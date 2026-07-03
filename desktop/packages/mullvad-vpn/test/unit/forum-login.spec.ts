@@ -17,16 +17,22 @@ describe('forum-login deep link parsing', () => {
 
   it('rejects a malformed sid (not 32 lowercase hex)', () => {
     expect(
-      parseForumLoginUrl(`warren://forum-login?sid=NOTHEX&host=connect.warrenbrowse.com`),
+      parseForumLoginUrl('warren://forum-login?sid=NOTHEX&host=connect.warrenbrowse.com'),
     ).toBeUndefined();
     expect(
-      parseForumLoginUrl(`warren://forum-login?sid=${'A'.repeat(32)}&host=connect.warrenbrowse.com`),
+      parseForumLoginUrl(
+        `warren://forum-login?sid=${'A'.repeat(32)}&host=connect.warrenbrowse.com`,
+      ),
     ).toBeUndefined();
   });
 
   it('rejects the wrong scheme or action', () => {
-    expect(parseForumLoginUrl(`https://forum-login?sid=${sid}&host=connect.warrenbrowse.com`)).toBeUndefined();
-    expect(parseForumLoginUrl(`warren://something-else?sid=${sid}&host=connect.warrenbrowse.com`)).toBeUndefined();
+    expect(
+      parseForumLoginUrl(`https://forum-login?sid=${sid}&host=connect.warrenbrowse.com`),
+    ).toBeUndefined();
+    expect(
+      parseForumLoginUrl(`warren://something-else?sid=${sid}&host=connect.warrenbrowse.com`),
+    ).toBeUndefined();
   });
 
   it('rejects a non-URL string without throwing', () => {
