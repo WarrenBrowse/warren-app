@@ -52,6 +52,7 @@ import {
 } from './command-line-options';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
+import { findForumLoginArg, FORUM_DEEP_LINK_SCHEME, performForumLogin } from './forum-login';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { findIconPath } from './linux-desktop-entry';
@@ -190,6 +191,7 @@ class ApplicationMain
     }
 
     this.addSecondInstanceEventHandler();
+    this.registerForumLoginDeepLink();
 
     this.initLogging();
 
@@ -288,9 +290,31 @@ class ApplicationMain
   };
 
   private addSecondInstanceEventHandler() {
-    app.on('second-instance', (_event, _argv, _workingDirectory) => {
+    app.on('second-instance', (_event, argv, _workingDirectory) => {
       this.userInterface?.showWindow();
+      // Windows/Linux deliver a deep link to the already-running instance as
+      // an argv entry on the second launch.
+      const deepLink = findForumLoginArg(argv);
+      if (deepLink) {
+        void this.handleForumLoginDeepLink(deepLink);
+      }
     });
+  }
+
+  // Community-forum wallet login (doc 55). Registers the `warren://` scheme and
+  // wires the three delivery paths: macOS `open-url`, Windows/Linux argv on the
+  // second instance (see above) and on first launch (checked in onReady).
+  private registerForumLoginDeepLink() {
+    app.setAsDefaultProtocolClient(FORUM_DEEP_LINK_SCHEME);
+    app.on('open-url', (event, url) => {
+      event.preventDefault();
+      this.userInterface?.showWindow();
+      void this.handleForumLoginDeepLink(url);
+    });
+  }
+
+  private async handleForumLoginDeepLink(url: string) {
+    await performForumLogin(url, this.daemonRpc);
   }
 
   private overrideAppPaths() {
@@ -425,6 +449,13 @@ class ApplicationMain
     app.on('activate', this.onActivate);
     powerMonitor.on('suspend', this.onSuspend);
     powerMonitor.on('resume', this.onResume);
+
+    // Windows/Linux cold start: a deep link that launched the app arrives as a
+    // process argument. macOS delivers it through `open-url` instead.
+    const initialDeepLink = findForumLoginArg(process.argv);
+    if (initialDeepLink) {
+      void this.handleForumLoginDeepLink(initialDeepLink);
+    }
 
     // Disable built-in DNS resolver.
     app.configureHostResolver({

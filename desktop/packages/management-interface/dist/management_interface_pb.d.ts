@@ -1933,6 +1933,58 @@ export namespace WarrenMultiHopSettings {
     }
 }
 
+export class ForumLoginRequest extends jspb.Message { 
+    getSid(): string;
+    setSid(value: string): ForumLoginRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumLoginRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumLoginRequest): ForumLoginRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumLoginRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumLoginRequest;
+    static deserializeBinaryFromReader(message: ForumLoginRequest, reader: jspb.BinaryReader): ForumLoginRequest;
+}
+
+export namespace ForumLoginRequest {
+    export type AsObject = {
+        sid: string,
+    }
+}
+
+export class ForumLoginSignature extends jspb.Message { 
+    getPubkeySs58(): string;
+    setPubkeySs58(value: string): ForumLoginSignature;
+    getSignatureHex(): string;
+    setSignatureHex(value: string): ForumLoginSignature;
+    getTimestamp(): number;
+    setTimestamp(value: number): ForumLoginSignature;
+    getNonceHex(): string;
+    setNonceHex(value: string): ForumLoginSignature;
+    getBody(): string;
+    setBody(value: string): ForumLoginSignature;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumLoginSignature.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumLoginSignature): ForumLoginSignature.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumLoginSignature, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumLoginSignature;
+    static deserializeBinaryFromReader(message: ForumLoginSignature, reader: jspb.BinaryReader): ForumLoginSignature;
+}
+
+export namespace ForumLoginSignature {
+    export type AsObject = {
+        pubkeySs58: string,
+        signatureHex: string,
+        timestamp: number,
+        nonceHex: string,
+        body: string,
+    }
+}
+
 export class WarrenStatus extends jspb.Message { 
     getReconnectCount(): number;
     setReconnectCount(value: number): WarrenStatus;

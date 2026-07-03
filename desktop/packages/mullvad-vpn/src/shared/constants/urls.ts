@@ -10,6 +10,10 @@ export const urls = {
   faq: 'https://warrenbrowse.com/help/',
   privacyGuide: 'https://warrenbrowse.com/privacy-guide/',
   download: 'https://warrenbrowse.com/download/',
+  // Community + support forum. Login is wallet-based (DiscourseConnect wallet
+  // SSO, doc 55); the `warren://forum-login` deep link is handled in the main
+  // process. See forum-login.ts.
+  forum: 'https://forum.warrenbrowse.com/',
 } as const;
 
 type BaseUrl = (typeof urls)[keyof typeof urls];

@@ -7,7 +7,7 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { FaqButton, ProblemReportButton } from './components';
+import { CommunityButton, FaqButton, ProblemReportButton } from './components';
 
 export function SupportView() {
   const { pop } = useHistory();
@@ -30,6 +30,7 @@ export function SupportView() {
                 <FlexColumn>
                   <ProblemReportButton />
                   <FaqButton />
+                  <CommunityButton />
                 </FlexColumn>
               </View.Container>
             </View.Content>

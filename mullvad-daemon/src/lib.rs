@@ -362,6 +362,14 @@ pub enum DaemonCommand {
     /// before the allocator recycles it once the GUI has serialized
     /// it onto the gRPC response.
     GetWarrenMnemonic(oneshot::Sender<Option<zeroize::Zeroizing<String>>>),
+    /// Signs a community-forum login challenge (doc 55). Carries the
+    /// deep-link `sid`; replies with the four X-Warren-* header values +
+    /// the request body, or `None` if no identity is bootstrapped. The
+    /// signing key never leaves the daemon.
+    SignForumLogin(
+        oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        String,
+    ),
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
     /// validation + atomic write. The daemon hot-swaps the
     /// in-memory `WarrenAuthSigner` and triggers `account_manager.login`
@@ -2338,6 +2346,7 @@ impl Daemon {
             GetAccountData(tx, account_number) => self.on_get_account_data(tx, account_number),
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
+            SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
@@ -2861,6 +2870,28 @@ impl Daemon {
             mnemonic.is_some()
         );
         Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
+    }
+
+    /// Signs the community-forum login challenge for `sid` (doc 55).
+    /// Signs the fixed canonical request `POST /v1/forum/login` with body
+    /// `{"sid":"<sid>"}` using the Warren identity key held in the daemon,
+    /// and returns the header values + body. Replies `None` when no signer
+    /// is bootstrapped. The `sid` is validated (32 lowercase hex) upstream
+    /// in the gRPC layer, so it is safe to embed here.
+    ///
+    /// **No-log policy**: the `sid`, pubkey and signature are never logged.
+    fn on_sign_forum_login(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        sid: String,
+    ) {
+        let result = self.warren_signer.as_ref().map(|signer| {
+            let body = format!("{{\"sid\":\"{sid}\"}}");
+            let headers = signer.sign_request("POST", "/v1/forum/login", body.as_bytes());
+            (headers, body)
+        });
+        log::debug!("on_sign_forum_login: signed={}", result.is_some());
+        Self::oneshot_send(tx, result, "sign_forum_login");
     }
 
     /// Restores the mnemonic via

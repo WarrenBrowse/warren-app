@@ -578,6 +578,46 @@ impl ManagementService for ManagementServiceImpl {
 
     /// Snapshot of the live Warren tunnel status read directly from
     /// the daemon-shared cache.
+    /// Signs a community-forum login challenge (doc 55, DiscourseConnect
+    /// wallet SSO). Validates the deep-link `sid` shape, then asks the
+    /// daemon to sign `POST /v1/forum/login` with the Warren identity key
+    /// and returns the header values + body for the GUI to POST.
+    /// **No-log policy**: never log the sid, pubkey, or signature.
+    async fn sign_forum_login(
+        &self,
+        request: Request<types::ForumLoginRequest>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        let sid = request.into_inner().sid;
+        // The sid is attacker-influenced (it comes from a deep link the OS
+        // handed us), and it is interpolated into the signed JSON body, so
+        // pin it to the exact Discourse nonce shape: 32 lowercase hex.
+        let valid = sid.len() == 32
+            && sid
+                .bytes()
+                .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase());
+        if !valid {
+            return Err(Status::invalid_argument(
+                "sid must be 32 lowercase hex chars",
+            ));
+        }
+        log::debug!("sign_forum_login (sid/pubkey/sig NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SignForumLogin(tx, sid))?;
+        let signed = self.wait_for_result(rx).await?;
+        match signed {
+            Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            None => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+        }
+    }
+
     async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {
         log::debug!("get_warren_status");
         let snapshot = self.warren_status_cache.snapshot();

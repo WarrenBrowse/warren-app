@@ -66,6 +66,19 @@ import {
 const DAEMON_RPC_PATH =
   process.platform === 'win32' ? '//./pipe/Warren VPN' : '/var/run/warren-vpn';
 
+/**
+ * The signed community-forum login material returned by the daemon: the
+ * four X-Warren-* header values plus the JSON body to POST to the forum
+ * connect host (doc 55). None of these is a long-lived secret.
+ */
+export interface ForumLoginSignature {
+  pubkeySs58: string;
+  signatureHex: string;
+  timestamp: number;
+  nonceHex: string;
+  body: string;
+}
+
 export class SubscriptionListener<T> {
   // Only meant to be used by DaemonRpc
   // @internal
@@ -275,6 +288,29 @@ export class DaemonRpc extends GrpcClient {
    */
   public async setWarrenMnemonic(mnemonic: string): Promise<void> {
     await this.callString<Empty>(this.client.setWarrenMnemonic, mnemonic);
+  }
+
+  /**
+   * Signs a community-forum login challenge (doc 55, DiscourseConnect
+   * wallet SSO). `sid` comes from a `warren://forum-login?sid=..` deep
+   * link. The daemon signs the fixed `POST /v1/forum/login` request with
+   * the Warren identity key and returns the four X-Warren-* header values
+   * plus the JSON body to POST. The signing key never leaves the daemon.
+   */
+  public async signForumLogin(sid: string): Promise<ForumLoginSignature> {
+    const request = new grpcTypes.ForumLoginRequest();
+    request.setSid(sid);
+    const response = await this.call<grpcTypes.ForumLoginRequest, grpcTypes.ForumLoginSignature>(
+      this.client.signForumLogin,
+      request,
+    );
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
   }
 
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {

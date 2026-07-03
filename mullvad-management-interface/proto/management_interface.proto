@@ -87,6 +87,16 @@ service ManagementService {
   // BIP39-validated before being written to disk (= atomic rejection).
   rpc SetWarrenMnemonic(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
+  // Signs a community-forum login challenge (DiscourseConnect wallet SSO,
+  // warren-core doc 55). The GUI passes the `sid` from a
+  // `warren://forum-login?sid=..` deep link; the daemon signs the fixed
+  // canonical request `POST /v1/forum/login` with body `{"sid":"<sid>"}`
+  // using the Warren identity key and returns the four X-Warren-* header
+  // values. The GUI then POSTs them to the forum connect host. The key
+  // never leaves the daemon. Errors if no identity is bootstrapped or the
+  // sid is malformed.
+  rpc SignForumLogin(ForumLoginRequest) returns (ForumLoginSignature) {}
+
   // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
   // OFF by default per doctrine `warren_multihop_doctrine_v1` (full
   // bandwidth single-hop, opt-in privacy). entry_country / exit_country
@@ -704,6 +714,25 @@ message WarrenMultiHopSettings {
   string exit_country = 3;
   // HPKE epoch rotation interval. Default 4h, max 8h per doctrine.
   google.protobuf.Duration hpke_epoch_rotation = 4;
+}
+
+// Community-forum wallet login (doc 55). `sid` is the opaque session id
+// from the `warren://forum-login?sid=..` deep link (32 lowercase hex);
+// the daemon validates its shape before signing.
+message ForumLoginRequest {
+  string sid = 1;
+}
+
+// The four X-Warren-* header values plus the request body the GUI must
+// POST to `https://<connect-host>/v1/forum/login`. None of these is a
+// long-lived secret: the signature is bound to the fixed path + body +
+// nonce + timestamp (60 s window, single-use server side).
+message ForumLoginSignature {
+  string pubkey_ss58 = 1;
+  string signature_hex = 2;
+  uint64 timestamp = 3;
+  string nonce_hex = 4;
+  string body = 5;
 }
 
 // Warren live tunnel status surface via GetWarrenStatus rpc and the
