@@ -7972,11 +7972,3 @@ dependencies = [
  "syn 2.0.117",
  "winnow 1.0.2",
 ]
-
-[[patch.unused]]
-name = "warrenguard-tun-core"
-version = "0.1.0"
-
-[[patch.unused]]
-name = "warrenguard-tun-device"
-version = "0.1.0"
