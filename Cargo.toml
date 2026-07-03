@@ -208,10 +208,6 @@ warrenguard-multihop = { path = "../warrenguard/crates/warrenguard-multihop" }
 warrenguard-daita = { path = "../warrenguard/crates/warrenguard-daita" }
 warrenguard-tls = { path = "../warrenguard/crates/warrenguard-tls" }
 warrenguard-natpmp-protocol = { path = "../warrenguard/crates/warrenguard-natpmp-protocol" }
-# tun-core / -tun-device are deliberately NOT patched here: this graph reaches them
-# only via the ../warrenguard path (through route-split), never the git source, so a
-# patch entry would be unused (cargo warns). warren-sdk-rs DOES git-dep + patch them
-# in its own workspace; do not mirror those two lines back into this section.
 warrenguard-backoff = { path = "../warrenguard/crates/warrenguard-backoff" }
 warrenguard-transport = { path = "../warrenguard/crates/warrenguard-transport" }
 warrenguard-transport-core = { path = "../warrenguard/crates/warrenguard-transport-core" }
