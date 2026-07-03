@@ -26,6 +26,17 @@ function newConfig() {
     copyright: 'Warren contributors',
     productName: 'Warren VPN',
     publish: null,
+    // Register the `warren://` deep-link scheme so the OS routes the
+    // community-forum login callback (`warren://forum-login?...`, doc 55) to
+    // the app. electron-builder writes CFBundleURLTypes (macOS) and the
+    // .desktop MimeType (Linux); Windows registers it at runtime via
+    // app.setAsDefaultProtocolClient. See src/main/forum-login.ts.
+    protocols: [
+      {
+        name: 'Warren',
+        schemes: ['warren'],
+      },
+    ],
     asar: true,
     compression: noCompression ? 'store' : 'normal',
     extraResources: [
