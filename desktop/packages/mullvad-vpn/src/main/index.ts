@@ -52,7 +52,13 @@ import {
 } from './command-line-options';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
-import { findForumLoginArg, FORUM_DEEP_LINK_SCHEME, performForumLogin } from './forum-login';
+import {
+  approveForumLogin,
+  cancelForumLogin,
+  findForumLoginArg,
+  FORUM_DEEP_LINK_SCHEME,
+  parseForumLoginUrl,
+} from './forum-login';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { findIconPath } from './linux-desktop-entry';
@@ -313,8 +319,17 @@ class ApplicationMain
     });
   }
 
-  private async handleForumLoginDeepLink(url: string) {
-    await performForumLogin(url, this.daemonRpc);
+  // A `warren://forum-login` deep link never logs in on its own: it surfaces a
+  // consent prompt in the renderer (approve/cancel), and only an explicit
+  // approval signs and submits (handled via IPC below).
+  private handleForumLoginDeepLink(url: string) {
+    const request = parseForumLoginUrl(url);
+    if (!request) {
+      log.warn('Ignoring malformed or non-allowlisted forum-login deep link');
+      return;
+    }
+    this.userInterface?.showWindow();
+    IpcMainEventChannel.forumLogin.notifyRequest?.(request);
   }
 
   private overrideAppPaths() {
@@ -1079,6 +1094,12 @@ class ApplicationMain
     IpcMainEventChannel.navigation.handleSetHistory((history) => {
       this.navigationHistory = history;
     });
+
+    // Forum login: only an explicit user approval signs with the wallet key.
+    IpcMainEventChannel.forumLogin.handleApprove((request) =>
+      approveForumLogin(request, this.daemonRpc),
+    );
+    IpcMainEventChannel.forumLogin.handleCancel((request) => cancelForumLogin(request));
 
     IpcMainEventChannel.customLists.handleCreateCustomList((name) => {
       return this.daemonRpc.createCustomList(name);

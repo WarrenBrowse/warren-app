@@ -57,6 +57,7 @@ import Lang from './components/Lang';
 import MacOsScrollbarDetection from './components/MacOsScrollbarDetection';
 import { ModalContainer } from './components/Modal';
 import { AppContext } from './context';
+import { ForumLoginPrompt } from './features/forum-login';
 import { WarrenPubKeyWarning } from './features/warren-pubkey-warning';
 import { Theme } from './lib/components';
 import { getNavigationBase } from './lib/functions/navigation-base';
@@ -438,6 +439,7 @@ export default class AppRenderer {
                           </MotionConfig>
                         </KeyboardNavigation>
                         <WarrenPubKeyWarning />
+                        <ForumLoginPrompt />
                         {window.env.platform === 'darwin' && <MacOsScrollbarDetection />}
                       </ModalContainer>
                     </ErrorBoundary>

@@ -1,5 +1,6 @@
 import { Session, session } from 'electron';
 
+import { ForumLoginResult, IForumLoginRequest } from '../shared/forum-login';
 import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
 
@@ -84,28 +85,31 @@ export function findForumLoginArg(argv: readonly string[]): string | undefined {
 }
 
 /**
- * Drives the full forum-login exchange for a validated deep link: ask the
- * daemon to sign, then POST to the connect host. Resolves `true` on a 2xx
- * from the provider, `false` otherwise. Never throws (logged instead) so a
- * malformed link cannot crash the main process.
+ * Signs and submits an APPROVED forum login: ask the daemon to sign, then POST
+ * to the connect host. Called only after the user approves the consent prompt.
+ * Never throws (logged instead) so a failure cannot crash the main process.
  */
-export async function performForumLogin(rawUrl: string, daemonRpc: DaemonRpc): Promise<boolean> {
-  const parsed = parseForumLoginUrl(rawUrl);
-  if (!parsed) {
-    log.warn('Ignoring malformed or non-allowlisted forum-login deep link');
-    return false;
+export async function approveForumLogin(
+  request: IForumLoginRequest,
+  daemonRpc: DaemonRpc,
+): Promise<ForumLoginResult> {
+  // Re-validate host + sid main-side: the renderer is trusted, but this is the
+  // security boundary that signs with the wallet key.
+  if (!ALLOWED_CONNECT_HOSTS.includes(request.host) || !/^[0-9a-f]{32}$/.test(request.sid)) {
+    log.warn('Refusing forum login: host not allowlisted or malformed sid');
+    return 'error';
   }
 
   let signature;
   try {
-    signature = await daemonRpc.signForumLogin(parsed.sid);
+    signature = await daemonRpc.signForumLogin(request.sid);
   } catch (error) {
     log.error(`Forum login: daemon could not sign (identity bootstrapped?): ${String(error)}`);
-    return false;
+    return 'error';
   }
 
   try {
-    const response = await getForumSession().fetch(`https://${parsed.host}/v1/forum/login`, {
+    const response = await getForumSession().fetch(`https://${request.host}/v1/forum/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -116,15 +120,36 @@ export async function performForumLogin(rawUrl: string, daemonRpc: DaemonRpc): P
       },
       body: signature.body,
     });
+    if (response.status === 403) {
+      log.info('Forum login: refused (wallet has never subscribed)');
+      return 'subscription-required';
+    }
     if (!response.ok) {
       log.error(`Forum login: provider returned HTTP ${response.status}`);
-      return false;
+      return 'error';
     }
     log.info('Forum login: signed challenge accepted by the provider');
-    return true;
+    return 'approved';
   } catch (error) {
     // Never log the sid/pubkey/signature (no-log policy).
     log.error(`Forum login: POST to connect host failed: ${String(error)}`);
-    return false;
+    return 'error';
+  }
+}
+
+/**
+ * Tells the connect provider the user declined, so the waiting browser page
+ * stops polling and shows a "cancelled" message. Best-effort, never throws.
+ */
+export async function cancelForumLogin(request: IForumLoginRequest): Promise<void> {
+  if (!ALLOWED_CONNECT_HOSTS.includes(request.host) || !/^[0-9a-f]{32}$/.test(request.sid)) {
+    return;
+  }
+  try {
+    await getForumSession().fetch(`https://${request.host}/v1/session/${request.sid}/cancel`, {
+      method: 'POST',
+    });
+  } catch (error) {
+    log.error(`Forum login: cancel notification failed: ${String(error)}`);
   }
 }

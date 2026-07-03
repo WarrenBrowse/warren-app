@@ -33,6 +33,7 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from './daemon-rpc-types';
+import { ForumLoginResult, IForumLoginRequest } from './forum-login';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
 import {
@@ -149,6 +150,14 @@ export const ipcSchema = {
   navigation: {
     reset: notifyRenderer<void>(),
     setHistory: send<IHistoryObject>(),
+  },
+  // Community-forum wallet login (doc 55). `request` is pushed when a
+  // `warren://forum-login` deep link arrives; the renderer shows a consent
+  // prompt and calls `approve` or `cancel`. Never a silent external login.
+  forumLogin: {
+    request: notifyRenderer<IForumLoginRequest>(),
+    approve: invoke<IForumLoginRequest, ForumLoginResult>(),
+    cancel: invoke<IForumLoginRequest, void>(),
   },
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),

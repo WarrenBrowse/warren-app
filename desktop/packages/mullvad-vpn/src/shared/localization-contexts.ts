@@ -47,5 +47,6 @@ export type LocalizationContexts =
   | 'port-forwarding-view'
   | 'warren-onboarding'
   | 'warren-mnemonic'
+  | 'forum-login'
   | 'custom-list-feature'
   | 'locations-feature';
