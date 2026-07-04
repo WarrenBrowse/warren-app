@@ -28,9 +28,14 @@ jobs:
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
 
-      - name: Build (unsigned)
+      - name: Build (unsigned, x64 only)
         shell: bash
-        run: ./build.sh --optimize --universal
+        env:
+          # Host is Windows-on-ARM; we only ship x64. Build the x86_64 target
+          # (cross-compiled with the native ARM64-hosted MSVC tools) and skip
+          # the aarch64 target that --universal would also build.
+          TARGETS: x86_64-pc-windows-msvc
+        run: ./build.sh --optimize
 
       - name: List produced installers
         shell: bash
