@@ -170,6 +170,10 @@ jobs:
         # build error and succeeds on a re-run. Retry the whole build on a crash
         # signature; real compile errors still fail immediately on the first pass.
         run: |
+          # pipefail so `build.sh | tee` reports build.sh's exit code, not tee's:
+          # without it a failed build (e.g. ring/clang) looked green and the
+          # SIGSEGV-retry below never triggered.
+          set -o pipefail
           for attempt in 1 2 3; do
             if ./build.sh --optimize 2>&1 | tee /tmp/build-linux.log; then exit 0; fi
             if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux.log; then

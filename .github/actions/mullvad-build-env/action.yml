@@ -332,7 +332,11 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install libdbus-1-dev
+        # clang: the ring crate's C sources are compiled with CC=clang; without
+        # it the release build dies with "cc-rs: clang ... exit status: 127" and,
+        # because the packaging step swallowed the empty output, silently shipped
+        # no Linux installers. libdbus-1-dev: mullvad-daemon links against dbus.
+        sudo apt-get install -y libdbus-1-dev clang
 
     - name: Install Go
       uses: actions/setup-go@v6

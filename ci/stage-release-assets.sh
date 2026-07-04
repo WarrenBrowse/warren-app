@@ -85,7 +85,12 @@ case "$platform" in
 esac
 
 if [ -z "$(ls -A "$OUT" 2>/dev/null)" ]; then
-  echo "::warning::no installers found to stage for platform=$platform"
+  # A platform build that produced no installer is a real failure: fail loudly
+  # here rather than publishing an incomplete release. This is the backstop that
+  # would have caught the Linux build silently shipping nothing after ring failed
+  # to compile (masked by the build step's `| tee` losing build.sh's exit code).
+  echo "::error::no installers found to stage for platform=$platform; the build produced no artifacts"
+  exit 1
 else
   echo "Staged release assets:"
   ls -1 "$OUT"
