@@ -87,7 +87,7 @@ jobs:
       WARREN_NOTARIZE_KEYCHAIN_PROFILE: ${{ secrets.WARREN_NOTARIZE_KEYCHAIN_PROFILE }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/mullvad-build-env
         with:
@@ -124,7 +124,7 @@ jobs:
       # artifacts: release assets live in separate storage that is NOT subject to
       # the Actions artifact storage quota (which the artifact path kept hitting).
       - name: Publish macOS installers to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
@@ -148,7 +148,7 @@ jobs:
       CXX: clang++
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/mullvad-build-env
         with:
@@ -192,14 +192,14 @@ jobs:
       # upload-artifact. Mirrors the macOS job; runs on every ref (draft keyed by
       # github.ref_name) so a v* tag run assembles the full multi-platform draft.
       - name: Publish Linux installers to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
           files: release-assets/*
 
       - name: Upload Linux artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: linux-installers
@@ -230,7 +230,7 @@ jobs:
         run: git config --system core.longpaths true
 
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/mullvad-build-env
         with:
@@ -326,14 +326,14 @@ jobs:
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the installer straight to the draft release.
       - name: Publish Windows installers to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
           files: release-assets/*
 
       - name: Upload Windows artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: windows-installers
@@ -361,7 +361,7 @@ jobs:
       APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -455,7 +455,7 @@ jobs:
           [ -n "${IOS_PROV_TMP:-}" ] && rm -f "$IOS_PROV_TMP" || true
 
       - name: Upload iOS artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ios-installers
           path: |
@@ -484,7 +484,7 @@ jobs:
       GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
 
@@ -548,14 +548,14 @@ jobs:
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the APK/AAB straight to the draft release.
       - name: Publish Android installers to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
           draft: true
           files: release-assets/*
 
       - name: Upload Android artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: android-installers
@@ -581,7 +581,7 @@ jobs:
       TAG_NAME: ${{ github.ref_name }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # The self-hosted Rosetta runner does not ship the gh CLI. Install it for
       # the job (latest release binary, no sudo, PATH scoped to the job) so the
@@ -683,7 +683,7 @@ jobs:
 
       - name: Checkout repository
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up build env (Rust + siblings)
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
@@ -769,7 +769,7 @@ jobs:
         # artifact-storage quota) must NOT fail the release.
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: update-metadata
           path: signed/*.json

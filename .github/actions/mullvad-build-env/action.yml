@@ -276,6 +276,9 @@ runs:
         cache-bin: false
 
     - name: Install Protoc
+      # Pinned at v3: upstream has not yet shipped a Node 24 build, so this is the
+      # one action that still triggers the "Node.js 20 is deprecated" warning. The
+      # runner forces it onto Node 24 anyway; bump when arduino ships a node24 tag.
       uses: arduino/setup-protoc@v3
       with:
         repo-token: ${{ inputs.protoc-token }}
@@ -342,9 +345,13 @@ runs:
       uses: actions/setup-go@v6
       with:
         go-version: 1.21.3
+        # No go.mod at the repo root (wireguard-go is built through build.sh with
+        # its own module), so setup-go's default dependency cache warns
+        # "Dependencies file is not found ... go.mod". Nothing to cache here.
+        cache: false
 
     - name: Setup node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version-file: desktop/package.json
         cache: "npm"

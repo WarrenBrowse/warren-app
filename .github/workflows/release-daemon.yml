@@ -35,7 +35,7 @@ jobs:
       CC: clang
       CXX: clang++
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Stamp clean release version (daemon-vX.Y.Z)
         # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
         # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
@@ -90,7 +90,7 @@ jobs:
         # one, so the public install one-liner only needs warren-cli to be public.
         # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -98,7 +98,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: true
           files: release-assets/*
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: warren-headless-linux
@@ -109,7 +109,7 @@ jobs:
     name: macOS headless bundle
     runs-on: [self-hosted, macOS, ARM64]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Stamp clean release version (daemon-vX.Y.Z)
         # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
         # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
@@ -130,7 +130,7 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
@@ -158,7 +158,7 @@ jobs:
         # one, so the public install one-liner only needs warren-cli to be public.
         # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -166,7 +166,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: true
           files: warren-headless-macos-*.tar.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: warren-headless-macos
@@ -181,7 +181,7 @@ jobs:
     # tunnel is untested on Windows anyway — don't fail the whole release on it.
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Stamp clean release version (daemon-vX.Y.Z)
         # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
         # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
@@ -202,7 +202,7 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Checkout warren-cli (install assets)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
@@ -239,7 +239,7 @@ jobs:
         # one, so the public install one-liner only needs warren-cli to be public.
         # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
         if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
@@ -247,7 +247,7 @@ jobs:
           tag_name: ${{ github.ref_name }}
           draft: true
           files: warren-headless-windows-x64.zip
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: warren-headless-windows
