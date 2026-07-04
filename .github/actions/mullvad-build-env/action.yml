@@ -339,7 +339,10 @@ runs:
         # it the release build dies with "cc-rs: clang ... exit status: 127" and,
         # because the packaging step swallowed the empty output, silently shipped
         # no Linux installers. libdbus-1-dev: mullvad-daemon links against dbus.
-        sudo apt-get install -y libdbus-1-dev clang
+        # libarchive-tools: provides bsdtar, required by fpm to emit the Arch
+        # (pacman) package alongside the deb/rpm (electron-builder's pacman
+        # target). xz (already present via rpm) is the archive compressor.
+        sudo apt-get install -y libdbus-1-dev clang libarchive-tools
 
     - name: Install Go
       uses: actions/setup-go@v6

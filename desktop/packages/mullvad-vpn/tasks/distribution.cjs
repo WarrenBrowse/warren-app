@@ -187,6 +187,10 @@ function newConfig() {
           target: 'rpm',
           arch: getLinuxTargetArch(),
         },
+        {
+          target: 'pacman',
+          arch: getLinuxTargetArch(),
+        },
       ],
       executableName: 'warren-vpn',
       artifactName: 'WarrenVPN-${version}_${arch}.${ext}',
@@ -259,6 +263,41 @@ function newConfig() {
       afterInstall: distAssets('linux/after-install.sh'),
       afterRemove: distAssets('linux/after-remove.sh'),
       depends: ['libXScrnSaver', 'libnotify', 'dbus-libs'],
+    },
+
+    // Arch Linux / Arch-based (Manjaro, EndeavourOS...). Built by the same fpm
+    // pass as deb/rpm (no recompile, just an extra package write), so it adds
+    // only seconds to CI. Same payload as deb: the systemd units, the three
+    // binaries, and the shell completions, driven by the same install/remove
+    // scriptlets. depends is set explicitly because electron-builder's pacman
+    // default list carries packages that no longer exist in the Arch repos
+    // (e.g. http-parser) or live only in the AUR (libappindicator-gtk3), which
+    // would make `pacman -U` refuse to install.
+    pacman: {
+      fpm: [
+        '--version',
+        getPacmanVersion(),
+        '--before-install',
+        distAssets('linux/before-install.sh'),
+        '--before-remove',
+        distAssets('linux/before-remove.sh'),
+        distAssets('linux/warren-daemon.service') +
+          '=/usr/lib/systemd/system/warren-daemon.service',
+        distAssets('linux/warren-early-boot-blocking.service') +
+          '=/usr/lib/systemd/system/warren-early-boot-blocking.service',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren')) + '=/usr/bin/',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-daemon')) + '=/usr/bin/',
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-exclude')) + '=/usr/bin/',
+        distAssets('linux/problem-report-link') + '=/usr/bin/warren-problem-report',
+        buildAssets('shell-completions/warren.bash') +
+          '=/usr/share/bash-completion/completions/warren',
+        buildAssets('shell-completions/_warren') + '=/usr/share/zsh/site-functions/_warren',
+        buildAssets('shell-completions/warren.fish') +
+          '=/usr/share/fish/vendor_completions.d/warren.fish',
+      ],
+      afterInstall: distAssets('linux/after-install.sh'),
+      afterRemove: distAssets('linux/after-remove.sh'),
+      depends: ['gtk3', 'nss', 'libxss', 'libnotify', 'dbus'],
     },
   };
 }
@@ -414,10 +453,12 @@ function packLinux() {
 
   if (noCompression) {
     config.rpm.fpm.unshift('--rpm-compression', 'none');
+    config.pacman.fpm.unshift('--pacman-compression', 'none');
   }
 
   if (targets && targets === 'aarch64-unknown-linux-gnu') {
     config.rpm.fpm.unshift('--architecture', 'aarch64');
+    config.pacman.fpm.unshift('--architecture', 'aarch64');
   }
 
   return builder.build({
@@ -502,6 +543,15 @@ function getMacArch() {
 // Fedora do this where a tilde denotes a version component that must be sorted as earlier
 // than a non-tilde version component
 // https://docs.fedoraproject.org/en-US/packaging-guidelines/Versioning/#_complex_versioning
+// Arch's pkgver forbids the hyphen (it separates pkgver from pkgrel). Clean
+// release tags produce a hyphen-free version already, but a local dev build
+// carries "-dev-<sha>", which fpm would reject and fail the whole Linux pack
+// (deb/rpm included). Map any remaining hyphen to an underscore so pacman
+// packaging never breaks a dev build.
+function getPacmanVersion() {
+  return getLinuxVersion().replace(/-/g, '_');
+}
+
 function getLinuxVersion() {
   const [version, ...prereleaseParts] = productVersion([]).split('-');
   const [major, minor] = version.split('.');

@@ -1,0 +1,66 @@
+---
+# THROWAWAY validation workflow (delete once the Arch/pacman packaging is
+# confirmed green). Runs ONLY the Linux GUI build on the Rosetta runner and
+# asserts that the build now emits a .deb, a .rpm AND a .pacman (Arch) package.
+# Non-publishing: manual dispatch only, never tags, never touches a release.
+name: linux-pack-smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  linux-pack:
+    name: Linux .deb/.rpm/.pacman smoke
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    env:
+      CC: clang
+      CXX: clang++
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+
+      - name: Assert bsdtar is available (pacman prerequisite)
+        run: bsdtar --version
+
+      - name: Build
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            if ./build.sh --optimize 2>&1 | tee /tmp/build-linux.log; then exit 0; fi
+            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux.log; then
+              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
+              continue
+            fi
+            exit 1
+          done
+          exit 1
+
+      - name: Assert all three Linux packages were produced
+        run: |
+          echo "== dist/ =="
+          ls -lh dist/ || true
+          shopt -s nullglob
+          deb=(dist/WarrenVPN-*_amd64.deb)
+          rpm=(dist/WarrenVPN-*_x86_64.rpm)
+          pac=(dist/WarrenVPN-*.pacman)
+          missing=0
+          [ ${#deb[@]} -ge 1 ] || { echo "::error::no .deb produced"; missing=1; }
+          [ ${#rpm[@]} -ge 1 ] || { echo "::error::no .rpm produced"; missing=1; }
+          [ ${#pac[@]} -ge 1 ] || { echo "::error::no .pacman produced"; missing=1; }
+          [ $missing -eq 0 ] || exit 1
+          echo "OK: deb=${deb[*]} rpm=${rpm[*]} pacman=${pac[*]}"
+          # Prove the .pacman is a real Arch package readable by bsdtar and that
+          # it carries the daemon binary + systemd unit.
+          echo "== .pacman contents =="
+          bsdtar -tf "${pac[0]}" | grep -E "usr/bin/warren-daemon|warren-daemon.service|\.PKGINFO" || {
+            echo "::error::.pacman missing expected payload"; exit 1; }

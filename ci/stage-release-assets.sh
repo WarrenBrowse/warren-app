@@ -43,6 +43,10 @@ case "$platform" in
   linux)
     for f in dist/WarrenVPN-*_amd64.deb;  do stage "$f" "WarrenVPN-${version}-linux-amd64.deb";  done
     for f in dist/WarrenVPN-*_x86_64.rpm; do stage "$f" "WarrenVPN-${version}-linux-x86_64.rpm"; done
+    # Arch Linux package (electron-builder pacman target). Installed with
+    # `sudo pacman -U <file>`; the .pacman extension is electron-builder's, the
+    # archive itself is a standard xz-compressed Arch package.
+    for f in dist/WarrenVPN-*.pacman; do stage "$f" "WarrenVPN-${version}-linux-x86_64.pacman"; done
     # Daemon-only packages (only produced by `build.sh --daemon-only`; absent in
     # the normal full build, harmlessly skipped by nullglob).
     for f in dist/warren-vpn-daemon_*_amd64.deb;   do stage "$f" "warren-vpn-daemon-${version}-linux-amd64.deb";   done

@@ -1,7 +1,7 @@
 ---
 # Warren VPN - Release pipeline
 #
-# Builds Warren VPN installers for macOS (DMG/PKG), Linux (.deb + .rpm),
+# Builds Warren VPN installers for macOS (DMG/PKG), Linux (.deb + .rpm + .pacman),
 # Windows (MSI/NSIS) and Android (AAB/APK), and uploads them to a GitHub
 # Release. Code signing is opt-in per platform: when the signing secrets are
 # absent the jobs produce UNSIGNED builds (the current default, since Warren
@@ -131,7 +131,7 @@ jobs:
           files: release-assets/*
 
   build-linux:
-    name: Build Linux .deb/.rpm
+    name: Build Linux .deb/.rpm/.pacman
     needs: [tests]
     # Routed to the Mac Studio x86_64 Rosetta container runner (macstudio-rosetta).
     # The Debian LXC runner stays registered but lacks this label, so it is no
