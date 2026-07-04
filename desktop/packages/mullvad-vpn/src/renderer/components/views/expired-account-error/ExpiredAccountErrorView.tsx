@@ -1,28 +1,17 @@
-import {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useState } from 'react';
 import { sprintf } from 'sprintf-js';
-import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { LockdownModeSwitch } from '../../../features/tunnel/components';
 import { Button, Flex, Spinner } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
-import { spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
 import { useExclusiveTask } from '../../../lib/hooks/use-exclusive-task';
 import { IconBadge } from '../../../lib/icon-badge';
+import { PaymentRecoveryAction, paymentRecoveryAction } from '../../../lib/payment';
 import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
 import {
@@ -33,42 +22,11 @@ import {
   StyledWarrenPubKeyLabel,
   StyledWarrenPubKeyMessage,
 } from '../../ExpiredAccountErrorViewStyles';
-import { ModalAlert, ModalAlertType, ModalMessage } from '../../Modal';
-import { SettingsListItem } from '../../settings-list-item';
-
-enum RecoveryAction {
-  openBrowser,
-  disconnect,
-  disableLockdownMode,
-}
-
-const StyledSettingsToggleListItem = styled(SettingsListItem)`
-  margin-top: ${spacings.medium};
-`;
+import { ExternalPaymentButton } from '../../payment';
 
 export function ExpiredAccountErrorView() {
-  return (
-    <ExpiredAccountContextProvider>
-      <ExpiredAccountErrorViewComponent />
-    </ExpiredAccountContextProvider>
-  );
-}
-
-function ExpiredAccountErrorViewComponent() {
   const { push } = useHistory();
-  const { disconnectTunnel } = useAppContext();
-
-  const { recoveryAction } = useRecoveryAction();
   const isNewAccount = useIsNewAccount();
-
-  const [disconnect, disconnecting] = useExclusiveTask(async () => {
-    try {
-      await disconnectTunnel('gui-expired-account');
-    } catch (e) {
-      const error = e as Error;
-      log.error(`Failed to disconnect the tunnel: ${error.message}`);
-    }
-  });
 
   const navigateToRedeemVoucher = useCallback(() => {
     push(RoutePath.redeemVoucher);
@@ -93,18 +51,15 @@ function ExpiredAccountErrorViewComponent() {
             <FlexColumn>{isNewAccount ? <WelcomeView /> : <Content />}</FlexColumn>
 
             <FlexColumn gap="medium">
-              {recoveryAction === RecoveryAction.disconnect && (
-                <Button variant="destructive" disabled={disconnecting} onClick={disconnect}>
-                  <Button.Text>
-                    {
-                      // TRANSLATORS: Button label for disconnecting from the VPN.
-                      messages.pgettext('connect-view', 'Disconnect')
-                    }
-                  </Button.Text>
-                </Button>
-              )}
+              <DisconnectButton />
 
-              <ExternalPaymentButton />
+              <ExternalPaymentButton
+                buttonText={
+                  isNewAccount
+                    ? messages.gettext('Buy credit')
+                    : messages.gettext('Buy more credit')
+                }
+              />
 
               <CheckSubscriptionButton />
 
@@ -117,8 +72,6 @@ function ExpiredAccountErrorViewComponent() {
                 </Button.Text>
               </Button>
             </FlexColumn>
-
-            <LockdownModeAlert />
           </View.Container>
         </View.Content>
       </StyledCustomScrollbars>
@@ -128,7 +81,7 @@ function ExpiredAccountErrorViewComponent() {
 
 function WelcomeView() {
   const account = useSelector((state) => state.account);
-  const { recoveryMessage } = useRecoveryAction();
+  const recoveryMessage = useRecoveryMessage();
 
   return (
     <>
@@ -156,7 +109,7 @@ function WelcomeView() {
 }
 
 function Content() {
-  const { recoveryMessage } = useRecoveryAction();
+  const recoveryMessage = useRecoveryMessage();
 
   return (
     <>
@@ -179,56 +132,57 @@ function Content() {
   );
 }
 
-function ExternalPaymentButton() {
-  const { setShowLockdownModeAlert, startPolling } = useExpiredAccountContext();
-  const { recoveryAction } = useRecoveryAction();
-  const { buyCredit } = useAppContext();
-  const isNewAccount = useIsNewAccount();
+// Plain "just give me my internet back" affordance while the firewall
+// blocks: disconnecting must not force the user through a checkout
+// tab (the buy button's dialog also disconnects, but always opens the
+// browser too).
+function DisconnectButton() {
+  const isBlocked = useSelector((state) => state.connection.isBlocked);
+  const lockdownMode = useSelector((state) => state.settings.lockdownMode);
+  const { disconnectTunnel } = useAppContext();
 
-  const buttonText = isNewAccount
-    ? messages.gettext('Buy credit')
-    : messages.gettext('Buy more credit');
-
-  const [openExternalPayment, openingExternalPayment] = useExclusiveTask(async () => {
-    if (recoveryAction === RecoveryAction.disableLockdownMode) {
-      setShowLockdownModeAlert(true);
-    } else {
-      // Opens the checkout bound to a fresh purchase id and starts the
-      // auto-redeem poll (doc 35): the credit lands without the user
-      // copying any voucher.
-      await buyCredit();
-      // G-5: Also auto-poll the account data as a safety net (covers a
-      // credit applied through any other path).
-      startPolling();
+  const [disconnect, disconnecting] = useExclusiveTask(async () => {
+    try {
+      await disconnectTunnel('gui-expired-account');
+    } catch (e) {
+      const error = e as Error;
+      log.error(`Failed to disconnect the tunnel: ${error.message}`);
     }
   });
 
+  if (paymentRecoveryAction(lockdownMode, isBlocked) !== PaymentRecoveryAction.disconnect) {
+    return null;
+  }
+
   return (
-    <Button
-      variant="success"
-      disabled={openingExternalPayment || recoveryAction === RecoveryAction.disconnect}
-      onClick={openExternalPayment}
-      aria-description={
-        // TRANSLATORS: Accessibility label for the button that opens the browser to buy credit.
-        messages.pgettext('accessibility', 'Opens externally')
-      }>
-      <Button.Text>{buttonText}</Button.Text>
-      <Button.Icon icon="external" />
+    <Button variant="destructive" disabled={disconnecting} onClick={disconnect}>
+      <Button.Text>
+        {
+          // TRANSLATORS: Button label for disconnecting from the VPN.
+          messages.pgettext('connect-view', 'Disconnect')
+        }
+      </Button.Text>
     </Button>
   );
 }
 
-// G-5: Manual "Check subscription" button for users who completed
-// external payment and want to refresh immediately.
+// Manual "Check subscription" refresh for users who completed the
+// external payment. The main-process purchase poll normally credits
+// on its own; while it runs the label reflects it.
 function CheckSubscriptionButton() {
-  const { polling } = useExpiredAccountContext();
-  const { recoveryAction } = useRecoveryAction();
-  const { updateAccountData } = useAppContext();
+  const purchaseInFlight = useSelector((state) => state.account.purchaseInFlight);
+  const isBlocked = useSelector((state) => state.connection.isBlocked);
+  const lockdownMode = useSelector((state) => state.settings.lockdownMode);
+  const { checkPendingPurchases, updateAccountData } = useAppContext();
   const [checking, setChecking] = useState(false);
 
   const handleCheck = useCallback(async () => {
     setChecking(true);
     try {
+      // First give any pending app-initiated purchase an immediate
+      // redeem attempt (that is what actually credits the account),
+      // then refresh the expiry the UI shows.
+      await checkPendingPurchases();
       await updateAccountData();
     } catch (e) {
       const err = e as Error;
@@ -236,15 +190,15 @@ function CheckSubscriptionButton() {
     } finally {
       setChecking(false);
     }
-  }, [updateAccountData]);
+  }, [checkPendingPurchases, updateAccountData]);
 
   const onClickCheck = useCallback(() => {
     void handleCheck();
   }, [handleCheck]);
 
-  // Only show after the user has opened the external payment page
-  // (polling started) or as a persistent manual refresh option.
-  if (recoveryAction === RecoveryAction.disconnect) {
+  // While the firewall blocks, the check cannot reach the API and
+  // would fail silently: the recovery guidance handles this state.
+  if (paymentRecoveryAction(lockdownMode, isBlocked) === PaymentRecoveryAction.disconnect) {
     return null;
   }
 
@@ -257,7 +211,7 @@ function CheckSubscriptionButton() {
         <Spinner size="small" />
       ) : (
         <Button.Text>
-          {polling
+          {purchaseInFlight
             ? messages.pgettext('connect-view', 'Checking... (click to refresh now)')
             : messages.pgettext('connect-view', "I've completed payment")}
         </Button.Text>
@@ -266,158 +220,24 @@ function CheckSubscriptionButton() {
   );
 }
 
-function LockdownModeAlert() {
-  const { showLockdownModeAlert, setShowLockdownModeAlert } = useExpiredAccountContext();
-
-  const onCloseLockdownModeInstructions = useCallback(() => {
-    setShowLockdownModeAlert(false);
-  }, [setShowLockdownModeAlert]);
-
-  return (
-    <ModalAlert
-      isOpen={showLockdownModeAlert}
-      type={ModalAlertType.caution}
-      buttons={[
-        <Button key="cancel" onClick={onCloseLockdownModeInstructions}>
-          <Button.Text>{messages.gettext('Close')}</Button.Text>
-        </Button>,
-      ]}
-      close={onCloseLockdownModeInstructions}>
-      <ModalMessage>
-        {messages.pgettext(
-          'connect-view',
-          'You need to disable "Lockdown mode" in order to access the Internet to add time.',
-        )}
-      </ModalMessage>
-      <ModalMessage>
-        {messages.pgettext(
-          'connect-view',
-          'Remember, turning it off will allow network traffic while the VPN is disconnected until you turn it back on under Advanced settings.',
-        )}
-      </ModalMessage>
-      <StyledSettingsToggleListItem>
-        <SettingsListItem.Item>
-          <LockdownModeSwitch>
-            <LockdownModeSwitch.Label variant="titleMedium">
-              {messages.pgettext('vpn-settings-view', 'Lockdown mode')}
-            </LockdownModeSwitch.Label>
-            <SettingsListItem.Item.ActionGroup>
-              <LockdownModeSwitch.Input />
-            </SettingsListItem.Item.ActionGroup>
-          </LockdownModeSwitch>
-        </SettingsListItem.Item>
-      </StyledSettingsToggleListItem>
-    </ModalAlert>
-  );
-}
-
-type ExpiredAccountContextType = {
-  setShowLockdownModeAlert: (val: boolean) => void;
-  showLockdownModeAlert: boolean;
-  polling: boolean;
-  startPolling: () => void;
-};
-
-const ExpiredAccountContext = createContext<ExpiredAccountContextType | undefined>(undefined);
-
-const ExpiredAccountContextProvider = ({ children }: { children: ReactNode }) => {
-  const [showLockdownModeAlert, setShowLockdownModeAlert] = useState(false);
-  const [polling, setPolling] = useState(false);
-  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const pollDeadlineRef = useRef<number>(0);
-  const { updateAccountData } = useAppContext();
-
-  // Cleanup auto-poll on unmount.
-  useEffect(() => {
-    return () => {
-      if (pollTimerRef.current) {
-        clearInterval(pollTimerRef.current);
-      }
-    };
-  }, []);
-
-  const startPolling = useCallback(() => {
-    // Auto-poll every 10s for 2 minutes after the user opens the
-    // external payment page. If the daemon reports a valid expiry,
-    // the existing StateTriggeredNavigation will route to main.
-    if (pollTimerRef.current) {
-      clearInterval(pollTimerRef.current);
-    }
-    pollDeadlineRef.current = Date.now() + 2 * 60 * 1000;
-    setPolling(true);
-    pollTimerRef.current = setInterval(() => {
-      if (Date.now() > pollDeadlineRef.current) {
-        if (pollTimerRef.current) {
-          clearInterval(pollTimerRef.current);
-          pollTimerRef.current = null;
-        }
-        setPolling(false);
-        return;
-      }
-      void updateAccountData().catch((e: unknown) => {
-        const err = e as Error;
-        log.error(`Auto-poll subscription check failed: ${err.message}`);
-      });
-    }, 10_000);
-  }, [updateAccountData]);
-
-  const value: ExpiredAccountContextType = useMemo(
-    () => ({
-      setShowLockdownModeAlert,
-      showLockdownModeAlert,
-      polling,
-      startPolling,
-    }),
-    [setShowLockdownModeAlert, showLockdownModeAlert, polling, startPolling],
-  );
-  return <ExpiredAccountContext.Provider value={value}>{children}</ExpiredAccountContext.Provider>;
-};
-
-const useExpiredAccountContext = () => {
-  const context = useContext(ExpiredAccountContext);
-  if (!context) {
-    throw new Error(
-      'useExpiredAccountContext must be used within an ExpiredAccountContextProvider',
-    );
-  }
-
-  return context;
-};
-
-const useRecoveryAction = () => {
+function useRecoveryMessage(): string {
   const isBlocked = useSelector((state) => state.connection.isBlocked);
   const lockdownMode = useSelector((state) => state.settings.lockdownMode);
 
-  let recoveryAction: RecoveryAction;
-
-  if (lockdownMode && isBlocked) {
-    recoveryAction = RecoveryAction.disableLockdownMode;
-  } else if (!lockdownMode && isBlocked) {
-    recoveryAction = RecoveryAction.disconnect;
-  } else {
-    recoveryAction = RecoveryAction.openBrowser;
-  }
-
-  let recoveryMessage: string;
-
-  switch (recoveryAction) {
-    case RecoveryAction.openBrowser:
-    case RecoveryAction.disableLockdownMode:
-      recoveryMessage = messages.pgettext(
+  switch (paymentRecoveryAction(lockdownMode, isBlocked)) {
+    case PaymentRecoveryAction.openBrowser:
+    case PaymentRecoveryAction.disableLockdownMode:
+      return messages.pgettext(
         'connect-view',
         'Either buy credit on our website or redeem a voucher.',
       );
-      break;
-    case RecoveryAction.disconnect:
-      recoveryMessage = messages.pgettext(
+    case PaymentRecoveryAction.disconnect:
+      return messages.pgettext(
         'connect-view',
         'To add more, you will need to disconnect and access the Internet with an unsecure connection.',
       );
-      break;
   }
-
-  return { recoveryAction, recoveryMessage };
-};
+}
 
 const useIsNewAccount = () => {
   const account = useSelector((state) => state.account);

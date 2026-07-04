@@ -3,6 +3,7 @@ import { IChangelog } from './ipc-types';
 export type DisconnectSource =
   | 'gui-disconnect-button'
   | 'gui-expired-account'
+  | 'gui-buy-credit'
   | 'gui-login-unblock'
   | 'gui-device-revoked'
   | 'gui-quit-button'

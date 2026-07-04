@@ -19,6 +19,9 @@ export interface IAccountReduxState {
   pubkeyHistory?: WarrenPubKey;
   expiry?: string; // ISO8601
   status: LoginState;
+  // Mirror of the main-process purchase poll (app-initiated checkout,
+  // doc 35). Drives the "Checking..." labels in the paywall views.
+  purchaseInFlight: boolean;
 }
 
 const initialState: IAccountReduxState = {
@@ -26,6 +29,7 @@ const initialState: IAccountReduxState = {
   pubkeyHistory: undefined,
   expiry: undefined,
   status: { type: 'none', deviceRevoked: false },
+  purchaseInFlight: false,
 };
 
 export default function (
@@ -116,6 +120,11 @@ export default function (
         status,
       };
     }
+    case 'UPDATE_PURCHASE_IN_FLIGHT':
+      return {
+        ...state,
+        purchaseInFlight: action.purchaseInFlight,
+      };
   }
 
   return state;

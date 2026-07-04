@@ -5,6 +5,7 @@ import {
   IAccountData,
   LogoutSource,
   TunnelState,
+  VoucherResponse,
   WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
@@ -74,18 +75,26 @@ export default class Account {
     IpcMainEventChannel.account.handleSetWarrenMnemonic((mnemonic: string) =>
       this.daemonRpc.setWarrenMnemonic(mnemonic),
     );
-    IpcMainEventChannel.account.handleSubmitVoucher(async (voucherCode: string) => {
-      const currentPubKey = this.getWarrenPubKey();
-      const response = await this.daemonRpc.submitVoucher(voucherCode);
-
-      if (currentPubKey) {
-        this.accountDataCache.handleVoucherResponse(currentPubKey, response);
-      }
-
-      return response;
-    });
+    IpcMainEventChannel.account.handleSubmitVoucher((voucherCode: string) =>
+      this.submitVoucher(voucherCode),
+    );
     IpcMainEventChannel.account.handleUpdateData(() => this.updateAccountData());
   }
+
+  // Shared by the IPC handler (manual voucher entry) and the
+  // main-process purchase poll (wpid auto-redeem): a successful
+  // redemption must update the cached expiry and notify the renderer
+  // no matter who submitted.
+  public submitVoucher = async (voucherCode: string): Promise<VoucherResponse> => {
+    const currentPubKey = this.getWarrenPubKey();
+    const response = await this.daemonRpc.submitVoucher(voucherCode);
+
+    if (currentPubKey) {
+      this.accountDataCache.handleVoucherResponse(currentPubKey, response);
+    }
+
+    return response;
+  };
 
   public isLoggedIn(): boolean {
     return this.deviceState?.type === 'logged in';

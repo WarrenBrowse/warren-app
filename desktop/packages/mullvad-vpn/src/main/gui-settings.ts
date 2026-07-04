@@ -18,6 +18,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   animateMap: 'boolean',
   onboardingCompletedUnix: 'number',
   backupPending: 'boolean',
+  pendingPurchases: 'Array<string>',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -32,6 +33,7 @@ const defaultSettings: IGuiSettingsState = {
   updateDismissedForVersion: '',
   animateMap: true,
   backupPending: false,
+  pendingPurchases: [],
 };
 
 export default class GuiSettings {
@@ -161,6 +163,15 @@ export default class GuiSettings {
 
   get backupPending(): boolean {
     return this.stateValue.backupPending ?? false;
+  }
+
+  // Pending app-initiated purchases (see gui-settings-state.ts).
+  set pendingPurchases(newValue: Array<string>) {
+    this.changeStateAndNotify({ ...this.stateValue, pendingPurchases: newValue });
+  }
+
+  get pendingPurchases(): Array<string> {
+    return this.stateValue.pendingPurchases ?? [];
   }
 
   public load() {

@@ -1,16 +1,7 @@
-import { isWarrenPubKey, WARREN_SS58_PREFIX } from '../../shared/utils';
+import { isWarrenPubKey, shortenWarrenPubKey, WARREN_SS58_PREFIX } from '../../shared/utils';
 
-// Re-exported for callers that import the SS58 prefix from this module.
-export { WARREN_SS58_PREFIX };
-
-// Below this length there is nothing to shorten, so the address is
-// returned verbatim. Mirrors Polkadot's `toShortAddress` behaviour
-// (6 head + 1 ellipsis + 6 tail = 13 chars).
-const SHORTEN_MIN_LENGTH = 13;
-const SHORTEN_EDGE_CHARS = 6;
-
-// U+2026 HORIZONTAL ELLIPSIS, matching Polkadot's short-address style.
-const ELLIPSIS = '…';
+// Re-exported for callers that import these from this module.
+export { shortenWarrenPubKey, WARREN_SS58_PREFIX };
 
 /**
  * Returns `true` when `value` is a valid Warren SS58 address for the
@@ -20,23 +11,6 @@ const ELLIPSIS = '…';
  */
 export function isWarrenAddress(value: string): boolean {
   return isWarrenPubKey(value);
-}
-
-/**
- * Shortens a Warren SS58 address for display in the
- * `toShortAddress` style: first 6 chars + `…` + last 6 chars (e.g.
- * `wb7kgy…hP9DnB`). Strings of length <= 13 are returned unchanged.
- *
- * This is display-only; callers that need the full address (e.g. for
- * clipboard copy) must use the raw value, not this output.
- */
-export function shortenWarrenPubKey(pubkey: string): string {
-  if (pubkey.length <= SHORTEN_MIN_LENGTH) {
-    return pubkey;
-  }
-  return `${pubkey.substring(0, SHORTEN_EDGE_CHARS)}${ELLIPSIS}${pubkey.substring(
-    pubkey.length - SHORTEN_EDGE_CHARS,
-  )}`;
 }
 
 /**

@@ -91,6 +91,7 @@ export interface IAppStateSnapshot {
   navigationHistory?: IHistoryObject;
   currentApiAccessMethod?: AccessMethodSetting;
   isMacOs13OrNewer: boolean;
+  purchaseInFlight: boolean;
 }
 
 export type IpcSchema = typeof ipcSchema;
@@ -319,6 +320,18 @@ export const ipcSchema = {
     setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: invoke<void, void>(),
+    // Starts an app-initiated purchase (doc 35): the main process
+    // mints the wpid, opens the checkout in the browser and owns the
+    // auto-redeem poll (the renderer is background-throttled while
+    // the user pays, so the poll cannot live there).
+    buyCredit: invoke<void, void>(),
+    // Forces an immediate redeem attempt of every pending purchase
+    // (bypasses the focus-check throttle). Wired to the manual
+    // "I've completed payment" buttons.
+    checkPendingPurchases: invoke<void, void>(),
+    // True while the main-process purchase poll is active; drives the
+    // "Checking..." labels in the paywall views.
+    purchase: notifyRenderer<boolean>(),
   },
   accountHistory: {
     '': notifyRenderer<WarrenPubKey | undefined>(),

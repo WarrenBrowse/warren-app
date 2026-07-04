@@ -94,3 +94,21 @@ describe('account reducer - Warren pubkey state shape', () => {
     expect(loggedOut.expiry).toBeUndefined();
   });
 });
+
+describe('account reducer - purchase poll state', () => {
+  it('initial state has no purchase in flight', () => {
+    const state = accountReducer(undefined, { type: 'INIT' } as never);
+    expect(state.purchaseInFlight).toBe(false);
+  });
+
+  it('updatePurchaseInFlight(true) flips the flag on', () => {
+    const state = accountReducer(undefined, accountActions.updatePurchaseInFlight(true));
+    expect(state.purchaseInFlight).toBe(true);
+  });
+
+  it('updatePurchaseInFlight(false) flips the flag back off', () => {
+    const initial = accountReducer(undefined, accountActions.updatePurchaseInFlight(true));
+    const next = accountReducer(initial, accountActions.updatePurchaseInFlight(false));
+    expect(next.purchaseInFlight).toBe(false);
+  });
+});

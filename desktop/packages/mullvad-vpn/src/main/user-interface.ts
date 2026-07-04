@@ -28,6 +28,7 @@ const execAsync = promisify(exec);
 export interface UserInterfaceDelegate {
   dismissActiveNotifications(): void;
   updateAccountData(): Promise<void>;
+  checkPendingPurchases(): void;
   connectTunnel(): void;
   reconnectTunnel(): void;
   disconnectTunnel(source: DisconnectSource): void;
@@ -50,7 +51,6 @@ export default class UserInterface implements WindowControllerDelegate {
   private browsingFiles = false;
 
   private blurNavigationResetScheduler = new Scheduler();
-  private backgroundThrottleScheduler = new Scheduler();
 
   public constructor(
     private delegate: UserInterfaceDelegate,
@@ -298,6 +298,11 @@ export default class UserInterface implements WindowControllerDelegate {
         contextIsolation: true,
         spellcheck: false,
         devTools: process.env.NODE_ENV === 'development',
+        // The menubar window hides on blur; without this Chromium
+        // throttles the hidden renderer's timers to ~1/min, stalling
+        // the paywall views' refresh polls exactly while the user
+        // pays in the external browser.
+        backgroundThrottling: false,
       },
     };
 
@@ -388,6 +393,11 @@ export default class UserInterface implements WindowControllerDelegate {
         log.debug(`updateAccountData on focus failed: ${error}`);
       });
 
+      // Focus is the natural "user came back from paying in the
+      // browser" signal: give any pending app-initiated purchase an
+      // immediate redeem attempt (throttled internally).
+      this.delegate.checkPendingPurchases();
+
       this.delegate.getVersionInfo().catch((error) => {
         log.debug(`getVersionInfo on focus failed: ${error}`);
       });
@@ -399,15 +409,13 @@ export default class UserInterface implements WindowControllerDelegate {
 
     // Use hide instead of blur to prevent the navigation reset from happening when bluring an
     // unpinned window.
+    // No setBackgroundThrottling(false/true) dance here anymore: the
+    // window is created with backgroundThrottling disabled for good,
+    // and re-enabling it after this reset would silently undo that.
     this.windowController.window?.on('hide', () => {
       if (process.env.NODE_ENV !== 'development' || !this.navigationResetDisabled) {
         this.blurNavigationResetScheduler.schedule(() => {
-          this.windowController.webContents?.setBackgroundThrottling(false);
           IpcMainEventChannel.navigation.notifyReset?.();
-
-          this.backgroundThrottleScheduler.schedule(() => {
-            this.windowController.webContents?.setBackgroundThrottling(true);
-          }, 1_000);
         }, 120_000);
       }
     });

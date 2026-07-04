@@ -8,12 +8,11 @@ import { Button, Checkbox, Flex, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
-import { useExclusiveTask } from '../../../lib/hooks/use-exclusive-task';
 import { useEffectEvent } from '../../../lib/utility-hooks';
-import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../..';
 import { BackAction } from '../../keyboard-navigation';
 import { ModalAlert, ModalAlertType } from '../../Modal';
+import { ExternalPaymentButton } from '../../payment';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
 import { AccountExpiryRow, LabelledRow, WarrenPubKeyRow } from './components';
@@ -25,14 +24,7 @@ const StyledViewContainer = styled(View.Container)`
 
 export function AccountView() {
   const history = useHistory();
-  const isOffline = useSelector((state) => state.connection.isBlocked);
-  const { updateAccountData, logout, buyCredit } = useAppContext();
-
-  // Opens the checkout bound to a fresh purchase id; the credit is
-  // pulled and redeemed automatically by the poll (doc 35).
-  const [buyMore] = useExclusiveTask(async () => {
-    await buyCredit();
-  });
+  const { updateAccountData, logout } = useAppContext();
 
   // `updateAccountData` rejects when the API returns 404 (= no
   // active subscription yet on a freshly created Warren account)
@@ -115,14 +107,7 @@ export function AccountView() {
             </FlexColumn>
 
             <FlexColumn gap="medium">
-              <Button
-                variant="success"
-                disabled={isOffline}
-                onClick={buyMore}
-                aria-description={messages.pgettext('accessibility', 'Opens externally')}>
-                <Button.Text>{messages.gettext('Buy more credit')}</Button.Text>
-                <Button.Icon icon="external" />
-              </Button>
+              <ExternalPaymentButton buttonText={messages.gettext('Buy more credit')} />
 
               <RedeemVoucherButton />
 

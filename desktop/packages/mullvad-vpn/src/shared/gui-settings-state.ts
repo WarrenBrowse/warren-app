@@ -58,4 +58,12 @@ export interface IGuiSettingsState {
   // identity. Persisting the flag lets startup re-route to the
   // backup-pending state. Cleared once the backup is confirmed.
   backupPending?: boolean;
+
+  // App-initiated purchases (doc 35) awaiting their webhook voucher,
+  // as `${wpid}:${startedUnixMs}` entries. Persisted so a purchase
+  // paid after the app was closed is still redeemed on the next run
+  // (the server keeps the wpid mapping for 24h). Owned by the main
+  // process PurchaseFlow; the renderer never reads it. Optional so
+  // settings files written by older versions keep validating.
+  pendingPurchases?: Array<string>;
 }

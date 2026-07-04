@@ -49,6 +49,11 @@ interface IUpdateAccountExpiryAction {
   expired?: boolean;
 }
 
+interface IUpdatePurchaseInFlightAction {
+  type: 'UPDATE_PURCHASE_IN_FLIGHT';
+  purchaseInFlight: boolean;
+}
+
 export type AccountAction =
   | ILoggedInAction
   | ILoggedOutAction
@@ -59,7 +64,8 @@ export type AccountAction =
   | IAccountCreated
   | IAccountSetupFinished
   | IUpdatePubKeyHistoryAction
-  | IUpdateAccountExpiryAction;
+  | IUpdateAccountExpiryAction
+  | IUpdatePurchaseInFlightAction;
 
 function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   return {
@@ -127,6 +133,13 @@ function updateAccountExpiry(expiry?: string): IUpdateAccountExpiryAction {
   };
 }
 
+function updatePurchaseInFlight(purchaseInFlight: boolean): IUpdatePurchaseInFlightAction {
+  return {
+    type: 'UPDATE_PURCHASE_IN_FLIGHT',
+    purchaseInFlight,
+  };
+}
+
 export default {
   loggedIn,
   loggedOut,
@@ -138,4 +151,5 @@ export default {
   accountSetupFinished,
   updatePubKeyHistory,
   updateAccountExpiry,
+  updatePurchaseInFlight,
 };

@@ -1,4 +1,5 @@
 import { exec, execFile } from 'child_process';
+import { createHash } from 'crypto';
 import {
   app,
   clipboard,
@@ -41,6 +42,7 @@ import {
   SystemNotificationCategory,
 } from '../shared/notifications/notification';
 import { RoutePath } from '../shared/routes';
+import { shortenWarrenPubKey } from '../shared/utils';
 import Account, { AccountDelegate, LocaleProvider } from './account';
 import AppUpgrade from './app-upgrade';
 import { getOpenAtLogin } from './autostart';
@@ -81,6 +83,7 @@ import NotificationController, {
 import { isMacOs13OrNewer } from './platform-version';
 import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
+import PurchaseFlow from './purchase-flow';
 import ReconnectionBackoff from './reconnection-backoff';
 import Settings, { SettingsDelegate } from './settings';
 import TunnelStateHandler, {
@@ -157,6 +160,9 @@ class ApplicationMain
 
   private pendingForumLogin = new PendingForumLogin();
 
+  private purchaseFlow: PurchaseFlow;
+  private purchaseFlowResumed = false;
+
   private relayList?: IRelayListWithEndpointData;
 
   private currentApiAccessMethod?: AccessMethodSetting;
@@ -170,6 +176,31 @@ class ApplicationMain
     this.settings = new Settings(this, this.daemonRpc, this.version.currentVersion);
     this.account = new Account(this, this.daemonRpc);
     this.appUpgrade = new AppUpgrade(this.daemonRpc);
+    // The purchase URL is built here from the allowlisted constant,
+    // never from renderer input, so it can go straight to the shell.
+    this.purchaseFlow = new PurchaseFlow(
+      {
+        submitVoucher: (code) => this.account.submitVoucher(code),
+        openUrl: (url) => shell.openExternal(url),
+        notifyPurchasePolling: (polling) => IpcMainEventChannel.account.notifyPurchase?.(polling),
+        // Redemption credits whoever is logged in, so purchases are
+        // stamped with a non-reversible account tag (never the raw
+        // pubkey: gui_settings.json must stay identity-free).
+        accountTag: () => {
+          const pubkey = this.loggedInPubkey();
+          return pubkey
+            ? createHash('sha256').update(pubkey).digest('hex').slice(0, 16)
+            : undefined;
+        },
+      },
+      {
+        get: () => this.settings.gui.pendingPurchases,
+        set: (entries) => {
+          this.settings.gui.pendingPurchases = entries;
+        },
+      },
+      urls.purchase,
+    );
   }
 
   public run() {
@@ -998,6 +1029,7 @@ class ApplicationMain
       splitTunnelingApplications: this.splitTunnelingApplications,
       splitTunnelingSupported: this.splitTunnelingSupported,
       macOsScrollbarVisibility: this.macOsScrollbarVisibility,
+      purchaseInFlight: this.purchaseFlow.polling,
       changelog: this.changelog ?? [],
       navigationHistory: this.navigationHistory,
       currentApiAccessMethod: this.currentApiAccessMethod,
@@ -1085,6 +1117,14 @@ class ApplicationMain
         await shell.openExternal(url);
       }
     });
+    IpcMainEventChannel.account.handleBuyCredit(() => {
+      const pubkey = this.loggedInPubkey();
+      return this.purchaseFlow.start(pubkey ? shortenWarrenPubKey(pubkey) : undefined);
+    });
+    IpcMainEventChannel.account.handleCheckPendingPurchases(() =>
+      this.purchaseFlow.checkPendingNow(true),
+    );
+
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>
       Promise.resolve(path.basename(filePath)),
     );
@@ -1352,6 +1392,10 @@ class ApplicationMain
     this.notificationController.dismissActiveNotifications();
   public isUnpinnedWindow = () => this.settings.gui.unpinnedWindow;
   public updateAccountData = () => this.account.updateAccountData();
+
+  public checkPendingPurchases = () => {
+    void this.purchaseFlow.checkPendingNow();
+  };
   public getAccountData = () => this.account.accountData;
   public getVersionInfo = () => this.version.fetchLatestVersion();
 
@@ -1386,11 +1430,23 @@ class ApplicationMain
   // AccountDelegate
   public getLocale = () => this.locale;
   public getTunnelState = () => this.tunnelState.tunnelState;
+  private loggedInPubkey(): string | undefined {
+    const deviceState = this.account.deviceState;
+    return deviceState?.type === 'logged in' ? deviceState.warrenIdentity.pubkey : undefined;
+  }
+
   public onDeviceEvent = () => {
     this.userInterface?.updateTray(this.account.isLoggedIn(), this.tunnelState.tunnelState);
 
     if (this.isPerformingPostUpgrade) {
       void this.performPostUpgradeCheck();
+    }
+
+    // First login of this run: a purchase persisted by a previous run
+    // may have been paid while the app was closed. Redeem it now.
+    if (this.account.isLoggedIn() && !this.purchaseFlowResumed) {
+      this.purchaseFlowResumed = true;
+      this.purchaseFlow.resume();
     }
   };
   /* eslint-enable @typescript-eslint/member-ordering */
