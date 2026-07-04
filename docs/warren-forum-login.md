@@ -84,8 +84,31 @@ The daemon does the HTTP so the wallet key never leaves the daemon process
 - **Desktop (Electron): DONE.** Deep-link handler (`src/main/forum-login.ts`),
   `warren://` scheme registration, `SignForumLogin` daemon RPC, and the
   "Community forum" button (Support view) are shipped and verified at compile
-  level (tsc/eslint/vitest + daemon cargo check/clippy). A device click-through
-  remains.
+  level (tsc/eslint/vitest + daemon cargo check/clippy). Device click-through:
+  macOS verified 2026-07-03 (app running); Windows and Linux remain, in both
+  states (app running AND app closed, see cold start below).
+
+### Desktop delivery paths and cold start (all three OS)
+
+How the OS hands the link to the app, and what makes it robust:
+
+- **Scheme registration.** macOS: `CFBundleURLTypes` written by
+  electron-builder from the `protocols` config. Linux: the generated
+  `.desktop` carries `MimeType=x-scheme-handler/warren;` and `Exec=... %U`
+  (the launcher script forwards `"$@"` to `warren-gui`); distro
+  `desktop-file-utils` triggers rebuild `mimeinfo.cache` on install. Windows:
+  electron-builder NSIS does NOT register URL protocols; registration happens
+  at runtime (`app.setAsDefaultProtocolClient`, HKCU) on every app start, so
+  the scheme exists from the first launch onward.
+- **Delivery.** macOS: `open-url` event. Windows/Linux: argv of the second
+  instance (app running) or `process.argv` at startup (app closed).
+- **Cold start buffering.** A deep link that launches the app arrives before
+  the renderer exists, so the `forumLogin.request` IPC push would be lost.
+  The main process buffers the latest unanswered request
+  (`PendingForumLogin`, 10 min TTL matching the server session lifetime) and
+  the consent prompt fetches it on mount (`forumLogin.getPending`). The
+  buffer also survives a window close/reopen until the user approves or
+  cancels; only a transient submit error keeps it for retry.
 - **Android + iOS: BLOCKED on a prerequisite (2026-07-03 finding).** These
   apps have NOT yet integrated the Warren gRPC management service at all: no
   `getWarrenMnemonic`/`setWarrenApiUrl`/`WarrenStatus` calls exist, the

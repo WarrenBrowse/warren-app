@@ -33,11 +33,20 @@ export function ForumLoginPrompt() {
   const [notice, setNotice] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    return window.ipc.forumLogin.listenRequest((req) => {
+    const unsubscribe = window.ipc.forumLogin.listenRequest((req) => {
       setNotice(undefined);
       setBusy(false);
       setRequest(req);
     });
+    // A deep link that arrived before this component mounted (cold start,
+    // window reopen) was buffered in the main process; a live push racing
+    // this fetch wins via the functional update.
+    void window.ipc.forumLogin.getPending().then((req) => {
+      if (req) {
+        setRequest((current) => current ?? req);
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const close = useCallback(() => {

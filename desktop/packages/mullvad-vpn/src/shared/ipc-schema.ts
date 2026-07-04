@@ -156,6 +156,9 @@ export const ipcSchema = {
   // prompt and calls `approve` or `cancel`. Never a silent external login.
   forumLogin: {
     request: notifyRenderer<IForumLoginRequest>(),
+    // A deep link that cold-starts the app fires before the renderer exists;
+    // the prompt fetches the buffered request on mount instead.
+    getPending: invoke<void, IForumLoginRequest | undefined>(),
     approve: invoke<IForumLoginRequest, ForumLoginResult>(),
     cancel: invoke<IForumLoginRequest, void>(),
   },

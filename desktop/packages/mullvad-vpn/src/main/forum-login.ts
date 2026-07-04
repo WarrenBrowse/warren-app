@@ -84,6 +84,40 @@ export function findForumLoginArg(argv: readonly string[]): string | undefined {
   return argv.find((arg) => arg.startsWith(`${FORUM_DEEP_LINK_SCHEME}://forum-login`));
 }
 
+// The connect provider expires a login session 10 minutes after creating it;
+// a request buffered longer than that could only produce a doomed signature.
+const PENDING_MAX_AGE_MS = 10 * 60 * 1000;
+
+/**
+ * Holds the latest unanswered forum-login request so it survives the window
+ * not existing yet. A deep link that cold-starts the app arrives before the
+ * renderer has subscribed to the `forumLogin.request` push; the renderer
+ * fetches this buffer when the prompt mounts instead. The request stays
+ * buffered until approved/cancelled so reopening the window re-shows an
+ * unanswered prompt.
+ */
+export class PendingForumLogin {
+  private request?: IForumLoginRequest;
+  private receivedAt = 0;
+
+  public set(request: IForumLoginRequest, now: number): void {
+    this.request = request;
+    this.receivedAt = now;
+  }
+
+  public get(now: number): IForumLoginRequest | undefined {
+    if (this.request && now - this.receivedAt > PENDING_MAX_AGE_MS) {
+      this.clear();
+    }
+    return this.request;
+  }
+
+  public clear(): void {
+    this.request = undefined;
+    this.receivedAt = 0;
+  }
+}
+
 /**
  * Signs and submits an APPROVED forum login: ask the daemon to sign, then POST
  * to the connect host. Called only after the user approves the consent prompt.

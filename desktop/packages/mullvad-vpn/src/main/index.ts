@@ -58,6 +58,7 @@ import {
   findForumLoginArg,
   FORUM_DEEP_LINK_SCHEME,
   parseForumLoginUrl,
+  PendingForumLogin,
 } from './forum-login';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
@@ -153,6 +154,8 @@ class ApplicationMain
   private changelog?: IChangelog;
 
   private navigationHistory?: IHistoryObject;
+
+  private pendingForumLogin = new PendingForumLogin();
 
   private relayList?: IRelayListWithEndpointData;
 
@@ -328,6 +331,10 @@ class ApplicationMain
       log.warn('Ignoring malformed or non-allowlisted forum-login deep link');
       return;
     }
+    // Buffer first: on a cold start (the deep link launched the app) the
+    // renderer does not exist yet, so the push below goes nowhere and the
+    // prompt fetches the buffer when it mounts instead.
+    this.pendingForumLogin.set(request, Date.now());
     this.userInterface?.showWindow();
     IpcMainEventChannel.forumLogin.notifyRequest?.(request);
   }
@@ -1096,10 +1103,22 @@ class ApplicationMain
     });
 
     // Forum login: only an explicit user approval signs with the wallet key.
-    IpcMainEventChannel.forumLogin.handleApprove((request) =>
-      approveForumLogin(request, this.daemonRpc),
+    IpcMainEventChannel.forumLogin.handleGetPending(() =>
+      Promise.resolve(this.pendingForumLogin.get(Date.now())),
     );
-    IpcMainEventChannel.forumLogin.handleCancel((request) => cancelForumLogin(request));
+    IpcMainEventChannel.forumLogin.handleApprove(async (request) => {
+      const result = await approveForumLogin(request, this.daemonRpc);
+      // A transient failure keeps the request buffered so a window reload can
+      // retry; any settled outcome must not re-prompt.
+      if (result !== 'error') {
+        this.pendingForumLogin.clear();
+      }
+      return result;
+    });
+    IpcMainEventChannel.forumLogin.handleCancel((request) => {
+      this.pendingForumLogin.clear();
+      return cancelForumLogin(request);
+    });
 
     IpcMainEventChannel.customLists.handleCreateCustomList((name) => {
       return this.daemonRpc.createCustomList(name);
