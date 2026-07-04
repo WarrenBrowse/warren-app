@@ -33,8 +33,6 @@ const AppMainHeader = ({
   const loggedIn = useSelector((state) => state.account.status.type === 'ok');
   const size = sizeProp === 'basedOnLoginStatus' ? (loggedIn ? '2' : '1') : sizeProp;
 
-  const logoTone = variant && variant !== 'default' ? 'dark' : 'light';
-
   const logoState = getLogoStateByTunnelState(connectionStatus);
 
   return (
@@ -42,7 +40,11 @@ const AppMainHeader = ({
       <Flex justifyContent="space-between" alignItems="center">
         <InitialFocus>
           {logoVariant !== 'none' ? (
-            <Logo variant={logoVariant} tone={logoTone} state={logoState} />
+            // Always the light (cream) mark: the wordmark next to it is
+            // white on every header background, so a dark mark on the
+            // colored variants split the logo into two tones and made
+            // the brand look different from one screen to the next.
+            <Logo variant={logoVariant} state={logoState} />
           ) : (
             <div />
           )}
