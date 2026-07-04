@@ -5,7 +5,6 @@ import { Flex } from '../flex';
 export interface LogoProps {
   variant?: 'icon' | 'text' | 'both';
   size?: '1' | '2';
-  tone?: 'light' | 'dark';
   state?: LogoState;
 }
 
@@ -24,30 +23,27 @@ const textFontSizes = {
   '2': 48,
 };
 
-const markAssets: Record<LogoState, { light: string; dark: string }> = {
-  exposed: { dark: 'logo-rabbit', light: 'logo-rabbit-cream' },
-  hidden: { dark: 'logo-ears', light: 'logo-ears-cream' },
+// The dark rabbit IS the brand (poka, 2026-07-04): one mark per state,
+// identical on every screen and background. There is deliberately NO
+// tone/color knob on this component, so a per-screen variant of the
+// mark is impossible by construction; introducing one again requires
+// changing this API and shipping new art, both loud in review.
+const markAssets: Record<LogoState, string> = {
+  exposed: 'logo-rabbit',
+  hidden: 'logo-ears',
   // TODO: give the kill-switch "internet blocked" state its own mark (per the
   // art direction, an ocre rabbit with crossed-out eyes). Until that art exists
   // it falls back to the exposed face.
-  blocked: { dark: 'logo-rabbit', light: 'logo-rabbit-cream' },
+  blocked: 'logo-rabbit',
 };
 
 // All mark PNGs share this canvas and a bottom-anchored burrow, so every state
 // renders the exact same box (the hole stays put; only the rabbit ducks in/out).
 const MARK_ASPECT = 968 / 687;
 
-const Mark = ({
-  size,
-  tone,
-  state,
-}: {
-  size: number;
-  tone: 'light' | 'dark';
-  state: LogoState;
-}) => (
+const Mark = ({ size, state }: { size: number; state: LogoState }) => (
   <img
-    src={`assets/images/${markAssets[state][tone]}.png`}
+    src={`assets/images/${markAssets[state]}.png`}
     height={size}
     width={Math.round(size * MARK_ASPECT)}
     alt="Warren"
@@ -70,24 +66,16 @@ const Wordmark = ({ fontSize }: { fontSize: number }) => (
   </span>
 );
 
-// The dark mark IS the brand (poka, 2026-07-04): it stays dark on
-// every background, colored or grey, even next to the white wordmark.
-// The cream variant is kept only for future art-direction needs.
-export const Logo = ({
-  variant = 'icon',
-  size: sizeProp = '1',
-  tone = 'dark',
-  state = 'exposed',
-}: LogoProps) => {
+export const Logo = ({ variant = 'icon', size: sizeProp = '1', state = 'exposed' }: LogoProps) => {
   switch (variant) {
     case 'icon':
-      return <Mark size={iconSizes[sizeProp]} tone={tone} state={state} />;
+      return <Mark size={iconSizes[sizeProp]} state={state} />;
     case 'text':
       return <Wordmark fontSize={textFontSizes[sizeProp]} />;
     case 'both':
       return (
         <Flex alignItems="center" gap="tiny">
-          <Mark size={iconSizes[sizeProp]} tone={tone} state={state} />
+          <Mark size={iconSizes[sizeProp]} state={state} />
           <Wordmark fontSize={textFontSizes[sizeProp]} />
         </Flex>
       );
