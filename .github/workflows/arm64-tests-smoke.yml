@@ -1,0 +1,51 @@
+---
+# Temporary smoke: validate the Warren daemon test suite on the NATIVE arm64
+# Linux runner (macstudio-arm64) before switching the real gate off the slow
+# x86_64-Rosetta runner. workflow_dispatch only; delete once the gate is moved.
+name: arm64 tests smoke
+
+on:
+  workflow_dispatch:
+
+jobs:
+  daemon-arm64:
+    name: Daemon Warren crates (arm64 native)
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    timeout-minutes: 45
+    env:
+      # Native arm64: no Rosetta jobserver deadlock, so use real parallelism.
+      # Kept below the 16-core VM total to stay a good neighbour to the other
+      # runners sharing the Colima VM.
+      CARGO_BUILD_JOBS: "10"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          rustup-components: clippy rustfmt
+
+      - name: cargo fmt --check (Warren scope)
+        run: cargo fmt --all -- --check
+
+      - name: install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
+      - name: cargo test Warren scope (native, no Rosetta retries)
+        timeout-minutes: 30
+        run: |
+          cargo nextest run --locked --profile warren-ci \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli \
+            -p talpid-warren-tunnel -p talpid-core -p warren-jni
+          cargo check --locked -p warren-ios
+
+      - name: cargo clippy Warren scope
+        timeout-minutes: 20
+        run: |
+          for crate in mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core warren-jni; do
+            cargo clippy --no-deps --locked -p "$crate" -- -D warnings
+          done
