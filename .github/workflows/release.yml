@@ -687,6 +687,21 @@ jobs:
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
+      # The Rosetta runner does not ship the gh CLI; install it for the job the
+      # same way publish-release does, otherwise the download step below fails
+      # with "gh: command not found".
+      - name: Ensure gh CLI
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: |
+          if command -v gh >/dev/null 2>&1; then echo "gh present: $(gh --version | head -1)"; exit 0; fi
+          ver=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+                  | sed -nE 's/.*"tag_name": *"v?([0-9.]+)".*/\1/p' | head -1)
+          [ -n "$ver" ] || ver=2.62.0
+          curl -fsSL "https://github.com/cli/cli/releases/download/v${ver}/gh_${ver}_linux_amd64.tar.gz" -o /tmp/gh.tgz
+          tar -xzf /tmp/gh.tgz -C /tmp
+          echo "/tmp/gh_${ver}_linux_amd64/bin" >> "$GITHUB_PATH"
+          echo "installed gh ${ver}"
+
       - name: Download installers from the release
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
         env:
