@@ -384,9 +384,21 @@ function build {
 
     if [[ -n $specified_target ]]; then
         local cargo_output_dir="$CARGO_TARGET_DIR/$specified_target/$RUST_BUILD_MODE"
-        # To make it easier to package multiple targets, the binaries are
-        # located in a directory with the name of the target triple.
-        local destination_dir="dist-assets/$specified_target"
+        # pack-windows.cjs keys the app-binary directory (DIST_SUBDIR) to the
+        # target arch, not the build host: x64 binaries live at dist-assets/
+        # (DIST_SUBDIR=''), arm64 under the triple subdir. On an x86_64 host the
+        # x64 build is the "local" empty-target build and already lands at
+        # dist-assets/; when cross-building x64 from an aarch64 host it is an
+        # explicit target, so it must land at dist-assets/ too, otherwise
+        # electron-builder cannot find dist-assets/warren.exe.
+        local destination_dir
+        if [[ "$specified_target" == "x86_64-pc-windows-msvc" ]]; then
+            destination_dir="dist-assets"
+        else
+            # To make it easier to package multiple targets, the binaries are
+            # located in a directory with the name of the target triple.
+            destination_dir="dist-assets/$specified_target"
+        fi
         mkdir -p "$destination_dir"
     else
         local cargo_output_dir="$CARGO_TARGET_DIR/$RUST_BUILD_MODE"
