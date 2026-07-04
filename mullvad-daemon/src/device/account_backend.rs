@@ -287,8 +287,12 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                     .remove(wpid);
             }
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
-            let now_secs = u64::try_from(Utc::now().timestamp()).unwrap_or(0);
-            let time_added = resp.expires_at.saturating_sub(now_secs);
+            // The voucher's OWN granted duration, straight from the
+            // server. Deriving it from `expires_at - now` would report
+            // the account's total remaining time and over-report for a
+            // user who still had a balance ("1 year added" when the
+            // voucher only granted a month on top of 11 existing).
+            let time_added = resp.added_secs;
             Ok(VoucherSubmission {
                 new_expiry,
                 time_added,
@@ -591,7 +595,11 @@ mod tests {
         let mut server = mockito::Server::new_async().await;
         let wpid = "00112233445566778899aabbccddeeff";
         let checkout = format!("/v1/checkout/{wpid}/voucher");
-        let expires_at = now_secs() + 30 * 86_400;
+        // Returning user: the account already had ~11 months, so the new
+        // expiry is ~1 year out while THIS voucher granted only 30 days.
+        // The two numbers must not be conflated (that was the bug).
+        let voucher_added = 30 * 86_400;
+        let expires_at = now_secs() + 365 * 86_400;
         let pull_ok = server
             .mock("GET", checkout.as_str())
             .with_status(200)
@@ -607,7 +615,9 @@ mod tests {
         let register = server
             .mock("POST", "/v1/register")
             .with_status(201)
-            .with_body(format!(r#"{{"expires_at":{expires_at}}}"#))
+            .with_body(format!(
+                r#"{{"expires_at":{expires_at},"added_secs":{voucher_added}}}"#
+            ))
             .create_async()
             .await;
         let seed = [65u8; 32];
@@ -618,10 +628,10 @@ mod tests {
             .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
             .await
             .expect("wpid pull + redeem must succeed");
-        assert!(
-            submission.time_added >= 30 * 86_400 - 120,
-            "credited time must reflect the voucher duration, got {}",
-            submission.time_added
+        assert_eq!(
+            submission.time_added, voucher_added,
+            "time_added must be the voucher's granted duration, NOT the \
+             account's total remaining time (expires_at - now)"
         );
         pull_ok.assert_async().await;
         register.assert_async().await;
