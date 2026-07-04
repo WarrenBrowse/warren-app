@@ -13,7 +13,12 @@ import { colors, Radius, spacings } from '../../lib/foundations';
 
 const StyledGrid = styled.div<{ $revealed: boolean }>`
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* Each cell must hold the longest BIP39 word (8 chars) plus its
+     index without clipping, so the column count derives from the
+     container width instead of a fixed 3 columns: the narrow menubar
+     window gets 2 columns, wider containers get 3+. A fixed 1fr
+     3-column layout made long words spill past the card edge. */
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
   gap: ${spacings.small};
   padding: ${spacings.small};
   border: 1px solid ${colors.whiteAlpha20};
@@ -29,7 +34,8 @@ const StyledWord = styled.div`
   display: flex;
   align-items: baseline;
   gap: ${spacings.tiny};
-  padding: ${spacings.tiny};
+  min-width: 0;
+  padding: ${spacings.tiny} 0;
 `;
 
 const StyledIndex = styled.span`
