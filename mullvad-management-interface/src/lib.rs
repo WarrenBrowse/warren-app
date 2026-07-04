@@ -156,12 +156,14 @@ pub use client::MullvadProxyClient;
 
 pub type ServerJoinHandle = tokio::task::JoinHandle<()>;
 
-/// Default Unix group granted access to the management socket when no
-/// explicit override is configured. Members of this group (plus root)
-/// can drive the daemon and read wallet secrets, so the installer
-/// creates it and adds the desktop user. See `apply_socket_permissions`.
+/// How the freshly bound management socket will be exposed, decided from
+/// explicit operator configuration only (see `plan_socket_access`).
 #[cfg(all(unix, not(target_os = "android")))]
-const DEFAULT_SOCKET_GROUP: &str = "warren";
+#[derive(Debug)]
+enum SocketAccessPlan {
+    RestrictToGroup(nix::unistd::Gid),
+    WorldAccessible,
+}
 
 /// Peer credentials of a connected management client, captured from the
 /// Unix domain socket via `SO_PEERCRED`. Used to authorize wallet/secret
@@ -293,41 +295,63 @@ fn build_incoming(
     Ok((incoming, SocketSecurity::WorldAccessible))
 }
 
-/// Apply access control to the freshly-bound Unix socket. Restricts it to
-/// root + a Unix group when one is available; fails closed if an operator
-/// explicitly named a group that does not exist; otherwise falls back to
-/// world-accessible with a loud warning (so the desktop GUI still works on
-/// boxes where the group has not been provisioned).
+/// Decide how to expose the management socket. Only an explicitly
+/// configured group (env override) restricts it; the default is
+/// world-accessible with wallet/secret RPCs gated per-uid, matching
+/// upstream Mullvad's threat model (local users are trusted) and the
+/// wider industry practice. A group is deliberately never auto-detected:
+/// group membership only takes effect at the next login, so flipping on a
+/// pre-existing group would lock the freshly-installed GUI out of the
+/// socket until the user logs out and back in.
+#[cfg(all(unix, not(target_os = "android")))]
+fn plan_socket_access(
+    configured_group: Option<&str>,
+    resolve_group: impl FnOnce(&str) -> Result<Option<nix::unistd::Gid>, Error>,
+) -> Result<SocketAccessPlan, Error> {
+    match configured_group {
+        None => Ok(SocketAccessPlan::WorldAccessible),
+        Some(name) => match resolve_group(name)? {
+            Some(gid) => Ok(SocketAccessPlan::RestrictToGroup(gid)),
+            None => {
+                // Operator asked for a specific group that does not exist: fail
+                // closed rather than silently exposing the socket to all users.
+                log::error!(
+                    "Configured management socket group '{name}' does not exist; refusing to expose the management socket"
+                );
+                Err(Error::NoGidError)
+            }
+        },
+    }
+}
+
+/// Apply access control to the freshly-bound Unix socket per
+/// `plan_socket_access`.
 #[cfg(all(unix, not(target_os = "android")))]
 fn apply_socket_permissions(path: &std::path::Path) -> Result<SocketSecurity, Error> {
     let env_group = env::var("WARREN_MANAGEMENT_SOCKET_GROUP")
         .or_else(|_| env::var("MULLVAD_MANAGEMENT_SOCKET_GROUP"))
         .ok();
-    let explicit = env_group.is_some();
-    let group_name = env_group.as_deref().unwrap_or(DEFAULT_SOCKET_GROUP);
 
-    match nix::unistd::Group::from_name(group_name).map_err(Error::ObtainGidError)? {
-        Some(group) => {
-            nix::unistd::chown(path, None, Some(group.gid)).map_err(Error::SetGidError)?;
+    let plan = plan_socket_access(env_group.as_deref(), |name| {
+        Ok(nix::unistd::Group::from_name(name)
+            .map_err(Error::ObtainGidError)?
+            .map(|group| group.gid))
+    })?;
+
+    match plan {
+        SocketAccessPlan::RestrictToGroup(gid) => {
+            nix::unistd::chown(path, None, Some(gid)).map_err(Error::SetGidError)?;
             fs::set_permissions(path, PermissionsExt::from_mode(0o760))
                 .map_err(Error::PermissionsError)?;
             Ok(SocketSecurity::GroupRestricted)
         }
-        None if explicit => {
-            // Operator asked for a specific group that does not exist: fail
-            // closed rather than silently exposing the socket to all users.
-            log::error!(
-                "Configured management socket group '{group_name}' does not exist; refusing to expose the management socket"
-            );
-            Err(Error::NoGidError)
-        }
-        None => {
+        SocketAccessPlan::WorldAccessible => {
             fs::set_permissions(path, PermissionsExt::from_mode(0o766))
                 .map_err(Error::PermissionsError)?;
-            log::warn!(
-                "Management socket group '{group_name}' not found: the socket at {} is reachable by every local user. \
-                 Wallet/secret RPCs are restricted to the first local user that connects (trust-on-first-use). \
-                 For multi-user safety, create the '{DEFAULT_SOCKET_GROUP}' group and add your desktop user to it.",
+            log::info!(
+                "Management socket at {} is reachable by all local users; wallet/secret RPCs are \
+                 gated to the owning uid. Set WARREN_MANAGEMENT_SOCKET_GROUP to restrict the \
+                 socket to a dedicated Unix group instead.",
                 path.display()
             );
             Ok(SocketSecurity::WorldAccessible)
@@ -384,5 +408,39 @@ impl<T: AsyncRead + AsyncWrite + Unpin> AsyncWrite for StreamBox<T> {
 
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         Pin::new(&mut self.inner).poll_shutdown(cx)
+    }
+}
+
+#[cfg(all(test, unix, not(target_os = "android")))]
+mod socket_access_tests {
+    use super::*;
+
+    #[test]
+    fn no_configured_group_is_world_accessible_without_consulting_groups() {
+        // A stray `warren` group on the system must never flip the socket to
+        // group-restricted (locking the GUI out until the next login), so the
+        // group database must not even be consulted without explicit config.
+        let plan = plan_socket_access(None, |_| -> Result<Option<nix::unistd::Gid>, Error> {
+            panic!("group database consulted although no group was configured")
+        })
+        .unwrap();
+        assert!(matches!(plan, SocketAccessPlan::WorldAccessible));
+    }
+
+    #[test]
+    fn configured_group_restricts_to_that_gid() {
+        let plan =
+            plan_socket_access(Some("vpnadmins"), |_| Ok(Some(nix::unistd::Gid::from_raw(4242))))
+                .unwrap();
+        match plan {
+            SocketAccessPlan::RestrictToGroup(gid) => assert_eq!(gid.as_raw(), 4242),
+            SocketAccessPlan::WorldAccessible => panic!("explicit group was ignored"),
+        }
+    }
+
+    #[test]
+    fn configured_but_missing_group_fails_closed() {
+        let result = plan_socket_access(Some("vpnadmins"), |_| Ok(None));
+        assert!(matches!(result, Err(Error::NoGidError)));
     }
 }

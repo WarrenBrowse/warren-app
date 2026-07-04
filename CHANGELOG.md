@@ -22,6 +22,13 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Changed
+- Linux: make the app work immediately after install by exposing the daemon management socket to
+  local users again (upstream Mullvad's threat model and the wider industry practice) instead of
+  requiring membership in a `warren` group, which only took effect after logging out and back in.
+  Wallet/secret RPCs stay gated to the owning uid; operators can still set
+  WARREN_MANAGEMENT_SOCKET_GROUP to restrict the socket to a dedicated group (fails closed if the
+  group is missing).
 
 ## [1.3.7] - 2026-07-01
 ### Security

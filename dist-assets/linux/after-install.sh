@@ -3,23 +3,12 @@ set -eu
 
 chmod u+s "/usr/bin/warren-exclude"
 
-# Management socket access group. The daemon restricts the management
-# socket (which can return the wallet seed phrase) to root plus this
-# group; without it the socket falls back to world-accessible. Create the
-# group and add the human who triggered the install so the GUI can still
-# connect (group changes take effect on next login).
-if ! getent group warren >/dev/null 2>&1; then
-    groupadd --system warren || echo "Failed to create 'warren' group"
-fi
-install_user=""
-if [ -n "${PKEXEC_UID:-}" ]; then
-    install_user="$(id -un "${PKEXEC_UID}" 2>/dev/null || true)"
-fi
-install_user="${install_user:-${SUDO_USER:-}}"
-if [ -n "${install_user}" ] && [ "${install_user}" != "root" ]; then
-    usermod -aG warren "${install_user}" 2>/dev/null \
-        || echo "Could not add ${install_user} to 'warren' group; add it manually for GUI access"
-fi
+# No management-socket group is provisioned: the daemon exposes the socket to
+# local users and gates wallet/secret RPCs per-uid (matching upstream Mullvad's
+# threat model). Group membership only applies at the next login, so a
+# group-based install would leave the GUI unable to reach the daemon until the
+# user logs out and back in. Operators wanting kernel-enforced restriction can
+# create a group and set WARREN_MANAGEMENT_SOCKET_GROUP on the service.
 
 systemctl enable "/usr/lib/systemd/system/warren-daemon.service"
 systemctl start warren-daemon.service || echo "Failed to start warren-daemon.service"

@@ -8,23 +8,25 @@
 //!
 //! Policy:
 //! - **root** (uid 0) is always allowed (the daemon itself / admin).
-//! - When the socket is **group-restricted**, the kernel already enforced
-//!   that only authorized users (root + the `warren` group) could connect,
-//!   so any peer that got this far is allowed.
-//! - When the socket is **world-accessible** (no group provisioned), we
-//!   apply trust-on-first-use: the first non-root uid to touch a wallet
-//!   RPC becomes the owner, and a different uid is denied. This closes the
+//! - When the socket is **group-restricted** (operator opted in via
+//!   `WARREN_MANAGEMENT_SOCKET_GROUP`), the kernel already enforced that
+//!   only authorized users (root + that group) could connect, so any peer
+//!   that got this far is allowed.
+//! - When the socket is **world-accessible** (the default, matching
+//!   upstream Mullvad's local-users-are-trusted threat model), we apply
+//!   trust-on-first-use: the first non-root uid to touch a wallet RPC
+//!   becomes the owner, and a different uid is denied. This closes the
 //!   steady-state multi-user exfiltration (another user reading the
 //!   desktop user's seed) without breaking the single-user GUI.
 //! - **Unknown credentials** (`None`, e.g. the Windows named pipe) are
 //!   allowed; that channel is gated by its DACL + the desktop's
 //!   admin-ownership check instead.
 //!
-//! Residual (world-accessible mode only): on a multi-user box where the
-//! group was never created, a hostile process that races the GUI to be
-//! the very first wallet caller can claim ownership. The real fix is the
-//! `warren` group (provisioned by the installer), which makes the
-//! group-restricted branch authoritative and bypasses TOFU entirely.
+//! Residual (world-accessible mode only): on a multi-user box a hostile
+//! process that races the GUI to be the very first wallet caller can claim
+//! ownership. Hardened multi-user deployments should set
+//! `WARREN_MANAGEMENT_SOCKET_GROUP` to a dedicated group, which makes the
+//! kernel-enforced group branch authoritative and bypasses TOFU entirely.
 
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, Ordering};
