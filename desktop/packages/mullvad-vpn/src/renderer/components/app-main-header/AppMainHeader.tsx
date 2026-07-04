@@ -40,10 +40,6 @@ const AppMainHeader = ({
       <Flex justifyContent="space-between" alignItems="center">
         <InitialFocus>
           {logoVariant !== 'none' ? (
-            // Always the light (cream) mark: the wordmark next to it is
-            // white on every header background, so a dark mark on the
-            // colored variants split the logo into two tones and made
-            // the brand look different from one screen to the next.
             <Logo variant={logoVariant} state={logoState} />
           ) : (
             <div />

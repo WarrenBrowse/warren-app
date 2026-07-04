@@ -70,10 +70,13 @@ const Wordmark = ({ fontSize }: { fontSize: number }) => (
   </span>
 );
 
+// The dark mark IS the brand (poka, 2026-07-04): it stays dark on
+// every background, colored or grey, even next to the white wordmark.
+// The cream variant is kept only for future art-direction needs.
 export const Logo = ({
   variant = 'icon',
   size: sizeProp = '1',
-  tone = 'light',
+  tone = 'dark',
   state = 'exposed',
 }: LogoProps) => {
   switch (variant) {
