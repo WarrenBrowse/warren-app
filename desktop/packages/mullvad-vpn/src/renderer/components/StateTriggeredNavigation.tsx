@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import { RoutePath } from '../../shared/routes';
-import { useScheduler } from '../../shared/scheduler';
 import { getNavigationBase } from '../lib/functions/navigation-base';
 import { TransitionType, useHistory } from '../lib/history';
 import { useEffectEvent } from '../lib/utility-hooks';
@@ -15,8 +14,6 @@ export default function StateTriggeredNavigation() {
   const onboardingCompletedUnix = useSelector(
     (state) => state.settings.guiSettings.onboardingCompletedUnix,
   );
-
-  const delayScheduler = useScheduler();
 
   const prevPath = useRef<RoutePath>(
     getNavigationBase(connectedToDaemon, loginState, onboardingCompletedUnix),
@@ -71,20 +68,14 @@ export default function StateTriggeredNavigation() {
     }
 
     if (currentPath !== nextPath) {
-      delayScheduler.cancel();
-
-      const transition = getNavigationTransition(currentPath, nextPath);
-      const delay = getNavigationDelay(currentPath, nextPath);
-
-      const navigate = () => {
-        reset(nextPath, { transition });
-      };
-
-      if (delay) {
-        delayScheduler.schedule(navigate, delay);
-      } else {
-        navigate();
-      }
+      // Navigate on the same render cycle as the state change. The
+      // 1000ms login-to-main/expired delay inherited from Mullvad
+      // existed to show its "logged in" checkmark; Warren has no such
+      // interstitial, so any delay here is a window where the source
+      // view renders content for a state the user already left
+      // (observed as the welcome screen flashing between the backup
+      // step and the expired/congrats screen).
+      reset(nextPath, { transition: getNavigationTransition(currentPath, nextPath) });
     }
   });
 
@@ -98,15 +89,6 @@ export default function StateTriggeredNavigation() {
   }, [nextPath]);
 
   return null;
-}
-
-function getNavigationDelay(currentPath: RoutePath, nextPath: RoutePath): number | void {
-  if (
-    currentPath === RoutePath.login &&
-    (nextPath === RoutePath.main || nextPath === RoutePath.expired)
-  ) {
-    return 1000;
-  }
 }
 
 function getNavigationTransition(currentPath: RoutePath, nextPath: RoutePath) {

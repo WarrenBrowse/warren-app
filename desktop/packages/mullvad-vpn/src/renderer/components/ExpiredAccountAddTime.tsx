@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { useParams } from 'react-router';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
@@ -14,6 +14,7 @@ import { Button, Flex } from '../lib/components';
 import { FlexColumn } from '../lib/components/flex-column';
 import { View } from '../lib/components/view';
 import { colors } from '../lib/foundations';
+import { getNavigationBase } from '../lib/functions/navigation-base';
 import { TransitionType, useHistory } from '../lib/history';
 import { IconBadge } from '../lib/icon-badge';
 import { generateRoutePath } from '../lib/routeHelpers';
@@ -247,9 +248,14 @@ export function SetupFinished() {
 }
 
 function HeaderBar() {
-  const isNewAccount = useSelector(
+  const isNewAccountLive = useSelector(
     (state) => state.account.status.type === 'ok' && state.account.status.method === 'new_account',
   );
+  // Frozen at mount: finishing the setup flips the login method to
+  // "existing_account" while this view is still transitioning out,
+  // and a live value would snap the header to the connection-status
+  // color (red when disconnected) in front of the user.
+  const [isNewAccount] = useState(isNewAccountLive);
 
   return (
     <AppMainHeader
@@ -268,6 +274,10 @@ function useFinishedCallback() {
   const isNewAccount = useSelector(
     (state) => state.account.status.type === 'ok' && state.account.status.method === 'new_account',
   );
+  const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
+  const onboardingCompletedUnix = useSelector(
+    (state) => state.settings.guiSettings.onboardingCompletedUnix,
+  );
 
   const callback = useCallback(() => {
     // Changes login method from "new_account" to "existing_account"
@@ -275,8 +285,17 @@ function useFinishedCallback() {
       accountSetupFinished();
     }
 
-    history.reset(RoutePath.main, { transition: TransitionType.push });
-  }, [isNewAccount, accountSetupFinished, history]);
+    // Land directly where the state-driven base routes for the
+    // post-setup state (first launch: the onboarding wizard). A
+    // hardcoded reset(main) races the state-triggered redirect and
+    // flashes the main view before the wizard replaces it.
+    const destination = getNavigationBase(
+      connectedToDaemon,
+      { type: 'ok', method: 'existing_account' },
+      onboardingCompletedUnix,
+    );
+    history.reset(destination, { transition: TransitionType.push });
+  }, [isNewAccount, accountSetupFinished, history, connectedToDaemon, onboardingCompletedUnix]);
 
   return callback;
 }

@@ -10,6 +10,7 @@ import { FlexColumn } from '../../../lib/components/flex-column';
 import { Link } from '../../../lib/components/link';
 import { View } from '../../../lib/components/view';
 import { colors, Radius, spacings } from '../../../lib/foundations';
+import { LoginViewStep, loginViewStep } from '../../../lib/functions/login-step';
 import { formatHtml } from '../../../lib/html-formatter';
 import { IconBadge } from '../../../lib/icon-badge';
 import { useSelector } from '../../../redux/store';
@@ -61,13 +62,14 @@ export function LoginView() {
     tunnelState.state === 'error' ||
     (tunnelState.state === 'disconnected' && tunnelState.lockedDown);
 
-  const isBackup = status.type === 'backup-pending';
   const backupPubkey = status.type === 'backup-pending' ? status.pubkey : null;
   // The daemon is busy minting + logging into the new identity.
   const creating = status.type === 'logging in';
   const createFailed = status.type === 'failed' ? status.error.message : null;
 
   const [mode, setMode] = useState<Mode>('pick');
+  const step = loginViewStep(status.type, mode);
+  const isBackup = step === 'backup';
   const [mnemonic, setMnemonic] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [restoreInput, setRestoreInput] = useState('');
@@ -141,7 +143,9 @@ export function LoginView() {
     try {
       await setWarrenMnemonic(normalizeMnemonic(restoreInput));
       // On success the daemon logs in and emits a device event that
-      // navigates away from this screen.
+      // navigates away from this screen. `busy` stays true on purpose:
+      // releasing it before the device event lands re-enables the
+      // submit button for a moment on a screen the user is leaving.
     } catch (e) {
       log.error(`Failed to restore identity: ${(e as Error).message}`);
       setError(
@@ -150,12 +154,11 @@ export function LoginView() {
           'Invalid recovery phrase. Check the words and their order, then try again.',
         ),
       );
-    } finally {
       setBusy(false);
     }
   }, [restoreInput, setWarrenMnemonic]);
 
-  const title = formTitle(isBackup, mode, isPerformingPostUpgrade);
+  const title = formTitle(step, isPerformingPostUpgrade);
   const statusIcon = getStatusIcon(isPerformingPostUpgrade, createFailed !== null);
   // The create-failure error belongs to the welcome (pick) step only. In
   // restore/backup steps it would be stale, leftover text under the wrong
@@ -194,14 +197,22 @@ export function LoginView() {
                   </Text>
                 )}
 
-                {isBackup ? (
+                {step === 'loggedIn' ? (
+                  // Neutral transition state: the view lingers here for
+                  // the navigation transition after login settles, and
+                  // rendering any real step in that window flashes the
+                  // wrong screen before the destination appears.
+                  <Flex justifyContent="center">
+                    <Spinner size="big" />
+                  </Flex>
+                ) : step === 'backup' ? (
                   <BackupStep
                     mnemonic={mnemonic}
                     confirmed={confirmed}
                     onConfirmedChange={setConfirmed}
                     onContinue={onConfirmBackup}
                   />
-                ) : mode === 'restore' ? (
+                ) : step === 'restore' ? (
                   <RestoreStep
                     value={restoreInput}
                     onValueChange={setRestoreInput}
@@ -222,20 +233,25 @@ export function LoginView() {
   );
 }
 
-function formTitle(isBackup: boolean, mode: Mode, isPerformingPostUpgrade?: boolean): string {
+function formTitle(step: LoginViewStep, isPerformingPostUpgrade?: boolean): string {
   if (isPerformingPostUpgrade) {
     return messages.pgettext('login-view', 'Upgrading...');
   }
-  if (isBackup) {
-    // TRANSLATORS: Title of the step that shows the new recovery phrase.
-    return messages.pgettext('login-view', 'Back up your recovery phrase');
+  switch (step) {
+    case 'loggedIn':
+      // Transition state: no text, any title here belongs to a step
+      // the user already left.
+      return '';
+    case 'backup':
+      // TRANSLATORS: Title of the step that shows the new recovery phrase.
+      return messages.pgettext('login-view', 'Back up your recovery phrase');
+    case 'restore':
+      // TRANSLATORS: Title of the step where the user enters their recovery phrase.
+      return messages.pgettext('login-view', 'Restore your account');
+    case 'pick':
+      // TRANSLATORS: Title of the logged-out welcome screen.
+      return messages.pgettext('login-view', 'Welcome to Warren');
   }
-  if (mode === 'restore') {
-    // TRANSLATORS: Title of the step where the user enters their recovery phrase.
-    return messages.pgettext('login-view', 'Restore your account');
-  }
-  // TRANSLATORS: Title of the logged-out welcome screen.
-  return messages.pgettext('login-view', 'Welcome to Warren');
 }
 
 function getStatusIcon(isPerformingPostUpgrade: boolean | undefined, failed: boolean) {
