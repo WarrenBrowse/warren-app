@@ -218,13 +218,17 @@ jobs:
         run: ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
       - name: Build daemon + CLI (release)
         shell: bash
-        run: cargo build --release -p mullvad-daemon -p mullvad-cli
+        # The runner is Windows-on-ARM (macstudio-win); Warren ships x64 only, so
+        # build the x86_64 target explicitly instead of the host default (arm64),
+        # which would otherwise emit an aarch64 daemon into target/release.
+        run: cargo build --release --target x86_64-pc-windows-msvc -p mullvad-daemon -p mullvad-cli
       - name: Assemble bundle
         shell: bash
         run: |
           out="warren-headless-windows-x64"
+          rel="target/x86_64-pc-windows-msvc/release"
           mkdir -p "$out/bin" "$out/resources"
-          cp target/release/warren.exe target/release/warren-daemon.exe "$out/bin/"
+          cp "$rel/warren.exe" "$rel/warren-daemon.exe" "$out/bin/"
           cp dist-assets/ca.crt "$out/resources/"
           cp -R dist-assets/maybenot_machines "$out/resources/" 2>/dev/null || true
           cp warren-cli/windows/install-windows.ps1 "$out/"
