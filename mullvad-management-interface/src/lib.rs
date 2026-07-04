@@ -429,9 +429,10 @@ mod socket_access_tests {
 
     #[test]
     fn configured_group_restricts_to_that_gid() {
-        let plan =
-            plan_socket_access(Some("vpnadmins"), |_| Ok(Some(nix::unistd::Gid::from_raw(4242))))
-                .unwrap();
+        let plan = plan_socket_access(Some("vpnadmins"), |_| {
+            Ok(Some(nix::unistd::Gid::from_raw(4242)))
+        })
+        .unwrap();
         match plan {
             SocketAccessPlan::RestrictToGroup(gid) => assert_eq!(gid.as_raw(), 4242),
             SocketAccessPlan::WorldAccessible => panic!("explicit group was ignored"),
