@@ -17,27 +17,21 @@ on:
 jobs:
   daemon-warren-tests:
     name: Daemon Warren crates (cargo test)
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    # Hard ceiling: a hung test must fail the job in minutes, never sit at the
-    # GitHub 6h max and block the serialized runner for everyone. A healthy run
-    # is 6-11 min (the runner volume persists the cargo target cache), so 45 is
-    # a generous backstop; the real anti-hang guard is the per-invocation
-    # `timeout` in each cargo step below (a wedged compile is killed and retried
-    # long before this ceiling, so the job self-heals instead of burning it).
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    # Backstop so a wedged test/compile fails in minutes instead of sitting at
+    # the GitHub 6h max and blocking a fleet runner. A healthy native-arm64 run
+    # is ~3-4 min (the runner volume persists the cargo target cache), so 45 is
+    # a generous ceiling.
     timeout-minutes: 45
     env:
-      # Cap build parallelism. Under x86_64-Rosetta emulation the GNU jobserver
-      # plus emulated rustc threads can DEADLOCK at high -j (a crashed rustc
-      # never returns its jobserver token -> cargo waits on a free token
-      # forever, 0% CPU). Fewer concurrent rustc = far lower deadlock odds, and
-      # a healthy build stays well under 15 min on the 16-core VM. Paired with
-      # the container reaper (docker --init) and the per-invocation `timeout`
-      # retry, this makes the class of hang that wedged the runner impossible to
-      # sit forever.
+      # Cap build parallelism so several fleet jobs can share the 16-core Colima
+      # VM without thrashing (multiple macstudio-arm64 runners live on it).
+      # Native arm64 has none of the x86-Rosetta jobserver-deadlock failure modes
+      # the old runner needed retry guards for, so this is purely neighbourliness.
       CARGO_BUILD_JOBS: "6"
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - uses: ./.github/actions/mullvad-build-env
         with:
@@ -62,45 +56,17 @@ jobs:
         # Targets the Warren-specific crates. We avoid --workspace so we do not
         # run Android / iOS / Windows specific tests on Linux (already covered by
         # upstream daemon.yml). Run via nextest with the `warren-ci` profile,
-        # whose slow-timeout TERMINATES a test that blocks > 60s and names it:
-        # some upstream daemon tests hang under the x86_64-Rosetta sandbox (they
-        # pass in seconds natively). cargo check warren-ios separately (it is
-        # cfg(target_os = "ios"), compile-only on Linux).
+        # whose slow-timeout TERMINATES a test that blocks > 60s and names it.
+        # cargo check warren-ios separately (cfg(target_os = "ios"), compile-only
+        # on Linux). Native arm64: no Rosetta crash/deadlock retry needed; the
+        # step timeout is the only backstop.
         timeout-minutes: 30
         run: |
-          # retry_flaky retries on the two Rosetta-emulation failure modes that
-          # are NOT real errors:
-          #   1. CRASH: rustc/cc1 intermittently SIGSEGVs on a random crate.
-          #   2. HANG: the GNU jobserver deadlocks (a crashed rustc never returns
-          #      its token -> cargo waits forever at 0% CPU). nextest's own
-          #      `slow-timeout` only covers test EXECUTION, never the build, so
-          #      wrap each invocation in `timeout`: a wedged compile is SIGKILLed
-          #      (rc 124/137) and retried on a fresh jobserver instead of sitting
-          #      until the job ceiling and blocking the runner for everyone.
-          # A real compile error still fails immediately on the first pass.
-          # 18m is ~2x a healthy full build, so it never fires on a slow-but-live
-          # build; -k gives a live process a grace SIGTERM before the SIGKILL.
-          retry_flaky() {
-            for attempt in 1 2 3; do
-              if timeout -k 60s 18m "$@" 2>&1 | tee /tmp/flaky-out.txt; then return 0; fi
-              rc=${PIPESTATUS[0]}
-              if [ "$rc" = 124 ] || [ "$rc" = 137 ]; then
-                echo "::warning::cargo hung under Rosetta and was killed (attempt $attempt/3); retrying"
-                continue
-              fi
-              if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction" /tmp/flaky-out.txt; then
-                echo "::warning::rustc crashed under Rosetta (attempt $attempt/3); retrying"
-                continue
-              fi
-              return "$rc"
-            done
-            return 1
-          }
-          retry_flaky cargo nextest run --locked --profile warren-ci \
+          cargo nextest run --locked --profile warren-ci \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli \
             -p talpid-warren-tunnel -p talpid-core -p warren-jni
-          retry_flaky cargo check --locked -p warren-ios
+          cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope
         # --no-deps: lint only these Warren crates, not their entire upstream
@@ -109,32 +75,13 @@ jobs:
         # that are not part of the Warren surface and carry their own upstream CI.
         timeout-minutes: 20
         run: |
-          # clippy-driver crashes AND the jobserver can hang under Rosetta the
-          # same way rustc does (see the test step); kill a wedged clippy with
-          # `timeout` and retry on crash/hang, fail real lints immediately.
-          retry_flaky() {
-            for attempt in 1 2 3; do
-              if timeout -k 60s 12m "$@" 2>&1 | tee /tmp/flaky-clippy.txt; then return 0; fi
-              rc=${PIPESTATUS[0]}
-              if [ "$rc" = 124 ] || [ "$rc" = 137 ]; then
-                echo "::warning::clippy hung under Rosetta and was killed (attempt $attempt/3); retrying"
-                continue
-              fi
-              if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction" /tmp/flaky-clippy.txt; then
-                echo "::warning::clippy-driver crashed under Rosetta (attempt $attempt/3); retrying"
-                continue
-              fi
-              return "$rc"
-            done
-            return 1
-          }
           for crate in mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core warren-jni; do
-            retry_flaky cargo clippy --no-deps --locked -p "$crate" -- -D warnings
+            cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
     # Backstop so a wedged npm/tsc/eslint can never sit on the shared runner
     # until the GitHub 6h max. A healthy run is ~2 min.
     timeout-minutes: 20
@@ -143,10 +90,10 @@ jobs:
         working-directory: desktop/packages/mullvad-vpn
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: desktop/package.json
           cache: 'npm'
