@@ -352,14 +352,19 @@ fn map_voucher_register_error(err: warren_api::ClientError) -> rest::Error {
             // `Error::InvalidVoucher` / `Error::UsedVoucher` variant.
             let mullvad_code: Option<&'static str> = if body.contains("voucher unknown or invalid")
                 || body.contains("voucher was cancelled")
+                || body.contains("voucher expired")
             {
-                // Cancelled vouchers are surfaced as invalid: the
-                // user cannot meaningfully distinguish "wrong code"
-                // from "code revoked by the admin" and the recovery
-                // action (contact the admin for a fresh voucher)
-                // is the same.
+                // Cancelled or expired vouchers are surfaced as invalid:
+                // the user cannot meaningfully distinguish "wrong code"
+                // from "code revoked/past its deadline" and the recovery
+                // action (obtain a fresh voucher) is the same.
                 Some(mullvad_api::INVALID_VOUCHER)
-            } else if body.contains("voucher already redeemed") {
+            } else if body.contains("voucher already redeemed")
+                || body.contains("voucher redemption limit reached")
+            {
+                // Single-use already redeemed, or a multi-account voucher
+                // at its quota: in both cases the code is spent and can
+                // no longer be redeemed ("already used").
                 Some(mullvad_api::VOUCHER_USED)
             } else {
                 None
@@ -802,6 +807,39 @@ mod tests {
                 assert_eq!(msg, mullvad_api::VOUCHER_USED);
             }
             other => panic!("expected ApiError(409, VOUCHER_USED), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_exhausted_409_maps_voucher_used() {
+        // A multi-account voucher whose redemption quota is reached can
+        // no longer be redeemed: the user must see "already used", not a
+        // generic "an error occurred".
+        let err = super::map_voucher_register_error(server_status(
+            409,
+            r#"{"error":"voucher redemption limit reached"}"#,
+        ));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409);
+                assert_eq!(msg, mullvad_api::VOUCHER_USED);
+            }
+            other => panic!("expected ApiError(409, VOUCHER_USED), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn map_voucher_register_error_expired_410_maps_invalid_voucher() {
+        // A voucher past its deadline is no longer valid; group it with
+        // cancelled (the recovery is the same: obtain a fresh voucher).
+        let err =
+            super::map_voucher_register_error(server_status(410, r#"{"error":"voucher expired"}"#));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 410);
+                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+            }
+            other => panic!("expected ApiError(410, INVALID_VOUCHER), got {other:?}"),
         }
     }
 
