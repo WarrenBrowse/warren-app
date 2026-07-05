@@ -44,5 +44,9 @@ export function resolveScenery(phase: ConnectionPhase, exitCountry: string | und
       return { image: resolveCountryImage(exitCountry), showBula: true, blurred: true };
     case 'protected':
       return { image: resolveCountryImage(exitCountry), showBula: false, blurred: false };
+    case 'blocked':
+      // Kill switch: nothing leaks, so the rabbit is tucked in the burrow, but
+      // there is no tunnel, so the scene stays the neutral plain (no city).
+      return { image: PLAINE_IMAGE, showBula: false, blurred: false };
   }
 }

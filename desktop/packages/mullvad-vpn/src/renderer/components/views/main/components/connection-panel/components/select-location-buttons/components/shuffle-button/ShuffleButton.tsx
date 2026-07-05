@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import styled from 'styled-components';
 
 import { messages } from '../../../../../../../../../../shared/gettext';
@@ -17,10 +17,15 @@ export function ShuffleButton(props: ButtonProps) {
   const { relayLocations, selectExitRelayLocation } = useRelayLocations();
   const { connectTunnel } = useAppContext();
 
+  const available = useMemo(
+    () =>
+      relayLocations.filter((country) =>
+        country.cities.some((city) => city.relays.some((relay) => relay.active)),
+      ),
+    [relayLocations],
+  );
+
   const onShuffle = useCallback(async () => {
-    const available = relayLocations.filter((country) =>
-      country.cities.some((city) => city.relays.some((relay) => relay.active)),
-    );
     if (available.length === 0) {
       return;
     }
@@ -32,11 +37,14 @@ export function ShuffleButton(props: ButtonProps) {
       const error = e as Error;
       log.error(`Failed to shuffle the exit location: ${error.message}`);
     }
-  }, [relayLocations, selectExitRelayLocation, connectTunnel]);
+  }, [available, selectExitRelayLocation, connectTunnel]);
 
   return (
     <StyledShuffleButton
       onClick={onShuffle}
+      // Disabled until the relay list has an active exit, so a click never
+      // silently no-ops before the list loads.
+      disabled={available.length === 0}
       width="fit"
       // TRANSLATORS: Accessibility label for the button that connects to a random exit.
       aria-label={messages.pgettext('tunnel-control', 'Random location')}

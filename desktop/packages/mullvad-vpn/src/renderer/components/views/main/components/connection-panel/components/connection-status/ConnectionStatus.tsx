@@ -7,7 +7,7 @@ import {
   getConnectionPhase,
   getPhaseAccentColorName,
 } from '../../../../../../../lib/connection-phase';
-import { Colors, colors } from '../../../../../../../lib/foundations';
+import { colors } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { largeText, smallText } from '../../../../../../common-styles';
 
@@ -36,11 +36,12 @@ const StyledSubtitle = styled.span(smallText, {
 export function ConnectionStatus() {
   const tunnelState = useSelector((state) => state.connection.status);
 
-  const phase = getConnectionPhase(tunnelState.state);
-  const colorName = getStatusColorName(tunnelState);
-  // An open eye ("show") reads as exposed/visible; the crossed-out eye ("hide")
-  // reads as protected/hidden in the burrow.
-  const eyeIcon = phase === 'protected' ? 'hide' : 'show';
+  const phase = getConnectionPhase(tunnelState);
+  const colorName = getPhaseAccentColorName(phase);
+  // A crossed-out eye ("hide") reads as protected/hidden in the burrow (secured
+  // or blocked); an open eye ("show") reads as exposed/visible.
+  const eyeIcon = phase === 'protected' || phase === 'blocked' ? 'hide' : 'show';
+  const subtitle = getConnectionStatusSubtitle(tunnelState);
 
   return (
     <StyledRow role="status">
@@ -49,19 +50,10 @@ export function ConnectionStatus() {
         <StyledTitle $color={colors[colorName]}>
           {getConnectionStatusLabelText(tunnelState)}
         </StyledTitle>
-        <StyledSubtitle>{getConnectionStatusSubtitle(tunnelState)}</StyledSubtitle>
+        {subtitle ? <StyledSubtitle>{subtitle}</StyledSubtitle> : null}
       </StyledTextColumn>
     </StyledRow>
   );
-}
-
-function getStatusColorName(tunnelState: TunnelState): Colors {
-  // A locked-down disconnected state is a deliberate block, not raw exposure, so
-  // it stays neutral rather than shouting red.
-  if (tunnelState.state === 'disconnected' && tunnelState.lockedDown) {
-    return 'white';
-  }
-  return getPhaseAccentColorName(getConnectionPhase(tunnelState.state));
 }
 
 function getConnectionStatusLabelText(tunnelState: TunnelState) {
@@ -71,13 +63,16 @@ function getConnectionStatusLabelText(tunnelState: TunnelState) {
       return messages.pgettext('tunnel-control', 'Connection established');
     case 'connecting':
     case 'disconnecting':
-    case 'disconnected':
       // TRANSLATORS: Bold status title shown when traffic is not protected.
       return messages.pgettext('tunnel-control', 'You are visible');
+    case 'disconnected':
+      return tunnelState.lockedDown
+        ? messages.gettext('BLOCKED CONNECTION')
+        : messages.pgettext('tunnel-control', 'You are visible');
     case 'error':
       return tunnelState.details.blockingError
         ? messages.gettext('FAILED TO SECURE CONNECTION')
-        : messages.gettext('BLOCKED CONNECTION');
+        : messages.pgettext('tunnel-control', 'Connection established');
   }
 }
 
@@ -87,13 +82,19 @@ function getConnectionStatusSubtitle(tunnelState: TunnelState) {
       // TRANSLATORS: Secondary line shown below the status title when protected.
       return messages.pgettext('tunnel-control', 'You are protected');
     case 'connecting':
-    case 'disconnecting':
       // TRANSLATORS: Secondary line shown while the encrypted tunnel is coming up.
       return messages.pgettext('tunnel-control', 'Encrypting your connection');
+    case 'disconnecting':
+      // TRANSLATORS: Secondary line shown while the tunnel is being torn down.
+      return messages.pgettext('tunnel-control', 'Disconnecting...');
     case 'disconnected':
-      // TRANSLATORS: Secondary line shown when traffic is not encrypted.
-      return messages.pgettext('tunnel-control', 'Your connection is not encrypted');
+      return tunnelState.lockedDown
+        ? ''
+        : // TRANSLATORS: Secondary line shown when traffic is not encrypted.
+          messages.pgettext('tunnel-control', 'Your connection is not encrypted');
     case 'error':
-      return '';
+      return tunnelState.details.blockingError
+        ? ''
+        : messages.pgettext('tunnel-control', 'You are protected');
   }
 }

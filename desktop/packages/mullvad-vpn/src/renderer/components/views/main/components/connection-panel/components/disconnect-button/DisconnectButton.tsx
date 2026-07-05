@@ -19,16 +19,20 @@ export function DisconnectButton() {
     }
   }, [disconnectTunnel]);
 
+  // This button also renders in the error/blocked state (the kill switch is on),
+  // where the action is still "turn it off" = disconnect, not "connecting".
+  // Colour tracks the same phase as the rest of the screen: green when up, orange
+  // while coming up, neutral when blocked.
+  const connecting = tunnelState === 'connecting';
   const connected = tunnelState === 'connected';
+  const variant = connected ? 'success' : connecting ? 'warning' : 'primary';
 
-  // Green only once actually protected; orange while the tunnel is still coming
-  // up, so the button colour tracks the same phase as the rest of the screen.
   return (
-    <Button variant={connected ? 'success' : 'warning'} onClick={onDisconnect}>
+    <Button variant={variant} onClick={onDisconnect}>
       <Button.Text>
-        {connected
-          ? messages.gettext('Disconnect')
-          : messages.pgettext('tunnel-control', 'Connecting...')}
+        {connecting
+          ? messages.pgettext('tunnel-control', 'Connecting...')
+          : messages.gettext('Disconnect')}
       </Button.Text>
     </Button>
   );

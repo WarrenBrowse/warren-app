@@ -5,30 +5,47 @@ import {
   resolveCountryImage,
   resolveScenery,
 } from '../../src/renderer/components/CountryBackdrop/scenery';
-import { getConnectionPhase, getPhaseAccentColor } from '../../src/renderer/lib/connection-phase';
-import { colors } from '../../src/renderer/lib/foundations';
+import {
+  getConnectionPhase,
+  getPhaseAccentColorName,
+} from '../../src/renderer/lib/connection-phase';
+import { TunnelState } from '../../src/shared/daemon-rpc-types';
+
+const connected = { state: 'connected', details: {} } as unknown as TunnelState;
+const connecting = { state: 'connecting' } as TunnelState;
+const disconnecting = { state: 'disconnecting', details: 'nothing' } as TunnelState;
+const disconnectedOpen = { state: 'disconnected', lockedDown: false } as TunnelState;
+const disconnectedLocked = { state: 'disconnected', lockedDown: true } as TunnelState;
+const errorBlocking = {
+  state: 'error',
+  details: { blockingError: {} },
+} as unknown as TunnelState;
+const errorNonBlocking = { state: 'error', details: {} } as unknown as TunnelState;
 
 describe('getConnectionPhase', () => {
-  it('maps connected to protected', () => {
-    expect(getConnectionPhase('connected')).toBe('protected');
+  it('connected is protected, (dis)connecting is transitional', () => {
+    expect(getConnectionPhase(connected)).toBe('protected');
+    expect(getConnectionPhase(connecting)).toBe('connecting');
+    expect(getConnectionPhase(disconnecting)).toBe('connecting');
   });
 
-  it('maps connecting and disconnecting to the transitional phase', () => {
-    expect(getConnectionPhase('connecting')).toBe('connecting');
-    expect(getConnectionPhase('disconnecting')).toBe('connecting');
+  it('disconnected is exposed, but locked-down is blocked (kill switch)', () => {
+    expect(getConnectionPhase(disconnectedOpen)).toBe('exposed');
+    expect(getConnectionPhase(disconnectedLocked)).toBe('blocked');
   });
 
-  it('maps disconnected and error to exposed', () => {
-    expect(getConnectionPhase('disconnected')).toBe('exposed');
-    expect(getConnectionPhase('error')).toBe('exposed');
+  it('a blocking error is blocked; a non-blocking error keeps the tunnel protected', () => {
+    expect(getConnectionPhase(errorBlocking)).toBe('blocked');
+    expect(getConnectionPhase(errorNonBlocking)).toBe('protected');
   });
 });
 
-describe('getPhaseAccentColor', () => {
-  it('uses green when protected, orange when connecting, red when exposed', () => {
-    expect(getPhaseAccentColor('protected')).toBe(colors.green);
-    expect(getPhaseAccentColor('connecting')).toBe(colors.orange);
-    expect(getPhaseAccentColor('exposed')).toBe(colors.red);
+describe('getPhaseAccentColorName', () => {
+  it('maps each phase to its accent token, blocked staying neutral', () => {
+    expect(getPhaseAccentColorName('protected')).toBe('green');
+    expect(getPhaseAccentColorName('connecting')).toBe('orange');
+    expect(getPhaseAccentColorName('exposed')).toBe('red');
+    expect(getPhaseAccentColorName('blocked')).toBe('white');
   });
 });
 
@@ -47,7 +64,7 @@ describe('resolveCountryImage', () => {
 });
 
 describe('resolveScenery', () => {
-  it('exposed: plain, rabbit shown, no blur, regardless of country', () => {
+  it('exposed: plain, rabbit shown, no blur', () => {
     expect(resolveScenery('exposed', 'Germany')).toEqual({
       image: PLAINE_IMAGE,
       showBula: true,
@@ -69,8 +86,8 @@ describe('resolveScenery', () => {
     expect(scenery.blurred).toBe(false);
   });
 
-  it('protected without art still hides the rabbit on the plain', () => {
-    expect(resolveScenery('protected', 'France')).toEqual({
+  it('blocked: neutral plain, rabbit hidden (safe), sharp', () => {
+    expect(resolveScenery('blocked', 'Germany')).toEqual({
       image: PLAINE_IMAGE,
       showBula: false,
       blurred: false,

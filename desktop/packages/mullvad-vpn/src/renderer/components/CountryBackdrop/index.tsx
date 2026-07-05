@@ -77,21 +77,48 @@ const AccentWash = styled.div<{ $color: string; $animate: boolean }>`
   transition: ${(props) => (props.$animate ? 'background 700ms ease' : 'none')};
 `;
 
+// Country the app is connecting to / connected to. Prefer the live geoip exit
+// country; while it resolves during connecting, fall back to the selected relay
+// constraint so the target city shows from the first frame instead of a blurred
+// generic plain.
+function useTargetCountry(): string | undefined {
+  const status = useSelector((state) => state.connection.status);
+  const relaySettings = useSelector((state) => state.settings.relaySettings);
+  const relayLocations = useSelector((state) => state.settings.relayLocations);
+
+  const liveCountry =
+    status.state === 'connected' || status.state === 'connecting'
+      ? status.details?.location?.country
+      : undefined;
+  if (liveCountry) {
+    return liveCountry;
+  }
+
+  if (status.state !== 'connecting') {
+    return undefined;
+  }
+  if ('normal' in relaySettings) {
+    const location = relaySettings.normal.location;
+    if (location !== 'any' && 'country' in location && location.country) {
+      // relayLocations names are the English relay-list country names, which is
+      // exactly what the scenery lookup keys on.
+      return relayLocations.find((country) => country.code === location.country)?.name;
+    }
+  }
+  return undefined;
+}
+
 export default function CountryBackdrop() {
   const status = useSelector((state) => state.connection.status);
+  const targetCountry = useTargetCountry();
 
   // e2e runs against deterministic snapshots; skip the decorative scene.
   if (window.env.e2e) {
     return null;
   }
 
-  const phase = getConnectionPhase(status.state);
-  const exitCountry =
-    status.state === 'connected' || status.state === 'connecting'
-      ? status.details?.location?.country
-      : undefined;
-
-  const scenery = resolveScenery(phase, exitCountry);
+  const phase = getConnectionPhase(status);
+  const scenery = resolveScenery(phase, targetCountry);
   const animate = !getReduceMotion();
   const accent = getPhaseAccentColor(phase);
 
@@ -115,24 +142,20 @@ interface CrossfadeLandscapeProps {
 // one (fading in, front). Nothing to prune because the front eventually fully
 // covers the back.
 function CrossfadeLandscape({ src, animate, blurred }: CrossfadeLandscapeProps) {
-  const [frontSrc, setFrontSrc] = useState(src);
-  const [backSrc, setBackSrc] = useState(src);
-  const fadeKey = useRef(0);
+  const [layers, setLayers] = useState({ front: src, back: src, key: 0 });
+  const prevSrc = useRef(src);
 
   useEffect(() => {
-    setFrontSrc((prevFront) => {
-      if (prevFront !== src) {
-        setBackSrc(prevFront);
-        fadeKey.current += 1;
-      }
-      return src;
-    });
+    if (prevSrc.current !== src) {
+      setLayers((current) => ({ front: src, back: current.front, key: current.key + 1 }));
+      prevSrc.current = src;
+    }
   }, [src]);
 
   return (
     <Scene $blurred={blurred} $animate={animate}>
-      <FullBleed src={backSrc} alt="" aria-hidden />
-      <FrontLandscape key={fadeKey.current} src={frontSrc} alt="" aria-hidden $animate={animate} />
+      <FullBleed src={layers.back} alt="" aria-hidden />
+      <FrontLandscape key={layers.key} src={layers.front} alt="" aria-hidden $animate={animate} />
     </Scene>
   );
 }
