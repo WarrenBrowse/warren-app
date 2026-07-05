@@ -1,5 +1,5 @@
 import { TunnelState } from '../../shared/daemon-rpc-types';
-import { colors } from './foundations';
+import { Colors, colors } from './foundations';
 
 // The connect screen collapses the five daemon tunnel states into three visual
 // phases, each with its own accent colour. This is the single source of truth so
@@ -21,12 +21,18 @@ export function getConnectionPhase(state: TunnelState['state']): ConnectionPhase
 }
 
 export function getPhaseAccentColor(phase: ConnectionPhase): string {
+  return colors[getPhaseAccentColorName(phase)];
+}
+
+// Same accent as a colour-token name, for APIs (like <Icon color>) that take a
+// token key rather than a resolved value.
+export function getPhaseAccentColorName(phase: ConnectionPhase): Colors {
   switch (phase) {
     case 'protected':
-      return colors.green;
+      return 'green';
     case 'connecting':
-      return colors.orange;
+      return 'orange';
     case 'exposed':
-      return colors.red;
+      return 'red';
   }
 }

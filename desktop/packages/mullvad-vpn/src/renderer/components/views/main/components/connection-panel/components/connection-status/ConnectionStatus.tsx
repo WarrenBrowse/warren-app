@@ -2,12 +2,14 @@ import styled from 'styled-components';
 
 import { TunnelState } from '../../../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../../../shared/gettext';
-import { getConnectionPhase, getPhaseAccentColor } from '../../../../../../../lib/connection-phase';
-import { colors } from '../../../../../../../lib/foundations';
-import { getReduceMotion } from '../../../../../../../lib/functions';
+import { Icon } from '../../../../../../../lib/components';
+import {
+  getConnectionPhase,
+  getPhaseAccentColorName,
+} from '../../../../../../../lib/connection-phase';
+import { Colors, colors } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { largeText, smallText } from '../../../../../../common-styles';
-import { StatusEye } from './StatusEye';
 
 const StyledRow = styled.div({
   display: 'flex',
@@ -35,28 +37,31 @@ export function ConnectionStatus() {
   const tunnelState = useSelector((state) => state.connection.status);
 
   const phase = getConnectionPhase(tunnelState.state);
-  const color = getConnectionSTatusLabelColor(tunnelState);
-  const animate = !getReduceMotion();
+  const colorName = getStatusColorName(tunnelState);
+  // An open eye ("show") reads as exposed/visible; the crossed-out eye ("hide")
+  // reads as protected/hidden in the burrow.
+  const eyeIcon = phase === 'protected' ? 'hide' : 'show';
 
   return (
     <StyledRow role="status">
-      <StatusEye color={color} closed={phase === 'protected'} animate={animate} />
+      <Icon icon={eyeIcon} color={colorName} size="large" />
       <StyledTextColumn>
-        <StyledTitle $color={color}>{getConnectionStatusLabelText(tunnelState)}</StyledTitle>
+        <StyledTitle $color={colors[colorName]}>
+          {getConnectionStatusLabelText(tunnelState)}
+        </StyledTitle>
         <StyledSubtitle>{getConnectionStatusSubtitle(tunnelState)}</StyledSubtitle>
       </StyledTextColumn>
     </StyledRow>
   );
 }
 
-function getConnectionSTatusLabelColor(tunnelState: TunnelState) {
-  const phase = getConnectionPhase(tunnelState.state);
+function getStatusColorName(tunnelState: TunnelState): Colors {
   // A locked-down disconnected state is a deliberate block, not raw exposure, so
   // it stays neutral rather than shouting red.
   if (tunnelState.state === 'disconnected' && tunnelState.lockedDown) {
-    return colors.white;
+    return 'white';
   }
-  return getPhaseAccentColor(phase);
+  return getPhaseAccentColorName(getConnectionPhase(tunnelState.state));
 }
 
 function getConnectionStatusLabelText(tunnelState: TunnelState) {

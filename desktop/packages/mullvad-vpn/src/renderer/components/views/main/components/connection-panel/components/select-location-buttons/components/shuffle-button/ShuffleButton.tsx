@@ -5,15 +5,10 @@ import { messages } from '../../../../../../../../../../shared/gettext';
 import log from '../../../../../../../../../../shared/logging';
 import { useAppContext } from '../../../../../../../../../context';
 import { useRelayLocations } from '../../../../../../../../../features/locations/hooks';
-import { Button, ButtonProps } from '../../../../../../../../../lib/components';
+import { Button, ButtonProps, Icon } from '../../../../../../../../../lib/components';
 
 const StyledShuffleButton = styled(Button)({
   minWidth: '40px',
-});
-
-const ShuffleGlyph = styled.svg({
-  width: '20px',
-  height: '20px',
 });
 
 // Picks a random exit country among those with an active relay, then connects.
@@ -46,21 +41,7 @@ export function ShuffleButton(props: ButtonProps) {
       // TRANSLATORS: Accessibility label for the button that connects to a random exit.
       aria-label={messages.pgettext('tunnel-control', 'Random location')}
       {...props}>
-      <ShuffleGlyph
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        role="img"
-        aria-hidden>
-        <path d="M16 3h5v5" />
-        <path d="M21 3 13 11" />
-        <path d="M16 21h5v-5" />
-        <path d="m15 15 6 6" />
-        <path d="M3 4l6 6" />
-      </ShuffleGlyph>
+      <Icon icon="shuffle" />
     </StyledShuffleButton>
   );
 }

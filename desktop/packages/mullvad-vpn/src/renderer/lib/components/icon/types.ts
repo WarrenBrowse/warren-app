@@ -37,5 +37,6 @@ export const icons = {
   'settings-filled': 'icon-settings-filled',
   'settings-partial': 'icon-settings-partial',
   show: 'icon-show',
+  shuffle: 'icon-shuffle',
   trash: 'icon-trash',
 };
