@@ -746,6 +746,9 @@ jobs:
             "$signer" sign --file "unsigned/${platform}.json" --secret "$WARREN_UPDATE_SIGNING_KEY" \
               > "signed/${platform}.json"
           done
+          # Website manifest: not part of the signed app-update contract
+          # (integrity comes from TLS on the update host), shipped alongside.
+          cp unsigned/downloads.json signed/downloads.json
           ls -lh signed
 
       - name: Upload metadata to the update host

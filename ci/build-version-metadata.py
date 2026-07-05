@@ -15,6 +15,11 @@ ci/stage-release-assets.sh):
   - Linux: none. The release is listed without installers (the daemon's
     `allow_empty` path); the GUI sends Linux users to the download page.
 
+Also emits `downloads.json`, the website-facing manifest consumed by the
+warren.ro download page: latest downloadable version per platform with EVERY
+user-facing asset (deb/rpm/pacman included), independent from the app-updater
+installer contract above.
+
 Anti-rollback: `metadata_version` is the previously published value + 1. The
 previous signed manifest is fetched from the metadata base URL; if it is
 unreachable or absent we start at 1 with an empty release history. Older
@@ -41,6 +46,21 @@ from pathlib import Path
 
 # Filename architecture token -> metadata architecture enum value.
 WIN_ARCH_TOKENS = {"x64": "x86", "arm64": "arm64"}
+
+# Filename architecture token -> website architecture label (downloads.json).
+SITE_ARCH_TOKENS = {
+    "amd64": "x64",
+    "x86_64": "x64",
+    "x64": "x64",
+    "arm64": "arm64",
+    "aarch64": "arm64",
+    "universal": "universal",
+}
+
+SITE_PLATFORMS = {"macos", "windows", "linux", "android", "ios"}
+
+# Store/CI artifacts that are not a user-facing download.
+SITE_SKIP_FORMATS = {"aab"}
 
 
 def sha256_and_size(path: Path) -> tuple[str, int]:
@@ -145,6 +165,67 @@ def windows_installers(release_dir: Path, version: str, repo: str, tag: str) -> 
     return installers
 
 
+def classify_site_assets(release_dir: Path, version: str, repo: str, tag: str) -> dict:
+    """Group every user-facing installer of this release by platform.
+
+    Unlike the app manifests (whose installer lists are an app-updater
+    contract: one installer per architecture, none on Linux), downloads.json
+    lists everything a human can download, all formats included.
+    """
+    platforms: dict[str, list] = {}
+    prefix = f"WarrenVPN-{version}-"
+    for path in sorted(release_dir.glob(f"{prefix}*")):
+        rest = path.name[len(prefix):]
+        stem, dot, ext = rest.rpartition(".")
+        if not dot:
+            continue
+        fmt = ext.lower()
+        if fmt in SITE_SKIP_FORMATS:
+            continue
+        tokens = stem.split("-")
+        platform = tokens[0]
+        if platform not in SITE_PLATFORMS:
+            print(f"  skipping unrecognized asset {path.name}", file=sys.stderr)
+            continue
+        arch_token = tokens[1] if len(tokens) > 1 else "universal"
+        architecture = SITE_ARCH_TOKENS.get(arch_token, arch_token)
+        sha256, size = sha256_and_size(path)
+        platforms.setdefault(platform, []).append({
+            "filename": path.name,
+            "url": asset_url(repo, tag, path.name),
+            "size": size,
+            "sha256": sha256,
+            "architecture": architecture,
+            "format": fmt,
+        })
+    return platforms
+
+
+def fetch_previous_downloads(metadata_base_url: str) -> dict:
+    """Previous downloads.json platform map, or {} when absent/unreadable."""
+    url = f"{metadata_base_url.rstrip('/')}/downloads.json"
+    try:
+        with urllib.request.urlopen(url, timeout=15) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except (urllib.error.URLError, ValueError, TimeoutError) as error:
+        print(f"  no usable previous downloads.json ({error}); starting fresh", file=sys.stderr)
+        return {}
+    return dict(payload.get("platforms", {}))
+
+
+def build_downloads(args, classified: dict) -> dict:
+    """Website manifest: latest downloadable release per platform.
+
+    Platforms absent from this release keep their previous entry, so a
+    release that ships only some platforms never blanks the others on the
+    download page.
+    """
+    platforms = fetch_previous_downloads(args.metadata_base_url)
+    for platform, assets in classified.items():
+        platforms[platform] = {"version": args.version, "assets": assets}
+    return {"updated_at": args.now, "platforms": platforms}
+
+
 def build_release(version: str, changelog: str, installers: list) -> dict:
     return {"version": version, "changelog": changelog, "installers": installers}
 
@@ -212,6 +293,14 @@ def main() -> int:
         out_path.write_text(json.dumps(response, indent=2) + "\n", encoding="utf-8")
         print(f"wrote {out_path} (metadata_version={response['metadata_version']}, "
               f"installers={len(installers)}, releases={len(response['releases'])})")
+
+    # Website manifest (warren.ro download page): every format, all platforms.
+    # Served over TLS only; not part of the signed app-update contract.
+    downloads = build_downloads(args, classify_site_assets(release_dir, args.version, args.repo, args.tag))
+    downloads_path = out_dir / "downloads.json"
+    downloads_path.write_text(json.dumps(downloads, indent=2) + "\n", encoding="utf-8")
+    counts = {p: len(v.get("assets", [])) for p, v in downloads["platforms"].items()}
+    print(f"wrote {downloads_path} (assets per platform: {counts})")
 
     return 0
 
