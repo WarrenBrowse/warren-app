@@ -3,5 +3,7 @@ import { useMainHeaderTone } from '../MainHeaderContext';
 
 export const MainHeaderIconButton = (props: IconButtonProps) => {
   const tone = useMainHeaderTone();
-  return <IconButton variant="secondary" tone={tone} {...props} />;
+  // Primary (solid) rather than the softer secondary: over the bright scenery the
+  // account/settings icons need to read as crisp flat black, per the mockups.
+  return <IconButton variant="primary" tone={tone} {...props} />;
 };
