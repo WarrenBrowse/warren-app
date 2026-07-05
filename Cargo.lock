@@ -6437,6 +6437,7 @@ dependencies = [
  "cbindgen",
  "ed25519-dalek",
  "futures",
+ "getrandom 0.2.17",
  "hex",
  "hyper",
  "hyper-util",

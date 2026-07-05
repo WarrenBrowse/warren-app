@@ -735,6 +735,23 @@ char *warren_account_redeem_voucher(const uint8_t *seed, const char *voucher);
 char *warren_account_delete(const uint8_t *seed);
 
 /**
+ * Sign and submit a forum-login challenge for `sid` to the connect `host`.
+ *
+ * Derives the `WarrenIdentity` from the 32-byte wallet `seed`, builds the
+ * signed `POST /v1/forum/login` request (host allowlist + sid shape checked in
+ * `crate::forum`), sends it, and returns the outcome envelope. Any input,
+ * build, or transport failure collapses to `{"ok":false,"error":"error"}`; a
+ * server 403 maps to `subscription-required`. Nothing about the request (seed,
+ * sid, signature, nonce) is ever logged.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
+ * `host` must be valid NUL-terminated C strings. The returned pointer must be
+ * freed exactly once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_login(const uint8_t *seed, const char *sid, const char *host);
+
+/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,

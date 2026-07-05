@@ -37,6 +37,11 @@ mod warren_multihop_generation;
 mod warren_pin_store;
 #[cfg(any(target_os = "ios", test))]
 mod warren_wallet_ffi;
+// Community-forum wallet login (doc 55): the pure request-construction +
+// validation + outcome mapping (host-testable); the network POST that consumes
+// it is iOS-gated in `warren_forum_ffi`.
+#[cfg(any(target_os = "ios", test))]
+mod forum;
 // Pure, host-testable NAT-PMP helpers (port-follow resolution + event
 // projection). Compiled under `test` so the host suite runs them, and on the
 // iOS tunnel path where `warren_tunnel_ffi` consumes them. Same gating as
@@ -47,6 +52,8 @@ mod warren_natpmp_ffi;
 // iOS-only modules that reference libc, tokio, mullvad-api, etc.
 #[cfg(target_os = "ios")]
 mod warren_account_ffi;
+#[cfg(target_os = "ios")]
+mod warren_forum_ffi;
 #[cfg(target_os = "ios")]
 mod warren_multihop_ffi;
 
