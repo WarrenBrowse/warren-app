@@ -77,3 +77,6 @@ __pycache__/
 /dev-gui.log
 /dist-assets/relays.json
 /dist-assets/warren-relays.json
+
+# Raw master art for the connect-screen scenery (processed into assets/images/scenery/*.webp)
+new-da/
