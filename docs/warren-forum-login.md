@@ -146,50 +146,51 @@ How the OS hands the link to the app, and what makes it robust:
     `{"ok":false,"error":"error"}`. Blocks on the POST (call off the main
     thread). The mnemonic, sid, signature and nonce are never logged.
 
-## Android (Kotlin) - remaining app glue (unblocked)
+## Android (Kotlin) - IMPLEMENTED (2026-07-06), device test pending
 
-All additive; needs the Gradle/NDK build loop (build on the macstudio runner
-or a local NDK-configured checkout, then a device test). File anchors below are
-from the 2026-07-06 code map. DI is Koin (not Hilt); logging is Kermit
-(`co.touchlab.kermit.Logger`); JSON parsing is kotlinx.serialization.
+The full Kotlin glue is landed on branch `android-forum-login` and verified as
+far as headless allows: `:app:compileProdDebugKotlin` is green (with
+`allWarningsAsErrors`) and 9 JVM unit tests pass
+(`:app:testProdDebugUnitTest --tests "com.warrenbrowse.vpn.app.forum.*"`). DI is
+Koin, logging is Kermit, JSON parsing is kotlinx.serialization. What shipped:
 
-1. **Intent filter** in `android/app/src/main/AndroidManifest.xml` on
-   `MainActivity` (a third `<intent-filter>` alongside MAIN/LAUNCHER, activity
-   block at `AndroidManifest.xml:66-86`; the activity is already
-   `exported="true"`, `launchMode="singleInstance"`): `ACTION_VIEW` +
-   `CATEGORY_DEFAULT` + `CATEGORY_BROWSABLE` with
-   `<data android:scheme="warren" android:host="forum-login"/>`. There is no
-   existing deep-link filter in the app, this is the first.
-2. **Deep-link branch** in `MainActivity.handleIntent` (`MainActivity.kt:138`,
-   the `when` whose `else` drops unknown actions to `Logger.w(...)`): add an
-   `Intent.ACTION_VIEW` arm that reads `intent.data`, extracts `sid`+`host`, and
-   fails fast on a non-allowlisted host or a `sid` not matching `^[0-9a-f]{32}$`
-   (Rust re-validates). Because `launchMode=singleInstance`, both cold-start and
-   warm links already flow through `handleIntent` via the `addOnNewIntentListener`
-   `callbackFlow` collected in `onCreate` (`MainActivity.kt:160-169`), no
-   `onNewIntent` override needed.
-3. **Consent** prompt (mirror `ForumLoginPrompt.tsx`; never sign silently): the
-   app is 100% Compose, so hoist a `StateFlow<ForumLoginRequest?>` that
-   `MainActivity` sets from `handleIntent` and a composable observes, showing a
-   reusable `NegativeConfirmationDialog`
-   (`lib/ui/component/.../dialog/NegativeConfirmationDialog.kt`) titled "Sign in
-   to the Warren community forum?" with approve/cancel (copy from the desktop
-   prompt: signs a one-time challenge, no email/password, anonymous handle).
-4. **Sign + POST** on approve: a `WarrenForumLoginUseCase` (Koin `single`,
-   pattern of `WarrenSubscriptionUseCase`) that reads the mnemonic silently
-   (`walletRepository.readMnemonic()`, no biometric gate today) and, on
+1. **Intent filter** (`AndroidManifest.xml`): a third `<intent-filter>` on
+   `MainActivity` (`ACTION_VIEW` + `DEFAULT` + `BROWSABLE`,
+   `<data android:scheme="warren" android:host="forum-login"/>`), the app's first
+   deep link.
+2. **Deep-link parse** (`app/forum/ForumLoginLink.kt`): a PURE `parseForumLoginLink(
+   rawUrl): ForumLoginLink?` (java.net.URI, no Android `Uri`, so it is JVM
+   unit-testable) that enforces scheme `warren`, action `forum-login`, sid
+   `^[0-9a-f]{32}$`, host allowlist `connect.warrenbrowse.com`. Wired into
+   `MainActivity.handleIntent` as an `Intent.ACTION_VIEW` arm feeding
+   `ForumLoginController`; the existing `addOnNewIntentListener` callbackFlow
+   already delivers both cold-start and warm links (singleInstance).
+   Unit-tested (`ForumLoginLinkTest`, mirrors the desktop spec).
+3. **Consent** (`app/forum/ForumLoginPromptHost.kt`): a Compose `AlertDialog`
+   overlay added at `MainActivity` `setContent` alongside `WarrenApp`, observing
+   `ForumLoginController.pending`. Approve = `PrimaryButton` (a plain
+   Material3 dialog, not the destructive-framed `NegativeConfirmationDialog`);
+   never signs silently. A `busy` guard keeps the composable in composition
+   until the call returns so the coroutine is not cancelled mid-flight.
+4. **Sign + POST** (`app/forum/WarrenForumLoginUseCase.kt`, Koin `single`,
+   pattern of `WarrenSubscriptionUseCase`): reads the mnemonic silently and, on
    `Dispatchers.IO`, `mnemonic.use { WarrenJni.forumLogin(it.phrase, sid, host) }`
-   (the `.use{}` zeroes the CharArray). Parse the `{"ok":...}` with
-   kotlinx.serialization: `ok:true` -> success toast then open the forum in a
-   Custom Tab; `error:"subscription-required"` -> "subscription required"
-   message; else -> generic failure. No Kotlin HTTP client, no nonce/timestamp
-   handling, no header plumbing (all in Rust now).
-5. **Cancel**: notify the provider so the waiting browser page unblocks
-   (`POST https://<host>/v1/session/<sid>/cancel`, best-effort). This is the one
-   unsigned call; add a tiny `WarrenJni.forumLoginCancel(host, sid)` (or fold it
-   into the use case via a Rust helper) rather than a Kotlin HTTP client, to
-   keep the no-Kotlin-HTTP invariant. Optional for a first cut (the session
-   expires in 10 min regardless).
+   (Rust signs + POSTs). The pure `parseForumLoginOutcome(json)` maps the
+   `{"ok":...}` envelope to `Approved` / `SubscriptionRequired` / `Failure`
+   (unit-tested, `ForumLoginOutcomeTest`); the prompt toasts the result and (todo
+   on device) opens the forum in a Custom Tab on success. No Kotlin HTTP client,
+   no nonce/timestamp/header plumbing (all in Rust).
+
+Remaining, genuinely device-gated:
+- **Device round-trip test**: browser invokes `warren://forum-login` -> OS routes
+  to the app -> consent -> sign -> the browser approval page completes and the
+  user lands logged in under an opaque handle (subscriber group applied for a
+  subscribed wallet). Needs a real device/emulator + the live connect provider.
+- **Custom Tab open-on-success + a "Community" entry point** (open
+  `https://forum.warrenbrowse.com`): trivial UI, deferred to the device session.
+- **Cancel notify** (`POST /v1/session/<sid>/cancel`): optional; the session
+  expires in 10 min regardless. If added, do it via a small Rust JNI helper to
+  keep the no-Kotlin-HTTP invariant, not an OkHttp dependency.
 
 ## iOS (Swift) - later, more gated (needs Xcode)
 
