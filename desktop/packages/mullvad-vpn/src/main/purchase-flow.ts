@@ -204,9 +204,9 @@ export default class PurchaseFlow {
     this.submitInFlight = true;
     try {
       const response = await this.delegate.submitVoucher(wpid);
-      // 'invalid' means the payment webhook has not landed yet and
-      // 'error' is transient: keep polling. 'success' credits the
-      // account; 'already_used' means the mapping was already consumed.
+      // 'not_ready' (webhook not landed) and 'error' keep polling.
+      // 'success' credits the account; 'already_used' means the
+      // mapping was already consumed.
       if (response.type === 'success' || response.type === 'already_used') {
         this.removeEntry(wpid);
         this.stopActivePoll();

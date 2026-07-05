@@ -84,6 +84,10 @@ pub enum Error {
     InvalidVoucher,
     #[error("The voucher has already been used")]
     UsedVoucher,
+    #[error("The voucher has expired or was revoked")]
+    VoucherExpired,
+    #[error("The purchase has no voucher queued yet")]
+    VoucherNotReady,
     #[error("Failed to read or write account cache")]
     DeviceIoError(#[from] Arc<io::Error>),
     #[error("Failed parse account cache")]
@@ -594,6 +598,11 @@ impl AccountManager {
             }
             Err(Error::InvalidDevice) => {
                 self.revoke_device(|| Error::InvalidDevice).await;
+            }
+            // The GUI purchase poll hits this every few seconds until the
+            // payment webhook lands; error level would flood the log.
+            Err(Error::VoucherNotReady) => {
+                log::debug!("Voucher not ready yet (payment pending)");
             }
             Err(err) => log::error!("Failed to submit voucher: {}", err),
         }

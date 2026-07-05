@@ -781,7 +781,7 @@ export interface ISocketAddress {
 
 export type VoucherResponse =
   | { type: 'success'; newExpiry: string; secondsAdded: number }
-  | { type: 'invalid' | 'already_used' | 'error' };
+  | { type: 'invalid' | 'already_used' | 'expired' | 'not_ready' | 'error' };
 
 export interface SocksAuth {
   username: string;

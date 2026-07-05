@@ -241,6 +241,13 @@ export function RedeemVoucherResponse() {
             {messages.pgettext('redeem-voucher-view', 'Voucher code has already been used.')}
           </StyledErrorResponse>
         );
+      case 'expired':
+        return (
+          <StyledErrorResponse>
+            {messages.pgettext('redeem-voucher-view', 'Voucher code has expired.')}
+          </StyledErrorResponse>
+        );
+      case 'not_ready':
       case 'error':
         return (
           <StyledErrorResponse>

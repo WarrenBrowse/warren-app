@@ -15,6 +15,7 @@ const PURCHASE_URL = 'https://checkout.warrenbrowse.com/';
 const T0 = 1_750_000_000_000;
 
 const invalid: VoucherResponse = { type: 'invalid' };
+const notReady: VoucherResponse = { type: 'not_ready' };
 const error: VoucherResponse = { type: 'error' };
 const alreadyUsed: VoucherResponse = { type: 'already_used' };
 const success: VoucherResponse = {
@@ -187,6 +188,23 @@ describe('PurchaseFlow active poll', () => {
 
     expect(submitted.length).toBeGreaterThanOrEqual(4);
     expect(flow.polling).toBe(true);
+    flow.dispose();
+  });
+
+  it('keeps polling on not_ready until the webhook lands', async () => {
+    const responses = [notReady, notReady, success];
+    const { delegate, submitted } = makeDelegate(() =>
+      Promise.resolve(responses.shift() ?? notReady),
+    );
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.start();
+    await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
+
+    expect(submitted.length).toBe(3);
+    expect(store.entries).toEqual([]);
+    expect(flow.polling).toBe(false);
     flow.dispose();
   });
 

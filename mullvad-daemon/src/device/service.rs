@@ -268,6 +268,8 @@ fn map_rest_error(error: rest::Error) -> Error {
             mullvad_api::INVALID_ACCOUNT => Error::InvalidAccount,
             mullvad_api::INVALID_VOUCHER => Error::InvalidVoucher,
             mullvad_api::VOUCHER_USED => Error::UsedVoucher,
+            mullvad_api::VOUCHER_EXPIRED => Error::VoucherExpired,
+            mullvad_api::VOUCHER_NOT_READY => Error::VoucherNotReady,
             _ => Error::OtherRestError(error),
         },
         error => Error::OtherRestError(error),

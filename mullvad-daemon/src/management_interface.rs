@@ -221,6 +221,8 @@ fn warren_status_snapshot_to_proto(
 
 const INVALID_VOUCHER_MESSAGE: &str = "This voucher code is invalid";
 const USED_VOUCHER_MESSAGE: &str = "This voucher code has already been used";
+const EXPIRED_VOUCHER_MESSAGE: &str = "This voucher code has expired";
+const NOT_READY_VOUCHER_MESSAGE: &str = "The purchase has no voucher queued yet";
 
 #[mullvad_management_interface::async_trait]
 impl ManagementService for ManagementServiceImpl {
@@ -2190,6 +2192,12 @@ fn map_device_error(error: &device::Error) -> Status {
         }
         device::Error::InvalidVoucher => Status::new(Code::NotFound, INVALID_VOUCHER_MESSAGE),
         device::Error::UsedVoucher => Status::new(Code::ResourceExhausted, USED_VOUCHER_MESSAGE),
+        device::Error::VoucherExpired => {
+            Status::new(Code::FailedPrecondition, EXPIRED_VOUCHER_MESSAGE)
+        }
+        device::Error::VoucherNotReady => {
+            Status::new(Code::Unavailable, NOT_READY_VOUCHER_MESSAGE)
+        }
         device::Error::DeviceIoError(_error) => Status::new(Code::Unavailable, error.to_string()),
         device::Error::OtherRestError(error) => map_rest_error(error),
         _ => Status::new(Code::Unknown, error.to_string()),

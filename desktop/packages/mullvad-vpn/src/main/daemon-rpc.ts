@@ -343,6 +343,12 @@ export class DaemonRpc extends GrpcClient {
             return { type: 'invalid' };
           case grpc.status.RESOURCE_EXHAUSTED:
             return { type: 'already_used' };
+          case grpc.status.FAILED_PRECONDITION:
+            return { type: 'expired' };
+          // Also emitted on daemon-transport failures: both mean
+          // "nothing definitive happened, retry later".
+          case grpc.status.UNAVAILABLE:
+            return { type: 'not_ready' };
         }
       }
       return { type: 'error' };

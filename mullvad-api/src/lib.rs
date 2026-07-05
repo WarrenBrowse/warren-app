@@ -45,6 +45,13 @@ pub const VOUCHER_USED: &str = "VOUCHER_USED";
 /// Error code returned by the Mullvad API if the voucher code is invalid.
 pub const INVALID_VOUCHER: &str = "INVALID_VOUCHER";
 
+/// Warren: the voucher is past its deadline or was revoked by the admin.
+pub const VOUCHER_EXPIRED: &str = "VOUCHER_EXPIRED";
+
+/// Warren: the app-initiated purchase (wpid) has no queued voucher yet;
+/// the GUI keeps polling.
+pub const VOUCHER_NOT_READY: &str = "VOUCHER_NOT_READY";
+
 /// Error code returned by the Mullvad API if the account number is invalid.
 pub const INVALID_ACCOUNT: &str = "INVALID_ACCOUNT";
 

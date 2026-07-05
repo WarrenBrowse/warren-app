@@ -215,14 +215,12 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                                     .insert(wpid.clone(), secret.clone());
                                 secret
                             }
-                            // Webhook not landed yet (or id expired).
-                            // Surface the legacy INVALID_VOUCHER code so
-                            // the GUI poll treats it as "not ready, try
-                            // again".
+                            // Webhook not landed yet (or id expired):
+                            // the GUI keeps polling on this signal.
                             None => {
                                 return Err(rest::Error::ApiError(
                                     rest::StatusCode::NOT_FOUND,
-                                    mullvad_api::INVALID_VOUCHER.to_owned(),
+                                    mullvad_api::VOUCHER_NOT_READY.to_owned(),
                                 ));
                             }
                         },
@@ -237,35 +235,62 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                 voucher_secret: voucher,
                 referral_code: None,
             };
+            // Pre-register expiry, so a 409 after a lost response can be
+            // told apart from a genuinely spent voucher. `None` = fetch
+            // failed, recovery disabled; `Some(0)` = no subscription yet.
+            let baseline_expiry = match client.get_subscription().await {
+                Ok(r) => Some(r.expires_at),
+                Err(warren_api::ClientError::ServerStatus { status: 404, .. }) => Some(0),
+                Err(_) => None,
+            };
+
             // The pull above consumed the single-use mapping: a
             // transient register failure here would burn the paid
-            // voucher. Retry transport-level failures a few times
-            // before giving up (server-side 4xx are final); on a
-            // pulled wpid the cache above lets the NEXT GUI poll keep
-            // retrying the register even after these retries fail.
+            // voucher. Retry transport failures and 5xx a few times
+            // (4xx are final); on a pulled wpid the cache above lets
+            // the NEXT GUI poll keep retrying the register even after
+            // these retries fail.
             let mut resp = None;
             let mut last_err = None;
+            let mut retried_after_failure = false;
             for attempt in 0u32..3 {
                 if attempt > 0 {
                     tokio::time::sleep(std::time::Duration::from_secs(2)).await;
+                    retried_after_failure = true;
                 }
                 match client.register_with_voucher(&req).await {
                     Ok(r) => {
                         resp = Some(r);
                         break;
                     }
-                    Err(e @ warren_api::ClientError::ServerStatus { .. }) => {
-                        // Final server-side verdict. AlreadyRedeemed on a
-                        // cached secret means a previous attempt DID land
-                        // server-side: drop the cache entry so the poll
-                        // stops replaying it.
+                    Err(e @ warren_api::ClientError::ServerStatus { status, .. })
+                        if status < 500 =>
+                    {
                         if let Some(wpid) = &wpid {
                             pulled_unregistered
                                 .lock()
                                 .expect("not poisoned")
                                 .remove(wpid);
                         }
-                        return Err(map_voucher_register_error(e));
+                        let mapped = map_voucher_register_error(e);
+                        // An earlier attempt may have landed with its
+                        // response lost: a replay then 409s although the
+                        // account WAS credited. Verify against the
+                        // baseline and report the success it is.
+                        if retried_after_failure
+                            && matches!(&mapped, rest::Error::ApiError(_, code)
+                                        if code == mullvad_api::VOUCHER_USED)
+                            && let Some(baseline) = baseline_expiry
+                            && let Ok(sub) = client.get_subscription().await
+                            && sub.expires_at > baseline
+                        {
+                            let now = chrono::Utc::now().timestamp().max(0) as u64;
+                            return Ok(VoucherSubmission {
+                                new_expiry: expiry_from_unix_secs(sub.expires_at)?,
+                                time_added: sub.expires_at.saturating_sub(baseline.max(now)),
+                            });
+                        }
+                        return Err(mapped);
                     }
                     Err(e) => last_err = Some(e),
                 }
@@ -351,14 +376,12 @@ fn map_voucher_register_error(err: warren_api::ClientError) -> rest::Error {
             // `device::service::map_rest_error` picks the right
             // `Error::InvalidVoucher` / `Error::UsedVoucher` variant.
             let mullvad_code: Option<&'static str> = if body.contains("voucher unknown or invalid")
-                || body.contains("voucher was cancelled")
-                || body.contains("voucher expired")
             {
-                // Cancelled or expired vouchers are surfaced as invalid:
-                // the user cannot meaningfully distinguish "wrong code"
-                // from "code revoked/past its deadline" and the recovery
-                // action (obtain a fresh voucher) is the same.
                 Some(mullvad_api::INVALID_VOUCHER)
+            } else if body.contains("voucher was cancelled") || body.contains("voucher expired") {
+                // The user typed a real code that is past its deadline or
+                // revoked; "invalid" would send them into retype loops.
+                Some(mullvad_api::VOUCHER_EXPIRED)
             } else if body.contains("voucher already redeemed")
                 || body.contains("voucher redemption limit reached")
             {
@@ -641,9 +664,8 @@ mod tests {
         pull_ok.assert_async().await;
         register.assert_async().await;
 
-        // The mapping is single-use: a second poll on the same wpid
-        // reports INVALID_VOUCHER (the GUI stops polling on success,
-        // so this only happens on a replay).
+        // The mapping is single-use: a replay poll on the same wpid
+        // reports not-ready (the GUI stops polling on success).
         let err = backend
             .submit_voucher(pubkey_ss58, wpid.to_owned())
             .await
@@ -651,9 +673,9 @@ mod tests {
         match err {
             rest::Error::ApiError(code, msg) => {
                 assert_eq!(code.as_u16(), 404);
-                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+                assert_eq!(msg, mullvad_api::VOUCHER_NOT_READY);
             }
-            other => panic!("expected ApiError(404, INVALID_VOUCHER), got {other:?}"),
+            other => panic!("expected ApiError(404, VOUCHER_NOT_READY), got {other:?}"),
         }
         pull_gone.assert_async().await;
     }
@@ -722,9 +744,10 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_submit_voucher_with_unready_wpid_maps_invalid_voucher() {
-        // Polling case: the webhook has not landed yet, so the pull
-        // 404s. The GUI maps INVALID_VOUCHER to "keep polling".
+    async fn warren_remote_submit_voucher_with_unready_wpid_maps_not_ready() {
+        // The webhook has not landed yet, so the pull 404s. The GUI
+        // keeps polling on the dedicated not-ready signal and the
+        // daemon logs it at debug, not error.
         let mut server = mockito::Server::new_async().await;
         let wpid = "ffeeddccbbaa99887766554433221100";
         let _pull = server
@@ -742,9 +765,155 @@ mod tests {
         match err {
             rest::Error::ApiError(code, msg) => {
                 assert_eq!(code.as_u16(), 404);
-                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+                assert_eq!(msg, mullvad_api::VOUCHER_NOT_READY);
             }
-            other => panic!("expected ApiError(404, INVALID_VOUCHER), got {other:?}"),
+            other => panic!("expected ApiError(404, VOUCHER_NOT_READY), got {other:?}"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn register_retries_5xx_then_succeeds() {
+        let mut server = mockito::Server::new_async().await;
+        let _sub = server
+            .mock("GET", "/v1/subscription")
+            .with_status(404)
+            .create_async()
+            .await;
+        let _r503 = server
+            .mock("POST", "/v1/register")
+            .with_status(503)
+            .expect(1)
+            .create_async()
+            .await;
+        let expires_at = now_secs() + 30 * 86_400;
+        let r_ok = server
+            .mock("POST", "/v1/register")
+            .with_status(201)
+            .with_body(format!(r#"{{"expires_at":{expires_at},"added_secs":2592000}}"#))
+            .create_async()
+            .await;
+        let seed = [70u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let submission = backend
+            .submit_voucher(address_for_seed(seed), "AAAA-BBBB-CCCC-DDDD".to_owned())
+            .await
+            .expect("a transient 5xx must be retried, not surfaced as final");
+        assert_eq!(submission.time_added, 2_592_000);
+        r_ok.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn conflict_after_lost_response_reports_success_when_expiry_advanced() {
+        // Attempt 1 landed but its response was lost; the replay 409s
+        // although the account WAS credited.
+        let mut server = mockito::Server::new_async().await;
+        let expires_at = now_secs() + 30 * 86_400;
+        let _sub_baseline = server
+            .mock("GET", "/v1/subscription")
+            .with_status(404)
+            .expect(1)
+            .create_async()
+            .await;
+        let _sub_after = server
+            .mock("GET", "/v1/subscription")
+            .with_status(200)
+            .with_body(format!(r#"{{"expires_at":{expires_at}}}"#))
+            .create_async()
+            .await;
+        let _r503 = server
+            .mock("POST", "/v1/register")
+            .with_status(503)
+            .expect(1)
+            .create_async()
+            .await;
+        let _r409 = server
+            .mock("POST", "/v1/register")
+            .with_status(409)
+            .with_body(r#"{"error":"voucher already redeemed"}"#)
+            .create_async()
+            .await;
+        let seed = [71u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let submission = backend
+            .submit_voucher(address_for_seed(seed), "AAAA-BBBB-CCCC-DDDD".to_owned())
+            .await
+            .expect("409 after a lost response with advanced expiry is a success");
+        assert_eq!(submission.new_expiry.timestamp() as u64, expires_at);
+        let now = now_secs();
+        assert!(
+            submission.time_added >= expires_at - now - 5 && submission.time_added <= expires_at - now + 5,
+            "time_added must approximate the credited duration, got {}",
+            submission.time_added
+        );
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn conflict_without_prior_retry_propagates_voucher_used() {
+        let mut server = mockito::Server::new_async().await;
+        let _sub = server
+            .mock("GET", "/v1/subscription")
+            .with_status(404)
+            .create_async()
+            .await;
+        let _r409 = server
+            .mock("POST", "/v1/register")
+            .with_status(409)
+            .with_body(r#"{"error":"voucher already redeemed"}"#)
+            .create_async()
+            .await;
+        let seed = [72u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let err = backend
+            .submit_voucher(address_for_seed(seed), "AAAA-BBBB-CCCC-DDDD".to_owned())
+            .await
+            .expect_err("a first-attempt 409 is a genuine already-used");
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409);
+                assert_eq!(msg, mullvad_api::VOUCHER_USED);
+            }
+            other => panic!("expected ApiError(409, VOUCHER_USED), got {other:?}"),
+        }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn conflict_after_retry_without_expiry_advance_propagates_voucher_used() {
+        let mut server = mockito::Server::new_async().await;
+        let expires_at = now_secs() + 10 * 86_400;
+        let _sub = server
+            .mock("GET", "/v1/subscription")
+            .with_status(200)
+            .with_body(format!(r#"{{"expires_at":{expires_at}}}"#))
+            .create_async()
+            .await;
+        let _r503 = server
+            .mock("POST", "/v1/register")
+            .with_status(503)
+            .expect(1)
+            .create_async()
+            .await;
+        let _r409 = server
+            .mock("POST", "/v1/register")
+            .with_status(409)
+            .with_body(r#"{"error":"voucher already redeemed"}"#)
+            .create_async()
+            .await;
+        let seed = [73u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let err = backend
+            .submit_voucher(address_for_seed(seed), "AAAA-BBBB-CCCC-DDDD".to_owned())
+            .await
+            .expect_err("unchanged expiry means the voucher was spent elsewhere");
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409);
+                assert_eq!(msg, mullvad_api::VOUCHER_USED);
+            }
+            other => panic!("expected ApiError(409, VOUCHER_USED), got {other:?}"),
         }
     }
 
@@ -779,9 +948,9 @@ mod tests {
     }
 
     #[test]
-    fn map_voucher_register_error_cancelled_410_maps_invalid_voucher() {
-        // Cancelled vouchers are surfaced as invalid for the user
-        // (admin-side action, no recovery distinct from "wrong code").
+    fn map_voucher_register_error_cancelled_410_maps_voucher_expired() {
+        // A revoked voucher is "no longer valid", not "wrong code": the
+        // user typed it correctly and must not be sent into retype loops.
         let err = super::map_voucher_register_error(server_status(
             410,
             r#"{"error":"voucher was cancelled by the admin"}"#,
@@ -789,9 +958,9 @@ mod tests {
         match err {
             rest::Error::ApiError(code, msg) => {
                 assert_eq!(code.as_u16(), 410);
-                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+                assert_eq!(msg, mullvad_api::VOUCHER_EXPIRED);
             }
-            other => panic!("expected ApiError(410, INVALID_VOUCHER), got {other:?}"),
+            other => panic!("expected ApiError(410, VOUCHER_EXPIRED), got {other:?}"),
         }
     }
 
@@ -829,17 +998,15 @@ mod tests {
     }
 
     #[test]
-    fn map_voucher_register_error_expired_410_maps_invalid_voucher() {
-        // A voucher past its deadline is no longer valid; group it with
-        // cancelled (the recovery is the same: obtain a fresh voucher).
+    fn map_voucher_register_error_expired_410_maps_voucher_expired() {
         let err =
             super::map_voucher_register_error(server_status(410, r#"{"error":"voucher expired"}"#));
         match err {
             rest::Error::ApiError(code, msg) => {
                 assert_eq!(code.as_u16(), 410);
-                assert_eq!(msg, mullvad_api::INVALID_VOUCHER);
+                assert_eq!(msg, mullvad_api::VOUCHER_EXPIRED);
             }
-            other => panic!("expected ApiError(410, INVALID_VOUCHER), got {other:?}"),
+            other => panic!("expected ApiError(410, VOUCHER_EXPIRED), got {other:?}"),
         }
     }
 
