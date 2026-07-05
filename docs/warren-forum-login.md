@@ -123,48 +123,83 @@ How the OS hands the link to the app, and what makes it robust:
   Keystore and passed into JNI per call (the existing model for
   subscription/voucher/tunnel signing), so forum login inherits that.
 
-  **Rust side DONE (2026-07-05, branch `android-forum-login`):** the JNI
-  helper single-sources the wire format so Kotlin never rebuilds it.
-  - `warren-jni` `wallet::sign_forum_login(mnemonic, sid, timestamp, nonce_hex)`
-    -> `ForumLoginSigned { headers, body }`, host-tested (signature verified
-    against the canonical `POST /v1/forum/login` message; sid/nonce validated).
-  - JNI export `WarrenJni.signForumLogin(mnemonic, sid, timestamp, nonceHex):
-    String` returning `{"ok":true,"headers":{...},"body":"..."}` /
-    `{"ok":false,"error":"..."}`.
+  **Rust side DONE (2026-07-05/06, branch `android-forum-login`):** the JNI
+  layer signs AND sends, so ONLY `sid`+`host` cross the boundary (the faithful
+  Android mirror of the desktop, where the renderer passes only sid+host and the
+  daemon does the signing + POST). A key map finding drove this: there is NO
+  general-purpose HTTP client anywhere in the Kotlin code, every other signed
+  call (`getSubscription`, `redeemVoucher`, `sendProblemReport`) signs and POSTs
+  inside Rust via `warren-api` and returns only result JSON. So forum login does
+  the same rather than introducing OkHttp with no house pattern.
+  - `warren-jni::forum` (host-compiled, 7 host tests): `build_signed_request(
+    mnemonic, sid, host)` validates the connect-host allowlist, generates a
+    fresh timestamp + random 16-byte nonce, reuses `wallet::sign_forum_login`
+    (still host-tested for wire parity) for the canonical `{"sid":"<sid>"}` body
+    + four `X-Warren-*` headers, and returns the exact URL/headers/body to POST;
+    `outcome_for_status` (2xx approved, 403 subscription-required, else failed)
+    and `envelope` map to the Kotlin JSON. All fully unit-tested off-device.
+  - `warren-jni::android_jni::forum_login` (Android-only) executes that request
+    on the shared tokio runtime through the reqwest transport `warren-api`
+    already bundles, mapping the HTTP status via `outcome_for_status`.
+  - JNI export `WarrenJni.forumLogin(mnemonic, sid, host): String` returning
+    `{"ok":true}` / `{"ok":false,"error":"subscription-required"}` /
+    `{"ok":false,"error":"error"}`. Blocks on the POST (call off the main
+    thread). The mnemonic, sid, signature and nonce are never logged.
 
 ## Android (Kotlin) - remaining app glue (unblocked)
 
 All additive; needs the Gradle/NDK build loop (build on the macstudio runner
-or a local NDK-configured checkout, then a device test).
+or a local NDK-configured checkout, then a device test). File anchors below are
+from the 2026-07-06 code map. DI is Koin (not Hilt); logging is Kermit
+(`co.touchlab.kermit.Logger`); JSON parsing is kotlinx.serialization.
 
 1. **Intent filter** in `android/app/src/main/AndroidManifest.xml` on
-   `MainActivity` (alongside the existing `MAIN`/`LAUNCHER` filters, ~line 83):
-   an `ACTION_VIEW` + `CATEGORY_DEFAULT` + `CATEGORY_BROWSABLE` filter with
-   `<data android:scheme="warren" android:host="forum-login"/>`.
-2. **Deep-link parse** in `MainActivity.handleIntent` (`MainActivity.kt:138`,
-   which currently drops unknown actions to `else -> Logger.w(...)`): on
-   `Intent.ACTION_VIEW` with a `warren://forum-login` data URI, extract `sid`
-   (query param) + `host`, validate `host == "connect.warrenbrowse.com"` and
-   `sid` matches `^[0-9a-f]{32}$` (Rust re-validates, but fail fast here).
-   Reuse the existing `onNewIntent` pipe (`MainActivity.kt:161`).
-3. **Consent** prompt (mirror `ForumLoginPrompt.tsx`): show country-less
-   "Sign in to the Warren forum as your wallet?" with approve/cancel.
-4. **Sign + POST** on approve: unlock the mnemonic from the wallet repo
-   (`AndroidKeystoreWalletRepository` / `MnemonicCache`), generate `timestamp
-   = System.currentTimeMillis()/1000` and `nonceHex` (16 `SecureRandom` bytes,
-   lowercase hex), call `WarrenJni.signForumLogin(...)`, parse the JSON, attach
-   every returned header + POST `body` to `https://<host>/v1/forum/login`
-   (reuse the app's OkHttp client). Map HTTP 403 -> "subscription required",
-   2xx -> success toast, then open the forum in a Custom Tab.
-   On cancel, `POST /v1/session/<sid>/cancel` (mirrors desktop).
+   `MainActivity` (a third `<intent-filter>` alongside MAIN/LAUNCHER, activity
+   block at `AndroidManifest.xml:66-86`; the activity is already
+   `exported="true"`, `launchMode="singleInstance"`): `ACTION_VIEW` +
+   `CATEGORY_DEFAULT` + `CATEGORY_BROWSABLE` with
+   `<data android:scheme="warren" android:host="forum-login"/>`. There is no
+   existing deep-link filter in the app, this is the first.
+2. **Deep-link branch** in `MainActivity.handleIntent` (`MainActivity.kt:138`,
+   the `when` whose `else` drops unknown actions to `Logger.w(...)`): add an
+   `Intent.ACTION_VIEW` arm that reads `intent.data`, extracts `sid`+`host`, and
+   fails fast on a non-allowlisted host or a `sid` not matching `^[0-9a-f]{32}$`
+   (Rust re-validates). Because `launchMode=singleInstance`, both cold-start and
+   warm links already flow through `handleIntent` via the `addOnNewIntentListener`
+   `callbackFlow` collected in `onCreate` (`MainActivity.kt:160-169`), no
+   `onNewIntent` override needed.
+3. **Consent** prompt (mirror `ForumLoginPrompt.tsx`; never sign silently): the
+   app is 100% Compose, so hoist a `StateFlow<ForumLoginRequest?>` that
+   `MainActivity` sets from `handleIntent` and a composable observes, showing a
+   reusable `NegativeConfirmationDialog`
+   (`lib/ui/component/.../dialog/NegativeConfirmationDialog.kt`) titled "Sign in
+   to the Warren community forum?" with approve/cancel (copy from the desktop
+   prompt: signs a one-time challenge, no email/password, anonymous handle).
+4. **Sign + POST** on approve: a `WarrenForumLoginUseCase` (Koin `single`,
+   pattern of `WarrenSubscriptionUseCase`) that reads the mnemonic silently
+   (`walletRepository.readMnemonic()`, no biometric gate today) and, on
+   `Dispatchers.IO`, `mnemonic.use { WarrenJni.forumLogin(it.phrase, sid, host) }`
+   (the `.use{}` zeroes the CharArray). Parse the `{"ok":...}` with
+   kotlinx.serialization: `ok:true` -> success toast then open the forum in a
+   Custom Tab; `error:"subscription-required"` -> "subscription required"
+   message; else -> generic failure. No Kotlin HTTP client, no nonce/timestamp
+   handling, no header plumbing (all in Rust now).
+5. **Cancel**: notify the provider so the waiting browser page unblocks
+   (`POST https://<host>/v1/session/<sid>/cancel`, best-effort). This is the one
+   unsigned call; add a tiny `WarrenJni.forumLoginCancel(host, sid)` (or fold it
+   into the use case via a Rust helper) rather than a Kotlin HTTP client, to
+   keep the no-Kotlin-HTTP invariant. Optional for a first cut (the session
+   expires in 10 min regardless).
 
-## iOS (Swift) - once the Warren management service is wired
+## iOS (Swift) - later, more gated (needs Xcode)
 
-- Add `warren` to `CFBundleURLSchemes` and handle it in
-  `application(_:open:options:)` / the SwiftUI `.onOpenURL`.
-- Parse+validate `sid`+`host`, call `signForumLogin` over the management
-  bridge, POST to the connect host, present a toast. "Community" opens the
-  forum in `SFSafariViewController`.
+Same shape as Android: the Rust `warren-jni::forum` logic is reusable; add an
+equivalent FFI entry in the `warren-ios` crate (`forum_login(mnemonic, sid,
+host) -> {"ok":...}`, ideally by lifting `forum.rs` to a shared crate so it is
+not duplicated). Swift side: add `warren` to `CFBundleURLSchemes`, handle it in
+`.onOpenURL`, validate `sid`+`host`, call the FFI, present a toast. "Community"
+opens the forum in `SFSafariViewController`. Gated on an Xcode build + Apple
+signing (not available on the current host).
 
 ## Security checklist (all platforms)
 

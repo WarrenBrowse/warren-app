@@ -318,45 +318,71 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequ
     new_byte_array_from(&env, &sig)
 }
 
-/// Sign a forum-login challenge for `sid` (`POST /v1/forum/login`).
+/// Sign and submit a forum-login challenge for `sid` to the connect `host`
+/// (`POST /v1/forum/login`).
 ///
-/// Mirrors the desktop daemon's `SignForumLogin` RPC: the canonical body
-/// `{"sid":"<sid>"}` and the four `X-Warren-*` headers are built in Rust
-/// (`wallet::sign_forum_login`), so the Kotlin caller never rebuilds the
-/// wire format. The caller supplies a fresh `timestamp` (Unix seconds) and a
-/// random `nonce_hex` (32 hex chars = 16 bytes). Returns
-/// `{"ok": true, "headers": {..}, "body": ".."}` on success or
-/// `{"ok": false, "error": ".."}`. The mnemonic and sid are never logged.
+/// Mirrors the desktop daemon's SignForumLogin plus its POST: only the opaque
+/// `sid` and the connect `host` cross the boundary. The mnemonic derives the
+/// signing key for this call and is not retained; the wallet signature never
+/// surfaces to Kotlin because the request is signed AND sent here (like every
+/// other signed JNI call). `host` is checked against a hard allowlist so a
+/// hostile deep link cannot redirect the signed request. Returns `{"ok":true}`
+/// on acceptance, `{"ok":false,"error":"subscription-required"}` when the wallet
+/// has never subscribed (HTTP 403), or `{"ok":false,"error":"error"}`. The
+/// mnemonic, sid, signature and nonce are never logged.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signForumLogin<'local>(
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLogin<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     mnemonic: JString<'local>,
     sid: JString<'local>,
-    timestamp: jnix::jni::sys::jlong,
-    nonce_hex: JString<'local>,
+    host: JString<'local>,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
     let phrase = String::from_java(&jnix_env, mnemonic);
     let sid = String::from_java(&jnix_env, sid);
-    let nonce_hex = String::from_java(&jnix_env, nonce_hex);
-    if timestamp < 0 {
-        let _ = jnix_env.throw(format!("timestamp must be >= 0, got {timestamp}"));
-        return std::ptr::null_mut();
-    }
-    let json = match crate::wallet::sign_forum_login(&phrase, &sid, timestamp as u64, &nonce_hex) {
-        Ok(signed) => {
-            serde_json::json!({"ok": true, "headers": signed.headers, "body": signed.body})
-                .to_string()
-        }
-        Err(e) => {
-            log::warn!("signForumLogin failed");
-            serde_json::json!({"ok": false, "error": e.to_string()}).to_string()
-        }
-    };
+    let host = String::from_java(&jnix_env, host);
+    let outcome = forum_login(&phrase, &sid, &host);
+    let json = crate::forum::envelope(outcome);
     match jnix_env.new_string(json) {
         Ok(s) => s.into_inner() as jstring,
         Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Drive the signed forum-login POST: build the signed request (host allowlist +
+/// wire bytes, all in `crate::forum`), execute it on the shared runtime through
+/// the reqwest transport, and map the HTTP status to an outcome. Never logs any
+/// request material; a failure to build or send collapses to `Failed`.
+fn forum_login(mnemonic: &str, sid: &str, host: &str) -> crate::forum::ForumLoginOutcome {
+    use crate::forum::ForumLoginOutcome;
+    use warren_api::{HttpRequest, HttpTransport, Method, ReqwestTransport};
+
+    let Some(runtime) = RUNTIME.get() else {
+        log::warn!("forumLogin: initLogger must run first");
+        return ForumLoginOutcome::Failed;
+    };
+    let signed = match crate::forum::build_signed_request(mnemonic, sid, host) {
+        Ok(req) => req,
+        Err(_) => {
+            // No values: the cause could otherwise echo sid/host/mnemonic state.
+            log::warn!("forumLogin: could not build signed request");
+            return ForumLoginOutcome::Failed;
+        }
+    };
+    let request = HttpRequest {
+        method: Method::Post,
+        url: signed.url,
+        headers: signed.headers,
+        body: signed.body,
+        use_sni: true,
+    };
+    match runtime.block_on(ReqwestTransport::new().execute(request)) {
+        Ok(response) => crate::forum::outcome_for_status(response.status),
+        Err(_) => {
+            log::warn!("forumLogin: transport error");
+            ForumLoginOutcome::Failed
+        }
     }
 }
 

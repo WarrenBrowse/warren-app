@@ -15,6 +15,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 thiserror = { workspace = true }
 hex = "0.4"
+# 16 bytes of OS entropy for the forum-login request nonce. This is the only
+# JNI call site that mints its own nonce (every other signed call goes through
+# the warren-api client, which nonces internally); cross-platform so the nonce
+# helper stays host-testable.
+getrandom = "0.2"
 # Explicit versions (rather than `{ workspace = true }`): warren-app's
 # workspace.dependencies does not pin bip39 / ed25519-dalek. Both are
 # pinned with `=` to the same exact versions that warren-core uses so

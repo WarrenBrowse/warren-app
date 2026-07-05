@@ -78,25 +78,31 @@ object WarrenJni {
     ): ByteArray
 
     /**
-     * Sign a forum-login challenge for `sid` (`POST /v1/forum/login`),
-     * mirroring the desktop daemon's `SignForumLogin`. The canonical body
-     * `{"sid":"<sid>"}` and the four `X-Warren-*` headers are built in Rust
-     * so the wire format is single-sourced. The caller supplies a fresh
-     * `timestamp` (Unix seconds) and a random `nonceHex` (32 hex chars = 16
-     * bytes, e.g. from `SecureRandom`).
+     * Sign and submit a forum-login challenge for `sid` to the connect `host`
+     * (`POST /v1/forum/login`), mirroring the desktop daemon's SignForumLogin
+     * plus its POST. Everything wire-sensitive happens in Rust: the canonical
+     * body `{"sid":"<sid>"}`, the four `X-Warren-*` headers, a fresh timestamp
+     * and random nonce, and the HTTPS POST itself. Only `sid` and `host` cross
+     * the boundary, so the wallet signature never surfaces to Kotlin. `host` is
+     * checked against a hard allowlist in Rust so a hostile deep link cannot
+     * redirect the signed request.
      *
-     * Returns a JSON string: `{"ok":true,"headers":{...},"body":"..."}` on
-     * success (attach every header verbatim and POST the body to
-     * `https://<connect-host>/v1/forum/login`), or `{"ok":false,"error":"..."}`.
-     * Never log the returned material, the mnemonic, or the sid (no-log).
+     * Returns a JSON string:
+     *   - `{"ok":true}` when the provider accepted the login
+     *   - `{"ok":false,"error":"subscription-required"}` when the wallet has
+     *     never subscribed (HTTP 403)
+     *   - `{"ok":false,"error":"error"}` on any other failure
+     *
+     * Blocks on a network POST, so it must be invoked off the main thread.
+     * Never log the mnemonic or the sid (no-log).
      *
      * @param sid 32 lowercase hex chars (validated in Rust; rejected otherwise)
+     * @param host connect host from the deep link (allowlisted in Rust)
      */
-    external fun signForumLogin(
+    external fun forumLogin(
         mnemonic: String,
         sid: String,
-        timestamp: Long,
-        nonceHex: String,
+        host: String,
     ): String
 
     // -- Tunnel lifecycle --------------------------------------------------
