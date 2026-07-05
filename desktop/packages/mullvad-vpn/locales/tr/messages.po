@@ -4565,3 +4565,31 @@ msgstr "İmzalanıyor, lütfen bekleyin."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Topluluk forumu"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Bağlanıyor..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Bağlantı kuruldu"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Bağlantınız şifreleniyor"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Rastgele konum"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Korunuyorsunuz"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Görünür durumdasınız"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Bağlantınız şifrelenmemiş"

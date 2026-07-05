@@ -4538,3 +4538,31 @@ msgstr "正在签名，请稍候。"
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "社区论坛"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "正在连接…"
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "连接已建立"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "正在加密您的连接"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "随机位置"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "您已受到保护"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "您已暴露"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "您的连接未加密"

@@ -4565,3 +4565,31 @@ msgstr "Signerer, vent venligst."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Fællesskabsforum"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Opretter forbindelse..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Forbindelse oprettet"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Krypterer din forbindelse"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Tilfældig placering"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Du er beskyttet"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Du er synlig"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Din forbindelse er ikke krypteret"

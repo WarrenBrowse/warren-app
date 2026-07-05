@@ -89,13 +89,7 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-msgid "CONNECTED"
-msgstr ""
-
 msgid "Connecting"
-msgstr ""
-
-msgid "CONNECTING..."
 msgstr ""
 
 msgid "Continue"
@@ -143,13 +137,7 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
-msgid "DISCONNECTED"
-msgstr ""
-
 msgid "Disconnecting"
-msgstr ""
-
-msgid "DISCONNECTING..."
 msgstr ""
 
 msgid "Edit"
@@ -2111,6 +2099,10 @@ msgid "Voucher code has already been used."
 msgstr ""
 
 msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr ""
+
+msgctxt "redeem-voucher-view"
 msgid "Voucher code is invalid."
 msgstr ""
 
@@ -2624,7 +2616,40 @@ msgid "Connect"
 msgstr ""
 
 msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr ""
+
+#. Bold status title shown when the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr ""
+
+#. Secondary line shown while the encrypted tunnel is coming up.
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr ""
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr ""
+
+msgctxt "tunnel-control"
 msgid "Switch location"
+msgstr ""
+
+#. Secondary line shown below the status title when protected.
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr ""
+
+#. Bold status title shown when traffic is not protected.
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr ""
+
+#. Secondary line shown when traffic is not encrypted.
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
 msgstr ""
 
 msgctxt "user-interface-settings-view"

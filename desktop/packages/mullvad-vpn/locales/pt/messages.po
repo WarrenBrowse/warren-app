@@ -4565,3 +4565,31 @@ msgstr "A assinar, aguarde."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Fórum da comunidade"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "A ligar..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Ligação estabelecida"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "A cifrar a sua ligação"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Localização aleatória"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Está protegido"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Está visível"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "A sua ligação não está cifrada"

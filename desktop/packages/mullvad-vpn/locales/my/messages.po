@@ -4541,3 +4541,31 @@ msgstr "လက်မှတ်ရေးထိုးနေသည်၊ ခေတ�
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "အသိုက်အဝန်း ဖိုရမ်"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "ချိတ်ဆက်နေဆဲ..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "ချိတ်ဆက်မှု တည်ဆောက်ပြီးပါပြီ"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "သင့်ချိတ်ဆက်မှုကို ကုဒ်ဝှက်နေသည်"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "ကျပန်း တည်နေရာ"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "သင် အကာအကွယ် ရရှိနေသည်"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "သင် ထင်ရှားနေသည်"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "သင့်ချိတ်ဆက်မှုကို ကုဒ်ဝှက်ထားခြင်း မရှိပါ"

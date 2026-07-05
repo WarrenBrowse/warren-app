@@ -4593,3 +4593,31 @@ msgstr "Подписываем, подождите."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Форум сообщества"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Подключение..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Соединение установлено"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Шифрование вашего соединения"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Случайное местоположение"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Вы защищены"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Вас видно"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Ваше соединение не зашифровано"
