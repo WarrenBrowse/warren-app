@@ -6489,6 +6489,7 @@ dependencies = [
  "rand 0.9.4",
  "serde",
  "serde_json",
+ "sha2",
  "talpid-platform-metadata",
  "talpid-types",
  "thiserror 2.0.18",

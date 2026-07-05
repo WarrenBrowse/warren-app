@@ -318,6 +318,48 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequ
     new_byte_array_from(&env, &sig)
 }
 
+/// Sign a forum-login challenge for `sid` (`POST /v1/forum/login`).
+///
+/// Mirrors the desktop daemon's `SignForumLogin` RPC: the canonical body
+/// `{"sid":"<sid>"}` and the four `X-Warren-*` headers are built in Rust
+/// (`wallet::sign_forum_login`), so the Kotlin caller never rebuilds the
+/// wire format. The caller supplies a fresh `timestamp` (Unix seconds) and a
+/// random `nonce_hex` (32 hex chars = 16 bytes). Returns
+/// `{"ok": true, "headers": {..}, "body": ".."}` on success or
+/// `{"ok": false, "error": ".."}`. The mnemonic and sid are never logged.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signForumLogin<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    sid: JString<'local>,
+    timestamp: jnix::jni::sys::jlong,
+    nonce_hex: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = String::from_java(&jnix_env, mnemonic);
+    let sid = String::from_java(&jnix_env, sid);
+    let nonce_hex = String::from_java(&jnix_env, nonce_hex);
+    if timestamp < 0 {
+        let _ = jnix_env.throw(format!("timestamp must be >= 0, got {timestamp}"));
+        return std::ptr::null_mut();
+    }
+    let json = match crate::wallet::sign_forum_login(&phrase, &sid, timestamp as u64, &nonce_hex) {
+        Ok(signed) => {
+            serde_json::json!({"ok": true, "headers": signed.headers, "body": signed.body})
+                .to_string()
+        }
+        Err(e) => {
+            log::warn!("signForumLogin failed");
+            serde_json::json!({"ok": false, "error": e.to_string()}).to_string()
+        }
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// Allocate a Java `byte[]` and copy `bytes` into it. Returns a null pointer
 /// (and leaves any pending JVM exception unchanged) on allocation failure.
 fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {

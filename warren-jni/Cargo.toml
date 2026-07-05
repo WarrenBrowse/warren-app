@@ -81,6 +81,11 @@ warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpm
 # DaitaState for the multi-hop DAITA pump.
 rand_v9 = { package = "rand", version = "0.9", optional = true }
 
+[dev-dependencies]
+# Host-only: reconstruct the SHA-256 body hash in the forum-login signing
+# test to verify the signature against the canonical POST message.
+sha2 = "0.10"
+
 [features]
 default = ["tunnel"]
 # Allow the API endpoint URL to be overridden at runtime (dev/staging).
