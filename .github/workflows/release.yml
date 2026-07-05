@@ -751,6 +751,14 @@ jobs:
           cp unsigned/downloads.json signed/downloads.json
           ls -lh signed
 
+      - name: Preflight ssh client
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          command -v scp >/dev/null || {
+            echo "::error::scp missing on this runner: bake openssh-client into the runner image (metadata upload cannot work without it)"
+            exit 1
+          }
+
       - name: Upload metadata to the update host
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
         run: |

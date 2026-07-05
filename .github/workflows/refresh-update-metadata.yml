@@ -21,6 +21,13 @@ on:
     # 03:17 UTC on the 1st of every month. Well inside the 6-month expiry window,
     # so a single missed run never lapses the manifests.
     - cron: '17 3 1 * *'
+  # Self-heal: a FAILED release run may have died before (or in) its own
+  # publish-update-metadata job, leaving the served manifests stale while the
+  # GitHub release itself was published (the v1.4.1-v1.4.3 incident). Re-sign
+  # the latest published release from main on a fresh runner in that case.
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       tag:
@@ -34,6 +41,9 @@ permissions:
 jobs:
   refresh-update-metadata:
     name: Re-sign + republish latest update metadata
+    # workflow_run only self-heals after a FAILED release; a green release
+    # already published its own metadata.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     env:
       WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
@@ -135,6 +145,14 @@ jobs:
           # (integrity comes from TLS on the update host), shipped alongside.
           cp unsigned/downloads.json signed/downloads.json
           ls -lh signed
+
+      - name: Preflight ssh client
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          command -v scp >/dev/null || {
+            echo "::error::scp missing on this runner: bake openssh-client into the runner image (metadata upload cannot work without it)"
+            exit 1
+          }
 
       - name: Upload metadata to the update host
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
