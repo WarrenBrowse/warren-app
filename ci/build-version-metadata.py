@@ -59,8 +59,10 @@ SITE_ARCH_TOKENS = {
 
 SITE_PLATFORMS = {"macos", "windows", "linux", "android", "ios"}
 
-# Store/CI artifacts that are not a user-facing download.
-SITE_SKIP_FORMATS = {"aab"}
+# Store/CI artifacts that are not a user-facing download. The sideload APK
+# stays off the download page until the Android app ships (store listings
+# will take over then); drop "apk" from this set to flip it live.
+SITE_SKIP_FORMATS = {"aab", "apk"}
 
 
 def sha256_and_size(path: Path) -> tuple[str, int]:
