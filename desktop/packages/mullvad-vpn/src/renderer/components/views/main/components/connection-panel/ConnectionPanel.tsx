@@ -34,9 +34,13 @@ const StyledConnectionPanel = styled.div<{ $expanded: boolean }>((props) => ({
   margin: `auto ${PANEL_MARGIN} ${PANEL_MARGIN}`,
   padding: '16px',
   justifySelf: 'flex-end',
-  borderRadius: '12px',
-  backgroundColor: props.$expanded ? colors.darkerBlue10Alpha80 : colors.darkerBlue10Alpha40,
-  backdropFilter: 'blur(6px)',
+  borderRadius: '16px',
+  // Denser glass than upstream: the panel now floats over full-bleed daylight
+  // artwork, so it needs more body to keep text legible.
+  backgroundColor: props.$expanded ? colors.blackAlpha60 : colors.blackAlpha50,
+  backdropFilter: 'blur(10px)',
+  border: `1px solid ${colors.whiteAlpha20}`,
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
 
   transition: 'background-color 300ms ease-out',
 }));

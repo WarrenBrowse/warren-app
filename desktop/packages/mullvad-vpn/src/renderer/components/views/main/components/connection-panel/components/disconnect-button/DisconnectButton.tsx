@@ -19,12 +19,16 @@ export function DisconnectButton() {
     }
   }, [disconnectTunnel]);
 
-  const displayAsCancel = tunnelState !== 'connected';
+  const connected = tunnelState === 'connected';
 
+  // Green only once actually protected; orange while the tunnel is still coming
+  // up, so the button colour tracks the same phase as the rest of the screen.
   return (
-    <Button variant="destructive" onClick={onDisconnect}>
+    <Button variant={connected ? 'success' : 'warning'} onClick={onDisconnect}>
       <Button.Text>
-        {displayAsCancel ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
+        {connected
+          ? messages.gettext('Disconnect')
+          : messages.pgettext('tunnel-control', 'Connecting...')}
       </Button.Text>
     </Button>
   );
