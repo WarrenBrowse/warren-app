@@ -1,22 +1,7 @@
 import { Url, urls } from './constants';
 
-export function getDownloadUrl(suggestedIsBeta: boolean): Url {
-  let url: Url = urls.download;
-  switch (process.platform ?? window.env.platform) {
-    case 'win32':
-      url += 'windows/';
-      break;
-    case 'linux':
-      url += 'linux/';
-      break;
-    case 'darwin':
-      url += 'macos/';
-      break;
-  }
-
-  if (suggestedIsBeta) {
-    url += 'beta/';
-  }
-
-  return url as Url;
+// The website has a single download page that detects the platform itself,
+// so no per-platform or beta path is appended (those routes do not exist).
+export function getDownloadUrl(_suggestedIsBeta: boolean): Url {
+  return urls.download;
 }

@@ -2,10 +2,10 @@
     <string name="app_name" translatable="false">Warren VPN</string>
     <string name="voucher_hint" translatable="false">XXXX-XXXX-XXXX-XXXX</string>
     <string name="account_url" translatable="false">https://warrenbrowse.com/account</string>
-    <string name="download_url" translatable="false">https://warrenbrowse.com/download</string>
+    <string name="download_url" translatable="false">https://warrenbrowse.com/telecharger</string>
     <string name="market_uri" translatable="false">market://details?id=%s</string>
     <string name="faqs_and_guides_url" translatable="false">https://warrenbrowse.com/faq</string>
-    <string name="privacy_policy_url" translatable="false">https://warrenbrowse.com/privacy</string>
+    <string name="privacy_policy_url" translatable="false">https://warrenbrowse.com/confidentialite</string>
     <string name="lockdown_url" translatable="false">https://warrenbrowse.com/android-lockdown</string>
     <string name="split_tunneling" translatable="false">Split tunneling</string>
     <string name="socks5_remote" translatable="false">SOCKS5</string>

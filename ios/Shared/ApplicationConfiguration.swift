@@ -62,19 +62,23 @@ enum ApplicationConfiguration {
     // Maximum file size for writing and reading logs.
     static let logMaximumFileSize: UInt64 = 131_072  // 128 kB.
 
+    // The website auto-detects the browser language, so the URLs below carry
+    // no language path segment; the `language` parameters are kept for call
+    // sites but unused.
+
     /// Privacy policy URL.
-    static func privacyPolicyLink(for language: String) -> String {
-        "https://\(Self.hostName)/\(language)/help/privacy-policy/"
+    static func privacyPolicyLink(for _: String) -> String {
+        "https://warrenbrowse.com/confidentialite"
     }
 
-    /// Make a start regarding  policy URL.
-    static func privacyGuidesURL(for language: String) -> URL {
-        URL(string: "https://\(Self.hostName)/\(language)/help/first-steps-towards-online-privacy/")!
+    /// Privacy first-steps guide URL.
+    static func privacyGuidesURL(for _: String) -> URL {
+        URL(string: "https://warrenbrowse.com/no-log")!
     }
 
     /// FAQ & Guides URL.
-    static func faqAndGuidesURL(for language: String) -> URL {
-        URL(string: "https://\(Self.hostName)/\(language)/help/tag/warren-app/")!
+    static func faqAndGuidesURL(for _: String) -> URL {
+        URL(string: "https://warrenbrowse.com/faq")!
     }
 
     /// Maximum number of devices per account.
