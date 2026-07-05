@@ -80,7 +80,7 @@ class ApplicationMain {
 
     const window = new BrowserWindow({
       useContentSize: true,
-      width: 320,
+      width: 380,
       height: 568,
       resizable: false,
       maximizable: false,

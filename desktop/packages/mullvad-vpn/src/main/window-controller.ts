@@ -217,7 +217,9 @@ export default class WindowController {
 
   public static getContentSize(unpinnedWindow: boolean): { width: number; height: number } {
     return {
-      width: 320,
+      // Widened from Mullvad's 320 to fit the full-bleed scenery art, whose
+      // 1417x2120 masters are authored at a 0.669 ratio (380 x 568 matches it).
+      width: 380,
       height: WindowController.getContentHeight(unpinnedWindow),
     };
   }
