@@ -16,6 +16,8 @@ import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSendProblemReportUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
+import com.warrenbrowse.vpn.app.forum.ForumLoginController
+import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
@@ -118,6 +120,11 @@ val appModule = module {
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
     single { WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get()) } bind
         WarrenSubscriptionInvoker::class
+
+    // Community-forum wallet login (doc 55): the deep-link consent controller and
+    // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.
+    single { ForumLoginController() }
+    single { WarrenForumLoginUseCase(walletRepository = get()) }
 
     single { LocaleRepository(get()) }
     // TODO Move these back to UiModule when fixDisableBug is removed

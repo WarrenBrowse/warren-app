@@ -19,6 +19,9 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.app.forum.ForumLoginController
+import com.warrenbrowse.vpn.app.forum.ForumLoginPromptHost
+import com.warrenbrowse.vpn.app.forum.parseForumLoginLink
 import com.warrenbrowse.vpn.di.uiModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
@@ -54,6 +57,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
+    private val forumLoginController by inject<ForumLoginController>()
 
     private fun dispatchWarrenConnect() {
         // Route the post-VPN-profile-grant connect (and the already-prepared
@@ -85,7 +89,14 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
 
         super.onCreate(savedInstanceState)
 
-        setContent { AppTheme { WarrenApp(serviceConnectionManager) } }
+        setContent {
+            AppTheme {
+                WarrenApp(serviceConnectionManager)
+                // Overlay: shows the forum-login consent prompt when a
+                // `warren://forum-login` deep link has been captured below.
+                ForumLoginPromptHost()
+            }
+        }
 
         // This is to protect against tapjacking attacks
         // This is applied at an OS level since Android 12 so it is only required on older versions
@@ -142,6 +153,11 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
                     intent.getApiEndpointConfigurationExtras()
                 )
             KEY_REQUEST_VPN_PROFILE -> handleRequestVpnProfileIntent()
+            Intent.ACTION_VIEW ->
+                // A `warren://forum-login` deep link: validate + stash it; the
+                // consent prompt (never a silent sign-in) reads it and signs on
+                // approval. A non-forum ACTION_VIEW parses to null and is ignored.
+                parseForumLoginLink(intent.dataString)?.let(forumLoginController::request)
             else -> Logger.w("Unhandled intent action: $action")
         }
     }
