@@ -34,7 +34,9 @@ const StyledOuter = styled.div({
   justifyContent: 'flex-end',
   gap: '8px',
   maxHeight: `calc(100% - 2 * ${PANEL_MARGIN})`,
-  margin: `auto ${PANEL_MARGIN} ${PANEL_MARGIN}`,
+  // Hug the very bottom so the card sits low and uncovers more of the scenery
+  // (Bula + the burrow) above it.
+  margin: `auto ${PANEL_MARGIN} 8px`,
 });
 
 // Feature pills stacked vertically, left-aligned, just above the card.
@@ -53,7 +55,7 @@ const StyledCard = styled.div<{ $expanded: boolean }>((props) => ({
   flexDirection: 'column',
   flexShrink: 0,
   minHeight: 0,
-  padding: '16px',
+  padding: '14px 16px',
   borderRadius: '16px',
   // Denser glass than upstream: the card floats over full-bleed daylight artwork,
   // so it needs more body to keep text legible.
@@ -69,8 +71,8 @@ const StyledConnectionButtonContainer = styled.div({
   transition: 'margin-top 300ms ease-out',
   display: 'flex',
   flexDirection: 'column',
-  gap: '16px',
-  marginTop: '16px',
+  gap: '12px',
+  marginTop: '12px',
 });
 
 const StyledCustomScrollbars = styled(CustomScrollbars)({

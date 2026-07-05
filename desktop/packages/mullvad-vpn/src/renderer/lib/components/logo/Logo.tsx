@@ -62,7 +62,9 @@ const Wordmark = ({ fontSize, tone = 'light' }: { fontSize: number; tone?: 'ligh
       fontWeight: 900,
       fontSize,
       lineHeight: 1,
-      color: tone === 'dark' ? colors.darkBlue : colors.whiteOnDarkBlue80,
+      // True black (not the charcoal darkBlue, which reads washed-out over the
+      // bright sky), matching the black rabbit mark and the flat header icons.
+      color: tone === 'dark' ? colors.black : colors.whiteOnDarkBlue80,
       whiteSpace: 'nowrap',
     }}>
     <span style={{ fontSize: '1.35em' }}>W</span>

@@ -82,8 +82,8 @@ function getConnectionStatusSubtitle(tunnelState: TunnelState) {
       // TRANSLATORS: Secondary line shown below the status title when protected.
       return messages.pgettext('tunnel-control', 'You are protected');
     case 'connecting':
-      // TRANSLATORS: Secondary line shown while the encrypted tunnel is coming up.
-      return messages.pgettext('tunnel-control', 'Encrypting your connection');
+      // TRANSLATORS: Secondary line shown while the tunnel is coming up.
+      return messages.pgettext('tunnel-control', 'Connection in progress');
     case 'disconnecting':
       // TRANSLATORS: Secondary line shown while the tunnel is being torn down.
       return messages.pgettext('tunnel-control', 'Disconnecting...');

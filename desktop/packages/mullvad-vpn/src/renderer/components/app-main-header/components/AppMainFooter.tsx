@@ -11,10 +11,10 @@ import { AppMainHeaderTimeLeft } from './AppMainHeaderTimeLeft';
 // text shadow guarantees legibility over the brighter patches of grass.
 const StyledFooter = styled.footer`
   flex-shrink: 0;
-  min-height: 54px;
+  min-height: 34px;
   display: flex;
   align-items: flex-end;
-  padding: 0 18px 10px;
+  padding: 0 18px 7px;
   background: linear-gradient(
     to top,
     ${colors.blackAlpha60} 0%,
