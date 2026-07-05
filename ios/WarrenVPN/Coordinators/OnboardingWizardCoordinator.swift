@@ -109,7 +109,7 @@ final class OnboardingWizardCoordinator: Coordinator, Presentable {
     }
 
     private func presentSubscriptionLink() {
-        guard let url = URL(string: "https://warrenbrowse.com/pricing") else {
+        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else {
             logger.error("Invalid subscription URL")
             return
         }

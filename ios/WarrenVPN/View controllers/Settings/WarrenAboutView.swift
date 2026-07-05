@@ -57,18 +57,18 @@ public struct WarrenAboutView: View {
     private var linksGroup: some View {
         VStack(spacing: 8) {
             linkRow(
-                label: String(localized: "Visit warrenbrowse.com", table: "Settings", comment: "About → marketing site link"),
-                url: "https://warrenbrowse.com",
+                label: String(localized: "Visit warren.ro", table: "Settings", comment: "About → marketing site link"),
+                url: "https://warren.ro",
                 icon: "safari"
             )
             linkRow(
                 label: String(localized: "Privacy policy", table: "Settings", comment: ""),
-                url: "https://warrenbrowse.com/privacy",
+                url: "https://warren.ro/confidentialite",
                 icon: "lock.shield"
             )
             linkRow(
                 label: String(localized: "Terms of service", table: "Settings", comment: ""),
-                url: "https://warrenbrowse.com/terms",
+                url: "https://warren.ro/cgu",
                 icon: "doc.text"
             )
             linkRow(

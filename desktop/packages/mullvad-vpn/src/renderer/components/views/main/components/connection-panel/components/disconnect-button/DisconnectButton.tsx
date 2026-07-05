@@ -27,12 +27,13 @@ export function DisconnectButton() {
   const connected = tunnelState === 'connected';
   const variant = connected ? 'success' : connecting ? 'warning' : 'primary';
 
+  // While connecting the click aborts the attempt, so the button reads "Cancel".
+  // The connecting progress itself is conveyed by the status card (orange eye +
+  // "Encrypting your connection"), not by the button label.
   return (
     <Button variant={variant} onClick={onDisconnect}>
       <Button.Text>
-        {connecting
-          ? messages.pgettext('tunnel-control', 'Connecting...')
-          : messages.gettext('Disconnect')}
+        {connecting ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
       </Button.Text>
     </Button>
   );

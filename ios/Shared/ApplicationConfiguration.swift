@@ -68,17 +68,17 @@ enum ApplicationConfiguration {
 
     /// Privacy policy URL.
     static func privacyPolicyLink(for _: String) -> String {
-        "https://warrenbrowse.com/confidentialite"
+        "https://warren.ro/confidentialite"
     }
 
     /// Privacy first-steps guide URL.
     static func privacyGuidesURL(for _: String) -> URL {
-        URL(string: "https://warrenbrowse.com/no-log")!
+        URL(string: "https://warren.ro/no-log")!
     }
 
     /// FAQ & Guides URL.
     static func faqAndGuidesURL(for _: String) -> URL {
-        URL(string: "https://warrenbrowse.com/faq")!
+        URL(string: "https://warren.ro/faq")!
     }
 
     /// Maximum number of simultaneously connected devices per account,

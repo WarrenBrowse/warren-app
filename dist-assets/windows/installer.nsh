@@ -860,7 +860,7 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 
 	# Show appropriate message about failed update depending on whether /inapp is specified
 	${If} $0 == 1
-		MessageBox MB_OK "The update could not be installed and the previous version is missing. Please download the app again from warrenbrowse.com/download and reinstall. If that fails, please try restarting your computer and try again."
+		MessageBox MB_OK "The update could not be installed and the previous version is missing. Please download the app again from warren.ro/telecharger and reinstall. If that fails, please try restarting your computer and try again."
 	${Else}
 		MessageBox MB_OK "Failed to uninstall a previous version. Please try restarting your computer and try again. If you still have this issue, please contact support."
 	${EndIf}

@@ -113,7 +113,10 @@ const Collapsible = styled(motion.div)({
   flexDirection: 'column',
   justifyContent: 'flex-start',
   translateY: '0%',
-  margin: '12px 16px 0',
+  // Offset toward the right rather than spanning the full width (per the art
+  // direction), leaving the left of the scene open.
+  margin: '12px 16px 0 auto',
+  maxWidth: '300px',
   borderRadius: '14px',
   border: `1px solid ${colors.whiteAlpha20}`,
   borderTop: `2px solid ${colors.green}`,
