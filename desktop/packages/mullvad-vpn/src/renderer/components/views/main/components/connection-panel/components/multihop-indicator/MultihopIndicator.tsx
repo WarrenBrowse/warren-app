@@ -10,7 +10,6 @@ import { useSelector } from '../../../../../../../redux/store';
 
 const StyledWrapper = styled.div({
   display: 'flex',
-  marginTop: '8px',
 });
 
 /**
