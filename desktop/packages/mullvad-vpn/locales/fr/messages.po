@@ -3808,3 +3808,7 @@ msgstr "Vous êtes visible"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Votre connexion n'est pas chiffrée"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Déconnexion en cours..."

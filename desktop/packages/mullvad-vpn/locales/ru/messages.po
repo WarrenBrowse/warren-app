@@ -4621,3 +4621,7 @@ msgstr "Вас видно"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Ваше соединение не зашифровано"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Отключение..."

@@ -4636,3 +4636,7 @@ msgstr "أنت مكشوف"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "اتصالك غير مشفّر"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "جارٍ قطع الاتصال..."

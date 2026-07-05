@@ -4566,3 +4566,7 @@ msgstr "您已暴露"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "您的连接未加密"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "正在断开连接…"

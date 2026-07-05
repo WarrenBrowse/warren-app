@@ -4593,3 +4593,7 @@ msgstr "Du är synlig"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Din anslutning är inte krypterad"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Kopplar från …"

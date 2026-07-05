@@ -4593,3 +4593,7 @@ msgstr "Estás expuesto"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Tu conexión no está cifrada"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Desconectando..."

@@ -2624,6 +2624,11 @@ msgctxt "tunnel-control"
 msgid "Connection established"
 msgstr ""
 
+#. Secondary line shown while the tunnel is being torn down.
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr ""
+
 #. Secondary line shown while the encrypted tunnel is coming up.
 msgctxt "tunnel-control"
 msgid "Encrypting your connection"
@@ -2647,17 +2652,8 @@ msgctxt "tunnel-control"
 msgid "You are visible"
 msgstr ""
 
-#. Secondary line shown when traffic is not encrypted.
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
-msgstr ""
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
-msgstr ""
-
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
 msgstr ""
 
 msgctxt "user-interface-settings-view"

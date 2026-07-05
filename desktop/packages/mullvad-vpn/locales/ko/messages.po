@@ -4566,3 +4566,7 @@ msgstr "노출되어 있습니다"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "연결이 암호화되지 않았습니다"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "연결을 끊는 중..."

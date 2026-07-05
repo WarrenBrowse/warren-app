@@ -4621,3 +4621,7 @@ msgstr "Jesteś widoczny"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Twoje połączenie nie jest szyfrowane"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Rozłączanie..."

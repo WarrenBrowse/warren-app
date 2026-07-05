@@ -4566,3 +4566,7 @@ msgstr "あなたは見られています"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "接続が暗号化されていません"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "切断しています..."

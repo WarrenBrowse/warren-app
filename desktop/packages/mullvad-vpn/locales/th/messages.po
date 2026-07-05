@@ -4566,3 +4566,7 @@ msgstr "คุณถูกมองเห็นได้"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "การเชื่อมต่อของคุณไม่ได้เข้ารหัส"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "กำลังยกเลิกการเชื่อมต่อ..."

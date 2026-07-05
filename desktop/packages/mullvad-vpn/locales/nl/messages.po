@@ -4593,3 +4593,7 @@ msgstr "Je bent zichtbaar"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Je verbinding is niet versleuteld"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Verbinding verbreken..."

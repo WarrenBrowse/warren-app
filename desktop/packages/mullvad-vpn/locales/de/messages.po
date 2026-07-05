@@ -4594,3 +4594,7 @@ msgstr "Sie sind sichtbar"
 msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr "Ihre Verbindung ist nicht verschlüsselt"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Trennen …"
