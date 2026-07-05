@@ -4597,3 +4597,7 @@ msgstr "Bağlantınız şifrelenmemiş"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Bağlantı kesiliyor..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Bağlantı sürüyor"

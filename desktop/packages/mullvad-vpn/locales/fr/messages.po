@@ -3812,3 +3812,7 @@ msgstr "Votre connexion n'est pas chiffrée"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Déconnexion en cours..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Connexion en cours"

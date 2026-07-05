@@ -4625,3 +4625,7 @@ msgstr "Ваше соединение не зашифровано"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Отключение..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Подключение выполняется"

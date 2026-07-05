@@ -4597,3 +4597,7 @@ msgstr "Yhteyttäsi ei ole salattu"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Yhteyttä katkaistaan..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Yhteyttä muodostetaan"

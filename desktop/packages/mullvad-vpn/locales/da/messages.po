@@ -4597,3 +4597,7 @@ msgstr "Din forbindelse er ikke krypteret"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Afbryder..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Forbindelse i gang"

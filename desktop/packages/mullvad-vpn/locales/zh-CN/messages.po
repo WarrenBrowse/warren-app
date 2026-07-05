@@ -4570,3 +4570,7 @@ msgstr "您的连接未加密"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "正在断开连接…"
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "正在连接"

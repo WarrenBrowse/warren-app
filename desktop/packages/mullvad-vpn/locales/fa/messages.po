@@ -4584,3 +4584,7 @@ msgstr "اتصال شما رمزگذاری نشده است"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "در حال قطع اتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "اتصال در حال انجام"

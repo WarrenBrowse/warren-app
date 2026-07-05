@@ -4573,3 +4573,7 @@ msgstr "သင့်ချိတ်ဆက်မှုကို ကုဒ်ဝ�
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "ချိတ်ဆက်မှုဖြုတ်ဆဲ..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "ချိတ်ဆက်နေဆဲ"

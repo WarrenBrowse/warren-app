@@ -3745,3 +3745,7 @@ msgstr "Conexiunea ta nu este criptată"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Se deconectează..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Conectare în curs"

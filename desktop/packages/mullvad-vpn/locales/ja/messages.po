@@ -4570,3 +4570,7 @@ msgstr "接続が暗号化されていません"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "切断しています..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "接続中"

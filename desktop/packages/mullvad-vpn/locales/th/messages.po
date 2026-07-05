@@ -4570,3 +4570,7 @@ msgstr "การเชื่อมต่อของคุณไม่ได้
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "กำลังยกเลิกการเชื่อมต่อ..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "กำลังเชื่อมต่อ"

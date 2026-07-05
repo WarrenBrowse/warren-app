@@ -4598,3 +4598,7 @@ msgstr "Ihre Verbindung ist nicht verschlüsselt"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Trennen …"
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Verbindung wird hergestellt"

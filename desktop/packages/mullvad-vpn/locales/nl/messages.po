@@ -4597,3 +4597,7 @@ msgstr "Je verbinding is niet versleuteld"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Verbinding verbreken..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Verbinding wordt gemaakt"

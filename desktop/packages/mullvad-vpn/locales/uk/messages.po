@@ -4625,3 +4625,7 @@ msgstr "Ваше з'єднання не зашифроване"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Відключення..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Підключення триває"

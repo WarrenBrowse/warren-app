@@ -4597,3 +4597,7 @@ msgstr "Tu conexión no está cifrada"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "Desconectando..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Conexión en curso"

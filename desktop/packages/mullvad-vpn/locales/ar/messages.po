@@ -4640,3 +4640,7 @@ msgstr "اتصالك غير مشفّر"
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr "جارٍ قطع الاتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "جارٍ الاتصال"
