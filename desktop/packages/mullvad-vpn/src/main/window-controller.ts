@@ -320,8 +320,10 @@ export default class WindowController {
   // On both Linux and Windows the app height is applied incorrectly:
   // https://github.com/electron/electron/issues/28777
   private static getContentHeight(unpinnedWindow: boolean): number {
-    // The height we want to achieve.
-    const contentHeight = 568;
+    // The height we want to achieve. Taller than Mullvad's 568 so the full-bleed
+    // scenery (and Bula) breathe above the connection card instead of being
+    // mostly hidden behind it.
+    const contentHeight = 640;
 
     switch (process.platform) {
       case 'win32':
