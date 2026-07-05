@@ -20,7 +20,7 @@
     <string name="providers">Providers</string>
     <string name="any">Any</string>
     <string name="device_name_info_first_paragraph">This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website.</string>
-    <string name="device_name_info_second_paragraph">You can have up to 5 devices logged in on one Warren account.</string>
+    <string name="device_name_info_second_paragraph">You can have up to 3 devices connected at the same time on one Warren account.</string>
     <string name="device_name_info_third_paragraph">If you log out, the device and the device name is removed. When you log back in again, the device will get a new name.</string>
     <string name="local_network_sharing">Local network sharing</string>
     <string name="auto_connect_and_lockdown_mode">Auto-connect &amp; Lockdown mode</string>

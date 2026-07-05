@@ -21,7 +21,7 @@
     <string name="providers">Furnizori</string>
     <string name="any">Oricare</string>
     <string name="device_name_info_first_paragraph">Acesta este numele atribuit dispozitivului. Fiecare dispozitiv conectat la un cont Warren primește un nume unic care vă ajută să îl identificați atunci când vă gestionați dispozitivele în aplicație sau pe site.</string>
-    <string name="device_name_info_second_paragraph">Puteți avea până la 5 dispozitive conectate la un singur cont Warren.</string>
+    <string name="device_name_info_second_paragraph">Puteți avea până la 3 dispozitive conectate simultan la un singur cont Warren.</string>
     <string name="device_name_info_third_paragraph">Dacă vă deconectați, dispozitivul și numele acestuia sunt eliminate. Când vă conectați din nou, dispozitivul va primi un nume nou.</string>
     <string name="local_network_sharing">Partajare în rețeaua locală</string>
     <string name="auto_connect_and_lockdown_mode">Conectare automată &amp; Mod blocare</string>

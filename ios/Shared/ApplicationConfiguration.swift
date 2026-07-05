@@ -81,6 +81,8 @@ enum ApplicationConfiguration {
         URL(string: "https://warrenbrowse.com/faq")!
     }
 
-    /// Maximum number of devices per account.
-    static let maxAllowedDevices = 5
+    /// Maximum number of simultaneously connected devices per account,
+    /// matching the backend session-lease cap (warren-config
+    /// MAX_DEVICES_PER_ACCOUNT) and the published terms.
+    static let maxAllowedDevices = 3
 }

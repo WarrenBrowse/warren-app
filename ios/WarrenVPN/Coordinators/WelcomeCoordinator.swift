@@ -102,7 +102,7 @@ extension WelcomeCoordinator: @preconcurrency WelcomeViewControllerDelegate {
                 comment: ""
             ),
             NSLocalizedString(
-                "You can have up to 5 devices logged in on one Warren account.",
+                "You can have up to 3 devices connected at the same time on one Warren account.",
                 comment: ""
             ),
             NSLocalizedString(
