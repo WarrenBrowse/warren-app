@@ -6,6 +6,10 @@ export interface LogoProps {
   variant?: 'icon' | 'text' | 'both';
   size?: '1' | '2';
   state?: LogoState;
+  // Wordmark text colour only. The guard below concerns the MARK art, not the
+  // wordmark: over the bright scenery the light wordmark loses contrast, so the
+  // main header renders it dark. Defaults to the light-on-charcoal colour.
+  wordmarkTone?: 'light' | 'dark';
 }
 
 // 'exposed'  : Bula's masked face is out of the burrow (disconnected).
@@ -51,14 +55,14 @@ const Mark = ({ size, state }: { size: number; state: LogoState }) => (
   />
 );
 
-const Wordmark = ({ fontSize }: { fontSize: number }) => (
+const Wordmark = ({ fontSize, tone = 'light' }: { fontSize: number; tone?: 'light' | 'dark' }) => (
   <span
     style={{
       fontFamily: FontFamilies.nunito,
       fontWeight: 900,
       fontSize,
       lineHeight: 1,
-      color: colors.whiteOnDarkBlue80,
+      color: tone === 'dark' ? colors.darkBlue : colors.whiteOnDarkBlue80,
       whiteSpace: 'nowrap',
     }}>
     <span style={{ fontSize: '1.35em' }}>W</span>
@@ -66,17 +70,22 @@ const Wordmark = ({ fontSize }: { fontSize: number }) => (
   </span>
 );
 
-export const Logo = ({ variant = 'icon', size: sizeProp = '1', state = 'exposed' }: LogoProps) => {
+export const Logo = ({
+  variant = 'icon',
+  size: sizeProp = '1',
+  state = 'exposed',
+  wordmarkTone = 'light',
+}: LogoProps) => {
   switch (variant) {
     case 'icon':
       return <Mark size={iconSizes[sizeProp]} state={state} />;
     case 'text':
-      return <Wordmark fontSize={textFontSizes[sizeProp]} />;
+      return <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} />;
     case 'both':
       return (
         <Flex alignItems="center" gap="tiny">
           <Mark size={iconSizes[sizeProp]} state={state} />
-          <Wordmark fontSize={textFontSizes[sizeProp]} />
+          <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} />
         </Flex>
       );
   }
