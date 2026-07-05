@@ -5,43 +5,32 @@ import { colors } from '../../../lib/foundations';
 import { AppMainHeaderPubKey } from './AppMainHeaderPubKey';
 import { AppMainHeaderTimeLeft } from './AppMainHeaderTimeLeft';
 
-// The pubkey and time-left sit over the dark, busy bottom of the scenery (the
-// burrow foreground), where plain text is hard to read. Each is set on its own
-// frosted, fully-rounded glass pill so it stays legible without darkening the
-// whole footer, keeping the light-text-on-dark-glass language of the panel.
+// The pubkey and time-left sit over the dark, busy bottom of the scenery. Rather
+// than framing them in chips, we lay a soft bottom-up gradient scrim so the light
+// text reads without any visible chrome, blending into the landscape. A small
+// text shadow guarantees legibility over the brighter patches of grass.
 const StyledFooter = styled.footer`
   flex-shrink: 0;
-  padding: 6px 16px 10px;
-`;
-
-const Pill = styled.div`
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-  max-width: 100%;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background-color: ${colors.blackAlpha50};
-  backdrop-filter: blur(8px);
-
-  /* The pubkey/time-left labels render null when absent (no account, expired);
-     collapse the empty pill so no stray chip is left floating. */
-  &:empty {
-    display: none;
-  }
+  min-height: 54px;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 18px 10px;
+  background: linear-gradient(
+    to top,
+    ${colors.blackAlpha60} 0%,
+    ${colors.blackAlpha40} 45%,
+    transparent 100%
+  );
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
 `;
 
 export function AppMainFooter() {
   return (
     <StyledFooter>
       <MainHeaderToneProvider value="light">
-        <Flex justifyContent="space-between" alignItems="center" gap="small">
-          <Pill>
-            <AppMainHeaderPubKey />
-          </Pill>
-          <Pill>
-            <AppMainHeaderTimeLeft />
-          </Pill>
+        <Flex justifyContent="space-between" alignItems="center" gap="small" flexGrow={1}>
+          <AppMainHeaderPubKey />
+          <AppMainHeaderTimeLeft />
         </Flex>
       </MainHeaderToneProvider>
     </StyledFooter>
