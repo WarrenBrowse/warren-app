@@ -77,6 +77,28 @@ object WarrenJni {
         bodyHashHex: String,
     ): ByteArray
 
+    /**
+     * Sign a forum-login challenge for `sid` (`POST /v1/forum/login`),
+     * mirroring the desktop daemon's `SignForumLogin`. The canonical body
+     * `{"sid":"<sid>"}` and the four `X-Warren-*` headers are built in Rust
+     * so the wire format is single-sourced. The caller supplies a fresh
+     * `timestamp` (Unix seconds) and a random `nonceHex` (32 hex chars = 16
+     * bytes, e.g. from `SecureRandom`).
+     *
+     * Returns a JSON string: `{"ok":true,"headers":{...},"body":"..."}` on
+     * success (attach every header verbatim and POST the body to
+     * `https://<connect-host>/v1/forum/login`), or `{"ok":false,"error":"..."}`.
+     * Never log the returned material, the mnemonic, or the sid (no-log).
+     *
+     * @param sid 32 lowercase hex chars (validated in Rust; rejected otherwise)
+     */
+    external fun signForumLogin(
+        mnemonic: String,
+        sid: String,
+        timestamp: Long,
+        nonceHex: String,
+    ): String
+
     // -- Tunnel lifecycle --------------------------------------------------
 
     /**
