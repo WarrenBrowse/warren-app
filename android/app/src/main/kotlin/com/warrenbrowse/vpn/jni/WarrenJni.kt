@@ -77,6 +77,46 @@ object WarrenJni {
         bodyHashHex: String,
     ): ByteArray
 
+    /**
+     * Sign and submit a forum-login challenge for `sid` to the connect `host`
+     * (`POST /v1/forum/login`), mirroring the desktop daemon's SignForumLogin
+     * plus its POST. Everything wire-sensitive happens in Rust: the canonical
+     * body `{"sid":"<sid>"}`, the four `X-Warren-*` headers, a fresh timestamp
+     * and random nonce, and the HTTPS POST itself. Only `sid` and `host` cross
+     * the boundary, so the wallet signature never surfaces to Kotlin. `host` is
+     * checked against a hard allowlist in Rust so a hostile deep link cannot
+     * redirect the signed request.
+     *
+     * Returns a JSON string:
+     *   - `{"ok":true}` when the provider accepted the login
+     *   - `{"ok":false,"error":"subscription-required"}` when the wallet has
+     *     never subscribed (HTTP 403)
+     *   - `{"ok":false,"error":"error"}` on any other failure
+     *
+     * Blocks on a network POST, so it must be invoked off the main thread.
+     * Never log the mnemonic or the sid (no-log).
+     *
+     * @param sid 32 lowercase hex chars (validated in Rust; rejected otherwise)
+     * @param host connect host from the deep link (allowlisted in Rust)
+     */
+    external fun forumLogin(
+        mnemonic: String,
+        sid: String,
+        host: String,
+    ): String
+
+    /**
+     * Best-effort notify the connect `host` that the user declined the forum
+     * login for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser
+     * page unblocks instead of polling to timeout. Unsigned (no wallet
+     * material); failures are ignored (the server session expires in 10 min).
+     * Blocks on a network POST, so it must be invoked off the main thread.
+     */
+    external fun forumLoginCancel(
+        sid: String,
+        host: String,
+    )
+
     // -- Tunnel lifecycle --------------------------------------------------
 
     /**

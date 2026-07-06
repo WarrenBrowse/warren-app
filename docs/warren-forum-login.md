@@ -109,32 +109,131 @@ How the OS hands the link to the app, and what makes it robust:
   the consent prompt fetches it on mount (`forumLogin.getPending`). The
   buffer also survives a window close/reopen until the user approves or
   cancels; only a transient submit error keeps it for retry.
-- **Android + iOS: BLOCKED on a prerequisite (2026-07-03 finding).** These
-  apps have NOT yet integrated the Warren gRPC management service at all: no
-  `getWarrenMnemonic`/`setWarrenApiUrl`/`WarrenStatus` calls exist, the
-  repositories are stubbed (`managementService: Any? = null`), and there is no
-  generated Kotlin/Swift ManagementService stub. Forum login cannot be built
-  before the mobile apps wire the Warren management service (a separate epic).
-  The daemon-side `SignForumLogin` RPC is already shipped and ready for that
-  work. When the mobile Warren integration lands, implement as below.
+- **Android + iOS: the 2026-07-03 "blocked on a gRPC management-service
+  epic" finding is CORRECTED (2026-07-05).** The premise was wrong: Android
+  has no `mullvad-daemon` and no gRPC at all - it talks to Rust through the
+  JNI bridge `libwarren_jni.so`, and the exact wallet-signing capability
+  `SignForumLogin` wraps is ALREADY exposed and exercised there
+  (`WarrenJni.signCanonicalRequest`, used today for signed subscription /
+  voucher requests). So forum login is a SMALL additive slice, not blocked;
+  you mirror the desktop *behavior*, not its gRPC *transport* (the desktop
+  `SignForumLogin` gRPC RPC will never be reachable from Android and does not
+  need to be). Security note: the boundary differs - on desktop the key
+  never leaves the daemon; on Android the mnemonic is unlocked from the
+  Keystore and passed into JNI per call (the existing model for
+  subscription/voucher/tunnel signing), so forum login inherits that.
 
-## Android (Kotlin) - once the Warren management service is wired
+  **Rust side DONE (2026-07-05/06, branch `android-forum-login`):** the JNI
+  layer signs AND sends, so ONLY `sid`+`host` cross the boundary (the faithful
+  Android mirror of the desktop, where the renderer passes only sid+host and the
+  daemon does the signing + POST). A key map finding drove this: there is NO
+  general-purpose HTTP client anywhere in the Kotlin code, every other signed
+  call (`getSubscription`, `redeemVoucher`, `sendProblemReport`) signs and POSTs
+  inside Rust via `warren-api` and returns only result JSON. So forum login does
+  the same rather than introducing OkHttp with no house pattern.
+  - `warren-jni::forum` (host-compiled, 7 host tests): `build_signed_request(
+    mnemonic, sid, host)` validates the connect-host allowlist, generates a
+    fresh timestamp + random 16-byte nonce, reuses `wallet::sign_forum_login`
+    (still host-tested for wire parity) for the canonical `{"sid":"<sid>"}` body
+    + four `X-Warren-*` headers, and returns the exact URL/headers/body to POST;
+    `outcome_for_status` (2xx approved, 403 subscription-required, else failed)
+    and `envelope` map to the Kotlin JSON. All fully unit-tested off-device.
+  - `warren-jni::android_jni::forum_login` (Android-only) executes that request
+    on the shared tokio runtime through the reqwest transport `warren-api`
+    already bundles, mapping the HTTP status via `outcome_for_status`.
+  - JNI export `WarrenJni.forumLogin(mnemonic, sid, host): String` returning
+    `{"ok":true}` / `{"ok":false,"error":"subscription-required"}` /
+    `{"ok":false,"error":"error"}`. Blocks on the POST (call off the main
+    thread). The mnemonic, sid, signature and nonce are never logged.
 
-- Add an intent filter for the deep link in `AndroidManifest.xml`:
-  `<data android:scheme="warren" android:host="forum-login"/>` on a
-  lightweight Activity.
-- The Activity extracts `sid`+`host`, validates the host allowlist + sid shape,
-  calls `signForumLogin(sid)` over the management-interface, POSTs the headers
-  to the connect host, finishes silently (or shows a toast). "Community" button
-  opens the forum URL in a Custom Tab.
+## Android (Kotlin) - IMPLEMENTED (2026-07-06), device test pending
 
-## iOS (Swift) - once the Warren management service is wired
+The full Kotlin glue is landed on branch `android-forum-login` and verified as
+far as headless allows: `:app:compileProdDebugKotlin` is green (with
+`allWarningsAsErrors`) and 9 JVM unit tests pass
+(`:app:testProdDebugUnitTest --tests "com.warrenbrowse.vpn.app.forum.*"`). DI is
+Koin, logging is Kermit, JSON parsing is kotlinx.serialization. What shipped:
 
-- Add `warren` to `CFBundleURLSchemes` and handle it in
-  `application(_:open:options:)` / the SwiftUI `.onOpenURL`.
-- Parse+validate `sid`+`host`, call `signForumLogin` over the management
-  bridge, POST to the connect host, present a toast. "Community" opens the
-  forum in `SFSafariViewController`.
+1. **Intent filter** (`AndroidManifest.xml`): a third `<intent-filter>` on
+   `MainActivity` (`ACTION_VIEW` + `DEFAULT` + `BROWSABLE`,
+   `<data android:scheme="warren" android:host="forum-login"/>`), the app's first
+   deep link.
+2. **Deep-link parse** (`app/forum/ForumLoginLink.kt`): a PURE `parseForumLoginLink(
+   rawUrl): ForumLoginLink?` (java.net.URI, no Android `Uri`, so it is JVM
+   unit-testable) that enforces scheme `warren`, action `forum-login`, sid
+   `^[0-9a-f]{32}$`, host allowlist `connect.warrenbrowse.com`. Wired into
+   `MainActivity.handleIntent` as an `Intent.ACTION_VIEW` arm feeding
+   `ForumLoginController`; the existing `addOnNewIntentListener` callbackFlow
+   already delivers both cold-start and warm links (singleInstance).
+   Unit-tested (`ForumLoginLinkTest`, mirrors the desktop spec).
+3. **Consent** (`app/forum/ForumLoginPromptHost.kt`): a Compose `AlertDialog`
+   overlay added at `MainActivity` `setContent` alongside `WarrenApp`, observing
+   `ForumLoginController.pending`. Approve = `PrimaryButton` (a plain
+   Material3 dialog, not the destructive-framed `NegativeConfirmationDialog`);
+   never signs silently. A `busy` guard keeps the composable in composition
+   until the call returns so the coroutine is not cancelled mid-flight.
+4. **Sign + POST** (`app/forum/WarrenForumLoginUseCase.kt`, Koin `single`,
+   pattern of `WarrenSubscriptionUseCase`): reads the mnemonic silently and, on
+   `Dispatchers.IO`, `mnemonic.use { WarrenJni.forumLogin(it.phrase, sid, host) }`
+   (Rust signs + POSTs). The pure `parseForumLoginOutcome(json)` maps the
+   `{"ok":...}` envelope to `Approved` / `SubscriptionRequired` / `Failure`
+   (unit-tested, `ForumLoginOutcomeTest`); the prompt toasts the result and (todo
+   on device) opens the forum in a Custom Tab on success. No Kotlin HTTP client,
+   no nonce/timestamp/header plumbing (all in Rust).
+
+**Cancel notify DONE** (`WarrenJni.forumLoginCancel(sid, host)` -> Rust
+`forum::build_cancel_url` + best-effort `POST /v1/session/<sid>/cancel`, wired to
+the consent prompt's decline path on a fire-and-forget scope, no Kotlin HTTP).
+
+Remaining, genuinely device-gated:
+- **Device round-trip test**: browser invokes `warren://forum-login` -> OS routes
+  to the app -> consent -> sign -> the browser approval page completes and the
+  user lands logged in under an opaque handle (subscriber group applied for a
+  subscribed wallet). Needs a real device/emulator + the live connect provider.
+- **A "Community" entry point** (open `https://forum.warrenbrowse.com` in a
+  Custom Tab from a settings/support row): trivial UI, placement is a product
+  call, deferred to the device session. Open-on-success is NOT needed: the
+  browser tab that initiated the deep link completes the login itself.
+
+## iOS (Swift) - IMPLEMENTED (2026-07-06), device test pending
+
+Landed on branch `android-forum-login` and, like Android, verified as far as
+headless allows: the Rust FFI is host-tested + iOS-target compiled, and the
+whole `WarrenVPN` app builds for the iOS simulator (Xcode 26.4 is present after
+all; only the on-device round-trip is gated). What shipped:
+
+1. **Rust FFI** (`warren-ios`): a new host-tested `forum` module (8 host tests:
+   allowlist, sid shape, wire assembly, nonce, status mapping, envelope) that,
+   unlike Android, signs directly via `WarrenIdentity::from_seed(seed)
+   .sign_request(...)` (no `sign_forum_login` port needed, the iOS house pattern
+   passes the 32-byte seed). The iOS-gated `warren_forum_ffi.rs` exports
+   `char *warren_forum_login(const uint8_t *seed, const char *sid, const char
+   *host)` (auto-added to `warren_rust_runtime.h` by the cbindgen `build.rs`),
+   executing the POST via `ReqwestTransport::execute` on the shared iOS runtime,
+   returning the same `{"ok":...}` envelope as Android.
+2. **Swift** (existing files only, no `.pbxproj` surgery): `WarrenForumLoginOutcome`
+   + `WarrenAccountClient.forumLogin(seed:sid:host:)` (reuses the account
+   client's `parseEnvelope`), a `warren://forum-login` `CFBundleURLTypes` entry in
+   `Info.plist`, and `SceneDelegate` handling (`scene(_:openURLContexts:)` + the
+   cold-launch `connectionOptions.urlContexts` path, a `parseForumLogin` guard,
+   a `UIAlertController` consent prompt, silent seed load via
+   `WarrenWalletKeychain.load()` + `WarrenWallet.fromMnemonic`, and a result
+   alert). Rust re-validates sid+host, so the Swift parse is a fail-fast.
+
+Verified on this host: `cargo test -p warren-ios` (8 forum tests green),
+`cargo build -p warren-ios --target aarch64-apple-ios-sim` clean, and
+`xcodebuild -scheme WarrenVPN -destination 'generic/platform=iOS Simulator'
+CODE_SIGNING_ALLOWED=NO` exits 0 (the `ios/Configurations/*.xcconfig` are
+gitignored per-dev files, generated from the `.template`s for the compile check).
+
+**Cancel notify DONE** (`warren_forum_cancel(sid, host)` FFI +
+`WarrenAccountClient.forumLoginCancel(sid:host:)`, wired to the `UIAlertController`
+Cancel action off the main thread; shares the Rust `forum::build_cancel_url`).
+
+Remaining, device-gated only (same as Android): the on-device deep-link
+round-trip and a "Community" entry point (open the forum in
+`SFSafariViewController`). Open-on-success is not needed (the initiating browser
+tab completes the login).
 
 ## Security checklist (all platforms)
 

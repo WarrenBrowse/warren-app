@@ -11,6 +11,11 @@
 
 pub mod wallet;
 
+// Community-forum wallet login (doc 55): the pure request-construction +
+// validation + outcome mapping (host-testable); the network POST that consumes
+// it is Android-gated in `android_jni`.
+pub mod forum;
+
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod tunnel;
 

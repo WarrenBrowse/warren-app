@@ -83,6 +83,17 @@
             <intent-filter>
                 <action android:name="com.warrenbrowse.vpn.request_vpn_permission" />
             </intent-filter>
+            <!--
+                Community-forum wallet login (doc 55): the connect provider's
+                approval page invokes `warren://forum-login?sid=..&host=..`; the
+                OS hands it here (MainActivity.handleIntent validates + prompts).
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="warren" android:host="forum-login" />
+            </intent-filter>
         </activity>
         <!--
             foregroundServiceType="systemExempted" is required in Android 14+

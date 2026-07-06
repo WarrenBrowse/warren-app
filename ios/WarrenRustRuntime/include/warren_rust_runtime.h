@@ -735,6 +735,35 @@ char *warren_account_redeem_voucher(const uint8_t *seed, const char *voucher);
 char *warren_account_delete(const uint8_t *seed);
 
 /**
+ * Sign and submit a forum-login challenge for `sid` to the connect `host`.
+ *
+ * Derives the `WarrenIdentity` from the 32-byte wallet `seed`, builds the
+ * signed `POST /v1/forum/login` request (host allowlist + sid shape checked in
+ * `crate::forum`), sends it, and returns the outcome envelope. Any input,
+ * build, or transport failure collapses to `{"ok":false,"error":"error"}`; a
+ * server 403 maps to `subscription-required`. Nothing about the request (seed,
+ * sid, signature, nonce) is ever logged.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
+ * `host` must be valid NUL-terminated C strings. The returned pointer must be
+ * freed exactly once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_login(const uint8_t *seed, const char *sid, const char *host);
+
+/**
+ * Best-effort: notify the connect `host` that the user declined the forum login
+ * for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser page
+ * unblocks instead of polling to timeout. Unsigned (no seed / wallet material);
+ * mirrors the desktop `cancelForumLogin`. Failures are ignored (the server
+ * session expires on its own in 10 minutes). Blocking; call off the main thread.
+ *
+ * # Safety
+ * `sid` and `host` must be valid NUL-terminated C strings.
+ */
+void warren_forum_cancel(const char *sid, const char *host);
+
+/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,
