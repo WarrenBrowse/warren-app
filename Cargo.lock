@@ -2897,6 +2897,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "base64",
  "bip39",
  "chrono",
  "clap",
@@ -6746,6 +6747,7 @@ dependencies = [
  "warrenguard-tls",
  "warrenguard-transport-core",
  "warrenguard-wire",
+ "zeroize",
 ]
 
 [[package]]

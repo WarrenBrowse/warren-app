@@ -23,19 +23,20 @@ import { DaemonRpc } from './daemon-rpc';
 
 export const FORUM_DEEP_LINK_SCHEME = 'warren';
 
-// The forum-login POST must NOT ride `session.defaultSession`: that session is
+// The forum POSTs must NOT ride `session.defaultSession`: that session is
 // hardened to cancel every outbound web request (the renderer never phones
-// home). This is a deliberate, user-initiated request to our own connect host,
-// so it uses an isolated session that the default block filter does not touch.
+// home). These are deliberate, user-initiated requests to our own connect
+// host, so they use an isolated session the default block filter does not
+// touch. Shared with the attach-logs flow (forum-attach.ts).
 let forumSession: Session | undefined;
-function getForumSession(): Session {
+export function getForumSession(): Session {
   forumSession ??= session.fromPartition('warren-forum-login');
   return forumSession;
 }
 
-/** The host we accept in the deep link. Hard allowlist: a hostile link must
+/** The host we accept in a deep link. Hard allowlist: a hostile link must
  * not be able to point a signed request at an attacker-controlled server. */
-const ALLOWED_CONNECT_HOSTS = ['connect.warrenbrowse.com'];
+export const ALLOWED_CONNECT_HOSTS = ['connect.warrenbrowse.com'];
 
 interface ParsedForumLogin {
   sid: string;
@@ -76,36 +77,41 @@ export function parseForumLoginUrl(rawUrl: string): ParsedForumLogin | undefined
 }
 
 /**
- * Finds the first `warren://forum-login` URL in a process argv list. Windows
- * and Linux deliver the deep link as a command-line argument (to the initial
- * process or, for a running instance, via the `second-instance` event).
+ * Finds the first `warren://` forum deep link (forum-login or attach-logs) in
+ * a process argv list. Windows and Linux deliver a deep link as a
+ * command-line argument (to the initial process or, for a running instance,
+ * via the `second-instance` event).
  */
-export function findForumLoginArg(argv: readonly string[]): string | undefined {
-  return argv.find((arg) => arg.startsWith(`${FORUM_DEEP_LINK_SCHEME}://forum-login`));
+export function findForumDeepLinkArg(argv: readonly string[]): string | undefined {
+  const prefixes = ['forum-login', 'attach-logs'].map(
+    (action) => `${FORUM_DEEP_LINK_SCHEME}://${action}`,
+  );
+  return argv.find((arg) => prefixes.some((prefix) => arg.startsWith(prefix)));
 }
 
-// The connect provider expires a login session 10 minutes after creating it;
-// a request buffered longer than that could only produce a doomed signature.
+// The connect provider expires a login/attach session 10 minutes after
+// creating it; a request buffered longer than that could only produce a
+// doomed signature.
 const PENDING_MAX_AGE_MS = 10 * 60 * 1000;
 
 /**
- * Holds the latest unanswered forum-login request so it survives the window
- * not existing yet. A deep link that cold-starts the app arrives before the
- * renderer has subscribed to the `forumLogin.request` push; the renderer
- * fetches this buffer when the prompt mounts instead. The request stays
- * buffered until approved/cancelled so reopening the window re-shows an
+ * Holds the latest unanswered forum request (login or attach-logs) so it
+ * survives the window not existing yet. A deep link that cold-starts the app
+ * arrives before the renderer has subscribed to the request push; the
+ * renderer fetches this buffer when the prompt mounts instead. The request
+ * stays buffered until approved/cancelled so reopening the window re-shows an
  * unanswered prompt.
  */
-export class PendingForumLogin {
-  private request?: IForumLoginRequest;
+export class PendingForumRequest<T> {
+  private request?: T;
   private receivedAt = 0;
 
-  public set(request: IForumLoginRequest, now: number): void {
+  public set(request: T, now: number): void {
     this.request = request;
     this.receivedAt = now;
   }
 
-  public get(now: number): IForumLoginRequest | undefined {
+  public get(now: number): T | undefined {
     if (this.request && now - this.receivedAt > PENDING_MAX_AGE_MS) {
       this.clear();
     }

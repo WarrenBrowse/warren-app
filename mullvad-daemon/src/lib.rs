@@ -370,6 +370,17 @@ pub enum DaemonCommand {
         oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         String,
     ),
+    /// Signs a community-forum attach-logs request (doc 55). Carries the
+    /// deep-link `sid`, the forum topic id and the gzipped problem report;
+    /// replies with the four X-Warren-* header values + the request body,
+    /// or `None` if no identity is bootstrapped. The signing key never
+    /// leaves the daemon.
+    SignForumAttachLogs(
+        oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        String,
+        u64,
+        Vec<u8>,
+    ),
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
     /// validation + atomic write. The daemon hot-swaps the
     /// in-memory `WarrenAuthSigner` and triggers `account_manager.login`
@@ -2347,6 +2358,9 @@ impl Daemon {
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
             SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
+            SignForumAttachLogs(tx, sid, topic_id, log_gz) => {
+                self.on_sign_forum_attach_logs(tx, sid, topic_id, log_gz)
+            }
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
@@ -2892,6 +2906,32 @@ impl Daemon {
         });
         log::debug!("on_sign_forum_login: signed={}", result.is_some());
         Self::oneshot_send(tx, result, "sign_forum_login");
+    }
+
+    /// Signs the community-forum attach-logs request for `sid` (doc 55).
+    /// Builds the canonical body via [`forum_attach_body`] and signs
+    /// `POST /v1/forum/attach-logs` with the Warren identity key held in
+    /// the daemon, returning the header values + the exact signed body (the
+    /// GUI POSTs it verbatim). Replies `None` when no signer is
+    /// bootstrapped. The `sid` and `log_gz` are validated upstream in the
+    /// gRPC layer, so they are safe to embed here.
+    ///
+    /// **No-log policy**: the `sid`, pubkey, signature and log content are
+    /// never logged.
+    fn on_sign_forum_attach_logs(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        sid: String,
+        topic_id: u64,
+        log_gz: Vec<u8>,
+    ) {
+        let result = self.warren_signer.as_ref().map(|signer| {
+            let body = forum_attach_body(&sid, topic_id, &log_gz);
+            let headers = signer.sign_request("POST", "/v1/forum/attach-logs", body.as_bytes());
+            (headers, body)
+        });
+        log::debug!("on_sign_forum_attach_logs: signed={}", result.is_some());
+        Self::oneshot_send(tx, result, "sign_forum_attach_logs");
     }
 
     /// Restores the mnemonic via
@@ -5052,6 +5092,35 @@ fn oneshot_map<T1: Send + 'static, T2: Send + 'static>(
         }
     });
     new_tx
+}
+
+/// Canonical `POST /v1/forum/attach-logs` JSON body (doc 55). The field
+/// order and formatting are a frozen wire contract with warren-connect:
+/// the daemon signs exactly this string and the GUI POSTs it verbatim, so
+/// the signed bytes and the sent bytes are identical. Standard base64
+/// alphabet, no line wrapping.
+fn forum_attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> String {
+    use base64::Engine;
+    let log_gz_b64 = base64::engine::general_purpose::STANDARD.encode(log_gz);
+    format!("{{\"sid\":\"{sid}\",\"topic_id\":{topic_id},\"log_gz_b64\":\"{log_gz_b64}\"}}")
+}
+
+#[cfg(test)]
+mod forum_attach_body_tests {
+    use super::forum_attach_body;
+
+    #[test]
+    fn forum_attach_body_pins_the_wire_contract() {
+        let sid = "0123456789abcdef0123456789abcdef";
+        // gzip content is opaque to the contract; any bytes exercise the
+        // base64 path, including padding.
+        let body = forum_attach_body(sid, 42, b"hello");
+        assert_eq!(
+            body,
+            "{\"sid\":\"0123456789abcdef0123456789abcdef\",\
+             \"topic_id\":42,\"log_gz_b64\":\"aGVsbG8=\"}"
+        );
+    }
 }
 
 /// Remove any old RPC socket (if it exists).

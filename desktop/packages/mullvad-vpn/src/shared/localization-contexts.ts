@@ -48,5 +48,6 @@ export type LocalizationContexts =
   | 'warren-onboarding'
   | 'warren-mnemonic'
   | 'forum-login'
+  | 'forum-attach'
   | 'custom-list-feature'
   | 'locations-feature';

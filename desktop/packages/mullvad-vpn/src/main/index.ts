@@ -12,6 +12,7 @@ import {
 import fs from 'fs';
 import * as path from 'path';
 import util from 'util';
+import { gzipSync } from 'zlib';
 
 import { hasExpired } from '../shared/account-expiry';
 import {
@@ -31,6 +32,8 @@ import {
   TunnelState,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
+import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
+import { IForumLoginRequest } from '../shared/forum-login';
 import { messages, relayLocations } from '../shared/gettext';
 import { SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import { ITranslations, MacOsScrollbarVisibility } from '../shared/ipc-schema';
@@ -55,12 +58,18 @@ import {
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
 import {
+  approveForumAttach,
+  cancelForumAttach,
+  ParsedForumAttach,
+  parseForumAttachUrl,
+} from './forum-attach';
+import {
   approveForumLogin,
   cancelForumLogin,
-  findForumLoginArg,
+  findForumDeepLinkArg,
   FORUM_DEEP_LINK_SCHEME,
   parseForumLoginUrl,
-  PendingForumLogin,
+  PendingForumRequest,
 } from './forum-login';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
@@ -158,7 +167,8 @@ class ApplicationMain
 
   private navigationHistory?: IHistoryObject;
 
-  private pendingForumLogin = new PendingForumLogin();
+  private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>();
+  private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>();
 
   private purchaseFlow: PurchaseFlow;
   private purchaseFlowResumed = false;
@@ -334,40 +344,84 @@ class ApplicationMain
       this.userInterface?.showWindow();
       // Windows/Linux deliver a deep link to the already-running instance as
       // an argv entry on the second launch.
-      const deepLink = findForumLoginArg(argv);
+      const deepLink = findForumDeepLinkArg(argv);
       if (deepLink) {
-        void this.handleForumLoginDeepLink(deepLink);
+        this.handleForumDeepLink(deepLink);
       }
     });
   }
 
-  // Community-forum wallet login (doc 55). Registers the `warren://` scheme and
-  // wires the three delivery paths: macOS `open-url`, Windows/Linux argv on the
-  // second instance (see above) and on first launch (checked in onReady).
+  // Community-forum deep links (doc 55): wallet login and attach-logs.
+  // Registers the `warren://` scheme and wires the three delivery paths:
+  // macOS `open-url`, Windows/Linux argv on the second instance (see above)
+  // and on first launch (checked in onReady).
   private registerForumLoginDeepLink() {
     app.setAsDefaultProtocolClient(FORUM_DEEP_LINK_SCHEME);
     app.on('open-url', (event, url) => {
       event.preventDefault();
       this.userInterface?.showWindow();
-      void this.handleForumLoginDeepLink(url);
+      this.handleForumDeepLink(url);
     });
   }
 
-  // A `warren://forum-login` deep link never logs in on its own: it surfaces a
-  // consent prompt in the renderer (approve/cancel), and only an explicit
-  // approval signs and submits (handled via IPC below).
-  private handleForumLoginDeepLink(url: string) {
-    const request = parseForumLoginUrl(url);
-    if (!request) {
-      log.warn('Ignoring malformed or non-allowlisted forum-login deep link');
+  // A forum deep link never acts on its own: each kind surfaces a consent
+  // prompt in the renderer (approve/cancel), and only an explicit approval
+  // signs and submits (handled via IPC below).
+  private handleForumDeepLink(url: string) {
+    const login = parseForumLoginUrl(url);
+    if (login) {
+      this.handleForumLoginDeepLink(login);
       return;
     }
+    const attach = parseForumAttachUrl(url);
+    if (attach) {
+      void this.handleForumAttachDeepLink(attach);
+      return;
+    }
+    log.warn('Ignoring malformed or non-allowlisted forum deep link');
+  }
+
+  private handleForumLoginDeepLink(request: IForumLoginRequest) {
     // Buffer first: on a cold start (the deep link launched the app) the
     // renderer does not exist yet, so the push below goes nowhere and the
     // prompt fetches the buffer when it mounts instead.
     this.pendingForumLogin.set(request, Date.now());
     this.userInterface?.showWindow();
     IpcMainEventChannel.forumLogin.notifyRequest?.(request);
+  }
+
+  private async handleForumAttachDeepLink(parsed: ParsedForumAttach) {
+    // Collect the redacted report up front so the consent prompt can show
+    // exactly what would be sent before the user approves anything.
+    let reportId: string;
+    try {
+      reportId = await problemReport.collectLogs();
+    } catch (error) {
+      log.error(`Forum attach: could not collect the problem report: ${String(error)}`);
+      return;
+    }
+    const request: IForumAttachRequest = { ...parsed, reportId };
+    this.pendingForumAttach.set(request, Date.now());
+    this.userInterface?.showWindow();
+    IpcMainEventChannel.forumAttach.notifyRequest?.(request);
+  }
+
+  // Re-reads the report collected at deep-link time and gzips it here in
+  // main: the renderer never handles the log content, only the report id.
+  private async approveForumAttachRequest(
+    request: IForumAttachRequest,
+  ): Promise<ForumAttachResult> {
+    let logGz: Buffer;
+    try {
+      const report = await fs.promises.readFile(
+        problemReport.getProblemReportPath(request.reportId),
+      );
+      logGz = gzipSync(report);
+    } catch (error) {
+      log.error(`Forum attach: could not read the collected report: ${String(error)}`);
+      return 'error';
+    }
+    return approveForumAttach(request, this.daemonRpc, logGz);
   }
 
   private overrideAppPaths() {
@@ -505,9 +559,9 @@ class ApplicationMain
 
     // Windows/Linux cold start: a deep link that launched the app arrives as a
     // process argument. macOS delivers it through `open-url` instead.
-    const initialDeepLink = findForumLoginArg(process.argv);
+    const initialDeepLink = findForumDeepLinkArg(process.argv);
     if (initialDeepLink) {
-      void this.handleForumLoginDeepLink(initialDeepLink);
+      this.handleForumDeepLink(initialDeepLink);
     }
 
     // Disable built-in DNS resolver.
@@ -1158,6 +1212,24 @@ class ApplicationMain
     IpcMainEventChannel.forumLogin.handleCancel((request) => {
       this.pendingForumLogin.clear();
       return cancelForumLogin(request);
+    });
+
+    // Forum attach-logs: only an explicit user approval signs and sends.
+    IpcMainEventChannel.forumAttach.handleGetPending(() =>
+      Promise.resolve(this.pendingForumAttach.get(Date.now())),
+    );
+    IpcMainEventChannel.forumAttach.handleApprove(async (request) => {
+      const result = await this.approveForumAttachRequest(request);
+      // A transient failure keeps the request buffered so a window reload can
+      // retry; any settled outcome must not re-prompt.
+      if (result !== 'error') {
+        this.pendingForumAttach.clear();
+      }
+      return result;
+    });
+    IpcMainEventChannel.forumAttach.handleCancel((request) => {
+      this.pendingForumAttach.clear();
+      return cancelForumAttach(request);
     });
 
     IpcMainEventChannel.customLists.handleCreateCustomList((name) => {

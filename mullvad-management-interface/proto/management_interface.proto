@@ -97,6 +97,18 @@ service ManagementService {
   // sid is malformed.
   rpc SignForumLogin(ForumLoginRequest) returns (ForumLoginSignature) {}
 
+  // Signs a community-forum attach-logs request (warren-core doc 55). The
+  // GUI passes the `sid` + `topic_id` from a
+  // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped
+  // redacted problem report; the daemon builds the canonical JSON body
+  // `{"sid":"<sid>","topic_id":<topic>,"log_gz_b64":"<base64>"}`, signs
+  // `POST /v1/forum/attach-logs` with the Warren identity key, and returns
+  // the four X-Warren-* header values plus that exact body. The GUI POSTs
+  // the body verbatim so the signed bytes and the sent bytes are identical.
+  // The key never leaves the daemon. Errors if no identity is bootstrapped,
+  // the sid is malformed, or the gzip is empty or exceeds 1 MiB.
+  rpc SignForumAttachLogs(ForumAttachLogsRequest) returns (ForumLoginSignature) {}
+
   // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
   // OFF by default per doctrine `warren_multihop_doctrine_v1` (full
   // bandwidth single-hop, opt-in privacy). entry_country / exit_country
@@ -733,6 +745,17 @@ message ForumLoginSignature {
   uint64 timestamp = 3;
   string nonce_hex = 4;
   string body = 5;
+}
+
+// Community-forum attach-logs (doc 55). `sid` is the opaque session id from
+// the `warren://attach-logs?sid=..` deep link (32 lowercase hex; the daemon
+// validates its shape before signing), `topic_id` the forum topic of the
+// user's bug report, and `log_gz` the gzipped redacted problem report
+// (non-empty, max 1 MiB).
+message ForumAttachLogsRequest {
+  string sid = 1;
+  uint64 topic_id = 2;
+  bytes log_gz = 3;
 }
 
 // Warren live tunnel status surface via GetWarrenStatus rpc and the

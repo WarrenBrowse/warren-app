@@ -261,6 +261,17 @@ function deserialize_mullvad_daemon_management_interface_FeatureIndicators(buffe
   return management_interface_pb.FeatureIndicators.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_ForumAttachLogsRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ForumAttachLogsRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumAttachLogsRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ForumAttachLogsRequest(buffer_arg) {
+  return management_interface_pb.ForumAttachLogsRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_ForumLoginRequest(arg) {
   if (!(arg instanceof management_interface_pb.ForumLoginRequest)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumLoginRequest');
@@ -1051,6 +1062,27 @@ signForumLogin: {
     responseType: management_interface_pb.ForumLoginSignature,
     requestSerialize: serialize_mullvad_daemon_management_interface_ForumLoginRequest,
     requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
+  // Signs a community-forum attach-logs request (warren-core doc 55). The
+// GUI passes the `sid` + `topic_id` from a
+// `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped
+// redacted problem report; the daemon builds the canonical JSON body
+// `{"sid":"<sid>","topic_id":<topic>,"log_gz_b64":"<base64>"}`, signs
+// `POST /v1/forum/attach-logs` with the Warren identity key, and returns
+// the four X-Warren-* header values plus that exact body. The GUI POSTs
+// the body verbatim so the signed bytes and the sent bytes are identical.
+// The key never leaves the daemon. Errors if no identity is bootstrapped,
+// the sid is malformed, or the gzip is empty or exceeds 1 MiB.
+signForumAttachLogs: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumAttachLogs',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ForumAttachLogsRequest,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ForumAttachLogsRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumAttachLogsRequest,
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },

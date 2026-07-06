@@ -33,6 +33,7 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from './daemon-rpc-types';
+import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumLoginResult, IForumLoginRequest } from './forum-login';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
@@ -162,6 +163,16 @@ export const ipcSchema = {
     getPending: invoke<void, IForumLoginRequest | undefined>(),
     approve: invoke<IForumLoginRequest, ForumLoginResult>(),
     cancel: invoke<IForumLoginRequest, void>(),
+  },
+  // Community-forum attach-logs (doc 55). `request` is pushed when a
+  // `warren://attach-logs` deep link arrives; the renderer shows a consent
+  // prompt (with a "view the logs" action backed by problemReport.viewLog)
+  // and calls `approve` or `cancel`. Logs are never sent silently.
+  forumAttach: {
+    request: notifyRenderer<IForumAttachRequest>(),
+    getPending: invoke<void, IForumAttachRequest | undefined>(),
+    approve: invoke<IForumAttachRequest, ForumAttachResult>(),
+    cancel: invoke<IForumAttachRequest, void>(),
   },
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),
