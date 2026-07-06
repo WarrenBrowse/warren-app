@@ -6749,6 +6749,7 @@ dependencies = [
  "warrenguard-tls",
  "warrenguard-transport-core",
  "warrenguard-wire",
+ "zeroize",
 ]
 
 [[package]]

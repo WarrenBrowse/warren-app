@@ -105,6 +105,18 @@ object WarrenJni {
         host: String,
     ): String
 
+    /**
+     * Best-effort notify the connect `host` that the user declined the forum
+     * login for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser
+     * page unblocks instead of polling to timeout. Unsigned (no wallet
+     * material); failures are ignored (the server session expires in 10 min).
+     * Blocks on a network POST, so it must be invoked off the main thread.
+     */
+    external fun forumLoginCancel(
+        sid: String,
+        host: String,
+    )
+
     // -- Tunnel lifecycle --------------------------------------------------
 
     /**

@@ -275,12 +275,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
                 comment: "Forum login consent prompt body"),
             preferredStyle: .alert)
         alert.addAction(UIAlertAction(
-            title: NSLocalizedString("Cancel", comment: ""), style: .cancel))
+            title: NSLocalizedString("Cancel", comment: ""),
+            style: .cancel,
+            handler: { _ in Self.notifyForumLoginCancelled(sid: sid, host: host) }))
         alert.addAction(UIAlertAction(
             title: NSLocalizedString("Approve", comment: ""),
             style: .default,
             handler: { [weak self] _ in self?.performForumLogin(sid: sid, host: host) }))
         presenter.present(alert, animated: true)
+    }
+
+    /// Best-effort cancel notify so the waiting browser page unblocks (mirrors
+    /// the desktop). Fire-and-forget off the main thread; the 10-minute server
+    /// session expiry covers a dropped call.
+    private static func notifyForumLoginCancelled(sid: String, host: String) {
+        DispatchQueue.global(qos: .utility).async {
+            WarrenAccountClient.forumLoginCancel(sid: sid, host: host)
+        }
     }
 
     /// Loads the wallet seed silently and signs + POSTs the challenge in Rust

@@ -213,6 +213,19 @@ public enum WarrenAccountClient {
         }
     }
 
+    /// Best-effort: tells the connect `host` the user declined the forum login
+    /// for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser page
+    /// unblocks instead of polling to timeout. Unsigned (no wallet material);
+    /// mirrors the desktop `cancelForumLogin`. Blocking, run off the main
+    /// thread; failures are ignored (the server session expires in 10 min).
+    public static func forumLoginCancel(sid: String, host: String) {
+        sid.withCString { sidPtr in
+            host.withCString { hostPtr in
+                warren_forum_cancel(sidPtr, hostPtr)
+            }
+        }
+    }
+
     // MARK: - Envelope parsing
 
     /// Parsed shape of the JSON envelope returned by the FFI.

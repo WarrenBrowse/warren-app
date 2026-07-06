@@ -125,3 +125,38 @@ pub unsafe extern "C" fn warren_forum_login(
         envelope_cstring(outcome)
     })
 }
+
+/// Best-effort: notify the connect `host` that the user declined the forum login
+/// for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser page
+/// unblocks instead of polling to timeout. Unsigned (no seed / wallet material);
+/// mirrors the desktop `cancelForumLogin`. Failures are ignored (the server
+/// session expires on its own in 10 minutes). Blocking; call off the main thread.
+///
+/// # Safety
+/// `sid` and `host` must be valid NUL-terminated C strings.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_forum_cancel(sid: *const c_char, host: *const c_char) {
+    crate::ffi_guard((), || {
+        // SAFETY: the inputs uphold the documented preconditions.
+        let (Some(sid), Some(host)) = (unsafe { cstr_to_string(sid) }, unsafe {
+            cstr_to_string(host)
+        }) else {
+            return;
+        };
+        let Some(url) = forum::build_cancel_url(&sid, &host) else {
+            return;
+        };
+        let Ok(handle) = crate::warren_ios_runtime() else {
+            return;
+        };
+        let request = HttpRequest {
+            method: Method::Post,
+            url,
+            headers: Vec::new(),
+            body: Vec::new(),
+            use_sni: true,
+        };
+        // Best-effort: a failed cancel just means the browser polls to timeout.
+        let _ = handle.block_on(ReqwestTransport::new().execute(request));
+    })
+}

@@ -4,7 +4,10 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
@@ -37,6 +40,10 @@ sealed interface WarrenForumLoginOutcome {
  */
 class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
 
+    // Fire-and-forget scope for the cancel notify so it survives the consent
+    // prompt being dismissed (a composition scope would cancel it mid-flight).
+    private val cancelScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     suspend fun signIn(link: ForumLoginLink): WarrenForumLoginOutcome {
         if (walletRepository.state.value is WalletState.Absent) {
             Logger.w("WarrenForumLoginUseCase: no wallet on device")
@@ -59,6 +66,21 @@ class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
                     return@use WarrenForumLoginOutcome.Failure(e.message ?: "JNI forumLogin threw")
                 }
                 parseForumLoginOutcome(rawJson)
+            }
+        }
+    }
+
+    /**
+     * Best-effort: notify the provider the user declined so the waiting browser
+     * page unblocks. Fire-and-forget on [cancelScope] so it is not cancelled
+     * when the consent prompt leaves composition; nothing to report back.
+     */
+    fun cancel(link: ForumLoginLink) {
+        cancelScope.launch {
+            try {
+                WarrenJni.forumLoginCancel(link.sid, link.host)
+            } catch (e: Exception) {
+                Logger.w(throwable = e) { "WarrenJni.forumLoginCancel threw" }
             }
         }
     }

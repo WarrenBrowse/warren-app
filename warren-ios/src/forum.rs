@@ -35,6 +35,19 @@ pub fn is_valid_sid(sid: &str) -> bool {
             .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
+/// Build the best-effort cancel URL `POST /v1/session/<sid>/cancel`, or `None`
+/// if `host`/`sid` are invalid. Tells the connect provider the user declined so
+/// the waiting browser page unblocks instead of polling to timeout (mirrors the
+/// desktop `cancelForumLogin` and Android's `build_cancel_url`). Unsigned: it
+/// carries no wallet material.
+#[must_use]
+pub fn build_cancel_url(sid: &str, host: &str) -> Option<String> {
+    if !is_allowed_connect_host(host) || !is_valid_sid(sid) {
+        return None;
+    }
+    Some(format!("https://{host}/v1/session/{sid}/cancel"))
+}
+
 /// A signed `POST /v1/forum/login` request, transport-agnostic so the byte
 /// construction (host-tested) and the network execution (iOS-only) stay
 /// separable.
@@ -179,6 +192,18 @@ mod tests {
         assert!(!is_valid_sid("0123456789ABCDEF0123456789abcdef")); // uppercase
         assert!(!is_valid_sid("0123456789abcdef")); // too short
         assert!(!is_valid_sid("0123456789abcdef0123456789abcdeg")); // non-hex
+    }
+
+    #[test]
+    fn cancel_url_is_built_only_for_a_valid_host_and_sid() {
+        assert_eq!(
+            build_cancel_url(SID, "connect.warrenbrowse.com").as_deref(),
+            Some(
+                "https://connect.warrenbrowse.com/v1/session/0123456789abcdef0123456789abcdef/cancel"
+            )
+        );
+        assert_eq!(build_cancel_url(SID, "evil.example.com"), None);
+        assert_eq!(build_cancel_url("NOTHEX", "connect.warrenbrowse.com"), None);
     }
 
     #[test]

@@ -36,8 +36,17 @@ fun ForumLoginPromptHost() {
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
 
+    // Declining notifies the provider so the waiting browser page unblocks
+    // (mirrors the desktop), then dismisses the prompt.
+    val onDecline = {
+        if (!busy) {
+            useCase.cancel(link)
+            controller.clear()
+        }
+    }
+
     AlertDialog(
-        onDismissRequest = { if (!busy) controller.clear() },
+        onDismissRequest = onDecline,
         title = { Text("Sign in to the Warren community forum?") },
         text = {
             Text(
@@ -66,7 +75,7 @@ fun ForumLoginPromptHost() {
             )
         },
         dismissButton = {
-            TextButton(onClick = { if (!busy) controller.clear() }) { Text("Cancel") }
+            TextButton(onClick = onDecline) { Text("Cancel") }
         },
     )
 }

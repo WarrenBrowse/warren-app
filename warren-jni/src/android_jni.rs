@@ -386,6 +386,44 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> crate::forum::ForumLogi
     }
 }
 
+/// Best-effort: tell the connect provider the user declined the forum login
+/// (`POST /v1/session/<sid>/cancel`) so the waiting browser page unblocks
+/// instead of polling to timeout. Unsigned (no wallet material); mirrors the
+/// desktop `cancelForumLogin`. Failures are ignored: the server session expires
+/// on its own in 10 minutes.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLoginCancel<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    sid: JString<'local>,
+    host: JString<'local>,
+) {
+    let jnix_env = JnixEnv::from(env);
+    let sid = String::from_java(&jnix_env, sid);
+    let host = String::from_java(&jnix_env, host);
+    forum_cancel(&sid, &host);
+}
+
+fn forum_cancel(sid: &str, host: &str) {
+    use warren_api::{HttpRequest, HttpTransport, Method, ReqwestTransport};
+
+    let Some(url) = crate::forum::build_cancel_url(sid, host) else {
+        return;
+    };
+    let Some(runtime) = RUNTIME.get() else {
+        return;
+    };
+    let request = HttpRequest {
+        method: Method::Post,
+        url,
+        headers: Vec::new(),
+        body: Vec::new(),
+        use_sni: true,
+    };
+    // Best-effort: a failed cancel just means the browser polls to timeout.
+    let _ = runtime.block_on(ReqwestTransport::new().execute(request));
+}
+
 /// Allocate a Java `byte[]` and copy `bytes` into it. Returns a null pointer
 /// (and leaves any pending JVM exception unchanged) on allocation failure.
 fn new_byte_array_from(env: &JnixEnv<'_>, bytes: &[u8]) -> jbyteArray {
