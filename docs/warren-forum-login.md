@@ -185,15 +185,23 @@ Koin, logging is Kermit, JSON parsing is kotlinx.serialization. What shipped:
 `forum::build_cancel_url` + best-effort `POST /v1/session/<sid>/cancel`, wired to
 the consent prompt's decline path on a fire-and-forget scope, no Kotlin HTTP).
 
+**Community entry-point DONE**: a "Community forum" row in the Settings screen
+(`SettingsScreen.kt`, `ExternalLinkListItem` + `LocalUriHandler`, strings
+`community_forum` / `community_forum_url`) opens `https://forum.warrenbrowse.com`
+in the system browser (the round-trip needs the external browser, and it mirrors
+the desktop `CommunityButton`).
+
+**DRY**: the wire bytes + validation + cancel URL + outcome mapping are now
+single-sourced in the shared `warren-forum` crate; `warren-jni::forum` is a thin
+shim that only adds the mnemonic -> signing-key derivation.
+
 Remaining, genuinely device-gated:
 - **Device round-trip test**: browser invokes `warren://forum-login` -> OS routes
   to the app -> consent -> sign -> the browser approval page completes and the
   user lands logged in under an opaque handle (subscriber group applied for a
   subscribed wallet). Needs a real device/emulator + the live connect provider.
-- **A "Community" entry point** (open `https://forum.warrenbrowse.com` in a
-  Custom Tab from a settings/support row): trivial UI, placement is a product
-  call, deferred to the device session. Open-on-success is NOT needed: the
-  browser tab that initiated the deep link completes the login itself.
+  Open-on-success is NOT needed: the browser tab that initiated the deep link
+  completes the login itself.
 
 ## iOS (Swift) - IMPLEMENTED (2026-07-06), device test pending
 
@@ -230,10 +238,14 @@ gitignored per-dev files, generated from the `.template`s for the compile check)
 `WarrenAccountClient.forumLoginCancel(sid:host:)`, wired to the `UIAlertController`
 Cancel action off the main thread; shares the Rust `forum::build_cancel_url`).
 
-Remaining, device-gated only (same as Android): the on-device deep-link
-round-trip and a "Community" entry point (open the forum in
-`SFSafariViewController`). Open-on-success is not needed (the initiating browser
-tab completes the login).
+**Community entry-point DONE**: a "Community forum" `linkRow` in
+`WarrenAboutView.swift` opens `https://forum.warrenbrowse.com` via
+`UIApplication.shared.open` (external Safari, so the `warren://` redirect routes
+back). **DRY**: `warren-ios::forum` is now a thin shim over the shared
+`warren-forum` crate (only the seed-derived-identity signing entry is iOS-side).
+
+Remaining, device-gated only: the on-device deep-link round-trip. Open-on-success
+is not needed (the initiating browser tab completes the login).
 
 ## Security checklist (all platforms)
 
