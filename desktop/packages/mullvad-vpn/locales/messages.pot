@@ -1275,6 +1275,54 @@ msgctxt "filter-view"
 msgid "Warren owned only"
 msgstr ""
 
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr ""
+
 msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr ""
