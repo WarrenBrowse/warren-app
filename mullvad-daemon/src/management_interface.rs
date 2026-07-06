@@ -2133,6 +2133,7 @@ impl ManagementInterfaceEventBroadcaster {
 /// A forum deep-link `sid` is attacker-influenced (it comes from a URL the
 /// OS handed us) and gets interpolated into a signed JSON body, so pin it
 /// to the exact session id shape: 32 lowercase hex.
+#[expect(clippy::result_large_err)]
 fn validate_forum_sid(sid: &str) -> Result<(), Status> {
     let valid = sid.len() == 32
         && sid
