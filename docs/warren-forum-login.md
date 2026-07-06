@@ -181,16 +181,19 @@ Koin, logging is Kermit, JSON parsing is kotlinx.serialization. What shipped:
    on device) opens the forum in a Custom Tab on success. No Kotlin HTTP client,
    no nonce/timestamp/header plumbing (all in Rust).
 
+**Cancel notify DONE** (`WarrenJni.forumLoginCancel(sid, host)` -> Rust
+`forum::build_cancel_url` + best-effort `POST /v1/session/<sid>/cancel`, wired to
+the consent prompt's decline path on a fire-and-forget scope, no Kotlin HTTP).
+
 Remaining, genuinely device-gated:
 - **Device round-trip test**: browser invokes `warren://forum-login` -> OS routes
   to the app -> consent -> sign -> the browser approval page completes and the
   user lands logged in under an opaque handle (subscriber group applied for a
   subscribed wallet). Needs a real device/emulator + the live connect provider.
-- **Custom Tab open-on-success + a "Community" entry point** (open
-  `https://forum.warrenbrowse.com`): trivial UI, deferred to the device session.
-- **Cancel notify** (`POST /v1/session/<sid>/cancel`): optional; the session
-  expires in 10 min regardless. If added, do it via a small Rust JNI helper to
-  keep the no-Kotlin-HTTP invariant, not an OkHttp dependency.
+- **A "Community" entry point** (open `https://forum.warrenbrowse.com` in a
+  Custom Tab from a settings/support row): trivial UI, placement is a product
+  call, deferred to the device session. Open-on-success is NOT needed: the
+  browser tab that initiated the deep link completes the login itself.
 
 ## iOS (Swift) - IMPLEMENTED (2026-07-06), device test pending
 
@@ -223,9 +226,14 @@ Verified on this host: `cargo test -p warren-ios` (8 forum tests green),
 CODE_SIGNING_ALLOWED=NO` exits 0 (the `ios/Configurations/*.xcconfig` are
 gitignored per-dev files, generated from the `.template`s for the compile check).
 
+**Cancel notify DONE** (`warren_forum_cancel(sid, host)` FFI +
+`WarrenAccountClient.forumLoginCancel(sid:host:)`, wired to the `UIAlertController`
+Cancel action off the main thread; shares the Rust `forum::build_cancel_url`).
+
 Remaining, device-gated only (same as Android): the on-device deep-link
-round-trip, open-forum-on-success (`SFSafariViewController`) + a "Community"
-entry point, and the optional cancel-notify.
+round-trip and a "Community" entry point (open the forum in
+`SFSafariViewController`). Open-on-success is not needed (the initiating browser
+tab completes the login).
 
 ## Security checklist (all platforms)
 
