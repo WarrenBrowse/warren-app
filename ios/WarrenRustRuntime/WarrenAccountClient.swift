@@ -49,6 +49,16 @@ public enum WarrenAccountError: Error, Equatable {
     case server(status: Int, message: String)
 }
 
+/// Outcome of a `POST /v1/forum/login` (community-forum wallet login, doc 55).
+public enum WarrenForumLoginOutcome: Equatable {
+    /// The provider accepted the signature; the browser completes the login.
+    case approved
+    /// The wallet has never subscribed to Warren; forum access is refused (403).
+    case subscriptionRequired
+    /// Any other failure (bad input, provider error, transport error).
+    case failed
+}
+
 /// Stateless facade over the Warren account FFI. All methods are
 /// synchronous and blocking; run them off the main thread.
 public enum WarrenAccountClient {
@@ -166,6 +176,40 @@ public enum WarrenAccountClient {
             case .okToken, .okVoid:
                 return .failure(.transport("storekit check response missing expires_at"))
             }
+        }
+    }
+
+    /// Signs and submits a community-forum login challenge for `sid` to the
+    /// connect `host` (`POST /v1/forum/login`, doc 55). Everything
+    /// wire-sensitive (the signature, a fresh nonce, and the POST itself)
+    /// happens in Rust; only `sid` and `host` cross the boundary, so the wallet
+    /// signature never surfaces to Swift. `host` is re-validated against a hard
+    /// allowlist in Rust so a hostile deep link cannot redirect the signed
+    /// request. Blocking (run off the main thread); the seed and sid are never
+    /// logged.
+    public static func forumLogin(seed: Data, sid: String, host: String) -> WarrenForumLoginOutcome {
+        guard seed.count == seedByteCount else { return .failed }
+        let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
+            guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+            return sid.withCString { sidPtr in
+                host.withCString { hostPtr in
+                    warren_forum_login(base, sidPtr, hostPtr)
+                }
+            }
+        }
+        // The FFI envelope is {"ok":true} / {"ok":false,"error":"subscription-
+        // required"|"error"} (no `status` field), so it parses as .okVoid on
+        // success and .failure(.transport(message)) otherwise.
+        switch parseEnvelope(raw) {
+        case .success(.okVoid):
+            return .approved
+        case let .success(.failure(error)):
+            if case let .transport(message) = error, message == "subscription-required" {
+                return .subscriptionRequired
+            }
+            return .failed
+        default:
+            return .failed
         }
     }
 
