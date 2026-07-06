@@ -192,15 +192,40 @@ Remaining, genuinely device-gated:
   expires in 10 min regardless. If added, do it via a small Rust JNI helper to
   keep the no-Kotlin-HTTP invariant, not an OkHttp dependency.
 
-## iOS (Swift) - later, more gated (needs Xcode)
+## iOS (Swift) - IMPLEMENTED (2026-07-06), device test pending
 
-Same shape as Android: the Rust `warren-jni::forum` logic is reusable; add an
-equivalent FFI entry in the `warren-ios` crate (`forum_login(mnemonic, sid,
-host) -> {"ok":...}`, ideally by lifting `forum.rs` to a shared crate so it is
-not duplicated). Swift side: add `warren` to `CFBundleURLSchemes`, handle it in
-`.onOpenURL`, validate `sid`+`host`, call the FFI, present a toast. "Community"
-opens the forum in `SFSafariViewController`. Gated on an Xcode build + Apple
-signing (not available on the current host).
+Landed on branch `android-forum-login` and, like Android, verified as far as
+headless allows: the Rust FFI is host-tested + iOS-target compiled, and the
+whole `WarrenVPN` app builds for the iOS simulator (Xcode 26.4 is present after
+all; only the on-device round-trip is gated). What shipped:
+
+1. **Rust FFI** (`warren-ios`): a new host-tested `forum` module (8 host tests:
+   allowlist, sid shape, wire assembly, nonce, status mapping, envelope) that,
+   unlike Android, signs directly via `WarrenIdentity::from_seed(seed)
+   .sign_request(...)` (no `sign_forum_login` port needed, the iOS house pattern
+   passes the 32-byte seed). The iOS-gated `warren_forum_ffi.rs` exports
+   `char *warren_forum_login(const uint8_t *seed, const char *sid, const char
+   *host)` (auto-added to `warren_rust_runtime.h` by the cbindgen `build.rs`),
+   executing the POST via `ReqwestTransport::execute` on the shared iOS runtime,
+   returning the same `{"ok":...}` envelope as Android.
+2. **Swift** (existing files only, no `.pbxproj` surgery): `WarrenForumLoginOutcome`
+   + `WarrenAccountClient.forumLogin(seed:sid:host:)` (reuses the account
+   client's `parseEnvelope`), a `warren://forum-login` `CFBundleURLTypes` entry in
+   `Info.plist`, and `SceneDelegate` handling (`scene(_:openURLContexts:)` + the
+   cold-launch `connectionOptions.urlContexts` path, a `parseForumLogin` guard,
+   a `UIAlertController` consent prompt, silent seed load via
+   `WarrenWalletKeychain.load()` + `WarrenWallet.fromMnemonic`, and a result
+   alert). Rust re-validates sid+host, so the Swift parse is a fail-fast.
+
+Verified on this host: `cargo test -p warren-ios` (8 forum tests green),
+`cargo build -p warren-ios --target aarch64-apple-ios-sim` clean, and
+`xcodebuild -scheme WarrenVPN -destination 'generic/platform=iOS Simulator'
+CODE_SIGNING_ALLOWED=NO` exits 0 (the `ios/Configurations/*.xcconfig` are
+gitignored per-dev files, generated from the `.template`s for the compile check).
+
+Remaining, device-gated only (same as Android): the on-device deep-link
+round-trip, open-forum-on-success (`SFSafariViewController`) + a "Community"
+entry point, and the optional cancel-notify.
 
 ## Security checklist (all platforms)
 
