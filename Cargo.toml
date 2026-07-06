@@ -39,6 +39,7 @@ members = [
   "talpid-warren-tunnel",
   "talpid-windows",
   "warren-jni",
+  "warren-forum",
   "windows-installer",
 ]
 exclude = ["ci/ios/test-router/raas"]

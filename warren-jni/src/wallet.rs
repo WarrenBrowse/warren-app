@@ -24,13 +24,6 @@ use warren_identity::{derive_node_key, seed_from_mnemonic};
 pub enum WalletError {
     #[error("invalid mnemonic: {0}")]
     InvalidMnemonic(String),
-    /// The forum-login `sid` was not 32 lowercase hex chars (mirrors the
-    /// desktop deep-link guard; a malformed sid must never be signed).
-    #[error("invalid forum-login sid")]
-    InvalidSid,
-    /// The supplied nonce was not 32 hex chars (16 bytes).
-    #[error("invalid nonce hex")]
-    InvalidNonce,
 }
 
 impl From<warren_identity::MnemonicError> for WalletError {
@@ -128,74 +121,6 @@ pub fn sign_canonical_request(
 ) -> Result<[u8; 64], WalletError> {
     let msg = warren_identity::canonical_message(method, path, timestamp, nonce_hex, body_hash_hex);
     sign_message(mnemonic, msg.as_bytes())
-}
-
-/// The signed material for a `POST /v1/forum/login` request: the four
-/// `X-Warren-*` headers and the exact body to send. The Kotlin caller
-/// attaches the headers verbatim and POSTs the body, never rebuilding the
-/// wire-sensitive body itself. Kept plain data (no `serde` derive) so it
-/// stays host-testable; the JSON encoding happens in the Android-gated JNI
-/// layer where `serde` is available.
-#[derive(Debug, Clone)]
-pub struct ForumLoginSigned {
-    /// `X-Warren-*` header name -> value, ready to attach as-is.
-    pub headers: std::collections::BTreeMap<String, String>,
-    /// The canonical request body, single-sourced here (`{"sid":"<sid>"}`).
-    pub body: String,
-}
-
-/// True iff `sid` is exactly 32 lowercase hex chars (the forum SSO session id
-/// shape; mirrors the desktop `parseForumLoginUrl` guard).
-fn is_valid_sid(sid: &str) -> bool {
-    sid.len() == 32
-        && sid
-            .bytes()
-            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
-}
-
-/// Sign a forum-login challenge for `sid`, wallet-authenticated.
-///
-/// The canonical `POST /v1/forum/login` body `{"sid":"<sid>"}` and the four
-/// `X-Warren-*` headers are built here from `warren_identity`'s single
-/// request-signing definition, so the Android (and any FFI) caller cannot
-/// drift from the wire contract the desktop daemon uses. `timestamp` (Unix
-/// seconds) and `nonce_hex` (32 hex chars = 16 random bytes) are inputs,
-/// mirroring [`sign_canonical_request`]: the caller supplies a fresh clock
-/// and a random nonce, keeping this deterministic and unit-testable.
-///
-/// # Errors
-///
-/// [`WalletError::InvalidSid`] for a malformed `sid`, [`WalletError::InvalidNonce`]
-/// for a malformed nonce, [`WalletError::InvalidMnemonic`] for a bad phrase.
-pub fn sign_forum_login(
-    mnemonic: &str,
-    sid: &str,
-    timestamp: u64,
-    nonce_hex: &str,
-) -> Result<ForumLoginSigned, WalletError> {
-    if !is_valid_sid(sid) {
-        return Err(WalletError::InvalidSid);
-    }
-    let nonce: [u8; 16] = hex::decode(nonce_hex)
-        .ok()
-        .and_then(|b| b.try_into().ok())
-        .ok_or(WalletError::InvalidNonce)?;
-    let key = signing_key_from_mnemonic(mnemonic)?;
-    let body = format!("{{\"sid\":\"{sid}\"}}");
-    let sig = warren_identity::signing::sign_request(
-        &key,
-        "POST",
-        "/v1/forum/login",
-        body.as_bytes(),
-        timestamp,
-        nonce,
-    );
-    let headers = sig
-        .headers()
-        .into_iter()
-        .map(|(name, value)| (name.to_owned(), value))
-        .collect();
-    Ok(ForumLoginSigned { headers, body })
 }
 
 #[cfg(test)]
@@ -308,73 +233,6 @@ mod tests {
         pubkey.verify(expected.as_bytes(), &sig).expect(
             "canonical-request signature must verify against the warren-identity-built message",
         );
-    }
-
-    #[test]
-    fn sign_forum_login_produces_a_verifiable_signature_and_exact_body() {
-        use ed25519_dalek::{Signature, Verifier, VerifyingKey};
-        use sha2::{Digest as _, Sha256};
-
-        let phrase = generate_mnemonic();
-        let pubkey = VerifyingKey::from_bytes(&pubkey_from_mnemonic(&phrase).unwrap()).unwrap();
-        let sid = "0123456789abcdef0123456789abcdef";
-        let nonce_hex = "00112233445566778899aabbccddeeff";
-
-        let signed = sign_forum_login(&phrase, sid, 1_700_000_000, nonce_hex).unwrap();
-
-        // Body is single-sourced and exact.
-        assert_eq!(
-            signed.body,
-            "{\"sid\":\"0123456789abcdef0123456789abcdef\"}"
-        );
-        // All four X-Warren-* headers present, pubkey matches the wallet.
-        assert_eq!(signed.headers.len(), 4);
-        assert_eq!(
-            signed.headers.get("X-Warren-PubKey").map(String::as_str),
-            Some(pubkey_ss58_from_mnemonic(&phrase).unwrap().as_str())
-        );
-        assert_eq!(
-            signed.headers.get("X-Warren-Timestamp").map(String::as_str),
-            Some("1700000000")
-        );
-
-        // The signature verifies against the canonical POST message the
-        // server will reconstruct (proves wire parity, not just presence).
-        let body_hash_hex = hex::encode(Sha256::digest(signed.body.as_bytes()));
-        let expected = warren_identity::canonical_message(
-            "POST",
-            "/v1/forum/login",
-            1_700_000_000,
-            nonce_hex,
-            &body_hash_hex,
-        );
-        let sig_hex = signed.headers.get("X-Warren-Sig").unwrap();
-        let sig = Signature::from_bytes(&hex::decode(sig_hex).unwrap().try_into().unwrap());
-        pubkey
-            .verify(expected.as_bytes(), &sig)
-            .expect("forum-login signature must verify against the canonical POST message");
-    }
-
-    #[test]
-    fn sign_forum_login_rejects_malformed_sid_and_nonce() {
-        let phrase = generate_mnemonic();
-        let good_nonce = "00112233445566778899aabbccddeeff";
-        // Uppercase, wrong length, and non-hex sids are all refused.
-        for bad_sid in [
-            "0123456789ABCDEF0123456789abcdef", // uppercase
-            "0123456789abcdef",                 // too short
-            "0123456789abcdef0123456789abcdeg", // non-hex 'g'
-        ] {
-            assert!(matches!(
-                sign_forum_login(&phrase, bad_sid, 1, good_nonce),
-                Err(WalletError::InvalidSid)
-            ));
-        }
-        // A malformed nonce is refused too.
-        assert!(matches!(
-            sign_forum_login(&phrase, "0123456789abcdef0123456789abcdef", 1, "xyz"),
-            Err(WalletError::InvalidNonce)
-        ));
     }
 
     /// Wire vector: a fixed mnemonic must always derive the same pubkey.

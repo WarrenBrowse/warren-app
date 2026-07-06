@@ -6420,6 +6420,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "warren-forum"
+version = "0.0.0"
+dependencies = [
+ "getrandom 0.2.17",
+ "hex",
+ "sha2",
+ "warren-identity",
+]
+
+[[package]]
 name = "warren-identity"
 version = "0.0.1"
 dependencies = [
@@ -6438,7 +6448,6 @@ dependencies = [
  "cbindgen",
  "ed25519-dalek",
  "futures",
- "getrandom 0.2.17",
  "hex",
  "hyper",
  "hyper-util",
@@ -6462,6 +6471,7 @@ dependencies = [
  "tracing-subscriber",
  "warren-api",
  "warren-discovery-core",
+ "warren-forum",
  "warren-identity",
  "warrenguard-backoff",
  "warrenguard-daita",
@@ -6481,7 +6491,6 @@ dependencies = [
  "android_logger",
  "bip39",
  "ed25519-dalek",
- "getrandom 0.2.17",
  "hex",
  "jnix",
  "log",
@@ -6492,13 +6501,13 @@ dependencies = [
  "rand 0.9.4",
  "serde",
  "serde_json",
- "sha2",
  "talpid-platform-metadata",
  "talpid-types",
  "thiserror 2.0.18",
  "tokio",
  "warren-api",
  "warren-discovery-core",
+ "warren-forum",
  "warren-identity",
  "warrenguard-daita",
  "warrenguard-multihop",

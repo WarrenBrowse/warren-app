@@ -1,0 +1,27 @@
+[package]
+name = "warren-forum"
+edition.workspace = true
+rust-version.workspace = true
+description = "Shared community-forum wallet-login logic for the Warren mobile FFI crates (warren-jni, warren-ios)"
+repository.workspace = true
+license.workspace = true
+
+# Pure, host-tested logic shared by the Android (`warren-jni`) and iOS
+# (`warren-ios`) forum-login FFI. No platform deps: it takes an ed25519
+# `SigningKey` (each FFI derives it from its own secret store) and returns the
+# transport-agnostic request bytes, so both platforms single-source the wire
+# format + validation + outcome mapping instead of duplicating them.
+[dependencies]
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# 16 bytes of OS entropy for the request nonce (the one call site that mints its
+# own nonce; the warren-api client nonces internally for every other call).
+getrandom = "0.2"
+
+[dev-dependencies]
+# Wire-parity test: reconstruct the SHA-256 body hash and verify the signature
+# against the canonical POST message warren-identity builds.
+sha2 = "0.10"
+hex = "0.4"
+
+[lints]
+workspace = true

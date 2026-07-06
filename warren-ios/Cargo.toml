@@ -17,11 +17,10 @@ crate-type = ["staticlib"]
 [dependencies]
 thiserror = { workspace = true }
 hex = "0.4"
-# 16 bytes of OS entropy for the forum-login request nonce (the only call site
-# that mints its own nonce; every other signed call goes through the warren-api
-# client, which nonces internally). Cross-platform so the nonce helper is
-# host-testable. Same pattern as `warren-jni`.
-getrandom = "0.2"
+# Shared community-forum login logic (wire bytes + validation + outcome mapping),
+# single-sourced with Android (`warren-jni`). This crate only adds the iOS
+# seed-derived-identity signing entry on top.
+warren-forum = { path = "../warren-forum" }
 bip39 = { version = "2", features = ["rand"] }
 # Pinned (=2.2.0) to align with every other Warren crate that handles
 # signing keys. A silent minor bump of a crypto crate that produces

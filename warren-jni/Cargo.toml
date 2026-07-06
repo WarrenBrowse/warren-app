@@ -15,11 +15,10 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 thiserror = { workspace = true }
 hex = "0.4"
-# 16 bytes of OS entropy for the forum-login request nonce. This is the only
-# JNI call site that mints its own nonce (every other signed call goes through
-# the warren-api client, which nonces internally); cross-platform so the nonce
-# helper stays host-testable.
-getrandom = "0.2"
+# Shared community-forum login logic (wire bytes + validation + outcome mapping),
+# single-sourced with iOS (`warren-ios`). This crate only adds the Android
+# mnemonic -> signing-key derivation on top.
+warren-forum = { path = "../warren-forum" }
 # Explicit versions (rather than `{ workspace = true }`): warren-app's
 # workspace.dependencies does not pin bip39 / ed25519-dalek. Both are
 # pinned with `=` to the same exact versions that warren-core uses so
@@ -85,11 +84,6 @@ warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpm
 # pool pick's `Rng + RngCore` trait bounds line up; used only to seed a local
 # DaitaState for the multi-hop DAITA pump.
 rand_v9 = { package = "rand", version = "0.9", optional = true }
-
-[dev-dependencies]
-# Host-only: reconstruct the SHA-256 body hash in the forum-login signing
-# test to verify the signature against the canonical POST message.
-sha2 = "0.10"
 
 [features]
 default = ["tunnel"]
