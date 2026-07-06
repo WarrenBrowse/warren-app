@@ -130,7 +130,7 @@ export function ForumAttachPrompt() {
             ),
         messages.pgettext(
           'forum-attach',
-          'The logs are anonymized: account numbers and personal data are redacted. You can view exactly what will be sent before approving.',
+          'The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving.',
         ),
       ]}
       buttons={[
