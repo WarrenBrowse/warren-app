@@ -789,7 +789,9 @@ mod tests {
         let r_ok = server
             .mock("POST", "/v1/register")
             .with_status(201)
-            .with_body(format!(r#"{{"expires_at":{expires_at},"added_secs":2592000}}"#))
+            .with_body(format!(
+                r#"{{"expires_at":{expires_at},"added_secs":2592000}}"#
+            ))
             .create_async()
             .await;
         let seed = [70u8; 32];
@@ -843,7 +845,8 @@ mod tests {
         assert_eq!(submission.new_expiry.timestamp() as u64, expires_at);
         let now = now_secs();
         assert!(
-            submission.time_added >= expires_at - now - 5 && submission.time_added <= expires_at - now + 5,
+            submission.time_added >= expires_at - now - 5
+                && submission.time_added <= expires_at - now + 5,
             "time_added must approximate the credited duration, got {}",
             submission.time_added
         );

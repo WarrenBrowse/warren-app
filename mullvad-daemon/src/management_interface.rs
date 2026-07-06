@@ -2245,9 +2245,7 @@ fn map_device_error(error: &device::Error) -> Status {
         device::Error::VoucherExpired => {
             Status::new(Code::FailedPrecondition, EXPIRED_VOUCHER_MESSAGE)
         }
-        device::Error::VoucherNotReady => {
-            Status::new(Code::Unavailable, NOT_READY_VOUCHER_MESSAGE)
-        }
+        device::Error::VoucherNotReady => Status::new(Code::Unavailable, NOT_READY_VOUCHER_MESSAGE),
         device::Error::DeviceIoError(_error) => Status::new(Code::Unavailable, error.to_string()),
         device::Error::OtherRestError(error) => map_rest_error(error),
         _ => Status::new(Code::Unknown, error.to_string()),
