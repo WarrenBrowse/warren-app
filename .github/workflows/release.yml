@@ -105,13 +105,13 @@ jobs:
 
       - name: Build (signed + notarized)
         if: env.WARREN_CSC_LINK_MACOS != ''
-        run: ./build.sh --optimize --sign --notarize
+        run: bash ci/build-with-retry.sh --optimize --sign --notarize
 
       - name: Build (unsigned, signing assets missing)
         if: env.WARREN_CSC_LINK_MACOS == ''
         run: |
           echo "::warning::WARREN_CSC_LINK_MACOS secret not set; producing unsigned dev build."
-          ./build.sh --optimize
+          bash ci/build-with-retry.sh --optimize
 
       - name: Wipe signing certificate from runner
         if: always() && env.WARREN_CSC_LINK_MACOS != ''
