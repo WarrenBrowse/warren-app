@@ -57,6 +57,7 @@ import Lang from './components/Lang';
 import MacOsScrollbarDetection from './components/MacOsScrollbarDetection';
 import { ModalContainer } from './components/Modal';
 import { AppContext } from './context';
+import { ForumAttachPrompt } from './features/forum-attach';
 import { ForumLoginPrompt } from './features/forum-login';
 import { WarrenPubKeyWarning } from './features/warren-pubkey-warning';
 import { Theme } from './lib/components';
@@ -443,6 +444,7 @@ export default class AppRenderer {
                               for the pubkey warning that is the safe "reject"). */}
                           <WarrenPubKeyWarning />
                           <ForumLoginPrompt />
+                          <ForumAttachPrompt />
                         </KeyboardNavigation>
                         {window.env.platform === 'darwin' && <MacOsScrollbarDetection />}
                       </ModalContainer>

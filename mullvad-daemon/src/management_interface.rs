@@ -578,8 +578,6 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    /// Snapshot of the live Warren tunnel status read directly from
-    /// the daemon-shared cache.
     /// Signs a community-forum login challenge (doc 55, DiscourseConnect
     /// wallet SSO). Validates the deep-link `sid` shape, then asks the
     /// daemon to sign `POST /v1/forum/login` with the Warren identity key
@@ -590,18 +588,7 @@ impl ManagementService for ManagementServiceImpl {
         request: Request<types::ForumLoginRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
         let sid = request.into_inner().sid;
-        // The sid is attacker-influenced (it comes from a deep link the OS
-        // handed us), and it is interpolated into the signed JSON body, so
-        // pin it to the exact Discourse nonce shape: 32 lowercase hex.
-        let valid = sid.len() == 32
-            && sid
-                .bytes()
-                .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase());
-        if !valid {
-            return Err(Status::invalid_argument(
-                "sid must be 32 lowercase hex chars",
-            ));
-        }
+        validate_forum_sid(&sid)?;
         log::debug!("sign_forum_login (sid/pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SignForumLogin(tx, sid))?;
@@ -620,6 +607,52 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
+    /// Signs a community-forum attach-logs request (doc 55). Validates the
+    /// deep-link `sid` shape and the gzipped report size, then asks the
+    /// daemon to build and sign the canonical `POST /v1/forum/attach-logs`
+    /// body with the Warren identity key, returning the header values plus
+    /// the exact signed body for the GUI to POST verbatim.
+    /// **No-log policy**: never log the sid, pubkey, signature, or log
+    /// content.
+    async fn sign_forum_attach_logs(
+        &self,
+        request: Request<types::ForumAttachLogsRequest>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        let request = request.into_inner();
+        validate_forum_sid(&request.sid)?;
+        if request.log_gz.is_empty() {
+            return Err(Status::invalid_argument("log_gz must not be empty"));
+        }
+        // The connect provider caps the upload at 1 MiB; refusing here
+        // avoids signing a request the server is guaranteed to reject.
+        if request.log_gz.len() > 1024 * 1024 {
+            return Err(Status::invalid_argument("log_gz exceeds 1 MiB"));
+        }
+        log::debug!("sign_forum_attach_logs (sid/pubkey/sig NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SignForumAttachLogs(
+            tx,
+            request.sid,
+            request.topic_id,
+            request.log_gz,
+        ))?;
+        let signed = self.wait_for_result(rx).await?;
+        match signed {
+            Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            None => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+        }
+    }
+
+    /// Snapshot of the live Warren tunnel status read directly from
+    /// the daemon-shared cache.
     async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {
         log::debug!("get_warren_status");
         let snapshot = self.warren_status_cache.snapshot();
@@ -2094,6 +2127,23 @@ impl ManagementInterfaceEventBroadcaster {
                 types::AccessMethodSetting::from(new_access_method),
             )),
         })
+    }
+}
+
+/// A forum deep-link `sid` is attacker-influenced (it comes from a URL the
+/// OS handed us) and gets interpolated into a signed JSON body, so pin it
+/// to the exact session id shape: 32 lowercase hex.
+fn validate_forum_sid(sid: &str) -> Result<(), Status> {
+    let valid = sid.len() == 32
+        && sid
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase());
+    if valid {
+        Ok(())
+    } else {
+        Err(Status::invalid_argument(
+            "sid must be 32 lowercase hex chars",
+        ))
     }
 }
 

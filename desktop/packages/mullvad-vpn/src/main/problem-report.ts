@@ -38,7 +38,9 @@ export function registerIpcListeners() {
   });
 }
 
-function collectLogs(toRedact?: string): Promise<string> {
+// Also used by the forum attach-logs flow (forum-attach.ts): the report is
+// collected when the deep link arrives so the consent prompt can show it.
+export function collectLogs(toRedact?: string): Promise<string> {
   const id = randomUUID();
   const reportPath = getProblemReportPath(id);
   const executable = resolveBin('warren-problem-report');
@@ -93,7 +95,7 @@ function send(email: string, message: string, savedReportId: string): Promise<vo
 // traversal (e.g. `../../etc/passwd`) into the report path.
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-function getProblemReportPath(id: string): string {
+export function getProblemReportPath(id: string): string {
   if (!UUID_REGEX.test(id)) {
     throw new Error('Invalid problem report id');
   }

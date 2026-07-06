@@ -313,6 +313,38 @@ export class DaemonRpc extends GrpcClient {
     };
   }
 
+  /**
+   * Signs a community-forum attach-logs request (doc 55). `sid` and
+   * `topicId` come from a `warren://attach-logs?sid=..&topic=..` deep link
+   * and `logGz` is the gzipped redacted problem report. The daemon builds
+   * the canonical `POST /v1/forum/attach-logs` JSON body itself, signs it
+   * with the Warren identity key, and returns the four X-Warren-* header
+   * values plus that exact body, which must be POSTed verbatim so the
+   * signed bytes and the sent bytes are identical. The signing key never
+   * leaves the daemon.
+   */
+  public async signForumAttachLogs(
+    sid: string,
+    topicId: number,
+    logGz: Uint8Array,
+  ): Promise<ForumLoginSignature> {
+    const request = new grpcTypes.ForumAttachLogsRequest();
+    request.setSid(sid);
+    request.setTopicId(topicId);
+    request.setLogGz(logGz);
+    const response = await this.call<
+      grpcTypes.ForumAttachLogsRequest,
+      grpcTypes.ForumLoginSignature
+    >(this.client.signForumAttachLogs, request);
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
+  }
+
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {
     try {
       const response = await this.callString<grpcTypes.VoucherSubmission>(

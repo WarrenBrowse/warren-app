@@ -1985,6 +1985,34 @@ export namespace ForumLoginSignature {
     }
 }
 
+export class ForumAttachLogsRequest extends jspb.Message { 
+    getSid(): string;
+    setSid(value: string): ForumAttachLogsRequest;
+    getTopicId(): number;
+    setTopicId(value: number): ForumAttachLogsRequest;
+    getLogGz(): Uint8Array | string;
+    getLogGz_asU8(): Uint8Array;
+    getLogGz_asB64(): string;
+    setLogGz(value: Uint8Array | string): ForumAttachLogsRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumAttachLogsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumAttachLogsRequest): ForumAttachLogsRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumAttachLogsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumAttachLogsRequest;
+    static deserializeBinaryFromReader(message: ForumAttachLogsRequest, reader: jspb.BinaryReader): ForumAttachLogsRequest;
+}
+
+export namespace ForumAttachLogsRequest {
+    export type AsObject = {
+        sid: string,
+        topicId: number,
+        logGz: Uint8Array | string,
+    }
+}
+
 export class WarrenStatus extends jspb.Message { 
     getReconnectCount(): number;
     setReconnectCount(value: number): WarrenStatus;
