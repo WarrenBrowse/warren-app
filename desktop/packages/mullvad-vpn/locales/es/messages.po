@@ -4601,3 +4601,51 @@ msgstr "Desconectando..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Conexión en curso"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Adjuntar los registros"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "¿Adjuntar tus registros al informe de error?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "No se pudieron adjuntar los registros. Inténtalo de nuevo en un momento."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Solo el autor del informe de error puede adjuntarle registros."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Enviando, espera un momento."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "El archivo de registro es demasiado grande para adjuntarlo."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Los registros se anonimizan: los números de cuenta y los datos personales se ocultan. Se envían de forma privada al equipo de soporte de Warren y nunca aparecen públicamente en el foro. Puedes ver exactamente lo que se enviará antes de aprobarlo."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Esta solicitud ha caducado. Empieza de nuevo desde la página del foro."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Ver los registros"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Tu informe de error en el foro de Warren (tema %(topicId)d) solicita adjuntar los registros técnicos de la aplicación para ayudar a diagnosticar el problema."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "El nuevo informe de error que estás redactando en el foro de Warren solicita adjuntar los registros técnicos de la aplicación para ayudar a diagnosticar el problema."

@@ -4601,3 +4601,51 @@ msgstr "Kobler fra …"
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Tilkobling pågår"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Legg ved loggene"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Vil du legge ved loggene i feilrapporten?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Det gikk ikke å legge ved loggene. Prøv igjen om et øyeblikk."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Bare den som skrev feilrapporten kan legge ved logger i den."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Sender, vennligst vent."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Loggfilen er for stor til å legges ved."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Loggene anonymiseres: kontonumre og personopplysninger fjernes. De sendes privat til Warrens kundestøtte og vises aldri offentlig på forumet. Du kan se nøyaktig hva som blir sendt før du godkjenner."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Denne forespørselen er utløpt. Start på nytt fra forumsiden."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Se loggene"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Feilrapporten din på Warren-forumet (emne %(topicId)d) ber om å legge ved appens tekniske logger for å hjelpe med å diagnostisere problemet."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Den nye feilrapporten du holder på å skrive på Warren-forumet, ber om å legge ved appens tekniske logger for å hjelpe med å diagnostisere problemet."

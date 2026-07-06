@@ -4629,3 +4629,51 @@ msgstr "Отключение..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Подключение выполняется"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Прикрепить журналы"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Прикрепить журналы к отчёту об ошибке?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Не удалось прикрепить журналы. Повторите попытку через мгновение."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Отмена"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Прикреплять журналы к отчёту об ошибке может только его автор."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Отправка, подождите."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Файл журнала слишком велик для прикрепления."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Журналы анонимизируются: номера учётных записей и личные данные удаляются. Они отправляются приватно в службу поддержки Warren и никогда не появляются публично на форуме. Перед подтверждением вы можете точно увидеть, что будет отправлено."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Этот запрос устарел. Начните заново со страницы форума."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Просмотреть журналы"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Ваш отчёт об ошибке на форуме Warren (тема %(topicId)d) просит прикрепить технические журналы приложения, чтобы помочь диагностировать проблему."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Ваш новый отчёт об ошибке, создаваемый на форуме Warren, просит прикрепить технические журналы приложения, чтобы помочь диагностировать проблему."

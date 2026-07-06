@@ -4574,3 +4574,51 @@ msgstr "正在中斷連線…"
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "正在連線"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "附上日誌"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "要將日誌附加到錯誤報告中嗎？"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "附加日誌失敗。請稍後再試。"
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "取消"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "只有錯誤報告的作者才能為其附加日誌。"
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "正在傳送，請稍候。"
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "日誌檔案過大，無法附加。"
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "日誌已匿名化：帳戶編號和個人資料會被隱去。日誌將私密傳送給 Warren 支援人員，絕不會在論壇上公開顯示。在核准前，您可以準確查看將要傳送的內容。"
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "此請求已過期。請從論壇頁面重新開始。"
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "查看日誌"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "您在 Warren 論壇上的錯誤報告（主題 %(topicId)d）請求附加應用程式技術日誌，以協助診斷問題。"
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "您正在 Warren 論壇上撰寫的新錯誤報告請求附加應用程式技術日誌，以協助診斷問題。"

@@ -4644,3 +4644,51 @@ msgstr "جارٍ قطع الاتصال..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "جارٍ الاتصال"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "إرفاق السجلات"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "إرفاق سجلاتك بتقرير الخطأ؟"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "فشل إرفاق السجلات. يُرجى المحاولة مرة أخرى بعد قليل."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "يمكن لكاتب تقرير الخطأ وحده إرفاق السجلات به."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "جارٍ الإرسال، يُرجى الانتظار."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "ملف السجل كبير جداً بحيث لا يمكن إرفاقه."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "السجلات مجهولة الهوية: أرقام الحسابات والبيانات الشخصية محجوبة. تُرسل بشكل خاص إلى فريق دعم Warren ولا تظهر علناً على المنتدى أبداً. يمكنك معاينة ما سيُرسل بالضبط قبل الموافقة."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "انتهت صلاحية هذا الطلب. ابدأ من جديد من صفحة المنتدى."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "عرض السجلات"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "يطلب تقرير الخطأ الخاص بك على منتدى Warren (الموضوع %(topicId)d) إرفاق السجلات التقنية للتطبيق للمساعدة في تشخيص المشكلة."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "يطلب تقرير الخطأ الجديد الذي تكتبه حالياً على منتدى Warren إرفاق السجلات التقنية للتطبيق للمساعدة في تشخيص المشكلة."

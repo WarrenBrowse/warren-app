@@ -4629,3 +4629,51 @@ msgstr "Rozłączanie..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Trwa łączenie"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Dołącz dzienniki"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Dołączyć dzienniki do zgłoszenia błędu?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Dołączanie dzienników nie powiodło się. Spróbuj ponownie za chwilę."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Anuluj"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Tylko autor zgłoszenia błędu może dołączyć do niego dzienniki."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Wysyłanie, proszę czekać."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Plik dziennika jest za duży, aby go dołączyć."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Dzienniki są anonimizowane: numery kont i dane osobowe są usuwane. Trafiają one prywatnie do zespołu wsparcia Warren i nigdy nie pojawiają się publicznie na forum. Przed zatwierdzeniem możesz dokładnie zobaczyć, co zostanie wysłane."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "To żądanie wygasło. Zacznij ponownie ze strony forum."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Wyświetl dzienniki"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Twoje zgłoszenie błędu na forum Warren (temat %(topicId)d) prosi o dołączenie technicznych dzienników aplikacji, aby pomóc zdiagnozować problem."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Twoje nowe zgłoszenie błędu tworzone na forum Warren prosi o dołączenie technicznych dzienników aplikacji, aby pomóc zdiagnozować problem."

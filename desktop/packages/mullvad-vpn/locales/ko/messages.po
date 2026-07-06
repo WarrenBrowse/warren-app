@@ -4574,3 +4574,51 @@ msgstr "연결을 끊는 중..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "연결 진행 중"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "로그 첨부"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "버그 신고에 로그를 첨부하시겠습니까?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "로그 첨부에 실패했습니다. 잠시 후 다시 시도해 주세요."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "취소"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "버그 신고에 로그를 첨부할 수 있는 사람은 해당 신고 작성자뿐입니다."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "전송 중입니다. 잠시 기다려 주세요."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "로그 파일이 너무 커서 첨부할 수 없습니다."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "로그는 익명화됩니다. 계정 번호와 개인 정보는 가려집니다. 로그는 Warren 지원 담당자에게 비공개로 전송되며 포럼에 공개적으로 표시되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "이 요청은 만료되었습니다. 포럼 페이지에서 다시 시작하세요."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "로그 보기"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren 포럼에 올린 회원님의 버그 신고(주제 %(topicId)d)에서 문제 진단에 도움이 되도록 앱 기술 로그 첨부를 요청합니다."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren 포럼에서 작성 중인 회원님의 새 버그 신고에서 문제 진단에 도움이 되도록 앱 기술 로그 첨부를 요청합니다."

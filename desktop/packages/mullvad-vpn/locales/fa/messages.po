@@ -4588,3 +4588,51 @@ msgstr "در حال قطع اتصال..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "اتصال در حال انجام"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "پیوست کردن لاگ‌ها"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "لاگ‌ها را به گزارش اشکال پیوست می‌کنید؟"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "پیوست کردن لاگ‌ها ناموفق بود. لطفاً کمی بعد دوباره تلاش کنید."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "لغو"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "فقط نویسنده گزارش اشکال می‌تواند لاگ‌ها را به آن پیوست کند."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "در حال ارسال، لطفاً صبر کنید."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "فایل لاگ برای پیوست شدن بسیار بزرگ است."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "لاگ‌ها ناشناس‌سازی شده‌اند: شماره‌های حساب و داده‌های شخصی حذف می‌شوند. آن‌ها به‌صورت خصوصی به کارکنان پشتیبانی Warren ارسال می‌شوند و هرگز به‌طور عمومی در انجمن نمایش داده نمی‌شوند. می‌توانید پیش از تأیید، دقیقاً آنچه را که ارسال خواهد شد ببینید."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "این درخواست منقضی شده است. از صفحه انجمن دوباره شروع کنید."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "مشاهده لاگ‌ها"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "گزارش اشکال شما در انجمن Warren (موضوع %(topicId)d) درخواست می‌کند که لاگ‌های فنی برنامه برای کمک به تشخیص مشکل پیوست شوند."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "گزارش اشکال جدیدی که در حال نگارش آن در انجمن Warren هستید درخواست می‌کند که لاگ‌های فنی برنامه برای کمک به تشخیص مشکل پیوست شوند."

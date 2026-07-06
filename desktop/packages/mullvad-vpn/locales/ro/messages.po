@@ -3749,3 +3749,51 @@ msgstr "Se deconectează..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Conectare în curs"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Atașează logurile"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Atașezi logurile la raportul de eroare?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Atașarea logurilor a eșuat. Te rugăm să încerci din nou peste un moment."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Anulează"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Doar autorul raportului de eroare poate atașa loguri la acesta."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Se trimite, te rugăm să aștepți."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Fișierul log este prea mare pentru a fi atașat."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Logurile sunt anonimizate: numerele de cont și datele personale sunt ascunse. Sunt trimise în privat echipei de asistență Warren și nu apar niciodată public pe forum. Poți vedea exact ce va fi trimis înainte de a aproba."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Această cerere a expirat. Începe din nou de pe pagina forumului."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Vizualizează logurile"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Raportul tău de eroare de pe forumul Warren (subiectul %(topicId)d) cere atașarea logurilor tehnice ale aplicației pentru a ajuta la diagnosticarea problemei."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Noul raport de eroare pe care îl compui pe forumul Warren cere atașarea logurilor tehnice ale aplicației pentru a ajuta la diagnosticarea problemei."

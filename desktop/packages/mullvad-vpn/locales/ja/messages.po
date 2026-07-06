@@ -4574,3 +4574,51 @@ msgstr "切断しています..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "接続中"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "ログを添付"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "バグ報告にログを添付しますか？"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "ログの添付に失敗しました。しばらくしてからもう一度お試しください。"
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "バグ報告にログを添付できるのは、その報告の作成者のみです。"
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "送信しています。しばらくお待ちください。"
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "ログファイルが大きすぎるため添付できません。"
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "ログは匿名化されています。アカウント番号や個人情報は伏せられます。ログは Warren サポートスタッフに非公開で送信され、フォーラム上に公開されることはありません。承認する前に、送信される内容を正確に確認できます。"
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "このリクエストは有効期限が切れています。フォーラムのページからやり直してください。"
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "ログを表示"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren フォーラムのあなたのバグ報告（トピック %(topicId)d）で、問題の診断に役立てるためにアプリの技術ログの添付が求められています。"
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren フォーラムで作成中のあなたの新しいバグ報告で、問題の診断に役立てるためにアプリの技術ログの添付が求められています。"

@@ -4574,3 +4574,51 @@ msgstr "กำลังยกเลิกการเชื่อมต่อ...
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "กำลังเชื่อมต่อ"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "แนบบันทึก"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "แนบบันทึกของคุณไปกับรายงานข้อบกพร่องหรือไม่?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "แนบบันทึกไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "เฉพาะผู้เขียนรายงานข้อบกพร่องเท่านั้นที่สามารถแนบบันทึกได้"
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "กำลังส่ง โปรดรอสักครู่"
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "ไฟล์บันทึกมีขนาดใหญ่เกินกว่าจะแนบได้"
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "บันทึกได้รับการปกปิดตัวตน: หมายเลขบัญชีและข้อมูลส่วนบุคคลถูกซ่อนไว้ ข้อมูลเหล่านี้จะถูกส่งเป็นการส่วนตัวไปยังทีมสนับสนุนของ Warren และจะไม่ปรากฏต่อสาธารณะบนฟอรัม คุณสามารถดูสิ่งที่จะถูกส่งได้อย่างชัดเจนก่อนอนุมัติ"
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "คำขอนี้หมดอายุแล้ว โปรดเริ่มใหม่จากหน้าฟอรัม"
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "ดูบันทึก"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "รายงานข้อบกพร่องของคุณบนฟอรัม Warren (หัวข้อ %(topicId)d) ขอให้แนบบันทึกทางเทคนิคของแอปเพื่อช่วยวินิจฉัยปัญหา"
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "รายงานข้อบกพร่องใหม่ที่คุณกำลังเขียนบนฟอรัม Warren ขอให้แนบบันทึกทางเทคนิคของแอปเพื่อช่วยวินิจฉัยปัญหา"

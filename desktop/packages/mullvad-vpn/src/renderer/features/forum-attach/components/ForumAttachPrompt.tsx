@@ -18,6 +18,17 @@ const NoticeText = styled.span({
   lineHeight: 1.4,
 });
 
+// The global theme sets a background color but no default text color, so a bare
+// element inherits the browser default (black) and is invisible on the dark
+// modal. The transient "Sending" status must set its own readable color.
+const StatusText = styled.div({
+  display: 'block',
+  marginTop: '12px',
+  color: colors.whiteAlpha60,
+  fontSize: '13px',
+  lineHeight: 1.4,
+});
+
 // The renderer reaches IPC through the contextBridge-exposed `window.ipc`,
 // never by importing `lib/ipc-event-channel` directly (that module imports
 // the `electron` package and crashes the sandboxed renderer on load).
@@ -170,9 +181,9 @@ export function ForumAttachPrompt() {
           {notice}
         </NoticeText>
       )}
-      <div role="status" aria-live="polite">
+      <StatusText role="status" aria-live="polite">
         {busy ? messages.pgettext('forum-attach', 'Sending, please wait.') : ''}
-      </div>
+      </StatusText>
     </ModalAlert>
   );
 }

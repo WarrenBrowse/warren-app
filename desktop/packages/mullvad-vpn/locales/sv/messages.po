@@ -4601,3 +4601,51 @@ msgstr "Kopplar från …"
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Anslutning pågår"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Bifoga loggarna"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Vill du bifoga dina loggar till felrapporten?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Det gick inte att bifoga loggarna. Försök igen om en stund."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Endast den som skrev felrapporten kan bifoga loggar till den."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Skickar, vänta."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Loggfilen är för stor för att bifogas."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Loggarna anonymiseras: kontonummer och personuppgifter tas bort. De skickas privat till Warrens supportteam och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Den här begäran har upphört att gälla. Börja om från forumsidan."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Visa loggarna"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Din felrapport på Warren-forumet (ämne %(topicId)d) ber om att bifoga appens tekniska loggar för att hjälpa till att diagnostisera problemet."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Den nya felrapport du håller på att skriva på Warren-forumet ber om att bifoga appens tekniska loggar för att hjälpa till att diagnostisera problemet."

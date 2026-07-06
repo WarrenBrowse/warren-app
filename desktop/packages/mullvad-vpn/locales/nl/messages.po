@@ -4601,3 +4601,51 @@ msgstr "Verbinding verbreken..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Verbinding wordt gemaakt"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "De logs bijvoegen"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Je logs bij het bugrapport voegen?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Het bijvoegen van de logs is mislukt. Probeer het zo meteen opnieuw."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Annuleren"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Alleen de auteur van het bugrapport kan er logs bij voegen."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Bezig met verzenden, even geduld."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Het logbestand is te groot om bij te voegen."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "De logs worden geanonimiseerd: accountnummers en persoonlijke gegevens worden verwijderd. Ze gaan privé naar het Warren-supportteam en verschijnen nooit openbaar op het forum. Je kunt precies zien wat er wordt verzonden voordat je goedkeurt."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Dit verzoek is verlopen. Begin opnieuw vanaf de forumpagina."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "De logs bekijken"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Je bugrapport op het Warren-forum (onderwerp %(topicId)d) vraagt om de technische logs van de app bij te voegen om het probleem te helpen diagnosticeren."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Je nieuwe bugrapport dat je op het Warren-forum aan het opstellen bent, vraagt om de technische logs van de app bij te voegen om het probleem te helpen diagnosticeren."

@@ -4601,3 +4601,51 @@ msgstr "Yhteyttä katkaistaan..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Yhteyttä muodostetaan"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Liitä lokit"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Liitetäänkö lokit virheraporttiin?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Lokien liittäminen epäonnistui. Yritä hetken kuluttua uudelleen."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Peruuta"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Vain virheraportin tekijä voi liittää siihen lokeja."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Lähetetään, odota hetki."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Lokitiedosto on liian suuri liitettäväksi."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Lokit anonymisoidaan: tilinumerot ja henkilötiedot poistetaan. Ne menevät yksityisesti Warrenin tukitiimille eivätkä koskaan näy julkisesti foorumilla. Voit tarkistaa tarkalleen, mitä lähetetään, ennen kuin hyväksyt."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Tämä pyyntö on vanhentunut. Aloita uudelleen foorumisivulta."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Näytä lokit"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren-foorumilla tekemäsi virheraportti (aihe %(topicId)d) pyytää liittämään sovelluksen tekniset lokit ongelman selvittämiseksi."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren-foorumille parhaillaan laatimasi uusi virheraportti pyytää liittämään sovelluksen tekniset lokit ongelman selvittämiseksi."

@@ -4601,3 +4601,51 @@ msgstr "Afbryder..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Forbindelse i gang"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Vedhæft logfilerne"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Vil du vedhæfte dine logfiler til fejlrapporten?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Det mislykkedes at vedhæfte logfilerne. Prøv igen om et øjeblik."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Annuller"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Kun forfatteren af fejlrapporten kan vedhæfte logfiler til den."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Sender, vent venligst."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Logfilen er for stor til at blive vedhæftet."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Logfilerne anonymiseres: kontonumre og personlige data fjernes. De sendes privat til Warrens supportteam og vises aldrig offentligt på forummet. Du kan se præcis, hvad der bliver sendt, før du godkender."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Denne anmodning er udløbet. Start forfra fra forumsiden."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Se logfilerne"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Din fejlrapport på Warren-forummet (emne %(topicId)d) beder om at vedhæfte appens tekniske logfiler for at hjælpe med at diagnosticere problemet."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Din nye fejlrapport, som du er ved at skrive på Warren-forummet, beder om at vedhæfte appens tekniske logfiler for at hjælpe med at diagnosticere problemet."

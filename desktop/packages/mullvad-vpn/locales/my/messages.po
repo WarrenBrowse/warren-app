@@ -4577,3 +4577,51 @@ msgstr "ချိတ်ဆက်မှုဖြုတ်ဆဲ..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "ချိတ်ဆက်နေဆဲ"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "မှတ်တမ်းများ ပူးတွဲရန်"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "သင့်မှတ်တမ်းများကို ချွတ်ယွင်းမှု အစီရင်ခံစာတွင် ပူးတွဲမလား?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "မှတ်တမ်းများ ပူးတွဲခြင်း မအောင်မြင်ပါ။ ခဏအကြာတွင် ထပ်မံကြိုးစားပါ။"
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "ပယ်ဖျက်ရန်"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "ချွတ်ယွင်းမှု အစီရင်ခံစာကို ရေးသားသူသာလျှင် ၎င်းတွင် မှတ်တမ်းများ ပူးတွဲနိုင်ပါသည်။"
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "ပို့နေသည်၊ ခေတ္တစောင့်ပါ။"
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "မှတ်တမ်းဖိုင်သည် ပူးတွဲရန် အရွယ်အစား ကြီးလွန်းပါသည်။"
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "မှတ်တမ်းများကို အမည်ဝှက်ထားပါသည်: အကောင့်နံပါတ်များနှင့် ကိုယ်ရေးကိုယ်တာ အချက်အလက်များကို ဖျောက်ထားသည်။ ၎င်းတို့ကို Warren ပံ့ပိုးကူညီရေးဝန်ထမ်းများထံသို့ သီးသန့်ပေးပို့ပြီး ဖိုရမ်တွင် အများမြင်အောင် ဘယ်သောအခါမျှ မပေါ်ပါ။ အတည်မပြုမီ ပေးပို့မည့်အရာကို အတိအကျ ကြည့်ရှုနိုင်ပါသည်။"
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "ဤတောင်းဆိုမှု သက်တမ်းကုန်သွားပါပြီ။ ဖိုရမ်စာမျက်နှာမှ ပြန်လည်စတင်ပါ။"
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "မှတ်တမ်းများကို ကြည့်ရန်"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren ဖိုရမ်ရှိ သင့်ချွတ်ယွင်းမှု အစီရင်ခံစာ (ခေါင်းစဉ် %(topicId)d) သည် ပြဿနာကို ရှာဖွေဖော်ထုတ်ရန် ကူညီရန်အတွက် အက်ပ်၏ နည်းပညာဆိုင်ရာ မှတ်တမ်းများ ပူးတွဲရန် တောင်းဆိုပါသည်။"
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren ဖိုရမ်တွင် သင်ရေးသားနေဆဲဖြစ်သော ချွတ်ယွင်းမှု အစီရင်ခံစာအသစ်သည် ပြဿနာကို ရှာဖွေဖော်ထုတ်ရန် ကူညီရန်အတွက် အက်ပ်၏ နည်းပညာဆိုင်ရာ မှတ်တမ်းများ ပူးတွဲရန် တောင်းဆိုပါသည်။"

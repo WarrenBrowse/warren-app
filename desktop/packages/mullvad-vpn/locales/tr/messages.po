@@ -4601,3 +4601,51 @@ msgstr "Bağlantı kesiliyor..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Bağlantı sürüyor"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Günlükleri ekle"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Günlükleriniz hata raporuna eklensin mi?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Günlükler eklenemedi. Lütfen birazdan tekrar deneyin."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "İptal"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Hata raporuna yalnızca raporu yazan kişi günlük ekleyebilir."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Gönderiliyor, lütfen bekleyin."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Günlük dosyası eklenemeyecek kadar büyük."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Günlükler anonimleştirilir: hesap numaraları ve kişisel veriler gizlenir. Yalnızca Warren destek ekibine özel olarak gönderilir ve forumda hiçbir zaman herkese açık görünmez. Onaylamadan önce tam olarak neyin gönderileceğini görebilirsiniz."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Bu isteğin süresi doldu. Forum sayfasından yeniden başlayın."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Günlükleri görüntüle"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren forumundaki hata raporunuz (konu %(topicId)d), sorunu teşhis etmeye yardımcı olmak için uygulamanın teknik günlüklerinin eklenmesini istiyor."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren forumunda oluşturmakta olduğunuz yeni hata raporu, sorunu teşhis etmeye yardımcı olmak için uygulamanın teknik günlüklerinin eklenmesini istiyor."

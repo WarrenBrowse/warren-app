@@ -4601,3 +4601,51 @@ msgstr "A desligar..."
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr "Ligação em curso"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Anexar os registos"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Anexar os seus registos ao relatório de erro?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Não foi possível anexar os registos. Tente novamente dentro de momentos."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Apenas o autor do relatório de erro lhe pode anexar registos."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "A enviar, aguarde."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "O ficheiro de registo é demasiado grande para ser anexado."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: account numbers and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Os registos são anonimizados: os números de conta e os dados pessoais são ocultados. São enviados de forma privada à equipa de apoio da Warren e nunca aparecem publicamente no fórum. Pode ver exatamente o que será enviado antes de aprovar."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Este pedido expirou. Comece novamente a partir da página do fórum."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Ver os registos"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "O seu relatório de erro no fórum Warren (tópico %(topicId)d) pede para anexar os registos técnicos da aplicação para ajudar a diagnosticar o problema."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "O novo relatório de erro que está a redigir no fórum Warren pede para anexar os registos técnicos da aplicação para ajudar a diagnosticar o problema."
