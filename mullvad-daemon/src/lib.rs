@@ -5121,6 +5121,19 @@ mod forum_attach_body_tests {
              \"topic_id\":42,\"log_gz_b64\":\"aGVsbG8=\"}"
         );
     }
+
+    #[test]
+    fn forum_attach_body_pins_the_pre_topic_variant() {
+        // topic_id 0 = pre-topic session: the logs are sent while the report
+        // is still being composed; the forum binds them after creation.
+        let sid = "0123456789abcdef0123456789abcdef";
+        let body = forum_attach_body(sid, 0, b"hello");
+        assert_eq!(
+            body,
+            "{\"sid\":\"0123456789abcdef0123456789abcdef\",\
+             \"topic_id\":0,\"log_gz_b64\":\"aGVsbG8=\"}"
+        );
+    }
 }
 
 /// Remove any old RPC socket (if it exists).

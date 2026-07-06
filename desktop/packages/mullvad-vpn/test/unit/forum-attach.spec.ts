@@ -40,8 +40,18 @@ describe('attach-logs deep link parsing', () => {
     ).toBeUndefined();
   });
 
-  it('rejects a malformed topic (non-decimal, non-positive, or beyond safe bounds)', () => {
-    for (const topic of ['', 'abc', '-1', '0', '1.5', '0x10', '9007199254740993']) {
+  it('accepts topic 0 (pre-topic session: logs sent while the report is being composed)', () => {
+    expect(
+      parseForumAttachUrl(`warren://attach-logs?sid=${sid}&topic=0&host=connect.warrenbrowse.com`),
+    ).toEqual({
+      sid,
+      host: 'connect.warrenbrowse.com',
+      topicId: 0,
+    });
+  });
+
+  it('rejects a malformed topic (non-decimal, negative, or beyond safe bounds)', () => {
+    for (const topic of ['', 'abc', '-1', '1.5', '0x10', '9007199254740993']) {
       expect(
         parseForumAttachUrl(
           `warren://attach-logs?sid=${sid}&topic=${topic}&host=connect.warrenbrowse.com`,
@@ -141,6 +151,22 @@ describe('approveForumAttach validation', () => {
   it('refuses an empty gzip without touching the daemon', async () => {
     const { rpc, signForumAttachLogs } = makeDaemon();
     const result = await approveForumAttach(request, rpc, new Uint8Array(0));
+    expect(result).toBe('error');
+    expect(signForumAttachLogs).not.toHaveBeenCalled();
+  });
+
+  it('accepts a pre-topic request (topicId 0) and asks the daemon to sign it', async () => {
+    const { rpc, signForumAttachLogs } = makeDaemon();
+    signForumAttachLogs.mockRejectedValue(new Error('no identity'));
+    const logGz = new Uint8Array(8);
+    const result = await approveForumAttach({ ...request, topicId: 0 }, rpc, logGz);
+    expect(signForumAttachLogs).toHaveBeenCalledWith(sid, 0, logGz);
+    expect(result).toBe('error');
+  });
+
+  it('refuses a negative topicId without touching the daemon', async () => {
+    const { rpc, signForumAttachLogs } = makeDaemon();
+    const result = await approveForumAttach({ ...request, topicId: -1 }, rpc, new Uint8Array(8));
     expect(result).toBe('error');
     expect(signForumAttachLogs).not.toHaveBeenCalled();
   });

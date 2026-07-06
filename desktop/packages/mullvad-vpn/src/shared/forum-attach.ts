@@ -8,7 +8,9 @@ export interface IForumAttachRequest {
   sid: string;
   // Connect host from the deep link (validated against an allowlist in main).
   host: string;
-  // The forum topic the logs get attached to.
+  // The forum topic the logs get attached to. 0 means a pre-topic session:
+  // the report is still being composed and the forum binds the logs to the
+  // topic after creation.
   topicId: number;
   // Problem-report id collected when the deep link arrived. It lets the
   // renderer show exactly what would be sent (problemReport.viewLog) and

@@ -54,13 +54,16 @@ export function parseForumAttachUrl(rawUrl: string): ParsedForumAttach | undefin
   if (!/^[0-9a-f]{32}$/.test(sid)) {
     return undefined;
   }
-  // Decimal-only topic id, kept within Number's safe-integer range so the
-  // value survives the JS number round trip to the daemon unchanged.
+  // Decimal-only topic id (the regex already excludes negatives), kept
+  // within Number's safe-integer range so the value survives the JS number
+  // round trip to the daemon unchanged. Topic 0 is the pre-topic variant:
+  // the report is still being composed and the forum binds the logs to the
+  // topic after creation.
   if (!/^[0-9]+$/.test(topic)) {
     return undefined;
   }
   const topicId = Number(topic);
-  if (!Number.isSafeInteger(topicId) || topicId <= 0) {
+  if (!Number.isSafeInteger(topicId)) {
     return undefined;
   }
   if (!ALLOWED_CONNECT_HOSTS.includes(host)) {
@@ -86,7 +89,7 @@ export async function approveForumAttach(
     !ALLOWED_CONNECT_HOSTS.includes(request.host) ||
     !/^[0-9a-f]{32}$/.test(request.sid) ||
     !Number.isSafeInteger(request.topicId) ||
-    request.topicId <= 0
+    request.topicId < 0
   ) {
     log.warn('Refusing forum attach: host not allowlisted or malformed request');
     return 'error';

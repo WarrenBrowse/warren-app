@@ -114,13 +114,20 @@ export function ForumAttachPrompt() {
       type={ModalAlertType.info}
       title={messages.pgettext('forum-attach', 'Attach your logs to the bug report?')}
       message={[
-        sprintf(
-          messages.pgettext(
-            'forum-attach',
-            'Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem.',
-          ),
-          { topicId: request?.topicId ?? 0 },
-        ),
+        // Topic 0 is the pre-topic variant: the report is still being
+        // composed, so there is no topic number to name yet.
+        request?.topicId === 0
+          ? messages.pgettext(
+              'forum-attach',
+              'Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem.',
+            )
+          : sprintf(
+              messages.pgettext(
+                'forum-attach',
+                'Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem.',
+              ),
+              { topicId: request?.topicId ?? 0 },
+            ),
         messages.pgettext(
           'forum-attach',
           'The logs are anonymized: account numbers and personal data are redacted. You can view exactly what will be sent before approving.',
