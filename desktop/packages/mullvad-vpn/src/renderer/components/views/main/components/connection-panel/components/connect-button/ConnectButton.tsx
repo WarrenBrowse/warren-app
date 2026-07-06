@@ -17,10 +17,12 @@ export function ConnectButton(props: ButtonProps) {
     }
   }, [connectTunnel]);
 
-  // Red, not green: while disconnected the user is exposed, so the button wears
-  // the exposed colour and the label is the action that leaves that state.
+  // Green: the button is a call-to-action, not a state indicator. The exposed
+  // state is already signalled in red by the status card (red eye + "You are
+  // visible"); the button's job is to invite the safe action, so it wears the
+  // "go" colour to inspire confidence in connecting.
   return (
-    <Button variant="destructive" onClick={onConnect} {...props}>
+    <Button variant="success" onClick={onConnect} {...props}>
       <Button.Text>{messages.pgettext('tunnel-control', 'Connect')}</Button.Text>
     </Button>
   );
