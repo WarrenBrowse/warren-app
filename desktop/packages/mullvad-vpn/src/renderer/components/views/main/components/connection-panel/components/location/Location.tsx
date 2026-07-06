@@ -16,8 +16,14 @@ export function Location() {
   const connection = useSelector((state) => state.connection);
   const text = getLocationText(connection.status, connection.country, connection.city);
 
+  // Only surface a location line once a tunnel is up or coming up (the exit
+  // location). When disconnected the panel stays compact so more of the scenery
+  // and Bula show, matching the art direction.
+  const showLocation =
+    connection.status.state === 'connected' || connection.status.state === 'connecting';
+
   return (
-    <ConnectionPanelAccordion expanded={connection.status.state !== 'error'}>
+    <ConnectionPanelAccordion expanded={showLocation}>
       <StyledLocation>
         <Marquee>{text}</Marquee>
       </StyledLocation>

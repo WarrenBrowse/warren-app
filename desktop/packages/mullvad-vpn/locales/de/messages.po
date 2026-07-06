@@ -4566,3 +4566,39 @@ msgstr "Signierung läuft, bitte warten."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Community-Forum"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Verbinden …"
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Verbindung hergestellt"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Ihre Verbindung wird verschlüsselt"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Zufälliger Standort"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Sie sind geschützt"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Sie sind sichtbar"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Ihre Verbindung ist nicht verschlüsselt"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Trennen …"
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Verbindung wird hergestellt"

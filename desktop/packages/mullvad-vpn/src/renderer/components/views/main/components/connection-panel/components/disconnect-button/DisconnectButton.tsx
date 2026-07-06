@@ -19,12 +19,21 @@ export function DisconnectButton() {
     }
   }, [disconnectTunnel]);
 
-  const displayAsCancel = tunnelState !== 'connected';
+  // This button also renders in the error/blocked state (the kill switch is on),
+  // where the action is still "turn it off" = disconnect, not "connecting".
+  // Colour tracks the same phase as the rest of the screen: green when up, orange
+  // while coming up, neutral when blocked.
+  const connecting = tunnelState === 'connecting';
+  const connected = tunnelState === 'connected';
+  const variant = connected ? 'success' : connecting ? 'warning' : 'primary';
 
+  // While connecting the click aborts the attempt, so the button reads "Cancel".
+  // The connecting progress itself is conveyed by the status card (orange eye +
+  // "Encrypting your connection"), not by the button label.
   return (
-    <Button variant="destructive" onClick={onDisconnect}>
+    <Button variant={variant} onClick={onDisconnect}>
       <Button.Text>
-        {displayAsCancel ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
+        {connecting ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
       </Button.Text>
     </Button>
   );

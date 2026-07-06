@@ -1,8 +1,5 @@
-import styled from 'styled-components';
-
 import { messages } from '../../../../shared/gettext';
 import {
-  AnimateMapSetting,
   MonochromaticTrayIconSetting,
   NotificationsSetting,
   StartMinimizedSetting,
@@ -17,12 +14,6 @@ import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
 import { LanguageListItem } from './components';
-
-const AnimateMapContainer = styled.div({
-  '@media (prefers-reduced-motion: reduce)': {
-    display: 'none',
-  },
-});
 
 export function UserInterfaceSettingsView() {
   const { pop } = useHistory();
@@ -56,9 +47,6 @@ export function UserInterfaceSettingsView() {
                 )}
 
                 {unpinnedWindow && <StartMinimizedSetting position="solo" />}
-                <AnimateMapContainer>
-                  <AnimateMapSetting />
-                </AnimateMapContainer>
               </View.Container>
             </View.Content>
           </NavigationScrollbars>

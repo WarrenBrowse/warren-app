@@ -4552,3 +4552,39 @@ msgstr "در حال امضا، لطفاً صبر کنید."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "انجمن جامعه"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "در حال اتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "اتصال برقرار شد"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "در حال رمزگذاری اتصال شما"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "مکان تصادفی"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "شما محافظت می‌شوید"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "شما قابل مشاهده هستید"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "اتصال شما رمزگذاری نشده است"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "در حال قطع اتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "اتصال در حال انجام"

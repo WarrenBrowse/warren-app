@@ -3,6 +3,7 @@ import { Flex, HeaderProps, Logo, LogoProps, LogoState, MainHeader } from '../..
 import { useSelector } from '../../redux/store';
 import { InitialFocus } from '../initial-focus';
 import {
+  AppMainFooter,
   AppMainHeaderBarAccountButton,
   AppMainHeaderPubKey,
   AppMainHeaderSettingsButton,
@@ -20,6 +21,7 @@ const AppMainHeader = ({
   logoVariant = 'both',
   variant: variantProp,
   size: sizeProp,
+  tone = 'light',
   children,
   ...props
 }: MainHeaderProps) => {
@@ -36,10 +38,14 @@ const AppMainHeader = ({
   const logoState = getLogoStateByTunnelState(connectionStatus);
 
   return (
-    <MainHeader variant={variant} size={size} {...props}>
+    <MainHeader variant={variant} size={size} tone={tone} {...props}>
       <Flex justifyContent="space-between" alignItems="center">
         <InitialFocus>
-          {logoVariant !== 'none' ? <Logo variant={logoVariant} state={logoState} /> : <div />}
+          {logoVariant !== 'none' ? (
+            <Logo variant={logoVariant} state={logoState} wordmarkTone={tone} />
+          ) : (
+            <div />
+          )}
         </InitialFocus>
         <Flex gap="medium" alignItems="center">
           {children}
@@ -58,6 +64,7 @@ const AppMainHeader = ({
 const AppMainHeaderNamespace = Object.assign(AppMainHeader, {
   AccountButton: AppMainHeaderBarAccountButton,
   SettingsButton: AppMainHeaderSettingsButton,
+  Footer: AppMainFooter,
 });
 
 export { AppMainHeaderNamespace as AppMainHeader };

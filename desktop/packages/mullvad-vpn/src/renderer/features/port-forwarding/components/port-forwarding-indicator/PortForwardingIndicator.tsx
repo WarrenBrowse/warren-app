@@ -11,7 +11,6 @@ import { usePortForwarding } from '../../hooks';
 
 const StyledWrapper = styled.div({
   display: 'flex',
-  marginTop: '8px',
 });
 
 /**

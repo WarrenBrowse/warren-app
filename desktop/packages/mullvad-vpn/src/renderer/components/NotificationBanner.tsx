@@ -106,19 +106,30 @@ export const NotificationIndicator = styled.div<INotificationIndicatorProps>((pr
     : colors.transparent,
 }));
 
+// Floats as a glass card over the scenery, matching the connection panel, rather
+// than a solid bar. A green top accent echoes the mockup's update banner.
 const Collapsible = styled(motion.div)({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'flex-start',
   translateY: '0%',
-  backgroundColor: colors.darkerBlue50,
+  // Offset toward the right rather than spanning the full width (per the art
+  // direction), leaving the left of the scene open.
+  margin: '12px 16px 0 auto',
+  maxWidth: '300px',
+  borderRadius: '14px',
+  border: `1px solid ${colors.whiteAlpha20}`,
+  borderTop: `2px solid ${colors.green}`,
+  backgroundColor: colors.blackAlpha60,
+  backdropFilter: 'blur(10px)',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
   overflow: 'hidden',
 });
 
 const Content = styled.section({
   display: 'flex',
   flexDirection: 'row',
-  padding: '8px 12px 8px 16px',
+  padding: '10px 12px 10px 16px',
   height: 'fit-content',
 });
 

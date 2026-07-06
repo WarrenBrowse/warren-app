@@ -4538,3 +4538,39 @@ msgstr "กำลังลงนาม โปรดรอสักครู่"
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "ฟอรัมชุมชน"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "กำลังเชื่อมต่อ..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "เชื่อมต่อสำเร็จ"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "กำลังเข้ารหัสการเชื่อมต่อของคุณ"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "ตำแหน่งแบบสุ่ม"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "คุณได้รับการปกป้อง"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "คุณถูกมองเห็นได้"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "การเชื่อมต่อของคุณไม่ได้เข้ารหัส"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "กำลังยกเลิกการเชื่อมต่อ..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "กำลังเชื่อมต่อ"

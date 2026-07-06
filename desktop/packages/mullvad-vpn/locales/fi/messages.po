@@ -4565,3 +4565,39 @@ msgstr "Allekirjoitetaan, odota hetki."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Yhteisöfoorumi"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Yhdistetään..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Yhteys muodostettu"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Salataan yhteyttäsi"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Satunnainen sijainti"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Olet suojattu"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Olet näkyvissä"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Yhteyttäsi ei ole salattu"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Yhteyttä katkaistaan..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Yhteyttä muodostetaan"

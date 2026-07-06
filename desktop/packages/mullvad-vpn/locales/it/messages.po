@@ -4565,3 +4565,39 @@ msgstr "Firma in corso, attendi."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Forum della community"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Connessione..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Connessione stabilita"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Crittografia della connessione in corso"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Posizione casuale"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Sei protetto"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Sei visibile"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "La tua connessione non è crittografata"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Disconnessione..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Connessione in corso"

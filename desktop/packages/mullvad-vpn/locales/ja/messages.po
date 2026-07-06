@@ -4538,3 +4538,39 @@ msgstr "署名しています。しばらくお待ちください。"
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "コミュニティフォーラム"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "接続しています..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "接続が確立されました"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "接続を暗号化しています"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "ランダムな場所"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "保護されています"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "あなたは見られています"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "接続が暗号化されていません"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "切断しています..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "接続中"

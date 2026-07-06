@@ -39,6 +39,13 @@ export const colorTokens = {
   green80: 'rgb(94, 142, 66)',
   green40: 'rgb(58, 86, 48)',
 
+  // Connecting / in-progress: a distinct orange sitting between the exposed red
+  // and the secured green, so the transitional state reads as its own phase
+  // rather than a washed-out red.
+  orange: 'rgb(224, 122, 40)',
+  orangeAlpha40: 'rgba(224, 122, 40, 0.4)',
+  orange80: 'rgb(198, 106, 34)',
+
   // Warning + brand warm accents (used sparingly, kept saturated).
   yellow: 'rgb(202, 150, 60)', // ocre
   fur: 'rgb(208, 150, 64)', // ocre / beige, Bula's fur

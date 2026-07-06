@@ -4565,3 +4565,39 @@ msgstr "Bezig met ondertekenen, even geduld."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Community-forum"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Verbinden..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Verbinding tot stand gebracht"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Je verbinding wordt versleuteld"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Willekeurige locatie"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Je bent beschermd"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Je bent zichtbaar"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Je verbinding is niet versleuteld"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Verbinding verbreken..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Verbinding wordt gemaakt"

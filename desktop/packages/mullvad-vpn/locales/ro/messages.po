@@ -3713,3 +3713,39 @@ msgstr "Se semnează, te rugăm să aștepți."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Forumul comunității"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Se conectează..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Conexiune stabilită"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Se criptează conexiunea"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Locație aleatorie"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Ești protejat"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Ești vizibil"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Conexiunea ta nu este criptată"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Se deconectează..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Conectare în curs"

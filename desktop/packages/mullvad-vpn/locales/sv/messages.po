@@ -4565,3 +4565,39 @@ msgstr "Signerar, vänta."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Gemenskapsforum"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Ansluter …"
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Anslutning upprättad"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Krypterar din anslutning"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Slumpmässig plats"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Du är skyddad"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Du är synlig"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Din anslutning är inte krypterad"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Kopplar från …"
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Anslutning pågår"

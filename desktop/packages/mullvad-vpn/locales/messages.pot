@@ -2,9 +2,6 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "%(amount)d more..."
-msgstr ""
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr ""
 
@@ -89,13 +86,7 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-msgid "CONNECTED"
-msgstr ""
-
 msgid "Connecting"
-msgstr ""
-
-msgid "CONNECTING..."
 msgstr ""
 
 msgid "Continue"
@@ -143,13 +134,7 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
-msgid "DISCONNECTED"
-msgstr ""
-
 msgid "Disconnecting"
-msgstr ""
-
-msgid "DISCONNECTING..."
 msgstr ""
 
 msgid "Edit"
@@ -1015,10 +1000,6 @@ msgstr ""
 #. %(DAITA)s - Is a non-translatable feature "DAITA"
 msgctxt "connect-view"
 msgid "%(DAITA)s: Multihop"
-msgstr ""
-
-msgctxt "connect-view"
-msgid "Active features"
 msgstr ""
 
 msgctxt "connect-view"
@@ -2111,6 +2092,10 @@ msgid "Voucher code has already been used."
 msgstr ""
 
 msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr ""
+
+msgctxt "redeem-voucher-view"
 msgid "Voucher code is invalid."
 msgstr ""
 
@@ -2623,16 +2608,41 @@ msgctxt "tunnel-control"
 msgid "Connect"
 msgstr ""
 
+#. Bold status title shown when the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr ""
+
+#. Secondary line shown while the tunnel is coming up.
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr ""
+
+#. Secondary line shown while the tunnel is being torn down.
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr ""
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr ""
+
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr ""
 
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
+#. Secondary line shown below the status title when protected.
+msgctxt "tunnel-control"
+msgid "You are protected"
 msgstr ""
 
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
+#. Bold status title shown when traffic is not protected.
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr ""
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
 msgstr ""
 
 msgctxt "user-interface-settings-view"

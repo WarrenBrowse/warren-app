@@ -3780,3 +3780,39 @@ msgstr "Signature en cours, veuillez patienter."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Forum communautaire"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Connexion en cours..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Connexion établie"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Chiffrement de votre connexion"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Localisation aléatoire"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Vous êtes protégé"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Vous êtes visible"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Votre connexion n'est pas chiffrée"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Déconnexion en cours..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Connexion en cours"

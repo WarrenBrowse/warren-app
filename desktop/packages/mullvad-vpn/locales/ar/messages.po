@@ -4608,3 +4608,39 @@ msgstr "جارٍ التوقيع، يُرجى الانتظار."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "منتدى المجتمع"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "جارٍ الاتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "تم إنشاء الاتصال"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "جارٍ تشفير اتصالك"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "موقع عشوائي"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "أنت محمي"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "أنت مكشوف"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "اتصالك غير مشفّر"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "جارٍ قطع الاتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "جارٍ الاتصال"

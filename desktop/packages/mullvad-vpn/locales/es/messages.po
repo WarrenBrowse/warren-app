@@ -4565,3 +4565,39 @@ msgstr "Firmando, espera un momento."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "Foro de la comunidad"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Conectando..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Conexión establecida"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Cifrando tu conexión"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Ubicación aleatoria"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Estás protegido"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Estás expuesto"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Tu conexión no está cifrada"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Desconectando..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Conexión en curso"

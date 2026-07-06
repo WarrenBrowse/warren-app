@@ -4538,3 +4538,39 @@ msgstr "서명 중입니다. 잠시 기다려 주세요."
 msgctxt "support-view"
 msgid "Community forum"
 msgstr "커뮤니티 포럼"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "연결 중..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "연결이 설정됨"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "연결을 암호화하는 중"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "무작위 위치"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "보호되고 있습니다"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "노출되어 있습니다"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "연결이 암호화되지 않았습니다"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "연결을 끊는 중..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "연결 진행 중"

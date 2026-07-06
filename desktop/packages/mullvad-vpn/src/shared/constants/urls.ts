@@ -7,9 +7,9 @@
 export const urls = {
   purchase: 'https://checkout.warrenbrowse.com/',
   pricing: 'https://checkout.warrenbrowse.com/',
-  faq: 'https://warrenbrowse.com/faq',
-  privacyGuide: 'https://warrenbrowse.com/no-log',
-  download: 'https://warrenbrowse.com/telecharger',
+  faq: 'https://warren.ro/faq',
+  privacyGuide: 'https://warren.ro/no-log',
+  download: 'https://warren.ro/telecharger',
   // Community + support forum. Login is wallet-based (DiscourseConnect wallet
   // SSO, doc 55); the `warren://forum-login` deep link is handled in the main
   // process. See forum-login.ts.

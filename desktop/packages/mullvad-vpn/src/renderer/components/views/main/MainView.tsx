@@ -1,29 +1,26 @@
 import styled from 'styled-components';
 
-import { Spinner } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
-import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
-import Map from '../../Map';
+import CountryBackdrop from '../../CountryBackdrop';
 import NotificationArea from '../../NotificationArea';
 import { ConnectionPanel } from './components';
 
-const StyledContent = styled(FlexColumn)`
-  position: relative;
-  overflow: hidden;
-`;
-
-const StyledMapOverlay = styled(FlexColumn)`
+// Everything except the backdrop lives in this layer, above the full-bleed
+// scenery.
+const Foreground = styled(FlexColumn)`
   position: relative;
   z-index: 1;
-  max-height: 100%;
+  flex: 1;
+  min-height: 0;
 `;
 
-const StatusIcon = styled(Spinner)`
-  position: absolute;
-  align-self: center;
-  margin-top: 94px;
+const StyledContent = styled(FlexColumn)`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 `;
 
 const StyledNotificationArea = styled(NotificationArea)`
@@ -31,6 +28,7 @@ const StyledNotificationArea = styled(NotificationArea)`
   left: 0;
   top: 0;
   right: 0;
+  z-index: 1;
 `;
 
 const StyledMain = styled.main`
@@ -41,28 +39,22 @@ const StyledMain = styled.main`
 `;
 
 export function MainView() {
-  const connection = useSelector((state) => state.connection);
-
-  const showSpinner =
-    connection.status.state === 'connecting' || connection.status.state === 'disconnecting';
-
   return (
-    <View>
-      <AppMainHeader size="basedOnLoginStatus" variant="basedOnConnectionStatus">
-        <AppMainHeader.AccountButton />
-        <AppMainHeader.SettingsButton />
-      </AppMainHeader>
-      <StyledContent flexGrow={1}>
-        <Map />
-        <StyledMapOverlay flexGrow={1}>
+    <View style={{ position: 'relative' }}>
+      <CountryBackdrop />
+      <Foreground>
+        <AppMainHeader size="1" variant="transparent" tone="dark">
+          <AppMainHeader.AccountButton />
+          <AppMainHeader.SettingsButton />
+        </AppMainHeader>
+        <StyledContent>
           <StyledNotificationArea />
           <StyledMain>
-            {showSpinner ? <StatusIcon size="big" /> : null}
-
             <ConnectionPanel />
           </StyledMain>
-        </StyledMapOverlay>
-      </StyledContent>
+        </StyledContent>
+        <AppMainHeader.Footer />
+      </Foreground>
     </View>
   );
 }

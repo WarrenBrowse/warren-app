@@ -1,12 +1,7 @@
-import { useSelector } from '../../../../../../../redux/store';
-import { MultiButton, ReconnectButton, SelectLocationButton } from './components';
+import { MultiButton, SelectLocationButton, ShuffleButton } from './components';
 
+// The location selector always carries a shuffle side button (random exit),
+// matching the mockups, in every connection state.
 export function SelectLocationButtons() {
-  const tunnelState = useSelector((state) => state.connection.status.state);
-
-  if (tunnelState === 'connecting' || tunnelState === 'connected') {
-    return <MultiButton mainButton={SelectLocationButton} sideButton={ReconnectButton} />;
-  } else {
-    return <SelectLocationButton />;
-  }
+  return <MultiButton mainButton={SelectLocationButton} sideButton={ShuffleButton} />;
 }
