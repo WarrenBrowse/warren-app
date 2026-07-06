@@ -254,6 +254,8 @@ private fun LazyListScope.content(
 
     itemWithDivider { PrivacyPolicy(state) }
 
+    itemWithDivider { CommunityForum() }
+
     item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
 }
 
@@ -311,6 +313,19 @@ private fun PrivacyPolicy(state: SettingsUiState) {
     ExternalLinkListItem(
         title = privacyPolicyLabel,
         onClick = openPrivacyPolicy,
+        position = Position.Middle,
+    )
+}
+
+@Composable
+private fun CommunityForum() {
+    val label = stringResource(id = R.string.community_forum)
+    val openForum =
+        LocalUriHandler.current.createUriHook(stringResource(R.string.community_forum_url))
+
+    ExternalLinkListItem(
+        title = label,
+        onClick = openForum,
         position = Position.Bottom,
     )
 }

@@ -57,6 +57,11 @@ public struct WarrenAboutView: View {
     private var linksGroup: some View {
         VStack(spacing: 8) {
             linkRow(
+                label: String(localized: "Community forum", table: "Settings", comment: "Opens the Warren community forum in Safari"),
+                url: "https://forum.warrenbrowse.com",
+                icon: "bubble.left.and.bubble.right"
+            )
+            linkRow(
                 label: String(localized: "Visit warren.ro", table: "Settings", comment: "About → marketing site link"),
                 url: "https://warren.ro",
                 icon: "safari"
