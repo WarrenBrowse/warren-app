@@ -148,6 +148,19 @@ export async function approveForumAttach(
 }
 
 /**
+ * Resolves the report bytes to send on approval: the report previewed at
+ * deep-link time when it exists, otherwise a fresh collection. The retry is
+ * what keeps a transient collector failure from turning into a dead prompt.
+ */
+export async function resolveApprovedReport(
+  reportId: string | undefined,
+  collect: () => Promise<string>,
+  read: (id: string) => Promise<Buffer>,
+): Promise<Buffer> {
+  return read(reportId ?? (await collect()));
+}
+
+/**
  * Tells the connect provider the user declined, so the waiting browser page
  * stops polling and shows a "cancelled" message. Best-effort, never throws.
  */

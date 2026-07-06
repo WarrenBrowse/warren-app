@@ -62,6 +62,7 @@ import {
   cancelForumAttach,
   ParsedForumAttach,
   parseForumAttachUrl,
+  resolveApprovedReport,
 } from './forum-attach';
 import {
   approveForumLogin,
@@ -392,13 +393,14 @@ class ApplicationMain
 
   private async handleForumAttachDeepLink(parsed: ParsedForumAttach) {
     // Collect the redacted report up front so the consent prompt can show
-    // exactly what would be sent before the user approves anything.
-    let reportId: string;
+    // exactly what would be sent before the user approves anything. A
+    // collection failure must NOT swallow the request silently: the prompt
+    // still shows (without the preview) and approve retries the collection.
+    let reportId: string | undefined;
     try {
       reportId = await problemReport.collectLogs();
     } catch (error) {
       log.error(`Forum attach: could not collect the problem report: ${String(error)}`);
-      return;
     }
     const request: IForumAttachRequest = { ...parsed, reportId };
     this.pendingForumAttach.set(request, Date.now());
@@ -406,19 +408,22 @@ class ApplicationMain
     IpcMainEventChannel.forumAttach.notifyRequest?.(request);
   }
 
-  // Re-reads the report collected at deep-link time and gzips it here in
-  // main: the renderer never handles the log content, only the report id.
+  // Re-reads the report collected at deep-link time (or collects a fresh one
+  // if that failed) and gzips it here in main: the renderer never handles the
+  // log content, only the report id.
   private async approveForumAttachRequest(
     request: IForumAttachRequest,
   ): Promise<ForumAttachResult> {
     let logGz: Buffer;
     try {
-      const report = await fs.promises.readFile(
-        problemReport.getProblemReportPath(request.reportId),
+      const report = await resolveApprovedReport(
+        request.reportId,
+        () => problemReport.collectLogs(),
+        (id) => fs.promises.readFile(problemReport.getProblemReportPath(id)),
       );
       logGz = gzipSync(report);
     } catch (error) {
-      log.error(`Forum attach: could not read the collected report: ${String(error)}`);
+      log.error(`Forum attach: could not collect or read the report: ${String(error)}`);
       return 'error';
     }
     return approveForumAttach(request, this.daemonRpc, logGz);

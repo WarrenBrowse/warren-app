@@ -12,8 +12,11 @@ export interface IForumAttachRequest {
   topicId: number;
   // Problem-report id collected when the deep link arrived. It lets the
   // renderer show exactly what would be sent (problemReport.viewLog) and
-  // main re-read that same report at approve time.
-  reportId: string;
+  // main re-read that same report at approve time. Absent when that first
+  // collection failed: the prompt still shows (hiding the preview button)
+  // and approve retries the collection, so a transient collector failure
+  // never silently swallows the user's request.
+  reportId?: string;
 }
 
 export type ForumAttachResult =

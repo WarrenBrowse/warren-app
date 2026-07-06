@@ -81,7 +81,7 @@ export function ForumAttachPrompt() {
   }, []);
 
   const handleViewLogs = useCallback(() => {
-    if (request) {
+    if (request?.reportId) {
       void window.ipc.problemReport.viewLog(request.reportId);
     }
   }, [request]);
@@ -127,13 +127,19 @@ export function ForumAttachPrompt() {
         ),
       ]}
       buttons={[
-        <Button
-          key="view"
-          disabled={busy}
-          onClick={handleViewLogs}
-          aria-label={messages.pgettext('forum-attach', 'View the logs')}>
-          <Button.Text>{messages.pgettext('forum-attach', 'View the logs')}</Button.Text>
-        </Button>,
+        // No preview button when the deep-link collection failed: approve
+        // retries the collection instead.
+        ...(request?.reportId
+          ? [
+              <Button
+                key="view"
+                disabled={busy}
+                onClick={handleViewLogs}
+                aria-label={messages.pgettext('forum-attach', 'View the logs')}>
+                <Button.Text>{messages.pgettext('forum-attach', 'View the logs')}</Button.Text>
+              </Button>,
+            ]
+          : []),
         <Button
           key="approve"
           variant="success"

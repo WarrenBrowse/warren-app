@@ -5,6 +5,7 @@ import {
   approveForumAttach,
   MAX_LOG_GZ_BYTES,
   parseForumAttachUrl,
+  resolveApprovedReport,
 } from '../../src/main/forum-attach';
 import { findForumDeepLinkArg, PendingForumRequest } from '../../src/main/forum-login';
 import { IForumAttachRequest } from '../../src/shared/forum-attach';
@@ -142,5 +143,30 @@ describe('approveForumAttach validation', () => {
     const result = await approveForumAttach(request, rpc, new Uint8Array(0));
     expect(result).toBe('error');
     expect(signForumAttachLogs).not.toHaveBeenCalled();
+  });
+});
+
+describe('resolveApprovedReport', () => {
+  it('reads the previewed report without collecting a new one', async () => {
+    const collect = vi.fn(() => Promise.resolve('fresh-id'));
+    const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
+    const report = await resolveApprovedReport('previewed-id', collect, read);
+    expect(report.toString()).toBe('report:previewed-id');
+    expect(collect).not.toHaveBeenCalled();
+  });
+
+  it('collects a fresh report when the deep-link collection had failed', async () => {
+    const collect = vi.fn(() => Promise.resolve('fresh-id'));
+    const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
+    const report = await resolveApprovedReport(undefined, collect, read);
+    expect(report.toString()).toBe('report:fresh-id');
+    expect(collect).toHaveBeenCalledOnce();
+  });
+
+  it('propagates a failed retry so approve surfaces an error', async () => {
+    const collect = vi.fn(() => Promise.reject(new Error('collector missing')));
+    const read = vi.fn();
+    await expect(resolveApprovedReport(undefined, collect, read)).rejects.toThrow();
+    expect(read).not.toHaveBeenCalled();
   });
 });
