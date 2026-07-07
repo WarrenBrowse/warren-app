@@ -70,9 +70,11 @@ function getConnectionStatusLabelText(tunnelState: TunnelState) {
         ? messages.gettext('BLOCKED CONNECTION')
         : messages.pgettext('tunnel-control', 'You are visible');
     case 'error':
+      // Leaking (blockingError) reads like the exposed state; a held block reads
+      // like the locked-down state. The banner carries the specific cause.
       return tunnelState.details.blockingError
-        ? messages.gettext('FAILED TO SECURE CONNECTION')
-        : messages.pgettext('tunnel-control', 'Connection established');
+        ? messages.pgettext('tunnel-control', 'You are visible')
+        : messages.gettext('BLOCKED CONNECTION');
   }
 }
 
@@ -94,7 +96,7 @@ function getConnectionStatusSubtitle(tunnelState: TunnelState) {
           messages.pgettext('tunnel-control', 'Your connection is not encrypted');
     case 'error':
       return tunnelState.details.blockingError
-        ? ''
-        : messages.pgettext('tunnel-control', 'You are protected');
+        ? messages.pgettext('tunnel-control', 'Your connection is not encrypted')
+        : '';
   }
 }

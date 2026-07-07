@@ -22,9 +22,10 @@ export function getConnectionPhase(tunnelState: TunnelState): ConnectionPhase {
       // Locked down = kill switch holding traffic, not raw exposure.
       return tunnelState.lockedDown ? 'blocked' : 'exposed';
     case 'error':
-      // A blocking error means the kill switch is actively blocking (safe but
-      // offline); a non-blocking error still leaves the secured tunnel up.
-      return tunnelState.details.blockingError ? 'blocked' : 'protected';
+      // blockingError = the daemon failed to install the block, so traffic may
+      // be leaking (exposed). Without it the kill switch holds: secured but
+      // offline (blocked). An error is never "connected".
+      return tunnelState.details.blockingError ? 'exposed' : 'blocked';
   }
 }
 

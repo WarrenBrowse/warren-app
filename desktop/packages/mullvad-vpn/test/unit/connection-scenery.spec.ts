@@ -34,9 +34,9 @@ describe('getConnectionPhase', () => {
     expect(getConnectionPhase(disconnectedLocked)).toBe('blocked');
   });
 
-  it('a blocking error is blocked; a non-blocking error keeps the tunnel protected', () => {
-    expect(getConnectionPhase(errorBlocking)).toBe('blocked');
-    expect(getConnectionPhase(errorNonBlocking)).toBe('protected');
+  it('a blocking error is exposed (leaking); a held block is blocked, never protected', () => {
+    expect(getConnectionPhase(errorBlocking)).toBe('exposed');
+    expect(getConnectionPhase(errorNonBlocking)).toBe('blocked');
   });
 });
 
