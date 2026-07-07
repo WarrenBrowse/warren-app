@@ -64,11 +64,12 @@ describe('resolveCountryImage', () => {
 });
 
 describe('resolveScenery', () => {
-  it('exposed: plain, rabbit shown, no blur', () => {
+  it('exposed: plain, rabbit shown, no blur, foreground lifted', () => {
     expect(resolveScenery('exposed', 'Germany')).toEqual({
       image: PLAINE_IMAGE,
       showBula: true,
       blurred: false,
+      lifted: true,
     });
   });
 
@@ -77,6 +78,7 @@ describe('resolveScenery', () => {
     expect(scenery.image).toMatch(/netherlands\.webp$/);
     expect(scenery.showBula).toBe(true);
     expect(scenery.blurred).toBe(true);
+    expect(scenery.lifted).toBe(false);
   });
 
   it('protected: exit cityscape, rabbit hidden, sharp', () => {
@@ -84,6 +86,7 @@ describe('resolveScenery', () => {
     expect(scenery.image).toMatch(/singapore\.webp$/);
     expect(scenery.showBula).toBe(false);
     expect(scenery.blurred).toBe(false);
+    expect(scenery.lifted).toBe(false);
   });
 
   it('blocked: neutral plain, rabbit hidden (safe), sharp', () => {
@@ -91,6 +94,14 @@ describe('resolveScenery', () => {
       image: PLAINE_IMAGE,
       showBula: false,
       blurred: false,
+      lifted: false,
     });
+  });
+
+  it('lifts the foreground only when exposed', () => {
+    expect(resolveScenery('exposed', undefined).lifted).toBe(true);
+    for (const phase of ['connecting', 'protected', 'blocked'] as const) {
+      expect(resolveScenery(phase, undefined).lifted).toBe(false);
+    }
   });
 });

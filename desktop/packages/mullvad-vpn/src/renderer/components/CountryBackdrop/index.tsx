@@ -51,11 +51,25 @@ const FrontLandscape = styled(FullBleed)<{ $animate: boolean }>`
   }
 `;
 
+// How far the foreground rises into the safe zone when lifted, as a share of the
+// frame height (340px of the 2120px master, so the burrow mouth clears the panel
+// top; the exposed seam it uncovers stays hidden behind the panel).
+const LIFT_PERCENT = 16;
+
+// The burrow foreground. Raised into view when exposed, otherwise flush at the
+// bottom (tucked behind the panel).
+const Foreground = styled(FullBleed)<{ $lifted: boolean; $animate: boolean }>`
+  transform: translateY(${(props) => (props.$lifted ? -LIFT_PERCENT : 0)}%);
+  transition: ${(props) => (props.$animate ? 'transform 550ms ease' : 'none')};
+`;
+
 // Bula sits exposed outside the burrow; when protected he is hidden inside it,
-// sliding down and fading out.
-const Bula = styled(FullBleed)<{ $visible: boolean; $animate: boolean }>`
+// sliding down and fading out. He rides the same lift as the burrow he sits on.
+const Bula = styled(FullBleed)<{ $visible: boolean; $lifted: boolean; $animate: boolean }>`
   opacity: ${(props) => (props.$visible ? 1 : 0)};
-  transform: ${(props) => (props.$visible ? 'translateY(0)' : 'translateY(3%)')};
+  transform: translateY(
+    ${(props) => (props.$lifted ? -LIFT_PERCENT : 0) + (props.$visible ? 0 : 3)}%
+  );
   transition: ${(props) => (props.$animate ? 'opacity 550ms ease, transform 550ms ease' : 'none')};
 `;
 
@@ -125,8 +139,21 @@ export default function CountryBackdrop() {
   return (
     <Root>
       <CrossfadeLandscape src={scenery.image} animate={animate} blurred={scenery.blurred} />
-      <FullBleed src={TERRIER_IMAGE} alt="" aria-hidden />
-      <Bula src={BULA_IMAGE} alt="" aria-hidden $visible={scenery.showBula} $animate={animate} />
+      <Foreground
+        src={TERRIER_IMAGE}
+        alt=""
+        aria-hidden
+        $lifted={scenery.lifted}
+        $animate={animate}
+      />
+      <Bula
+        src={BULA_IMAGE}
+        alt=""
+        aria-hidden
+        $visible={scenery.showBula}
+        $lifted={scenery.lifted}
+        $animate={animate}
+      />
       <AccentWash $color={accent} $animate={animate} />
     </Root>
   );

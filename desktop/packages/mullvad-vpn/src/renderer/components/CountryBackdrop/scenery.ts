@@ -23,6 +23,11 @@ export interface Scenery {
   showBula: boolean;
   // Whether the landscape is blurred (the connecting animation).
   blurred: boolean;
+  // Whether the foreground (burrow + Bula) is raised into the always-visible
+  // band above the panel. Only when exposed on the plain, where the rabbit is
+  // the hero: elsewhere it stays low, tucked behind the panel, so the burrow
+  // never floats over a cityscape and the plain has no lift seam.
+  lifted: boolean;
 }
 
 export function resolveCountryImage(country: string | undefined): string {
@@ -37,16 +42,26 @@ export function resolveCountryImage(country: string | undefined): string {
 export function resolveScenery(phase: ConnectionPhase, exitCountry: string | undefined): Scenery {
   switch (phase) {
     case 'exposed':
-      return { image: PLAINE_IMAGE, showBula: true, blurred: false };
+      return { image: PLAINE_IMAGE, showBula: true, blurred: false, lifted: true };
     case 'connecting':
       // Background swaps to the target country and blurs; the rabbit is left
       // untouched (still outside) until the tunnel is actually up.
-      return { image: resolveCountryImage(exitCountry), showBula: true, blurred: true };
+      return {
+        image: resolveCountryImage(exitCountry),
+        showBula: true,
+        blurred: true,
+        lifted: false,
+      };
     case 'protected':
-      return { image: resolveCountryImage(exitCountry), showBula: false, blurred: false };
+      return {
+        image: resolveCountryImage(exitCountry),
+        showBula: false,
+        blurred: false,
+        lifted: false,
+      };
     case 'blocked':
       // Kill switch: nothing leaks, so the rabbit is tucked in the burrow, but
       // there is no tunnel, so the scene stays the neutral plain (no city).
-      return { image: PLAINE_IMAGE, showBula: false, blurred: false };
+      return { image: PLAINE_IMAGE, showBula: false, blurred: false, lifted: false };
   }
 }
