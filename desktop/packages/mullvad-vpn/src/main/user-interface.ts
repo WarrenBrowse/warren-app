@@ -339,9 +339,11 @@ export default class UserInterface implements WindowControllerDelegate {
           // https://github.com/electron/electron/issues/25915
           alwaysOnTop: !unpinnedWindow,
           skipTaskbar: !unpinnedWindow,
-          // Workaround for sub-pixel anti-aliasing
-          // https://github.com/electron/electron/blob/main/docs/faq.md#the-font-looks-blurry-what-is-this-and-what-can-i-do
-          backgroundColor: '#fff',
+          // Transparent so the renderer can round the corners (no OS rounding for
+          // frameless windows here). The framed window keeps the opaque bg: the
+          // sub-pixel anti-aliasing workaround transparency would otherwise break.
+          transparent: !unpinnedWindow,
+          ...(unpinnedWindow ? { backgroundColor: '#fff' } : {}),
         });
         const WM_DEVICECHANGE = 0x0219;
         const DBT_DEVICEARRIVAL = 0x8000n;

@@ -17,10 +17,8 @@ export function ConnectButton(props: ButtonProps) {
     }
   }, [connectTunnel]);
 
-  // Green: the button is a call-to-action, not a state indicator. The exposed
-  // state is already signalled in red by the status card (red eye + "You are
-  // visible"); the button's job is to invite the safe action, so it wears the
-  // "go" colour to inspire confidence in connecting.
+  // Green "go": the button signals its action, not the state (the exposed state
+  // is already shown in red by the status card).
   return (
     <Button variant="success" onClick={onConnect} {...props}>
       <Button.Text>{messages.pgettext('tunnel-control', 'Connect')}</Button.Text>
