@@ -7,6 +7,7 @@ import android.net.NetworkRequest
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
+import java.io.IOException
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
@@ -116,7 +117,21 @@ class WarrenQuinnAdapter(
             onSessionDown(config, "VpnService.Builder.establish() returned null")
             return@withLock
         }
-        activeFd = fd
+        // Retain a dup of the TUN fd so the VPN interface stays established even
+        // after the native side closes its copy on an unexpected session death:
+        // traffic keeps entering the now-unread TUN (blocked, not leaked) until
+        // the status poll installs the real blackhole. Without this the interface
+        // tears down the instant Rust drops the fd, leaking clear traffic on the
+        // physical link for up to one poll interval. The fail-closed logic below
+        // relies on activeFd being a LIVE handle to the interface.
+        activeFd = try {
+            fd.dup()
+        } catch (e: IOException) {
+            Logger.e(throwable = e) { "failed to dup TUN fd; aborting connect" }
+            fd.close()
+            onSessionDown(config, "TUN fd dup failed")
+            return@withLock
+        }
 
         val rc = try {
             mnemonic.useAsString { phrase ->
@@ -531,36 +546,41 @@ class WarrenQuinnAdapter(
         }
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
-            _state.value = WarrenTunnelState.Reconnecting
-            // Establish the blackhole interface BEFORE tearing the tunnel
-            // down so traffic stays captured across the whole reconnect gap.
-            // VpnService.Builder.establish() atomically replaces the live
-            // tunnel interface, so there is never a window without a TUN (the
-            // previous code closed the interface then slept, exposing traffic
-            // to the physical network for the grace period). The blackhole is
-            // torn down by connect() -> exitBlockingMode() on success.
-            if (blockingFd == null) {
-                val fd = applyPlan(planTunInterface(config, blocking = true))
-                if (fd != null) {
-                    blockingFd = fd
-                } else {
-                    Logger.w("scheduleHandoverReconnect: blackhole establish failed; brief leak possible")
+            // All shared-state mutation and the native teardown run under `lock`,
+            // the same discipline as scheduleDropReconnect, so a concurrent
+            // connect/disconnect/onSessionDown cannot interleave with this
+            // handover (which previously mutated fds and _state off-lock).
+            lock.withLock {
+                if (userInitiatedDisconnect) return@withLock
+                _state.value = WarrenTunnelState.Reconnecting
+                // Establish the blackhole BEFORE tearing the tunnel down so
+                // traffic stays captured across the reconnect gap: establish()
+                // atomically replaces the live interface, so there is never a
+                // window without a TUN. The blackhole is torn down by
+                // connect() -> exitBlockingMode() on success.
+                if (blockingFd == null) {
+                    val fd = applyPlan(planTunInterface(config, blocking = true))
+                    if (fd != null) {
+                        blockingFd = fd
+                    } else {
+                        Logger.w("scheduleHandoverReconnect: blackhole establish failed; brief leak possible")
+                    }
                 }
+                // Stop polling before the intentional teardown so the status
+                // loop does not observe the DISCONNECTED transition and trip the
+                // kill switch (this is an expected handover, not a drop).
+                statusPollJob?.cancel()
+                statusPollJob = null
+                WarrenJni.disconnectTunnel()
+                activeFd?.close()
+                activeFd = null
+                _state.value = WarrenTunnelState.Disconnected
             }
-            // Stop polling BEFORE the intentional teardown so the status
-            // loop does not observe the DISCONNECTED transition and trip
-            // the kill switch (this is an expected handover, not a drop).
-            statusPollJob?.cancel()
-            statusPollJob = null
-            WarrenJni.disconnectTunnel()
-            // Backoff::HANDSHAKE = 15 s.
             delay(HANDOVER_GRACE_MS)
-            // Re-acquire the lock through `connect` itself; first drop
-            // local state so it re-initialises cleanly.
-            activeFd?.close()
-            activeFd = null
-            _state.value = WarrenTunnelState.Disconnected
-            connect(config, mnemonic)
+            // Re-check intent after the grace period: a user disconnect during
+            // the wait cancels this job (teardownLocked cancels pendingHandover)
+            // and flips the flag, so we must not reconnect over a user teardown.
+            if (!userInitiatedDisconnect) connect(config, mnemonic)
         }
     }
 
