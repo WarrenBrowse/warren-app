@@ -1,26 +1,91 @@
 import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
+import { formatRemainingTime, hasExpired } from '../../../../shared/account-expiry';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Button, Checkbox, Flex, Text } from '../../../lib/components';
+import { Button, Checkbox, Flex, Icon, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
+import { colors } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
 import { useEffectEvent } from '../../../lib/utility-hooks';
+import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../..';
 import { BackAction } from '../../keyboard-navigation';
 import { ModalAlert, ModalAlertType } from '../../Modal';
 import { ExternalPaymentButton } from '../../payment';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
-import { AccountExpiryRow, LabelledRow, WarrenPubKeyRow } from './components';
+import { AccountExpiryRow, WarrenPubKeyRow } from './components';
 
 const StyledViewContainer = styled(View.Container)`
   height: 100%;
   justify-content: space-between;
 `;
+
+// Surface card that lifts the account facts off the flat background and fills
+// the vertical space that used to sit empty above the buttons.
+const Card = styled.div`
+  background-color: ${colors.blue10};
+  border-radius: 16px;
+  padding: 16px;
+`;
+
+// The backup action is navigation, not a coloured command: an outlined row with
+// a chevron sets it apart from the solid buy/voucher buttons so no two actions
+// share the same weight.
+const BackupRow = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: ${colors.transparent};
+  border: 1px solid ${colors.whiteAlpha20};
+  transition: background-color 150ms ease;
+  &:not(:disabled):hover {
+    background-color: ${colors.whiteAlpha20};
+  }
+`;
+
+// Log out is rare and destructive: a ghost red link at the very bottom, kept
+// clearly separate from the everyday actions above.
+const LogoutButton = styled.button`
+  align-self: center;
+  padding: 10px 12px;
+  background: ${colors.transparent};
+  color: ${colors.red};
+  &:not(:disabled):hover {
+    text-decoration: underline;
+  }
+`;
+
+function SubscriptionCard() {
+  const accountExpiry = useSelector((state) => state.account.expiry);
+  const active = accountExpiry ? !hasExpired(accountExpiry) : false;
+  const remaining = active && accountExpiry ? formatRemainingTime(accountExpiry) : undefined;
+
+  return (
+    <Card>
+      <FlexColumn gap="small">
+        {remaining ? (
+          <Text variant="titleLarge" color="green">
+            {remaining}
+          </Text>
+        ) : null}
+        <FlexColumn gap="tiny">
+          <Text variant="labelTiny" color="whiteAlpha60">
+            {messages.pgettext('account-view', 'Paid until')}
+          </Text>
+          <AccountExpiryRow />
+        </FlexColumn>
+      </FlexColumn>
+    </Card>
+  );
+}
 
 export function AccountView() {
   const history = useHistory();
@@ -94,41 +159,42 @@ export function AccountView() {
                 <HeaderTitle>{messages.pgettext('account-view', 'Account')}</HeaderTitle>
               </Text>
 
-              <FlexColumn gap="large">
-                <LabelledRow
-                  label={messages.pgettext('account-view', 'Public key (account number)')}>
-                  <WarrenPubKeyRow />
-                </LabelledRow>
+              <SubscriptionCard />
 
-                <LabelledRow gap="tiny" label={messages.pgettext('account-view', 'Paid until')}>
-                  <AccountExpiryRow />
-                </LabelledRow>
-              </FlexColumn>
+              <Card>
+                <FlexColumn gap="tiny">
+                  <Text variant="labelTiny" color="whiteAlpha60">
+                    {messages.pgettext('account-view', 'Public key (account number)')}
+                  </Text>
+                  <WarrenPubKeyRow />
+                </FlexColumn>
+              </Card>
             </FlexColumn>
 
-            <FlexColumn gap="medium">
+            <FlexColumn gap="small">
               <ExternalPaymentButton buttonText={messages.gettext('Buy more credit')} />
 
-              <RedeemVoucherButton />
+              <RedeemVoucherButton variant="primary" />
 
-              <Button onClick={goToKeys}>
-                <Button.Text>
+              <BackupRow onClick={goToKeys}>
+                <Text variant="bodySmallSemibold">
                   {
                     // TRANSLATORS: Button label that opens the Keys
                     // TRANSLATORS: backup view (= reveal/copy BIP39 mnemonic).
                     messages.pgettext('account-view', 'Backup keys')
                   }
-                </Button.Text>
-              </Button>
+                </Text>
+                <Icon icon="chevron-right" color="whiteAlpha60" />
+              </BackupRow>
 
-              <Button variant="destructive" onClick={openLogoutConfirm}>
-                <Button.Text>
+              <LogoutButton onClick={openLogoutConfirm}>
+                <Text variant="bodySmallSemibold" color="red">
                   {
                     // TRANSLATORS: Button label for logging out.
                     messages.pgettext('account-view', 'Log out')
                   }
-                </Button.Text>
-              </Button>
+                </Text>
+              </LogoutButton>
             </FlexColumn>
           </StyledViewContainer>
         </View.Content>
