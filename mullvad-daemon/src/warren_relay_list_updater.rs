@@ -25,8 +25,8 @@ use futures::{FutureExt, SinkExt, StreamExt};
 
 use talpid_future::retry::{ExponentialBackoff, Jittered, retry_future};
 use warren_discovery_core::{
-    SignedError, VerifiedRelayList, VerifiedRoster, WarrenRelayList, verify_roster_any,
-    verify_signed_relay_list_any,
+    RosterError, SignedError, VerifiedRelayList, VerifiedRoster, WarrenRelayList,
+    verify_roster_any, verify_signed_relay_list_any,
 };
 
 /// Splits a pinned-pubkey config value (single key, or comma-separated
@@ -115,6 +115,9 @@ pub enum Error {
 
     #[error("signature/format verification failed")]
     Verify(#[from] SignedError),
+
+    #[error("roster verification failed")]
+    RosterVerify(#[from] RosterError),
 
     #[error("failed to write cache at {0}")]
     Io(String, #[source] std::io::Error),
