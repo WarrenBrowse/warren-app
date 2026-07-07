@@ -83,6 +83,19 @@ class WarrenLocalSettingsRepository(context: Context) {
     private val _allowLan = MutableStateFlow(prefs.getBoolean(KEY_ALLOW_LAN, false))
     val allowLan: StateFlow<Boolean> = _allowLan.asStateFlow()
 
+    /** Split tunnelling master switch: when off, [excludedApps] is ignored. */
+    private val _splitTunnelingEnabled =
+        MutableStateFlow(prefs.getBoolean(KEY_SPLIT_TUNNELING_ENABLED, false))
+    val splitTunnelingEnabled: StateFlow<Boolean> = _splitTunnelingEnabled.asStateFlow()
+
+    /**
+     * Package names routed OUTSIDE the tunnel (VpnService.Builder
+     * `addDisallowedApplication`). Applied only while [splitTunnelingEnabled].
+     */
+    private val _excludedApps =
+        MutableStateFlow(prefs.getStringSet(KEY_EXCLUDED_APPS, emptySet())?.toSet() ?: emptySet())
+    val excludedApps: StateFlow<Set<String>> = _excludedApps.asStateFlow()
+
     /**
      * Whether the first-launch onboarding wizard has been completed. Gates
      * the welcome flow so it is shown once (to new users, before wallet
@@ -201,6 +214,23 @@ class WarrenLocalSettingsRepository(context: Context) {
     fun setMultiHopEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_MULTI_HOP_ENABLED, enabled).apply()
         _multiHopEnabled.value = enabled
+    }
+
+    fun setSplitTunnelingEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SPLIT_TUNNELING_ENABLED, enabled).apply()
+        _splitTunnelingEnabled.value = enabled
+    }
+
+    fun addExcludedApp(packageName: String) = updateExcludedApps { it + packageName }
+
+    fun removeExcludedApp(packageName: String) = updateExcludedApps { it - packageName }
+
+    private fun updateExcludedApps(transform: (Set<String>) -> Set<String>) {
+        val updated = transform(_excludedApps.value)
+        // Store a fresh set: SharedPreferences keeps a reference to the passed
+        // set and its own getStringSet return value must not be mutated.
+        prefs.edit().putStringSet(KEY_EXCLUDED_APPS, HashSet(updated)).apply()
+        _excludedApps.value = updated
     }
 
     fun setEntryCountry(country: String?) = setCountry(KEY_ENTRY_COUNTRY, country, _entryCountry)
@@ -486,6 +516,8 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
     private const val KEY_ALLOW_LAN = "allow_lan"
+    private const val KEY_SPLIT_TUNNELING_ENABLED = "split_tunneling_enabled"
+    private const val KEY_EXCLUDED_APPS = "split_tunneling_excluded_apps"
     private const val KEY_ONBOARDING_DONE = "onboarding_completed"
     private const val KEY_TUNNEL_MTU = "tunnel_mtu"
     const val MTU_MIN = 576

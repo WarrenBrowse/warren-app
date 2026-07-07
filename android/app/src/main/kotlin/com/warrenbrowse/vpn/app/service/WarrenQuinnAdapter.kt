@@ -4,6 +4,7 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.content.pm.PackageManager
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
@@ -11,6 +12,7 @@ import java.io.IOException
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -19,6 +21,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -45,6 +50,7 @@ import kotlinx.coroutines.sync.withLock
 class WarrenQuinnAdapter(
     private val vpnService: VpnService,
     private val connectivityManager: ConnectivityManager,
+    private val settings: WarrenLocalSettingsRepository,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Mutex()
@@ -81,6 +87,30 @@ class WarrenQuinnAdapter(
     // Detects a flapping tunnel so the lockdown reconnect loop stops hammering
     // a network that is clearly down. Reset on a real connect + user teardown.
     private val flapDetector = FlapDetector()
+
+    init {
+        // Re-establish the TUN when the split-tunnelling selection changes while
+        // connected, so newly excluded/included apps take effect without a
+        // manual reconnect. The current-value emission is skipped (drop(1)); a
+        // reconnect only fires from a settled Connected state.
+        scope.launch {
+            combine(settings.splitTunnelingEnabled, settings.excludedApps) { enabled, apps ->
+                if (enabled) apps else emptySet()
+            }
+                .drop(1)
+                .distinctUntilChanged()
+                .collect {
+                    if (activeConfig != null && _state.value is WarrenTunnelState.Connected) {
+                        Logger.i("split-tunnelling selection changed; re-establishing tunnel")
+                        reconnect()
+                    }
+                }
+        }
+    }
+
+    /** Package names to route outside the tunnel, or empty when split off. */
+    private fun currentExcludedApps(): Set<String> =
+        if (settings.splitTunnelingEnabled.value) settings.excludedApps.value else emptySet()
 
     /**
      * Establish a Quinn session. Ownership of [mnemonic] transfers to the
@@ -285,7 +315,7 @@ class WarrenQuinnAdapter(
     }
 
     private fun buildTunInterface(config: WarrenTunnelConfig): ParcelFileDescriptor? =
-        applyPlan(planTunInterface(config))
+        applyPlan(planTunInterface(config, excludedApps = currentExcludedApps()))
 
     /**
      * Apply a [WarrenTunInterfacePlan] to a fresh `VpnService.Builder` and
@@ -315,6 +345,17 @@ class WarrenQuinnAdapter(
                 builder.addDnsServer(it)
             } catch (e: IllegalArgumentException) {
                 Logger.w(throwable = e) { "skipping invalid DNS server $it" }
+            }
+        }
+        // Split tunnelling: route excluded apps outside the tunnel. A package
+        // that is no longer installed throws NameNotFoundException; skip it
+        // rather than abort the whole interface. Never on a blocking plan (its
+        // excludedApps is empty), so the kill switch always captures everything.
+        plan.excludedApps.forEach { pkg ->
+            try {
+                builder.addDisallowedApplication(pkg)
+            } catch (e: PackageManager.NameNotFoundException) {
+                Logger.w(throwable = e) { "skipping excluded app not installed: $pkg" }
             }
         }
         // establish() validates the full config in the system process and

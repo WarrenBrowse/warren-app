@@ -81,7 +81,7 @@ val uiModule = module {
     single { ChangelogRepository(get(), get(), get()) }
     single { ProblemReportRepository(context = androidContext(), jni = get()) }
     single { RelayListRepository() }
-    single { SplitTunnelingRepository() }
+    single { SplitTunnelingRepository(get()) }
     single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
     single { SplashCompleteRepository() }
     single {

@@ -133,6 +133,18 @@ class WarrenTunInterfacePlanTest {
     }
 
     @Test
+    fun `split tunnelling excluded apps are carried into the active plan`() {
+        val plan = planTunInterface(config(), excludedApps = setOf("com.foo", "com.bar"))
+        assertEquals(setOf("com.foo", "com.bar"), plan.excludedApps)
+    }
+
+    @Test
+    fun `blocking plan never excludes apps so the kill switch captures everything`() {
+        val plan = planTunInterface(config(), blocking = true, excludedApps = setOf("com.foo"))
+        assertTrue(plan.excludedApps.isEmpty())
+    }
+
+    @Test
     fun `allow lan off tunnels the entire ipv4 internet including private ranges`() {
         val plan = planTunInterface(config(allowLan = false))
         assertTrue(plan.hasRoute(WarrenTunDefaults.IPV4_DEFAULT_ROUTE))

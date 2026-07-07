@@ -23,6 +23,12 @@ data class WarrenTunInterfacePlan(
      * real tunnel is down and `lockdownMode` is enabled.
      */
     val blocking: Boolean,
+    /**
+     * Package names to route OUTSIDE the tunnel via
+     * `VpnService.Builder.addDisallowedApplication` (split tunnelling). Always
+     * empty for a [blocking] kill-switch plan, which must capture everything.
+     */
+    val excludedApps: Set<String> = emptySet(),
 ) {
     data class TunCidr(val address: String, val prefixLength: Int)
 }
@@ -75,6 +81,7 @@ object WarrenTunDefaults {
 fun planTunInterface(
     config: WarrenTunnelConfig,
     blocking: Boolean = false,
+    excludedApps: Set<String> = emptySet(),
 ): WarrenTunInterfacePlan {
     val addresses = mutableListOf(
         WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_ADDRESS, WarrenTunDefaults.IPV4_PREFIX),
@@ -141,6 +148,7 @@ fun planTunInterface(
         // makes VpnService.Builder.establish() throw "Cannot set address".
         mtu = config.mtu.coerceIn(if (config.enableIpv6) IPV6_MIN_MTU else MIN_MTU, MAX_MTU),
         blocking = false,
+        excludedApps = excludedApps,
     )
 }
 

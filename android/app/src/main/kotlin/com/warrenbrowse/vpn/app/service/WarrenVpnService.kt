@@ -85,6 +85,7 @@ class WarrenVpnService : LifecycleVpnService() {
         quinnAdapter = WarrenQuinnAdapter(
             vpnService = this,
             connectivityManager = getSystemService<ConnectivityManager>()!!,
+            settings = getKoin().get(),
         )
 
         // Observe Quinn tunnel transitions:
