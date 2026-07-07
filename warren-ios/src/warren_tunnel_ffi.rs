@@ -267,6 +267,68 @@ const RC_NOT_CONNECTED: c_int = -3;
 )]
 const RC_TUNNEL_FEATURE_DISABLED: c_int = -10;
 
+/// One edge of the multi-hop session-watch loop.
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
+enum WatchTransition {
+    /// A session became live. `first` is true only for the very first
+    /// connection of this tunnel, so the anti-rollback high-water mark is
+    /// raised exactly once.
+    Connected { first: bool },
+    /// A previously live session dropped; a redial is in flight.
+    Reconnecting,
+    /// No edge to report (steady state, whether connected or down).
+    Idle,
+}
+
+/// Pure edge-detector for the session-watch loop, extracted so the event
+/// ordering is unit-testable without a live supervisor. A reconnection (drop
+/// then re-establish) MUST re-emit `Connected`: gating every `Connected` on
+/// `connected_before` leaves the UI stuck at Reconnecting after any handover.
+fn watch_transition(
+    has_session: bool,
+    was_connected: bool,
+    connected_before: bool,
+) -> WatchTransition {
+    match (has_session, was_connected) {
+        (true, false) => WatchTransition::Connected {
+            first: !connected_before,
+        },
+        (false, true) => WatchTransition::Reconnecting,
+        _ => WatchTransition::Idle,
+    }
+}
+
+#[cfg(test)]
+mod watch_transition_tests {
+    use super::{WatchTransition, watch_transition};
+
+    #[test]
+    fn first_connection_is_flagged_first() {
+        assert_eq!(
+            watch_transition(true, false, false),
+            WatchTransition::Connected { first: true }
+        );
+    }
+
+    #[test]
+    fn reconnection_re_emits_connected_but_not_first() {
+        assert_eq!(
+            watch_transition(false, true, true),
+            WatchTransition::Reconnecting
+        );
+        assert_eq!(
+            watch_transition(true, false, true),
+            WatchTransition::Connected { first: false }
+        );
+    }
+
+    #[test]
+    fn steady_states_emit_nothing() {
+        assert_eq!(watch_transition(true, true, true), WatchTransition::Idle);
+        assert_eq!(watch_transition(false, false, true), WatchTransition::Idle);
+    }
+}
+
 // ---- Handle implementation (feature-gated) ----
 
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
@@ -286,6 +348,7 @@ mod handle_impl {
     use std::sync::{Arc, Mutex};
     use tokio::runtime::Runtime;
     use warrenguard_transport::IosTun;
+    use warrenguard_transport::supervisor::SupervisorHandle;
 
     /// Pointer + opaque context pair tracked as a single unit. Both
     /// fields move together so the borrow checker enforces atomic
@@ -354,6 +417,11 @@ mod handle_impl {
         /// `warren_tunnel_take_pin_mismatch` after a failure to decide
         /// whether to show the Trust / Report / Reject alert.
         pub pin_mismatch: Mutex<Option<String>>,
+        /// Control handle to the running multi-hop supervisor, installed by
+        /// `spawn_multi_hop`. Lets the lifecycle FFI drive a real redial
+        /// (`force_reconnect`) and query live session state (`has_session`).
+        /// `None` until the multi-hop supervisor is up.
+        pub supervisor: Mutex<Option<SupervisorHandle>>,
     }
 
     impl WarrenTunnelHandleImpl {
@@ -382,7 +450,36 @@ mod handle_impl {
                 failover_count: AtomicU32::new(0),
                 has_connected_once: AtomicBool::new(false),
                 pin_mismatch: Mutex::new(None),
+                supervisor: Mutex::new(None),
             })
+        }
+
+        /// Install the multi-hop supervisor control handle (once, from
+        /// `spawn_multi_hop`).
+        pub fn set_supervisor(&self, handle: SupervisorHandle) {
+            if let Ok(mut slot) = self.supervisor.lock() {
+                *slot = Some(handle);
+            }
+        }
+
+        /// Force a fresh-socket redial of the current circuit (TUN, routes and
+        /// killswitch untouched). Returns false when there is no supervisor or
+        /// no live session to reconnect.
+        pub fn force_reconnect(&self) -> bool {
+            self.supervisor
+                .lock()
+                .ok()
+                .and_then(|slot| slot.as_ref().map(SupervisorHandle::force_reconnect))
+                .unwrap_or(false)
+        }
+
+        /// Whether the supervisor currently publishes a live session.
+        pub fn has_live_session(&self) -> bool {
+            self.supervisor
+                .lock()
+                .ok()
+                .and_then(|slot| slot.as_ref().map(SupervisorHandle::has_session))
+                .unwrap_or(false)
         }
 
         /// Record a TOFU pin-mismatch JSON payload (drained by Swift via
@@ -727,6 +824,7 @@ fn spawn_multi_hop(
             n_connections: 1,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
+        arc_for_task.set_supervisor(supervisor.handle());
         // ADR 36: the downlink pump publishes a mid-session `ExitDraining`
         // advisory here; the drain reactor below forces a supervisor redial so
         // we migrate before the exit's hard close. iOS has no daemon avoid-set,
@@ -787,7 +885,7 @@ fn spawn_multi_hop(
                         // tag): the app already renders it as a transient
                         // reconnect, which is exactly what a drain migration is.
                         drain_arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
-                        drain_handle.force_reconnect();
+                        let _ = drain_handle.force_reconnect();
                     }
                 }
             });
@@ -856,10 +954,16 @@ fn spawn_multi_hop(
         // reconnect in flight (Reconnecting). When the sender drops (the
         // supervisor task exits) the tunnel is down.
         let mut ev = watch;
+        let mut was_connected = false;
         loop {
             let has_session = ev.borrow().is_some();
-            if has_session {
-                if !arc_for_task.has_connected_once.load(Ordering::Acquire) {
+            match watch_transition(
+                has_session,
+                was_connected,
+                arc_for_task.has_connected_once.load(Ordering::Acquire),
+            ) {
+                WatchTransition::Connected { first } => {
+                    was_connected = true;
                     arc_for_task
                         .has_connected_once
                         .store(true, Ordering::Release);
@@ -868,19 +972,24 @@ fn spawn_multi_hop(
                         .connected_at_secs
                         .store(now_secs(), Ordering::Relaxed);
                     arc_for_task.fire_event(WarrenTunnelEventTagC::EventConnected);
-                    // Raise the anti-rollback high-water mark only now that the
-                    // circuit actually connected, so an unusable forged
-                    // directory never poisons the persisted mark.
-                    if let Some(path) = gen_path.as_deref() {
-                        crate::warren_multihop_generation::raise_high_water(
-                            path,
-                            accepted_generation,
-                        );
+                    // Raise the anti-rollback high-water mark only on the first
+                    // connect, so an unusable forged directory never poisons the
+                    // persisted mark, and a later reconnect does not re-raise it.
+                    if first {
+                        if let Some(path) = gen_path.as_deref() {
+                            crate::warren_multihop_generation::raise_high_water(
+                                path,
+                                accepted_generation,
+                            );
+                        }
                     }
                 }
-            } else if arc_for_task.has_connected_once.load(Ordering::Acquire) {
-                arc_for_task.set_state(WarrenTunnelStateC::Reconnecting);
-                arc_for_task.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+                WatchTransition::Reconnecting => {
+                    was_connected = false;
+                    arc_for_task.set_state(WarrenTunnelStateC::Reconnecting);
+                    arc_for_task.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+                }
+                WatchTransition::Idle => {}
             }
             if ev.changed().await.is_err() {
                 break;
@@ -1321,7 +1430,11 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
     }
 }
 
-/// Resumes the inbound pump after a [`warren_tunnel_pause`]. Idempotent.
+/// Resumes after a [`warren_tunnel_pause`]. Health-checked: it never reports
+/// Connected without a live session. A short suspension usually leaves the
+/// Quinn session intact; a long one (peer idle-timeout) drops it, so resume
+/// forces a redial and stays Reconnecting until the supervisor republishes a
+/// session. Idempotent.
 ///
 /// Returns `0` on success, `-1` on null handle.
 ///
@@ -1338,11 +1451,13 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
             return RC_INVALID_INPUT;
         };
-        // Mirror of `pause`. TODO: actually un-set the pause
-        // flag the pump consults.
-        if arc.state_snapshot() == WarrenTunnelStateC::Reconnecting {
+        if arc.has_live_session() {
             arc.set_state(WarrenTunnelStateC::Connected);
             arc.fire_event(WarrenTunnelEventTagC::EventConnected);
+        } else {
+            arc.set_state(WarrenTunnelStateC::Reconnecting);
+            arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+            arc.force_reconnect();
         }
         RC_OK
     }
@@ -1353,8 +1468,9 @@ pub unsafe extern "C" fn warren_tunnel_resume(handle: *mut WarrenTunnelHandle) -
     }
 }
 
-/// Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
-/// Uses `warrenguard_backoff::Backoff::HANDSHAKE` (15s).
+/// Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover): forces
+/// the supervisor to redial its current circuit on a fresh socket, under the
+/// supervisor's own configured backoff. TUN, routes and killswitch stay up.
 ///
 /// Returns `0` on success, `-3` if the tunnel is not connected.
 ///
@@ -1374,7 +1490,8 @@ pub unsafe extern "C" fn warren_tunnel_reconnect(handle: *mut WarrenTunnelHandle
         if arc.state_snapshot() == WarrenTunnelStateC::Disconnected {
             return RC_NOT_CONNECTED;
         }
-        // TODO: signal the warren-tunnel reconnect future.
+        arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+        let _ = arc.force_reconnect();
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
