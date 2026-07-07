@@ -402,10 +402,13 @@ struct WarrenTunnelHandle *warren_tunnel_start(const struct WarrenTunnelParamete
 void warren_tunnel_stop(struct WarrenTunnelHandle *handle);
 
 /**
- * Pauses the inbound pump without tearing down the Quinn connection.
- * Used on iOS `sleep()` to comply with NetworkExtension background
- * time budgets. Resume via [`warren_tunnel_resume`]. Calling pause
- * on an already-paused or disconnected handle is a no-op.
+ * Called on iOS `sleep()`. Deliberately does not stop the pump: iOS suspends
+ * the whole extension process shortly after `sleep()`, which halts the pump on
+ * its own, and while the extension is briefly backgrounded but not yet
+ * suspended the pump MUST keep running to hold the connection. So this leaves
+ * the live `Connected` state untouched; [`warren_tunnel_resume`] health-checks
+ * the session on wake. A userspace pump-pause would only risk stalling a
+ * still-running backgrounded tunnel for no benefit.
  *
  * Returns `0` on success, `-1` on null handle.
  *
@@ -415,7 +418,11 @@ void warren_tunnel_stop(struct WarrenTunnelHandle *handle);
 int warren_tunnel_pause(struct WarrenTunnelHandle *handle);
 
 /**
- * Resumes the inbound pump after a [`warren_tunnel_pause`]. Idempotent.
+ * Resumes after a [`warren_tunnel_pause`]. Health-checked: it never reports
+ * Connected without a live session. A short suspension usually leaves the
+ * Quinn session intact; a long one (peer idle-timeout) drops it, so resume
+ * forces a redial and stays Reconnecting until the supervisor republishes a
+ * session. Idempotent.
  *
  * Returns `0` on success, `-1` on null handle.
  *
@@ -425,8 +432,9 @@ int warren_tunnel_pause(struct WarrenTunnelHandle *handle);
 int warren_tunnel_resume(struct WarrenTunnelHandle *handle);
 
 /**
- * Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover).
- * Uses `warrenguard_backoff::Backoff::HANDSHAKE` (15s).
+ * Triggers a tunnel reconnect (e.g. on Wi-Fi <-> cellular handover): forces
+ * the supervisor to redial its current circuit on a fresh socket, under the
+ * supervisor's own configured backoff. TUN, routes and killswitch stay up.
  *
  * Returns `0` on success, `-3` if the tunnel is not connected.
  *
