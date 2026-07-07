@@ -567,6 +567,26 @@ mod tests {
     }
 
     #[test]
+    fn clear_signer_swaps_identity_to_the_zero_sentinel() {
+        let dir = isolated_tempdir();
+        let signer = load_or_create_signer(&dir).expect("signer");
+        let user_pubkey = signer.pubkey_ss58();
+
+        clear_signer(&signer);
+
+        let sentinel_pubkey =
+            WarrenAuthSigner::new(SigningKey::from_bytes(&[0u8; 32])).pubkey_ss58();
+        assert_ne!(
+            user_pubkey,
+            signer.pubkey_ss58(),
+            "logout must stop signing as the user's identity"
+        );
+        assert_eq!(signer.pubkey_ss58(), sentinel_pubkey);
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
     fn get_warren_mnemonic_returns_none_when_no_file_exists() {
         let dir = isolated_tempdir();
 

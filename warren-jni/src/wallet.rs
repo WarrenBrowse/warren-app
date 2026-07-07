@@ -236,22 +236,16 @@ mod tests {
     }
 
     /// Wire vector: a fixed mnemonic must always derive the same pubkey.
-    /// This guards against silent HKDF-info or salt drift.
+    /// A change to this frozen hex means the HKDF salt/info or the key
+    /// derivation drifted, which breaks every existing account, so the auth
+    /// schema version must be bumped deliberately alongside it.
     #[test]
     fn fixed_mnemonic_derives_stable_pubkey() {
         // Official BIP39 all-zero-entropy test vector (12 words).
         const PHRASE: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        const EXPECTED_PUBKEY_HEX: &str =
+            "01fcbb300c7212762f44992dfe581af2a48dc6f304317f509334838a87d2b58c";
         let pubkey = pubkey_from_mnemonic(PHRASE).unwrap();
-        // The hex below was computed via this function on warren-core
-        // `8b0e345` (the pinned SHA at the time of this test landing). If
-        // it ever changes the auth wire format has drifted and the
-        // schema version must be bumped.
-        let actual_hex = hex::encode(pubkey);
-        // Compute-and-pin: re-derive on first run, then freeze.
-        assert_eq!(actual_hex.len(), 64, "Ed25519 pubkey hex must be 64 chars");
-        // Asserting the deterministic property is enough to catch drift
-        // without coupling the test to today's hex.
-        let again = pubkey_from_mnemonic(PHRASE).unwrap();
-        assert_eq!(pubkey, again);
+        assert_eq!(hex::encode(pubkey), EXPECTED_PUBKEY_HEX);
     }
 }
