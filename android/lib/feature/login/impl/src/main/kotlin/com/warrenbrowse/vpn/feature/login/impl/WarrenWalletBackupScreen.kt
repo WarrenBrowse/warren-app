@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
 import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
@@ -64,6 +65,9 @@ fun WarrenWalletBackupScreen(
         LaunchedEffect(Unit) { onProcessRestoreFailure() }
         return
     }
+
+    // The full phrase is on screen here; block screenshots and the Recents thumbnail.
+    SecureScreenWhileInView()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val copyToClipboard = createCopyToClipboardHandle(snackbarHostState, isSensitive = true)

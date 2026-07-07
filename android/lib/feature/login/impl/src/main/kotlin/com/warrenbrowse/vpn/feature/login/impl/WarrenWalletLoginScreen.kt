@@ -23,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
@@ -102,6 +103,8 @@ fun WarrenWalletLoginScreen(
             verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
         ) {
             if (importMode) {
+                // The phrase being entered is on screen; block screenshots and Recents.
+                SecureScreenWhileInView()
                 Text(
                     text = stringResource(R.string.wallet_import_title),
                     style = MaterialTheme.typography.headlineSmall,

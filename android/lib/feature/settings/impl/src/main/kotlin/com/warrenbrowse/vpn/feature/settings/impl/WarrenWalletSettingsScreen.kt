@@ -41,6 +41,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
 import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.common.compose.safeOpenUri
 import com.warrenbrowse.vpn.core.Navigator
@@ -301,6 +302,8 @@ fun WarrenWalletSettings(navigator: Navigator) {
     }
 
     viewMnemonic?.let { mnemonic ->
+        // The recovery phrase is revealed here; block screenshots and Recents.
+        SecureScreenWhileInView()
         AlertDialog(
             onDismissRequest = { viewMnemonic = null },
             title = { Text(stringResource(R.string.wallet_settings_recovery_phrase_title)) },
