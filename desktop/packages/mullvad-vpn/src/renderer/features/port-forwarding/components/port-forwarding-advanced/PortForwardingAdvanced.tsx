@@ -26,8 +26,19 @@ import { appliedPort, mappingForRule, rulePort } from '../../mapping';
 const StyledRow = styled.div({
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   width: '100%',
   gap: '12px',
+});
+
+// Protocol + port hug the left inset; status + remove hug the right inset. Two
+// groups under space-between so the row spans the card edge-to-edge instead of
+// packing left and leaving a gap on the right.
+const StyledRowGroup = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  minWidth: 0,
 });
 
 const StyledInput = styled.input<{ $disabled: boolean; $invalid: boolean }>(
@@ -426,41 +437,45 @@ function PortRuleRow({
   return (
     <FlexColumn gap="tiny">
       <StyledRow>
-        <StyledSelect
-          $disabled={disabled}
-          disabled={disabled}
-          value={rule.protocol}
-          onChange={handleProtocolChange}
-          aria-label={messages.pgettext('port-forwarding-view', 'Protocol')}>
-          <option value={NatPmpProto.udp}>UDP</option>
-          <option value={NatPmpProto.tcp}>TCP</option>
-        </StyledSelect>
-        <StyledInput
-          $disabled={disabled}
-          $invalid={error !== null}
-          disabled={disabled}
-          type="text"
-          inputMode="numeric"
-          pattern="[0-9]*"
-          value={portDraft}
-          onChange={handlePortChange}
-          onBlur={commitPort}
-          onKeyDown={handlePortKeyDown}
-          placeholder={messages.pgettext('port-forwarding-view', 'port')}
-          aria-label={messages.pgettext('port-forwarding-view', 'Port')}
-        />
-        <StyledStatus>
-          <RuleStatus mapping={mapping} />
-        </StyledStatus>
-        <StyledRemoveButton
-          type="button"
-          $disabled={disabled}
-          disabled={disabled}
-          onClick={handleRemoveClick}
-          aria-label={messages.pgettext('port-forwarding-view', 'Remove port')}
-          title={messages.pgettext('port-forwarding-view', 'Remove port')}>
-          ✕
-        </StyledRemoveButton>
+        <StyledRowGroup>
+          <StyledSelect
+            $disabled={disabled}
+            disabled={disabled}
+            value={rule.protocol}
+            onChange={handleProtocolChange}
+            aria-label={messages.pgettext('port-forwarding-view', 'Protocol')}>
+            <option value={NatPmpProto.udp}>UDP</option>
+            <option value={NatPmpProto.tcp}>TCP</option>
+          </StyledSelect>
+          <StyledInput
+            $disabled={disabled}
+            $invalid={error !== null}
+            disabled={disabled}
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={portDraft}
+            onChange={handlePortChange}
+            onBlur={commitPort}
+            onKeyDown={handlePortKeyDown}
+            placeholder={messages.pgettext('port-forwarding-view', 'port')}
+            aria-label={messages.pgettext('port-forwarding-view', 'Port')}
+          />
+        </StyledRowGroup>
+        <StyledRowGroup>
+          <StyledStatus>
+            <RuleStatus mapping={mapping} />
+          </StyledStatus>
+          <StyledRemoveButton
+            type="button"
+            $disabled={disabled}
+            disabled={disabled}
+            onClick={handleRemoveClick}
+            aria-label={messages.pgettext('port-forwarding-view', 'Remove port')}
+            title={messages.pgettext('port-forwarding-view', 'Remove port')}>
+            ✕
+          </StyledRemoveButton>
+        </StyledRowGroup>
       </StyledRow>
       {error !== null ? (
         <Text variant="labelTiny" color="red">
