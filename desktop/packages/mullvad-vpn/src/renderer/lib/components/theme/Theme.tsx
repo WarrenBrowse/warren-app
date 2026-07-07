@@ -14,9 +14,10 @@ import {
 
 type VariablesProps = React.PropsWithChildren<object>;
 
-// macOS rounds frameless windows at the OS level; elsewhere we clip #app to a
-// rounded rect ourselves (body stays transparent so the corners show through).
-const roundWindowCorners = window.env.platform !== 'darwin';
+// macOS rounds frameless windows at the OS level; Windows does not, so there we
+// clip #app to a rounded rect ourselves (body stays transparent so the corners
+// show through). Linux keeps square corners: its window is WM-decorated.
+const roundWindowCorners = window.env.platform === 'win32';
 
 const GlobalStyle = createGlobalStyle`
   :root {

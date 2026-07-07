@@ -320,10 +320,9 @@ export default class WindowController {
   // On both Linux and Windows the app height is applied incorrectly:
   // https://github.com/electron/electron/issues/28777
   private static getContentHeight(unpinnedWindow: boolean): number {
-    // The height we want to achieve. Taller than Mullvad's 568 so the full-bleed
-    // scenery (and Bula) breathe above the connection card instead of being
-    // mostly hidden behind it.
-    const contentHeight = 640;
+    // Matches the 0.668 aspect ratio of the full-bleed scenery masters (380/568),
+    // so `object-fit: cover` fills the width without cropping the sides.
+    const contentHeight = 568;
 
     switch (process.platform) {
       case 'win32':
