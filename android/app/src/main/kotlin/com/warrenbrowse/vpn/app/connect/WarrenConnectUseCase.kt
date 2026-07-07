@@ -67,7 +67,7 @@ class WarrenConnectUseCase(
             is Outcome.Failure -> WarrenConnectResult.Failure(outcome.message)
         }
 
-    suspend fun invoke(activity: FragmentActivity): Outcome {
+    suspend fun invoke(context: Context): Outcome {
         // The pubkey (public, used to address the relay config) is available
         // whether the wallet is Locked at rest or transiently Ready; only Absent
         // blocks. Gating on Ready alone made Connect a no-op at rest, since the
@@ -126,12 +126,12 @@ class WarrenConnectUseCase(
         val configJson = config.toWireJson()
 
         MnemonicCache.put(mnemonic)
-        val intent = Intent(activity.applicationContext, WarrenVpnService::class.java).apply {
+        val appContext = context.applicationContext
+        val intent = Intent(appContext, WarrenVpnService::class.java).apply {
             action = KEY_WARREN_CONNECT_QUINN_ACTION
             putExtra(KEY_WARREN_TUNNEL_CONFIG_JSON, configJson)
         }
-        val context: Context = activity.applicationContext
-        context.startForegroundService(intent)
+        appContext.startForegroundService(intent)
         Logger.i("WarrenConnectUseCase: dispatched Quinn connect intent")
         return Outcome.Success
     }

@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.app.service
 
-import android.app.KeyguardManager
 import android.content.Intent
 import android.net.ConnectivityManager
 import android.os.Binder
@@ -13,6 +12,7 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import com.warrenbrowse.vpn.BuildConfig
+import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
@@ -35,7 +35,7 @@ import org.koin.core.context.loadKoinModules
 // ConnectivityManager handover hook.
 class WarrenVpnService : LifecycleVpnService() {
 
-    private lateinit var keyguardManager: KeyguardManager
+    private lateinit var warrenConnectUseCase: WarrenConnectUseCase
 
     private lateinit var migrateSplitTunneling: MigrateSplitTunneling
     private lateinit var apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder
@@ -75,9 +75,8 @@ class WarrenVpnService : LifecycleVpnService() {
             migrateSplitTunneling = get()
             apiEndpointFromIntentHolder = get()
             quinnStateProxy = get()
+            warrenConnectUseCase = get()
         }
-
-        keyguardManager = getSystemService<KeyguardManager>()!!
 
         // Quinn adapter must outlive every connect/disconnect cycle, so
         // it is owned by the service and kept alive for the service's
@@ -149,21 +148,21 @@ class WarrenVpnService : LifecycleVpnService() {
         // Always promote to foreground if connect/disconnect actions are provided to mitigate cases
         // where the service would potentially otherwise be too slow running `startForeground`.
         when {
-            keyguardManager.isKeyguardLocked -> {
-                Logger.i("Keyguard is locked, ignoring command")
-            }
-
             intent.isFromSystem() || intent?.action == KEY_CONNECT_ACTION -> {
-                // KEY_CONNECT_ACTION carries no config. Callers should use
-                // KEY_WARREN_CONNECT_QUINN_ACTION (with a serialised
-                // WarrenTunnelConfig and a preceding MnemonicCache.put). A
-                // system-initiated connect with no config logs and does
-                // nothing else.
+                // Boot auto-start (KEY_CONNECT_ACTION from the boot receiver or a
+                // notification Connect button) and system always-on (isFromSystem)
+                // both arrive without a config. Run the full connect orchestration,
+                // which resolves the wallet + config, stages the mnemonic, and
+                // dispatches KEY_WARREN_CONNECT_QUINN_ACTION back to this service.
+                // The mnemonic read is silent (app-bound key), so this works
+                // headless after boot even while the keyguard is locked.
                 foregroundNotificationHandler.startForeground()
-                Logger.w(
-                    "Received legacy KEY_CONNECT_ACTION (system or callsite); " +
-                        "migrate to KEY_WARREN_CONNECT_QUINN_ACTION"
-                )
+                lifecycleScope.launch {
+                    val outcome = warrenConnectUseCase.invoke(applicationContext)
+                    if (outcome !is WarrenConnectUseCase.Outcome.Success) {
+                        Logger.w("auto-start/always-on connect did not dispatch: $outcome")
+                    }
+                }
             }
 
             intent?.action == KEY_RECONNECT_ACTION -> {
