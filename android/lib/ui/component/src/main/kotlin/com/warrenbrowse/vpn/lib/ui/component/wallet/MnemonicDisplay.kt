@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isSensitiveData
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -77,6 +79,9 @@ fun MnemonicDisplay(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    // Keep the recovery words out of the accessibility tree and
+                    // screenshots taken by services that honor sensitivity.
+                    .semantics { isSensitiveData = true }
                     .then(if (revealed) Modifier else Modifier.blur(BLUR_RADIUS_DP.dp)),
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
