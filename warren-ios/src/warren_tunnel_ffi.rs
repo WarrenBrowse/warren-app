@@ -1395,10 +1395,13 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
     }
 }
 
-/// Pauses the inbound pump without tearing down the Quinn connection.
-/// Used on iOS `sleep()` to comply with NetworkExtension background
-/// time budgets. Resume via [`warren_tunnel_resume`]. Calling pause
-/// on an already-paused or disconnected handle is a no-op.
+/// Called on iOS `sleep()`. Deliberately does not stop the pump: iOS suspends
+/// the whole extension process shortly after `sleep()`, which halts the pump on
+/// its own, and while the extension is briefly backgrounded but not yet
+/// suspended the pump MUST keep running to hold the connection. So this leaves
+/// the live `Connected` state untouched; [`warren_tunnel_resume`] health-checks
+/// the session on wake. A userspace pump-pause would only risk stalling a
+/// still-running backgrounded tunnel for no benefit.
 ///
 /// Returns `0` on success, `-1` on null handle.
 ///
@@ -1415,12 +1418,7 @@ pub unsafe extern "C" fn warren_tunnel_pause(handle: *mut WarrenTunnelHandle) ->
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
             return RC_INVALID_INPUT;
         };
-        // TODO: signal a pause to the running pump (e.g. via
-        // an `AtomicBool` flag the pump consults each iteration, or
-        // an mpsc oneshot). For now, just record the state transition
-        // so Swift consumers see Reconnecting → Connected on resume.
-        arc.set_state(WarrenTunnelStateC::Reconnecting);
-        arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+        let _ = arc;
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
