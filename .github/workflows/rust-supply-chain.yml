@@ -1,8 +1,16 @@
 ---
 name: Rust - Supply chain
 on:
-  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
-  # Kept runnable on-demand via the Actions tab.
+  push:
+    branches: [main]
+    paths:
+      - '**/Cargo.toml'
+      - '**/Cargo.lock'
+      - 'deny.toml'
+      - '.github/workflows/rust-supply-chain.yml'
+  # Daily so newly published advisories are caught even without a dependency change.
+  schedule:
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 permissions: {}

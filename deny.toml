@@ -39,6 +39,12 @@ ignore = [
   # via warren-core's warrenguard-tls; parses only local PEM cert/key material at
   # startup, never attacker-controlled bytes. Security-clean, no CVE.
   "RUSTSEC-2025-0134",
+
+  # quick-xml DoS advisories are reached only through translations-converter, a
+  # build-time developer tool that parses local translation files we author, never
+  # attacker-controlled input, and is never shipped in the daemon or app binary.
+  "RUSTSEC-2026-0194",
+  "RUSTSEC-2026-0195",
 ]
 
 # This section is considered when running `cargo deny check licenses`
@@ -63,6 +69,34 @@ allow = [
   "CDLA-Permissive-2.0"
 ]
 
+# AGPL-3.0-or-later is allowed only for the first-party WarrenBrowse crates
+# (Warren is the sole copyright holder, so it can ship them, including via the
+# iOS App Store). Third-party copyleft stays rejected, which the extra iOS
+# license check in rust-supply-chain.yml relies on.
+exceptions = [
+  { allow = ["AGPL-3.0-or-later"], name = "warren-api" },
+  { allow = ["AGPL-3.0-or-later"], name = "warren-contract" },
+  { allow = ["AGPL-3.0-or-later"], name = "warren-discovery-core" },
+  { allow = ["AGPL-3.0-or-later"], name = "warren-identity" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-backoff" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-config" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-daita" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-identity" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-killswitch-os" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-multihop" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-natpmp-client" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-natpmp-protocol" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-pump" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-ratelimit" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-relay" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-route-split" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-tls" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-transport" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-transport-core" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-winroute" },
+  { allow = ["AGPL-3.0-or-later"], name = "warrenguard-wire" },
+]
+
 [licenses.private]
 ignore = false
 
@@ -81,7 +115,9 @@ deny = [
   # We are using Rustls, so we want to avoid OpenSSL
   { name = "openssl-sys" },
   { name = "openssl-src" },
-  { name = "openssl-probe" },
+  # openssl-probe carries no OpenSSL code; it only locates the system CA bundle
+  # for rustls-native-certs, so it is allowed solely through that path.
+  { name = "openssl-probe", wrappers = ["rustls-native-certs"] },
   # We are using tokio, so we want to avoid async-std
   { name = "async-std" },
   ## Older versions of crates where we only want to use the newer variants
@@ -90,7 +126,9 @@ deny = [
   { name = "hyper", version = "0" },
   { name = "tokio", version = "0" },
   { name = "time", version = "0.1" },
-  { name = "rand", version = "<0.9.3 " },
+  # bip39 (BIP39 mnemonic) hard-depends on rand 0.8, so it cannot leave the graph;
+  # warren-api still calls the rand 0.8 API too. Allow it only through those two.
+  { name = "rand", version = "<0.9.3", wrappers = ["bip39", "warren-api"] },
 ]
 
 # This section is considered when running `cargo deny check sources`.
@@ -110,4 +148,4 @@ allow-git = []
 
 [sources.allow-org]
 # 1 or more github.com organizations to allow git sources for
-github = ["mullvad"]
+github = ["WarrenBrowse"]
