@@ -177,7 +177,8 @@ describe('resolveApprovedReport', () => {
     const collect = vi.fn(() => Promise.resolve('fresh-id'));
     const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
     const report = await resolveApprovedReport('previewed-id', collect, read);
-    expect(report.toString()).toBe('report:previewed-id');
+    expect(report.bytes.toString()).toBe('report:previewed-id');
+    expect(report.reportId).toBe('previewed-id');
     expect(collect).not.toHaveBeenCalled();
   });
 
@@ -185,7 +186,21 @@ describe('resolveApprovedReport', () => {
     const collect = vi.fn(() => Promise.resolve('fresh-id'));
     const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
     const report = await resolveApprovedReport(undefined, collect, read);
-    expect(report.toString()).toBe('report:fresh-id');
+    expect(report.bytes.toString()).toBe('report:fresh-id');
+    expect(report.reportId).toBe('fresh-id');
+    expect(collect).toHaveBeenCalledOnce();
+  });
+
+  it('re-collects when the previewed report file has vanished', async () => {
+    const collect = vi.fn(() => Promise.resolve('fresh-id'));
+    const read = vi.fn((id: string) =>
+      id === 'previewed-id'
+        ? Promise.reject(new Error('ENOENT'))
+        : Promise.resolve(Buffer.from(`report:${id}`)),
+    );
+    const report = await resolveApprovedReport('previewed-id', collect, read);
+    expect(report.bytes.toString()).toBe('report:fresh-id');
+    expect(report.reportId).toBe('fresh-id');
     expect(collect).toHaveBeenCalledOnce();
   });
 

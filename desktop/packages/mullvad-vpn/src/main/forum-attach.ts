@@ -150,17 +150,34 @@ export async function approveForumAttach(
   }
 }
 
+/** The report bytes to send plus the id of the file they were read from, so
+ * the caller can delete exactly that temp file afterwards (it may differ from
+ * the previewed id when a fresh collection was needed). */
+export interface ResolvedReport {
+  bytes: Buffer;
+  reportId: string;
+}
+
 /**
  * Resolves the report bytes to send on approval: the report previewed at
- * deep-link time when it exists, otherwise a fresh collection. The retry is
- * what keeps a transient collector failure from turning into a dead prompt.
+ * deep-link time when it still exists, otherwise a fresh collection. Retrying
+ * covers both a failed deep-link collection (no previewed id) and a previewed
+ * file the OS reaped before approval, so neither turns into a dead prompt.
  */
 export async function resolveApprovedReport(
   reportId: string | undefined,
   collect: () => Promise<string>,
   read: (id: string) => Promise<Buffer>,
-): Promise<Buffer> {
-  return read(reportId ?? (await collect()));
+): Promise<ResolvedReport> {
+  if (reportId !== undefined) {
+    try {
+      return { bytes: await read(reportId), reportId };
+    } catch {
+      // Previewed file vanished (temp reaper); fall through to re-collect.
+    }
+  }
+  const fresh = await collect();
+  return { bytes: await read(fresh), reportId: fresh };
 }
 
 /**

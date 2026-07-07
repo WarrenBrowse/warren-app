@@ -5094,6 +5094,15 @@ fn oneshot_map<T1: Send + 'static, T2: Send + 'static>(
     new_tx
 }
 
+/// Canonical `POST /v1/forum/login` JSON body (doc 55). Frozen wire
+/// contract with warren-connect: the daemon signs exactly this string and
+/// the GUI POSTs it verbatim, so a reformat here would silently break
+/// signature verification. `sid` is validated to `^[0-9a-f]{32}$` upstream,
+/// so it needs no JSON escaping.
+fn forum_login_body(sid: &str) -> String {
+    format!("{{\"sid\":\"{sid}\"}}")
+}
+
 /// Canonical `POST /v1/forum/attach-logs` JSON body (doc 55). The field
 /// order and formatting are a frozen wire contract with warren-connect:
 /// the daemon signs exactly this string and the GUI POSTs it verbatim, so
@@ -5107,7 +5116,15 @@ fn forum_attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> String {
 
 #[cfg(test)]
 mod forum_attach_body_tests {
-    use super::forum_attach_body;
+    use super::{forum_attach_body, forum_login_body};
+
+    #[test]
+    fn forum_login_body_pins_the_wire_contract() {
+        assert_eq!(
+            forum_login_body("0123456789abcdef0123456789abcdef"),
+            "{\"sid\":\"0123456789abcdef0123456789abcdef\"}"
+        );
+    }
 
     #[test]
     fn forum_attach_body_pins_the_wire_contract() {

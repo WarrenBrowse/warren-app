@@ -587,6 +587,11 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumLoginRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        // Signs with the wallet identity key, so it is gated per-uid exactly
+        // like the mnemonic RPCs: the management socket is world-accessible,
+        // and without this a co-tenant local user could obtain a forum login
+        // signed under this account's wallet identity.
+        self.authorize_wallet_access(&request)?;
         let sid = request.into_inner().sid;
         validate_forum_sid(&sid)?;
         log::debug!("sign_forum_login (sid/pubkey/sig NEVER logged)");
@@ -618,6 +623,9 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumAttachLogsRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        // Same wallet-key gate as sign_forum_login: without it the
+        // world-accessible socket is a signing oracle for any local user.
+        self.authorize_wallet_access(&request)?;
         let request = request.into_inner();
         validate_forum_sid(&request.sid)?;
         if request.log_gz.is_empty() {

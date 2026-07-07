@@ -410,23 +410,43 @@ class ApplicationMain
 
   // Re-reads the report collected at deep-link time (or collects a fresh one
   // if that failed) and gzips it here in main: the renderer never handles the
-  // log content, only the report id.
+  // log content, only the report id. The temp report is deleted once sent so
+  // the redacted-but-still-sensitive logs do not linger in the OS temp dir.
   private async approveForumAttachRequest(
     request: IForumAttachRequest,
   ): Promise<ForumAttachResult> {
     let logGz: Buffer;
+    let usedReportId: string;
     try {
       const report = await resolveApprovedReport(
         request.reportId,
         () => problemReport.collectLogs(),
         (id) => fs.promises.readFile(problemReport.getProblemReportPath(id)),
       );
-      logGz = gzipSync(report);
+      logGz = gzipSync(report.bytes);
+      usedReportId = report.reportId;
     } catch (error) {
       log.error(`Forum attach: could not collect or read the report: ${String(error)}`);
+      this.deleteForumAttachReport(request.reportId);
       return 'error';
     }
-    return approveForumAttach(request, this.daemonRpc, logGz);
+    try {
+      return await approveForumAttach(request, this.daemonRpc, logGz);
+    } finally {
+      this.deleteForumAttachReport(usedReportId);
+      if (request.reportId && request.reportId !== usedReportId) {
+        this.deleteForumAttachReport(request.reportId);
+      }
+    }
+  }
+
+  // Best-effort deletion of a collected problem-report temp file. A missing
+  // file (already reaped, or never written) is not an error.
+  private deleteForumAttachReport(reportId: string | undefined) {
+    if (!reportId) {
+      return;
+    }
+    fs.promises.unlink(problemReport.getProblemReportPath(reportId)).catch(() => undefined);
   }
 
   private overrideAppPaths() {
@@ -1234,6 +1254,9 @@ class ApplicationMain
     });
     IpcMainEventChannel.forumAttach.handleCancel((request) => {
       this.pendingForumAttach.clear();
+      // Declining the prompt: drop the report collected at deep-link time so
+      // it does not linger in the OS temp dir.
+      this.deleteForumAttachReport(request.reportId);
       return cancelForumAttach(request);
     });
 
