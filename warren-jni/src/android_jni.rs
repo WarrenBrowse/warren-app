@@ -40,6 +40,9 @@ use jnix::{
     },
 };
 use tokio::sync::oneshot;
+// Every mnemonic that crosses the JNI boundary is wrapped in Zeroizing so its
+// heap allocation is wiped on drop, on every path including early returns.
+use zeroize::Zeroizing;
 
 // ---------------------------------------------------------------------------
 // Error / runtime state
@@ -203,7 +206,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_importMnemonic<'l
     mnemonic: JString<'local>,
 ) -> jbyteArray {
     let env = JnixEnv::from(env);
-    let phrase = String::from_java(&env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&env, mnemonic));
     let pubkey = match crate::wallet::pubkey_from_mnemonic(&phrase) {
         Ok(p) => p,
         Err(e) => {
@@ -226,7 +229,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_mnemonicPubkeySs5
     mnemonic: JString<'local>,
 ) -> jstring {
     let env = JnixEnv::from(env);
-    let phrase = String::from_java(&env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&env, mnemonic));
     let ss58_str = match crate::wallet::pubkey_ss58_from_mnemonic(&phrase) {
         Ok(s) => s,
         Err(e) => {
@@ -254,7 +257,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signRequest<'loca
     canonical_message: jbyteArray,
 ) -> jbyteArray {
     let env = JnixEnv::from(env);
-    let phrase = String::from_java(&env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&env, mnemonic));
     let msg = match env.convert_byte_array(canonical_message) {
         Ok(v) => v,
         Err(e) => {
@@ -292,7 +295,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequ
     body_hash_hex: JString<'local>,
 ) -> jbyteArray {
     let env = JnixEnv::from(env);
-    let phrase = String::from_java(&env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&env, mnemonic));
     let method = String::from_java(&env, method);
     let path = String::from_java(&env, path);
     let nonce_hex = String::from_java(&env, nonce_hex);
@@ -339,7 +342,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLogin<'local
     host: JString<'local>,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
-    let phrase = String::from_java(&jnix_env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
     let sid = String::from_java(&jnix_env, sid);
     let host = String::from_java(&jnix_env, host);
     let outcome = forum_login(&phrase, &sid, &host);
@@ -481,9 +484,6 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     {
         use std::os::fd::{FromRawFd, OwnedFd};
         use std::sync::atomic::Ordering;
-        // Wrap the raw mnemonic in Zeroizing so its heap allocation is
-        // wiped when it goes out of scope (guaranteed even on early-return paths).
-        use zeroize::Zeroizing;
 
         if tun_fd < 0 {
             let _ = jnix_env.throw(format!("invalid tun_fd: {tun_fd}"));
@@ -1062,7 +1062,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_sendProblemReport
     platform: JString<'local>,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
-    let phrase = String::from_java(&jnix_env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
     let user_message = String::from_java(&jnix_env, user_message);
     let redacted_logs = String::from_java(&jnix_env, redacted_logs);
     let app_version = String::from_java(&jnix_env, app_version);
@@ -1150,7 +1150,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getSubscription<'
     mnemonic: JString<'local>,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
-    let phrase = String::from_java(&jnix_env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
     let json = match get_subscription_inner(&phrase) {
         Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
         Err(e) => {
@@ -1262,7 +1262,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
     voucher: JString<'local>,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
-    let phrase = String::from_java(&jnix_env, mnemonic);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
     let voucher_secret = String::from_java(&jnix_env, voucher);
     let json = match redeem_voucher_inner(&phrase, &voucher_secret) {
         Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
