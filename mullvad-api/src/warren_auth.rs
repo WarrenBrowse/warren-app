@@ -31,8 +31,9 @@
 
 use std::sync::{Arc, RwLock};
 
-use ed25519_dalek::{Signer, SigningKey};
+use ed25519_dalek::SigningKey;
 use rand::RngCore;
+#[cfg(test)]
 use sha2::{Digest, Sha256};
 
 // Compile-time guard: `WarrenAuthSigner` hot-swaps its `SigningKey`
@@ -192,30 +193,25 @@ impl WarrenAuthSigner {
         timestamp: u64,
         nonce: [u8; NONCE_BYTES],
     ) -> WarrenAuthHeaders {
-        let nonce_hex = hex::encode(nonce);
-        let body_hash_hex = hex::encode(Sha256::digest(body));
-        let canonical = canonical_message(method, path, timestamp, &nonce_hex, &body_hash_hex);
-        // Single read-lock acquisition covers both signing and the
-        // pubkey lookup, so that a concurrent `replace_signing_key`
-        // cannot produce headers where the pubkey and the signature
-        // were computed against different keys.
-        let (pubkey_ss58, signature_hex) = {
+        // Single read-lock acquisition covers both signing and the pubkey
+        // lookup, so a concurrent `replace_signing_key` cannot produce headers
+        // where the pubkey and the signature were computed against different
+        // keys. The signing itself is delegated to warren-contract (through
+        // warren-identity), the single source of truth for the /v1 wire format,
+        // so this client cannot drift from the server-side verifier.
+        let signed = {
             let guard = self
                 .signing_key
                 .read()
                 .expect("WarrenAuthSigner RwLock poisoned");
-            let signature = guard.sign(canonical.as_bytes());
-            (
-                ss58::encode(&guard.verifying_key().to_bytes()),
-                hex::encode(signature.to_bytes()),
-            )
+            warren_identity::signing::sign_request(&guard, method, path, body, timestamp, nonce)
         };
 
         WarrenAuthHeaders {
-            pubkey_ss58,
-            signature_hex,
-            timestamp,
-            nonce_hex,
+            pubkey_ss58: signed.pubkey_ss58,
+            signature_hex: signed.signature_hex,
+            timestamp: signed.timestamp,
+            nonce_hex: signed.nonce_hex,
         }
     }
 
@@ -548,35 +544,52 @@ mod tests {
     }
 
     #[test]
-    fn apply_to_request_signs_with_path_and_query() {
-        // Anti-tampering: the signature must also cover the `?query`.
-        // A malicious proxy that strips a `?dry=true` must not produce
-        // a still-valid signature.
+    fn apply_to_request_signature_covers_the_query_string() {
+        // A proxy that strips a `?query` must not leave a still-valid signature.
         let signer = fixed_signer();
-        let mut req_with_q = http::Request::builder()
+        let mut req = http::Request::builder()
             .method("GET")
             .uri("/v1/exits?region=eu")
             .body(())
             .unwrap();
-        let mut req_without_q = http::Request::builder()
-            .method("GET")
-            .uri("/v1/exits")
-            .body(())
+
+        signer.apply_to_request(&mut req, b"").unwrap();
+
+        let get = |name: &str| {
+            req.headers()
+                .get(name)
+                .expect("header injected")
+                .to_str()
+                .expect("ascii header")
+                .to_owned()
+        };
+        let pubkey_bytes = ss58::decode(&get(HEADER_PUBKEY)).unwrap();
+        let vk = ed25519_dalek::VerifyingKey::from_bytes(&pubkey_bytes).unwrap();
+        let sig_bytes: [u8; 64] = hex::decode(get(HEADER_SIGNATURE))
+            .unwrap()
+            .try_into()
             .unwrap();
+        let sig = Signature::from_bytes(&sig_bytes);
+        let timestamp: u64 = get(HEADER_TIMESTAMP).parse().unwrap();
+        let nonce_hex = get(HEADER_NONCE);
+        let body_hash_hex = hex::encode(Sha256::digest(b""));
 
-        // We pin the same timestamp + nonce so we can isolate the
-        // effect of the path. To do that we go through
-        // `sign_request_at` directly and compare with what
-        // `apply_to_request` would inject.
-        let h_with = signer.sign_request_at("GET", "/v1/exits?region=eu", b"", 1, [0u8; 16]);
-        let h_without = signer.sign_request_at("GET", "/v1/exits", b"", 1, [0u8; 16]);
-        assert_ne!(h_with.signature_hex, h_without.signature_hex);
+        let with_query = canonical_message(
+            "GET",
+            "/v1/exits?region=eu",
+            timestamp,
+            &nonce_hex,
+            &body_hash_hex,
+        );
+        vk.verify(with_query.as_bytes(), &sig)
+            .expect("apply_to_request must sign the full path including the query");
 
-        // We use the `req_*` values only to confirm that
-        // `apply_to_request` does not crash on either path-only or
-        // path+query variants.
-        signer.apply_to_request(&mut req_with_q, b"").unwrap();
-        signer.apply_to_request(&mut req_without_q, b"").unwrap();
+        let path_only =
+            canonical_message("GET", "/v1/exits", timestamp, &nonce_hex, &body_hash_hex);
+        assert!(
+            vk.verify(path_only.as_bytes(), &sig).is_err(),
+            "stripping the query must invalidate the signature"
+        );
     }
 
     #[test]
