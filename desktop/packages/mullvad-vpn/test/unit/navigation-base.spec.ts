@@ -9,7 +9,7 @@ const okLogin: LoginState = {
   method: 'existing_account',
 };
 
-describe('getNavigationBase Warren onboarding redirect (M5.B.3)', () => {
+describe('getNavigationBase Warren onboarding redirect', () => {
   it('routes a logged-in user with no onboarding timestamp to the onboarding wizard', () => {
     const path = getNavigationBase(true, okLogin, undefined);
     expect(path).toBe(RoutePath.onboardingWelcome);

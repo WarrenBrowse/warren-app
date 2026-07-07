@@ -1,5 +1,5 @@
 ---
-# Warren VPN — HEADLESS (daemon + CLI) release pipeline
+# Warren VPN: HEADLESS (daemon + CLI) release pipeline
 #
 # Produces the GUI-less artifacts consumed by the `warren-cli` distribution repo:
 #   - Linux:   warren-vpn-daemon_<ver>_<arch>.deb / .rpm  (via build.sh --daemon-only)
@@ -178,7 +178,7 @@ jobs:
     runs-on: [self-hosted, Windows, macstudio-win]
     # Experimental: a bare `cargo build` misses the C lib search paths that
     # build.sh exports (winfw etc.), so linking can fail (LNK1181). The Warren
-    # tunnel is untested on Windows anyway — don't fail the whole release on it.
+    # tunnel is untested on Windows anyway, so don't fail the whole release on it.
     continue-on-error: true
     steps:
       - uses: actions/checkout@v5

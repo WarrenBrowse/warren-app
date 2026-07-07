@@ -1,8 +1,7 @@
 //! Warren PRODUCT/deployment constants owned by the app.
 //!
 //! Copied verbatim from `warren-core/crates/warren-config/src/lib.rs` so
-//! warren-ios no longer depends on warren-core (Phase 5 client
-//! convergence). Kept in lockstep with
+//! warren-ios does not depend on warren-core. Kept in lockstep with
 //! `mullvad-daemon::warren_product_config` and warren-jni's
 //! `PROD_SERVER_PUBKEY_HEX`.
 

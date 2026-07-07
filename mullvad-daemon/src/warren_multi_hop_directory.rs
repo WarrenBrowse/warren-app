@@ -1074,7 +1074,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     // circuit changed BECAUSE the previously-active exit is now
                     // in the avoid-set (a maintenance drain), and a new circuit
                     // is available, swap the LIVE supervisor onto it
-                    // (make-before-break) instead of a reconnect — the tunnel
+                    // (make-before-break) instead of a reconnect, so the tunnel
                     // never drops. Any other change (directory refresh, settings
                     // edit, no live supervisor) keeps the break-before-make
                     // reconnect.

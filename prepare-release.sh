@@ -11,7 +11,7 @@
 #   ./prepare-release.sh --desktop --dry-run 2026.5.0-beta1
 #
 # Notes:
-#   - --desktop is required (the only release surface in M4.H.D scope).
+#   - --desktop is required (the only release surface currently supported).
 #     The flag exists for forward compatibility with future surfaces
 #     (--android, --ios) and to mirror the upstream Mullvad CLI shape.
 #   - <VERSION> must follow CalVer YYYY.MILESTONE.PATCH[-prerelease]

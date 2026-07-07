@@ -402,7 +402,7 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .warren_custom_exit
                 .map(mullvad_types::settings::WarrenCustomExitSettings::from)
                 .unwrap_or_default(),
-            // A.4 pinning storage is daemon-internal: never round-trip
+            // TOFU pinning storage is daemon-internal: never round-trip
             // through gRPC `SetSettings` (would let a gRPC client wipe
             // the pin table). Default-initialise from a gRPC update;
             // the daemon retains its own copy.

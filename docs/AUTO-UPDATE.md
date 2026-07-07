@@ -219,7 +219,7 @@ GitHub repo **variable**
 
 | Variable | Value |
 | --- | --- |
-| `WARREN_UPDATE_MIN_VERSION` | e.g. `1.2.0` — clients below this are hard-blocked. Leave unset for no forced update. |
+| `WARREN_UPDATE_MIN_VERSION` | e.g. `1.2.0`: clients below this are hard-blocked. Leave unset for no forced update. |
 
 ### Ordering gotcha
 
@@ -253,7 +253,7 @@ constrain what is possible.
 **Android** is ~90% wired (inherited from Mullvad, intact) but the data source is
 stubbed:
 
-- Model `VersionInfo(currentVersion, isSupported)` —
+- Model `VersionInfo(currentVersion, isSupported)`:
   `android/lib/model/.../VersionInfo.kt`.
 - Notification + UI: `InAppNotification.UnsupportedVersion`, the banner
   (`lib/ui/component/.../NotificationData.kt`) with an "open store" action, and

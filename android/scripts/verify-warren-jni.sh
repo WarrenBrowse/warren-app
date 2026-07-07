@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Reproducible smoke for the warren-jni native side - meant to be runnable
 # from a clean checkout on macOS or Linux without Android Studio. Verifies
-# the Session D Android delivery surface (post `cce9774dcb`):
+# the warren-jni Android delivery surface:
 #
 #   1. The `warren-jni` crate compiles for the three Android ABIs we ship
 #      (aarch64-linux-android, armv7-linux-androideabi, x86_64-linux-android).
@@ -70,4 +70,4 @@ echo "==> warren-jni clippy on aarch64-linux-android"
 cargo clippy -p warren-jni --target aarch64-linux-android --quiet -- -D warnings
 
 echo ""
-echo "All warren-jni Session D delivery checks PASSED."
+echo "All warren-jni delivery checks PASSED."

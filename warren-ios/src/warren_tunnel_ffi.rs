@@ -1855,12 +1855,9 @@ mod tests {
 
         // Replicate the production `clone_arc_from_raw` logic.
         let cloned: Arc<u32> = {
-            // Step 1: reconstitute without decrementing ref-count.
             // SAFETY: `raw` came from `Arc::into_raw` above; reconstituting without dropping.
             let arc = unsafe { Arc::from_raw(raw) };
-            // Step 2: bump ref-count.
             let c = Arc::clone(&arc);
-            // Step 3: return ownership back to raw pointer.
             let _ = Arc::into_raw(arc);
             c
         };

@@ -11,7 +11,7 @@ const REVOKED_MESSAGE: &str = "The current device has been revoked";
 
 // A Warren account IS a BIP39 recovery phrase (no account numbers): the phrase
 // derives the Ed25519 identity and its `wb…` address. So `create` mints a fresh
-// phrase and `login` restores from one — both go through the daemon's mnemonic
+// phrase and `login` restores from one; both go through the daemon's mnemonic
 // signer (set_warren_mnemonic / create_new_account), never the legacy
 // account-number path.
 #[derive(Subcommand, Debug)]
@@ -71,7 +71,7 @@ impl Account {
         if !phrase.is_empty() {
             println!();
             println!(
-                "RECOVERY PHRASE — write it down offline. Anyone with it controls this\n\
+                "RECOVERY PHRASE: write it down offline. Anyone with it controls this\n\
                  account, and it is the only way to restore it. Never share it.\n"
             );
             println!("    {phrase}\n");
@@ -91,7 +91,7 @@ impl Account {
             anyhow::bail!("no recovery phrase provided");
         }
         rpc.set_warren_mnemonic(phrase).await.context(
-            "could not restore identity — the recovery phrase must be 12 or 24 BIP39 words",
+            "could not restore identity: the recovery phrase must be 12 or 24 BIP39 words",
         )?;
         println!("Warren identity restored and active.");
         Self::get(rpc, false).await
@@ -100,7 +100,7 @@ impl Account {
     async fn logout(rpc: &mut MullvadProxyClient) -> Result<()> {
         rpc.logout_account(&format!("{BIN_NAME} logout")).await?;
         println!(
-            "Logged out. Your recovery phrase is kept on this device — restore later\n\
+            "Logged out. Your recovery phrase is kept on this device; restore later\n\
              with `{BIN_NAME} account login`."
         );
         Ok(())
@@ -128,7 +128,7 @@ impl Account {
                     // No subscription bound to this identity yet (warren-api 404),
                     // or the API was unreachable. Either way, nothing to connect with.
                     Err(_) => {
-                        println!("{:<14}none — redeem a voucher to activate", "Subscription:");
+                        println!("{:<14}none, redeem a voucher to activate", "Subscription:");
                     }
                 }
             }
@@ -162,7 +162,7 @@ impl Account {
 }
 
 /// Prompts for and reads a recovery phrase as a single line (words stay
-/// space-separated — never concatenated). Normalised to the canonical lowercase
+/// space-separated, never concatenated). Normalised to the canonical lowercase
 /// single-spaced form the BIP39 validator expects.
 async fn read_phrase_from_stdin() -> String {
     tokio::task::spawn_blocking(|| {

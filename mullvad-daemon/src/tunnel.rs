@@ -58,7 +58,7 @@ pub enum Error {
     #[error("Failed to assemble Warren tunnel parameters")]
     WarrenAssemble(#[from] AssembleError),
 
-    /// A.4 TOFU pin verification refused the connect: the exit served
+    /// TOFU pin verification refused the connect: the exit served
     /// a different Ed25519 pubkey than the one previously pinned for
     /// the same exit identity. The user must either `TrustNewExitKey`
     /// (update the pin) or `ResetPinnedExitKeys` (clear all pins) via
@@ -833,7 +833,7 @@ impl ParametersGenerator {
                     // Fire-and-forget on the channel so the daemon
                     // consumer can route the event to the UI through
                     // the WarrenStatusCache. The channel may be
-                    // unsubscribed in tests or pre-H.4 builds; the
+                    // unsubscribed when no consumer is attached; the
                     // security gate works regardless.
                     if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
                         let _ = tx.send(WarrenPinUpdate::Mismatch {
@@ -858,7 +858,7 @@ impl ParametersGenerator {
                     });
                 }
                 WarrenPinOutcome::FirstSeen => {
-                    log::info!("warren A.4: TOFU pin established for exit_id={exit_id_hex}");
+                    log::info!("warren: TOFU pin established for exit_id={exit_id_hex}");
                     if let Some(tx) = inner.warren_pin_update_tx.as_ref() {
                         let _ = tx.send(WarrenPinUpdate::PinNewExit {
                             exit_id_hex,

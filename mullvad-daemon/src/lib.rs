@@ -1999,7 +1999,7 @@ impl Daemon {
                     })
                     .await;
                 if let Err(e) = result {
-                    log::warn!("warren A.4 pin-insert persist failed: {e}");
+                    log::warn!("warren TOFU pin-insert persist failed: {e}");
                 }
             }
             tunnel::WarrenPinUpdate::BumpLastSeen {
@@ -2017,7 +2017,7 @@ impl Daemon {
                     })
                     .await;
                 if let Err(e) = result {
-                    log::warn!("warren A.4 last_seen bump persist failed: {e}");
+                    log::warn!("warren TOFU last_seen bump persist failed: {e}");
                 }
             }
             tunnel::WarrenPinUpdate::Mismatch {
@@ -2057,7 +2057,7 @@ impl Daemon {
                     })
                     .await;
                 if let Err(e) = result {
-                    log::warn!("warren A.4 trust-replace persist failed: {e}");
+                    log::warn!("warren TOFU trust-replace persist failed: {e}");
                 }
             }
             tunnel::WarrenPinUpdate::ResetAll => {
@@ -2068,7 +2068,7 @@ impl Daemon {
                     })
                     .await;
                 if let Err(e) = result {
-                    log::warn!("warren A.4 reset-all persist failed: {e}");
+                    log::warn!("warren TOFU reset-all persist failed: {e}");
                 }
             }
         }
@@ -3942,7 +3942,7 @@ impl Daemon {
         if matches!(outcome, tunnel::TrustNewExitKeyOutcome::Ok) {
             self.warren_status_cache.clear_pubkey_mismatch_pending();
             log::info!(
-                "warren A.4: TOFU pin updated for exit_id={exit_id_hex} (user-trusted rotation)"
+                "warren: TOFU pin updated for exit_id={exit_id_hex} (user-trusted rotation)"
             );
         }
         Self::oneshot_send(tx, outcome, "trust_new_exit_key response");
@@ -3954,7 +3954,7 @@ impl Daemon {
     async fn on_reset_pinned_exit_keys(&mut self, tx: oneshot::Sender<u32>) {
         let count = self.parameters_generator.reset_pinned_exit_keys().await;
         self.warren_status_cache.clear_pubkey_mismatch_pending();
-        log::info!("warren A.4: pin table reset, dropped {count} entries");
+        log::info!("warren: pin table reset, dropped {count} entries");
         Self::oneshot_send(tx, count, "reset_pinned_exit_keys response");
     }
 
@@ -3963,7 +3963,7 @@ impl Daemon {
     /// modal). A subsequent connect would re-emit the mismatch.
     fn on_dismiss_pubkey_mismatch(&mut self, tx: oneshot::Sender<()>) {
         self.warren_status_cache.clear_pubkey_mismatch_pending();
-        log::info!("warren A.4: pubkey-mismatch dismissed by user");
+        log::info!("warren: pubkey-mismatch dismissed by user");
         Self::oneshot_send(tx, (), "dismiss_pubkey_mismatch response");
     }
 

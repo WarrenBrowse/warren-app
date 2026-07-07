@@ -179,7 +179,7 @@ impl NatPmpManager {
         if let Some(h) = self.forward_handle.take() {
             h.abort();
         }
-        // Step 2: release the live mapping cleanly. `release()`
+        // Then release the live mapping cleanly. `release()`
         // calls `cancel()` internally (the loop's Cancelled `send`
         // now fails silently because the forwarder is gone, which
         // is fine) and then sends a `lifetime = 0` Map so the
@@ -189,7 +189,7 @@ impl NatPmpManager {
         if let Some(mut handle) = self.refresh_handle.take() {
             handle.release().await;
         }
-        // Step 3: spawn the new pair with the same observer. The
+        // Finally spawn the new pair with the same observer. The
         // observer next sees a fresh `Mapped` event with the new
         // params' granted port.
         let (refresh_handle, forward_handle) = Self::spawn_refresh_pair(
