@@ -5084,6 +5084,7 @@ fn nat_pmp_settings_to_runtime_cfg(
             protocol: map_proto(r.protocol),
             suggested_external_port: r.suggested_external_port,
             internal_port: r.internal_port,
+            sticky_suggestion: false,
         })
         .collect();
     Some(NatPmpConfig {
@@ -5095,6 +5096,8 @@ fn nat_pmp_settings_to_runtime_cfg(
         protocol: NatPmpProto::Udp,
         suggested_external_port: 0,
         internal_port: 0,
+        sticky_suggestion: false,
+        remap_epoch: 0,
     })
 }
 

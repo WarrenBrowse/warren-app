@@ -427,6 +427,12 @@ pub struct NatPmpRule {
     pub suggested_external_port: u16,
     /// Internal port the application binds locally (0 = unset).
     pub internal_port: u16,
+    /// True when `suggested_external_port` was injected from the sticky
+    /// map ([`NatPmpConfig::with_sticky_ports`]) rather than pinned by
+    /// the user. A sticky suggestion is best-effort: on the exit's
+    /// strict port-conflict rejection the refresh loop downgrades to a
+    /// server pick instead of failing the rule.
+    pub sticky_suggestion: bool,
 }
 
 impl NatPmpRule {
@@ -482,6 +488,18 @@ pub struct NatPmpConfig {
     pub suggested_external_port: u16,
     /// Legacy single-port internal port.
     pub internal_port: u16,
+    /// Legacy single-port mirror of [`NatPmpRule::sticky_suggestion`]
+    /// (set by [`Self::for_rule`] so the per-manager config carries the
+    /// rule's suggestion origin).
+    pub sticky_suggestion: bool,
+    /// Monotonic re-map generation. Bumping it makes the per-rule config
+    /// differ from the last applied one, forcing the controller to
+    /// reconfigure (release + immediate re-request) past its debounce,
+    /// without changing any mapping property. Used after a drain-driven
+    /// exit migration so the mapping is re-created on the new exit NOW
+    /// instead of at the next `lifetime/2` renewal. Client-internal,
+    /// never on the wire.
+    pub remap_epoch: u64,
 }
 
 impl NatPmpConfig {
@@ -503,6 +521,8 @@ impl NatPmpConfig {
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         }
     }
 
@@ -524,6 +544,7 @@ impl NatPmpConfig {
                 protocol: self.protocol,
                 suggested_external_port: self.suggested_external_port,
                 internal_port: self.internal_port,
+                sticky_suggestion: self.sticky_suggestion,
             }];
         }
         Vec::new()
@@ -541,6 +562,8 @@ impl NatPmpConfig {
             protocol: rule.protocol,
             suggested_external_port: rule.suggested_external_port,
             internal_port: rule.internal_port,
+            sticky_suggestion: rule.sticky_suggestion,
+            remap_epoch: self.remap_epoch,
         }
     }
 
@@ -566,6 +589,7 @@ impl NatPmpConfig {
                     && port != 0
                 {
                     rule.suggested_external_port = port;
+                    rule.sticky_suggestion = true;
                 }
                 rule
             })
@@ -577,6 +601,8 @@ impl NatPmpConfig {
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: self.remap_epoch,
         }
     }
 
@@ -593,6 +619,8 @@ impl NatPmpConfig {
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         }
     }
 }
@@ -3651,6 +3679,8 @@ mod tests {
             protocol: NatPmpProto::Udp,
             suggested_external_port: 22222,
             internal_port: 22,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         let params = WarrenTunnelParameters {
             exit_id: RelayExitId::ZERO,
@@ -3713,10 +3743,13 @@ mod tests {
                 protocol: NatPmpProto::Udp,
                 suggested_external_port: 0,
                 internal_port: 51820,
+                sticky_suggestion: false,
             }],
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         let mut sticky = std::collections::HashMap::new();
         sticky.insert(
@@ -3749,10 +3782,13 @@ mod tests {
                 protocol: NatPmpProto::Tcp,
                 suggested_external_port: 50000,
                 internal_port: 50000,
+                sticky_suggestion: false,
             }],
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         let mut sticky = std::collections::HashMap::new();
         sticky.insert(
@@ -3783,10 +3819,13 @@ mod tests {
                 protocol: NatPmpProto::Udp,
                 suggested_external_port: 0,
                 internal_port: 51820,
+                sticky_suggestion: false,
             }],
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         let sticky = std::collections::HashMap::new();
 
@@ -3811,10 +3850,13 @@ mod tests {
                 protocol: NatPmpProto::Udp,
                 suggested_external_port: 0,
                 internal_port: 51820,
+                sticky_suggestion: false,
             }],
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 0,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         let mut sticky = std::collections::HashMap::new();
         sticky.insert(
@@ -3842,6 +3884,8 @@ mod tests {
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 6881,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         let mut sticky = std::collections::HashMap::new();
         sticky.insert(
@@ -4696,6 +4740,8 @@ mod tests {
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         }
     }
 

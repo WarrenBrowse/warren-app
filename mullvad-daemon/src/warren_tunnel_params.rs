@@ -681,6 +681,8 @@ mod tests {
             protocol: NatPmpProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
 
         let params = assemble_for_attempt(

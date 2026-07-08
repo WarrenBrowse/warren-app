@@ -154,6 +154,11 @@ struct InnerParametersGenerator {
     /// conflict-resolution "reset to auto" action clears the matching
     /// entry so the user gets a fresh port instead of the dead one.
     warren_nat_pmp_sticky: Arc<std::sync::Mutex<std::collections::HashMap<NatPmpRuleId, u16>>>,
+    /// Monotonic generation stamped on remap pushes
+    /// ([`ParametersGenerator::remap_warren_nat_pmp_now`]) so each one
+    /// differs from the previously applied per-rule config and beats the
+    /// controller's duplicate debounce.
+    warren_nat_pmp_remap_epoch: u64,
     /// User-supplied IPv4 CIDRs that should bypass the tunnel and
     /// reach the host's main routing table (LAN, SSH inbound). Plumbed
     /// down to [`talpid_warren_tunnel::WarrenTunnelParameters::bypass_cidrs`].
@@ -358,6 +363,7 @@ impl ParametersGenerator {
             warren_nat_pmp_sticky: Arc::new(
                 std::sync::Mutex::new(std::collections::HashMap::new()),
             ),
+            warren_nat_pmp_remap_epoch: 0,
             warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
             warren_n_connections: None,
@@ -497,6 +503,31 @@ impl ParametersGenerator {
         // tunnel start will pick up the value via
         // `produce_warren_tunnel_params` → `Receiver::borrow()`.
         let _ = inner.nat_pmp_control_tx.send(cfg);
+    }
+
+    /// Doc 59 Lot 1: force an immediate re-request of every NAT-PMP
+    /// mapping on the CURRENT exit. Called right after a drain-driven
+    /// gap-free migration, when the refresh loops would otherwise only
+    /// re-create the mappings on the new exit at the next `lifetime/2`
+    /// renewal (up to ~30 min of dead inbound port). No-op when
+    /// port-forwarding is unset or disabled.
+    pub async fn remap_warren_nat_pmp_now(&self) {
+        let mut inner = self.0.lock().await;
+        inner.warren_nat_pmp_remap_epoch += 1;
+        let sticky = inner
+            .warren_nat_pmp_sticky
+            .lock()
+            .map(|m| m.clone())
+            .unwrap_or_default();
+        let Some(cfg) = build_remap_config(
+            inner.warren_nat_pmp.as_ref(),
+            &sticky,
+            inner.warren_nat_pmp_remap_epoch,
+        ) else {
+            return;
+        };
+        log::info!("Warren NAT-PMP: immediate re-map after exit migration");
+        let _ = inner.nat_pmp_control_tx.send(Some(cfg));
     }
 
     /// ADR 36: record that `exit_id` (a multi-hop exit) signalled an in-band
@@ -1296,6 +1327,23 @@ fn warren_pin_verify(
     }
 }
 
+/// Builds the config pushed on the NAT-PMP control channel to force an
+/// immediate re-map of every rule on the CURRENT exit (doc 59 Lot 1):
+/// sticky ports applied so the public port follows best-effort, and the
+/// remap epoch set so the per-rule config differs from the last applied
+/// one (the controller reconfigures instead of debouncing). `None` when
+/// port-forwarding is unset or disabled (nothing to re-map).
+fn build_remap_config(
+    stored: Option<&talpid_warren_tunnel::NatPmpConfig>,
+    sticky: &std::collections::HashMap<NatPmpRuleId, u16>,
+    next_epoch: u64,
+) -> Option<talpid_warren_tunnel::NatPmpConfig> {
+    let cfg = stored.filter(|c| c.enabled)?;
+    let mut cfg = cfg.with_sticky_ports(sticky);
+    cfg.remap_epoch = next_epoch;
+    Some(cfg)
+}
+
 /// Records the granted external port for `id` into the sticky map so the next
 /// tunnel re-suggests it (the port follows the client across an exit change).
 /// Only a `Mapped`/`Renewed` carries a grant; a zero port is never granted,
@@ -1312,6 +1360,61 @@ fn record_granted_external_port(
         && let Ok(mut map) = sticky.lock()
     {
         map.insert(id, *external_port);
+    }
+}
+
+#[cfg(test)]
+mod warren_nat_pmp_remap_tests {
+    use std::collections::HashMap;
+
+    use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto, NatPmpRule, NatPmpRuleId};
+
+    use super::build_remap_config;
+
+    fn enabled_auto_cfg(internal_port: u16) -> NatPmpConfig {
+        let mut cfg = NatPmpConfig::default_enabled();
+        cfg.rules = vec![NatPmpRule {
+            protocol: NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port,
+            sticky_suggestion: false,
+        }];
+        cfg
+    }
+
+    #[test]
+    fn remap_config_applies_sticky_and_bumps_epoch() {
+        let cfg = enabled_auto_cfg(51820);
+        let mut sticky = HashMap::new();
+        sticky.insert(
+            NatPmpRuleId {
+                internal_port: 51820,
+                protocol: NatPmpProto::Udp,
+            },
+            49200,
+        );
+
+        let remapped = build_remap_config(Some(&cfg), &sticky, 7).expect("enabled cfg remaps");
+
+        assert_eq!(remapped.remap_epoch, 7, "epoch must force the reconfigure");
+        let rules = remapped.effective_rules();
+        assert_eq!(rules[0].suggested_external_port, 49200);
+        assert!(
+            rules[0].sticky_suggestion,
+            "a followed port is a preference, not a pin"
+        );
+        // A second remap with a higher epoch differs from the first even
+        // with identical rules, so the controller never debounces it away.
+        let again = build_remap_config(Some(&cfg), &sticky, 8).expect("remaps again");
+        assert_ne!(remapped, again);
+    }
+
+    #[test]
+    fn remap_config_absent_when_disabled_or_unset() {
+        assert!(build_remap_config(None, &HashMap::new(), 1).is_none());
+        let mut disabled = enabled_auto_cfg(51820);
+        disabled.enabled = false;
+        assert!(build_remap_config(Some(&disabled), &HashMap::new(), 1).is_none());
     }
 }
 

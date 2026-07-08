@@ -1103,6 +1103,11 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                             "Warren multi-hop: gap-free cross-exit migration off the drained \
                              exit (make-before-break, no reconnect)"
                         );
+                        // Doc 59 Lot 1: the tunnel survived the exit swap, so
+                        // the NAT-PMP refresh loops were NOT restarted and
+                        // would only re-create the mappings on the new exit
+                        // at the next lifetime/2 renewal. Re-map now.
+                        cfg.parameters_generator.remap_warren_nat_pmp_now().await;
                     } else {
                         match &desired {
                             Some(_) => {

@@ -121,12 +121,18 @@ impl NatPmpManager {
         bind_addr: Option<IpAddr>,
     ) -> (RefreshLoopHandle, JoinHandle<()>) {
         let (tx, mut rx) = mpsc::unbounded_channel::<NatPmpEvent>();
+        let suggestion = if config.sticky_suggestion {
+            warrenguard_natpmp_client::SuggestionKind::Sticky
+        } else {
+            warrenguard_natpmp_client::SuggestionKind::Pinned
+        };
         let refresh_handle = spawn_refresh_loop_from_addr(
             server,
             config.protocol,
             config.internal_port,
             config.suggested_external_port,
             config.lifetime_secs,
+            suggestion,
             tx,
             bind_addr,
         );
@@ -316,6 +322,8 @@ mod tests {
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         }
     }
 
@@ -551,6 +559,8 @@ mod tests {
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         manager.reconfigure(&new_cfg).await;
 
@@ -618,6 +628,8 @@ mod tests {
             protocol: MapProto::Udp,
             suggested_external_port: 0,
             internal_port: 22,
+            sticky_suggestion: false,
+            remap_epoch: 0,
         };
         manager.reconfigure(&new_cfg).await;
 
@@ -657,6 +669,8 @@ mod tests {
                 protocol: MapProto::Udp,
                 suggested_external_port: 0,
                 internal_port: 22,
+                sticky_suggestion: false,
+                remap_epoch: 0,
             };
             manager.reconfigure(&cfg).await;
         }
