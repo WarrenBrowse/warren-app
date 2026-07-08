@@ -816,6 +816,11 @@ fn spawn_multi_hop(
                 max: std::time::Duration::from_secs(2),
             },
             on_reconnect: None,
+            // No pre-swap gate and no swap observer on iOS: the overlap
+            // migration is invisible to the UI by design (live -> live, no
+            // watch edge), matching the desktop daemon's defaults.
+            pre_swap_check: None,
+            on_overlap_swapped: None,
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6: false,
             // Single connection on iOS: the NetworkExtension memory cap
@@ -1095,6 +1100,10 @@ fn maybe_spawn_nat_pmp(
         0,
         suggested_external_port,
         lifetime_secs,
+        // The suggestion is always a carried-over grant on iOS (no user pin
+        // on the C ABI), so a port conflict downgrades to a server pick
+        // instead of failing the forward.
+        warrenguard_natpmp_client::SuggestionKind::Sticky,
         tx,
         Some(bind_addr),
     );
