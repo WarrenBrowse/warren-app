@@ -50,6 +50,12 @@ pub use warrenguard_route_split::bypass_cidr::BypassCidr;
 // migration targets from the directory's selected circuit, so re-export both
 // types from this crate (it owns `MultiHopConfig`).
 pub use warrenguard_transport::supervisor::{CircuitTarget, MigrateHandle};
+// docs/59 Lot 3: the daemon builds the pre-swap NAT-PMP reservation
+// closure, whose subject is the candidate bundle, and hands the
+// supervisor a `PreSwapCheck` / `OverlapSwapObserver`. Re-exported so
+// mullvad-daemon needs no direct warrenguard-transport dependency.
+pub use warrenguard_transport::bundle::MultiHopBundle;
+pub use warrenguard_transport::supervisor::{OverlapSwapObserver, PreSwapCheck};
 
 /// Project a [`MultiHopConfig`] (a circuit the directory selected) into the
 /// [`CircuitTarget`] the supervisor migrates onto: the relay + exit identity,

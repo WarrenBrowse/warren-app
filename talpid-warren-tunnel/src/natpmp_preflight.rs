@@ -142,6 +142,39 @@ fn udp_checksum(src: Ipv4Addr, dst: Ipv4Addr, udp_segment: &[u8]) -> u16 {
     !(ones_complement_sum(udp_segment, seed) & 0xFFFF) as u16
 }
 
+/// Per-read timeout on the candidate bundle. Bounds each `recv` so a
+/// silent candidate cannot pin a read forever; the overall gate is
+/// additionally bounded by [`PRE_SWAP_GATE_DEADLINE`].
+pub const BUNDLE_RECV_TIMEOUT: Duration = Duration::from_millis(1500);
+
+/// [`PreflightTransport`] over the not-yet-published candidate session:
+/// inner IP packets ride the bundle's sealed datagram path exactly like
+/// post-swap tunnel traffic. Boundary glue over the real QUIC bundle;
+/// the trait logic is unit-tested against fakes and this adapter is
+/// validated against a real exit at rollout (docs/59 § 8).
+pub struct BundlePreflightTransport {
+    bundle: std::sync::Arc<warrenguard_transport::bundle::MultiHopBundle>,
+}
+
+impl BundlePreflightTransport {
+    #[must_use]
+    pub fn new(bundle: std::sync::Arc<warrenguard_transport::bundle::MultiHopBundle>) -> Self {
+        Self { bundle }
+    }
+}
+
+impl PreflightTransport for BundlePreflightTransport {
+    async fn send(&self, packet: Vec<u8>) -> Result<(), ()> {
+        self.bundle.send(&packet).await.map_err(|_| ())
+    }
+    async fn recv(&self) -> Option<Vec<u8>> {
+        tokio::time::timeout(BUNDLE_RECV_TIMEOUT, self.bundle.recv())
+            .await
+            .ok()?
+            .ok()
+    }
+}
+
 /// Verdict of reserving one pinned rule on a candidate exit.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReserveOutcome {
@@ -164,6 +197,29 @@ pub struct PinnedRule {
     pub internal_port: u16,
     pub external_port: u16,
     pub lifetime_secs: u32,
+}
+
+/// Extracts the user-PINNED rules (explicit external port chosen by the
+/// user, not a sticky follow) from the live port-forward config. Only
+/// these gate a migration (contract C2/C3 of docs/59): auto rules,
+/// sticky suggestions included, follow best-effort after the swap and
+/// never block it. Empty when port-forwarding is disabled.
+#[must_use]
+pub fn pinned_rules(cfg: &crate::NatPmpConfig) -> Vec<PinnedRule> {
+    if !cfg.enabled {
+        return Vec::new();
+    }
+    cfg.effective_rules()
+        .iter()
+        .filter(|r| r.suggested_external_port != 0 && !r.sticky_suggestion)
+        .map(|r| PinnedRule {
+            proto: r.protocol,
+            internal_port: r.internal_port,
+            external_port: r.suggested_external_port,
+            // Truncation-safe: RESERVE_LIFETIME is a small constant.
+            lifetime_secs: RESERVE_LIFETIME.as_secs() as u32,
+        })
+        .collect()
 }
 
 /// Transport over which the pre-flight speaks to the candidate exit.
@@ -234,25 +290,87 @@ pub async fn reserve_one<T: PreflightTransport>(
 /// were reserved on their exact port (the migration may commit). Stops
 /// at the first non-reservation: a single pinned conflict is enough to
 /// abort, and not sending the rest avoids needless allocations on a
-/// candidate we are about to abandon.
+/// candidate we are about to abandon. On abort, the rules already
+/// granted on this candidate are released (best-effort `lifetime=0`
+/// deletes, no reply awaited); the exit-side orphan reaper remains the
+/// backstop if a delete is lost.
 pub async fn reserve_all<T: PreflightTransport>(
     transport: &T,
     src: Ipv4Addr,
     rules: &[PinnedRule],
     attempts_per_rule: usize,
 ) -> bool {
+    let mut granted: Vec<PinnedRule> = Vec::new();
     for rule in rules {
         match reserve_one(transport, src, *rule, attempts_per_rule).await {
-            ReserveOutcome::Reserved { .. } => {}
-            ReserveOutcome::Conflict | ReserveOutcome::Unavailable => return false,
+            ReserveOutcome::Reserved { .. } => granted.push(*rule),
+            ReserveOutcome::Conflict | ReserveOutcome::Unavailable => {
+                release_all(transport, src, &granted).await;
+                return false;
+            }
         }
     }
     true
 }
 
+/// Fire-and-forget `lifetime=0` deletes for `rules` on the candidate.
+/// Replies are not awaited: the caller is abandoning this candidate and
+/// the orphan reaper covers a lost delete.
+async fn release_all<T: PreflightTransport>(transport: &T, src: Ipv4Addr, rules: &[PinnedRule]) {
+    for rule in rules {
+        let req = Request::Map {
+            proto: rule.proto,
+            internal_port: rule.internal_port,
+            // RFC 6886 delete shape: zero lifetime, zero suggested port.
+            suggested_external_port: 0,
+            lifetime_secs: 0,
+        };
+        let _ = transport
+            .send(encapsulate(src, &serialize_request(&req)))
+            .await;
+    }
+}
+
 /// Default read budget per rule: a handful of packets so unrelated exit
 /// chatter interleaved with the response does not abort the reservation.
 pub const DEFAULT_ATTEMPTS_PER_RULE: usize = 8;
+
+/// Upper bound on the whole pre-swap gate. Deliberately below the
+/// supervisor's 10 s fail-closed pre-swap timeout so the gate always
+/// returns an explicit verdict: a supervisor-side timeout aborts the
+/// swap too, but silently, and the daemon could then never advance the
+/// candidate ladder nor surface the C5 cancellation.
+pub const PRE_SWAP_GATE_DEADLINE: Duration = Duration::from_secs(8);
+
+/// Full pre-swap verdict for a candidate exit (docs/59 Lot 3, contract
+/// C1/C2): `true` commits the migration, `false` aborts it and keeps
+/// the current session.
+///
+/// - No pinned rule: nothing gates, no pre-flight traffic at all.
+/// - Pins but no candidate-assigned source IP: fail-safe DENY (a pin
+///   that cannot be verified must not migrate).
+/// - Otherwise reserve every pin on the candidate; any conflict or
+///   non-answer (quota, rate-limit, loss) denies, releasing the pins
+///   already granted. The whole gate self-bounds at
+///   [`PRE_SWAP_GATE_DEADLINE`] and denies on overrun.
+pub async fn pre_swap_gate<T: PreflightTransport>(
+    transport: &T,
+    src: Option<Ipv4Addr>,
+    rules: &[PinnedRule],
+) -> bool {
+    if rules.is_empty() {
+        return true;
+    }
+    let Some(src) = src else {
+        return false;
+    };
+    tokio::time::timeout(
+        PRE_SWAP_GATE_DEADLINE,
+        reserve_all(transport, src, rules, DEFAULT_ATTEMPTS_PER_RULE),
+    )
+    .await
+    .unwrap_or(false)
+}
 
 /// Default reservation lifetime: short. The reservation only has to
 /// survive until the swap commits and the live refresh loop takes over
@@ -265,6 +383,84 @@ mod tests {
     use std::collections::VecDeque;
     use std::sync::Mutex;
     use warrenguard_natpmp_protocol::{Response, serialize_response};
+
+    use crate::{NatPmpConfig, NatPmpRule};
+
+    fn pinned(internal: u16, external: u16) -> NatPmpRule {
+        NatPmpRule {
+            protocol: crate::NatPmpProto::Tcp,
+            suggested_external_port: external,
+            internal_port: internal,
+            sticky_suggestion: false,
+        }
+    }
+
+    #[test]
+    fn pinned_rules_empty_when_no_rules_configured() {
+        // C-contract: zero port-forward rules => zero pins => the caller
+        // must run NO pre-flight at all.
+        let cfg = NatPmpConfig::default_enabled();
+        assert!(pinned_rules(&cfg).is_empty());
+    }
+
+    #[test]
+    fn pinned_rules_empty_when_disabled() {
+        // A disabled config gates nothing, even if stale rules linger.
+        let mut cfg = NatPmpConfig::default_enabled();
+        cfg.enabled = false;
+        cfg.rules = vec![pinned(8080, 50000)];
+        assert!(pinned_rules(&cfg).is_empty());
+    }
+
+    #[test]
+    fn pinned_rules_extracts_a_user_pin() {
+        let mut cfg = NatPmpConfig::default_enabled();
+        cfg.rules = vec![pinned(8080, 50000)];
+        let pins = pinned_rules(&cfg);
+        assert_eq!(pins.len(), 1);
+        assert_eq!(pins[0].internal_port, 8080);
+        assert_eq!(pins[0].external_port, 50000);
+        assert_eq!(
+            u64::from(pins[0].lifetime_secs),
+            RESERVE_LIFETIME.as_secs(),
+            "reservations are short-lived: the live refresh loop takes over post-swap"
+        );
+    }
+
+    #[test]
+    fn pinned_rules_skips_auto_and_sticky_rules() {
+        // C3: auto rules (server-picked port, sticky follow included)
+        // never gate a migration; only an explicit user pin does (C2).
+        let mut cfg = NatPmpConfig::default_enabled();
+        let auto = NatPmpRule {
+            protocol: crate::NatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 51820,
+            sticky_suggestion: false,
+        };
+        let sticky = NatPmpRule {
+            protocol: crate::NatPmpProto::Udp,
+            suggested_external_port: 49200,
+            internal_port: 51821,
+            sticky_suggestion: true,
+        };
+        cfg.rules = vec![auto, sticky, pinned(8080, 50000)];
+        let pins = pinned_rules(&cfg);
+        assert_eq!(pins.len(), 1, "only the explicit user pin gates");
+        assert_eq!(pins[0].external_port, 50000);
+    }
+
+    #[test]
+    fn pinned_rules_reads_the_legacy_single_port_shape() {
+        // Old single-port configs express the pin through the flat
+        // fields; `effective_rules` synthesizes the rule.
+        let mut cfg = NatPmpConfig::default_enabled();
+        cfg.internal_port = 2222;
+        cfg.suggested_external_port = 2222;
+        let pins = pinned_rules(&cfg);
+        assert_eq!(pins.len(), 1);
+        assert_eq!(pins[0].external_port, 2222);
+    }
 
     const SRC: Ipv4Addr = Ipv4Addr::new(10, 66, 0, 42);
 
@@ -322,10 +518,12 @@ mod tests {
     }
 
     /// In-memory fake exit: answers each request with a scripted
-    /// `Response`, wrapped as a gateway reply packet.
+    /// `Response`, wrapped as a gateway reply packet. Every sent
+    /// request is recorded (decoded) so tests can assert on releases.
     struct FakeExit {
         replies: Mutex<VecDeque<Response>>,
         sent: Mutex<usize>,
+        requests: Mutex<Vec<warrenguard_natpmp_protocol::Request>>,
     }
 
     impl FakeExit {
@@ -333,13 +531,23 @@ mod tests {
             Self {
                 replies: Mutex::new(replies.into()),
                 sent: Mutex::new(0),
+                requests: Mutex::new(Vec::new()),
             }
+        }
+
+        fn requests(&self) -> Vec<warrenguard_natpmp_protocol::Request> {
+            self.requests.lock().unwrap().clone()
         }
     }
 
     impl PreflightTransport for FakeExit {
-        async fn send(&self, _packet: Vec<u8>) -> Result<(), ()> {
+        async fn send(&self, packet: Vec<u8>) -> Result<(), ()> {
             *self.sent.lock().unwrap() += 1;
+            // Strip the IPv4+UDP headers we encapsulated ourselves.
+            let payload = &packet[IPV4_HEADER_LEN + UDP_HEADER_LEN..];
+            if let Ok(req) = warrenguard_natpmp_protocol::parse_request(payload) {
+                self.requests.lock().unwrap().push(req);
+            }
             Ok(())
         }
         async fn recv(&self) -> Option<Vec<u8>> {
@@ -450,6 +658,129 @@ mod tests {
         assert!(!reserve_all(&exit, SRC, &rules, 4).await);
         // Only the first rule's request was sent (short-circuit).
         assert_eq!(*exit.sent.lock().unwrap(), 1);
+    }
+
+    #[tokio::test]
+    async fn gate_allows_without_any_traffic_when_no_pin_exists() {
+        // Zero pinned rules => no pre-flight at all: the gate must not
+        // send a single packet (and must not need the candidate IP).
+        let exit = FakeExit::new(vec![]);
+        assert!(pre_swap_gate(&exit, None, &[]).await);
+        assert!(pre_swap_gate(&exit, Some(SRC), &[]).await);
+        assert_eq!(*exit.sent.lock().unwrap(), 0, "no pins => no pre-flight");
+    }
+
+    #[tokio::test]
+    async fn gate_denies_when_pins_exist_but_candidate_assigned_no_ip() {
+        // Fail-safe (C2): a pinned rule that cannot be verified on the
+        // candidate must NOT migrate. No packet can even be built
+        // without the candidate-assigned source IP.
+        let exit = FakeExit::new(vec![map_ok(50000)]);
+        assert!(!pre_swap_gate(&exit, None, &[rule()]).await);
+        assert_eq!(*exit.sent.lock().unwrap(), 0);
+    }
+
+    #[tokio::test]
+    async fn gate_allows_when_every_pin_reserves() {
+        let exit = FakeExit::new(vec![map_ok(50000)]);
+        assert!(pre_swap_gate(&exit, Some(SRC), &[rule()]).await);
+    }
+
+    #[tokio::test]
+    async fn gate_denies_on_a_pin_conflict() {
+        let exit = FakeExit::new(vec![Response::Map {
+            proto: MapProto::Tcp,
+            result_code: ResultCode::SuggestedPortUnavailable,
+            epoch_secs: 1,
+            internal_port: 8080,
+            external_port: 0,
+            lifetime_secs: 0,
+            rate_limit: None,
+        }]);
+        assert!(!pre_swap_gate(&exit, Some(SRC), &[rule()]).await);
+    }
+
+    /// Transport whose recv never resolves (a candidate that swallows
+    /// the pre-flight datagrams).
+    struct BlackholeExit;
+
+    impl PreflightTransport for BlackholeExit {
+        async fn send(&self, _packet: Vec<u8>) -> Result<(), ()> {
+            Ok(())
+        }
+        async fn recv(&self) -> Option<Vec<u8>> {
+            std::future::pending().await
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn gate_denies_within_its_own_deadline_on_a_silent_candidate() {
+        // Fail-safe on timeout: the gate must return a DENY verdict by
+        // itself (inside the supervisor's 10 s fail-closed window) so
+        // the daemon can advance the candidate ladder instead of the
+        // check being aborted without a verdict.
+        let started = tokio::time::Instant::now();
+        assert!(!pre_swap_gate(&BlackholeExit, Some(SRC), &[rule()]).await);
+        assert!(
+            started.elapsed() <= PRE_SWAP_GATE_DEADLINE + Duration::from_secs(1),
+            "the gate must self-bound below the supervisor timeout"
+        );
+    }
+
+    #[tokio::test]
+    async fn reserve_all_releases_prior_grants_when_a_later_pin_conflicts() {
+        // Doc 59 D3: aborting a candidate must not leave half the pins
+        // reserved on it. Rule 1 (8080 -> 50000) is granted, rule 2
+        // (9090 -> 50001) conflicts: the abort path sends a best-effort
+        // delete (lifetime=0) for rule 1 before giving up.
+        let exit = FakeExit::new(vec![
+            map_ok(50000),
+            Response::Map {
+                proto: MapProto::Tcp,
+                result_code: ResultCode::SuggestedPortUnavailable,
+                epoch_secs: 1,
+                internal_port: 9090,
+                external_port: 0,
+                lifetime_secs: 0,
+                rate_limit: None,
+            },
+        ]);
+        let rules = [
+            rule(),
+            PinnedRule {
+                proto: MapProto::Tcp,
+                internal_port: 9090,
+                external_port: 50001,
+                lifetime_secs: 120,
+            },
+        ];
+        assert!(!reserve_all(&exit, SRC, &rules, 4).await);
+        let reqs = exit.requests();
+        assert_eq!(reqs.len(), 3, "map rule1 + map rule2 + release rule1");
+        assert!(
+            matches!(
+                reqs[2],
+                warrenguard_natpmp_protocol::Request::Map {
+                    proto: MapProto::Tcp,
+                    internal_port: 8080,
+                    lifetime_secs: 0,
+                    ..
+                }
+            ),
+            "the granted pin must be released (lifetime=0) on abort, got {:?}",
+            reqs[2]
+        );
+    }
+
+    #[tokio::test]
+    async fn reserve_all_success_sends_no_release() {
+        let exit = FakeExit::new(vec![map_ok(50000)]);
+        assert!(reserve_all(&exit, SRC, &[rule()], 4).await);
+        assert_eq!(
+            exit.requests().len(),
+            1,
+            "a fully-granted candidate must not see any delete"
+        );
     }
 
     fn map_ok_for(internal_port: u16, external_port: u16) -> Response {
