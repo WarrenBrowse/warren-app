@@ -96,6 +96,12 @@ use adapter::MullvadTunPacketDevice;
 pub mod nat_pmp_manager;
 pub use nat_pmp_manager::{NatPmpEvent, NatPmpEventObserver, NatPmpFailureReason, NatPmpManager};
 
+/// Pre-flight NAT-PMP reservation over a not-yet-published session
+/// (docs/59 Lot 3): reserve a pinned port on a candidate exit BEFORE
+/// committing a make-before-break migration, so a pinned rule never
+/// silently loses its port to a maintenance switch.
+pub mod natpmp_preflight;
+
 /// Split-default policy routing helper that routes Internet traffic via
 /// the tunnel without overriding the kernel main routing table.
 pub mod default_route_split;
@@ -297,6 +303,18 @@ pub struct WarrenTunnelParameters {
     /// teardown. `None` disables gap-free migration (the drain then falls
     /// back to the proactive reconnect). Multi-hop only.
     pub warren_register_migrate_handle: Option<std::sync::Arc<dyn Fn(MigrateHandle) + Send + Sync>>,
+
+    /// docs/59 Lot 3: pre-swap gate run against a candidate exit before a
+    /// make-before-break migration commits, so a pinned port is reserved
+    /// on the candidate first (else the migration is aborted). `None`
+    /// commits every overlap swap unconditionally. Wired by the daemon
+    /// from its live port-forward config.
+    pub warren_pre_swap_check: Option<warrenguard_transport::supervisor::PreSwapCheck>,
+
+    /// docs/59 Lot 3: observer fired after a committed overlap migration,
+    /// used to re-map NAT-PMP on the new exit immediately. `None` = not
+    /// observed. Wired by the daemon.
+    pub warren_on_overlap_swapped: Option<warrenguard_transport::supervisor::OverlapSwapObserver>,
 
     /// NAT-PMP port-forwarding configuration. `None` (default) disables
     /// the feature entirely; `Some` instructs the daemon-side
@@ -1686,6 +1704,12 @@ impl WarrenTunnelMonitor {
             // one identity (sticky inner IP) and pins flows by 5-tuple
             // hash, mirroring the single-hop MultiSession.
             n_connections: usize::from(params.n_connections).max(1),
+            // docs/59 Lot 3: the pre-swap NAT-PMP reservation and the
+            // post-swap re-map observer are wired by the daemon from its
+            // live port-forward config (next step); the transport carries
+            // the hooks, `None` keeps the pre-hook behavior.
+            pre_swap_check: params.warren_pre_swap_check.clone(),
+            on_overlap_swapped: params.warren_on_overlap_swapped.clone(),
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         // Subscribe to the supervisor's terminal-rejection signal BEFORE
@@ -3541,6 +3565,8 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_pre_swap_check: None,
+            warren_on_overlap_swapped: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3578,6 +3604,8 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_pre_swap_check: None,
+            warren_on_overlap_swapped: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3643,6 +3671,8 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_pre_swap_check: None,
+            warren_on_overlap_swapped: None,
             nat_pmp: None,
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
@@ -3695,6 +3725,8 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_pre_swap_check: None,
+            warren_on_overlap_swapped: None,
             nat_pmp: Some(cfg.clone()),
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
