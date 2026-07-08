@@ -164,6 +164,13 @@ pub struct WarrenStatusSnapshot {
     /// the maintenance banner). The recorder schedules a rebroadcast at
     /// expiry so the UI banner self-dismisses.
     pub port_migration_cancellation_active: bool,
+    /// True while the offline monitor reports the host offline. Pushed
+    /// on the very edge (no grace): the tunnel state machine holds
+    /// Connected for its migration grace window, so without this flag
+    /// the UI has no way to tell the user the network is gone until
+    /// the grace expires. The UI shows an immediate "no internet
+    /// connection" banner keyed on it, in every tunnel state.
+    pub host_offline: bool,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -181,6 +188,7 @@ impl Default for WarrenStatusSnapshot {
             maintenance_migration_active: false,
             port_migration_cancellations: 0,
             port_migration_cancellation_active: false,
+            host_offline: false,
         }
     }
 }
@@ -216,6 +224,7 @@ struct InternalState {
     last_maintenance_migration_at: Option<Instant>,
     port_migration_cancellations: u32,
     last_port_migration_cancelled_at: Option<Instant>,
+    host_offline: bool,
 }
 
 impl Default for InternalState {
@@ -231,6 +240,7 @@ impl Default for InternalState {
             last_maintenance_migration_at: None,
             port_migration_cancellations: 0,
             last_port_migration_cancelled_at: None,
+            host_offline: false,
         }
     }
 }
@@ -295,6 +305,7 @@ impl WarrenStatusCache {
                 inner.last_port_migration_cancelled_at,
                 Instant::now(),
             ),
+            host_offline: inner.host_offline,
         }
     }
 
@@ -548,6 +559,26 @@ impl WarrenStatusCache {
                 return;
             }
             inner.pubkey_mismatch_pending = None;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// Record the offline monitor's verdict, pushed by the daemon on
+    /// every connectivity edge (T+0, before any tunnel grace). The UI
+    /// banner keys on the snapshot flag. Idempotent: repeated equal
+    /// verdicts do not re-push (route-event storms would otherwise
+    /// spam the stream).
+    pub fn set_host_offline(&self, offline: bool) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.host_offline == offline {
+                return;
+            }
+            inner.host_offline = offline;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
@@ -1021,6 +1052,42 @@ mod tests {
         rx.borrow_and_update();
         // No mappings by default; another disable must not push.
         cache.set_nat_pmp_disabled();
+        assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    // --- Host offline surface -------------------------------------
+
+    #[test]
+    fn default_snapshot_reports_host_online() {
+        assert!(!WarrenStatusSnapshot::default().host_offline);
+        assert!(!WarrenStatusCache::new().snapshot().host_offline);
+    }
+
+    #[test]
+    fn set_host_offline_pushes_edge_and_clears_on_online() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.set_host_offline(true);
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(rx.borrow_and_update().host_offline);
+        cache.set_host_offline(false);
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(!rx.borrow_and_update().host_offline);
+    }
+
+    #[test]
+    fn set_host_offline_idempotent_same_verdict() {
+        // Route-event storms repeat the same verdict; the stream must
+        // not be spammed with identical snapshots.
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.set_host_offline(false);
+        assert!(!rx.has_changed().unwrap_or(false));
+        cache.set_host_offline(true);
+        rx.borrow_and_update();
+        cache.set_host_offline(true);
         assert!(!rx.has_changed().unwrap_or(false));
     }
 

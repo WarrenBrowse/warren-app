@@ -179,6 +179,7 @@ pub(crate) fn forward_offline_state(
     api_availability: ApiAvailability,
     mut offline_state_rx: mpsc::UnboundedReceiver<Connectivity>,
     online_edge_tx: tokio::sync::watch::Sender<u64>,
+    warren_status_cache: crate::warren_status::WarrenStatusCache,
 ) {
     tokio::spawn(async move {
         let mut was_offline = offline_state_rx
@@ -191,6 +192,7 @@ pub(crate) fn forward_offline_state(
             state = if was_offline { "offline" } else { "online" },
         );
         api_availability.set_offline(was_offline);
+        warren_status_cache.set_host_offline(was_offline);
 
         while let Some(state) = offline_state_rx.next().await {
             log::info!("Detecting changes to offline state - {state:?}");
@@ -201,6 +203,10 @@ pub(crate) fn forward_offline_state(
             }
             was_offline = is_offline;
             api_availability.set_offline(is_offline);
+            // Push the verdict to the UI on the edge itself: the tunnel
+            // state machine holds Connected through its migration grace,
+            // so this flag is the user's only immediate signal.
+            warren_status_cache.set_host_offline(is_offline);
         }
     });
 }

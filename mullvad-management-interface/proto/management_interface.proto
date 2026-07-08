@@ -790,6 +790,10 @@ message WarrenStatus {
   // True while the last port-conflict cancellation is inside its display
   // window (same self-expiring discipline as maintenance_migration_active).
   bool port_migration_cancellation_active = 9;
+  // True while the offline monitor reports the host offline, pushed on
+  // the edge itself (before any tunnel-side grace). Drives the
+  // immediate "no internet connection" banner in every tunnel state.
+  bool host_offline = 10;
 }
 
 // Session H A.4: forensic payload surfaced alongside a TOFU pubkey

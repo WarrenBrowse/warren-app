@@ -46,6 +46,7 @@ const BASE_STATUS: WarrenStatus = {
   maintenanceMigrationActive: false,
   portMigrationCancellations: 0,
   portMigrationCancellationActive: false,
+  hostOffline: false,
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

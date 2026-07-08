@@ -631,6 +631,7 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     maintenanceMigrationActive: status.getMaintenanceMigrationActive(),
     portMigrationCancellations: status.getPortMigrationCancellations(),
     portMigrationCancellationActive: status.getPortMigrationCancellationActive(),
+    hostOffline: status.getHostOffline(),
   };
 }
 

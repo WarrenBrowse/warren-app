@@ -30,6 +30,7 @@ import {
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
   WarrenFailoverNotificationProvider,
+  WarrenHostOfflineNotificationProvider,
   WarrenMaintenanceNotificationProvider,
   WarrenPortMigrationNotificationProvider,
 } from '../lib/notifications';
@@ -123,6 +124,13 @@ export default function NotificationArea(props: IProps) {
   const appUpgradeStep = convertEventTypeToStep(appUpgradeEventType);
 
   const notificationProviders: InAppNotificationProvider[] = [
+    // First on purpose: losing the network trumps every other banner,
+    // and the flag fires on the daemon's offline edge (T+0), before
+    // the tunnel state machine reacts (it holds Connected through its
+    // migration grace window).
+    new WarrenHostOfflineNotificationProvider({
+      hostOffline: warrenStatus?.hostOffline ?? false,
+    }),
     new ConnectingNotificationProvider({ tunnelState }),
     new ReconnectingNotificationProvider(tunnelState),
     new LockdownModeNotificationProvider({

@@ -2041,6 +2041,8 @@ export class WarrenStatus extends jspb.Message {
     setPortMigrationCancellations(value: number): WarrenStatus;
     getPortMigrationCancellationActive(): boolean;
     setPortMigrationCancellationActive(value: boolean): WarrenStatus;
+    getHostOffline(): boolean;
+    setHostOffline(value: boolean): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2063,6 +2065,7 @@ export namespace WarrenStatus {
         maintenanceMigrationActive: boolean,
         portMigrationCancellations: number,
         portMigrationCancellationActive: boolean,
+        hostOffline: boolean,
     }
 }
 

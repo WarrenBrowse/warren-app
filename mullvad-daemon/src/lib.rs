@@ -1510,6 +1510,7 @@ impl Daemon {
             api_availability.clone(),
             offline_state_rx,
             warren_online_edge_tx,
+            warren_status_cache.clone(),
         );
 
         let relay_list_listener = management_interface.notifier().clone();

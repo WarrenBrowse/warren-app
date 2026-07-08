@@ -16601,7 +16601,8 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     pubkeyMismatchPending: (f = msg.getPubkeyMismatchPending()) && proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject(includeInstance, f),
     maintenanceMigrationActive: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
     portMigrationCancellations: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    portMigrationCancellationActive: jspb.Message.getBooleanFieldWithDefault(msg, 9, false)
+    portMigrationCancellationActive: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
+    hostOffline: jspb.Message.getBooleanFieldWithDefault(msg, 10, false)
   };
 
   if (includeInstance) {
@@ -16676,6 +16677,10 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
     case 9:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setPortMigrationCancellationActive(value);
+      break;
+    case 10:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setHostOffline(value);
       break;
     default:
       reader.skipField();
@@ -16769,6 +16774,13 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
   if (f) {
     writer.writeBool(
       9,
+      f
+    );
+  }
+  f = message.getHostOffline();
+  if (f) {
+    writer.writeBool(
+      10,
       f
     );
   }
@@ -16991,6 +17003,24 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getPortMigratio
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setPortMigrationCancellationActive = function(value) {
   return jspb.Message.setProto3BooleanField(this, 9, value);
+};
+
+
+/**
+ * optional bool host_offline = 10;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getHostOffline = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 10, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setHostOffline = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 10, value);
 };
 
 
