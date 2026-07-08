@@ -215,6 +215,13 @@ struct InnerParametersGenerator {
     /// teardown) is a harmless no-op and holds no watch receiver, so it never
     /// pins a dead supervisor alive.
     warren_migrate_handle: Option<MigrateHandle>,
+    /// docs/59 D2 candidate ladder: ordered same-country alternates to
+    /// try when the pre-swap gate rejects the primary migration
+    /// candidate for a pinned-port conflict. Set by the directory
+    /// updater alongside each drain-driven migration; popped by
+    /// [`ParametersGenerator::on_warren_pre_swap_rejected`]; cleared on
+    /// a committed swap. Empty today (one country = one exit).
+    warren_migration_candidates: std::collections::VecDeque<MultiHopConfig>,
     /// Warren-api URL forwarded from `lib.rs` boot. Used
     /// fire-and-forget to POST `/v1/incidents/exit-down` whenever
     /// `assemble_failover_for_attempt` is dispatched, so the
@@ -371,6 +378,7 @@ impl ParametersGenerator {
             warren_last_exit_pubkey: None,
             warren_drained_exits: Vec::new(),
             warren_migrate_handle: None,
+            warren_migration_candidates: std::collections::VecDeque::new(),
             warren_api_url,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
@@ -590,6 +598,83 @@ impl ParametersGenerator {
             }
             None => false,
         }
+    }
+
+    /// docs/59 D2: stores the ordered same-country alternates to try if
+    /// the pre-swap gate rejects the primary migration candidate.
+    /// Replaced on every drain-driven re-selection; cleared once a
+    /// migration commits (or the ladder is exhausted).
+    pub async fn set_warren_migration_candidates(&self, alternates: Vec<MultiHopConfig>) {
+        self.0.lock().await.warren_migration_candidates = alternates.into();
+    }
+
+    /// docs/59 Lot 3: reaction to a pre-swap rejection (the candidate
+    /// exit cannot honour every pinned port). Advances the D2 ladder:
+    /// migrates onto the next same-country candidate, or cancels the
+    /// migration (C2, stay put + C5 signal) when exhausted.
+    pub async fn on_warren_pre_swap_rejected(&self) {
+        let inner = &mut *self.0.lock().await;
+        let handle = inner.warren_migrate_handle.as_ref();
+        let mut migrate = |target: CircuitTarget| match handle {
+            Some(h) => {
+                h.migrate_to(target);
+                true
+            }
+            None => false,
+        };
+        advance_migration_ladder(
+            &mut inner.warren_migration_candidates,
+            &mut migrate,
+            &inner.warren_status_cache,
+        );
+    }
+
+    /// docs/59 Lot 3: reaction to a COMMITTED overlap migration. Drops
+    /// the now-obsolete candidate ladder and re-maps every NAT-PMP rule
+    /// on the new exit immediately (auto rules are not covered by the
+    /// pre-flight, which only reserves pins).
+    pub async fn on_warren_overlap_swapped(&self) {
+        self.0.lock().await.warren_migration_candidates.clear();
+        self.remap_warren_nat_pmp_now().await;
+    }
+
+    /// docs/59 Lot 3: the pre-swap gate run against a candidate bundle
+    /// before the supervisor commits a make-before-break swap. Reads
+    /// the LIVE port-forward config (pins only), reserves each pin on
+    /// the candidate over the not-yet-published session, and advances
+    /// the candidate ladder on rejection. `true` commits the swap.
+    pub async fn run_warren_pre_swap_gate(
+        &self,
+        bundle: std::sync::Arc<talpid_warren_tunnel::MultiHopBundle>,
+    ) -> bool {
+        use talpid_warren_tunnel::natpmp_preflight;
+        let rules = {
+            let inner = self.0.lock().await;
+            inner
+                .warren_nat_pmp
+                .as_ref()
+                .map(natpmp_preflight::pinned_rules)
+                .unwrap_or_default()
+        };
+        if rules.is_empty() {
+            return true;
+        }
+        // The source IP of the pre-flight datagrams is the inner IP the
+        // CANDIDATE assigned (post-Setup); without it a pin cannot be
+        // verified, so the gate fails safe (C2: do not migrate).
+        let src = bundle.primary().assigned_ipv4();
+        if src.is_none() {
+            log::warn!(
+                "Warren pre-swap: candidate assigned no inner IPv4; \
+                 cannot verify pinned port(s), aborting the swap"
+            );
+        }
+        let transport = natpmp_preflight::BundlePreflightTransport::new(bundle);
+        let allowed = natpmp_preflight::pre_swap_gate(&transport, src, &rules).await;
+        if !allowed {
+            self.on_warren_pre_swap_rejected().await;
+        }
+        allowed
     }
 
     /// Hot-swaps the Warren relay selector with a freshly fetched +
@@ -1060,6 +1145,28 @@ impl ParametersGenerator {
                 g.set_warren_migrate_handle(handle).await;
             });
         }));
+        // docs/59 Lot 3: pre-swap NAT-PMP reservation gate + post-swap
+        // re-map observer, behind the explicit activation knob (the
+        // fields stay `None` by default: identical pre-Lot-3 behavior;
+        // the guard is enabled by env at the validation rollout).
+        if preswap_guard_enabled() {
+            log::info!(
+                "Warren: pre-swap port guard ENABLED ({PRESWAP_PORT_GUARD_ENV}=1); \
+                 maintenance migrations reserve pinned ports before committing"
+            );
+            let gate_gen = self.clone();
+            params.warren_pre_swap_check = Some(Arc::new(move |bundle| {
+                let g = gate_gen.clone();
+                Box::pin(async move { g.run_warren_pre_swap_gate(bundle).await })
+            }));
+            let swapped_gen = self.clone();
+            params.warren_on_overlap_swapped = Some(Arc::new(move |_target: &CircuitTarget| {
+                let g = swapped_gen.clone();
+                tokio::spawn(async move {
+                    g.on_warren_overlap_swapped().await;
+                });
+            }));
+        }
         // Wire the NAT-PMP observer that forwards every event from the
         // refresh loop into the same WarrenStatusCache. The cache
         // updates drive the gRPC `NatPmpStatusUpdates` stream the UI
@@ -1327,6 +1434,53 @@ fn warren_pin_verify(
     }
 }
 
+/// docs/59 Lot 3 activation knob: `WARREN_PRESWAP_PORT_GUARD=1` wires
+/// the pre-swap NAT-PMP reservation gate + candidate ladder onto every
+/// new tunnel. Off by default: the guard ships inert and is enabled at
+/// the real-exit validation rollout.
+pub const PRESWAP_PORT_GUARD_ENV: &str = "WARREN_PRESWAP_PORT_GUARD";
+
+fn preswap_guard_enabled_from(env: Option<&str>) -> bool {
+    env.is_some_and(|v| v.trim() == "1")
+}
+
+fn preswap_guard_enabled() -> bool {
+    preswap_guard_enabled_from(std::env::var(PRESWAP_PORT_GUARD_ENV).ok().as_deref())
+}
+
+/// Advances the docs/59 D2 candidate ladder after a pre-swap rejection:
+/// dispatches a migration onto the next candidate via `migrate` (which
+/// reports whether a live migrate handle accepted the target). Returns
+/// `true` when a candidate was dispatched; `false` when the ladder is
+/// exhausted or no handle is wired, in which case the migration is
+/// CANCELLED (C2: the client stays on the draining exit, ports kept)
+/// and the dedicated C5 signal is recorded on the status cache.
+fn advance_migration_ladder<F: FnMut(CircuitTarget) -> bool>(
+    candidates: &mut std::collections::VecDeque<MultiHopConfig>,
+    migrate: &mut F,
+    cache: &WarrenStatusCache,
+) -> bool {
+    if let Some(next) = candidates.pop_front() {
+        let target = talpid_warren_tunnel::migration_target(&next);
+        if migrate(target) {
+            log::info!(
+                "Warren pre-swap: candidate rejected for port conflict; \
+                 trying the next same-country exit"
+            );
+            return true;
+        }
+        // No live handle: retrying any remaining candidate is equally
+        // impossible, drop them all and cancel.
+        candidates.clear();
+    }
+    log::info!(
+        "Warren pre-swap: no candidate exit can honour the pinned port(s); \
+         migration cancelled, staying on the current exit (ports kept)"
+    );
+    cache.record_port_migration_cancelled();
+    false
+}
+
 /// Builds the config pushed on the NAT-PMP control channel to force an
 /// immediate re-map of every rule on the CURRENT exit (doc 59 Lot 1):
 /// sticky ports applied so the public port follows best-effort, and the
@@ -1360,6 +1514,121 @@ fn record_granted_external_port(
         && let Ok(mut map) = sticky.lock()
     {
         map.insert(id, *external_port);
+    }
+}
+
+#[cfg(test)]
+mod warren_preswap_tests {
+    use std::collections::VecDeque;
+
+    use super::*;
+
+    #[test]
+    fn preswap_guard_is_off_by_default() {
+        // docs/59 Lot 3 ships wired but INERT: activation is an explicit
+        // env opt-in at the validation rollout, never a silent default.
+        assert!(!preswap_guard_enabled_from(None));
+        assert!(!preswap_guard_enabled_from(Some("")));
+        assert!(!preswap_guard_enabled_from(Some("0")));
+        assert!(!preswap_guard_enabled_from(Some("yes")));
+    }
+
+    #[test]
+    fn preswap_guard_enables_on_exactly_one() {
+        assert!(preswap_guard_enabled_from(Some("1")));
+        assert!(preswap_guard_enabled_from(Some(" 1 ")));
+    }
+
+    fn fake_circuit(tag: u8) -> MultiHopConfig {
+        use ed25519_dalek::SigningKey;
+        use talpid_warren_tunnel::{ExitId, MultiHopExitDescriptor, MultiHopRelayDescriptor};
+        MultiHopConfig {
+            relay: MultiHopRelayDescriptor {
+                relay_id: [tag; 16],
+                relay_ed25519_pubkey: [tag; 32],
+                endpoint: "198.51.100.10:443".parse().unwrap(),
+                signature: [tag; 64],
+                cover_domain: None,
+            },
+            exit: MultiHopExitDescriptor {
+                exit_id: ExitId::from_bytes([tag; 16]),
+                exit_ed25519_pubkey: [tag; 32],
+                exit_x25519_multihop_pubkey: [tag; 32],
+                endpoint: None,
+                signature: [tag; 64],
+                dns_disabled: false,
+                cover_domain: None,
+            },
+            operational_pubkey: SigningKey::from_bytes(&[9u8; 32]).verifying_key(),
+            exit_country: "nl".to_owned(),
+            exit_city: "Amsterdam".to_owned(),
+            enable_gso: false,
+            use_warren_obfuscation: true,
+            single_node: false,
+        }
+    }
+
+    #[test]
+    fn ladder_dispatches_alternates_in_order_then_cancels() {
+        // C2 + D2: each pre-swap rejection tries the NEXT same-country
+        // candidate; once the ladder is exhausted the migration is
+        // cancelled and the dedicated C5 signal fires.
+        let cache = crate::warren_status::WarrenStatusCache::new();
+        let mut candidates: VecDeque<MultiHopConfig> =
+            vec![fake_circuit(1), fake_circuit(2)].into();
+        let dispatched: std::cell::RefCell<Vec<[u8; 16]>> = std::cell::RefCell::new(Vec::new());
+
+        let mut migrate = |target: CircuitTarget| {
+            dispatched.borrow_mut().push(*target.exit_id.as_bytes());
+            true
+        };
+        assert!(advance_migration_ladder(
+            &mut candidates,
+            &mut migrate,
+            &cache
+        ));
+        assert!(advance_migration_ladder(
+            &mut candidates,
+            &mut migrate,
+            &cache
+        ));
+        assert_eq!(
+            *dispatched.borrow(),
+            vec![[1; 16], [2; 16]],
+            "selector order"
+        );
+        assert_eq!(cache.snapshot().port_migration_cancellations, 0);
+
+        assert!(!advance_migration_ladder(
+            &mut candidates,
+            &mut migrate,
+            &cache
+        ));
+        assert_eq!(
+            cache.snapshot().port_migration_cancellations,
+            1,
+            "an exhausted ladder must surface the C5 cancellation"
+        );
+    }
+
+    #[test]
+    fn ladder_cancels_when_no_migrate_handle_is_wired() {
+        // Fail-safe: without a live handle nothing can be retried, so
+        // the remaining candidates are dropped and the user is told.
+        let cache = crate::warren_status::WarrenStatusCache::new();
+        let mut candidates: VecDeque<MultiHopConfig> =
+            vec![fake_circuit(1), fake_circuit(2)].into();
+        let mut no_handle = |_: CircuitTarget| false;
+        assert!(!advance_migration_ladder(
+            &mut candidates,
+            &mut no_handle,
+            &cache
+        ));
+        assert!(
+            candidates.is_empty(),
+            "a dead handle must not leave stale candidates behind"
+        );
+        assert_eq!(cache.snapshot().port_migration_cancellations, 1);
     }
 }
 

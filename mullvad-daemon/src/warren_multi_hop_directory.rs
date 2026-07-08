@@ -237,6 +237,93 @@ pub(crate) fn assemble(
     })
 }
 
+/// docs/59 D2 candidate ladder: the OTHER exits of the SAME COUNTRY as
+/// `primary`'s exit, each assembled into a full circuit, ordered by
+/// exit weight (descending, index tiebreak) so the ladder is
+/// deterministic. The primary's exit and every `exclude_exit_ids` entry
+/// are skipped; a pinned exit country never leaves its country (the
+/// exit filter is structural via [`valid_circuits`]). The primary's
+/// entry relay is preserved whenever it still forms a valid pair with
+/// the alternate exit, otherwise the heaviest valid entry is used.
+/// Empty today (one country = one exit) and for the manual-config path
+/// (no attested exit country).
+#[must_use]
+pub fn same_country_migration_alternates(
+    dir: &VerifiedMultiHopDirectory,
+    primary: &MultiHopConfig,
+    entry_country: &str,
+    exclude_exit_ids: &[[u8; 16]],
+) -> Vec<MultiHopConfig> {
+    let country = primary.exit_country.as_str();
+    if country.is_empty() {
+        return Vec::new();
+    }
+    let primary_exit = *primary.exit.exit_id.as_bytes();
+    if primary.single_node {
+        // 1-hop mode: an alternate is simply another same-country node
+        // collapsed onto itself.
+        let mut alternates: Vec<usize> = dir
+            .nodes
+            .iter()
+            .enumerate()
+            .filter(|(_, n)| {
+                n.country.eq_ignore_ascii_case(country)
+                    && *n.exit.exit_id.as_bytes() != primary_exit
+                    && !exclude_exit_ids.contains(n.exit.exit_id.as_bytes())
+            })
+            .map(|(j, _)| j)
+            .collect();
+        alternates.sort_by_key(|&j| (std::cmp::Reverse(dir.nodes[j].weight), j));
+        return alternates
+            .into_iter()
+            .filter_map(|j| {
+                assemble(
+                    dir,
+                    j,
+                    j,
+                    primary.enable_gso,
+                    primary.use_warren_obfuscation,
+                )
+            })
+            .collect();
+    }
+    let pairs = valid_circuits(dir, entry_country, country, exclude_exit_ids);
+    let mut exit_indices: Vec<usize> = pairs
+        .iter()
+        .map(|&(_, j)| j)
+        .filter(|&j| *dir.nodes[j].exit.exit_id.as_bytes() != primary_exit)
+        .collect();
+    exit_indices.sort_unstable();
+    exit_indices.dedup();
+    exit_indices.sort_by_key(|&j| (std::cmp::Reverse(dir.nodes[j].weight), j));
+    exit_indices
+        .into_iter()
+        .filter_map(|j| {
+            let entries: Vec<usize> = pairs
+                .iter()
+                .filter(|&&(_, x)| x == j)
+                .map(|&(e, _)| e)
+                .collect();
+            let entry = entries
+                .iter()
+                .copied()
+                .find(|&e| dir.nodes[e].relay.relay_id == primary.relay.relay_id)
+                .or_else(|| {
+                    entries
+                        .into_iter()
+                        .max_by_key(|&e| (dir.nodes[e].weight, std::cmp::Reverse(e)))
+                })?;
+            assemble(
+                dir,
+                entry,
+                j,
+                primary.enable_gso,
+                primary.use_warren_obfuscation,
+            )
+        })
+        .collect()
+}
+
 /// Stable identity of a circuit (entry routing tag + exit routing tag),
 /// used to skip a reconnect when a refreshed directory yields the same
 /// two hops.
@@ -1092,11 +1179,38 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     }
                     let migrated = match (drain_driven, desired.as_ref()) {
                         (true, Some(new_cfg)) => {
+                            // docs/59 D2: arm the candidate ladder BEFORE
+                            // dispatching the migration, so a pre-swap
+                            // rejection of this primary candidate can
+                            // retry the other same-country exits (no-op
+                            // today: one country = one exit). Inert while
+                            // the pre-swap guard is off (nothing rejects).
+                            let alternates = cached_dir
+                                .as_ref()
+                                .map(|dir| {
+                                    same_country_migration_alternates(
+                                        dir,
+                                        new_cfg,
+                                        &settings.entry_country,
+                                        &excluded,
+                                    )
+                                })
+                                .unwrap_or_default();
+                            cfg.parameters_generator
+                                .set_warren_migration_candidates(alternates)
+                                .await;
                             cfg.parameters_generator
                                 .try_warren_migrate(talpid_warren_tunnel::migration_target(new_cfg))
                                 .await
                         }
-                        _ => false,
+                        _ => {
+                            // Any non-drain circuit change invalidates a
+                            // previously-armed ladder.
+                            cfg.parameters_generator
+                                .set_warren_migration_candidates(Vec::new())
+                                .await;
+                            false
+                        }
                     };
                     if migrated {
                         log::info!(
@@ -1361,6 +1475,90 @@ mod tests {
             &[3; 16],
             "the still-valid sticky exit must be preserved through the entry upgrade"
         );
+    }
+
+    // --- Migration candidate ladder (docs 59 D2) ------------------------------
+
+    #[test]
+    fn migration_alternates_empty_when_the_country_has_one_exit() {
+        // Today's fleet: one country = one exit, so the ladder
+        // degenerates to primary-then-cancel.
+        let op = op_key();
+        let d = dir(vec![node(&op, 1, "de", 0, 100), node(&op, 2, "nl", 0, 50)]);
+        let primary = assemble(&d, 0, 1, true, true).expect("primary circuit");
+        assert!(same_country_migration_alternates(&d, &primary, "", &[]).is_empty());
+    }
+
+    #[test]
+    fn migration_alternates_lists_other_exits_of_the_same_country_by_weight() {
+        // D2: the ladder never leaves the exit's country, never repeats
+        // the primary exit, and is deterministic (weight-descending).
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "nl", 0, 50),
+            node(&op, 3, "nl", 0, 10),
+            node(&op, 4, "nl", 0, 80),
+            node(&op, 5, "sg", 0, 90),
+        ]);
+        let primary = assemble(&d, 0, 1, true, true).expect("primary circuit");
+        let alternates = same_country_migration_alternates(&d, &primary, "", &[]);
+        let exits: Vec<[u8; 16]> = alternates
+            .iter()
+            .map(|c| *c.exit.exit_id.as_bytes())
+            .collect();
+        assert_eq!(
+            exits,
+            vec![[4; 16], [3; 16]],
+            "same-country exits only (no sg), primary excluded, weight-descending"
+        );
+        assert!(
+            alternates
+                .iter()
+                .all(|c| c.relay.relay_id == primary.relay.relay_id),
+            "the entry hop is preserved when it still forms a valid pair"
+        );
+        assert!(
+            alternates.iter().all(|c| c.exit_country == "nl"),
+            "the attested exit geo must ride along for the GUI label"
+        );
+    }
+
+    #[test]
+    fn migration_alternates_skip_drained_exits() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "nl", 0, 50),
+            node(&op, 3, "nl", 0, 10),
+        ]);
+        let primary = assemble(&d, 0, 1, true, true).expect("primary circuit");
+        let drained = [[3u8; 16]];
+        assert!(
+            same_country_migration_alternates(&d, &primary, "", &drained).is_empty(),
+            "a drained alternate must not be offered as a migration candidate"
+        );
+    }
+
+    #[test]
+    fn migration_alternates_repick_an_entry_when_the_primary_pair_is_invalid() {
+        // The alternate exit shares the primary's entry country: that
+        // pair violates country diversity, so a different valid entry
+        // must be picked instead of silently dropping the candidate.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "nl", 0, 100),
+            node(&op, 2, "nl", 0, 50),
+            node(&op, 3, "de", 0, 10),
+        ]);
+        // Primary: DE entry -> NL exit (node 1).
+        let primary = assemble(&d, 2, 0, true, true).expect("primary circuit");
+        // Alternate exit: node 2 (nl). Entry candidates: node 3 (de) only
+        // (node 1 is same-country as the exit).
+        let alternates = same_country_migration_alternates(&d, &primary, "", &[]);
+        assert_eq!(alternates.len(), 1);
+        assert_eq!(alternates[0].exit.exit_id.as_bytes(), &[2; 16]);
+        assert_eq!(alternates[0].relay.relay_id, [3; 16]);
     }
 
     #[test]
