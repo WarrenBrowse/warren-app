@@ -5,11 +5,12 @@
 //   1. Derives the wallet `SigningKey` from the supplied mnemonic.
 //   2. Builds a [`warrenguard_wire::WarrenExitAddr`] from the JSON config
 //      (exit pubkey hex + UDP endpoint).
-//   3. Calls `ClientTunnel::with_signing_key(...).connect(addr).await`,
-//      which performs the QUIC dial + `Setup` / `SetupAck` handshake.
-//   4. Spawns `pump_bidirectional(tun, conn)` to wire IP packets between
-//      the Android TUN fd and the Quinn datagram channel until either
-//      side fails or the cancel oneshot fires.
+//   3. Hands the session lifecycle to the redial engine
+//      (`crate::redial::run_supervised`): initial QUIC dial +
+//      `Setup` / `SetupAck` handshake, the bidirectional pump between the
+//      Android TUN fd and the Quinn datagram channel, transparent redial
+//      with backoff on session loss (status `Reconnecting`), and the 15 s
+//      loss deadline after which the Kotlin fail-closed policy takes over.
 //
 // All work happens on the shared [`crate::android_jni::RUNTIME`] tokio
 // runtime so the JNI entry point can return synchronously while the
