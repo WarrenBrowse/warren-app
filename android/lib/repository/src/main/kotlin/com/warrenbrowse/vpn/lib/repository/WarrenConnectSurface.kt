@@ -133,6 +133,30 @@ interface WarrenNatPmpStatusProvider {
 }
 
 /**
+ * Lib-side surface for the host-offline verdict: true while the device has
+ * no usable network path. Independent of the tunnel state on purpose: the
+ * native session holds Connected through its transparent redial window, so
+ * without this flag the user would see a green "Connected" with no working
+ * network. The concrete impl is `app/connectivity/WarrenConnectivityMonitor`;
+ * the flow is already debounced on the rising edge so consumers can render
+ * it directly without flashing on routine network handovers.
+ */
+interface WarrenHostOfflineProvider {
+    val hostOffline: StateFlow<Boolean>
+}
+
+/**
+ * Lib-side surface for the automatic-recovery counter (redials or retry
+ * loops that reconnected the tunnel without user action, since process
+ * start). The concrete impl is `app/service/WarrenQuinnStateProxy`, fed by
+ * the adapter which sums the native redial count and its own retry-loop
+ * accounting. Drives the "Reconnections" connection-details row.
+ */
+interface WarrenAutoRecoveryProvider {
+    val autoRecoveryCount: StateFlow<Int>
+}
+
+/**
  * Lib-side surface for the Warren disconnect path. The concrete impl
  * lives in `app/connect/WarrenDisconnectUseCase` and is bound to this
  * interface in `di/AppModule`. The disconnect path does not need

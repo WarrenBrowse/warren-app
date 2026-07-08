@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
+import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
@@ -55,6 +56,8 @@ class WarrenVpnService : LifecycleVpnService() {
 
     private lateinit var quinnStateProxy: WarrenQuinnStateProxy
 
+    private lateinit var connectivityMonitor: WarrenConnectivityMonitor
+
     // Count number of binds to know if the service is needed. If user actively using the VPN, a
     // bind from the system, should always be present.
     private val bindCount = AtomicInt()
@@ -76,7 +79,13 @@ class WarrenVpnService : LifecycleVpnService() {
             apiEndpointFromIntentHolder = get()
             quinnStateProxy = get()
             warrenConnectUseCase = get()
+            connectivityMonitor = get()
         }
+
+        // While this service is alive its VpnService.protect() backs the
+        // monitor's underlying-network probe (the only truthful way to read
+        // connectivity from under our own TUN). Cleared in onDestroy.
+        connectivityMonitor.registerSocketProtector { socket -> protect(socket) }
 
         // Quinn adapter must outlive every connect/disconnect cycle, so
         // it is owned by the service and kept alive for the service's
@@ -86,6 +95,7 @@ class WarrenVpnService : LifecycleVpnService() {
             vpnService = this,
             connectivityManager = getSystemService<ConnectivityManager>()!!,
             settings = getKoin().get(),
+            connectivity = connectivityMonitor.connectivity,
         )
 
         // Observe Quinn tunnel transitions:
@@ -98,6 +108,11 @@ class WarrenVpnService : LifecycleVpnService() {
         lifecycleScope.launch {
             quinnAdapter.natPmpStatus.collect { status ->
                 quinnStateProxy.updateNatPmpStatus(status)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.autoRecoveryCount.collect { count ->
+                quinnStateProxy.updateAutoRecoveryCount(count)
             }
         }
         lifecycleScope.launch {
@@ -294,6 +309,8 @@ class WarrenVpnService : LifecycleVpnService() {
     override fun onDestroy() {
         super.onDestroy()
         Logger.i("WarrenVpnService: onDestroy")
+
+        connectivityMonitor.clearSocketProtector()
 
         // `disconnect()` is idempotent (state-machine guards a no-op if
         // already disconnected), so it is safe even if no session was

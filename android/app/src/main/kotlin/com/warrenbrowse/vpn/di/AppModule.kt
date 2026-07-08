@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.RelayCatalog
+import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
@@ -27,6 +28,8 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReportInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
@@ -89,7 +92,22 @@ val appModule = module {
     // Process-singleton mirror of WarrenQuinnAdapter.state so Composables can
     // read tunnel transitions without binding the service.
     single { WarrenQuinnStateProxy() } binds
-        arrayOf(WarrenTunnelStateProvider::class, WarrenNatPmpStatusProvider::class)
+        arrayOf(
+            WarrenTunnelStateProvider::class,
+            WarrenNatPmpStatusProvider::class,
+            WarrenAutoRecoveryProvider::class,
+        )
+
+    // Process-wide truthful connectivity source: feeds the adapter's
+    // connect/retry gating and the UI host-offline honesty surfaces.
+    single {
+        WarrenConnectivityMonitor(
+            connectivityManager =
+                androidContext().getSystemService(Context.CONNECTIVITY_SERVICE)
+                    as android.net.ConnectivityManager,
+            scope = MainScope(),
+        )
+    } bind WarrenHostOfflineProvider::class
 
     // Orchestrates biometric unlock + config build + service dispatch for the
     // Warren Quinn connect.

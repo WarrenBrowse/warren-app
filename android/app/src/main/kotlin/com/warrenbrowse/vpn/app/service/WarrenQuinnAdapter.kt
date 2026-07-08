@@ -10,6 +10,8 @@ import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import java.io.IOException
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.talpid.model.Connectivity
+import com.warrenbrowse.vpn.app.connectivity.canDialRelay
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -24,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -51,6 +54,7 @@ class WarrenQuinnAdapter(
     private val vpnService: VpnService,
     private val connectivityManager: ConnectivityManager,
     private val settings: WarrenLocalSettingsRepository,
+    private val connectivity: StateFlow<Connectivity>,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Mutex()
@@ -62,6 +66,14 @@ class WarrenQuinnAdapter(
     // polled alongside the tunnel status. `idle` when no mapping is active.
     private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
     val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
+
+    // Total automatic recoveries since process start: the Rust redial
+    // engine's in-session redials (WarrenJni.getAutoRecoveryCount) plus the
+    // adapter's own retry-loop successes (AutoRecoveryTracker). Mirrors the
+    // desktop reconnect_count row; user actions never count.
+    private val autoRecovery = AutoRecoveryTracker()
+    private val _autoRecoveryCount = MutableStateFlow(0)
+    val autoRecoveryCount: StateFlow<Int> = _autoRecoveryCount.asStateFlow()
 
     private var activeConfig: WarrenTunnelConfig? = null
     // Held as a zeroizable [Mnemonic] (CharArray-backed), NOT a String: the
@@ -241,12 +253,25 @@ class WarrenQuinnAdapter(
                     // A real connection settles the network: forget prior
                     // drops so a later isolated drop is not mistaken for the
                     // tail of an earlier flap.
-                    if (code == STATUS_CONNECTED) flapDetector.reset()
+                    if (code == STATUS_CONNECTED) {
+                        flapDetector.reset()
+                        if (autoRecovery.onConnected()) {
+                            Logger.i("WarrenQuinnAdapter: automatic recovery landed")
+                        }
+                    }
                     _state.value = statusFromCode(code, sessionConfig)
                 }
                 // Mirror the live NAT-PMP status (cheap static read).
                 val np = WarrenJni.getNatPmpStatus()
                 if (np != _natPmpStatus.value) _natPmpStatus.value = np
+                // Sum the native in-session redials with the adapter's own
+                // retry-loop recoveries. Polled (not event-driven) because a
+                // sub-poll-interval native redial has no observable status
+                // transition on this side.
+                val recoveries = WarrenJni.getAutoRecoveryCount() + autoRecovery.count
+                if (recoveries != _autoRecoveryCount.value) {
+                    _autoRecoveryCount.value = recoveries
+                }
                 delay(STATUS_POLL_INTERVAL_MS)
             }
         }
@@ -299,6 +324,9 @@ class WarrenQuinnAdapter(
         // kill switch.
         userInitiatedDisconnect = true
         flapDetector.reset()
+        // A user action clears any pending recovery attribution: whatever
+        // connects next is not an automatic recovery.
+        autoRecovery.onUserAction()
         unregisterNetworkCallback()
         pendingHandover?.cancel()
         pendingHandover = null
@@ -507,7 +535,9 @@ class WarrenQuinnAdapter(
         val mnemonic = activeMnemonic ?: return
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
+            autoRecovery.armAutomation()
             delay(HANDOVER_GRACE_MS)
+            awaitDialableNetwork()
             lock.withLock {
                 if (userInitiatedDisconnect) return@withLock
                 statusPollJob?.cancel()
@@ -587,6 +617,7 @@ class WarrenQuinnAdapter(
         }
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
+            autoRecovery.armAutomation()
             // All shared-state mutation and the native teardown run under `lock`,
             // the same discipline as scheduleDropReconnect, so a concurrent
             // connect/disconnect/onSessionDown cannot interleave with this
@@ -618,11 +649,29 @@ class WarrenQuinnAdapter(
                 _state.value = WarrenTunnelState.Disconnected
             }
             delay(HANDOVER_GRACE_MS)
+            awaitDialableNetwork()
             // Re-check intent after the grace period: a user disconnect during
             // the wait cancels this job (teardownLocked cancels pendingHandover)
             // and flips the flag, so we must not reconnect over a user teardown.
             if (!userInitiatedDisconnect) connect(config, mnemonic)
         }
+    }
+
+    /**
+     * Park the retry until the device has a network a relay dial can
+     * actually use (IPv4-bearing, see [canDialRelay]). Prevents the retry
+     * loop from burning dial attempts (and flap-detector budget) while the
+     * device is offline, and resumes promptly on the online edge. Mirrors
+     * the desktop `Error(IsOffline)` family-gated auto-reconnect.
+     */
+    private suspend fun awaitDialableNetwork() {
+        if (connectivity.value.canDialRelay()) return
+        Logger.i(
+            "WarrenQuinnAdapter: no dialable network (offline or IPv6-only); " +
+                "waiting for the online edge before reconnecting"
+        )
+        connectivity.first { it.canDialRelay() }
+        Logger.i("WarrenQuinnAdapter: dialable network is back; reconnecting")
     }
 
     private fun statusFromCode(code: Int, config: WarrenTunnelConfig): WarrenTunnelState =

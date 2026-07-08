@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.service
 
+import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
@@ -30,7 +31,8 @@ import kotlinx.coroutines.flow.stateIn
  * subscribe to the state without having to import the app-private
  * [WarrenTunnelState] type (they observe a `String` projection).
  */
-class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvider {
+class WarrenQuinnStateProxy :
+    WarrenTunnelStateProvider, WarrenNatPmpStatusProvider, WarrenAutoRecoveryProvider {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
@@ -57,6 +59,9 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvi
     private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
     override val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
 
+    private val _autoRecoveryCount = MutableStateFlow(0)
+    override val autoRecoveryCount: StateFlow<Int> = _autoRecoveryCount.asStateFlow()
+
     /** Called by [WarrenVpnService] on every adapter-side transition. */
     fun update(next: WarrenTunnelState) {
         _state.value = next
@@ -65,6 +70,11 @@ class WarrenQuinnStateProxy : WarrenTunnelStateProvider, WarrenNatPmpStatusProvi
     /** Called by [WarrenVpnService] on every NAT-PMP status change. */
     fun updateNatPmpStatus(json: String) {
         _natPmpStatus.value = json
+    }
+
+    /** Called by [WarrenVpnService] on every recovery-counter change. */
+    fun updateAutoRecoveryCount(count: Int) {
+        _autoRecoveryCount.value = count
     }
 
     private companion object {

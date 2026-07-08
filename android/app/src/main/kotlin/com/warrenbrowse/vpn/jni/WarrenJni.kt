@@ -153,9 +153,20 @@ object WarrenJni {
      * - 0: disconnected
      * - 1: connecting
      * - 2: connected
-     * - 3: reconnecting
+     * - 3: reconnecting (transparent native redial in flight; expected to
+     *      land within seconds, escalated to 0 after 15 s of continuous
+     *      loss, see `warren-jni/src/redial.rs`)
+     * - 4: unauthorized (subscription lapsed / revoked; terminal)
      */
     external fun getTunnelStatus(): Int
+
+    /**
+     * Returns the number of automatic in-session recoveries (a native
+     * redial that landed after a session loss) since process start.
+     * Monotonic; polled alongside [getTunnelStatus] and summed with the
+     * Kotlin-side retry-loop accounting for the "Reconnections" row.
+     */
+    external fun getAutoRecoveryCount(): Int
 
     /**
      * Returns the live NAT-PMP port-forwarding status as a JSON object:
