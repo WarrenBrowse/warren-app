@@ -10,6 +10,7 @@ import {
 import { colors } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { largeText, smallText } from '../../../../../../common-styles';
+import { CurrentCountryFlag } from '../../../../../../CurrentCountryFlag';
 
 const StyledRow = styled.div({
   display: 'flex',
@@ -22,6 +23,15 @@ const StyledTextColumn = styled.div({
   flexDirection: 'column',
   minWidth: 0,
 });
+
+// Right-aligned; leaves room for the expand chevron when the card is
+// expandable (connected/connecting), which sits absolutely at the top right.
+const StyledFlagSlot = styled.div<{ $chevronRoom: boolean }>((props) => ({
+  marginLeft: 'auto',
+  display: 'flex',
+  alignItems: 'center',
+  marginRight: props.$chevronRoom ? '36px' : 0,
+}));
 
 const StyledTitle = styled.span<{ $color: string }>(largeText, (props) => ({
   color: props.$color,
@@ -43,6 +53,8 @@ export function ConnectionStatus() {
   const eyeIcon = phase === 'protected' || phase === 'blocked' ? 'hide' : 'show';
   const subtitle = getConnectionStatusSubtitle(tunnelState);
 
+  const chevronRoom = tunnelState.state === 'connected' || tunnelState.state === 'connecting';
+
   return (
     <StyledRow role="status">
       <Icon icon={eyeIcon} color={colorName} size="large" />
@@ -52,6 +64,9 @@ export function ConnectionStatus() {
         </StyledTitle>
         {subtitle ? <StyledSubtitle>{subtitle}</StyledSubtitle> : null}
       </StyledTextColumn>
+      <StyledFlagSlot $chevronRoom={chevronRoom}>
+        <CurrentCountryFlag />
+      </StyledFlagSlot>
     </StyledRow>
   );
 }
