@@ -178,6 +178,11 @@ pub fn assemble_for_attempt(
         // ADR 36 (Option A): set by `produce_warren_tunnel_params` for
         // multi-hop (it owns the generator the register callback stores into).
         warren_register_migrate_handle: None,
+        // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
+        // wired later from the live port-forward config; None keeps the
+        // unconditional-swap behaviour.
+        warren_pre_swap_check: None,
+        warren_on_overlap_swapped: None,
         // NAT-PMP config originates from user settings (UI). The
         // caller threads it as-is; `None` keeps the legacy behaviour
         // (no refresh loop spawned).
@@ -271,6 +276,11 @@ pub fn assemble_failover_for_attempt(
         // ADR 36 (Option A): set by `produce_warren_tunnel_params` for
         // multi-hop (it owns the generator the register callback stores into).
         warren_register_migrate_handle: None,
+        // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
+        // wired later from the live port-forward config; None keeps the
+        // unconditional-swap behaviour.
+        warren_pre_swap_check: None,
+        warren_on_overlap_swapped: None,
         nat_pmp,
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,
@@ -348,6 +358,11 @@ pub fn assemble_custom(
         on_reconnect: None,
         on_exit_draining: None,
         warren_register_migrate_handle: None,
+        // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
+        // wired later from the live port-forward config; None keeps the
+        // unconditional-swap behaviour.
+        warren_pre_swap_check: None,
+        warren_on_overlap_swapped: None,
         nat_pmp,
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,
