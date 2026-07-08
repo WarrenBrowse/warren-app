@@ -609,6 +609,56 @@ impl Default for WarrenStatusCache {
     }
 }
 
+/// Coarse tunnel-state kind consumed by [`auto_recovery_step`]. The
+/// daemon maps its `TunnelState` to this before each step so the
+/// attribution logic stays a pure, platform-free function.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TunnelStateKind {
+    Disconnected,
+    Connecting,
+    Connected,
+    Disconnecting,
+    Error,
+}
+
+/// One step of the auto-recovery attribution driving the UI
+/// `reconnect_count` row alongside the supervisor's silent redials.
+///
+/// The supervisor observer only fires when the QUIC session is redialed
+/// UNDER a live tunnel; recoveries that go through the state machine
+/// (offline grace -> Error(IsOffline) -> auto reconnect, or the
+/// session-liveness escalation -> Connecting -> Connected) never touch
+/// it, which left the counter frozen at 0 through real network-loss
+/// recoveries. This function attributes those: it arms a pending flag
+/// on the state edges that only automation produces, and reports a
+/// count when a Connected arrives with the flag armed.
+///
+/// Returns `(pending_after, count_now)`.
+pub fn auto_recovery_step(
+    pending: bool,
+    prev: TunnelStateKind,
+    next: TunnelStateKind,
+    target_secured: bool,
+) -> (bool, bool) {
+    match next {
+        // The daemon auto-retries out of a blocked error while the user
+        // still wants the tunnel up; reaching Connected from here is a
+        // recovery, not a user action.
+        TunnelStateKind::Error if target_secured => (true, false),
+        // Connected -> Connecting without a Disconnecting in between
+        // only happens when the tunnel died under us (liveness
+        // escalation, transient backend error). Every user-initiated
+        // reconnect (button, relay change) passes through
+        // Disconnecting first.
+        TunnelStateKind::Connecting if prev == TunnelStateKind::Connected => (true, false),
+        TunnelStateKind::Connected => (false, pending),
+        // The user gave up (manual disconnect) or the target flipped:
+        // whatever comes next is not an automatic recovery.
+        TunnelStateKind::Disconnected => (false, false),
+        _ => (pending, false),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1053,6 +1103,66 @@ mod tests {
         // No mappings by default; another disable must not push.
         cache.set_nat_pmp_disabled();
         assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    // --- Auto-recovery attribution ---------------------------------
+
+    use TunnelStateKind::*;
+
+    #[test]
+    fn offline_block_then_reconnect_counts_one_recovery() {
+        // Connected -> Error(IsOffline, grace expired) -> Connecting
+        // (online edge) -> Connected: the exact poka/topic-37 flow.
+        let (p, c) = auto_recovery_step(false, Connected, Error, true);
+        assert!(p && !c);
+        let (p, c) = auto_recovery_step(p, Error, Connecting, true);
+        assert!(p && !c);
+        let (p, c) = auto_recovery_step(p, Connecting, Connected, true);
+        assert!(!p);
+        assert!(
+            c,
+            "reaching Connected out of an offline block is a recovery"
+        );
+    }
+
+    #[test]
+    fn tunnel_dying_under_us_then_recovering_counts() {
+        // Session-liveness escalation: Connected -> Connecting directly
+        // (no Disconnecting edge), then Connected again.
+        let (p, c) = auto_recovery_step(false, Connected, Connecting, true);
+        assert!(p && !c);
+        let (p, c) = auto_recovery_step(p, Connecting, Connected, true);
+        assert!(!p);
+        assert!(c);
+    }
+
+    #[test]
+    fn user_reconnect_does_not_count() {
+        // Button / relay change: Connected -> Disconnecting ->
+        // Connecting -> Connected. Never arms the flag.
+        let (p, c) = auto_recovery_step(false, Connected, Disconnecting, true);
+        assert!(!p && !c);
+        let (p, c) = auto_recovery_step(p, Disconnecting, Connecting, true);
+        assert!(!p && !c);
+        let (p, c) = auto_recovery_step(p, Connecting, Connected, true);
+        assert!(!p && !c);
+    }
+
+    #[test]
+    fn manual_disconnect_clears_the_pending_flag() {
+        let (p, _) = auto_recovery_step(false, Connected, Error, true);
+        assert!(p);
+        let (p, c) = auto_recovery_step(p, Error, Disconnected, true);
+        assert!(!p && !c);
+        // A later manual connect must not count as a recovery.
+        let (p, c) = auto_recovery_step(p, Connecting, Connected, true);
+        assert!(!p && !c);
+    }
+
+    #[test]
+    fn error_while_unsecured_never_arms() {
+        let (p, c) = auto_recovery_step(false, Connected, Error, false);
+        assert!(!p && !c);
     }
 
     // --- Host offline surface -------------------------------------

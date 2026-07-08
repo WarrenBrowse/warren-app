@@ -913,6 +913,12 @@ pub struct Daemon {
     /// to it on NAT-PMP toggle changes; the gRPC stream subscribers
     /// receive the resulting snapshots without polling.
     warren_status_cache: warren_status::WarrenStatusCache,
+    /// Armed by [`warren_status::auto_recovery_step`] on state edges
+    /// that only automation produces (blocked error while Secured,
+    /// tunnel dying under a live Connected); a Connected arriving with
+    /// it armed counts as one automatic recovery on the UI
+    /// `reconnect_count` row.
+    warren_auto_recovery_pending: bool,
     /// Second `Arc` clone of the `WarrenAuthSigner` also held by
     /// `mullvad-api`'s `RequestFactory`. Kept here so that
     /// `on_set_warren_mnemonic` can swap the signing key in-place
@@ -1841,6 +1847,7 @@ impl Daemon {
             cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
             warren_status_cache,
+            warren_auto_recovery_pending: false,
             warren_signer: warren_signer_for_daemon,
             warren_identity_seed: warren_shared_seed,
             warren_multi_hop_directory_active,
@@ -2094,6 +2101,16 @@ impl Daemon {
         }
     }
 
+    fn tunnel_state_kind(state: &TunnelState) -> warren_status::TunnelStateKind {
+        match state {
+            TunnelState::Disconnected { .. } => warren_status::TunnelStateKind::Disconnected,
+            TunnelState::Connecting { .. } => warren_status::TunnelStateKind::Connecting,
+            TunnelState::Connected { .. } => warren_status::TunnelStateKind::Connected,
+            TunnelState::Disconnecting(_) => warren_status::TunnelStateKind::Disconnecting,
+            TunnelState::Error(_) => warren_status::TunnelStateKind::Error,
+        }
+    }
+
     async fn handle_tunnel_state_transition(
         &mut self,
         tunnel_state_transition: TunnelStateTransition,
@@ -2200,6 +2217,17 @@ impl Daemon {
                 }
             }
             _ => {}
+        }
+
+        let (pending, count_recovery) = warren_status::auto_recovery_step(
+            self.warren_auto_recovery_pending,
+            Self::tunnel_state_kind(&self.tunnel_state),
+            Self::tunnel_state_kind(&tunnel_state),
+            *self.target_state == TargetState::Secured,
+        );
+        self.warren_auto_recovery_pending = pending;
+        if count_recovery {
+            self.warren_status_cache.record_reconnect();
         }
 
         self.tunnel_state = tunnel_state.clone();
