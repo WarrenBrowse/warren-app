@@ -298,9 +298,20 @@ fn watch_transition(
     }
 }
 
+/// Whether a watch-loop edge counts toward the auto-recovery counter
+/// (`failover_count`). Only a cold redial that lands counts: the very first
+/// connect of a handle is a user start (or relay change, which rebuilds the
+/// handle), and same-exit manual reconnects ride the make-before-break
+/// overlap which produces no watch edge at all. Mirrors the desktop
+/// `warren_status::auto_recovery_step` rule: count automation, never user
+/// actions.
+fn counts_as_auto_recovery(transition: &WatchTransition) -> bool {
+    matches!(transition, WatchTransition::Connected { first: false })
+}
+
 #[cfg(test)]
 mod watch_transition_tests {
-    use super::{WatchTransition, watch_transition};
+    use super::{WatchTransition, counts_as_auto_recovery, watch_transition};
 
     #[test]
     fn first_connection_is_flagged_first() {
@@ -326,6 +337,20 @@ mod watch_transition_tests {
     fn steady_states_emit_nothing() {
         assert_eq!(watch_transition(true, true, true), WatchTransition::Idle);
         assert_eq!(watch_transition(false, false, true), WatchTransition::Idle);
+    }
+
+    #[test]
+    fn only_a_landed_cold_redial_counts_as_auto_recovery() {
+        assert!(
+            counts_as_auto_recovery(&WatchTransition::Connected { first: false }),
+            "a reconnect that lands is an automatic recovery"
+        );
+        assert!(
+            !counts_as_auto_recovery(&WatchTransition::Connected { first: true }),
+            "the first connect of a handle is a user start, never a recovery"
+        );
+        assert!(!counts_as_auto_recovery(&WatchTransition::Reconnecting));
+        assert!(!counts_as_auto_recovery(&WatchTransition::Idle));
     }
 }
 
@@ -962,11 +987,17 @@ fn spawn_multi_hop(
         let mut was_connected = false;
         loop {
             let has_session = ev.borrow().is_some();
-            match watch_transition(
+            let transition = watch_transition(
                 has_session,
                 was_connected,
                 arc_for_task.has_connected_once.load(Ordering::Acquire),
-            ) {
+            );
+            // Auto-recovery counter: surfaces in the app's statistics view
+            // (the iOS analog of the desktop reconnect_count row).
+            if counts_as_auto_recovery(&transition) {
+                arc_for_task.failover_count.fetch_add(1, Ordering::Relaxed);
+            }
+            match transition {
                 WatchTransition::Connected { first } => {
                     was_connected = true;
                     arc_for_task
