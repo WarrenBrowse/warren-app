@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { strings } from '../../../../../../../../shared/constants';
 import {
   EndpointObfuscationType,
+  formatExitLocation,
   isMultihopTunnelState,
   isUnspecifiedSocketAddress,
   ITunnelEndpoint,
@@ -91,6 +92,14 @@ export function ConnectionDetails() {
   // different ports, so the port must be ignored - see
   // `isMultihopTunnelState`.
   const multihop = isMultihopTunnelState(tunnelState);
+  // When the egress IP is unavailable (redacted multi-hop exit: the client
+  // never learns the exit IP, and Warren does not run an am.i.mullvad-style
+  // conncheck), fall back to the exit geolocation the daemon does provide so
+  // the "Out" row is not left blank.
+  const exitLocationFallback =
+    showDetails && !hasExit && !connection.ipv4 && !connection.ipv6
+      ? formatExitLocation(connection.country, connection.city)
+      : undefined;
 
   return (
     <StyledConnectionDetailsContainer>
@@ -129,6 +138,11 @@ export function ConnectionDetails() {
           {connection.ipv6 && (
             <StyledConnectionDetailsLabel data-testid="out-ip">
               {connection.ipv6}
+            </StyledConnectionDetailsLabel>
+          )}
+          {exitLocationFallback && (
+            <StyledConnectionDetailsLabel data-testid="out-location">
+              {exitLocationFallback}
             </StyledConnectionDetailsLabel>
           )}
         </StyledIpLabelContainer>

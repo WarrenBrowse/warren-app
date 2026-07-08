@@ -886,6 +886,18 @@ export function parseSocketAddress(socketAddrStr: string): ISocketAddress {
   return socketAddress;
 }
 
+// Format the exit geolocation ("Country, City") shown as the "Out" address
+// when the egress IP is unavailable. In multi-hop the daemon redacts the exit
+// egress IP, so the exit is identified by the geolocation the directory does
+// disclose. Returns `undefined` when there is no country to show, so the caller
+// renders no empty line. A city without a country is not a standalone label.
+export function formatExitLocation(country?: string, city?: string): string | undefined {
+  if (!country) {
+    return undefined;
+  }
+  return city ? `${country}, ${city}` : country;
+}
+
 // A redacted / unspecified socket address (`0.0.0.0:0` or `[::]:0`). The
 // Warren daemon publishes the multi-hop exit endpoint as this placeholder when
 // the client-facing directory redacts the exit egress IP (censorship
