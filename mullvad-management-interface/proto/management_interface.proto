@@ -787,6 +787,9 @@ message WarrenStatus {
   // exit. The client stays on the draining exit with its ports intact;
   // the UI toasts "migration postponed, port kept" on each increment.
   uint32 port_migration_cancellations = 8;
+  // True while the last port-conflict cancellation is inside its display
+  // window (same self-expiring discipline as maintenance_migration_active).
+  bool port_migration_cancellation_active = 9;
 }
 
 // Session H A.4: forensic payload surfaced alongside a TOFU pubkey

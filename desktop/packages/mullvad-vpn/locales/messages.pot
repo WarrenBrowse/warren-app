@@ -1458,6 +1458,10 @@ msgid "INSTALLER FAILED"
 msgstr ""
 
 msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr ""
+
+msgctxt "in-app-notifications"
 msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr ""
 
@@ -1542,6 +1546,10 @@ msgstr ""
 #. Notification title when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
 msgstr ""
 
 msgctxt "in-app-notifications"

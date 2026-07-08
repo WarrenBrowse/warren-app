@@ -734,6 +734,12 @@ export interface WarrenStatus {
   // elapsed yet. The daemon pushes a fresh status when it does, so a
   // banner keyed on this flag self-dismisses.
   maintenanceMigrationActive: boolean;
+  // Docs 59 C5: number of maintenance migrations cancelled because a
+  // user-pinned forwarded port could not be reserved on any candidate
+  // server, and the matching self-expiring display-window flag. The
+  // client stays on the draining server with its ports intact.
+  portMigrationCancellations: number;
+  portMigrationCancellationActive: boolean;
 }
 
 // Outcome of the gRPC `TrustNewExitKey` RPC. The daemon either

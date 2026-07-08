@@ -159,6 +159,11 @@ pub struct WarrenStatusSnapshot {
     /// The client stays on the draining exit with its ports intact; the
     /// UI toasts "migration postponed, port kept" on each increment.
     pub port_migration_cancellations: u32,
+    /// True while the last port-conflict cancellation is inside its
+    /// display window ([`MAINTENANCE_MIGRATION_TTL`], same discipline as
+    /// the maintenance banner). The recorder schedules a rebroadcast at
+    /// expiry so the UI banner self-dismisses.
+    pub port_migration_cancellation_active: bool,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -175,6 +180,7 @@ impl Default for WarrenStatusSnapshot {
             pubkey_mismatch_pending: None,
             maintenance_migration_active: false,
             port_migration_cancellations: 0,
+            port_migration_cancellation_active: false,
         }
     }
 }
@@ -209,6 +215,7 @@ struct InternalState {
     pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
     last_maintenance_migration_at: Option<Instant>,
     port_migration_cancellations: u32,
+    last_port_migration_cancelled_at: Option<Instant>,
 }
 
 impl Default for InternalState {
@@ -223,6 +230,7 @@ impl Default for InternalState {
             pubkey_mismatch_pending: None,
             last_maintenance_migration_at: None,
             port_migration_cancellations: 0,
+            last_port_migration_cancelled_at: None,
         }
     }
 }
@@ -283,6 +291,10 @@ impl WarrenStatusCache {
                 Instant::now(),
             ),
             port_migration_cancellations: inner.port_migration_cancellations,
+            port_migration_cancellation_active: maintenance_active(
+                inner.last_port_migration_cancelled_at,
+                Instant::now(),
+            ),
         }
     }
 
@@ -368,9 +380,21 @@ impl WarrenStatusCache {
                 .expect("warren_status state lock poisoned");
             inner.port_migration_cancellations =
                 inner.port_migration_cancellations.saturating_add(1);
+            inner.last_port_migration_cancelled_at = Some(Instant::now());
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
+        // Time-driven flip back to inactive, mirroring the maintenance
+        // banner: rebroadcast once the display TTL elapses so the UI
+        // drops the banner without polling. Skipped outside a runtime
+        // (plain unit tests): the flag then just decays unobserved.
+        if let Ok(handle) = tokio::runtime::Handle::try_current() {
+            let cache = self.clone();
+            handle.spawn(async move {
+                tokio::time::sleep(MAINTENANCE_MIGRATION_TTL + Duration::from_secs(1)).await;
+                cache.rebroadcast();
+            });
+        }
     }
 
     /// Re-broadcasts the current snapshot unconditionally. Needed for
@@ -709,6 +733,16 @@ mod tests {
         assert_eq!(cache.snapshot().port_migration_cancellations, 1);
         cache.record_port_migration_cancelled();
         assert_eq!(cache.snapshot().port_migration_cancellations, 2);
+    }
+
+    #[test]
+    fn record_port_migration_cancelled_opens_the_display_window() {
+        // The UI banner keys on the windowed flag (same TTL discipline
+        // as the maintenance banner: self-expiring, rebroadcast-driven).
+        let cache = WarrenStatusCache::new();
+        assert!(!cache.snapshot().port_migration_cancellation_active);
+        cache.record_port_migration_cancelled();
+        assert!(cache.snapshot().port_migration_cancellation_active);
     }
 
     #[test]

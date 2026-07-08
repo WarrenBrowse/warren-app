@@ -16599,7 +16599,9 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     failoverCount: jspb.Message.getFieldWithDefault(msg, 4, 0),
     lastFailoverAge: (f = msg.getLastFailoverAge()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
     pubkeyMismatchPending: (f = msg.getPubkeyMismatchPending()) && proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject(includeInstance, f),
-    maintenanceMigrationActive: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
+    maintenanceMigrationActive: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    portMigrationCancellations: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    portMigrationCancellationActive: jspb.Message.getBooleanFieldWithDefault(msg, 9, false)
   };
 
   if (includeInstance) {
@@ -16666,6 +16668,14 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
     case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setMaintenanceMigrationActive(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setPortMigrationCancellations(value);
+      break;
+    case 9:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setPortMigrationCancellationActive(value);
       break;
     default:
       reader.skipField();
@@ -16745,6 +16755,20 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
   if (f) {
     writer.writeBool(
       7,
+      f
+    );
+  }
+  f = message.getPortMigrationCancellations();
+  if (f !== 0) {
+    writer.writeUint32(
+      8,
+      f
+    );
+  }
+  f = message.getPortMigrationCancellationActive();
+  if (f) {
+    writer.writeBool(
+      9,
       f
     );
   }
@@ -16931,6 +16955,42 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getMaintenanceM
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setMaintenanceMigrationActive = function(value) {
   return jspb.Message.setProto3BooleanField(this, 7, value);
+};
+
+
+/**
+ * optional uint32 port_migration_cancellations = 8;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getPortMigrationCancellations = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setPortMigrationCancellations = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional bool port_migration_cancellation_active = 9;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getPortMigrationCancellationActive = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setPortMigrationCancellationActive = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 9, value);
 };
 
 

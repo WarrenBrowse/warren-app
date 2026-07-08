@@ -2037,6 +2037,10 @@ export class WarrenStatus extends jspb.Message {
     setPubkeyMismatchPending(value?: WarrenPubkeyMismatch): WarrenStatus;
     getMaintenanceMigrationActive(): boolean;
     setMaintenanceMigrationActive(value: boolean): WarrenStatus;
+    getPortMigrationCancellations(): number;
+    setPortMigrationCancellations(value: number): WarrenStatus;
+    getPortMigrationCancellationActive(): boolean;
+    setPortMigrationCancellationActive(value: boolean): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2057,6 +2061,8 @@ export namespace WarrenStatus {
         lastFailoverAge?: google_protobuf_duration_pb.Duration.AsObject,
         pubkeyMismatchPending?: WarrenPubkeyMismatch.AsObject,
         maintenanceMigrationActive: boolean,
+        portMigrationCancellations: number,
+        portMigrationCancellationActive: boolean,
     }
 }
 
