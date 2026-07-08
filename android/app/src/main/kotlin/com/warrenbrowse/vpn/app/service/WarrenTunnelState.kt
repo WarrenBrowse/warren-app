@@ -22,6 +22,14 @@ sealed class WarrenTunnelState {
         val exitEndpointHost: String = "",
         val entryEndpointHost: String? = null,
     ) : WarrenTunnelState()
+    /**
+     * A transparent native redial is in flight after a session loss
+     * (`warren-jni/src/redial.rs`), or a handover reconnect is staged. The
+     * TUN still captures all traffic (dead pump drops it), so no
+     * kill-switch action is needed; the native engine escalates to
+     * [Disconnected] after 15 s of continuous loss and the adapter's
+     * fail-closed policy takes over from there.
+     */
     data object Reconnecting : WarrenTunnelState()
 
     /**
