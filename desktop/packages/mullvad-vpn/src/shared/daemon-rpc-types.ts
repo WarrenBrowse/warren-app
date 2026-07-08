@@ -740,6 +740,11 @@ export interface WarrenStatus {
   // client stays on the draining server with its ports intact.
   portMigrationCancellations: number;
   portMigrationCancellationActive: boolean;
+  // True while the daemon's offline monitor reports the host offline,
+  // pushed on the edge itself (before any tunnel-side grace). Drives
+  // the immediate "no internet connection" banner in every tunnel
+  // state.
+  hostOffline: boolean;
 }
 
 // Outcome of the gRPC `TrustNewExitKey` RPC. The daemon either
@@ -879,6 +884,27 @@ export function parseSocketAddress(socketAddrStr: string): ISocketAddress {
     port: Number(matches[2]),
   };
   return socketAddress;
+}
+
+// A redacted / unspecified socket address (`0.0.0.0:0` or `[::]:0`). The
+// Warren daemon publishes the multi-hop exit endpoint as this placeholder when
+// the client-facing directory redacts the exit egress IP (censorship
+// minimization: the client dials the entry relay and never learns the exit
+// IP). It is not a routable endpoint, so the GUI must not render it as an "Out"
+// address; the exit is identified by the geoip out IP and country/city instead.
+// Only the full host-AND-port-unset form counts: a non-zero port carries
+// routing intent and is treated as a real address.
+export function isUnspecifiedSocketAddress(socketAddrStr: string): boolean {
+  let host: string;
+  let port: number;
+  try {
+    ({ host, port } = parseSocketAddress(socketAddrStr));
+  } catch {
+    return false;
+  }
+  const normalizedHost = host.replace(/^\[|\]$/g, '').trim();
+  const unspecifiedHost = normalizedHost === '0.0.0.0' || normalizedHost === '::';
+  return unspecifiedHost && port === 0;
 }
 
 // Extract the host portion of a `host:port` socket-address string,

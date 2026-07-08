@@ -5,6 +5,7 @@ import { strings } from '../../../../../../../../shared/constants';
 import {
   EndpointObfuscationType,
   isMultihopTunnelState,
+  isUnspecifiedSocketAddress,
   ITunnelEndpoint,
   parseSocketAddress,
   RelayProtocol,
@@ -222,10 +223,17 @@ function getEntryPoint(tunnelState: TunnelState): Endpoint | undefined {
 }
 
 // The "Out" (Sortante) endpoint is the exit the user traffic leaves
-// through. The daemon always publishes it as the main `endpoint.address`
-// (for multi-hop it is the exit descriptor's endpoint; for single-hop the
-// only hop). The relay/entry endpoint, when present, lives in
-// `entryEndpoint` instead. Mirrors the CLI's `<exit> via <entry>` line.
+// through. The daemon publishes it as the main `endpoint.address`
+// (for multi-hop with a disclosed exit it is the exit descriptor's endpoint;
+// for single-hop the only hop). The relay/entry endpoint, when present, lives
+// in `entryEndpoint` instead. Mirrors the CLI's `<exit> via <entry>` line.
+//
+// In the standard multi-hop flow the client-facing directory redacts the exit
+// egress IP, so the daemon publishes an unspecified `0.0.0.0:0` placeholder as
+// the exit endpoint (the client never learns the exit IP). Rendering it
+// verbatim showed a bogus "Sortante 0.0.0.0:0 UDP" line; instead we drop the
+// endpoint address and let the geoip out IP (connection.ipv4/ipv6) and the
+// country/city label identify the exit.
 function getExitPoint(tunnelState: TunnelState): Endpoint | undefined {
   if (
     (tunnelState.state !== 'connected' && tunnelState.state !== 'connecting') ||
@@ -234,7 +242,12 @@ function getExitPoint(tunnelState: TunnelState): Endpoint | undefined {
     return undefined;
   }
 
-  return tunnelEndpointToRelayInAddress(tunnelState.details.endpoint);
+  const endpoint = tunnelState.details.endpoint;
+  if (isUnspecifiedSocketAddress(endpoint.address)) {
+    return undefined;
+  }
+
+  return tunnelEndpointToRelayInAddress(endpoint);
 }
 
 function tunnelEndpointToRelayInAddress(tunnelEndpoint: ITunnelEndpoint): Endpoint {

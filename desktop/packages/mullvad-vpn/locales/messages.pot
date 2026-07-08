@@ -1470,6 +1470,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr ""
 
 msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr ""
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr ""
 
@@ -1546,6 +1550,10 @@ msgstr ""
 #. Notification title when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
 msgstr ""
 
 msgctxt "in-app-notifications"
