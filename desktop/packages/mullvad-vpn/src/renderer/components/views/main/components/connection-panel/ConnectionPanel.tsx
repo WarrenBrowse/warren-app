@@ -79,10 +79,12 @@ const StyledCustomScrollbars = styled(CustomScrollbars)({
   flexShrink: 1,
 });
 
+// Sits to the LEFT of the country flag, which owns the top-right corner in
+// every state so it never appears to move when the chevron comes and goes.
 const StyledConnectionPanelChevron = styled(IconButton)({
   position: 'absolute',
   top: '16px',
-  right: '16px',
+  right: '46px',
   width: 'fit-content',
 });
 
