@@ -6,10 +6,13 @@
 //! takes the seed-derived `WarrenIdentity` and delegates. The network POST that
 //! consumes the request is iOS-gated in `warren_forum_ffi`.
 
-pub use warren_forum::{
-    ForumLoginOutcome, ForumRequestError, SignedForumRequest, build_cancel_url, envelope,
-    is_allowed_connect_host, is_valid_sid, outcome_for_status,
-};
+pub use warren_forum::{ForumRequestError, SignedForumRequest};
+// Consumed only by the iOS-gated network module (`warren_forum_ffi`), so the
+// host test build would flag these re-exports as unused. The host/sid
+// validators are not re-exported: the shared builders already validate
+// internally and no iOS caller consumes them directly.
+#[cfg(target_os = "ios")]
+pub use warren_forum::{ForumLoginOutcome, build_cancel_url, envelope, outcome_for_status};
 use warren_identity::WarrenIdentity;
 
 /// Build the signed forum-login request for `sid` against `host`, signing with
