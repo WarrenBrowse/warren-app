@@ -50,7 +50,9 @@
     <string name="connecting">Connexion...</string>
     <string name="connecting_to_daemon">Connexion au service système Warren...</string>
     <string name="connection_details_in">Entrante</string>
+    <string name="connection_details_reconnections">Reconnexions</string>
     <string name="connection_details_out">Sortante</string>
+    <string name="connection_interrupted">Connexion interrompue</string>
     <string name="cont">Continuer</string>
     <string name="copied_logs_to_clipboard">Journaux copiés dans le presse-papiers</string>
     <string name="copy">Copier</string>
@@ -96,6 +98,7 @@
     <string name="go_to_vpn_settings">Aller aux paramètres VPN</string>
     <string name="got_it">Compris !</string>
     <string name="hint_default">Par défaut</string>
+    <string name="host_offline_notification_message">Votre appareil est hors ligne. Warren se reconnectera automatiquement dès que le réseau sera de retour.</string>
     <string name="invalid_dns_servers">Les adresses de serveur DNS personnalisées %1$s ne sont pas valides</string>
     <string name="invalid_ipv6_config">Configuration IPV6 non valide, veuillez essayer de modifier les paramètres du VPN.</string>
     <string name="ip_version_v4_unavailable">L\'IPv4 n\'est pas disponible. Veuillez essayer de modifier le paramètre « Version de l\'IP de l\'appareil ».</string>
@@ -115,6 +118,7 @@
     <string name="navigate">Navigation</string>
     <string name="new_changelog_notification_message">Cliquez ici pour voir les nouveautés.</string>
     <string name="new_changelog_notification_title">NOUVELLE VERSION INSTALLÉE</string>
+    <string name="no_internet_connection">PAS DE CONNEXION INTERNET</string>
     <string name="no_matching_relay">Aucun serveur ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d\'autres paramètres.</string>
     <string name="no_matching_relay_entry">Aucun serveur d\'entrée ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d\'autres paramètres.</string>
     <string name="no_matching_relay_exit">Aucun serveur de sortie ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d\'autres paramètres.</string>

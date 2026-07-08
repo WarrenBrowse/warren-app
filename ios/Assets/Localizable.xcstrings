@@ -45513,6 +45513,16 @@
         }
       }
     },
+    "NO INTERNET CONNECTION": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PAS DE CONNEXION INTERNET"
+          }
+        }
+      }
+    },
     "Never": {
       "localizations": {
         "da": {
@@ -82485,6 +82495,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "您的裝置 (%@)"
+          }
+        }
+      }
+    },
+    "Your device is offline. Warren will reconnect automatically as soon as the network is back.": {
+      "localizations": {
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre appareil est hors ligne. Warren se reconnectera automatiquement dès que le réseau sera de retour."
           }
         }
       }

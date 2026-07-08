@@ -1556,6 +1556,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr "NOUVELLE VERSION INSTALLÉE"
 
 msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "PAS DE CONNEXION INTERNET"
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr "Veuillez quitter et redémarrer l'application."
 
@@ -1647,6 +1651,10 @@ msgstr "VÉRIFICATION TERMINÉE ! DÉMARRAGE DE L'INSTALLATEUR…"
 msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr "ÉCHEC DE LA VÉRIFICATION"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "Votre appareil est hors ligne. Warren se reconnectera automatiquement dès que le réseau sera de retour."
 
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
@@ -3796,6 +3804,10 @@ msgstr "Connexion en cours..."
 msgctxt "tunnel-control"
 msgid "Connection established"
 msgstr "Connexion établie"
+
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "Connexion interrompue"
 
 msgctxt "tunnel-control"
 msgid "Encrypting your connection"
