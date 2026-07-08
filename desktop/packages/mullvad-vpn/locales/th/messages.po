@@ -1512,6 +1512,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "ส่งรายงานปัญหา"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "การบำรุงรักษาเซิร์ฟเวอร์"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4242,6 +4246,10 @@ msgstr "เปลี่ยนเซิร์ฟเวอร์ทางออก
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "เซิร์ฟเวอร์ทางออกก่อนหน้าของคุณเข้าถึงไม่ได้ Warren ได้กำหนดเส้นทางคุณผ่านเซิร์ฟเวอร์อื่นโดยอัตโนมัติ"
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "เซิร์ฟเวอร์ของคุณกำลังอัปเดต Warren ได้ย้ายคุณไปยังเซิร์ฟเวอร์อื่นโดยอัตโนมัติ ไม่ต้องดำเนินการใด ๆ"
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

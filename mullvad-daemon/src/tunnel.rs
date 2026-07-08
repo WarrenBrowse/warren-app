@@ -87,7 +87,7 @@ pub enum Error {
 /// to bridge a drain-triggered reconnect to the next ambient relay-list refresh
 /// (which becomes the long-term authority), short enough that a recovered exit
 /// is offered again without a daemon restart.
-const WARREN_DRAINED_EXIT_TTL_SECS: u64 = 300;
+pub(crate) const WARREN_DRAINED_EXIT_TTL_SECS: u64 = 300;
 
 /// Wall-clock unix seconds (0 on a pre-epoch clock; never panics).
 fn warren_now_unix_secs() -> u64 {

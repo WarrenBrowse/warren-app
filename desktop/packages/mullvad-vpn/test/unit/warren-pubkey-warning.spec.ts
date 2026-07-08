@@ -43,6 +43,7 @@ const BASE_STATUS: WarrenStatus = {
   failoverCount: 0,
   lastFailoverAgeMs: null,
   pubkeyMismatchPending: null,
+  maintenanceMigrationActive: false,
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

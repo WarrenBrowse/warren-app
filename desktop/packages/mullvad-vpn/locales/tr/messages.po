@@ -1518,6 +1518,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Hata raporu gönder"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "SUNUCU BAKIMI"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4393,6 +4397,10 @@ msgstr "ÇIKIŞ DEĞİŞTİRİLDİ"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "Önceki çıkış sunucunuza ulaşılamaz oldu. Warren sizi otomatik olarak alternatif bir sunucu üzerinden yönlendirdi."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Sunucunuz güncelleniyor. Warren sizi otomatik olarak başka bir sunucuya taşıdı, herhangi bir işlem gerekmiyor."
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

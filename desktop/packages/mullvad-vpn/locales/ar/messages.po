@@ -1542,6 +1542,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "إرسال بلاغ بالمشكلة"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "صيانة الخادم"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4312,6 +4316,10 @@ msgstr "تم تبديل خادم الخروج"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "أصبح خادم الخروج السابق غير قابل للوصول. وجّهك Warren تلقائيًا عبر خادم بديل."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "يتم تحديث الخادم الخاص بك. قام Warren بنقلك إلى خادم آخر تلقائيًا، لا حاجة لأي إجراء."
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

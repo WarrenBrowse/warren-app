@@ -30,6 +30,7 @@ import {
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
   WarrenFailoverNotificationProvider,
+  WarrenMaintenanceNotificationProvider,
 } from '../lib/notifications';
 import { AppUpgradeAvailableNotificationProvider } from '../lib/notifications/app-upgrade-available';
 import { useMounted } from '../lib/utility-hooks';
@@ -156,6 +157,9 @@ export default function NotificationArea(props: IProps) {
       failoverCount: warrenStatus?.failoverCount ?? 0,
       acknowledgedCount: warrenFailoverAcknowledged,
       close: acknowledgeWarrenFailover,
+    }),
+    new WarrenMaintenanceNotificationProvider({
+      maintenanceMigrationActive: warrenStatus?.maintenanceMigrationActive ?? false,
     }),
   ];
 

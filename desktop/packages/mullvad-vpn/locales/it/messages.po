@@ -1518,6 +1518,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Invia segnalazione problema"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "MANUTENZIONE DEL SERVER"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4393,6 +4397,10 @@ msgstr "USCITA CAMBIATA"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "Il tuo nodo di uscita precedente è diventato irraggiungibile. Warren ti ha instradato automaticamente attraverso un server alternativo."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Il tuo server è in fase di aggiornamento. Warren ti ha spostato automaticamente su un altro server, nessuna azione richiesta."
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

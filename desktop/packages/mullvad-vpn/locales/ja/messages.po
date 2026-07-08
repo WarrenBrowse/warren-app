@@ -1512,6 +1512,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "問題の報告を送信"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "サーバーメンテナンス"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4242,6 +4246,10 @@ msgstr "出口サーバーが切り替わりました"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "以前の出口サーバーに到達できなくなりました。Warren が自動的に別のサーバー経由で接続を切り替えました。"
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "サーバーは更新中です。Warren は自動的に別のサーバーへ切り替えました。操作は不要です。"
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

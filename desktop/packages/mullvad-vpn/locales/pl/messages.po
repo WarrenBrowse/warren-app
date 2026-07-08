@@ -1530,6 +1530,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Wyślij zgłoszenie problemu"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "KONSERWACJA SERWERA"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4421,6 +4425,10 @@ msgstr "ZMIENIONO WĘZEŁ WYJŚCIOWY"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "Twój poprzedni węzeł wyjściowy stał się nieosiągalny. Warren automatycznie przekierował Cię przez serwer alternatywny."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Twój serwer jest aktualizowany. Warren automatycznie przeniósł Cię na inny serwer, nie musisz nic robić."
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

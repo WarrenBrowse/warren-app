@@ -1566,6 +1566,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Trimiteți un raport de problemă"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "MENTENANȚĂ SERVER"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -1634,6 +1638,10 @@ msgstr "VERIFICAREA A EȘUAT"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "Ieșirea pe care ați folosit-o anterior nu mai este accesibilă. Warren v-a redirecționat automat către un server alternativ."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Serverul dvs. este în curs de actualizare. Warren v-a mutat automat pe alt server, nicio acțiune necesară."
 
 msgctxt "keys-view"
 msgid "Backup keys"

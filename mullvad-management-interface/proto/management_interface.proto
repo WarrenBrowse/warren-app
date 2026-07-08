@@ -777,6 +777,11 @@ message WarrenStatus {
   // the daemon-side verify hook refused a connect because the
   // observed Ed25519 pubkey differs from the locally pinned baseline.
   WarrenPubkeyMismatch pubkey_mismatch_pending = 6;
+  // ADR 36: true while the last drain-triggered exit switch (server
+  // maintenance) is inside its display window. The daemon re-emits a
+  // status update when the window expires, so the UI banner keyed on
+  // this flag self-dismisses.
+  bool maintenance_migration_active = 7;
 }
 
 // Session H A.4: forensic payload surfaced alongside a TOFU pubkey

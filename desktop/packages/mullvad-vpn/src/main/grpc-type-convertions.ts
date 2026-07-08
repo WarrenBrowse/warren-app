@@ -628,6 +628,7 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     failoverCount: status.getFailoverCount(),
     lastFailoverAgeMs: durationToMs(status.getLastFailoverAge()),
     pubkeyMismatchPending,
+    maintenanceMigrationActive: status.getMaintenanceMigrationActive(),
   };
 }
 

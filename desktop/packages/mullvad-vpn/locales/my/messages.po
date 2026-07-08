@@ -1512,6 +1512,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "ပြဿနာ ရီပို့တ် ပေးပို့ရန်"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "ဆာဗာ ပြုပြင်ထိန်းသိမ်းမှု"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4245,6 +4249,10 @@ msgstr "EXIT ပြောင်းလဲပြီး"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "သင်၏ ယခင် exit သည် မရောက်ရှိနိုင်တော့ပါ။ Warren သည် သင့်ကို အခြားဆာဗာတစ်ခုမှတစ်ဆင့် အလိုအလျောက် လမ်းကြောင်းပြောင်းပေးခဲ့သည်။"
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "သင့်ဆာဗာကို အပ်ဒိတ်လုပ်နေပါသည်။ Warren က သင့်ကို အခြားဆာဗာသို့ အလိုအလျောက် ပြောင်းရွှေ့ပေးထားပြီး ဘာမှလုပ်ရန် မလိုပါ။"
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

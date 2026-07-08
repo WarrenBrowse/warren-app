@@ -16598,7 +16598,8 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     obfuscationActive: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
     failoverCount: jspb.Message.getFieldWithDefault(msg, 4, 0),
     lastFailoverAge: (f = msg.getLastFailoverAge()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
-    pubkeyMismatchPending: (f = msg.getPubkeyMismatchPending()) && proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject(includeInstance, f)
+    pubkeyMismatchPending: (f = msg.getPubkeyMismatchPending()) && proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject(includeInstance, f),
+    maintenanceMigrationActive: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
   };
 
   if (includeInstance) {
@@ -16661,6 +16662,10 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
       var value = new proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.deserializeBinaryFromReader);
       msg.setPubkeyMismatchPending(value);
+      break;
+    case 7:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setMaintenanceMigrationActive(value);
       break;
     default:
       reader.skipField();
@@ -16734,6 +16739,13 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
       6,
       f,
       proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.serializeBinaryToWriter
+    );
+  }
+  f = message.getMaintenanceMigrationActive();
+  if (f) {
+    writer.writeBool(
+      7,
+      f
     );
   }
 };
@@ -16901,6 +16913,24 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearPubkeyMism
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasPubkeyMismatchPending = function() {
   return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional bool maintenance_migration_active = 7;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getMaintenanceMigrationActive = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setMaintenanceMigrationActive = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 

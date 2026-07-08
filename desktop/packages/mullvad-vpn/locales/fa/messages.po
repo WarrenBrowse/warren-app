@@ -1518,6 +1518,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "ارسال گزارش مشکل"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "تعمیر و نگهداری سرور"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -4256,6 +4260,10 @@ msgstr "گره خروجی تغییر کرد"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "گره خروجی قبلی شما غیرقابل دسترسی شد. Warren به‌طور خودکار شما را از طریق یک سرور جایگزین مسیریابی کرد."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "سرور شما در حال به‌روزرسانی است. Warren شما را به‌طور خودکار به سرور دیگری منتقل کرد، نیازی به اقدام نیست."
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"

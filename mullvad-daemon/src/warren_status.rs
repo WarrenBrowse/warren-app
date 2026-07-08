@@ -148,6 +148,12 @@ pub struct WarrenStatusSnapshot {
     /// the user picks Trust / Reject / Report and the daemon clears
     /// the flag.
     pub pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
+    /// True while the last drain-triggered exit switch (ADR 36
+    /// maintenance migration) is younger than
+    /// [`MAINTENANCE_MIGRATION_TTL`]. The UI shows a self-expiring
+    /// "server maintenance" banner while this holds; the daemon
+    /// re-broadcasts at expiry so the banner drops without a poll.
+    pub maintenance_migration_active: bool,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -162,8 +168,23 @@ impl Default for WarrenStatusSnapshot {
             failover_count: 0,
             last_failover_age: None,
             pubkey_mismatch_pending: None,
+            maintenance_migration_active: false,
         }
     }
+}
+
+/// How long a drain-triggered migration is surfaced as "maintenance in
+/// progress". Matches the drained-exit avoid-set TTL
+/// (`crate::tunnel::WARREN_DRAINED_EXIT_TTL_SECS`): once the avoid-set
+/// entry expires the exit is selectable again, i.e. its maintenance
+/// window is considered over from this client's viewpoint.
+pub const MAINTENANCE_MIGRATION_TTL: Duration =
+    Duration::from_secs(crate::tunnel::WARREN_DRAINED_EXIT_TTL_SECS);
+
+/// Whether a maintenance migration recorded at `at` is still inside its
+/// display window at `now`. Pure so the TTL boundary is unit-testable.
+fn maintenance_active(at: Option<Instant>, now: Instant) -> bool {
+    at.is_some_and(|t| now.saturating_duration_since(t) < MAINTENANCE_MIGRATION_TTL)
 }
 
 /// Internal state held by [`WarrenStatusCache`]. Separated to keep the
@@ -180,6 +201,7 @@ struct InternalState {
     failover_count: u32,
     last_failover_at: Option<Instant>,
     pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
+    last_maintenance_migration_at: Option<Instant>,
 }
 
 impl Default for InternalState {
@@ -192,6 +214,7 @@ impl Default for InternalState {
             failover_count: 0,
             last_failover_at: None,
             pubkey_mismatch_pending: None,
+            last_maintenance_migration_at: None,
         }
     }
 }
@@ -247,6 +270,10 @@ impl WarrenStatusCache {
             failover_count: inner.failover_count,
             last_failover_age: inner.last_failover_at.map(|t| t.elapsed()),
             pubkey_mismatch_pending: inner.pubkey_mismatch_pending.clone(),
+            maintenance_migration_active: maintenance_active(
+                inner.last_maintenance_migration_at,
+                Instant::now(),
+            ),
         }
     }
 
@@ -298,6 +325,37 @@ impl WarrenStatusCache {
                 .expect("warren_status state lock poisoned");
             inner.failover_count = inner.failover_count.saturating_add(1);
             inner.last_failover_at = Some(Instant::now());
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// Stamps a drain-triggered exit switch (ADR 36 maintenance
+    /// migration) and broadcasts. The snapshot reports
+    /// `maintenance_migration_active` until [`MAINTENANCE_MIGRATION_TTL`]
+    /// elapses; the caller schedules a [`Self::rebroadcast`] at expiry so
+    /// subscribers observe the flip back to inactive.
+    pub fn record_maintenance_migration(&self) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            inner.last_maintenance_migration_at = Some(Instant::now());
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// Re-broadcasts the current snapshot unconditionally. Needed for
+    /// time-driven flips (the maintenance banner expiry) where no state
+    /// write happens but subscribers must observe the recomputed value.
+    pub fn rebroadcast(&self) {
+        let snapshot = {
+            let inner = self
+                .state
+                .read()
+                .expect("warren_status state lock poisoned");
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
@@ -558,6 +616,54 @@ mod tests {
         cache.record_reconnect();
         cache.record_reconnect();
         assert_eq!(cache.snapshot().reconnect_count, u32::MAX);
+    }
+
+    // --- Exit maintenance migration (ADR 36 banner) --------------------------
+
+    #[test]
+    fn default_snapshot_has_no_maintenance_migration() {
+        assert!(!WarrenStatusSnapshot::default().maintenance_migration_active);
+        assert!(
+            !WarrenStatusCache::new()
+                .snapshot()
+                .maintenance_migration_active
+        );
+    }
+
+    #[test]
+    fn record_maintenance_migration_activates_snapshot() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.record_maintenance_migration();
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(cache.snapshot().maintenance_migration_active);
+    }
+
+    #[test]
+    fn maintenance_active_expires_after_ttl() {
+        let now = Instant::now();
+        assert!(!maintenance_active(None, now));
+        assert!(maintenance_active(Some(now), now));
+        let inside = now
+            .checked_sub(MAINTENANCE_MIGRATION_TTL - Duration::from_secs(1))
+            .expect("clock supports subtraction");
+        assert!(maintenance_active(Some(inside), now));
+        let expired = now
+            .checked_sub(MAINTENANCE_MIGRATION_TTL + Duration::from_secs(1))
+            .expect("clock supports subtraction");
+        assert!(!maintenance_active(Some(expired), now));
+    }
+
+    #[test]
+    fn rebroadcast_reemits_current_snapshot() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.rebroadcast();
+        // The expiry timer relies on an unconditional re-send so the UI
+        // observes the active -> inactive flip without a state change.
+        assert!(rx.has_changed().unwrap_or(false));
     }
 
     // --- NAT-PMP surface ----------------------------------------------------

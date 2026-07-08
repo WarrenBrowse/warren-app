@@ -1761,6 +1761,25 @@ impl Daemon {
                 settings_rx: warren_mh_rx,
                 parameters_generator: parameters_generator.clone(),
                 request_reconnect,
+                on_maintenance_migration: Some({
+                    let cache = warren_status_cache.clone();
+                    Arc::new(move || {
+                        cache.record_maintenance_migration();
+                        // Time-driven flip back to inactive: re-broadcast
+                        // once the display TTL elapses so the UI banner
+                        // drops without polling. The extra second absorbs
+                        // timer/clock skew at the boundary.
+                        let cache = cache.clone();
+                        tokio::spawn(async move {
+                            tokio::time::sleep(
+                                warren_status::MAINTENANCE_MIGRATION_TTL
+                                    + std::time::Duration::from_secs(1),
+                            )
+                            .await;
+                            cache.rebroadcast();
+                        });
+                    })
+                }),
                 settings_dir: config.settings_dir.clone(),
                 online_edge_rx: Some(warren_online_edge_rx.clone()),
             });

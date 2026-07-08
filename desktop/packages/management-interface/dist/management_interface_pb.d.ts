@@ -2035,6 +2035,8 @@ export class WarrenStatus extends jspb.Message {
     clearPubkeyMismatchPending(): void;
     getPubkeyMismatchPending(): WarrenPubkeyMismatch | undefined;
     setPubkeyMismatchPending(value?: WarrenPubkeyMismatch): WarrenStatus;
+    getMaintenanceMigrationActive(): boolean;
+    setMaintenanceMigrationActive(value: boolean): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2054,6 +2056,7 @@ export namespace WarrenStatus {
         failoverCount: number,
         lastFailoverAge?: google_protobuf_duration_pb.Duration.AsObject,
         pubkeyMismatchPending?: WarrenPubkeyMismatch.AsObject,
+        maintenanceMigrationActive: boolean,
     }
 }
 

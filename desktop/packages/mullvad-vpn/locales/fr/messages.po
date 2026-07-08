@@ -1579,6 +1579,10 @@ msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Envoyer un rapport de problème"
 
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "MAINTENANCE DU SERVEUR"
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -1647,6 +1651,10 @@ msgstr "ÉCHEC DE LA VÉRIFICATION"
 msgctxt "in-app-notifications"
 msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
 msgstr "Votre serveur de sortie précédent est devenu inaccessible. Warren vous a routé(e) automatiquement via un serveur alternatif."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Votre serveur est en cours de mise à jour. Warren vous a déplacé(e) automatiquement vers un autre serveur, aucune action requise."
 
 msgctxt "keys-view"
 msgid "Backup keys"

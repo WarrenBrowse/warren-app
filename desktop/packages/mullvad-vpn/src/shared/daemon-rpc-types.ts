@@ -729,6 +729,11 @@ export interface WarrenStatus {
   // mounts `WarrenPubKeyWarning` while this field is non-null and
   // dismisses it after the user picks Trust / Reject / Report.
   pubkeyMismatchPending: WarrenPubkeyMismatch | null;
+  // ADR 36: true while the daemon migrated off an exit that entered
+  // its maintenance window (drain advisory) and that window has not
+  // elapsed yet. The daemon pushes a fresh status when it does, so a
+  // banner keyed on this flag self-dismisses.
+  maintenanceMigrationActive: boolean;
 }
 
 // Outcome of the gRPC `TrustNewExitKey` RPC. The daemon either

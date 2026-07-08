@@ -741,6 +741,12 @@ pub(crate) struct UpdaterConfig {
     /// Requests a tunnel reconnect when the active circuit changes. The
     /// daemon wires this to send `DaemonCommand::Reconnect`.
     pub request_reconnect: std::sync::Arc<dyn Fn() + Send + Sync>,
+    /// Invoked when a circuit change was CAUSED by the previous exit
+    /// entering the drain avoid-set (ADR 36 maintenance). The daemon
+    /// wires this to the status cache so the UI can surface a
+    /// self-expiring "server maintenance" banner. `None` disables the
+    /// hook (tests).
+    pub on_maintenance_migration: Option<std::sync::Arc<dyn Fn() + Send + Sync>>,
     /// Settings dir holding the optional `warren-multihop.json` dev
     /// override, used as a fallback when the directory API is
     /// unreachable (no network / dev without warren-api).
@@ -1081,6 +1087,9 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     let drain_driven = prev_circuit
                         .as_ref()
                         .is_some_and(|c| excluded.contains(c.exit.exit_id.as_bytes()));
+                    if drain_driven && let Some(notify) = cfg.on_maintenance_migration.as_ref() {
+                        notify();
+                    }
                     let migrated = match (drain_driven, desired.as_ref()) {
                         (true, Some(new_cfg)) => {
                             cfg.parameters_generator

@@ -216,6 +216,7 @@ fn warren_status_snapshot_to_proto(
                 city: m.city,
             }
         }),
+        maintenance_migration_active: snap.maintenance_migration_active,
     }
 }
 
