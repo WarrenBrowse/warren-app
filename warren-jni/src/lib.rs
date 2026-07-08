@@ -16,6 +16,11 @@ pub mod wallet;
 // it is Android-gated in `android_jni`.
 pub mod forum;
 
+// Redial supervision engine (session-loss backoff + 15 s escalation
+// deadline): pure async logic, host-testable with paused time; the Android
+// session in `tunnel` implements its IO trait.
+pub mod redial;
+
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod tunnel;
 

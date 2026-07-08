@@ -88,6 +88,25 @@ static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
 /// taking the `ACTIVE_TUNNEL` mutex, so polling from Kotlin is cheap.
 static SESSION_STATUS: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
+/// Count of automatic in-session recoveries (a redial that landed after a
+/// session loss) since process start. Bumped by the redial engine via
+/// [`note_auto_recovery`]; polled by Kotlin through `getAutoRecoveryCount`
+/// and combined with the Kotlin-side accounting of its own automatic
+/// reconnects (blackhole retry loop, handover). Monotonic per process,
+/// mirroring the desktop `WarrenStatusCache` reconnect counter (per daemon
+/// run). Rust-side counting is required because a sub-poll-interval redial
+/// (the first backoff lap is immediate) flips Reconnecting -> Connected
+/// between two Kotlin polls and would otherwise be invisible.
+static AUTO_RECOVERY_COUNT: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
+
+/// Record one automatic recovery. Called by the redial engine only on a
+/// successful redial after a loss (never on the initial connect or a user
+/// action).
+#[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
+pub(crate) fn note_auto_recovery() {
+    AUTO_RECOVERY_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+}
+
 /// Latest NAT-PMP port-forwarding status as a JSON string, polled by
 /// Kotlin via `getNatPmpStatus()`. Empty = idle (no active mapping). The
 /// session-side NAT-PMP refresh loop writes transitions here via
@@ -674,6 +693,17 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
     _class: JClass<'_>,
 ) -> jint {
     SESSION_STATUS.load(std::sync::atomic::Ordering::SeqCst)
+}
+
+/// Returns the number of automatic in-session recoveries (redial success
+/// after a session loss) since process start. Monotonic; polled by Kotlin
+/// alongside `getTunnelStatus()` to drive the "Reconnections" detail row.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getAutoRecoveryCount(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jint {
+    AUTO_RECOVERY_COUNT.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 /// Returns a JSON-encoded array of [`RelayInfo`] objects describing the

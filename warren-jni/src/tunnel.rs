@@ -94,13 +94,6 @@ pub struct WarrenTunnelConfig {
     /// here so the schema stays in sync and future client-side IPv6
     /// filtering can read it. `#[serde(default)]` keeps older payloads valid.
     #[serde(default)]
-    #[cfg_attr(
-        not(test),
-        expect(
-            dead_code,
-            reason = "IPv6 routing enforced Android-side; client-side filtering is a follow-up"
-        )
-    )]
     pub enable_ipv6: Option<bool>,
     /// App-level kill switch. Enforced Android-side (the adapter keeps a
     /// blackhole interface up when the tunnel drops). Accepted here for
@@ -129,25 +122,7 @@ pub struct WarrenTunnelConfig {
     pub dns: Option<serde_json::Value>,
 }
 
-/// Tunnel session status reported back to Kotlin via
-/// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
-/// to match the existing JNI int contract.
-#[repr(i32)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum SessionStatus {
-    Disconnected = 0,
-    Connecting = 1,
-    Connected = 2,
-    #[expect(dead_code, reason = "config field reserved for later wiring")]
-    Reconnecting = 3,
-    /// The exit refused the setup with a policy rejection
-    /// (`WarrenControlMessage::Rejected`): the account is not authorized,
-    /// i.e. the subscription has lapsed or was revoked. Distinct from
-    /// `Disconnected` so the Kotlin layer can surface "subscription
-    /// expired" and STOP the reconnect loop (retrying cannot recover an
-    /// unauthorized account until it is renewed).
-    Unauthorized = 4,
-}
+pub use crate::redial::SessionStatus;
 
 /// Errors surfaced from the synchronous JNI entry path. Currently only
 /// `JsonParse` actually fires - mnemonic / pubkey / endpoint failures
@@ -237,43 +212,137 @@ pub async fn run_session(
     let daita_requested = config.daita.is_some();
     let client = ClientTunnel::with_signing_key(&signing).with_daita(daita_requested);
 
-    // No-logs: never record the chosen exit's address or identity pubkey - that
-    // is exactly the user-linkable metadata a no-logs VPN must not retain (and
-    // this log tag is captured into user-submitted problem reports). Generic
-    // connection state only.
-    log::info!("Quinn connect (daita_requested={daita_requested})");
-    let session = match client.connect(target).await {
-        Ok(s) => s,
-        Err(e) => {
-            log::error!("Quinn connect failed: {e}");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
-            return;
-        }
+    // The redial engine owns the whole lifecycle from here: initial dial,
+    // pump, transparent redial on loss (SessionStatus::Reconnecting), and
+    // the 15 s loss deadline after which Kotlin's fail-closed policy takes
+    // over. See `crate::redial` for the status contract.
+    let mut io = SingleHopIo {
+        tun,
+        client,
+        target,
+        daita_requested,
+        config,
+        status,
+        staged: None,
     };
+    let mut cancel = crate::redial::OneshotCancel::new(cancel_rx);
+    crate::redial::run_supervised(&mut io, &mut cancel).await;
+}
 
-    // No-logs: never record the exit-assigned inner tunnel IPs (user-linkable).
-    // Log only non-identifying transport state.
-    log::info!(
-        "Tunnel up: mtu={} daita_spec={}",
-        session.assigned_max_mtu(),
-        session.daita_spec().is_some()
-    );
-    status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
+/// One established single-hop session, staged by [`SingleHopIo::dial`] and
+/// consumed by [`SingleHopIo::pump`]. Holds the [`ClientSession`] itself
+/// (not just the connection): dropping it would drop the Quinn `Endpoint`
+/// keep-alive and kill the tunnel under the pump.
+struct StagedSingleHop {
+    session: warrenguard_transport::ClientSession,
+    daita: Option<DaitaState>,
+    _nat_pmp: Option<NatPmpGuard>,
+}
 
-    // NAT-PMP wiring: if the client opted in, spawn the refresh
-    // loop with the assigned tunnel inner IPv4 as bind addr so the
-    // request egresses through the tunnel. The loop runs alongside
-    // the bidirectional pump and is cancelled implicitly when the
-    // session task exits (the cancel oneshot inside the manager fires
-    // on drop). Currently the assigned external port surfaces only
-    // via INFO log; piping it back to Kotlin is a future iteration.
-    let _nat_pmp_guard = maybe_spawn_nat_pmp(&config, session.assigned_ipv4());
+/// Production [`crate::redial::SessionIo`] for the single-hop tunnel.
+struct SingleHopIo {
+    tun: AndroidTun,
+    client: ClientTunnel,
+    target: WarrenExitAddr,
+    daita_requested: bool,
+    config: WarrenTunnelConfig,
+    status: &'static AtomicI32,
+    staged: Option<StagedSingleHop>,
+}
 
-    // Build the DAITA state from the exit-supplied spec. If the client
-    // requested DAITA but the exit declined (returned daita_spec=None),
-    // we silently fall back to the plain pump - this matches the
-    // warren-tunnel contract.
-    let daita_state = match session.daita_spec() {
+impl crate::redial::SessionIo for SingleHopIo {
+    async fn dial(&mut self) -> crate::redial::DialOutcome {
+        use crate::redial::DialOutcome;
+
+        // Drop any previous session first so its NAT-PMP guard and Quinn
+        // endpoint are torn down before the replacement binds.
+        self.staged = None;
+
+        // No-logs: never record the chosen exit's address or identity
+        // pubkey - that is exactly the user-linkable metadata a no-logs VPN
+        // must not retain (and this log tag is captured into user-submitted
+        // problem reports). Generic connection state only.
+        log::info!("Quinn connect (daita_requested={})", self.daita_requested);
+        let session = match self.client.connect(self.target.clone()).await {
+            Ok(s) => s,
+            // A policy rejection is terminal: retrying re-derives the same
+            // refusal, so surface Unauthorized and let Kotlin stop the loop.
+            Err(warrenguard_transport_core::TunnelError::AuthRejected) => {
+                log::warn!("exit rejected setup (not authorized / subscription lapsed)");
+                return DialOutcome::Unauthorized;
+            }
+            Err(e) => {
+                log::error!("Quinn connect failed: {e}");
+                return DialOutcome::Failed;
+            }
+        };
+
+        // No-logs: never record the exit-assigned inner tunnel IPs
+        // (user-linkable). Log only non-identifying transport state.
+        log::info!(
+            "Tunnel up: mtu={} daita_spec={}",
+            session.assigned_max_mtu(),
+            session.daita_spec().is_some()
+        );
+
+        // NAT-PMP wiring: if the client opted in, spawn the refresh loop
+        // with the assigned tunnel inner IPv4 as bind addr so the request
+        // egresses through the tunnel. Re-spawned per (re)dial because the
+        // assigned inner address can change; the sticky external-port
+        // follow re-suggests the previously granted port.
+        let nat_pmp = maybe_spawn_nat_pmp(&self.config, session.assigned_ipv4());
+
+        let daita = build_single_hop_daita(&session, self.daita_requested);
+        self.staged = Some(StagedSingleHop {
+            session,
+            daita,
+            _nat_pmp: nat_pmp,
+        });
+        DialOutcome::Established
+    }
+
+    async fn pump(&mut self) {
+        // The staged session moves into this future so a cancel (the engine
+        // dropping this future mid-await) tears down the session, the Quinn
+        // endpoint and the NAT-PMP guard in one go.
+        let Some(staged) = self.staged.take() else {
+            // Contract violation (pump without a staged dial); park forever
+            // rather than spinning the engine's redial loop.
+            log::error!("pump called without a staged session");
+            return std::future::pending::<()>().await;
+        };
+        let conn = staged.session.clone_conn();
+        // Branch on whether DAITA is on so the future type is single-arm
+        // per compile (avoids boxing or a `Pin<Box<dyn Future>>`).
+        let result = if let Some(state) = staged.daita {
+            pump_bidirectional_with_daita(self.tun.clone(), conn, state).await
+        } else {
+            pump_bidirectional(self.tun.clone(), conn).await
+        };
+        match result {
+            Err(e) => log::error!("pump exited with error: {e}"),
+            Ok(()) => log::info!("pump exited cleanly"),
+        }
+    }
+
+    fn publish(&mut self, status: SessionStatus) {
+        self.status.store(status as i32, Ordering::SeqCst);
+    }
+
+    fn note_auto_recovery(&mut self) {
+        crate::android_jni::note_auto_recovery();
+    }
+}
+
+/// Build the DAITA state from the exit-supplied spec. If the client
+/// requested DAITA but the exit declined (returned daita_spec=None), we
+/// silently fall back to the plain pump - this matches the warren-tunnel
+/// contract.
+fn build_single_hop_daita(
+    session: &warrenguard_transport::ClientSession,
+    daita_requested: bool,
+) -> Option<DaitaState> {
+    match session.daita_spec() {
         Some(spec) if daita_requested => match DaitaState::from_config(spec, Instant::now()) {
             Ok(state) => {
                 log::info!(
@@ -288,40 +357,7 @@ pub async fn run_session(
             }
         },
         _ => None,
-    };
-
-    let conn = session.clone_conn();
-    // Branch the select! body on whether DAITA is on so the future type
-    // is single-arm per compile (avoids boxing or a `Pin<Box<dyn Future>>`).
-    if let Some(state) = daita_state {
-        tokio::select! {
-            _ = cancel_rx => {
-                log::info!("Tunnel cancelled by Kotlin");
-            }
-            result = pump_bidirectional_with_daita(tun, conn, state) => {
-                if let Err(e) = result {
-                    log::error!("pump_bidirectional_with_daita exited with error: {e}");
-                } else {
-                    log::info!("pump_bidirectional_with_daita exited cleanly");
-                }
-            }
-        }
-    } else {
-        tokio::select! {
-            _ = cancel_rx => {
-                log::info!("Tunnel cancelled by Kotlin");
-            }
-            result = pump_bidirectional(tun, conn) => {
-                if let Err(e) = result {
-                    log::error!("pump_bidirectional exited with error: {e}");
-                } else {
-                    log::info!("pump_bidirectional exited cleanly");
-                }
-            }
-        }
     }
-
-    status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
 }
 
 /// Warren multi-hop directory root signing key (baked pin). Mirrors
@@ -660,12 +696,20 @@ fn maybe_spawn_nat_pmp(
     // suggested external port is the user's pin, or (auto) the last port an
     // exit granted us this process so it follows the client across an exit
     // change (only when the transport matches; see the static's doc).
+    let user_pin = config.nat_pmp_external_port.unwrap_or(0);
     let suggested_external_port = crate::natpmp_follow::effective_natpmp_suggested(
-        config.nat_pmp_external_port.unwrap_or(0),
+        user_pin,
         is_tcp,
         LAST_GRANTED_NATPMP_EXTERNAL_PORT.load(Ordering::Relaxed),
         LAST_GRANTED_NATPMP_IS_TCP.load(Ordering::Relaxed),
     );
+    // A user-pinned port is honour-or-error; the carried-over follow is
+    // best-effort and downgrades to a server pick on conflict.
+    let suggestion = if user_pin != 0 {
+        warrenguard_natpmp_client::SuggestionKind::Pinned
+    } else {
+        warrenguard_natpmp_client::SuggestionKind::Sticky
+    };
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
@@ -675,6 +719,7 @@ fn maybe_spawn_nat_pmp(
         0,
         suggested_external_port,
         lifetime_secs,
+        suggestion,
         tx,
         Some(bind_addr),
     );

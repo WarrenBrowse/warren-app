@@ -36,18 +36,26 @@ zeroize = { workspace = true }
 # thread panics while holding the guard. Listed in [dependencies] (not
 # Android-only) so the behaviour can be exercised by host tests.
 parking_lot = "0.12.0"
+# The redial supervision engine (`redial` module) is pure async logic,
+# unit-tested on the host with paused time, so tokio + the engine backoff
+# schedule must not be Android-only.
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync", "time", "macros"] }
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
+log = { workspace = true }
+
+[dev-dependencies]
+# Paused-time (`start_paused`) tests for the redial engine deadline.
+tokio = { workspace = true, features = ["test-util"] }
 
 # Android-only deps: the JNI surface + log + Tokio runtime for the (still
 # stubbed) tunnel lifecycle exports.
 [target.'cfg(target_os = "android")'.dependencies]
 jnix = { version = "0.5.1", features = ["derive"] }
-log = { workspace = true }
 log-panics = "2"
 # `android_logger` bridges the `log` crate to the Android logcat subsystem
 # so `log::info!` from any of our deps shows up under `adb logcat -s
 # WarrenJni:V` without per-call ceremony.
 android_logger = "0.15"
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { workspace = true }
 

@@ -6509,6 +6509,7 @@ dependencies = [
  "warren-discovery-core",
  "warren-forum",
  "warren-identity",
+ "warrenguard-backoff",
  "warrenguard-daita",
  "warrenguard-multihop",
  "warrenguard-natpmp-client",
