@@ -93,6 +93,7 @@ mod adapter;
 mod device_id;
 mod drain_reactor;
 mod migration_watchdog;
+mod session_liveness;
 use adapter::MullvadTunPacketDevice;
 
 /// Daemon-side NAT-PMP lifecycle wrapper that owns the refresh loop +
@@ -929,6 +930,10 @@ enum MonitorBackend {
         /// ADR 36 drain reactor: proactively migrates off a draining exit
         /// before its maintenance hard-close deadline.
         drain_reactor_handle: tokio::task::JoinHandle<()>,
+        /// Session-loss backstop: escalates when the supervisor stays
+        /// without a published session (silent redial not landing), so
+        /// the UI never shows Connected on a dead tunnel.
+        liveness_handle: tokio::task::JoinHandle<()>,
         /// Channel through which the pump task reports the first fatal
         /// error (uplink/downlink/supervisor death). `wait()` consumes
         /// it the same way the single-hop path consumes
@@ -2235,6 +2240,21 @@ impl WarrenTunnelMonitor {
             })
         };
 
+        // Session-loss backstop: the supervisor's transparent redial has
+        // no exit condition, so a network that dies without a route
+        // event (dead-but-routed) would keep the UI on "Connected"
+        // forever. See `session_liveness` module docs.
+        let liveness_handle = {
+            let mut io = session_liveness::RealLivenessIo {
+                client_rx: client_rx.clone(),
+                pump_error_tx: pump_error_tx.clone(),
+            };
+            runtime.spawn(async move {
+                session_liveness::run_session_liveness(&mut io).await;
+                log::debug!("{TRACE_PREFIX} session liveness guard terminated");
+            })
+        };
+
         // Drop the local watch receiver. The uplink/downlink pumps and
         // the watchdog keep theirs alive; teardown aborts the watchdog
         // first, then the pumps, so the supervisor still observes
@@ -2276,6 +2296,7 @@ impl WarrenTunnelMonitor {
                 watchdog_handle,
                 assign_guard_handle,
                 drain_reactor_handle,
+                liveness_handle,
                 pump_error_rx,
                 supervisor_fatal_rx,
             },
@@ -2353,6 +2374,7 @@ impl WarrenTunnelMonitor {
                 watchdog: tokio::task::JoinHandle<()>,
                 assign_guard: tokio::task::JoinHandle<()>,
                 drain_reactor: tokio::task::JoinHandle<()>,
+                liveness: tokio::task::JoinHandle<()>,
             },
         }
         // `None` for single-hop (no supervisor); `Some` for multi-hop.
@@ -2377,6 +2399,7 @@ impl WarrenTunnelMonitor {
                 watchdog_handle,
                 assign_guard_handle,
                 drain_reactor_handle,
+                liveness_handle,
                 pump_error_rx,
                 supervisor_fatal_rx: fatal_rx,
             } => {
@@ -2390,6 +2413,7 @@ impl WarrenTunnelMonitor {
                         watchdog: watchdog_handle,
                         assign_guard: assign_guard_handle,
                         drain_reactor: drain_reactor_handle,
+                        liveness: liveness_handle,
                     },
                 )
             }
@@ -2542,6 +2566,7 @@ impl WarrenTunnelMonitor {
                     watchdog,
                     assign_guard,
                     drain_reactor,
+                    liveness,
                 } => {
                     // Watchdog first: it holds a supervisor watch
                     // receiver + control handle; dropping them before
@@ -2549,6 +2574,11 @@ impl WarrenTunnelMonitor {
                     // shutdown check working as before.
                     watchdog.abort();
                     let _ = watchdog.await;
+                    // The liveness guard also holds a supervisor watch
+                    // receiver; drop it before the pumps for the same
+                    // reason.
+                    liveness.abort();
+                    let _ = liveness.await;
                     assign_guard.abort();
                     let _ = assign_guard.await;
                     // Drain reactor holds only an ExitDrainingChannel
