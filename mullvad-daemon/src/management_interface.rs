@@ -217,6 +217,7 @@ fn warren_status_snapshot_to_proto(
             }
         }),
         maintenance_migration_active: snap.maintenance_migration_active,
+        port_migration_cancellations: snap.port_migration_cancellations,
     }
 }
 

@@ -782,6 +782,11 @@ message WarrenStatus {
   // status update when the window expires, so the UI banner keyed on
   // this flag self-dismisses.
   bool maintenance_migration_active = 7;
+  // Doc 59 C5: number of maintenance migrations cancelled because a
+  // user-pinned forwarded port could not be reserved on any candidate
+  // exit. The client stays on the draining exit with its ports intact;
+  // the UI toasts "migration postponed, port kept" on each increment.
+  uint32 port_migration_cancellations = 8;
 }
 
 // Session H A.4: forensic payload surfaced alongside a TOFU pubkey

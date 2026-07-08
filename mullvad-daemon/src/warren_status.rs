@@ -154,6 +154,11 @@ pub struct WarrenStatusSnapshot {
     /// "server maintenance" banner while this holds; the daemon
     /// re-broadcasts at expiry so the banner drops without a poll.
     pub maintenance_migration_active: bool,
+    /// docs/59 C5: number of maintenance migrations CANCELLED because a
+    /// user-pinned port could not be reserved on any candidate exit.
+    /// The client stays on the draining exit with its ports intact; the
+    /// UI toasts "migration postponed, port kept" on each increment.
+    pub port_migration_cancellations: u32,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -169,6 +174,7 @@ impl Default for WarrenStatusSnapshot {
             last_failover_age: None,
             pubkey_mismatch_pending: None,
             maintenance_migration_active: false,
+            port_migration_cancellations: 0,
         }
     }
 }
@@ -202,6 +208,7 @@ struct InternalState {
     last_failover_at: Option<Instant>,
     pubkey_mismatch_pending: Option<PubkeyMismatchPending>,
     last_maintenance_migration_at: Option<Instant>,
+    port_migration_cancellations: u32,
 }
 
 impl Default for InternalState {
@@ -215,6 +222,7 @@ impl Default for InternalState {
             last_failover_at: None,
             pubkey_mismatch_pending: None,
             last_maintenance_migration_at: None,
+            port_migration_cancellations: 0,
         }
     }
 }
@@ -274,6 +282,7 @@ impl WarrenStatusCache {
                 inner.last_maintenance_migration_at,
                 Instant::now(),
             ),
+            port_migration_cancellations: inner.port_migration_cancellations,
         }
     }
 
@@ -342,6 +351,23 @@ impl WarrenStatusCache {
                 .write()
                 .expect("warren_status state lock poisoned");
             inner.last_maintenance_migration_at = Some(Instant::now());
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// docs/59 C5: records that a maintenance migration was cancelled
+    /// because a user-pinned port could not be reserved on any candidate
+    /// exit (the client stays put, ports kept), and broadcasts so the UI
+    /// can toast the dedicated signal.
+    pub fn record_port_migration_cancelled(&self) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            inner.port_migration_cancellations =
+                inner.port_migration_cancellations.saturating_add(1);
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
@@ -653,6 +679,48 @@ mod tests {
             .checked_sub(MAINTENANCE_MIGRATION_TTL + Duration::from_secs(1))
             .expect("clock supports subtraction");
         assert!(!maintenance_active(Some(expired), now));
+    }
+
+    // --- Port-conflict migration cancellation (docs 59 C5) -------------------
+
+    #[test]
+    fn default_snapshot_has_no_port_migration_cancellation() {
+        assert_eq!(
+            WarrenStatusSnapshot::default().port_migration_cancellations,
+            0
+        );
+        assert_eq!(
+            WarrenStatusCache::new()
+                .snapshot()
+                .port_migration_cancellations,
+            0
+        );
+    }
+
+    #[test]
+    fn record_port_migration_cancelled_bumps_counter_and_broadcasts() {
+        // C5: the UI toasts "migration postponed, port kept" on each
+        // increment, so the record must both bump and push.
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.record_port_migration_cancelled();
+        assert!(rx.has_changed().unwrap_or(false));
+        assert_eq!(cache.snapshot().port_migration_cancellations, 1);
+        cache.record_port_migration_cancelled();
+        assert_eq!(cache.snapshot().port_migration_cancellations, 2);
+    }
+
+    #[test]
+    fn record_port_migration_cancelled_saturates_at_u32_max() {
+        let cache = WarrenStatusCache::new();
+        {
+            let mut inner = cache.state.write().unwrap();
+            inner.port_migration_cancellations = u32::MAX - 1;
+        }
+        cache.record_port_migration_cancelled();
+        cache.record_port_migration_cancelled();
+        assert_eq!(cache.snapshot().port_migration_cancellations, u32::MAX);
     }
 
     #[test]
