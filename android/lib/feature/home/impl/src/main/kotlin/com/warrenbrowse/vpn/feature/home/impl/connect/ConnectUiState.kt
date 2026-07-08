@@ -10,6 +10,13 @@ data class ConnectUiState(
     val tunnelState: TunnelState,
     val inAppNotification: InAppNotification?,
     val isPlayBuild: Boolean,
+    // Debounced host-offline verdict; degrades the Connected presentation
+    // ("Connection interrupted") because the tunnel can hold Connected
+    // through its transparent redial window while nothing flows.
+    val hostOffline: Boolean = false,
+    // Automatic recoveries since process start (native redials + retry-loop
+    // successes); shown as the "Reconnections" connection-details row.
+    val autoRecoveryCount: Int = 0,
 ) {
 
     val showLoading =
@@ -23,6 +30,8 @@ data class ConnectUiState(
                 tunnelState = TunnelState.Disconnected(),
                 inAppNotification = null,
                 isPlayBuild = false,
+                hostOffline = false,
+                autoRecoveryCount = 0,
             )
     }
 }

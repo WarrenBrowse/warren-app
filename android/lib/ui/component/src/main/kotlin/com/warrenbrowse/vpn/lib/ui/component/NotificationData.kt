@@ -83,6 +83,12 @@ fun InAppNotification.toNotificationData(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
 ) =
     when (this) {
+        InAppNotification.HostOffline ->
+            NotificationData(
+                title = stringResource(id = R.string.no_internet_connection),
+                message = stringResource(id = R.string.host_offline_notification_message),
+                statusLevel = statusLevel,
+            )
         InAppNotification.TunnelStateBlocked ->
             NotificationData(
                 title = stringResource(id = R.string.blocking_internet),

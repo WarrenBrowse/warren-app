@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -28,6 +29,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 fun ConnectionDetailPanel(
     connectionDetails: ConnectionDetails?,
     enableSelectableText: Boolean = true,
+    autoRecoveryCount: Int = 0,
 ) {
 
     Column {
@@ -45,6 +47,37 @@ fun ConnectionDetailPanel(
                 enableSelectableText = enableSelectableText,
             )
         }
+
+        // Desktop reconnect_count row parity: automatic recoveries only
+        // (native redials + retry-loop successes); hidden until the first
+        // one so a healthy session shows no noise.
+        if (autoRecoveryCount > 0) {
+            ReconnectionsRow(
+                autoRecoveryCount,
+                Modifier.fillMaxWidth().padding(bottom = Dimens.smallPadding),
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReconnectionsRow(count: Int, modifier: Modifier = Modifier) {
+    Row(modifier = modifier) {
+        Text(
+            text = stringResource(R.string.connection_details_reconnections),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(end = Dimens.smallPadding),
+        )
+        Text(
+            text = count.toString(),
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

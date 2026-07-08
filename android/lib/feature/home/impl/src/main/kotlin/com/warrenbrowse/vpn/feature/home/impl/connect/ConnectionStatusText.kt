@@ -15,6 +15,7 @@ import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
+import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
 @Preview
 @Composable
@@ -29,10 +30,10 @@ private fun PreviewConnectionStatusText(
 }
 
 @Composable
-fun ConnectionStatusText(state: TunnelState) {
+fun ConnectionStatusText(state: TunnelState, hostOffline: Boolean = false) {
     Text(
-        text = state.text(),
-        color = state.textColor(),
+        text = state.text(hostOffline),
+        color = state.textColor(hostOffline),
         style = MaterialTheme.typography.titleLarge,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -40,9 +41,20 @@ fun ConnectionStatusText(state: TunnelState) {
 }
 
 @Composable
-private fun TunnelState.text() =
+private fun TunnelState.text(hostOffline: Boolean) =
     when (this) {
-        is TunnelState.Connected -> stringResource(id = R.string.connected)
+        // Connected with the host offline is a real window (the native
+        // session holds Connected through its transparent redial): a green
+        // "Connected" there is a lie. Only the connected state degrades;
+        // every other state's copy already tells the truth (desktop
+        // "interrupted" phase parity). The kill switch still holds, so the
+        // user stays protected.
+        is TunnelState.Connected ->
+            if (hostOffline) {
+                stringResource(id = R.string.connection_interrupted)
+            } else {
+                stringResource(id = R.string.connected)
+            }
         is TunnelState.Connecting -> stringResource(id = R.string.connecting)
         is TunnelState.Disconnected -> stringResource(id = R.string.disconnected)
         is TunnelState.Disconnecting ->
@@ -59,9 +71,14 @@ private fun TunnelState.text() =
     }.uppercase()
 
 @Composable
-private fun TunnelState.textColor() =
+private fun TunnelState.textColor(hostOffline: Boolean) =
     when (this) {
-        is TunnelState.Connected -> MaterialTheme.colorScheme.positive
+        is TunnelState.Connected ->
+            if (hostOffline) {
+                MaterialTheme.colorScheme.warning
+            } else {
+                MaterialTheme.colorScheme.positive
+            }
         is TunnelState.Connecting -> MaterialTheme.colorScheme.onSurface
         is TunnelState.Disconnected -> MaterialTheme.colorScheme.error
         is TunnelState.Disconnecting ->

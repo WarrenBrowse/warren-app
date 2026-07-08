@@ -772,6 +772,7 @@ private fun ConnectionCard(
                         exp,
                         onToggleExpand = { expanded = !exp },
                         onNavigateToFeature = onNavigateToFeature,
+                        autoRecoveryCount = state.autoRecoveryCount,
                     )
                 } else {
                     Spacer(Modifier.height(Dimens.smallSpacer))
@@ -810,7 +811,7 @@ private fun ConnectionCardHeader(
                 .testTag(CONNECT_CARD_HEADER_TEST_TAG)
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            ConnectionStatusText(state = state.tunnelState)
+            ConnectionStatusText(state = state.tunnelState, hostOffline = state.hostOffline)
             if (state.tunnelState.isConnectingOrConnected()) {
                 ExpandChevron(isExpanded = !expanded)
             }
@@ -868,6 +869,7 @@ private fun ConnectionInfo(
     expanded: Boolean,
     onToggleExpand: () -> Unit,
     onNavigateToFeature: (FeatureIndicator) -> Unit,
+    autoRecoveryCount: Int = 0,
 ) {
     val scrollState = rememberScrollState()
     Column {
@@ -889,7 +891,11 @@ private fun ConnectionInfo(
             FeatureIndicatorsPanel(featureIndicators, expanded, onToggleExpand, onNavigateToFeature)
 
             AnimatedVisibility(expanded && connectionDetails != null) {
-                ConnectionDetailPanel(connectionDetails, enableSelectableText = !isTv())
+                ConnectionDetailPanel(
+                    connectionDetails,
+                    enableSelectableText = !isTv(),
+                    autoRecoveryCount = autoRecoveryCount,
+                )
             }
         }
     }

@@ -11,6 +11,15 @@ sealed class InAppNotification {
     abstract val statusLevel: StatusLevel
     abstract val priority: Long
 
+    // Shown in every tunnel state while the device has no usable network:
+    // the tunnel machinery can hold Connected through its redial window, so
+    // the offline verdict must outrank every tunnel-state banner (desktop
+    // parity: the "NO INTERNET CONNECTION" banner outranks BLOCKED).
+    data object HostOffline : InAppNotification() {
+        override val statusLevel = StatusLevel.Error
+        override val priority: Long = 1006
+    }
+
     data class TunnelStateError(val error: ErrorState) : InAppNotification() {
         override val statusLevel =
             if (error.cause is ErrorStateCause.IsOffline) {

@@ -41,6 +41,7 @@ import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
@@ -92,6 +93,8 @@ val uiModule = module {
     }
 
     single { TunnelStateNotificationUseCase(get()) } bind
+        InAppNotificationUseCase::class
+    single { HostOfflineNotificationUseCase(get()) } bind
         InAppNotificationUseCase::class
     single {
         VersionNotificationUseCase(get(), BuildConfig.ENABLE_IN_APP_VERSION_NOTIFICATIONS)
@@ -146,6 +149,8 @@ val uiModule = module {
             resolveAppListing = get(),
             relayProvider = get(),
             localSettings = get(),
+            hostOfflineProvider = get(),
+            autoRecoveryProvider = get(),
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }

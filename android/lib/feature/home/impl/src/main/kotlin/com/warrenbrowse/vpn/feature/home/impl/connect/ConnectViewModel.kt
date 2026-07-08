@@ -30,6 +30,8 @@ import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
@@ -53,6 +55,8 @@ class ConnectViewModel(
     private val resolveAppListing: ResolveAppListingUseCase,
     private val relayProvider: WarrenRelayProvider,
     private val localSettings: WarrenLocalSettingsRepository,
+    hostOfflineProvider: WarrenHostOfflineProvider,
+    autoRecoveryProvider: WarrenAutoRecoveryProvider,
 ) : ViewModel() {
     private val _uiSideEffect = Channel<UiSideEffect>()
 
@@ -67,12 +71,16 @@ class ConnectViewModel(
                 connectionProxy.tunnelState.withPrev(),
                 lastKnownLocationUseCase.lastKnownDisconnectedLocation,
                 localSettings.selectedExitId,
+                hostOfflineProvider.hostOffline,
+                autoRecoveryProvider.autoRecoveryCount,
             ) {
                 selectedRelayItemTitle,
                 notifications,
                 (tunnelState, prevTunnelState),
                 lastKnownDisconnectedLocation,
-                selectedExitId ->
+                selectedExitId,
+                hostOffline,
+                autoRecoveryCount ->
                 // Warren's relay list carries no coordinates and there is no
                 // device-GeoIP service, so the Warren tunnel state never reports
                 // a location. Derive one from the selected (or first active) exit
@@ -109,6 +117,8 @@ class ConnectViewModel(
                     tunnelState = tunnelState,
                     inAppNotification = notifications.firstOrNull(),
                     isPlayBuild = isPlayBuild,
+                    hostOffline = hostOffline,
+                    autoRecoveryCount = autoRecoveryCount,
                 )
             }
             .stateIn(

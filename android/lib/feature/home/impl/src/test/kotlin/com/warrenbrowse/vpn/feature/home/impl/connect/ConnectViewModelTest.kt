@@ -30,6 +30,8 @@ import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -72,6 +74,12 @@ class ConnectViewModelTest {
     private val mockRelayProvider: WarrenRelayProvider = mockk(relaxed = true)
     private val mockWarrenLocalSettings: WarrenLocalSettingsRepository = mockk()
 
+    // Host-offline + auto-recovery surfaces
+    private val hostOfflineFlow = MutableStateFlow(false)
+    private val autoRecoveryCountFlow = MutableStateFlow(0)
+    private val mockHostOfflineProvider: WarrenHostOfflineProvider = mockk()
+    private val mockAutoRecoveryProvider: WarrenAutoRecoveryProvider = mockk()
+
     // Last known location
     private val mockLastKnownLocationUseCase: LastKnownLocationUseCase = mockk()
 
@@ -92,6 +100,8 @@ class ConnectViewModelTest {
             lastKnownLocationFlow
 
         every { mockWarrenLocalSettings.selectedExitId } returns selectedExitIdFlow
+        every { mockHostOfflineProvider.hostOffline } returns hostOfflineFlow
+        every { mockAutoRecoveryProvider.autoRecoveryCount } returns autoRecoveryCountFlow
         every { mockRelayProvider.list() } returns emptyList()
 
         every { mockLocation.country } returns "dummy country"
@@ -115,6 +125,8 @@ class ConnectViewModelTest {
                 resolveAppListing = mockk(),
                 relayProvider = mockRelayProvider,
                 localSettings = mockWarrenLocalSettings,
+                hostOfflineProvider = mockHostOfflineProvider,
+                autoRecoveryProvider = mockAutoRecoveryProvider,
             )
     }
 
