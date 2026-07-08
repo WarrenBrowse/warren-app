@@ -104,3 +104,18 @@ export function countryCodeFromName(
   const code = fromRelays ?? NAME_ALIASES[key] ?? cldrMap().get(key);
   return code?.toLowerCase();
 }
+
+/**
+ * ISO alpha-2 region of the OS locale, lowercased ("fr-FR" -> "fr"; a bare
+ * language like "fr" is maximized to its likely region). The only offline,
+ * leak-free stand-in for the user's own country while no tunnel is up.
+ */
+export function systemRegionCode(): string | undefined {
+  try {
+    const locale = new Intl.Locale(Intl.DateTimeFormat().resolvedOptions().locale);
+    const region = locale.region ?? locale.maximize().region;
+    return region && /^[a-zA-Z]{2}$/.test(region) ? region.toLowerCase() : undefined;
+  } catch {
+    return undefined;
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { countryCodeFromName } from '../../src/renderer/lib/country-code';
+import { countryCodeFromName, systemRegionCode } from '../../src/renderer/lib/country-code';
 
 describe('countryCodeFromName', () => {
   it('resolves relay-list countries first (authoritative, any future exit)', () => {
@@ -29,5 +29,12 @@ describe('countryCodeFromName', () => {
     expect(countryCodeFromName('Atlantis')).toBeUndefined();
     expect(countryCodeFromName('')).toBeUndefined();
     expect(countryCodeFromName(undefined)).toBeUndefined();
+  });
+});
+
+describe('systemRegionCode', () => {
+  it('returns a lowercase ISO alpha-2 region for the host locale', () => {
+    const code = systemRegionCode();
+    expect(code).toMatch(/^[a-z]{2}$/);
   });
 });
