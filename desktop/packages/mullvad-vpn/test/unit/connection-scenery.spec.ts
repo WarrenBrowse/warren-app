@@ -38,14 +38,37 @@ describe('getConnectionPhase', () => {
     expect(getConnectionPhase(errorBlocking)).toBe('exposed');
     expect(getConnectionPhase(errorNonBlocking)).toBe('blocked');
   });
+
+  it('connected while the host is offline degrades to interrupted, never green', () => {
+    expect(getConnectionPhase(connected, true)).toBe('interrupted');
+    expect(getConnectionPhase(connected, false)).toBe('protected');
+  });
+
+  it('host offline only degrades the connected state; other states keep their phase', () => {
+    // Their own presentation (banner, blocked scene) already tells the
+    // truth; only the green "protected" reading is a lie while offline.
+    expect(getConnectionPhase(disconnectedOpen, true)).toBe('exposed');
+    expect(getConnectionPhase(errorNonBlocking, true)).toBe('blocked');
+    expect(getConnectionPhase(connecting, true)).toBe('connecting');
+  });
 });
 
 describe('getPhaseAccentColorName', () => {
   it('maps each phase to its accent token, blocked staying neutral', () => {
     expect(getPhaseAccentColorName('protected')).toBe('green');
     expect(getPhaseAccentColorName('connecting')).toBe('orange');
+    expect(getPhaseAccentColorName('interrupted')).toBe('orange');
     expect(getPhaseAccentColorName('exposed')).toBe('red');
     expect(getPhaseAccentColorName('blocked')).toBe('white');
+  });
+});
+
+describe('resolveScenery interrupted', () => {
+  it('keeps the exit landscape but blurred, rabbit still in the burrow', () => {
+    const scenery = resolveScenery('interrupted', 'netherlands');
+    expect(scenery.image).toMatch(/netherlands\.webp$/);
+    expect(scenery.blurred).toBe(true);
+    expect(scenery.showBula).toBe(false);
   });
 });
 

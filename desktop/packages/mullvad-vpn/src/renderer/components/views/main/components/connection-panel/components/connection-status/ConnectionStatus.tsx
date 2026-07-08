@@ -4,10 +4,12 @@ import { TunnelState } from '../../../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../../../shared/gettext';
 import { Icon } from '../../../../../../../lib/components';
 import {
+  ConnectionPhase,
   getConnectionPhase,
   getPhaseAccentColorName,
 } from '../../../../../../../lib/connection-phase';
 import { colors } from '../../../../../../../lib/foundations';
+import { useHostOffline } from '../../../../../../../lib/host-offline';
 import { useSelector } from '../../../../../../../redux/store';
 import { largeText, smallText } from '../../../../../../common-styles';
 import { CurrentCountryFlag } from '../../../../../../CurrentCountryFlag';
@@ -44,20 +46,23 @@ const StyledSubtitle = styled.span(smallText, {
 
 export function ConnectionStatus() {
   const tunnelState = useSelector((state) => state.connection.status);
+  const hostOffline = useHostOffline();
 
-  const phase = getConnectionPhase(tunnelState);
+  const phase = getConnectionPhase(tunnelState, hostOffline);
   const colorName = getPhaseAccentColorName(phase);
-  // A crossed-out eye ("hide") reads as protected/hidden in the burrow (secured
-  // or blocked); an open eye ("show") reads as exposed/visible.
-  const eyeIcon = phase === 'protected' || phase === 'blocked' ? 'hide' : 'show';
-  const subtitle = getConnectionStatusSubtitle(tunnelState);
+  // A crossed-out eye ("hide") reads as protected/hidden in the burrow (secured,
+  // blocked, or the interrupted hold where the kill switch keeps everything
+  // fail-closed); an open eye ("show") reads as exposed/visible.
+  const eyeIcon =
+    phase === 'protected' || phase === 'blocked' || phase === 'interrupted' ? 'hide' : 'show';
+  const subtitle = getConnectionStatusSubtitle(tunnelState, phase);
 
   return (
     <StyledRow role="status">
       <Icon icon={eyeIcon} color={colorName} size="large" />
       <StyledTextColumn>
         <StyledTitle $color={colors[colorName]}>
-          {getConnectionStatusLabelText(tunnelState)}
+          {getConnectionStatusLabelText(tunnelState, phase)}
         </StyledTitle>
         {subtitle ? <StyledSubtitle>{subtitle}</StyledSubtitle> : null}
       </StyledTextColumn>
@@ -68,7 +73,12 @@ export function ConnectionStatus() {
   );
 }
 
-function getConnectionStatusLabelText(tunnelState: TunnelState) {
+function getConnectionStatusLabelText(tunnelState: TunnelState, phase: ConnectionPhase) {
+  if (phase === 'interrupted') {
+    // TRANSLATORS: Bold status title shown when the tunnel is up but the
+    // TRANSLATORS: device has no internet connection.
+    return messages.pgettext('tunnel-control', 'Connection interrupted');
+  }
   switch (tunnelState.state) {
     case 'connected':
       // TRANSLATORS: Bold status title shown when the tunnel is up.
@@ -90,7 +100,13 @@ function getConnectionStatusLabelText(tunnelState: TunnelState) {
   }
 }
 
-function getConnectionStatusSubtitle(tunnelState: TunnelState) {
+function getConnectionStatusSubtitle(tunnelState: TunnelState, phase: ConnectionPhase) {
+  if (phase === 'interrupted') {
+    // Still true during the hold: the kill switch keeps everything
+    // fail-closed while the daemon waits for the network to come back.
+    // TRANSLATORS: Secondary line shown below the status title when protected.
+    return messages.pgettext('tunnel-control', 'You are protected');
+  }
   switch (tunnelState.state) {
     case 'connected':
       // TRANSLATORS: Secondary line shown below the status title when protected.

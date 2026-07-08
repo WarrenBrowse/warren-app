@@ -5,16 +5,23 @@ import { Colors, colors } from './foundations';
 // each with its own accent colour. This is the single source of truth so the
 // backdrop wash, the eye icon, the status label and the action button never
 // drift apart.
-//   exposed    : leaking, traffic in the clear (red)
-//   connecting : tunnel coming up or down (orange)
-//   protected  : tunnel up (green)
-//   blocked    : kill switch active, nothing leaks but nothing flows (neutral)
-export type ConnectionPhase = 'exposed' | 'connecting' | 'protected' | 'blocked';
+//   exposed     : leaking, traffic in the clear (red)
+//   connecting  : tunnel coming up or down (orange)
+//   protected   : tunnel up (green)
+//   interrupted : tunnel nominally up but the host is offline (orange)
+//   blocked     : kill switch active, nothing leaks but nothing flows (neutral)
+export type ConnectionPhase = 'exposed' | 'connecting' | 'protected' | 'interrupted' | 'blocked';
 
-export function getConnectionPhase(tunnelState: TunnelState): ConnectionPhase {
+export function getConnectionPhase(tunnelState: TunnelState, hostOffline = false): ConnectionPhase {
   switch (tunnelState.state) {
     case 'connected':
-      return 'protected';
+      // The daemon holds Connected through its offline migration grace
+      // window and the supervisor redials transparently, so "connected
+      // while the host is offline" is a real, user-visible window. A
+      // green "protected" there is a lie: nothing flows. Only this
+      // state degrades; every other state's presentation already tells
+      // the truth on its own.
+      return hostOffline ? 'interrupted' : 'protected';
     case 'connecting':
     case 'disconnecting':
       return 'connecting';
@@ -40,6 +47,7 @@ export function getPhaseAccentColorName(phase: ConnectionPhase): Colors {
     case 'protected':
       return 'green';
     case 'connecting':
+    case 'interrupted':
       return 'orange';
     case 'exposed':
       return 'red';

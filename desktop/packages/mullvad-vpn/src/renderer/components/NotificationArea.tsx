@@ -24,6 +24,7 @@ import {
 } from '../hooks';
 import { Button } from '../lib/components';
 import { TransitionType, useHistory } from '../lib/history';
+import { useHostOffline } from '../lib/host-offline';
 import {
   AppUpgradeErrorNotificationProvider,
   AppUpgradeProgressNotificationProvider,
@@ -92,6 +93,7 @@ export default function NotificationArea(props: IProps) {
   // `warrenStatus.failoverCount > warrenFailoverAcknowledged`.
   const [warrenFailoverAcknowledged, setWarrenFailoverAcknowledged] = useState(0);
   const warrenStatus = useSelector((state: IReduxState) => state.settings.warrenStatus);
+  const hostOffline = useHostOffline();
   const acknowledgeWarrenFailover = useCallback(() => {
     setWarrenFailoverAcknowledged(warrenStatus?.failoverCount ?? 0);
   }, [warrenStatus?.failoverCount]);
@@ -125,11 +127,11 @@ export default function NotificationArea(props: IProps) {
 
   const notificationProviders: InAppNotificationProvider[] = [
     // First on purpose: losing the network trumps every other banner,
-    // and the flag fires on the daemon's offline edge (T+0), before
-    // the tunnel state machine reacts (it holds Connected through its
-    // migration grace window).
+    // and the flag fires on the daemon's offline edge (debounced only
+    // past the synthetic ~1 s blips), before the tunnel state machine
+    // reacts (it holds Connected through its migration grace window).
     new WarrenHostOfflineNotificationProvider({
-      hostOffline: warrenStatus?.hostOffline ?? false,
+      hostOffline: hostOffline,
     }),
     new ConnectingNotificationProvider({ tunnelState }),
     new ReconnectingNotificationProvider(tunnelState),

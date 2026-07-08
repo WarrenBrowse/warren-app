@@ -2690,6 +2690,12 @@ msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr ""
 
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr ""
+
 #. Secondary line shown while the tunnel is being torn down.
 msgctxt "tunnel-control"
 msgid "Disconnecting..."

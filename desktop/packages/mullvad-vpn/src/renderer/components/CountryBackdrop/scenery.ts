@@ -44,6 +44,12 @@ export function resolveScenery(phase: ConnectionPhase, exitCountry: string | und
       return { image: resolveCountryImage(exitCountry), showBula: true, blurred: true };
     case 'protected':
       return { image: resolveCountryImage(exitCountry), showBula: false, blurred: false };
+    case 'interrupted':
+      // Host offline on a nominally-up tunnel: same visual language as
+      // the connecting transition (blurred city) so the scene reads
+      // "not settled", with the rabbit still tucked in (the kill
+      // switch holds, nothing leaks).
+      return { image: resolveCountryImage(exitCountry), showBula: false, blurred: true };
     case 'blocked':
       // Kill switch: nothing leaks, so the rabbit is tucked in the burrow, but
       // there is no tunnel, so the scene stays the neutral plain (no city).
