@@ -23,4 +23,16 @@ extension Network.NWPath.Status {
             .undetermined
         }
     }
+
+    /// The status as seen by the Warren tunnel: relays are dialed over IPv4,
+    /// so a path that is satisfied but cannot carry IPv4 cannot carry the
+    /// tunnel either and must read as unsatisfied. Keeps the reconnect
+    /// trigger and the offline treatment from churning on v6-only edges
+    /// (the family gating the desktop applies in its error state).
+    public func warrenEffectiveStatus(supportsIPv4: Bool) -> Network.NWPath.Status {
+        if case .satisfied = self, !supportsIPv4 {
+            return .unsatisfied
+        }
+        return self
+    }
 }

@@ -11,6 +11,7 @@
 //  fires, and that NAT-PMP events leave the tunnel state unchanged.
 //
 
+import Network
 import XCTest
 
 @testable import PacketTunnelCore
@@ -205,6 +206,64 @@ final class WarrenQuinnActorTests: XCTestCase {
         guard case let .error(blocked) = state, blocked.reason == .deviceRevoked else {
             return XCTFail("NAT-PMP events must be state-neutral, got \(state)")
         }
+    }
+
+    // MARK: - Network reachability truthfulness
+
+    func test_updateNetworkReachability_unreachable_isStampedIntoConnectedState() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.updateNetworkReachability(networkPathStatus: .unsatisfied)
+        let state = await actor.observedState
+        guard case let .connected(conn) = state else {
+            return XCTFail("Expected .connected, got \(state)")
+        }
+        XCTAssertFalse(
+            conn.isNetworkReachable,
+            "an unsatisfied path must surface as unreachable so the UI can show the offline treatment"
+        )
+    }
+
+    func test_applyEvent_reconnecting_whileUnreachable_carriesUnreachable() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.updateNetworkReachability(networkPathStatus: .unsatisfied)
+        actor.applyEvent(.reconnecting)
+        let state = await actor.observedState
+        guard case let .reconnecting(conn) = state else {
+            return XCTFail("Expected .reconnecting, got \(state)")
+        }
+        XCTAssertFalse(
+            conn.isNetworkReachable,
+            "reconnecting-while-offline must not read as a plain reconnect"
+        )
+    }
+
+    func test_updateNetworkReachability_backOnline_restampsReachableAndReconnects() async {
+        let mock = MockWarrenQuinnAdapter()
+        let actor = makeStartedActor(adapter: mock)
+        actor.applyEvent(.connected)
+        actor.updateNetworkReachability(networkPathStatus: .unsatisfied)
+        actor.updateNetworkReachability(networkPathStatus: .satisfied)
+
+        XCTAssertEqual(
+            mock.reconnectCount, 1,
+            "the offline -> online edge must trigger a fresh-socket redial"
+        )
+        let state = await actor.observedState
+        guard case let .connected(conn) = state else {
+            return XCTFail("Expected .connected, got \(state)")
+        }
+        XCTAssertTrue(conn.isNetworkReachable, "recovery must clear the unreachable stamp")
+    }
+
+    func test_warrenEffectiveStatus_gatesOnIPv4Support() {
+        // Relays are dialed over IPv4: a satisfied-but-v4-less path cannot
+        // carry the tunnel and must read as unsatisfied.
+        XCTAssertEqual(NWPath.Status.satisfied.warrenEffectiveStatus(supportsIPv4: true), .satisfied)
+        XCTAssertEqual(NWPath.Status.satisfied.warrenEffectiveStatus(supportsIPv4: false), .unsatisfied)
+        XCTAssertEqual(NWPath.Status.unsatisfied.warrenEffectiveStatus(supportsIPv4: true), .unsatisfied)
+        XCTAssertEqual(NWPath.Status.unsatisfied.warrenEffectiveStatus(supportsIPv4: false), .unsatisfied)
     }
 
     // MARK: - waitUntilDisconnected

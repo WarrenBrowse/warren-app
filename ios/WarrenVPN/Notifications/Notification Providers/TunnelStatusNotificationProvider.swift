@@ -18,6 +18,12 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
 
     private var isWaitingForConnectivity = false
     private var noNetwork = false
+    /// Tunnel still Connected but the host has no usable network (the
+    /// detection grace before the engine escalates to reconnecting). The
+    /// offline banner must already show here so the green state never
+    /// stands unqualified while packets cannot flow (desktop parity: the
+    /// host-offline banner shows in every tunnel state).
+    private var hostOffline = false
     private var packetTunnelError: BlockedStateReason?
     private var tunnelManagerError: Error?
     private var tunnelObserver: TunnelBlockObserver?
@@ -35,7 +41,7 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
             return notificationDescription(for: packetTunnelError)
         } else if let tunnelManagerError {
             return notificationDescription(for: tunnelManagerError)
-        } else if isWaitingForConnectivity {
+        } else if isWaitingForConnectivity || hostOffline {
             return connectivityNotificationDescription()
         } else if noNetwork {
             return noNetworkNotificationDescription()
@@ -70,8 +76,10 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
         let invalidateForManagerError = updateTunnelManagerError(tunnelStatus.state)
         let invalidateForConnectivity = updateConnectivity(tunnelStatus.state)
         let invalidateForNetwork = updateNetwork(tunnelStatus.state)
+        let invalidateForHostOffline = updateHostOffline(tunnelStatus)
 
-        if invalidateForTunnelError || invalidateForManagerError || invalidateForConnectivity || invalidateForNetwork {
+        if invalidateForTunnelError || invalidateForManagerError || invalidateForConnectivity
+            || invalidateForNetwork || invalidateForHostOffline {
             invalidate()
         }
     }
@@ -104,6 +112,21 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
 
         if noNetwork != isWaitingState {
             noNetwork = isWaitingState
+            return true
+        }
+
+        return false
+    }
+
+    private func updateHostOffline(_ tunnelStatus: TunnelStatus) -> Bool {
+        var isOffline = false
+        if case .connected = tunnelStatus.state,
+           let connectionState = tunnelStatus.observedState.connectionState {
+            isOffline = !connectionState.isNetworkReachable
+        }
+
+        if hostOffline != isOffline {
+            hostOffline = isOffline
             return true
         }
 
@@ -205,14 +228,15 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
     }
 
     private func connectivityNotificationDescription() -> InAppNotificationDescriptor {
+        // Copy aligned with the desktop host-offline banner.
         InAppNotificationDescriptor(
             identifier: identifier,
             style: .warning,
-            title: NSLocalizedString("NETWORK ISSUES", comment: ""),
+            title: NSLocalizedString("NO INTERNET CONNECTION", comment: ""),
             body: .init(
                 string: NSLocalizedString(
                     """
-                    Your device is offline. The tunnel will automatically connect once your device is back online.
+                    Your device is offline. Warren will reconnect automatically as soon as the network is back.
                     """,
                     comment: ""
                 )

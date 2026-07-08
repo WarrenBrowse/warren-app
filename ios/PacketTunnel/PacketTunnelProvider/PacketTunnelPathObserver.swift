@@ -39,18 +39,33 @@ final class PacketTunnelPathObserver: DefaultPathObserverProtocol, Sendable {
             defer { started = true }
             pathMonitor.pathUpdateHandler = { [weak self] updatedPath in
                 guard let self else { return }
+                // Warren relays dial over IPv4, so a satisfied-but-v4-less
+                // path cannot carry the tunnel and is reported unsatisfied
+                // (family gating, mirrors the desktop error-state gate).
+                let effectiveStatus = updatedPath.status
+                    .warrenEffectiveStatus(supportsIPv4: updatedPath.supportsIPv4)
                 self.stateLock.withLock {
                     self.pendingPathUpdate?.cancel()
 
                     let workItem = DispatchWorkItem {
-                        body(updatedPath.status)
+                        body(effectiveStatus)
                     }
                     self.pendingPathUpdate = workItem
 
-                    self.eventQueue.asyncAfter(
-                        deadline: .now() + Self.pathUpdateDebounceDelay,
-                        execute: workItem
-                    )
+                    // Debounce only the offline edge: iOS synthesizes short
+                    // unsatisfied blips on routine handovers that must not
+                    // flash the offline treatment (same rising-edge debounce
+                    // idea as the desktop's host-offline signal). Recovery
+                    // is reported immediately so the reconnect trigger fires
+                    // on the spot.
+                    if case .satisfied = effectiveStatus {
+                        self.eventQueue.async(execute: workItem)
+                    } else {
+                        self.eventQueue.asyncAfter(
+                            deadline: .now() + Self.pathUpdateDebounceDelay,
+                            execute: workItem
+                        )
+                    }
                 }
             }
 

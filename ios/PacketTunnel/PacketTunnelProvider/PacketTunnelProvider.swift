@@ -33,6 +33,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     var accessMethodReceiver: MullvadAccessMethodReceiver!
     private var shadowsocksCacheCleaner: ShadowsocksCacheCleaner!
 
+    /// NWPath observer feeding the actor's reachability, so the observed
+    /// state can tell reconnecting-with-network from reconnecting-offline
+    /// (the "no internet" treatment) and a network-return edge triggers an
+    /// immediate fresh-socket redial. Started with the tunnel, stopped with
+    /// it.
+    private var pathObserver: PacketTunnelPathObserver?
+
     override init() {
         Self.configureLogging()
         providerLogger = Logger(label: "PacketTunnelProvider")
@@ -139,6 +146,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
                         )
                 } else {
                     self.providerLogger.debug("Starting tunnel implementation after initial configuration is applied")
+                    self.startPathObservation()
                     Task { await self.implementation.startTunnel(options: startOptions) }
                 }
                 self.internalQueue.async {
@@ -150,7 +158,20 @@ class PacketTunnelProvider: NEPacketTunnelProvider, @unchecked Sendable {
     override func stopTunnel(with reason: NEProviderStopReason) async {
         providerLogger.debug("stopTunnel: \(ProviderStopReasonWrapper(reason: reason))")
 
+        pathObserver?.stop()
+        pathObserver = nil
         await implementation.stopTunnel()
+    }
+
+    /// Start (or restart) NWPath observation and forward each debounced
+    /// verdict to the actor. Idempotent per tunnel session.
+    private func startPathObservation() {
+        pathObserver?.stop()
+        let observer = PacketTunnelPathObserver(eventQueue: internalQueue)
+        pathObserver = observer
+        observer.start { [weak self] status in
+            self?.implementation.actor.updateNetworkReachability(networkPathStatus: status)
+        }
     }
 
     override func handleAppMessage(_ messageData: Data) async -> Data? {

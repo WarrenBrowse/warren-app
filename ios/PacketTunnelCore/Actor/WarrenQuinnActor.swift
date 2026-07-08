@@ -98,6 +98,14 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     }
     private var connectionContext: ConnectionContext?
 
+    /// Live NWPath verdict, pushed by the provider's path observer via
+    /// [`updateNetworkReachability(networkPathStatus:)`]. Stamped into every
+    /// `ObservedConnectionState` so the app can tell
+    /// reconnecting-with-network from reconnecting-offline. Guarded by
+    /// `stateLock`. Defaults to `.reachable` (the tunnel only starts on a
+    /// viable path).
+    private var networkReachability: NetworkReachability = .reachable
+
     public var observedState: ObservedState {
         get async { snapshotState() }
     }
@@ -205,11 +213,15 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// Build the UI-facing connection state from the captured context.
     /// Pure (takes no lock) ; callers hold `stateLock`. Warren is QUIC/UDP
     /// and post-quantum-free, hence the fixed `transportLayer`/`isPostQuantum`.
+    /// Reachability is the live NWPath verdict pushed in via
+    /// [`updateNetworkReachability(networkPathStatus:)`], never a constant:
+    /// the app maps reconnecting-while-unreachable to its offline treatment,
+    /// so lying `.reachable` here would suppress the "no internet" banner.
     private func observedConnectionState(from ctx: ConnectionContext) -> ObservedConnectionState {
         ObservedConnectionState(
             selectedRelays: ctx.selectedRelays,
             relayConstraints: ctx.relayConstraints,
-            networkReachability: .reachable,
+            networkReachability: networkReachability,
             connectionAttemptCount: 0,
             transportLayer: .udp,
             remotePort: ctx.remotePort,
@@ -399,8 +411,10 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
 
     private var lastNetworkPathStatus: NWPath.Status = .satisfied
     public func updateNetworkReachability(networkPathStatus: NWPath.Status) {
-        // Fire reconnect on Wi-Fi <-> cellular handover (transition
-        // from `.unsatisfied` to `.satisfied`).
+        // Fire reconnect on the offline -> online edge (network return /
+        // Wi-Fi <-> cellular handover): the engine's own backoff redial
+        // would land within a couple of seconds anyway, but a fresh-socket
+        // redial on the edge rebinds onto the new interface immediately.
         let shouldReconnect: Bool = {
             switch (lastNetworkPathStatus, networkPathStatus) {
             case (.unsatisfied, .satisfied):
@@ -410,10 +424,39 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             }
         }()
         lastNetworkPathStatus = networkPathStatus
-        guard shouldReconnect else { return }
+
+        // Re-stamp the current state with the new reachability so the app's
+        // observed-state poll sees the flip without waiting for the next
+        // engine event: this is what drives the "no internet" treatment
+        // while the engine keeps redialing.
+        let reachability = networkPathStatus.networkReachability
         stateLock.lock()
         let adapter = self.adapter
+        let reachabilityChanged = networkReachability != reachability
+        networkReachability = reachability
+        var restamped: ObservedState?
+        if reachabilityChanged, let ctx = connectionContext {
+            switch currentState {
+            case .connected:
+                restamped = .connected(observedConnectionState(from: ctx))
+            case .reconnecting:
+                restamped = .reconnecting(observedConnectionState(from: ctx))
+            case .connecting:
+                restamped = .connecting(observedConnectionState(from: ctx))
+            case .initial, .disconnecting, .disconnected, .error, .negotiatingEphemeralPeer:
+                restamped = nil
+            }
+        }
+        if let restamped {
+            currentState = restamped
+        }
+        let continuation = observedStatesContinuation
         stateLock.unlock()
+
+        if let restamped {
+            continuation?.yield(restamped)
+        }
+        guard shouldReconnect else { return }
         adapter?.reconnect()
     }
 

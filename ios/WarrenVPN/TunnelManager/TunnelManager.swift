@@ -948,6 +948,13 @@ final class TunnelManager: @unchecked Sendable {
                 isDaita: connectionState.isDaitaEnabled
             )
         case let .connecting(connectionState):
+            // No usable network under a live connect attempt: surface the
+            // offline treatment (banner + honest label) instead of an
+            // eternal "CONNECTING...". Recovery is automatic: the tunnel
+            // keeps redialing and flips back on the online edge.
+            guard connectionState.isNetworkReachable else {
+                return .waitingForConnectivity(.noConnection)
+            }
             return .connecting(
                 connectionState.selectedRelays,
                 isPostQuantum: connectionState.isPostQuantum,
@@ -961,6 +968,9 @@ final class TunnelManager: @unchecked Sendable {
                 isDaita: connectionState.isDaitaEnabled
             )
         case let .reconnecting(connectionState):
+            guard connectionState.isNetworkReachable else {
+                return .waitingForConnectivity(.noConnection)
+            }
             return .reconnecting(
                 connectionState.selectedRelays,
                 isPostQuantum: connectionState.isPostQuantum,
