@@ -2919,7 +2919,7 @@ impl Daemon {
         sid: String,
     ) {
         let result = self.warren_signer.as_ref().map(|signer| {
-            let body = format!("{{\"sid\":\"{sid}\"}}");
+            let body = forum_login_body(&sid);
             let headers = signer.sign_request("POST", "/v1/forum/login", body.as_bytes());
             (headers, body)
         });
