@@ -19,6 +19,32 @@ pub struct ErrorState {
     block_reason: ErrorStateCause,
 }
 
+/// `true` when a `Connectivity` update should leave this blocked state
+/// and start a connect cycle. Pure so the cause/family matrix is
+/// unit-testable without a state machine harness.
+fn reconnects_on_connectivity(
+    block_reason: &ErrorStateCause,
+    connectivity: talpid_types::net::Connectivity,
+) -> bool {
+    if connectivity.is_offline() {
+        return false;
+    }
+    match block_reason {
+        // Require IPv4 specifically, not merely "online": relays are
+        // dialed over IPv4, so an online edge carrying only IPv6 (a
+        // router advertisement on a link with no v4 lease) would start
+        // a connect cycle that can only fail, churning Connecting and
+        // Error until a v4 route appears. Waiting for v4 keeps the
+        // blocked state stable and still auto-recovers on the real
+        // online edge.
+        ErrorStateCause::IsOffline => connectivity.has_ipv4(),
+        ErrorStateCause::TunnelParameterError(ParameterGenerationError::IpVersionUnavailable {
+            family,
+        }) => connectivity.has_family(*family),
+        _ => false,
+    }
+}
+
 impl ErrorState {
     pub(super) fn enter(
         shared_values: &mut SharedTunnelStateValues,
@@ -204,12 +230,7 @@ impl TunnelState for ErrorState {
             }
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
-                if !connectivity.is_offline()
-                    // Reconnect if we're no longer offline
-                    && (matches!(self.block_reason, ErrorStateCause::IsOffline)
-                    // Try to reconnect if missing IP connectivity becomes available
-                    || matches!(self.block_reason, ErrorStateCause::TunnelParameterError(ParameterGenerationError::IpVersionUnavailable { family }) if connectivity.has_family(family)))
-                {
+                if reconnects_on_connectivity(&self.block_reason, connectivity) {
                     #[cfg(target_os = "macos")]
                     if !*LOCAL_DNS_RESOLVER {
                         // This is probably unnecessary, since DNS is already configured on the
@@ -275,5 +296,74 @@ impl TunnelState for ErrorState {
                 SameState(self)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use talpid_types::net::{Connectivity, IpVersion};
+
+    #[test]
+    fn offline_edge_never_reconnects() {
+        assert!(!reconnects_on_connectivity(
+            &ErrorStateCause::IsOffline,
+            Connectivity::Offline
+        ));
+    }
+
+    #[test]
+    fn v4_online_edge_reconnects_the_offline_block() {
+        assert!(reconnects_on_connectivity(
+            &ErrorStateCause::IsOffline,
+            Connectivity::new(true, false)
+        ));
+        assert!(reconnects_on_connectivity(
+            &ErrorStateCause::IsOffline,
+            Connectivity::new(true, true)
+        ));
+    }
+
+    #[test]
+    fn v6_only_online_edge_keeps_the_offline_block() {
+        // Relays are dialed over IPv4: a v6-only online edge (router
+        // advertisement on a link with no v4 lease) can only start a
+        // connect cycle that fails, churning Connecting/Error.
+        assert!(!reconnects_on_connectivity(
+            &ErrorStateCause::IsOffline,
+            Connectivity::new(false, true)
+        ));
+    }
+
+    #[test]
+    fn presumed_online_reconnects_the_offline_block() {
+        assert!(reconnects_on_connectivity(
+            &ErrorStateCause::IsOffline,
+            Connectivity::PresumeOnline
+        ));
+    }
+
+    #[test]
+    fn missing_family_becoming_available_reconnects() {
+        let cause =
+            ErrorStateCause::TunnelParameterError(ParameterGenerationError::IpVersionUnavailable {
+                family: IpVersion::V6,
+            });
+        assert!(reconnects_on_connectivity(
+            &cause,
+            Connectivity::new(true, true)
+        ));
+        assert!(!reconnects_on_connectivity(
+            &cause,
+            Connectivity::new(true, false)
+        ));
+    }
+
+    #[test]
+    fn unrelated_block_reasons_never_reconnect_on_connectivity() {
+        assert!(!reconnects_on_connectivity(
+            &ErrorStateCause::SetDnsError,
+            Connectivity::new(true, true)
+        ));
     }
 }
