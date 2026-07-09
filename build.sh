@@ -351,7 +351,9 @@ function build {
         fi
     fi
 
-    cargo build "${cargo_target_arg[@]}" "${cargo_features[@]}" "${CARGO_ARGS[@]}" "${cargo_crates_to_build[@]}"
+    # bash 3.2 (macOS system bash) errors on "${empty[@]}" under `set -u`; guard the
+    # two arrays that are empty on a local, no-features build with the ${a[@]+"${a[@]}"} idiom.
+    cargo build ${cargo_target_arg[@]+"${cargo_target_arg[@]}"} ${cargo_features[@]+"${cargo_features[@]}"} "${CARGO_ARGS[@]}" "${cargo_crates_to_build[@]}"
 
     ################################################################################
     # Move binaries to correct locations in dist-assets
