@@ -85,7 +85,11 @@ const Wordmark = ({ fontSize, tone = 'light' }: { fontSize: number; tone?: 'ligh
   );
 };
 
-export const Logo = ({ variant = 'icon', size: sizeProp = '1', wordmarkTone = 'light' }: LogoProps) => {
+export const Logo = ({
+  variant = 'icon',
+  size: sizeProp = '1',
+  wordmarkTone = 'light',
+}: LogoProps) => {
   switch (variant) {
     case 'icon':
       return <Icon size={iconSizes[sizeProp]} tone={wordmarkTone} />;
