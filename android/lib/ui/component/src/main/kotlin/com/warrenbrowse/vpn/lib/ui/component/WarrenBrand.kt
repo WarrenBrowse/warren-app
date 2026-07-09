@@ -24,8 +24,8 @@ import androidx.compose.ui.unit.sp
 
 /**
  * Warren visual identity primitives, kept in lockstep with the desktop
- * `lib/components/logo/Logo.tsx`: the Bula "ears-in-burrow" rabbit mark and the
- * Nunito-Black "WARREN" wordmark with a drop-cap W lettrine.
+ * `lib/components/logo/Logo.tsx`: the ears mark (which stands in as the capital
+ * W) and the "arren" wordmark beside it.
  */
 
 // Nunito, shipped as a variable font. Black (900) is the wordmark weight; the
@@ -76,8 +76,9 @@ fun WarrenLogoMark(
 }
 
 /**
- * "WARREN" wordmark: a 1.35em drop-cap W followed by "ARREN", Nunito Black.
- * [color] adapts to the header tint so it reads on every state background.
+ * "arren" wordmark, Nunito Black. The ears mark rendered beside it stands in as
+ * the capital W, so the word itself carries no W. [color] adapts to the header
+ * tint so it reads on every state background.
  */
 @Composable
 fun WarrenWordmark(
@@ -86,8 +87,7 @@ fun WarrenWordmark(
     fontSize: TextUnit = 22.sp,
 ) {
     val text = buildAnnotatedString {
-        withStyle(SpanStyle(fontSize = fontSize * 1.35f)) { append("W") }
-        withStyle(SpanStyle(letterSpacing = 0.01.em)) { append("ARREN") }
+        withStyle(SpanStyle(letterSpacing = 0.01.em)) { append("arren") }
     }
     Text(
         text = text,
