@@ -55,7 +55,7 @@ pub(crate) use service::WarrenIdentityService;
 /// Convention:
 /// - `url`: `http(s)://host:port`, without trailing slash.
 /// - `seed`: the BIP39-derived pre-HKDF seed backing the Warren identity
-///   (`warren_signer::load_or_create_seed`). Kept as a seed rather than a
+///   (`WarrenIdentityManager::seed_handle`). Kept as a seed rather than a
 ///   `SigningKey` because the account-backend client is built around the
 ///   SDK's `warren_api::WarrenApiClient`, whose owned `WarrenIdentity` only
 ///   constructs from this pre-derivation input (see

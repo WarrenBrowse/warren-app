@@ -10,16 +10,15 @@
 //! identity), so the two views cannot share one storage cell and must
 //! be swapped together.
 //!
-//! Historically each identity event (boot, create account, restore,
-//! logout) updated the two views independently at its call site; the
-//! create-account path forgot the seed handle, so every purchase and
-//! balance query kept running as the stale boot identity while the GUI
-//! displayed the new one, silently crediting paid vouchers to a wallet
-//! the user does not own. This manager makes that state
-//! unrepresentable: both views are always rewritten by the single
-//! internal [`swap_to`](Self::swap_to) from ONE seed value, and the
-//! daemon flows have no other mutation surface (the raw swap helpers
-//! were removed from `warren_signer`).
+//! Two invariants, both load-bearing for billing (a violation credits
+//! paid vouchers to a wallet the user does not own):
+//! - Both views are always rewritten by the single internal
+//!   [`swap_to`](Self::swap_to) from ONE seed value; the daemon flows
+//!   have no other mutation surface.
+//! - The manager never mints an identity. Until the user explicitly
+//!   creates or imports one in onboarding, both views hold the fixed
+//!   placeholder sentinel, which the server refuses to authenticate or
+//!   register.
 
 use std::io;
 use std::path::Path;
@@ -38,21 +37,20 @@ pub struct WarrenIdentityManager {
 }
 
 impl WarrenIdentityManager {
-    /// Boot constructor: loads (or bootstraps) the BIP39 mnemonic in
-    /// `settings_dir` and builds both identity views from the same
-    /// seed value, in one read.
-    ///
-    /// Returns `None` (details logged by `load_or_create_seed`) when
-    /// the mnemonic cannot be loaded or derived; the daemon then runs
-    /// in legacy Bearer mode without a Warren identity.
+    /// Boot constructor: loads the persisted BIP39 mnemonic in
+    /// `settings_dir`, if any, and builds both identity views from the
+    /// same seed value, in one read. When no identity has been created
+    /// yet (or the storage backend fails, logged by `load_seed`), both
+    /// views hold the placeholder sentinel until onboarding mints or
+    /// imports a real one.
     #[must_use]
-    pub fn load_or_create(settings_dir: &Path) -> Option<Self> {
-        let seed = warren_signer::load_or_create_seed(settings_dir)?;
+    pub fn load(settings_dir: &Path) -> Self {
+        let seed = warren_signer::load_seed(settings_dir).unwrap_or_else(sentinel_seed);
         let signing_key = warren_identity::derive_node_key(&seed);
-        Some(Self {
+        Self {
             signer: Arc::new(WarrenAuthSigner::new(signing_key)),
             seed: Arc::new(std::sync::RwLock::new(seed)),
-        })
+        }
     }
 
     /// The shared signer consumed by the REST factory, the tunnel and
@@ -95,7 +93,7 @@ impl WarrenIdentityManager {
     /// touched (no partial swap).
     #[must_use]
     pub fn reload_from_disk(&self, settings_dir: &Path) -> Option<[u8; 32]> {
-        let seed = warren_signer::load_or_create_seed(settings_dir)?;
+        let seed = warren_signer::load_seed(settings_dir)?;
         Some(self.swap_to(seed))
     }
 
@@ -119,6 +117,15 @@ impl WarrenIdentityManager {
     /// rejects it outright), instead of the just-erased account.
     pub fn clear(&self) {
         let _ = self.swap_to(sentinel_seed());
+    }
+
+    /// True once the user has created or imported an identity; false
+    /// while both views still hold the placeholder sentinel. Gates
+    /// every flow that must not run as the sentinel (boot reconcile,
+    /// forum SSO signing).
+    #[must_use]
+    pub fn has_user_identity(&self) -> bool {
+        *self.seed.read().expect("warren seed RwLock poisoned") != sentinel_seed()
     }
 
     /// True when both views derive from the same seed. The manager
@@ -161,15 +168,25 @@ mod tests {
     }
 
     #[test]
-    fn load_or_create_builds_both_views_from_one_seed() {
+    fn load_on_fresh_storage_is_the_placeholder_and_mints_nothing() {
+        // The exact moment the user first sees their recovery phrase in
+        // onboarding must also be the moment the identity comes into
+        // existence: an identity minted at boot is a wallet the user
+        // cannot back up, and money paid onto it is lost.
         let dir = isolated_tempdir();
 
-        let manager = WarrenIdentityManager::load_or_create(&dir).expect("boot identity");
+        let manager = WarrenIdentityManager::load(&dir);
 
+        let sentinel_address = WarrenIdentity::from_seed(&sentinel_seed()).address();
         assert_eq!(
             manager.pubkey_ss58(),
-            sdk_address(&manager),
-            "the signer and the SDK seed must describe the same identity at boot"
+            sentinel_address,
+            "an un-onboarded daemon must run as the placeholder sentinel"
+        );
+        assert!(!manager.has_user_identity());
+        assert!(
+            warren_signer::get_warren_mnemonic(&dir).is_none(),
+            "loading must not persist any identity"
         );
         assert!(manager.is_coherent());
 
@@ -177,14 +194,31 @@ mod tests {
     }
 
     #[test]
-    fn mint_new_identity_keeps_signer_and_sdk_seed_in_lockstep() {
-        // Regression for the create-account bug: the signer was
-        // hot-swapped to the new identity while the SDK seed kept the
-        // boot identity, so purchases were registered (and the balance
-        // displayed) under a wallet the user does not own.
+    fn load_builds_both_views_from_the_persisted_seed() {
         let dir = isolated_tempdir();
-        let manager = WarrenIdentityManager::load_or_create(&dir).expect("boot identity");
-        let boot_address = manager.pubkey_ss58();
+        let _ = warren_signer::generate_and_store_mnemonic(&dir).expect("mint identity");
+
+        let manager = WarrenIdentityManager::load(&dir);
+
+        assert_eq!(
+            manager.pubkey_ss58(),
+            sdk_address(&manager),
+            "the signer and the SDK seed must describe the same identity at boot"
+        );
+        assert!(manager.has_user_identity());
+        assert!(manager.is_coherent());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn mint_new_identity_keeps_signer_and_sdk_seed_in_lockstep() {
+        // If a mint swapped the signer without the SDK seed, purchases
+        // would be registered (and the balance displayed) under a wallet
+        // the user does not own.
+        let dir = isolated_tempdir();
+        let manager = WarrenIdentityManager::load(&dir);
+        let placeholder_address = manager.pubkey_ss58();
 
         let new_pubkey = manager.mint_new_identity(&dir).expect("mint");
 
@@ -200,7 +234,11 @@ mod tests {
             "the SDK seed must follow the mint: a purchase right after \
              create-account must register under the displayed wallet"
         );
-        assert_ne!(new_address, boot_address, "mint must rotate the identity");
+        assert_ne!(
+            new_address, placeholder_address,
+            "mint must leave the placeholder"
+        );
+        assert!(manager.has_user_identity());
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -208,7 +246,7 @@ mod tests {
     #[test]
     fn reload_from_disk_swaps_both_views_to_the_imported_identity() {
         let dir = isolated_tempdir();
-        let manager = WarrenIdentityManager::load_or_create(&dir).expect("boot identity");
+        let manager = WarrenIdentityManager::load(&dir);
         let mnemonic = "abandon abandon abandon abandon abandon abandon \
                         abandon abandon abandon abandon abandon about";
         warren_signer::set_warren_mnemonic(&dir, mnemonic).expect("persist import");
@@ -237,8 +275,10 @@ mod tests {
     #[test]
     fn clear_swaps_both_views_to_the_sentinel() {
         let dir = isolated_tempdir();
-        let manager = WarrenIdentityManager::load_or_create(&dir).expect("boot identity");
-        let user_address = manager.pubkey_ss58();
+        let manager = WarrenIdentityManager::load(&dir);
+        let user_address = mullvad_api::warren_auth::ss58::encode(
+            &manager.mint_new_identity(&dir).expect("mint identity"),
+        );
 
         manager.clear();
 
@@ -254,6 +294,7 @@ mod tests {
             sentinel_address,
             "the SDK seed must be neutralized together with the signer"
         );
+        assert!(!manager.has_user_identity());
         assert!(manager.is_coherent());
 
         let _ = std::fs::remove_dir_all(&dir);

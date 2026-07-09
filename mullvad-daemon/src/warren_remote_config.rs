@@ -31,7 +31,7 @@ pub const DEFAULT_WARREN_API_URL: &str = "https://api.warrenbrowse.com";
 /// Resolves the warren-api config based on flags + URL sources and the
 /// BIP39-derived seed. Pure function: the caller injects `env_url` (=
 /// via `std::env::var("WARREN_API_URL").ok()`) and `seed` (=
-/// `warren_signer::load_or_create_seed(...)`, wrapped in a shared handle)
+/// `WarrenIdentityManager::seed_handle`)
 /// already resolved.
 ///
 /// URL priority: first non-empty of `env_url` > `settings_url`,

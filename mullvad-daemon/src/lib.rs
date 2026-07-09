@@ -924,9 +924,9 @@ pub struct Daemon {
     /// shared `WarrenAuthSigner` (REST factory, tunnel, forum SSO) and
     /// the SDK seed handle (account backend, incident reporters) and is
     /// the ONLY surface that swaps them (create/restore/logout), always
-    /// together and from one seed value. `None` if Warren auth could not
-    /// be initialized at boot (= legacy Bearer fallback path).
-    warren_identity: Option<Arc<warren_identity_manager::WarrenIdentityManager>>,
+    /// together and from one seed value. Holds the placeholder sentinel
+    /// until the user creates or imports an identity in onboarding.
+    warren_identity: Arc<warren_identity_manager::WarrenIdentityManager>,
     /// `true` when the Warren multi-hop directory updater is wired and owns
     /// the reconnect for circuit changes. While active, the standard
     /// "relay settings changed" restart path must not reconnect on its own
@@ -1064,33 +1064,31 @@ impl Daemon {
             .await
             .map_err(Error::ApiConnectionModeError)?;
 
-        // Warren fork: loads or generates the BIP39 mnemonic from the
-        // OS secret storage and builds the identity manager, the single
-        // owner of both identity views (signer + SDK seed). On failure,
-        // falls back to `None` (legacy Bearer mode); the detail is
-        // logged by `load_or_create_seed`. The manager stays in the
+        // Warren fork: the identity manager is the single owner of both
+        // identity views (signer + SDK seed). It loads the persisted
+        // mnemonic if the user has onboarded, and otherwise runs on the
+        // placeholder sentinel: no identity is ever minted outside the
+        // explicit create/import onboarding actions. It stays in the
         // `Daemon` struct so create/restore/logout hot-swap the identity
         // without requiring a daemon restart.
-        let warren_identity =
-            warren_identity_manager::WarrenIdentityManager::load_or_create(&config.settings_dir)
-                .map(Arc::new);
-        if let Some(manager) = warren_identity.as_ref()
-            && !manager.is_coherent()
-        {
+        let warren_identity = Arc::new(warren_identity_manager::WarrenIdentityManager::load(
+            &config.settings_dir,
+        ));
+        if !warren_identity.is_coherent() {
             // Unreachable by construction (the manager swaps both views
             // from one seed); kept as a loud tripwire because a signer /
             // SDK-seed divergence silently strands paid subscriptions on
             // a wallet the user does not own.
             log::error!("Warren identity views diverged at boot; identity handling is broken");
         }
-        let warren_signer = warren_identity.as_ref().map(|manager| manager.signer());
+        let warren_signer = warren_identity.signer();
         // Single source of truth for the raw-`SigningKey` consumers: the
         // SAME `Arc<RwLock<SigningKey>>` that `WarrenAuthSigner` wraps is
         // shared with the tunnel (RPK identity + legacy REST signing). A
         // manager hot-swap (create/restore/logout) therefore propagates to
         // every consumer without a daemon restart, instead of leaving
         // frozen per-consumer copies signing as the old/erased identity.
-        let warren_shared_key = warren_signer.as_ref().map(|signer| signer.shared());
+        let warren_shared_key = Some(warren_signer.shared());
         // Companion shared, hot-swappable BIP39 seed for the SDK-backed
         // `warren_api::WarrenApiClient` (account backend + best-effort
         // incident reports, via `warren_sdk_client::SharedWarrenApiClient`).
@@ -1099,11 +1097,9 @@ impl Daemon {
         // `warren_sdk_client` module doc). Both views live inside the
         // manager, which is the only surface that ever swaps them, always
         // together and from one seed value.
-        let warren_shared_seed = warren_identity
-            .as_ref()
-            .map(|manager| manager.seed_handle());
+        let warren_shared_seed = Some(warren_identity.seed_handle());
         let api_handle = api_runtime
-            .mullvad_rest_handle_with_warren_signer(access_mode_provider, warren_signer.clone());
+            .mullvad_rest_handle_with_warren_signer(access_mode_provider, Some(warren_signer));
 
         // Warren uses a single fixed API host, so the upstream Mullvad
         // API-IP rotation endpoint (`GET app/v1/api-addrs`) does not exist
@@ -1157,23 +1153,23 @@ impl Daemon {
         // logged-in pubkey and can drift from the signer (e.g. the
         // secret-storage backend changed under the daemon, or a partial
         // restore). When they disagree, the displayed account and the
-        // actually-signing identity diverge - the exact desync that once
-        // stranded a paid subscription on an unsubscribed key while the UI
-        // showed a different, subscribed account. Re-align `device.json` to
-        // the signer here so the three views (signer, device.json,
-        // `account get`) can never silently differ. Only the LoggedIn case
-        // is touched: `pubkey()` is None for LoggedOut/Revoked, so a
-        // deliberate logout or revocation is preserved.
-        if let Some(identity) = warren_identity.as_ref() {
-            let expected = identity.pubkey_ss58();
+        // actually-signing identity diverge, which strands paid
+        // subscriptions on a wallet the user does not see. Re-align
+        // `device.json` to the signer here so the three views (signer,
+        // device.json, `account get`) can never silently differ. Only the
+        // LoggedIn case is touched: `pubkey()` is None for
+        // LoggedOut/Revoked, so a deliberate logout or revocation is
+        // preserved.
+        if warren_identity.has_user_identity() {
+            let expected = warren_identity.pubkey_ss58();
             let stored = data.pubkey().map(|p| p.as_str().to_owned());
             if let Some(target) =
                 warren_signer::reconcile_login_target(&expected, stored.as_deref())
             {
-                // Self-healing: WARN, not ERROR. We detected the drift and
-                // re-align it on the spot, so it is an operational notice,
-                // not a fatal condition. Kept loud (warn) because the
-                // historical desync silently stranded a paid subscription.
+                // Self-healing: WARN, not ERROR. The drift is re-aligned
+                // on the spot, so it is an operational notice, not a fatal
+                // condition; kept loud because an unnoticed desync strands
+                // paid subscriptions.
                 log::warn!(
                     "Warren identity desync at boot: signer={target} device.json={}; \
                      re-aligning device.json to the signer-derived identity",
@@ -1198,6 +1194,22 @@ impl Daemon {
                     }
                 });
             }
+        } else if data.pubkey().is_some() {
+            // device.json claims a logged-in account but no identity
+            // exists on disk (secret storage lost or wiped out-of-band).
+            // The daemon cannot sign as that account anymore; land the
+            // user on a deterministic logged-out state instead of a
+            // logged-in UI whose every request fails.
+            log::warn!(
+                "device.json records a logged-in account but no Warren identity is \
+                 persisted; forcing logout"
+            );
+            let manager = account_manager.clone();
+            tokio::spawn(async move {
+                if let Err(e) = manager.logout().await {
+                    log::warn!("boot logout after lost identity failed: {e}");
+                }
+            });
         }
 
         let account_history = account_history::AccountHistory::new(
@@ -2810,12 +2822,13 @@ impl Daemon {
     ///
     /// Unlike the legacy Mullvad flow (which asked the server for a new
     /// account number), a Warren identity is a freshly generated BIP39
-    /// mnemonic: we generate one, persist it to the OS vault
-    /// (overwriting any prior entry - safe because the caller is logged
-    /// out, so the vault holds at most an unclaimed boot identity),
-    /// hot-swap it into the in-memory signer, then `login()` under the
-    /// new pubkey so the device state is consistent for every client
-    /// (CLI, Android, desktop) that calls `CreateNewAccount`.
+    /// mnemonic: we generate one, persist it to the OS vault, hot-swap
+    /// it into the daemon identity, then `login()` under the new pubkey
+    /// so the device state is consistent for every client (CLI, Android,
+    /// desktop) that calls `CreateNewAccount`. Guarded by the logged-in
+    /// check below: overwriting the vault is only reachable from a
+    /// logged-out state, where the GUI has already made the user confirm
+    /// that any prior identity is theirs to discard.
     ///
     /// The desktop GUI additionally runs a mandatory recovery-phrase
     /// backup step before letting the user proceed past the login
@@ -2838,16 +2851,10 @@ impl Daemon {
                     return Err(Error::AlreadyLoggedIn);
                 }
 
-                let identity = identity.ok_or_else(|| {
-                    Error::WarrenIdentityError(io::Error::other(
-                        "no in-memory Warren identity to activate the new identity",
-                    ))
-                })?;
-
                 // Generate + persist a fresh mnemonic, then hot-swap the
                 // daemon identity (signer AND SDK seed, atomically: a
                 // purchase or balance query right after create-account
-                // must run under the new wallet, never the boot one).
+                // must run under the new wallet, never the placeholder).
                 // Both steps are synchronous keychain/DPAPI I/O, so run
                 // them off the async executor to avoid stalling a worker
                 // thread on a slow vault.
@@ -2950,12 +2957,13 @@ impl Daemon {
         tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         sid: String,
     ) {
-        let result = self.warren_identity.as_ref().map(|identity| {
+        let result = self.warren_identity.has_user_identity().then(|| {
             let body = forum_login_body(&sid);
-            let headers =
-                identity
-                    .signer()
-                    .sign_request("POST", "/v1/forum/login", body.as_bytes());
+            let headers = self.warren_identity.signer().sign_request(
+                "POST",
+                "/v1/forum/login",
+                body.as_bytes(),
+            );
             (headers, body)
         });
         log::debug!("on_sign_forum_login: signed={}", result.is_some());
@@ -2979,12 +2987,13 @@ impl Daemon {
         topic_id: u64,
         log_gz: Vec<u8>,
     ) {
-        let result = self.warren_identity.as_ref().map(|identity| {
+        let result = self.warren_identity.has_user_identity().then(|| {
             let body = forum_attach_body(&sid, topic_id, &log_gz);
-            let headers =
-                identity
-                    .signer()
-                    .sign_request("POST", "/v1/forum/attach-logs", body.as_bytes());
+            let headers = self.warren_identity.signer().sign_request(
+                "POST",
+                "/v1/forum/attach-logs",
+                body.as_bytes(),
+            );
             (headers, body)
         });
         log::debug!("on_sign_forum_attach_logs: signed={}", result.is_some());
@@ -3037,16 +3046,7 @@ impl Daemon {
         // persisted the new mnemonic. On reload failure NEITHER view is
         // touched, so the daemon keeps the pre-swap identity coherently
         // instead of ending up half-swapped.
-        let new_pubkey_bytes = match self.warren_identity.as_ref() {
-            Some(identity) => identity.reload_from_disk(&self.settings_dir),
-            None => {
-                log::warn!(
-                    "on_set_warren_mnemonic: no in-memory identity to hot-swap \
-                     (legacy Bearer mode) - restart required to pick up new identity"
-                );
-                None
-            }
-        };
+        let new_pubkey_bytes = self.warren_identity.reload_from_disk(&self.settings_dir);
 
         // Step 2 - determine whether a `login()` under the new pubkey
         // is needed before acknowledging, so the GUI does not observe a
@@ -3276,9 +3276,7 @@ impl Daemon {
                 // together) so no signed request, purchase or balance
                 // query can keep authenticating as the just-erased
                 // identity.
-                if let Some(identity) = self.warren_identity.as_ref() {
-                    identity.clear();
-                }
+                self.warren_identity.clear();
 
                 let history = self
                     .account_history

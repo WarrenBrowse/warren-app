@@ -15,7 +15,7 @@
 //! in sync with the daemon-wide identity because both are re-derived from
 //! the same on-disk mnemonic at the same hot-swap events (boot, create /
 //! restore via `on_set_warren_mnemonic`, clear via `on_logout_account`; see
-//! `warren_signer::load_or_create_seed`).
+//! `WarrenIdentityManager`).
 
 use std::sync::{Arc, RwLock};
 

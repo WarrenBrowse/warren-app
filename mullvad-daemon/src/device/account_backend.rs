@@ -1109,9 +1109,9 @@ mod tests {
     async fn warren_remote_submit_voucher_refuses_a_mismatched_account_before_pulling() {
         // If the identity check ran AFTER the wpid pull, the single-use
         // server-side mapping would be consumed and the PAID voucher
-        // registered under the stale signing identity instead of the
-        // account the user sees: the exact production incident. No HTTP
-        // traffic may happen for a mismatched account.
+        // registered under the signing identity instead of the account
+        // the user sees. No HTTP traffic may happen for a mismatched
+        // account.
         let mut server = mockito::Server::new_async().await;
         let pull = server
             .mock(

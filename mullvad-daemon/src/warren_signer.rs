@@ -1,11 +1,19 @@
-//! Persistence and derivation of the user's BIP39 mnemonic: load or
-//! generate it, derive the pre-HKDF seed and the Ed25519 [`SigningKey`]
-//! via [`warren_identity::derive_node_key`], and manage the on-disk
-//! copies. In-memory identity hot-swaps live EXCLUSIVELY in
-//! [`crate::warren_identity_manager::WarrenIdentityManager`], the
-//! single mutation surface that keeps the signer and the SDK seed in
-//! lockstep; this module must never grow a helper that swaps one view
-//! without the other.
+//! Persistence and derivation of the user's BIP39 mnemonic: load it,
+//! derive the pre-HKDF seed and the Ed25519 [`SigningKey`] via
+//! [`warren_identity::derive_node_key`], and manage the on-disk copies.
+//!
+//! Two invariants this module enforces:
+//! - **No identity exists until the user creates or imports one.** The
+//!   only functions that write a mnemonic are the explicit onboarding
+//!   paths ([`generate_and_store_mnemonic`], [`set_warren_mnemonic`]).
+//!   Load paths are strictly read-only: a mnemonic minted outside the
+//!   user's sight is a wallet the user cannot back up, and money paid
+//!   onto it is lost.
+//! - **In-memory identity hot-swaps live EXCLUSIVELY in
+//!   [`crate::warren_identity_manager::WarrenIdentityManager`]**, the
+//!   single mutation surface that keeps the signer and the SDK seed in
+//!   lockstep; this module must never grow a helper that swaps one
+//!   view without the other.
 //!
 //! ## Persistence layout (post-secret-storage refactor)
 //!
@@ -33,10 +41,10 @@
 //! isolation (vs `lib.rs` which orchestrates all of boot and is
 //! non-testable in unit).
 //!
-//! Error policy: we log and return `None` if the mnemonic is
-//! inaccessible / corrupted. The boot continues in legacy Bearer
-//! mode. This degradation will disappear once the chain is
-//! 100% Warren (no Bearer fallback possible on the server side).
+//! Error policy: load functions return `None` (with a `log::warn!` for
+//! genuine storage failures) and the daemon boots on the placeholder
+//! identity; the user can still create or import an account, which
+//! surfaces any persistent storage problem in the onboarding UI.
 
 use std::io;
 use std::path::Path;
@@ -49,28 +57,30 @@ use crate::os_secret_storage::{SecretStorage, get_storage};
 /// Legacy file name for the BIP39 mnemonic, used by versions of
 /// Warren prior to the introduction of [`crate::os_secret_storage`].
 /// Still referenced because [`migrate_legacy_mnemonic`] looks for it
-/// at boot and because [`warren_identity::load_or_create_mnemonic`]
-/// is paramaterized with this path during first-launch bootstrap.
+/// at boot.
 pub const MNEMONIC_FILENAME: &str = "warren_mnemonic.txt";
 
 /// Logical key under which the mnemonic is stored in the
 /// [`SecretStorage`] backend.
 const MNEMONIC_KEY: &str = "warren_mnemonic";
 
-/// Loads or creates the BIP39 mnemonic in `settings_dir` and derives it
-/// into the 32-byte pre-HKDF seed (the input to
+/// Loads the persisted BIP39 mnemonic in `settings_dir`, if any, and
+/// derives it into the 32-byte pre-HKDF seed (the input to
 /// `warren_identity::derive_node_key` / `WarrenIdentity::from_seed`).
 ///
-/// Sibling of [`load_or_create_signing_key`], extracted so a caller that
-/// needs the SDK's `warren_identity::WarrenIdentity` (which only builds
-/// from this seed, never from an already-derived `SigningKey`) does not
-/// have to re-implement the mnemonic-loading logic. Both functions derive
+/// Read-only: returns `None` both when no identity has been created yet
+/// and when the storage backend fails. Never writes.
+///
+/// Sibling of [`load_signing_key`], extracted so a caller that needs
+/// the SDK's `warren_identity::WarrenIdentity` (which only builds from
+/// this seed, never from an already-derived `SigningKey`) does not have
+/// to re-implement the mnemonic-loading logic. Both functions derive
 /// from the same on-disk mnemonic and therefore always agree.
 ///
 /// **No-log policy**: NEVER log the returned seed. The caller must
 /// consume it then drop it.
 #[must_use]
-pub fn load_or_create_seed(settings_dir: &Path) -> Option<Zeroizing<[u8; 32]>> {
+pub fn load_seed(settings_dir: &Path) -> Option<Zeroizing<[u8; 32]>> {
     let storage = get_storage(settings_dir);
     if storage.is_plaintext() {
         log::warn!(
@@ -80,7 +90,7 @@ pub fn load_or_create_seed(settings_dir: &Path) -> Option<Zeroizing<[u8; 32]>> {
             settings_dir.join("secrets").display()
         );
     }
-    let mnemonic = load_or_create_mnemonic_via_storage(&*storage, settings_dir)?;
+    let mnemonic = load_mnemonic_via_storage(&*storage, settings_dir)?;
 
     match warren_identity::seed_from_mnemonic(&mnemonic) {
         Ok(seed) => Some(seed),
@@ -95,18 +105,17 @@ pub fn load_or_create_seed(settings_dir: &Path) -> Option<Zeroizing<[u8; 32]>> {
     }
 }
 
-/// Loads or creates the BIP39 mnemonic in `settings_dir` and derives
-/// it into an Ed25519 [`SigningKey`], without the wrapper.
+/// Loads the persisted BIP39 mnemonic in `settings_dir`, if any, and
+/// derives it into an Ed25519 [`SigningKey`], without the wrapper.
 ///
-/// Sibling of [`load_or_create_seed`]: exposes the raw
-/// cryptographic material needed to assemble
-/// [`talpid_warren_tunnel::WarrenTunnelParameters`].
+/// Sibling of [`load_seed`]: exposes the raw cryptographic material
+/// needed to assemble [`talpid_warren_tunnel::WarrenTunnelParameters`].
 ///
 /// **No-log policy**: NEVER log the returned `SigningKey`
 /// (see Warren rule). The caller must consume it then drop it.
 #[must_use]
-pub fn load_or_create_signing_key(settings_dir: &Path) -> Option<SigningKey> {
-    load_or_create_seed(settings_dir).map(|seed| warren_identity::derive_node_key(&seed))
+pub fn load_signing_key(settings_dir: &Path) -> Option<SigningKey> {
+    load_seed(settings_dir).map(|seed| warren_identity::derive_node_key(&seed))
 }
 
 /// Migrates a legacy `<settings_dir>/warren_mnemonic.txt` (pre-secret
@@ -166,19 +175,18 @@ fn migrate_legacy_mnemonic(storage: &dyn SecretStorage, settings_dir: &Path) {
     }
 }
 
-/// Loads the mnemonic from the active storage backend, or
-/// bootstraps a fresh BIP39 mnemonic via
-/// [`warren_identity::load_or_create_mnemonic`] when neither the
-/// storage nor the legacy file holds one yet.
+/// Loads the mnemonic from the active storage backend, if present.
+/// Read-only: an empty storage is the normal pre-onboarding state and
+/// returns `None` silently; only genuine backend failures warn.
 ///
 /// The return is wrapped in `Zeroizing` so the heap buffer is wiped
 /// at the call site once the seed has been derived.
-fn load_or_create_mnemonic_via_storage(
+fn load_mnemonic_via_storage(
     storage: &dyn SecretStorage,
     settings_dir: &Path,
 ) -> Option<Zeroizing<String>> {
     // Migrate first so any subsequent `storage.load` sees the moved
-    // entry instead of falling through to bootstrap.
+    // entry.
     migrate_legacy_mnemonic(storage, settings_dir);
 
     match storage.load(MNEMONIC_KEY) {
@@ -193,7 +201,7 @@ fn load_or_create_mnemonic_via_storage(
                 None
             }
         },
-        Ok(None) => bootstrap_fresh_mnemonic(storage, settings_dir),
+        Ok(None) => None,
         Err(e) => {
             log::warn!(
                 "Warren auth disabled: secret storage read failed ({e}) - backend={}",
@@ -202,48 +210,6 @@ fn load_or_create_mnemonic_via_storage(
             None
         }
     }
-}
-
-/// First-launch bootstrap: generates a fresh BIP39 mnemonic **in
-/// memory only** (never touching the legacy plaintext file path),
-/// persists it via the storage backend, and returns it.
-///
-/// This deliberately bypasses `warren_identity::load_or_create_mnemonic`
-/// because that helper unconditionally writes to its `path` argument -
-/// which would mean creating a plaintext copy at the legacy path
-/// every first launch, even on macOS / Windows where the active
-/// backend stores in the System Keychain / DPAPI. Time Machine or
-/// Windows Shadow Copy could snapshot that file during the brief
-/// window between write and delete, defeating the
-/// "excluded-from-backup" guarantee of the OS-native backend.
-///
-/// We use `bip39::Mnemonic::generate` directly (with the `rand`
-/// feature) to produce a fresh 12-word mnemonic. The resulting
-/// `Mnemonic` is `Zeroize + ZeroizeOnDrop` thanks to the `zeroize`
-/// feature on `bip39`. The `to_string()` allocation is wrapped in
-/// `Zeroizing<String>` immediately so the heap buffer is wiped on
-/// scope exit. If the storage write fails, we surface the failure
-/// and refuse to fall back to a plaintext legacy file - better to
-/// disable Warren auth this boot than silently regress the security
-/// posture.
-fn bootstrap_fresh_mnemonic(
-    storage: &dyn SecretStorage,
-    _settings_dir: &Path,
-) -> Option<Zeroizing<String>> {
-    let raw_mnemonic = generate_fresh_mnemonic()
-        .inspect_err(|e| log::warn!("Warren auth disabled: BIP39 mnemonic generation failed: {e}"))
-        .ok()?;
-
-    if let Err(e) = storage.store(MNEMONIC_KEY, raw_mnemonic.as_bytes()) {
-        log::warn!(
-            "Warren auth disabled: secret storage write failed at bootstrap \
-             ({e}) - backend={}. Refusing to fall back to a plaintext legacy \
-             file; the daemon will retry on next boot.",
-            storage.backend_name()
-        );
-        return None;
-    }
-    Some(raw_mnemonic)
 }
 
 /// Restores (= overwrites) the user's BIP39 mnemonic. BIP39
@@ -304,7 +270,14 @@ pub fn set_warren_mnemonic(settings_dir: &Path, mnemonic: &str) -> io::Result<()
     Ok(())
 }
 
-/// Generates a fresh 12-word BIP39 mnemonic in memory.
+/// Generates a fresh 12-word BIP39 mnemonic **in memory only**.
+///
+/// Deliberately bypasses `warren_identity::load_or_create_mnemonic`,
+/// which unconditionally writes a plaintext file at its `path`
+/// argument: Time Machine or Windows Shadow Copy could snapshot that
+/// file during the brief window between write and delete, defeating
+/// the "excluded-from-backup" guarantee of the OS-native secret
+/// storage the caller persists into.
 ///
 /// The source `bip39::Mnemonic` holds the entropy and is
 /// `ZeroizeOnDrop`; the returned `String` is wrapped in `Zeroizing`
@@ -344,9 +317,9 @@ fn remove_legacy_mnemonic_file(settings_dir: &Path, storage: &dyn SecretStorage)
 /// returned phrase so the user can back it up before it is ever the
 /// only copy.
 ///
-/// Unlike [`bootstrap_fresh_mnemonic`] (first-launch only, guarded by
-/// the absence of any stored entry), this is the explicit user-driven
-/// rotation path and always overwrites.
+/// This and [`set_warren_mnemonic`] are the ONLY writers of the
+/// persisted identity: minting anywhere else would create a wallet the
+/// user never saw and cannot back up.
 ///
 /// # No-log policy
 ///
@@ -476,39 +449,36 @@ mod tests {
     }
 
     fn address_on_disk(dir: &Path) -> Option<String> {
-        load_or_create_signing_key(dir)
+        load_signing_key(dir)
             .map(|key| mullvad_api::warren_auth::ss58::encode(&key.verifying_key().to_bytes()))
     }
 
     #[test]
-    fn load_or_create_signing_key_creates_mnemonic_on_first_call() {
+    fn load_seed_mints_nothing_on_fresh_storage() {
+        // A load must never create an identity: a wallet minted outside
+        // the user's sight cannot be backed up, and money paid onto it
+        // is lost.
         let dir = isolated_tempdir();
 
-        let pk = address_on_disk(&dir).expect("must produce a key on fresh boot");
-
-        // The mnemonic must be readable via `get_warren_mnemonic`
-        // after bootstrap (= persisted somewhere by the active
-        // storage backend).
         assert!(
-            get_warren_mnemonic(&dir).is_some(),
-            "bootstrap must leave a retrievable mnemonic"
+            load_seed(&dir).is_none(),
+            "no identity may exist before the user creates one"
         );
-        // The derived key must produce a valid Warren SS58 address (`wb…`):
-        assert!(pk.starts_with("wb"), "expected a wb… address, got {pk}");
         assert!(
-            (47..=49).contains(&pk.len()),
-            "unexpected SS58 length: {pk}"
+            get_warren_mnemonic(&dir).is_none(),
+            "loading must leave the storage empty"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
-    fn load_or_create_signing_key_is_idempotent_across_calls() {
+    fn load_signing_key_is_stable_across_calls_after_minting() {
         let dir = isolated_tempdir();
+        let _ = generate_and_store_mnemonic(&dir).expect("mint identity");
 
-        let first = address_on_disk(&dir).expect("first call");
-        let second = address_on_disk(&dir).expect("second call");
+        let first = address_on_disk(&dir).expect("first load");
+        let second = address_on_disk(&dir).expect("second load");
         assert_eq!(
             first, second,
             "same settings_dir = same pubkey across boots"
@@ -533,7 +503,7 @@ mod tests {
     #[test]
     fn get_warren_mnemonic_returns_existing_mnemonic_after_persist() {
         let dir = isolated_tempdir();
-        let _ = address_on_disk(&dir).expect("bootstrap identity");
+        let _ = generate_and_store_mnemonic(&dir).expect("mint identity");
 
         let mnemonic = get_warren_mnemonic(&dir).expect("must return Some after persist");
         let word_count = mnemonic.split_whitespace().count();
@@ -548,7 +518,8 @@ mod tests {
     #[test]
     fn get_warren_mnemonic_yields_deterministic_signing_key() {
         let dir = isolated_tempdir();
-        let signing_key = load_or_create_signing_key(&dir).expect("bootstrap key");
+        let _ = generate_and_store_mnemonic(&dir).expect("mint identity");
+        let signing_key = load_signing_key(&dir).expect("load key");
         let pubkey_via_signer = hex::encode(signing_key.verifying_key().as_bytes());
 
         let mnemonic = get_warren_mnemonic(&dir).expect("mnemonic exported");
@@ -565,23 +536,23 @@ mod tests {
     }
 
     #[test]
-    fn load_or_create_seed_agrees_with_load_or_create_signing_key() {
-        // `load_or_create_signing_key` now delegates to `load_or_create_seed`
-        // internally; this pins the observable contract (same on-disk
-        // mnemonic -> the seed re-derives the exact same SigningKey via
-        // `derive_node_key`) so a future refactor cannot silently desync the
-        // two, which would break the SDK-backed `warren_api::WarrenApiClient`
-        // callers that only have the seed.
+    fn load_seed_agrees_with_load_signing_key() {
+        // Pins the observable contract: the same on-disk mnemonic
+        // re-derives the exact same SigningKey via `derive_node_key`
+        // through both load paths, otherwise the SDK-backed
+        // `warren_api::WarrenApiClient` callers that only have the seed
+        // would sign as a different identity than the signer.
         let dir = isolated_tempdir();
+        let _ = generate_and_store_mnemonic(&dir).expect("mint identity");
 
-        let signing_key = load_or_create_signing_key(&dir).expect("bootstrap key");
-        let seed = load_or_create_seed(&dir).expect("seed must be present after bootstrap");
+        let signing_key = load_signing_key(&dir).expect("load key");
+        let seed = load_seed(&dir).expect("load seed");
         let re_derived = warren_identity::derive_node_key(&seed);
 
         assert_eq!(
             signing_key.verifying_key().to_bytes(),
             re_derived.verifying_key().to_bytes(),
-            "load_or_create_seed MUST re-derive to the same key as load_or_create_signing_key"
+            "load_seed MUST re-derive to the same key as load_signing_key"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
@@ -703,13 +674,14 @@ mod tests {
     #[test]
     fn set_warren_mnemonic_overwrites_existing_identity() {
         let dir = isolated_tempdir();
-        let original_pubkey = address_on_disk(&dir).expect("bootstrap original");
+        let _ = generate_and_store_mnemonic(&dir).expect("mint original");
+        let original_pubkey = address_on_disk(&dir).expect("original identity");
 
         let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
                             abandon abandon abandon abandon abandon about";
         set_warren_mnemonic(&dir, new_mnemonic).expect("set new mnemonic");
 
-        let new_key = load_or_create_signing_key(&dir).expect("new identity");
+        let new_key = load_signing_key(&dir).expect("new identity");
         let new_pubkey = hex::encode(new_key.verifying_key().as_bytes());
 
         assert_ne!(
@@ -722,7 +694,7 @@ mod tests {
     }
 
     #[test]
-    fn mnemonic_derivation_is_consistent_with_load_or_create() {
+    fn mnemonic_derivation_is_consistent_with_load_signing_key() {
         let dir = isolated_tempdir();
         let mnemonic = "abandon abandon abandon abandon abandon abandon \
                         abandon abandon abandon abandon abandon about";
@@ -734,13 +706,13 @@ mod tests {
             .expect("derivation from known-valid mnemonic must not fail");
         let inline_pubkey = inline_key.verifying_key().as_bytes().to_vec();
 
-        let loaded_key = load_or_create_signing_key(&dir).expect("load key from storage");
+        let loaded_key = load_signing_key(&dir).expect("load key from storage");
         let loaded_pubkey = loaded_key.verifying_key().as_bytes().to_vec();
 
         assert_eq!(
             inline_pubkey, loaded_pubkey,
-            "inline derivation (G-3 identity-changed detection) MUST produce \
-             the same pubkey as load_or_create_signing_key (boot path)"
+            "inline derivation (identity-changed detection) MUST produce \
+             the same pubkey as load_signing_key (boot path)"
         );
 
         let _ = std::fs::remove_dir_all(&dir);
