@@ -1,7 +1,11 @@
-//! Loads or generates the user's BIP39 mnemonic, derives it into an
-//! Ed25519 [`SigningKey`] via [`warren_identity::derive_node_key`],
-//! and wraps it in a shared
-//! [`mullvad_api::warren_auth::WarrenAuthSigner`] via [`Arc`].
+//! Persistence and derivation of the user's BIP39 mnemonic: load or
+//! generate it, derive the pre-HKDF seed and the Ed25519 [`SigningKey`]
+//! via [`warren_identity::derive_node_key`], and manage the on-disk
+//! copies. In-memory identity hot-swaps live EXCLUSIVELY in
+//! [`crate::warren_identity_manager::WarrenIdentityManager`], the
+//! single mutation surface that keeps the signer and the SDK seed in
+//! lockstep; this module must never grow a helper that swaps one view
+//! without the other.
 //!
 //! ## Persistence layout (post-secret-storage refactor)
 //!
@@ -36,10 +40,8 @@
 
 use std::io;
 use std::path::Path;
-use std::sync::Arc;
 
 use ed25519_dalek::SigningKey;
-use mullvad_api::warren_auth::WarrenAuthSigner;
 use zeroize::Zeroizing;
 
 use crate::os_secret_storage::{SecretStorage, get_storage};
@@ -54,18 +56,6 @@ pub const MNEMONIC_FILENAME: &str = "warren_mnemonic.txt";
 /// Logical key under which the mnemonic is stored in the
 /// [`SecretStorage`] backend.
 const MNEMONIC_KEY: &str = "warren_mnemonic";
-
-/// Loads or creates the BIP39 mnemonic in `settings_dir`, derives
-/// it into an Ed25519 signing key, and returns a shared [`WarrenAuthSigner`].
-///
-/// Returns `None` (with a `log::warn!`) if the mnemonic cannot be
-/// loaded or derived, to allow the daemon to continue in classic
-/// Mullvad mode.
-#[must_use]
-pub fn load_or_create_signer(settings_dir: &Path) -> Option<Arc<WarrenAuthSigner>> {
-    let signing_key = load_or_create_signing_key(settings_dir)?;
-    Some(Arc::new(WarrenAuthSigner::new(signing_key)))
-}
 
 /// Loads or creates the BIP39 mnemonic in `settings_dir` and derives it
 /// into the 32-byte pre-HKDF seed (the input to
@@ -108,7 +98,7 @@ pub fn load_or_create_seed(settings_dir: &Path) -> Option<Zeroizing<[u8; 32]>> {
 /// Loads or creates the BIP39 mnemonic in `settings_dir` and derives
 /// it into an Ed25519 [`SigningKey`], without the wrapper.
 ///
-/// Sibling of [`load_or_create_signer`]: exposes the raw
+/// Sibling of [`load_or_create_seed`]: exposes the raw
 /// cryptographic material needed to assemble
 /// [`talpid_warren_tunnel::WarrenTunnelParameters`].
 ///
@@ -265,7 +255,7 @@ fn bootstrap_fresh_mnemonic(
 /// because the previous identity (and the subscription tied to it)
 /// is IRREVERSIBLY replaced. The caller in
 /// `mullvad-daemon::on_set_warren_mnemonic` pairs this disk-write
-/// with [`reload_signer_from_disk`] + an
+/// with `WarrenIdentityManager::reload_from_disk` + an
 /// `account_manager.login(new_pubkey)` so the new identity is
 /// activated in the running daemon without requiring a restart.
 ///
@@ -347,10 +337,12 @@ fn remove_legacy_mnemonic_file(settings_dir: &Path, storage: &dyn SecretStorage)
 /// any existing entry), removes any leftover legacy plaintext file,
 /// and returns the new phrase.
 ///
-/// **Use case**: GUI "Create a new account". The caller pairs this
-/// with [`reload_signer_from_disk`] + an `account_manager.login(new_pubkey)`
-/// to activate the identity without a restart, then shows the returned
-/// phrase so the user can back it up before it is ever the only copy.
+/// **Use case**: GUI "Create a new account", via
+/// `WarrenIdentityManager::mint_new_identity` (which swaps BOTH the
+/// signer and the SDK seed to the new phrase) + an
+/// `account_manager.login(new_pubkey)`, then the GUI shows the
+/// returned phrase so the user can back it up before it is ever the
+/// only copy.
 ///
 /// Unlike [`bootstrap_fresh_mnemonic`] (first-launch only, guarded by
 /// the absence of any stored entry), this is the explicit user-driven
@@ -369,23 +361,6 @@ pub fn generate_and_store_mnemonic(settings_dir: &Path) -> io::Result<Zeroizing<
         storage.backend_name()
     );
     Ok(phrase)
-}
-
-/// Neutralizes the in-memory signing identity after a true sign-out.
-///
-/// Replaces the live Ed25519 key in the shared [`WarrenAuthSigner`]
-/// with an all-zero sentinel key. This serves two purposes:
-/// 1. The previous key material is dropped and zeroized (the
-///    `SigningKey` is `ZeroizeOnDrop`), so the just-erased identity no
-///    longer lingers in process memory.
-/// 2. Any signed request that happens to fire while logged out (e.g. a
-///    background relay-list refresh) is signed by the sentinel key, not
-///    the user's real (now-erased) identity - the server rejects it
-///    rather than the daemon authenticating as the deleted account.
-///
-/// Pairs with [`clear_warren_mnemonic`] in the GUI logout path.
-pub fn clear_signer(signer: &WarrenAuthSigner) {
-    signer.replace_signing_key(SigningKey::from_bytes(&[0u8; 32]));
 }
 
 /// Erases the persisted BIP39 mnemonic from the active secret-storage
@@ -410,33 +385,6 @@ pub fn clear_warren_mnemonic(settings_dir: &Path) -> io::Result<()> {
         storage.backend_name()
     );
     Ok(())
-}
-
-/// Re-reads the persisted BIP39 mnemonic, derives the Ed25519
-/// signing key, and swaps it into the shared [`WarrenAuthSigner`]
-/// held by `mullvad-api`'s `RequestFactory`.
-///
-/// **Use case**: the GUI just called [`set_warren_mnemonic`] and the
-/// daemon wants to activate the new identity without restarting the
-/// process. After this call, every subsequent API request signed by
-/// `signer` uses the freshly derived key.
-///
-/// Returns the new Ed25519 pubkey bytes on success (= the caller can
-/// log the post-swap pubkey for audit and invoke
-/// `account_manager.login(...)` against it), or `None` if the
-/// mnemonic cannot be loaded or derived (the existing signing key
-/// in `signer` is left intact in that case).
-///
-/// # No-log policy
-///
-/// NEVER log the mnemonic content nor the signing key. The returned
-/// pubkey is public information and may be logged for audit.
-#[must_use]
-pub fn reload_signer_from_disk(signer: &WarrenAuthSigner, settings_dir: &Path) -> Option<[u8; 32]> {
-    let signing_key = load_or_create_signing_key(settings_dir)?;
-    let pubkey_bytes = *signing_key.verifying_key().as_bytes();
-    signer.replace_signing_key(signing_key);
-    Some(pubkey_bytes)
 }
 
 /// Reads the user's BIP39 mnemonic from the active storage backend.
@@ -527,11 +475,16 @@ mod tests {
         dir
     }
 
+    fn address_on_disk(dir: &Path) -> Option<String> {
+        load_or_create_signing_key(dir)
+            .map(|key| mullvad_api::warren_auth::ss58::encode(&key.verifying_key().to_bytes()))
+    }
+
     #[test]
-    fn load_or_create_signer_creates_mnemonic_on_first_call() {
+    fn load_or_create_signing_key_creates_mnemonic_on_first_call() {
         let dir = isolated_tempdir();
 
-        let signer = load_or_create_signer(&dir).expect("must produce a signer on fresh boot");
+        let pk = address_on_disk(&dir).expect("must produce a key on fresh boot");
 
         // The mnemonic must be readable via `get_warren_mnemonic`
         // after bootstrap (= persisted somewhere by the active
@@ -540,8 +493,7 @@ mod tests {
             get_warren_mnemonic(&dir).is_some(),
             "bootstrap must leave a retrievable mnemonic"
         );
-        // The signer must produce a valid Warren SS58 address (`wb…`):
-        let pk = signer.pubkey_ss58();
+        // The derived key must produce a valid Warren SS58 address (`wb…`):
         assert!(pk.starts_with("wb"), "expected a wb… address, got {pk}");
         assert!(
             (47..=49).contains(&pk.len()),
@@ -552,36 +504,15 @@ mod tests {
     }
 
     #[test]
-    fn load_or_create_signer_is_idempotent_across_calls() {
+    fn load_or_create_signing_key_is_idempotent_across_calls() {
         let dir = isolated_tempdir();
 
-        let s1 = load_or_create_signer(&dir).expect("first call");
-        let s2 = load_or_create_signer(&dir).expect("second call");
+        let first = address_on_disk(&dir).expect("first call");
+        let second = address_on_disk(&dir).expect("second call");
         assert_eq!(
-            s1.pubkey_ss58(),
-            s2.pubkey_ss58(),
+            first, second,
             "same settings_dir = same pubkey across boots"
         );
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
-    fn clear_signer_swaps_identity_to_the_zero_sentinel() {
-        let dir = isolated_tempdir();
-        let signer = load_or_create_signer(&dir).expect("signer");
-        let user_pubkey = signer.pubkey_ss58();
-
-        clear_signer(&signer);
-
-        let sentinel_pubkey =
-            WarrenAuthSigner::new(SigningKey::from_bytes(&[0u8; 32])).pubkey_ss58();
-        assert_ne!(
-            user_pubkey,
-            signer.pubkey_ss58(),
-            "logout must stop signing as the user's identity"
-        );
-        assert_eq!(signer.pubkey_ss58(), sentinel_pubkey);
 
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -602,7 +533,7 @@ mod tests {
     #[test]
     fn get_warren_mnemonic_returns_existing_mnemonic_after_persist() {
         let dir = isolated_tempdir();
-        let _ = load_or_create_signer(&dir).expect("bootstrap signer");
+        let _ = address_on_disk(&dir).expect("bootstrap identity");
 
         let mnemonic = get_warren_mnemonic(&dir).expect("must return Some after persist");
         let word_count = mnemonic.split_whitespace().count();
@@ -772,8 +703,7 @@ mod tests {
     #[test]
     fn set_warren_mnemonic_overwrites_existing_identity() {
         let dir = isolated_tempdir();
-        let original_signer = load_or_create_signer(&dir).expect("bootstrap original");
-        let original_pubkey = original_signer.pubkey_ss58();
+        let original_pubkey = address_on_disk(&dir).expect("bootstrap original");
 
         let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
                             abandon abandon abandon abandon abandon about";
@@ -817,35 +747,6 @@ mod tests {
     }
 
     #[test]
-    fn reload_signer_from_disk_swaps_identity_in_place() {
-        let dir = isolated_tempdir();
-
-        let signer = load_or_create_signer(&dir).expect("bootstrap signer");
-        let original_pubkey = signer.pubkey_ss58();
-
-        let new_mnemonic = "abandon abandon abandon abandon abandon abandon \
-                            abandon abandon abandon abandon abandon about";
-        set_warren_mnemonic(&dir, new_mnemonic).expect("set new mnemonic");
-
-        let new_pubkey_bytes =
-            reload_signer_from_disk(&signer, &dir).expect("reload must succeed after set");
-        let new_pubkey_ss58 = mullvad_api::warren_auth::ss58::encode(&new_pubkey_bytes);
-
-        assert_eq!(
-            signer.pubkey_ss58(),
-            new_pubkey_ss58,
-            "the shared signer must now report the post-swap pubkey"
-        );
-        assert_ne!(
-            signer.pubkey_ss58(),
-            original_pubkey,
-            "the swap must actually change the identity"
-        );
-
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
-    #[test]
     fn legacy_mnemonic_file_is_migrated_on_first_load() {
         // Simulate a pre-secret-storage installation: a plaintext
         // mnemonic file at the legacy path with no storage entry.
@@ -856,8 +757,7 @@ mod tests {
         std::fs::write(&legacy_path, format!("{mnemonic}\n")).expect("seed legacy");
 
         // First call triggers migration.
-        let signer = load_or_create_signer(&dir).expect("loaded with migrated mnemonic");
-        let pubkey = signer.pubkey_ss58();
+        let pubkey = address_on_disk(&dir).expect("loaded with migrated mnemonic");
 
         // Legacy file should be gone after migration (and we ignore
         // failure on platforms where it cannot be removed for some
@@ -869,10 +769,9 @@ mod tests {
 
         // Subsequent load returns the same identity (= read from
         // storage, not from a re-bootstrap).
-        let signer2 = load_or_create_signer(&dir).expect("second load");
+        let pubkey2 = address_on_disk(&dir).expect("second load");
         assert_eq!(
-            pubkey,
-            signer2.pubkey_ss58(),
+            pubkey, pubkey2,
             "migrated mnemonic must yield a stable identity across loads"
         );
 

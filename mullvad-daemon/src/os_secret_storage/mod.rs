@@ -115,7 +115,7 @@ pub trait SecretStorage: Send + Sync {
 /// On macOS this constructs a fresh `MacOsKeychainStorage` and runs
 /// the open-time write+delete probe each time. The cost is ~1ms per
 /// call and is only paid on `set_warren_mnemonic` / `get_warren_mnemonic`
-/// (user-triggered operations, rare) and at `load_or_create_signer`
+/// (user-triggered operations, rare) and at `WarrenIdentityManager::load_or_create`
 /// (once per boot). Caching the backend on the `Daemon` struct is a
 /// future optimization; it requires threading `&dyn SecretStorage`
 /// through several public functions in `warren_signer` and is deferred

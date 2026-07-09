@@ -32,10 +32,11 @@ use zeroize::Zeroizing;
 /// the SDK-facing clients in this module. `None` at the `Option` level (the
 /// call sites carry `Option<SharedWarrenSeed>`) means "no mnemonic
 /// bootstrapped yet"; [`sentinel_seed`] is the in-place "logged out"
-/// value, mirroring `warren_signer::clear_signer`'s all-zero `SigningKey`
-/// sentinel: a fixed, publicly known identity that can never match a real
-/// subscription, so a request that fires after logout fails safely
-/// server-side instead of authenticating as the just-erased account.
+/// value that `WarrenIdentityManager::clear` swaps BOTH identity views
+/// to: a fixed, publicly known identity that must never hold a real
+/// subscription (warren-api rejects it outright), so a request that
+/// fires after logout fails safely server-side instead of
+/// authenticating as the just-erased account.
 pub(crate) type SharedWarrenSeed = Arc<RwLock<Zeroizing<[u8; 32]>>>;
 
 /// The "logged out" sentinel seed. See [`SharedWarrenSeed`].

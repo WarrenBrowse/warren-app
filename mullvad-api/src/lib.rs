@@ -52,6 +52,12 @@ pub const VOUCHER_EXPIRED: &str = "VOUCHER_EXPIRED";
 /// the GUI keeps polling.
 pub const VOUCHER_NOT_READY: &str = "VOUCHER_NOT_READY";
 
+/// Warren: the account the daemon designated does not match the identity
+/// the SDK client signs with. Refusing is what keeps an identity desync
+/// from crediting a purchase to (or serving the balance of) a wallet the
+/// user does not own.
+pub const WARREN_IDENTITY_DESYNC: &str = "WARREN_IDENTITY_DESYNC";
+
 /// Error code returned by the Mullvad API if the account number is invalid.
 pub const INVALID_ACCOUNT: &str = "INVALID_ACCOUNT";
 

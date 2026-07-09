@@ -157,10 +157,33 @@ impl WarrenRemoteAccountBackend {
     }
 }
 
+/// Refuses to act when the account the daemon designates differs from the
+/// identity the SDK client signs with. Under a signer/device desync,
+/// proceeding would credit a purchase to, serve the balance of, or delete
+/// a wallet the user does not own; the conflict must surface instead.
+/// No-log: only short prefixes of the two addresses are logged.
+fn check_account_matches_identity(account: &str, identity: &str) -> Result<(), rest::Error> {
+    if account == identity {
+        return Ok(());
+    }
+    let redact = |s: &str| s.get(..8).unwrap_or(s).to_owned();
+    log::error!(
+        "warren account backend: requested account {}... but the signing identity is {}...; \
+         refusing (identity desync)",
+        redact(account),
+        redact(identity)
+    );
+    Err(rest::Error::ApiError(
+        rest::StatusCode::CONFLICT,
+        mullvad_api::WARREN_IDENTITY_DESYNC.to_owned(),
+    ))
+}
+
 impl WarrenAccountBackend for WarrenRemoteAccountBackend {
     fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
         let client = self.client.clone();
         Box::pin(async move {
+            check_account_matches_identity(&account, &client.address())?;
             let resp = client.get_subscription().await.map_err(map_client_error)?;
             let expiry = expiry_from_unix_secs(resp.expires_at)?;
             Ok(AccountData {
@@ -170,20 +193,28 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
         })
     }
 
-    fn delete_account(&self, _account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
+    fn delete_account(&self, account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
         let client = self.client.clone();
-        Box::pin(async move { client.delete_account().await.map_err(map_client_error) })
+        Box::pin(async move {
+            check_account_matches_identity(&account, &client.address())?;
+            client.delete_account().await.map_err(map_client_error)
+        })
     }
 
     fn submit_voucher(
         &self,
-        _account: AccountNumber,
+        account: AccountNumber,
         voucher: String,
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
         let client = self.client.clone();
         let pubkey_ss58 = client.address();
         let pulled_unregistered = self.pulled_unregistered.clone();
         Box::pin(async move {
+            // Checked BEFORE the wpid pull below: the pull consumes the
+            // single-use server-side mapping, so running it under a
+            // desynced identity would burn the PAID voucher into the
+            // wrong wallet with no recovery.
+            check_account_matches_identity(&account, &pubkey_ss58)?;
             // App-initiated purchase (doc 35): the GUI polls this same
             // entry point with the 32-hex wpid it generated before
             // opening the checkout site. A wpid can never collide with
@@ -1037,6 +1068,109 @@ mod tests {
             }
             other => panic!("expected ApiError(409, raw body), got {other:?}"),
         }
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_get_data_refuses_a_mismatched_account() {
+        // Defense in depth for the identity-desync class of bug: serving
+        // the signing identity's balance labeled with a DIFFERENT
+        // requested account silently masks a signer/device divergence
+        // (the GUI shows another wallet's subscription as the user's).
+        // The backend must refuse loudly and send NO request.
+        let mut server = mockito::Server::new_async().await;
+        let sub = server
+            .mock("GET", "/v1/subscription")
+            .with_status(200)
+            .with_body(r#"{"expires_at":1700000000}"#)
+            .expect(0)
+            .create_async()
+            .await;
+        let seed = [73u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let err = backend
+            .get_data(address_for_seed([74u8; 32]))
+            .await
+            .expect_err("a mismatched account must be refused");
+
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409, "desync surfaces as a conflict");
+                assert_eq!(msg, mullvad_api::WARREN_IDENTITY_DESYNC);
+            }
+            other => panic!("expected ApiError(409, WARREN_IDENTITY_DESYNC), got {other:?}"),
+        }
+        sub.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_submit_voucher_refuses_a_mismatched_account_before_pulling() {
+        // If the identity check ran AFTER the wpid pull, the single-use
+        // server-side mapping would be consumed and the PAID voucher
+        // registered under the stale signing identity instead of the
+        // account the user sees: the exact production incident. No HTTP
+        // traffic may happen for a mismatched account.
+        let mut server = mockito::Server::new_async().await;
+        let pull = server
+            .mock(
+                "GET",
+                mockito::Matcher::Regex("^/v1/checkout/.*".to_owned()),
+            )
+            .expect(0)
+            .create_async()
+            .await;
+        let register = server
+            .mock("POST", "/v1/register")
+            .expect(0)
+            .create_async()
+            .await;
+        let seed = [75u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+        let wpid = "aaaabbbbccccddddeeeeffff00001111".to_owned();
+
+        let err = backend
+            .submit_voucher(address_for_seed([76u8; 32]), wpid)
+            .await
+            .expect_err("a mismatched account must be refused");
+
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409, "desync surfaces as a conflict");
+                assert_eq!(msg, mullvad_api::WARREN_IDENTITY_DESYNC);
+            }
+            other => panic!("expected ApiError(409, WARREN_IDENTITY_DESYNC), got {other:?}"),
+        }
+        pull.assert_async().await;
+        register.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn warren_remote_delete_account_refuses_a_mismatched_account() {
+        // Deleting under a desync would erase the signing identity's
+        // account server-side while the user believes they are deleting
+        // the displayed one: destructive, so the guard applies here too.
+        let mut server = mockito::Server::new_async().await;
+        let del = server
+            .mock("DELETE", "/v1/account")
+            .expect(0)
+            .create_async()
+            .await;
+        let seed = [77u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let err = backend
+            .delete_account(address_for_seed([78u8; 32]))
+            .await
+            .expect_err("a mismatched account must be refused");
+
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 409, "desync surfaces as a conflict");
+                assert_eq!(msg, mullvad_api::WARREN_IDENTITY_DESYNC);
+            }
+            other => panic!("expected ApiError(409, WARREN_IDENTITY_DESYNC), got {other:?}"),
+        }
+        del.assert_async().await;
     }
 
     #[test]
