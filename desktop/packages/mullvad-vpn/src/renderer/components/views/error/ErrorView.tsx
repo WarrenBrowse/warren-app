@@ -29,7 +29,6 @@ export function ErrorView({ settingsUnavailable, footer, children }: ErrorViewPr
         justifyContent="end">
         <FlexColumn gap="medium">
           <FlexColumn alignItems="center" justifyContent="end" gap="medium">
-            <Logo variant="icon" size="2" />
             <Logo variant="text" size="2" />
           </FlexColumn>
           <Text role="alert" variant="bodySmall" textAlign="center" color="whiteAlpha60">

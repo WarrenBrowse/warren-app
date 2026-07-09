@@ -1,20 +1,19 @@
 import { colors } from '../../foundations';
-import { FontFamilies } from '../../foundations/variables';
-import { Flex } from '../flex';
 
 export interface LogoProps {
   variant?: 'icon' | 'text' | 'both';
   size?: '1' | '2';
+  // Accepted for call-site compatibility but no longer selects art: the animated
+  // rabbit (one PNG per tunnel state) was replaced by the single fixed Warren
+  // mark. Kept so the header's existing wiring does not break.
   state?: LogoState;
-  // Wordmark text colour only. The guard below concerns the MARK art, not the
-  // wordmark: over the bright scenery the light wordmark loses contrast, so the
-  // main header renders it dark. Defaults to the light-on-charcoal colour.
+  // Over the bright scenery the light art loses contrast, so some screens render
+  // it dark. Defaults to the light-on-charcoal colour.
   wordmarkTone?: 'light' | 'dark';
 }
 
-// 'exposed'  : Bula's masked face is out of the burrow (disconnected).
-// 'hidden'   : Bula is safe in the burrow, only the ears show (connected).
-// 'blocked'  : internet blocked by the kill switch (future state).
+// Retained for the header's getLogoStateByTunnelState wiring; no longer maps to a
+// mark (see LogoProps.state).
 export type LogoState = 'exposed' | 'hidden' | 'blocked';
 
 const iconSizes = {
@@ -27,68 +26,73 @@ const textFontSizes = {
   '2': 48,
 };
 
-// The dark rabbit IS the brand (poka, 2026-07-04): one mark per state,
-// identical on every screen and background. There is deliberately NO
-// tone/color knob on this component, so a per-screen variant of the
-// mark is impossible by construction; introducing one again requires
-// changing this API and shipping new art, both loud in review.
-const markAssets: Record<LogoState, string> = {
-  exposed: 'logo-rabbit',
-  hidden: 'logo-ears',
-  // TODO: give the kill-switch "internet blocked" state its own mark (per the
-  // art direction, an ocre rabbit with crossed-out eyes). Until that art exists
-  // it falls back to the exposed face.
-  blocked: 'logo-rabbit',
-};
+const tint = (tone: 'light' | 'dark') =>
+  // True black over the bright sky (the charcoal darkBlue reads washed-out
+  // there); the light-on-charcoal grey everywhere else.
+  tone === 'dark' ? colors.black : colors.whiteOnDarkBlue80;
 
-// All mark PNGs share this canvas and a bottom-anchored burrow, so every state
-// renders the exact same box (the hole stays put; only the rabbit ducks in/out).
-const MARK_ASPECT = 968 / 687;
-
-const Mark = ({ size, state }: { size: number; state: LogoState }) => (
-  <img
-    src={`assets/images/${markAssets[state]}.png`}
-    height={size}
-    width={Math.round(size * MARK_ASPECT)}
-    alt="Warren"
-    draggable={false}
+// Both marks are single-colour vectors painted through a CSS mask (not <img>) so
+// the tone guard can recolour them per screen; an <img> cannot inherit a colour.
+// The near-square ears art is the standalone "W".
+const Icon = ({ size, tone }: { size: number; tone: 'light' | 'dark' }) => (
+  <span
+    role="img"
+    aria-label="Warren"
+    style={{
+      display: 'inline-block',
+      height: size,
+      width: size,
+      backgroundColor: tint(tone),
+      WebkitMaskImage: 'url(assets/images/warren-mark.svg)',
+      maskImage: 'url(assets/images/warren-mark.svg)',
+      WebkitMaskRepeat: 'no-repeat',
+      maskRepeat: 'no-repeat',
+      WebkitMaskPosition: 'center',
+      maskPosition: 'center',
+      WebkitMaskSize: 'contain',
+      maskSize: 'contain',
+    }}
   />
 );
 
-const Wordmark = ({ fontSize, tone = 'light' }: { fontSize: number; tone?: 'light' | 'dark' }) => (
-  <span
-    style={{
-      fontFamily: FontFamilies.nunito,
-      fontWeight: 900,
-      fontSize,
-      lineHeight: 1,
-      // True black (not the charcoal darkBlue, which reads washed-out over the
-      // bright sky), matching the black rabbit mark and the flat header icons.
-      color: tone === 'dark' ? colors.black : colors.whiteOnDarkBlue80,
-      whiteSpace: 'nowrap',
-    }}>
-    <span style={{ fontSize: '1.35em' }}>W</span>
-    <span style={{ marginLeft: '-0.28em', letterSpacing: '0.01em' }}>ARREN</span>
-  </span>
-);
+// The wordmark is one vector (assets/images/warren-wordmark.svg): the ears mark
+// as the "W", then "arren" set in Coliner Light. It is painted through a CSS
+// mask rather than an <img> so the tone guard can still recolour it per screen
+// (an <img> cannot inherit currentColor). fontSize keeps the same meaning as the
+// old text wordmark: the cap band is ~fontSize, the ears rise to ~1.35x above it.
+const WORDMARK_ASPECT = 3203 / 720;
+const Wordmark = ({ fontSize, tone = 'light' }: { fontSize: number; tone?: 'light' | 'dark' }) => {
+  const height = Math.round(fontSize * 1.35);
+  return (
+    <span
+      role="img"
+      aria-label="Warren"
+      style={{
+        display: 'inline-block',
+        height,
+        width: Math.round(height * WORDMARK_ASPECT),
+        backgroundColor: tint(tone),
+        WebkitMaskImage: 'url(assets/images/warren-wordmark.svg)',
+        maskImage: 'url(assets/images/warren-wordmark.svg)',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'left center',
+        maskPosition: 'left center',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+      }}
+    />
+  );
+};
 
-export const Logo = ({
-  variant = 'icon',
-  size: sizeProp = '1',
-  state = 'exposed',
-  wordmarkTone = 'light',
-}: LogoProps) => {
+export const Logo = ({ variant = 'icon', size: sizeProp = '1', wordmarkTone = 'light' }: LogoProps) => {
   switch (variant) {
     case 'icon':
-      return <Mark size={iconSizes[sizeProp]} state={state} />;
+      return <Icon size={iconSizes[sizeProp]} tone={wordmarkTone} />;
+    // The Warren wordmark already embeds the mark as its "W", so "both" and
+    // "text" render the same single lockup, with no separate icon beside it.
     case 'text':
-      return <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} />;
     case 'both':
-      return (
-        <Flex alignItems="center" gap="tiny">
-          <Mark size={iconSizes[sizeProp]} state={state} />
-          <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} />
-        </Flex>
-      );
+      return <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} />;
   }
 };
