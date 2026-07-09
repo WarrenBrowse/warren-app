@@ -1761,6 +1761,13 @@ impl Daemon {
                     });
                 }
             });
+            // ADR 36 gap-free drain path: request channel from the drain
+            // reactor (through the generator) into the directory updater.
+            let (warren_drain_migration_tx, warren_drain_migration_rx) =
+                tokio::sync::mpsc::unbounded_channel();
+            parameters_generator
+                .set_warren_drain_migration_tx(Some(warren_drain_migration_tx))
+                .await;
             warren_multi_hop_directory::spawn(warren_multi_hop_directory::UpdaterConfig {
                 api_url: warren_api_url.clone(),
                 server_pins: warren_server_pubkey.clone().into_iter().collect(),
@@ -1789,6 +1796,7 @@ impl Daemon {
                 }),
                 settings_dir: config.settings_dir.clone(),
                 online_edge_rx: Some(warren_online_edge_rx.clone()),
+                drain_migration_rx: Some(warren_drain_migration_rx),
             });
         }
 

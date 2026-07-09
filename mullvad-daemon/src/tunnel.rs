@@ -215,6 +215,12 @@ struct InnerParametersGenerator {
     /// teardown) is a harmless no-op and holds no watch receiver, so it never
     /// pins a dead supervisor alive.
     warren_migrate_handle: Option<MigrateHandle>,
+    /// ADR 36 gap-free drain path: request channel into the directory
+    /// updater. [`ParametersGenerator::migrate_off_drained_exit`] posts an
+    /// on-demand drain pass here and awaits the migration outcome. `None`
+    /// until the daemon boot wires the updater (the drain reactor then
+    /// always falls back to the rebuild).
+    warren_drain_migration_tx: Option<crate::warren_multi_hop_directory::DrainMigrationTx>,
     /// docs/59 D2 candidate ladder: ordered same-country alternates to
     /// try when the pre-swap gate rejects the primary migration
     /// candidate for a pinned-port conflict. Set by the directory
@@ -378,6 +384,7 @@ impl ParametersGenerator {
             warren_last_exit_pubkey: None,
             warren_drained_exits: Vec::new(),
             warren_migrate_handle: None,
+            warren_drain_migration_tx: None,
             warren_migration_candidates: std::collections::VecDeque::new(),
             warren_api_url,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
@@ -573,6 +580,29 @@ impl ParametersGenerator {
             .iter()
             .map(|(id, _)| *id)
             .collect()
+    }
+
+    /// ADR 36 gap-free drain path: wire the request channel into the
+    /// directory updater. Called once at daemon boot, right before the
+    /// updater is spawned with the receiving half.
+    pub async fn set_warren_drain_migration_tx(
+        &self,
+        tx: Option<crate::warren_multi_hop_directory::DrainMigrationTx>,
+    ) {
+        self.0.lock().await.warren_drain_migration_tx = tx;
+    }
+
+    /// ADR 36 gap-free drain path, invoked by the tunnel's drain reactor
+    /// with the DRAINING exit id. Records the exit in the avoid-set FIRST
+    /// (synchronously here, so the updater's re-selection is guaranteed to
+    /// exclude it: the fire-and-forget `on_exit_draining` spawn offers no
+    /// such ordering), then asks the directory updater for an immediate
+    /// drain pass. `true` = a make-before-break migration was dispatched
+    /// and the tunnel stays up; `false` sends the reactor to the rebuild.
+    pub async fn migrate_off_drained_exit(&self, exit_id: [u8; 16]) -> bool {
+        self.record_warren_drained_exit(exit_id).await;
+        let tx = self.0.lock().await.warren_drain_migration_tx.clone();
+        crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref()).await
     }
 
     /// ADR 36 (Option A): store the current tunnel's migrate handle. Wired
@@ -1144,6 +1174,16 @@ impl ParametersGenerator {
             tokio::spawn(async move {
                 g.set_warren_migrate_handle(handle).await;
             });
+        }));
+        // ADR 36 gap-free drain path: the drain reactor invokes this hook
+        // with the draining exit id (after its jitter) instead of rebuilding
+        // outright. The avoid-set record + directory-updater drain pass +
+        // supervisor migrate all happen behind `migrate_off_drained_exit`;
+        // a `false` outcome sends the reactor to its escalate fallback.
+        let drain_migrate_gen = self.clone();
+        params.warren_drain_migrate = Some(Arc::new(move |exit_id: [u8; 16]| {
+            let g = drain_migrate_gen.clone();
+            Box::pin(async move { g.migrate_off_drained_exit(exit_id).await })
         }));
         // docs/59 Lot 3: pre-swap NAT-PMP reservation gate + post-swap
         // re-map observer, behind the explicit activation knob (the

@@ -811,6 +811,64 @@ fn verify_cached_directory(
     Ok(verified)
 }
 
+/// ADR 36 gap-free drain path: a request the drain reactor posts to the
+/// updater. The updater runs an immediate cache-only selection pass (the
+/// avoid-set already holds the draining exit) and answers whether a
+/// make-before-break migration was dispatched.
+pub(crate) type DrainMigrationRequest = tokio::sync::oneshot::Sender<bool>;
+
+/// Sender half handed to [`crate::tunnel::ParametersGenerator`] so the
+/// tunnel's drain reactor can trigger an on-demand drain pass.
+pub(crate) type DrainMigrationTx = tokio::sync::mpsc::UnboundedSender<DrainMigrationRequest>;
+
+/// Ceiling on waiting for the updater's drain-pass answer. Slightly above
+/// [`FETCH_TIMEOUT`] so a request queued behind an in-flight periodic fetch
+/// still gets its real answer; past it the reactor falls back to the
+/// rebuild instead of staying wedged on a dead updater.
+const DRAIN_MIGRATION_REPLY_TIMEOUT: Duration = Duration::from_secs(20);
+
+/// Ask the updater for an immediate drain-migration pass and report whether
+/// a gap-free migration was dispatched. `false` on every degraded path (no
+/// updater wired, updater gone, reply timeout): the caller then falls back
+/// to the break-before-make rebuild, which always recovers.
+pub(crate) async fn request_drain_migration(tx: Option<&DrainMigrationTx>) -> bool {
+    let Some(tx) = tx else {
+        return false;
+    };
+    let (reply_tx, reply_rx) = tokio::sync::oneshot::channel();
+    if tx.send(reply_tx).is_err() {
+        return false;
+    }
+    matches!(
+        tokio::time::timeout(DRAIN_MIGRATION_REPLY_TIMEOUT, reply_rx).await,
+        Ok(Ok(true))
+    )
+}
+
+/// Answer every drain reactor waiting on this updater pass with the
+/// migration outcome. A dropped reactor (tunnel torn down mid-pass) is
+/// skipped harmlessly.
+fn settle_drain_replies(pending: &mut Vec<DrainMigrationRequest>, migrated: bool) {
+    for reply in pending.drain(..) {
+        let _ = reply.send(migrated);
+    }
+}
+
+/// Break-before-make fallback for a circuit change that was not applied
+/// gap-free. When a drain reactor is waiting on this pass, the reconnect is
+/// NOT requested here: the reactor escalates the rebuild itself on the
+/// `false` reply, and firing both triggers would rebuild the tunnel twice.
+fn dispatch_reconnect_fallback(reactor_waiting: bool, request_reconnect: &dyn Fn()) {
+    if reactor_waiting {
+        log::info!(
+            "Warren multi-hop: no gap-free migration possible; deferring the \
+             rebuild to the waiting drain reactor"
+        );
+        return;
+    }
+    request_reconnect();
+}
+
 /// Inputs the daemon hands the background updater at boot.
 pub(crate) struct UpdaterConfig {
     /// warren-api base URL.
@@ -845,6 +903,12 @@ pub(crate) struct UpdaterConfig {
     /// [`REFRESH_INTERVAL`] (whose tokio timer does not even advance while
     /// the host is asleep on macOS). `None` disables the hook (tests).
     pub online_edge_rx: Option<tokio::sync::watch::Receiver<u64>>,
+    /// ADR 36 gap-free drain path: on-demand pass requests from the drain
+    /// reactor (via [`crate::tunnel::ParametersGenerator::migrate_off_drained_exit`]).
+    /// Each request triggers an immediate cache-only re-selection whose
+    /// migration outcome is sent back on the carried oneshot. `None`
+    /// disables the hook (the reactor then always rebuilds).
+    pub drain_migration_rx: Option<tokio::sync::mpsc::UnboundedReceiver<DrainMigrationRequest>>,
 }
 
 fn now_unix() -> u64 {
@@ -937,6 +1001,12 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // closed channel.
         let mut online_edge_rx = cfg.online_edge_rx.take();
         let mut online_watch_active = online_edge_rx.is_some();
+        // Drain-reactor request channel (same take/latch pattern as the
+        // online-edge hook). Reactors waiting on the CURRENT pass; answered
+        // with the pass outcome by `settle_drain_replies` after apply.
+        let mut drain_migration_rx = cfg.drain_migration_rx.take();
+        let mut drain_watch_active = drain_migration_rx.is_some();
+        let mut pending_drain_replies: Vec<DrainMigrationRequest> = Vec::new();
 
         let mut ticker = tokio::time::interval(REFRESH_INTERVAL);
         ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -1148,6 +1218,9 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 }
             };
 
+            // Whether THIS pass dispatched a gap-free migration; the answer
+            // sent to every drain reactor waiting on the pass.
+            let mut pass_migrated = false;
             // Apply only when allowed and when the active circuit actually
             // changed, so a periodic refresh or an unrelated settings
             // change does not churn the tunnel.
@@ -1213,6 +1286,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         }
                     };
                     if migrated {
+                        pass_migrated = true;
                         log::info!(
                             "Warren multi-hop: gap-free cross-exit migration off the drained \
                              exit (make-before-break, no reconnect)"
@@ -1231,10 +1305,18 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 "Warren multi-hop circuit cleared; reconnecting single-hop"
                             ),
                         }
-                        (cfg.request_reconnect)();
+                        dispatch_reconnect_fallback(
+                            !pending_drain_replies.is_empty(),
+                            &*cfg.request_reconnect,
+                        );
                     }
                 }
             }
+            // Answer the drain reactors waiting on this pass. A pass that
+            // could not migrate (no directory, no alternative exit, circuit
+            // unchanged, no live handle) replies `false` and the reactor
+            // escalates the rebuild.
+            settle_drain_replies(&mut pending_drain_replies, pass_migrated);
 
             // Optional short backoff after a transport fetch failure: re-probe
             // the network soon instead of waiting the full periodic interval.
@@ -1257,8 +1339,20 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 std::future::pending::<bool>().await
             }
             .fuse();
+            // ADR 36: on-demand drain pass request from a tunnel's drain
+            // reactor. `None` from `recv` = sender dropped; latch off like
+            // the online-edge hook. Same by-value copy dance as above so the
+            // arm body can reassign the latch.
+            let drain_active = drain_watch_active;
+            let drain_requested = async {
+                if drain_active && let Some(rx) = drain_migration_rx.as_mut() {
+                    return rx.recv().await;
+                }
+                std::future::pending::<Option<DrainMigrationRequest>>().await
+            }
+            .fuse();
             // These async blocks are `!Unpin`; `select!` needs `Unpin`.
-            futures::pin_mut!(retry_tick, online_changed);
+            futures::pin_mut!(retry_tick, online_changed, drain_requested);
 
             // Wake on the refresh timer, a fast retry, a connectivity online
             // edge, or a settings change.
@@ -1293,6 +1387,23 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     // Settings change (toggle / exit-country): re-select from
                     // the cached directory instantly - do NOT block on a fetch.
                     refresh_due = false;
+                }
+                request = drain_requested => {
+                    match request {
+                        Some(reply) => {
+                            // Drain pass: re-select from the cached directory
+                            // instantly (the avoid-set already holds the
+                            // draining exit; a fetch would burn the reactor's
+                            // deadline budget) and answer after apply.
+                            pending_drain_replies.push(reply);
+                            refresh_due = false;
+                        }
+                        None => {
+                            // Sender dropped: stop watching the closed channel.
+                            drain_watch_active = false;
+                            refresh_due = false;
+                        }
+                    }
                 }
             }
         }
@@ -2002,6 +2113,83 @@ mod tests {
         let d = dir(vec![node(&op, 1, "fr", 0, 100)]);
         assert!(assemble(&d, 0, 9, true, true).is_none());
         assert!(assemble(&d, 9, 0, true, true).is_none());
+    }
+
+    #[tokio::test]
+    async fn drain_request_without_updater_falls_back_to_rebuild() {
+        // No updater wired (multi-hop unconfigured): the reactor must get an
+        // immediate `false` so its escalate rebuild still fires.
+        assert!(!request_drain_migration(None).await);
+    }
+
+    #[tokio::test]
+    async fn drain_request_propagates_the_updaters_answer() {
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let updater = tokio::spawn(async move {
+            for outcome in [true, false] {
+                let reply: DrainMigrationRequest = rx.recv().await.expect("request");
+                reply.send(outcome).expect("reactor is waiting");
+            }
+        });
+        assert!(
+            request_drain_migration(Some(&tx)).await,
+            "a dispatched gap-free migration must reach the reactor as `true`"
+        );
+        assert!(
+            !request_drain_migration(Some(&tx)).await,
+            "a failed pass must reach the reactor as `false` (escalate rebuild)"
+        );
+        updater.await.expect("fake updater");
+    }
+
+    #[tokio::test]
+    async fn drain_request_to_a_dead_updater_falls_back_to_rebuild() {
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<DrainMigrationRequest>();
+        drop(rx);
+        assert!(!request_drain_migration(Some(&tx)).await);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn drain_request_times_out_instead_of_wedging_the_reactor() {
+        // A wedged updater (never answers, never drops the reply sender)
+        // must not pin the reactor past the reply ceiling: timeout => false
+        // => the escalate rebuild recovers. Paused time auto-advances.
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let wedged = tokio::spawn(async move {
+            let reply: DrainMigrationRequest = rx.recv().await.expect("request");
+            tokio::time::sleep(Duration::from_secs(3600)).await;
+            drop(reply);
+        });
+        assert!(!request_drain_migration(Some(&tx)).await);
+        wedged.abort();
+    }
+
+    #[tokio::test]
+    async fn drain_pass_outcome_reaches_every_waiting_reactor() {
+        let (tx_a, rx_a) = tokio::sync::oneshot::channel();
+        let (tx_b, rx_b) = tokio::sync::oneshot::channel();
+        let mut pending = vec![tx_a, tx_b];
+        settle_drain_replies(&mut pending, true);
+        assert!(pending.is_empty(), "the pass must consume every waiter");
+        assert_eq!(rx_a.await, Ok(true));
+        assert_eq!(rx_b.await, Ok(true));
+    }
+
+    #[test]
+    fn reconnect_fallback_defers_to_a_waiting_drain_reactor() {
+        // A reactor-initiated pass that could not migrate must NOT also fire
+        // the updater's own reconnect: the reactor escalates the rebuild on
+        // its `false` reply, and two triggers would rebuild the tunnel twice.
+        let fired = std::cell::Cell::new(0u32);
+        let request_reconnect = || fired.set(fired.get() + 1);
+        dispatch_reconnect_fallback(true, &request_reconnect);
+        assert_eq!(fired.get(), 0, "reactor-initiated pass owns the fallback");
+        dispatch_reconnect_fallback(false, &request_reconnect);
+        assert_eq!(
+            fired.get(),
+            1,
+            "an updater-initiated circuit change still reconnects itself"
+        );
     }
 
     #[test]

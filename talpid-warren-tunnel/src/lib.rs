@@ -68,6 +68,16 @@ pub fn migration_target(cfg: &MultiHopConfig) -> CircuitTarget {
         exit_x25519_multihop_pubkey: cfg.exit.exit_x25519_multihop_pubkey,
     }
 }
+/// ADR 36 gap-free drain path: daemon-side migration hook consumed by the
+/// drain reactor. Input: the 16-byte id of the DRAINING exit. Output:
+/// whether a make-before-break migration off it was dispatched (the tunnel
+/// stays up); `false` sends the reactor to the break-before-make rebuild.
+pub type WarrenDrainMigrate = std::sync::Arc<
+    dyn Fn([u8; 16]) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>
+        + Send
+        + Sync,
+>;
+
 use warrenguard_daita::DaitaState;
 use warrenguard_pump::{
     pump_bidirectional, pump_bidirectional_with_daita, pump_bidirectional_with_idle_cover,
@@ -310,6 +320,16 @@ pub struct WarrenTunnelParameters {
     /// teardown. `None` disables gap-free migration (the drain then falls
     /// back to the proactive reconnect). Multi-hop only.
     pub warren_register_migrate_handle: Option<std::sync::Arc<dyn Fn(MigrateHandle) + Send + Sync>>,
+
+    /// ADR 36 gap-free drain path: async daemon hook the drain reactor
+    /// invokes with the DRAINING exit id after the anti-stampede jitter.
+    /// The daemon records the exit in the avoid-set, re-selects a circuit
+    /// that excludes it and, when a live migrate handle is registered,
+    /// swaps the supervisor onto it via `MigrateHandle::migrate_to`
+    /// (make-before-break). `true` = migration dispatched, the reactor
+    /// skips the tunnel rebuild. `None` disables the gap-free path (the
+    /// reactor always escalates the rebuild). Multi-hop only.
+    pub warren_drain_migrate: Option<WarrenDrainMigrate>,
 
     /// docs/59 Lot 3: pre-swap gate run against a candidate exit before a
     /// make-before-break migration commits, so a pinned port is reserved
@@ -2228,12 +2248,14 @@ impl WarrenTunnelMonitor {
             // dialed so the reactor can name it to the avoid-set.
             let current_exit_id = *cfg.exit.exit_id.as_bytes();
             let on_exit_draining = params.on_exit_draining.clone();
+            let drain_migrate = params.warren_drain_migrate.clone();
             runtime.spawn(async move {
                 let mut io = drain_reactor::RealDrainReactorIo {
                     drain_sub,
                     pump_error_tx,
                     current_exit_id,
                     on_exit_draining,
+                    drain_migrate,
                 };
                 drain_reactor::run_drain_reactor(&mut io).await;
                 log::debug!("{TRACE_PREFIX} drain reactor terminated");
@@ -3601,6 +3623,7 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_drain_migrate: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: None,
@@ -3640,6 +3663,7 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_drain_migrate: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: None,
@@ -3707,6 +3731,7 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_drain_migrate: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: None,
@@ -3761,6 +3786,7 @@ mod tests {
             on_reconnect: None,
             on_exit_draining: None,
             warren_register_migrate_handle: None,
+            warren_drain_migrate: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: Some(cfg.clone()),

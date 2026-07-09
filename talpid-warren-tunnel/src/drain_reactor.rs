@@ -197,6 +197,10 @@ pub(crate) struct RealDrainReactorIo {
     pub current_exit_id: [u8; 16],
     /// Daemon callback recording the drained exit in the avoid-set.
     pub on_exit_draining: Option<std::sync::Arc<dyn Fn([u8; 16]) + Send + Sync>>,
+    /// Daemon hook attempting the gap-free cross-exit migration off the
+    /// draining exit (`WarrenTunnelParameters::warren_drain_migrate`).
+    /// `None` = not wired: every drain falls back to the rebuild.
+    pub drain_migrate: Option<crate::WarrenDrainMigrate>,
 }
 
 impl DrainReactorIo for RealDrainReactorIo {
@@ -249,6 +253,13 @@ impl DrainReactorIo for RealDrainReactorIo {
     fn report_drained_exit(&mut self) {
         if let Some(cb) = self.on_exit_draining.as_ref() {
             cb(self.current_exit_id);
+        }
+    }
+
+    async fn try_migrate(&mut self) -> bool {
+        match self.drain_migrate.as_ref() {
+            Some(migrate) => migrate(self.current_exit_id).await,
+            None => false,
         }
     }
 }
@@ -467,6 +478,57 @@ mod tests {
             vec![FAKE_EXIT_ID],
             "a cooldown-suppressed reactor must STILL record the exit in the avoid-set \
              so the directory excludes it (only the reconnect is suppressed)"
+        );
+    }
+
+    /// Production IO with `drain_migrate` as the daemon hook, an inert drain
+    /// channel and an empty escalation slot (irrelevant to `try_migrate`).
+    fn real_io(drain_migrate: Option<crate::WarrenDrainMigrate>) -> RealDrainReactorIo {
+        RealDrainReactorIo {
+            drain_sub: tokio::sync::watch::channel(None).1,
+            pump_error_tx: std::sync::Arc::new(std::sync::Mutex::new(None)),
+            current_exit_id: FAKE_EXIT_ID,
+            on_exit_draining: None,
+            drain_migrate,
+        }
+    }
+
+    #[tokio::test]
+    async fn real_io_without_daemon_hook_never_migrates() {
+        // No daemon hook wired (single-hop, or a daemon predating the
+        // gap-free path): try_migrate must report failure so the reactor
+        // escalates the break-before-make rebuild, exactly as before.
+        assert!(
+            !real_io(None).try_migrate().await,
+            "with no daemon hook the real IO must fall back to the rebuild path"
+        );
+    }
+
+    #[tokio::test]
+    async fn real_io_hands_the_draining_exit_to_the_daemon_and_propagates_the_outcome() {
+        // The id handed to the daemon hook must be THE draining exit: the
+        // daemon records it in the avoid-set before selecting the migration
+        // target, which is what guarantees the target is never that exit.
+        let seen: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
+        for outcome in [true, false] {
+            let seen_in_hook = seen.clone();
+            let hook: crate::WarrenDrainMigrate = std::sync::Arc::new(move |exit_id| {
+                let seen = seen_in_hook.clone();
+                Box::pin(async move {
+                    seen.lock().unwrap().push(exit_id);
+                    outcome
+                })
+            });
+            assert_eq!(
+                real_io(Some(hook)).try_migrate().await,
+                outcome,
+                "the daemon's migration outcome must reach the reactor unchanged"
+            );
+        }
+        assert_eq!(
+            *seen.lock().unwrap(),
+            vec![FAKE_EXIT_ID; 2],
+            "the hook must always receive the draining exit id"
         );
     }
 
