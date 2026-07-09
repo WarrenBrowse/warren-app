@@ -3,23 +3,15 @@ package com.warrenbrowse.vpn.lib.ui.component
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Text
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.ExperimentalTextApi
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontVariation
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 
 /**
@@ -27,18 +19,6 @@ import androidx.compose.ui.unit.sp
  * `lib/components/logo/Logo.tsx`: the ears mark (which stands in as the capital
  * W) and the "arren" wordmark beside it.
  */
-
-// Nunito, shipped as a variable font. Black (900) is the wordmark weight; the
-// explicit variationSettings pins the weight axis on API 26+ (minSdk 28) so it
-// does not fall back to the font's regular default instance.
-@OptIn(ExperimentalTextApi::class)
-val NunitoFontFamily = FontFamily(
-    Font(
-        resId = R.font.nunito_variable,
-        weight = FontWeight.Black,
-        variationSettings = FontVariation.Settings(FontVariation.weight(900)),
-    ),
-)
 
 // 'Exposed': Bula's masked face is out of the burrow (disconnected / default).
 // 'Hidden' : Bula is safe in the burrow, only the ears show (connected).
@@ -53,6 +33,12 @@ enum class WarrenLogoTone { Light, Dark }
 // All mark PNGs share one canvas and a bottom-anchored burrow, so every state
 // renders the same box (the hole stays put; only the rabbit ducks in or out).
 private const val MARK_ASPECT = 968f / 687f
+
+// The "arren" vector's viewport (Coliner Light). HEIGHT_SCALE maps the caller's
+// text size onto the drawing height so it sits like the old text wordmark; tune
+// here if it reads too tall or short beside the mark.
+private const val WORDMARK_ASPECT = 2494f / 520f
+private const val WORDMARK_HEIGHT_SCALE = 1.3f
 
 @Composable
 fun WarrenLogoMark(
@@ -76,9 +62,10 @@ fun WarrenLogoMark(
 }
 
 /**
- * "arren" wordmark, Nunito Black. The ears mark rendered beside it stands in as
- * the capital W, so the word itself carries no W. [color] adapts to the header
- * tint so it reads on every state background.
+ * "arren" wordmark drawn in Coliner Light (a vector drawable, matching desktop
+ * and iOS). The ears mark rendered beside it stands in as the capital W, so the
+ * word itself carries no W. [color] tints it to the header background. [fontSize]
+ * keeps the old text-size call sites working, scaled to the drawing height.
  */
 @Composable
 fun WarrenWordmark(
@@ -86,16 +73,11 @@ fun WarrenWordmark(
     modifier: Modifier = Modifier,
     fontSize: TextUnit = 22.sp,
 ) {
-    val text = buildAnnotatedString {
-        withStyle(SpanStyle(letterSpacing = 0.01.em)) { append("arren") }
-    }
-    Text(
-        text = text,
-        color = color,
-        fontFamily = NunitoFontFamily,
-        fontWeight = FontWeight.Black,
-        fontSize = fontSize,
-        maxLines = 1,
-        modifier = modifier,
+    val height = with(LocalDensity.current) { fontSize.toDp() } * WORDMARK_HEIGHT_SCALE
+    Icon(
+        painter = painterResource(id = R.drawable.wordmark_arren),
+        contentDescription = null, // Decorative; the screen text conveys the name.
+        tint = color,
+        modifier = modifier.height(height).width(height * WORDMARK_ASPECT),
     )
 }
