@@ -794,6 +794,12 @@ message WarrenStatus {
   // the edge itself (before any tunnel-side grace). Drives the
   // immediate "no internet connection" banner in every tunnel state.
   bool host_offline = 10;
+  // Doc 62 item 5: true while the in-tunnel egress liveness probe
+  // reports the exit not forwarding (drained / half-swapped exit that
+  // still ACKs QUIC keep-alives). Cleared on a successful probe or
+  // when the tunnel leaves Connected. Drives the "interrupted" phase
+  // with the exit-not-forwarding banner while Connected.
+  bool exit_egress_dead = 11;
 }
 
 // Session H A.4: forensic payload surfaced alongside a TOFU pubkey

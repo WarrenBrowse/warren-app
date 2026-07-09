@@ -1185,6 +1185,16 @@ impl ParametersGenerator {
             let g = drain_migrate_gen.clone();
             Box::pin(async move { g.migrate_off_drained_exit(exit_id).await })
         }));
+        // Doc 62 item 5: the in-tunnel egress probe publishes its
+        // verdict edges here; the cache flag drives the gRPC
+        // `exit_egress_dead` field and the UI's exit-not-forwarding
+        // banner. A fresh tunnel starts with a clean verdict (the
+        // daemon also clears it whenever the tunnel leaves Connected).
+        let egress_cache = inner.warren_status_cache.clone();
+        egress_cache.set_exit_egress_dead(false);
+        params.on_egress_verdict = Some(Arc::new(move |dead: bool| {
+            egress_cache.set_exit_egress_dead(dead);
+        }));
         // docs/59 Lot 3: pre-swap NAT-PMP reservation gate + post-swap
         // re-map observer, behind the explicit activation knob (the
         // fields stay `None` by default: identical pre-Lot-3 behavior;

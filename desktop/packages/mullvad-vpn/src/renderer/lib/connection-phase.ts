@@ -12,16 +12,22 @@ import { Colors, colors } from './foundations';
 //   blocked     : kill switch active, nothing leaks but nothing flows (neutral)
 export type ConnectionPhase = 'exposed' | 'connecting' | 'protected' | 'interrupted' | 'blocked';
 
-export function getConnectionPhase(tunnelState: TunnelState, hostOffline = false): ConnectionPhase {
+export function getConnectionPhase(
+  tunnelState: TunnelState,
+  hostOffline = false,
+  exitEgressDead = false,
+): ConnectionPhase {
   switch (tunnelState.state) {
     case 'connected':
       // The daemon holds Connected through its offline migration grace
       // window and the supervisor redials transparently, so "connected
       // while the host is offline" is a real, user-visible window. A
-      // green "protected" there is a lie: nothing flows. Only this
+      // green "protected" there is a lie: nothing flows. Same for an
+      // exit that stopped forwarding (egress probe verdict): the QUIC
+      // session looks alive but no traffic gets through. Only this
       // state degrades; every other state's presentation already tells
       // the truth on its own.
-      return hostOffline ? 'interrupted' : 'protected';
+      return hostOffline || exitEgressDead ? 'interrupted' : 'protected';
     case 'connecting':
     case 'disconnecting':
       return 'connecting';

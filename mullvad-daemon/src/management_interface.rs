@@ -220,6 +220,7 @@ fn warren_status_snapshot_to_proto(
         port_migration_cancellations: snap.port_migration_cancellations,
         port_migration_cancellation_active: snap.port_migration_cancellation_active,
         host_offline: snap.host_offline,
+        exit_egress_dead: snap.exit_egress_dead,
     }
 }
 

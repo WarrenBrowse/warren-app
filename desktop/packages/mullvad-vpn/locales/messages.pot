@@ -1501,6 +1501,10 @@ msgctxt "in-app-notifications"
 msgid "SERVER MAINTENANCE"
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr ""
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -1514,6 +1518,10 @@ msgstr ""
 #. Notification subtitle when the installer failed.
 msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
 msgstr ""
 
 #. The in-app banner displayed to the user when the app beta update is

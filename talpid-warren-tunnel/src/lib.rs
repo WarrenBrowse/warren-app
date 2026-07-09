@@ -102,6 +102,7 @@ use warrenguard_wire::{WarrenExitAddr, WarrenTransportAddr};
 mod adapter;
 mod device_id;
 mod drain_reactor;
+mod egress_probe;
 mod migration_watchdog;
 mod session_liveness;
 use adapter::MullvadTunPacketDevice;
@@ -330,6 +331,16 @@ pub struct WarrenTunnelParameters {
     /// skips the tunnel rebuild. `None` disables the gap-free path (the
     /// reactor always escalates the rebuild). Multi-hop only.
     pub warren_drain_migrate: Option<WarrenDrainMigrate>,
+
+    /// Doc 62 item 5: invoked by the in-tunnel egress liveness probe on
+    /// verdict edges. `true` = the exit stopped forwarding (N consecutive
+    /// in-tunnel probes dead while the QUIC session stays alive), `false`
+    /// = egress recovered. The daemon wires this to
+    /// `WarrenStatusCache::set_exit_egress_dead` so the UI can render the
+    /// "interrupted" phase with an exit-not-forwarding cause. `None`
+    /// keeps the probe running for its drain interaction but drops the
+    /// status surface.
+    pub on_egress_verdict: Option<std::sync::Arc<dyn Fn(bool) + Send + Sync>>,
 
     /// docs/59 Lot 3: pre-swap gate run against a candidate exit before a
     /// make-before-break migration commits, so a pinned port is reserved
@@ -932,6 +943,9 @@ enum MonitorBackend {
         /// explicitly - otherwise every connect leaks one immortal task
         /// that keeps logging `pump_metrics` for a dead session forever.
         metrics_handle: tokio::task::JoinHandle<()>,
+        /// Doc 62 item 5: in-tunnel egress liveness probe (DNS to the
+        /// exit resolver through the tunnel).
+        egress_probe_handle: tokio::task::JoinHandle<()>,
         pump_error_rx: tokio::sync::oneshot::Receiver<String>,
     },
     MultiHop {
@@ -954,6 +968,10 @@ enum MonitorBackend {
         /// without a published session (silent redial not landing), so
         /// the UI never shows Connected on a dead tunnel.
         liveness_handle: tokio::task::JoinHandle<()>,
+        /// Doc 62 item 5: in-tunnel egress liveness probe. Catches the
+        /// case RX-silence cannot: an exit that ACKs QUIC keep-alives
+        /// but forwards nothing (drained / half-swapped rollout).
+        egress_probe_handle: tokio::task::JoinHandle<()>,
         /// Channel through which the pump task reports the first fatal
         /// error (uplink/downlink/supervisor death). `wait()` consumes
         /// it the same way the single-hop path consumes
@@ -1596,6 +1614,28 @@ impl WarrenTunnelMonitor {
 
         let _ = metadata; // kept for future MTU-change re-emission
 
+        // Doc 62 item 5: in-tunnel egress liveness probe. Single-hop has
+        // no supervisor watch or drain channel, so the probe only counts
+        // failures against the running pump and surfaces the verdict.
+        let egress_probe_handle = {
+            let probe_cfg = egress_probe::EgressProbeConfig::from_env();
+            let mut io = egress_probe::RealEgressProbeIo {
+                interval: probe_cfg.interval,
+                client_rx: None,
+                verdict: params.on_egress_verdict.clone(),
+                drain_rx: None,
+                drain_migrate: None,
+                current_exit_id: *params.exit_id.as_bytes(),
+            };
+            runtime.spawn(async move {
+                if !probe_cfg.enabled {
+                    return;
+                }
+                egress_probe::run_egress_probe(&mut io, probe_cfg.failure_threshold).await;
+                log::debug!("{TRACE_PREFIX} egress probe terminated");
+            })
+        };
+
         // Spawn the NAT-PMP runtime once the data plane is up. Picks
         // the legacy "managers owned by monitor" path or the
         // live-reconfig "managers owned by controller task" path based
@@ -1610,6 +1650,7 @@ impl WarrenTunnelMonitor {
             backend: MonitorBackend::SingleHop {
                 pump_handle,
                 metrics_handle,
+                egress_probe_handle,
                 pump_error_rx,
             },
             event_hook,
@@ -2277,6 +2318,30 @@ impl WarrenTunnelMonitor {
             })
         };
 
+        // Doc 62 item 5: in-tunnel egress liveness probe. RX-silence
+        // never trips on a drained/half-swapped exit that keeps ACKing
+        // QUIC keep-alives while forwarding nothing; this probe proves
+        // real egress and surfaces the exit_egress_dead verdict (plus
+        // the gap-free migration when a drain advisory is active).
+        let egress_probe_handle = {
+            let probe_cfg = egress_probe::EgressProbeConfig::from_env();
+            let mut io = egress_probe::RealEgressProbeIo {
+                interval: probe_cfg.interval,
+                client_rx: Some(client_rx.clone()),
+                verdict: params.on_egress_verdict.clone(),
+                drain_rx: Some(exit_draining_channel.subscribe()),
+                drain_migrate: params.warren_drain_migrate.clone(),
+                current_exit_id: *cfg.exit.exit_id.as_bytes(),
+            };
+            runtime.spawn(async move {
+                if !probe_cfg.enabled {
+                    return;
+                }
+                egress_probe::run_egress_probe(&mut io, probe_cfg.failure_threshold).await;
+                log::debug!("{TRACE_PREFIX} egress probe terminated");
+            })
+        };
+
         // Drop the local watch receiver. The uplink/downlink pumps and
         // the watchdog keep theirs alive; teardown aborts the watchdog
         // first, then the pumps, so the supervisor still observes
@@ -2319,6 +2384,7 @@ impl WarrenTunnelMonitor {
                 assign_guard_handle,
                 drain_reactor_handle,
                 liveness_handle,
+                egress_probe_handle,
                 pump_error_rx,
                 supervisor_fatal_rx,
             },
@@ -2388,6 +2454,7 @@ impl WarrenTunnelMonitor {
             SingleHop {
                 pump: tokio::task::JoinHandle<()>,
                 metrics: tokio::task::JoinHandle<()>,
+                egress_probe: tokio::task::JoinHandle<()>,
             },
             MultiHop {
                 supervisor: tokio::task::JoinHandle<()>,
@@ -2397,6 +2464,7 @@ impl WarrenTunnelMonitor {
                 assign_guard: tokio::task::JoinHandle<()>,
                 drain_reactor: tokio::task::JoinHandle<()>,
                 liveness: tokio::task::JoinHandle<()>,
+                egress_probe: tokio::task::JoinHandle<()>,
             },
         }
         // `None` for single-hop (no supervisor); `Some` for multi-hop.
@@ -2406,12 +2474,14 @@ impl WarrenTunnelMonitor {
             MonitorBackend::SingleHop {
                 pump_handle,
                 metrics_handle,
+                egress_probe_handle,
                 pump_error_rx,
             } => (
                 pump_error_rx,
                 BackendHandles::SingleHop {
                     pump: pump_handle,
                     metrics: metrics_handle,
+                    egress_probe: egress_probe_handle,
                 },
             ),
             MonitorBackend::MultiHop {
@@ -2422,6 +2492,7 @@ impl WarrenTunnelMonitor {
                 assign_guard_handle,
                 drain_reactor_handle,
                 liveness_handle,
+                egress_probe_handle,
                 pump_error_rx,
                 supervisor_fatal_rx: fatal_rx,
             } => {
@@ -2436,6 +2507,7 @@ impl WarrenTunnelMonitor {
                         assign_guard: assign_guard_handle,
                         drain_reactor: drain_reactor_handle,
                         liveness: liveness_handle,
+                        egress_probe: egress_probe_handle,
                     },
                 )
             }
@@ -2571,14 +2643,20 @@ impl WarrenTunnelMonitor {
         let tasks_t = Instant::now();
         runtime.block_on(async {
             match handles {
-                BackendHandles::SingleHop { pump, metrics } => {
+                BackendHandles::SingleHop {
+                    pump,
+                    metrics,
+                    egress_probe,
+                } => {
                     // Abort the metrics task too: it owns its own clone
                     // of the counters and does NOT stop when the pump is
                     // aborted, so without this it would leak one
                     // immortal logging task per connect.
                     metrics.abort();
+                    egress_probe.abort();
                     pump.abort();
                     let _ = metrics.await;
+                    let _ = egress_probe.await;
                     let _ = pump.await;
                 }
                 BackendHandles::MultiHop {
@@ -2589,6 +2667,7 @@ impl WarrenTunnelMonitor {
                     assign_guard,
                     drain_reactor,
                     liveness,
+                    egress_probe,
                 } => {
                     // Watchdog first: it holds a supervisor watch
                     // receiver + control handle; dropping them before
@@ -2601,6 +2680,10 @@ impl WarrenTunnelMonitor {
                     // reason.
                     liveness.abort();
                     let _ = liveness.await;
+                    // The egress probe holds a supervisor watch receiver
+                    // too; same ordering rule.
+                    egress_probe.abort();
+                    let _ = egress_probe.await;
                     assign_guard.abort();
                     let _ = assign_guard.await;
                     // Drain reactor holds only an ExitDrainingChannel
@@ -3622,6 +3705,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
             warren_pre_swap_check: None,
@@ -3662,6 +3746,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
             warren_pre_swap_check: None,
@@ -3730,6 +3815,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
             warren_pre_swap_check: None,
@@ -3785,6 +3871,7 @@ mod tests {
             alpn_protocols: Vec::new(),
             on_reconnect: None,
             on_exit_draining: None,
+            on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
             warren_pre_swap_check: None,

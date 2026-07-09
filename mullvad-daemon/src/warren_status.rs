@@ -171,6 +171,14 @@ pub struct WarrenStatusSnapshot {
     /// the grace expires. The UI shows an immediate "no internet
     /// connection" banner keyed on it, in every tunnel state.
     pub host_offline: bool,
+    /// Doc 62 item 5: true while the in-tunnel egress liveness probe
+    /// reports the exit not forwarding (N consecutive probe failures
+    /// with the QUIC session otherwise alive, e.g. a drained or
+    /// half-swapped exit during a fleet rollout). Cleared by a single
+    /// successful probe, and whenever the tunnel leaves Connected. The
+    /// UI renders the "interrupted" phase with an exit-not-forwarding
+    /// cause while this holds.
+    pub exit_egress_dead: bool,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -189,6 +197,7 @@ impl Default for WarrenStatusSnapshot {
             port_migration_cancellations: 0,
             port_migration_cancellation_active: false,
             host_offline: false,
+            exit_egress_dead: false,
         }
     }
 }
@@ -225,6 +234,7 @@ struct InternalState {
     port_migration_cancellations: u32,
     last_port_migration_cancelled_at: Option<Instant>,
     host_offline: bool,
+    exit_egress_dead: bool,
 }
 
 impl Default for InternalState {
@@ -241,6 +251,7 @@ impl Default for InternalState {
             port_migration_cancellations: 0,
             last_port_migration_cancelled_at: None,
             host_offline: false,
+            exit_egress_dead: false,
         }
     }
 }
@@ -306,6 +317,7 @@ impl WarrenStatusCache {
                 Instant::now(),
             ),
             host_offline: inner.host_offline,
+            exit_egress_dead: inner.exit_egress_dead,
         }
     }
 
@@ -579,6 +591,26 @@ impl WarrenStatusCache {
                 return;
             }
             inner.host_offline = offline;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send(snapshot);
+    }
+
+    /// Record the in-tunnel egress probe's verdict (doc 62 item 5).
+    /// Pushed on verdict edges by the probe callback and cleared by the
+    /// daemon whenever the tunnel leaves Connected (a rebuilt tunnel
+    /// starts with a clean verdict). Idempotent: repeated equal
+    /// verdicts do not re-push.
+    pub fn set_exit_egress_dead(&self, dead: bool) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.exit_egress_dead == dead {
+                return;
+            }
+            inner.exit_egress_dead = dead;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send(snapshot);
@@ -1199,6 +1231,56 @@ mod tests {
         rx.borrow_and_update();
         cache.set_host_offline(true);
         assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    // --- Exit egress surface (doc 62 item 5) -----------------------
+
+    #[test]
+    fn default_snapshot_reports_egress_alive() {
+        assert!(!WarrenStatusSnapshot::default().exit_egress_dead);
+        assert!(!WarrenStatusCache::new().snapshot().exit_egress_dead);
+    }
+
+    #[test]
+    fn set_exit_egress_dead_pushes_edge_and_clears_on_recovery() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.set_exit_egress_dead(true);
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(rx.borrow_and_update().exit_egress_dead);
+        cache.set_exit_egress_dead(false);
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(!rx.borrow_and_update().exit_egress_dead);
+    }
+
+    #[test]
+    fn set_exit_egress_dead_idempotent_same_verdict() {
+        // The probe publishes on edges, but a defensive daemon-side
+        // clear (tunnel leaving Connected) may repeat the verdict; the
+        // stream must not be spammed with identical snapshots.
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.set_exit_egress_dead(false);
+        assert!(!rx.has_changed().unwrap_or(false));
+        cache.set_exit_egress_dead(true);
+        rx.borrow_and_update();
+        cache.set_exit_egress_dead(true);
+        assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    #[test]
+    fn set_exit_egress_dead_does_not_perturb_host_offline() {
+        // The two "interrupted" causes are independent bits: an egress
+        // verdict must never mask or clear the offline monitor's.
+        let cache = WarrenStatusCache::new();
+        cache.set_host_offline(true);
+        cache.set_exit_egress_dead(true);
+        let s = cache.snapshot();
+        assert!(s.host_offline && s.exit_egress_dead);
+        cache.set_exit_egress_dead(false);
+        assert!(cache.snapshot().host_offline, "host_offline untouched");
     }
 
     // --- Failover surface ---------------------------------------

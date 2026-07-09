@@ -16602,7 +16602,8 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     maintenanceMigrationActive: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
     portMigrationCancellations: jspb.Message.getFieldWithDefault(msg, 8, 0),
     portMigrationCancellationActive: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
-    hostOffline: jspb.Message.getBooleanFieldWithDefault(msg, 10, false)
+    hostOffline: jspb.Message.getBooleanFieldWithDefault(msg, 10, false),
+    exitEgressDead: jspb.Message.getBooleanFieldWithDefault(msg, 11, false)
   };
 
   if (includeInstance) {
@@ -16681,6 +16682,10 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
     case 10:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setHostOffline(value);
+      break;
+    case 11:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setExitEgressDead(value);
       break;
     default:
       reader.skipField();
@@ -16781,6 +16786,13 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
   if (f) {
     writer.writeBool(
       10,
+      f
+    );
+  }
+  f = message.getExitEgressDead();
+  if (f) {
+    writer.writeBool(
+      11,
       f
     );
   }
@@ -17021,6 +17033,24 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getHostOffline 
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setHostOffline = function(value) {
   return jspb.Message.setProto3BooleanField(this, 10, value);
+};
+
+
+/**
+ * optional bool exit_egress_dead = 11;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getExitEgressDead = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setExitEgressDead = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 11, value);
 };
 
 

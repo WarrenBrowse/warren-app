@@ -51,6 +51,19 @@ describe('getConnectionPhase', () => {
     expect(getConnectionPhase(errorNonBlocking, true)).toBe('blocked');
     expect(getConnectionPhase(connecting, true)).toBe('connecting');
   });
+
+  it('connected with the exit not forwarding degrades to interrupted, never green', () => {
+    // Doc 62 item 5: a drained/half-swapped exit keeps the QUIC session
+    // alive, so the tunnel state stays Connected while nothing flows.
+    expect(getConnectionPhase(connected, false, true)).toBe('interrupted');
+    expect(getConnectionPhase(connected, false, false)).toBe('protected');
+  });
+
+  it('exit egress dead only degrades the connected state', () => {
+    expect(getConnectionPhase(disconnectedOpen, false, true)).toBe('exposed');
+    expect(getConnectionPhase(errorNonBlocking, false, true)).toBe('blocked');
+    expect(getConnectionPhase(connecting, false, true)).toBe('connecting');
+  });
 });
 
 describe('getPhaseAccentColorName', () => {

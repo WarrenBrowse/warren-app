@@ -745,6 +745,11 @@ export interface WarrenStatus {
   // the immediate "no internet connection" banner in every tunnel
   // state.
   hostOffline: boolean;
+  // Doc 62 item 5: true while the daemon's in-tunnel egress probe
+  // reports the exit not forwarding (drained / half-swapped exit that
+  // still answers QUIC keep-alives). Drives the "interrupted" phase
+  // with the exit-not-forwarding banner while Connected.
+  exitEgressDead: boolean;
 }
 
 // Outcome of the gRPC `TrustNewExitKey` RPC. The daemon either

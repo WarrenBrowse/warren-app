@@ -8,6 +8,7 @@ import {
   getConnectionPhase,
   getPhaseAccentColorName,
 } from '../../../../../../../lib/connection-phase';
+import { useExitEgressDead } from '../../../../../../../lib/exit-egress';
 import { colors } from '../../../../../../../lib/foundations';
 import { useHostOffline } from '../../../../../../../lib/host-offline';
 import { useSelector } from '../../../../../../../redux/store';
@@ -47,8 +48,9 @@ const StyledSubtitle = styled.span(smallText, {
 export function ConnectionStatus() {
   const tunnelState = useSelector((state) => state.connection.status);
   const hostOffline = useHostOffline();
+  const exitEgressDead = useExitEgressDead();
 
-  const phase = getConnectionPhase(tunnelState, hostOffline);
+  const phase = getConnectionPhase(tunnelState, hostOffline, exitEgressDead);
   const colorName = getPhaseAccentColorName(phase);
   // A crossed-out eye ("hide") reads as protected/hidden in the burrow (secured,
   // blocked, or the interrupted hold where the kill switch keeps everything

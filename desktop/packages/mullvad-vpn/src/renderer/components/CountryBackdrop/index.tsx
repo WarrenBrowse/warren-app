@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { getConnectionPhase, getPhaseAccentColor } from '../../lib/connection-phase';
+import { useExitEgressDead } from '../../lib/exit-egress';
 import { getReduceMotion } from '../../lib/functions';
 import { useHostOffline } from '../../lib/host-offline';
 import { useSelector } from '../../redux/store';
@@ -124,6 +125,7 @@ function useTargetCountry(): string | undefined {
 export default function CountryBackdrop() {
   const status = useSelector((state) => state.connection.status);
   const hostOffline = useHostOffline();
+  const exitEgressDead = useExitEgressDead();
   const targetCountry = useTargetCountry();
 
   // e2e runs against deterministic snapshots; skip the decorative scene.
@@ -131,7 +133,7 @@ export default function CountryBackdrop() {
     return null;
   }
 
-  const phase = getConnectionPhase(status, hostOffline);
+  const phase = getConnectionPhase(status, hostOffline, exitEgressDead);
   const scenery = resolveScenery(phase, targetCountry);
   const animate = !getReduceMotion();
   const accent = getPhaseAccentColor(phase);

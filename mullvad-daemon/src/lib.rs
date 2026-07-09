@@ -2227,6 +2227,14 @@ impl Daemon {
             _ => {}
         }
 
+        // Doc 62 item 5: the egress-dead verdict only means something
+        // while a tunnel is up; leaving Connected (rebuild, disconnect,
+        // error) invalidates it. The probe of the next tunnel re-raises
+        // it if the condition persists.
+        if !tunnel_state.is_connected() {
+            self.warren_status_cache.set_exit_egress_dead(false);
+        }
+
         let (pending, count_recovery) = warren_status::auto_recovery_step(
             self.warren_auto_recovery_pending,
             Self::tunnel_state_kind(&self.tunnel_state),

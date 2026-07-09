@@ -23,6 +23,7 @@ import {
   useHasAppUpgradeError,
 } from '../hooks';
 import { Button } from '../lib/components';
+import { useExitEgressDead } from '../lib/exit-egress';
 import { TransitionType, useHistory } from '../lib/history';
 import { useHostOffline } from '../lib/host-offline';
 import {
@@ -30,6 +31,7 @@ import {
   AppUpgradeProgressNotificationProvider,
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
+  WarrenExitEgressNotificationProvider,
   WarrenFailoverNotificationProvider,
   WarrenHostOfflineNotificationProvider,
   WarrenMaintenanceNotificationProvider,
@@ -94,6 +96,7 @@ export default function NotificationArea(props: IProps) {
   const [warrenFailoverAcknowledged, setWarrenFailoverAcknowledged] = useState(0);
   const warrenStatus = useSelector((state: IReduxState) => state.settings.warrenStatus);
   const hostOffline = useHostOffline();
+  const exitEgressDead = useExitEgressDead();
   const acknowledgeWarrenFailover = useCallback(() => {
     setWarrenFailoverAcknowledged(warrenStatus?.failoverCount ?? 0);
   }, [warrenStatus?.failoverCount]);
@@ -132,6 +135,13 @@ export default function NotificationArea(props: IProps) {
     // reacts (it holds Connected through its migration grace window).
     new WarrenHostOfflineNotificationProvider({
       hostOffline: hostOffline,
+    }),
+    // Same rank family, distinct cause: the host network is fine but
+    // the exit stopped forwarding (doc 62 item 5). Only meaningful
+    // while the tunnel still claims Connected.
+    new WarrenExitEgressNotificationProvider({
+      exitEgressDead,
+      tunnelConnected: tunnelState.state === 'connected',
     }),
     new ConnectingNotificationProvider({ tunnelState }),
     new ReconnectingNotificationProvider(tunnelState),
