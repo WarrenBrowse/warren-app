@@ -25,6 +25,11 @@ function desktop_install() {
 
 
 function desktop_post_install() {
+    # Activate the tracked git hooks (pre-commit desktop lint guard) for this
+    # clone. Idempotent; safe to run on CI too (CI never commits). Keeps the
+    # guard from depending on a manual per-clone `git config`.
+    git -C "$REPO_DIR" config core.hooksPath .githooks || true
+
     # Setup electron after install
     pushd "$DESKTOP_DIR/node_modules/electron"
     npm run postinstall
