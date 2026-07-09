@@ -166,7 +166,9 @@ fn check_account_matches_identity(account: &str, identity: &str) -> Result<(), r
     if account == identity {
         return Ok(());
     }
-    let redact = |s: &str| s.get(..8).unwrap_or(s).to_owned();
+    fn redact(s: &str) -> &str {
+        s.get(..8).unwrap_or(s)
+    }
     log::error!(
         "warren account backend: requested account {}... but the signing identity is {}...; \
          refusing (identity desync)",
