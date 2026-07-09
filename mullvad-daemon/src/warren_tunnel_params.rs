@@ -182,6 +182,7 @@ pub fn assemble_for_attempt(
         // ADR 36 gap-free drain path: set by `produce_warren_tunnel_params`
         // (it owns the generator handle the hook needs).
         warren_drain_migrate: None,
+        warren_dial_refused: None,
         // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
         // wired later from the live port-forward config; None keeps the
         // unconditional-swap behaviour.
@@ -284,6 +285,7 @@ pub fn assemble_failover_for_attempt(
         // ADR 36 gap-free drain path: set by `produce_warren_tunnel_params`
         // (it owns the generator handle the hook needs).
         warren_drain_migrate: None,
+        warren_dial_refused: None,
         // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
         // wired later from the live port-forward config; None keeps the
         // unconditional-swap behaviour.
@@ -370,6 +372,7 @@ pub fn assemble_custom(
         // ADR 36 gap-free drain path: set by `produce_warren_tunnel_params`
         // (it owns the generator handle the hook needs).
         warren_drain_migrate: None,
+        warren_dial_refused: None,
         // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
         // wired later from the live port-forward config; None keeps the
         // unconditional-swap behaviour.

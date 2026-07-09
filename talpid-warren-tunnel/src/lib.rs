@@ -78,6 +78,64 @@ pub type WarrenDrainMigrate = std::sync::Arc<
         + Sync,
 >;
 
+/// Identity of the hop that deliberately refused a dial attempt, as
+/// published in the multi-hop directory: the entry's `relay_id` or the
+/// exit's exit id. The two are distinguished because the daemon must
+/// exclude the REFUSING node, not blindly the circuit's exit (a drained
+/// entry in front of a healthy exit must not burn the exit's slot in
+/// the avoid-set).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WarrenRefusedHop {
+    /// The entry relay refused the QUIC connection (drained node).
+    Entry([u8; 16]),
+    /// The exit refused the session with its drain close code.
+    Exit([u8; 16]),
+}
+
+/// ADR 36 dial-refusal path: async daemon hook invoked (rate limited by
+/// [`WARREN_DIAL_REFUSAL_COOLDOWN`]) when the supervisor's dial is
+/// deliberately refused by a drained node. The daemon records the
+/// refusing node in its avoid-set and re-selects a circuit that excludes
+/// it (same country when one is pinned, any otherwise), retargeting the
+/// live supervisor. Output: whether a retarget was dispatched.
+pub type WarrenDialRefused = std::sync::Arc<
+    dyn Fn(WarrenRefusedHop) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>
+        + Send
+        + Sync,
+>;
+
+/// Minimum interval between two dial-refusal reactions. The supervisor
+/// redials a refusing circuit every 0.3-2 s (its backoff ceiling), so an
+/// unthrottled hook would flood the directory updater with re-selection
+/// passes while the first retarget is still being dispatched.
+const WARREN_DIAL_REFUSAL_COOLDOWN: std::time::Duration = std::time::Duration::from_secs(20);
+
+/// Unix seconds of the last dial-refusal reaction, process-wide (`0` =
+/// never). Process-global on purpose, like the drain reactor's cooldown:
+/// a rebuilt tunnel must not reset the throttle while the fleet is mid
+/// rollout.
+static LAST_DIAL_REFUSAL_UNIX: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+/// Wall-clock unix seconds (`0` on a pre-epoch clock, which only makes
+/// the refusal cooldown more conservative).
+fn warren_now_unix_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
+/// `true` when a dial-refusal reaction is due: none ever fired, or the
+/// cooldown elapsed. Robust to clock skew: a `last` in the future reads
+/// as not-elapsed (suppress), erring on the quiet side.
+fn dial_refusal_reaction_due(now_unix: u64, last_unix: u64) -> bool {
+    if last_unix == 0 {
+        return true;
+    }
+    last_unix <= now_unix
+        && now_unix.saturating_sub(last_unix) >= WARREN_DIAL_REFUSAL_COOLDOWN.as_secs()
+}
+
 use warrenguard_daita::DaitaState;
 use warrenguard_pump::{
     pump_bidirectional, pump_bidirectional_with_daita, pump_bidirectional_with_idle_cover,
@@ -341,6 +399,16 @@ pub struct WarrenTunnelParameters {
     /// keeps the probe running for its drain interaction but drops the
     /// status surface.
     pub on_egress_verdict: Option<std::sync::Arc<dyn Fn(bool) + Send + Sync>>,
+
+    /// ADR 36 dial-refusal path: async daemon hook invoked when a dial is
+    /// deliberately refused by a drained node (entry `CONNECTION_REFUSED`
+    /// or exit drain close), so the daemon excludes the refusing node and
+    /// retargets the supervisor instead of letting it hammer the same
+    /// node until the drain lifts. Rate limited process-wide by
+    /// [`WARREN_DIAL_REFUSAL_COOLDOWN`]. `None` disables the reaction
+    /// (refusals then retry on backoff until the ambient relay-list
+    /// refresh removes the node). Multi-hop only.
+    pub warren_dial_refused: Option<WarrenDialRefused>,
 
     /// docs/59 Lot 3: pre-swap gate run against a candidate exit before a
     /// make-before-break migration commits, so a pinned port is reserved
@@ -1782,6 +1850,49 @@ impl WarrenTunnelMonitor {
             // the hooks, `None` keeps the pre-hook behavior.
             pre_swap_check: params.warren_pre_swap_check.clone(),
             on_overlap_swapped: params.warren_on_overlap_swapped.clone(),
+            // ADR 36 dial-refusal path: a drained node answers every dial
+            // with a deliberate refusal; without this hook the supervisor
+            // backoff (0.3-2 s ceiling) hammers it until the drain lifts
+            // (observed: 5160 refusals in 19 minutes during a fleet
+            // rollout) and the user's connect stalls behind the retry
+            // loop. The daemon hook excludes the refusing node and
+            // retargets the live supervisor; the cooldown keeps one
+            // reaction per rollout wave instead of one per redial.
+            on_dial_refused: params.warren_dial_refused.clone().map(|hook| {
+                Arc::new(
+                    move |hop: warrenguard_transport::multihop::DialRefusedHop,
+                          relay_id: [u8; 16],
+                          exit_id: [u8; 16]| {
+                        let now = warren_now_unix_secs();
+                        let last =
+                            LAST_DIAL_REFUSAL_UNIX.load(std::sync::atomic::Ordering::Relaxed);
+                        if !dial_refusal_reaction_due(now, last) {
+                            return;
+                        }
+                        LAST_DIAL_REFUSAL_UNIX.store(now, std::sync::atomic::Ordering::Relaxed);
+                        let refused = match hop {
+                            warrenguard_transport::multihop::DialRefusedHop::Entry => {
+                                WarrenRefusedHop::Entry(relay_id)
+                            }
+                            warrenguard_transport::multihop::DialRefusedHop::Exit => {
+                                WarrenRefusedHop::Exit(exit_id)
+                            }
+                        };
+                        let hook = hook.clone();
+                        tokio::spawn(async move {
+                            let retargeted = hook(refused).await;
+                            log::info!(
+                                "Warren dial refused by a drained node: retarget {}",
+                                if retargeted {
+                                    "dispatched (supervisor migrates on its next attempt)"
+                                } else {
+                                    "unavailable (no alternative circuit); staying on backoff"
+                                }
+                            );
+                        });
+                    },
+                ) as warrenguard_transport::supervisor::DialRefusedObserver
+            }),
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         // Subscribe to the supervisor's terminal-rejection signal BEFORE
@@ -3553,6 +3664,21 @@ mod tests {
     use super::*;
     use warrenguard_wire::WarrenPubkey;
 
+    #[test]
+    fn dial_refusal_cooldown_throttles_reactions() {
+        // First refusal ever (last == 0) must react; a refusal inside the
+        // cooldown must not (the supervisor redials every 0.3-2 s, one
+        // reaction per rollout wave is enough); past the cooldown it
+        // reacts again; a future `last` (clock skew) stays quiet.
+        assert!(dial_refusal_reaction_due(1_000, 0));
+        assert!(!dial_refusal_reaction_due(1_010, 1_000));
+        assert!(dial_refusal_reaction_due(
+            1_000 + WARREN_DIAL_REFUSAL_COOLDOWN.as_secs(),
+            1_000
+        ));
+        assert!(!dial_refusal_reaction_due(900, 1_000));
+    }
+
     #[tokio::test]
     async fn race_handshake_surfaces_the_value_when_the_dial_completes_first() {
         // Nominal path: the handshake resolves before any close / timeout.
@@ -3708,6 +3834,7 @@ mod tests {
             on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
+            warren_dial_refused: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: None,
@@ -3749,6 +3876,7 @@ mod tests {
             on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
+            warren_dial_refused: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: None,
@@ -3818,6 +3946,7 @@ mod tests {
             on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
+            warren_dial_refused: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: None,
@@ -3874,6 +4003,7 @@ mod tests {
             on_egress_verdict: None,
             warren_register_migrate_handle: None,
             warren_drain_migrate: None,
+            warren_dial_refused: None,
             warren_pre_swap_check: None,
             warren_on_overlap_swapped: None,
             nat_pmp: Some(cfg.clone()),

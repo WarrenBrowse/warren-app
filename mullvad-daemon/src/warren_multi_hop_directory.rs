@@ -173,6 +173,14 @@ pub fn valid_circuits(
         if !country_matches(entry_country, &e.country) {
             continue;
         }
+        // A drained node is excluded as the ENTRY too: a drain precedes a
+        // whole-box restart (fleet rollout) and its admission gate refuses
+        // new QUIC connections outright, so a circuit entering through it
+        // either dies at the swap or can never be dialed at all.
+        if exclude_exit_ids.contains(e.exit.exit_id.as_bytes()) {
+            continue;
+        }
+
         for (j, x) in dir.nodes.iter().enumerate() {
             if i == j {
                 continue;
@@ -811,11 +819,22 @@ fn verify_cached_directory(
     Ok(verified)
 }
 
-/// ADR 36 gap-free drain path: a request the drain reactor posts to the
-/// updater. The updater runs an immediate cache-only selection pass (the
-/// avoid-set already holds the draining exit) and answers whether a
+/// ADR 36 gap-free drain path: a request the drain reactor (or the
+/// dial-refusal hook) posts to the updater. The updater runs an
+/// immediate cache-only selection pass and answers whether a
 /// make-before-break migration was dispatched.
-pub(crate) type DrainMigrationRequest = tokio::sync::oneshot::Sender<bool>;
+pub(crate) struct DrainMigrationRequest {
+    /// Entry relay (by its directory `relay_id`) that deliberately
+    /// refused a dial. The updater resolves it against the cached
+    /// directory and records the NODE in the avoid-set before the
+    /// selection (the caller cannot: only the updater holds the
+    /// directory that maps a relay id back to a node identity). `None`
+    /// for the drained-exit paths, where the caller already recorded
+    /// the exit.
+    pub avoid_entry_relay: Option<[u8; 16]>,
+    /// Answered with the pass outcome.
+    pub reply: tokio::sync::oneshot::Sender<bool>,
+}
 
 /// Sender half handed to [`crate::tunnel::ParametersGenerator`] so the
 /// tunnel's drain reactor can trigger an on-demand drain pass.
@@ -831,12 +850,21 @@ const DRAIN_MIGRATION_REPLY_TIMEOUT: Duration = Duration::from_secs(20);
 /// a gap-free migration was dispatched. `false` on every degraded path (no
 /// updater wired, updater gone, reply timeout): the caller then falls back
 /// to the break-before-make rebuild, which always recovers.
-pub(crate) async fn request_drain_migration(tx: Option<&DrainMigrationTx>) -> bool {
+pub(crate) async fn request_drain_migration(
+    tx: Option<&DrainMigrationTx>,
+    avoid_entry_relay: Option<[u8; 16]>,
+) -> bool {
     let Some(tx) = tx else {
         return false;
     };
     let (reply_tx, reply_rx) = tokio::sync::oneshot::channel();
-    if tx.send(reply_tx).is_err() {
+    if tx
+        .send(DrainMigrationRequest {
+            avoid_entry_relay,
+            reply: reply_tx,
+        })
+        .is_err()
+    {
         return false;
     }
     matches!(
@@ -845,10 +873,21 @@ pub(crate) async fn request_drain_migration(tx: Option<&DrainMigrationTx>) -> bo
     )
 }
 
+/// Resolve the directory node whose entry relay carries `relay_id` to
+/// its exit identity (the avoid-set key). `None` when the relay is not
+/// in the directory (stale circuit against a refreshed directory): the
+/// pass then simply re-selects without a new exclusion.
+fn entry_node_exit_id(dir: &VerifiedMultiHopDirectory, relay_id: [u8; 16]) -> Option<[u8; 16]> {
+    dir.nodes
+        .iter()
+        .find(|n| n.relay.relay_id == relay_id)
+        .map(|n| *n.exit.exit_id.as_bytes())
+}
+
 /// Answer every drain reactor waiting on this updater pass with the
 /// migration outcome. A dropped reactor (tunnel torn down mid-pass) is
 /// skipped harmlessly.
-fn settle_drain_replies(pending: &mut Vec<DrainMigrationRequest>, migrated: bool) {
+fn settle_drain_replies(pending: &mut Vec<tokio::sync::oneshot::Sender<bool>>, migrated: bool) {
     for reply in pending.drain(..) {
         let _ = reply.send(migrated);
     }
@@ -1006,7 +1045,11 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // with the pass outcome by `settle_drain_replies` after apply.
         let mut drain_migration_rx = cfg.drain_migration_rx.take();
         let mut drain_watch_active = drain_migration_rx.is_some();
-        let mut pending_drain_replies: Vec<DrainMigrationRequest> = Vec::new();
+        let mut pending_drain_replies: Vec<tokio::sync::oneshot::Sender<bool>> = Vec::new();
+        // Refused entry relays queued for resolution against the cached
+        // directory at the next pass (only the updater can map a relay id
+        // back to a node identity for the avoid-set).
+        let mut pending_avoid_entries: Vec<[u8; 16]> = Vec::new();
 
         let mut ticker = tokio::time::interval(REFRESH_INTERVAL);
         ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -1141,6 +1184,19 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 // the daemon blocks all traffic.
                 match cached_dir.as_ref() {
                     Some(dir) => {
+                        // Dial-refusal exclusions: resolve each refused entry
+                        // relay to its node and record it in the avoid-set
+                        // BEFORE the snapshot below, so this very pass already
+                        // excludes it. An unresolvable relay (stale circuit vs
+                        // a refreshed directory) is dropped: re-selection alone
+                        // then moves off it.
+                        for relay_id in pending_avoid_entries.drain(..) {
+                            if let Some(exit_id) = entry_node_exit_id(dir, relay_id) {
+                                cfg.parameters_generator
+                                    .record_warren_drained_exit(exit_id)
+                                    .await;
+                            }
+                        }
                         // ADR 36: exits that signalled a maintenance drain (via
                         // the in-band advisory, recorded by the drain reactor)
                         // are excluded from this selection so a drain-triggered
@@ -1244,9 +1300,17 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     // never drops. Any other change (directory refresh, settings
                     // edit, no live supervisor) keeps the break-before-make
                     // reconnect.
-                    let drain_driven = prev_circuit
-                        .as_ref()
-                        .is_some_and(|c| excluded.contains(c.exit.exit_id.as_bytes()));
+                    // Either hop of the previous circuit landing in the
+                    // avoid-set makes the change drain-driven: a refused
+                    // ENTRY (dial refusal) deserves the same gap-free
+                    // migrate as a draining exit, not a full rebuild.
+                    let drain_driven = prev_circuit.as_ref().is_some_and(|c| {
+                        excluded.contains(c.exit.exit_id.as_bytes())
+                            || cached_dir
+                                .as_ref()
+                                .and_then(|dir| entry_node_exit_id(dir, c.relay.relay_id))
+                                .is_some_and(|entry| excluded.contains(&entry))
+                    });
                     if drain_driven && let Some(notify) = cfg.on_maintenance_migration.as_ref() {
                         notify();
                     }
@@ -1390,12 +1454,17 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 }
                 request = drain_requested => {
                     match request {
-                        Some(reply) => {
+                        Some(request) => {
                             // Drain pass: re-select from the cached directory
                             // instantly (the avoid-set already holds the
                             // draining exit; a fetch would burn the reactor's
-                            // deadline budget) and answer after apply.
-                            pending_drain_replies.push(reply);
+                            // deadline budget) and answer after apply. A
+                            // refused entry relay rides along for resolution
+                            // at the top of the pass.
+                            if let Some(relay_id) = request.avoid_entry_relay {
+                                pending_avoid_entries.push(relay_id);
+                            }
+                            pending_drain_replies.push(request.reply);
                             refresh_due = false;
                         }
                         None => {
@@ -1899,6 +1968,19 @@ mod tests {
             );
         }
 
+        // 2-hop: the drained node must not be picked as the ENTRY either.
+        // A drain precedes a whole-box restart (fleet rollout), so routing
+        // through it as the first hop dies with it; and a drained entry
+        // refuses new QUIC connections outright, so a circuit entering
+        // through it can never even be dialed.
+        for (e, _) in &pairs {
+            assert_ne!(
+                *d.nodes[*e].exit.exit_id.as_bytes(),
+                de_exit,
+                "a drained node must never appear as the entry of a selected circuit"
+            );
+        }
+
         // 1-hop: the drained node is dropped from the candidate set.
         let one_hop = select_one_hop_circuit(&d, "", true, true, &[de_exit])
             .expect("a non-drained node remains for the 1-hop circuit");
@@ -2119,7 +2201,7 @@ mod tests {
     async fn drain_request_without_updater_falls_back_to_rebuild() {
         // No updater wired (multi-hop unconfigured): the reactor must get an
         // immediate `false` so its escalate rebuild still fires.
-        assert!(!request_drain_migration(None).await);
+        assert!(!request_drain_migration(None, None).await);
     }
 
     #[tokio::test]
@@ -2127,18 +2209,33 @@ mod tests {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let updater = tokio::spawn(async move {
             for outcome in [true, false] {
-                let reply: DrainMigrationRequest = rx.recv().await.expect("request");
-                reply.send(outcome).expect("reactor is waiting");
+                let request: DrainMigrationRequest = rx.recv().await.expect("request");
+                request.reply.send(outcome).expect("reactor is waiting");
             }
         });
         assert!(
-            request_drain_migration(Some(&tx)).await,
+            request_drain_migration(Some(&tx), None).await,
             "a dispatched gap-free migration must reach the reactor as `true`"
         );
         assert!(
-            !request_drain_migration(Some(&tx)).await,
+            !request_drain_migration(Some(&tx), None).await,
             "a failed pass must reach the reactor as `false` (escalate rebuild)"
         );
+        updater.await.expect("fake updater");
+    }
+
+    #[tokio::test]
+    async fn drain_request_carries_the_refused_entry_relay_to_the_updater() {
+        // The dial-refusal path must hand the refused entry relay to the
+        // updater verbatim: only the updater holds the directory that maps
+        // a relay id back to a node identity for the avoid-set.
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let updater = tokio::spawn(async move {
+            let request: DrainMigrationRequest = rx.recv().await.expect("request");
+            assert_eq!(request.avoid_entry_relay, Some([0xAB; 16]));
+            request.reply.send(true).expect("caller is waiting");
+        });
+        assert!(request_drain_migration(Some(&tx), Some([0xAB; 16])).await);
         updater.await.expect("fake updater");
     }
 
@@ -2146,7 +2243,7 @@ mod tests {
     async fn drain_request_to_a_dead_updater_falls_back_to_rebuild() {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<DrainMigrationRequest>();
         drop(rx);
-        assert!(!request_drain_migration(Some(&tx)).await);
+        assert!(!request_drain_migration(Some(&tx), None).await);
     }
 
     #[tokio::test(start_paused = true)]
@@ -2156,12 +2253,28 @@ mod tests {
         // => the escalate rebuild recovers. Paused time auto-advances.
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let wedged = tokio::spawn(async move {
-            let reply: DrainMigrationRequest = rx.recv().await.expect("request");
+            let request: DrainMigrationRequest = rx.recv().await.expect("request");
             tokio::time::sleep(Duration::from_secs(3600)).await;
-            drop(reply);
+            drop(request);
         });
-        assert!(!request_drain_migration(Some(&tx)).await);
+        assert!(!request_drain_migration(Some(&tx), None).await);
         wedged.abort();
+    }
+
+    #[test]
+    fn entry_node_exit_id_resolves_only_known_relays() {
+        // The avoid-set is keyed on node exit ids; a refused ENTRY arrives
+        // as a relay id and must resolve to the same node's exit identity.
+        // An unknown relay (stale circuit vs refreshed directory) must
+        // resolve to None, never to some other node.
+        let op = op_key();
+        let d = dir(vec![node(&op, 1, "fr", 0, 100), node(&op, 2, "de", 0, 100)]);
+        let relay_id = d.nodes[1].relay.relay_id;
+        assert_eq!(
+            entry_node_exit_id(&d, relay_id),
+            Some(*d.nodes[1].exit.exit_id.as_bytes())
+        );
+        assert_eq!(entry_node_exit_id(&d, [0xFF; 16]), None);
     }
 
     #[tokio::test]

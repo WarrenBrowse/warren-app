@@ -846,6 +846,10 @@ fn spawn_multi_hop(
             // watch edge), matching the desktop daemon's defaults.
             pre_swap_check: None,
             on_overlap_swapped: None,
+            // No dial-refusal hook yet on iOS: the engine RX-silence watch
+            // plus the directory refresh recover from a drained node; the
+            // desktop-style avoid-set retarget is a follow-up.
+            on_dial_refused: None,
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6: false,
             // Single connection on iOS: the NetworkExtension memory cap

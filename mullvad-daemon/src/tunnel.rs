@@ -602,7 +602,19 @@ impl ParametersGenerator {
     pub async fn migrate_off_drained_exit(&self, exit_id: [u8; 16]) -> bool {
         self.record_warren_drained_exit(exit_id).await;
         let tx = self.0.lock().await.warren_drain_migration_tx.clone();
-        crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref()).await
+        crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref(), None).await
+    }
+
+    /// ADR 36 dial-refusal path, invoked when the ENTRY relay of the
+    /// current circuit deliberately refuses a dial (drained node). The
+    /// caller only knows the relay id; the updater resolves it against
+    /// the cached directory, records the node in the avoid-set and runs
+    /// an immediate re-selection pass. `true` = a retarget was
+    /// dispatched onto a circuit that avoids the refusing node.
+    pub async fn migrate_off_refused_entry(&self, relay_id: [u8; 16]) -> bool {
+        let tx = self.0.lock().await.warren_drain_migration_tx.clone();
+        crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref(), Some(relay_id))
+            .await
     }
 
     /// ADR 36 (Option A): store the current tunnel's migrate handle. Wired
@@ -1195,6 +1207,29 @@ impl ParametersGenerator {
         params.on_egress_verdict = Some(Arc::new(move |dead: bool| {
             egress_cache.set_exit_egress_dead(dead);
         }));
+        // ADR 36 dial-refusal path: a drained node deliberately refuses
+        // the dial itself (entry CONNECTION_REFUSED / exit drain close),
+        // which the in-band drain reactor never sees (no session exists
+        // yet). React exactly like a drain: exclude the refusing node and
+        // re-select, honoring the pinned exit country (the exclusion
+        // narrows the candidate set; the country filter stays structural
+        // in the directory selection).
+        let dial_refused_gen = self.clone();
+        params.warren_dial_refused = Some(Arc::new(
+            move |refused: talpid_warren_tunnel::WarrenRefusedHop| {
+                let g = dial_refused_gen.clone();
+                Box::pin(async move {
+                    match refused {
+                        talpid_warren_tunnel::WarrenRefusedHop::Exit(exit_id) => {
+                            g.migrate_off_drained_exit(exit_id).await
+                        }
+                        talpid_warren_tunnel::WarrenRefusedHop::Entry(relay_id) => {
+                            g.migrate_off_refused_entry(relay_id).await
+                        }
+                    }
+                })
+            },
+        ));
         // docs/59 Lot 3: pre-swap NAT-PMP reservation gate + post-swap
         // re-map observer, behind the explicit activation knob (the
         // fields stay `None` by default: identical pre-Lot-3 behavior;
