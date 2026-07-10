@@ -9,8 +9,10 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import arrow.atomic.AtomicInt
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
@@ -182,11 +184,34 @@ class WarrenVpnService : LifecycleVpnService() {
             }
 
             intent?.action == KEY_RECONNECT_ACTION -> {
-                // Reconnect routes through the Quinn adapter, which reuses the
-                // cached config + mnemonic (no biometric re-prompt). Does
-                // nothing if there is no active session.
+                // Reconnect reuses the cached mnemonic (no biometric re-prompt)
+                // and does nothing if there is no active session. Rebuild the
+                // config from the CURRENT settings so the reconnect applies
+                // exit/entry/DAITA/NAT-PMP/DNS changes made since the last
+                // connect; without this the adapter would reuse its stale cached
+                // config and the new settings would be silently dropped. The
+                // rebuild (relay catalogue + settings reads + exit-key check)
+                // runs off the main thread to avoid an ANR on a slow device.
                 foregroundNotificationHandler.startForeground()
-                lifecycleScope.launch { quinnAdapter.reconnect() }
+                lifecycleScope.launch {
+                    val config = withContext(Dispatchers.Default) {
+                        when (val result = warrenConnectUseCase.buildFreshConfig()) {
+                            is WarrenConnectUseCase.ConfigResult.Ready -> result.config
+                            else -> {
+                                Logger.w(
+                                    "Reconnect: config rebuild unavailable ($result), " +
+                                        "reusing the cached config",
+                                )
+                                null
+                            }
+                        }
+                    }
+                    if (config != null) {
+                        quinnAdapter.reconnectWith(config)
+                    } else {
+                        quinnAdapter.reconnect()
+                    }
+                }
             }
 
             intent?.action == KEY_WARREN_CONNECT_QUINN_ACTION -> {

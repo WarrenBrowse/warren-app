@@ -306,6 +306,29 @@ class WarrenQuinnAdapter(
         connect(config, mnemonic)
     }
 
+    /**
+     * Tear down the active session and reconnect with a freshly built
+     * [newConfig], reusing the cached [activeMnemonic] (no biometric
+     * re-prompt). Unlike [reconnect], this applies settings changed since the
+     * last connect (exit relay, entry country, DAITA, NAT-PMP, DNS, ...) by
+     * swapping in a config the caller rebuilt from the current settings.
+     *
+     * No-op when there is no active session (no cached mnemonic to reuse); the
+     * user must use the normal connect flow in that case.
+     */
+    suspend fun reconnectWith(newConfig: WarrenTunnelConfig) {
+        val mnemonic = activeMnemonic
+        if (mnemonic == null) {
+            Logger.w("WarrenQuinnAdapter: reconnectWith() called without an active session")
+            return
+        }
+        lock.withLock { teardownLocked() }
+        // teardownLocked() clears activeConfig but keeps activeMnemonic, so the
+        // instance we captured is still the session's own: connect() detects the
+        // identity and does not re-store or wipe it.
+        connect(newConfig, mnemonic)
+    }
+
     suspend fun disconnect() = lock.withLock {
         teardownLocked()
         // User teardown is terminal: wipe the cached mnemonic.

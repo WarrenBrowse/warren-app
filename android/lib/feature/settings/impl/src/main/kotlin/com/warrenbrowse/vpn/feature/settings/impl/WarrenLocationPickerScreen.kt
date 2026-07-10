@@ -32,8 +32,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.relaylist.InactiveRelayIndicator
@@ -64,6 +66,9 @@ import org.koin.compose.koinInject
 fun WarrenLocationPicker(navigator: Navigator) {
     val relayProvider = koinInject<WarrenRelayProvider>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
+    val reconnectInvoker = koinInject<WarrenQuinnReconnectInvoker>()
+    val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
+    val tunnelState by tunnelStateProvider.state.collectAsStateWithLifecycle()
     val selectedExitId by settings.selectedExitId.collectAsStateWithLifecycle()
     val recentExitIds by settings.recentExitIds.collectAsStateWithLifecycle()
     val recentsEnabled by settings.recentsEnabled.collectAsStateWithLifecycle()
@@ -79,6 +84,15 @@ fun WarrenLocationPicker(navigator: Navigator) {
 
     val onSelect: (WarrenRelaySummary) -> Unit = { relay ->
         settings.setSelectedExitId(if (relay.exitId == selectedExitId) null else relay.exitId)
+        // Apply the new exit immediately when a tunnel is up: the service
+        // rebuilds the config from the just-updated selection and reconnects
+        // through the new exit (reusing the cached mnemonic, no biometric
+        // re-prompt). When disconnected this is a no-op and the change applies
+        // on the next connect. Mirrors the desktop, which reconnects on a
+        // location change.
+        if (tunnelState.startsWith("Connected")) {
+            reconnectInvoker.reconnect()
+        }
     }
 
     ScaffoldWithSmallTopBar(

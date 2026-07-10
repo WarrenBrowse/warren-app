@@ -22,6 +22,7 @@ import com.warrenbrowse.vpn.lib.common.util.combine
 import com.warrenbrowse.vpn.lib.common.util.withPrev
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.DeviceState
+import com.warrenbrowse.vpn.lib.model.Endpoint
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
@@ -95,7 +96,17 @@ class ConnectViewModel(
                                 tunnelState.location ?: lastKnownDisconnectedLocation
 
                             is TunnelState.Connecting -> tunnelState.location
-                            is TunnelState.Connected -> tunnelState.location
+                            // Key the marker/title off the ACTIVE exit (the one
+                            // the tunnel actually egresses through), not the
+                            // selected one: after switching exit without a
+                            // reconnect, selectedExitId already points at the new
+                            // exit while traffic still runs the old one, so
+                            // falling back to relayLocation here would mislabel a
+                            // live tunnel. Matched by endpoint host against the
+                            // relay catalogue.
+                            is TunnelState.Connected ->
+                                tunnelState.location
+                                    ?: activeExitLocation(tunnelState.endpoint.endpoint)
                             is TunnelState.Disconnecting ->
                                 when (tunnelState.actionAfterDisconnect) {
                                     ActionAfterDisconnect.Nothing -> lastKnownDisconnectedLocation
@@ -142,12 +153,35 @@ class ConnectViewModel(
         val exit = relays.firstOrNull { it.exitId == selectedExitId }
             ?: relays.firstOrNull { it.active }
             ?: return null
-        val (lat, lon) = CountryCentroid.of(exit.country) ?: return null
+        return exit.toGeoIpLocation()
+    }
+
+    /**
+     * Build a [GeoIpLocation] for the map marker + title from the exit the
+     * tunnel is ACTUALLY connected through, matched by endpoint host against the
+     * relay catalogue. Used while connected so the home reflects the live exit
+     * rather than the (possibly newly re-picked, not-yet-applied) selection.
+     * Returns null when the host does not match any known relay (then the caller
+     * falls back to the selected exit).
+     */
+    private fun activeExitLocation(endpoint: Endpoint): GeoIpLocation? {
+        val host = endpoint.address.address?.hostAddress
+            ?: endpoint.address.hostString
+            ?: return null
+        val exit = relayProvider.list()
+            .firstOrNull { it.endpoint.substringBeforeLast(':') == host }
+            ?: return null
+        return exit.toGeoIpLocation()
+    }
+
+    private fun com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary.toGeoIpLocation():
+        GeoIpLocation? {
+        val (lat, lon) = CountryCentroid.of(country) ?: return null
         return GeoIpLocation(
             ipv4 = null,
             ipv6 = null,
-            country = exit.country,
-            city = exit.city.ifBlank { null },
+            country = country,
+            city = city.ifBlank { null },
             latitude = lat,
             longitude = lon,
             hostname = null,

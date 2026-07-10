@@ -49,6 +49,77 @@ class WarrenConnectUseCase(
     }
 
     /**
+     * Result of building a [com.warrenbrowse.vpn.app.service.WarrenTunnelConfig]
+     * from the current settings. Needs only the public wallet pubkey, so it
+     * never reads the mnemonic: callers that already hold a live session (the
+     * reconnect path) can rebuild the config with the latest settings without a
+     * wallet read or a biometric prompt.
+     */
+    sealed interface ConfigResult {
+        data class Ready(
+            val config: com.warrenbrowse.vpn.app.service.WarrenTunnelConfig,
+        ) : ConfigResult
+        data object WalletNotReady : ConfigResult
+        data class ExitKeyMismatch(
+            val exitId: String,
+            val pinnedPubkeyHex: String,
+            val observedPubkeyHex: String,
+        ) : ConfigResult
+        data class Failure(val message: String) : ConfigResult
+    }
+
+    /**
+     * Build a fresh tunnel config from the current settings + relay catalogue,
+     * running the trust-on-first-use exit-key check (fail closed on a mismatch).
+     * Pure with respect to the wallet secret: only the public pubkey is read.
+     */
+    fun buildFreshConfig(): ConfigResult {
+        val pubkey = when (val state = walletRepository.state.value) {
+            is WalletState.Ready -> state.pubkey
+            is WalletState.Locked -> state.pubkey
+            WalletState.Absent -> {
+                Logger.w("WarrenConnectUseCase: no wallet on device")
+                return ConfigResult.WalletNotReady
+            }
+        }
+
+        val built = configBuilder.build(pubkey) ?: run {
+            Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
+            return ConfigResult.Failure("No relay available")
+        }
+
+        // Trust-on-first-use exit key check (fail closed). A mismatch means the
+        // exit's key changed since we last pinned it; refuse so the user can
+        // decide (reset pins in settings to accept a rotation).
+        built.exitId?.let { exitId ->
+            when (val verdict = localSettings.exitKeyVerdict(exitId, built.exitPubkeyHex)) {
+                is ExitKeyVerdict.Mismatch -> {
+                    Logger.w("WarrenConnectUseCase: exit key mismatch for $exitId, refusing")
+                    return ConfigResult.ExitKeyMismatch(
+                        exitId = exitId,
+                        pinnedPubkeyHex = verdict.pinned,
+                        observedPubkeyHex = built.exitPubkeyHex,
+                    )
+                }
+                ExitKeyVerdict.FirstSeen ->
+                    localSettings.trustExitKey(exitId, built.exitPubkeyHex)
+                ExitKeyVerdict.Match -> Unit
+            }
+        }
+
+        // Apply the local-network-sharing + MTU toggles here so they are honoured
+        // regardless of the config builder (the natural place, kept minimal).
+        // Both are serialized fields, so they survive the JSON round-trip through
+        // the VpnService Intent down to the TUN plan.
+        return ConfigResult.Ready(
+            built.copy(
+                allowLan = localSettings.allowLan.value,
+                mtu = localSettings.tunnelMtu.value,
+            ),
+        )
+    }
+
+    /**
      * `WarrenQuinnConnectInvoker` impl: maps the app-private [Outcome] to the
      * lib-side [WarrenConnectResult] so UI layers in `lib/feature/<x>` (which
      * cannot import [Outcome]) can raise the pubkey-mismatch dialog.
@@ -68,17 +139,18 @@ class WarrenConnectUseCase(
         }
 
     suspend fun invoke(context: Context): Outcome {
-        // The pubkey (public, used to address the relay config) is available
-        // whether the wallet is Locked at rest or transiently Ready; only Absent
-        // blocks. Gating on Ready alone made Connect a no-op at rest, since the
-        // resting state is Locked (Ready only happens right after create/import).
-        val pubkey = when (val state = walletRepository.state.value) {
-            is WalletState.Ready -> state.pubkey
-            is WalletState.Locked -> state.pubkey
-            WalletState.Absent -> {
-                Logger.w("WarrenConnectUseCase: no wallet on device")
-                return Outcome.WalletNotReady
-            }
+        // Build the config from current settings first (public pubkey only, no
+        // secret). This also runs the trust-on-first-use exit-key check and maps
+        // its outcomes back to the connect [Outcome] surface.
+        val config = when (val result = buildFreshConfig()) {
+            is ConfigResult.Ready -> result.config
+            ConfigResult.WalletNotReady -> return Outcome.WalletNotReady
+            is ConfigResult.ExitKeyMismatch -> return Outcome.ExitKeyMismatch(
+                exitId = result.exitId,
+                pinnedPubkeyHex = result.pinnedPubkeyHex,
+                observedPubkeyHex = result.observedPubkeyHex,
+            )
+            is ConfigResult.Failure -> return Outcome.Failure(result.message)
         }
 
         // Routine signing: read the mnemonic silently (no biometric/PIN prompt).
@@ -92,37 +164,6 @@ class WarrenConnectUseCase(
             return Outcome.Failure(e.message ?: "wallet read failed")
         }
 
-        val built = configBuilder.build(pubkey) ?: run {
-            Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
-            return Outcome.Failure("No relay available")
-        }
-        // Apply the local-network-sharing toggle here so it is honoured
-        // regardless of the config builder (which is the natural place but is
-        // kept minimal). allowLan is a serialized field, so it survives the
-        // JSON round-trip through the VpnService Intent down to the TUN plan.
-        // Trust-on-first-use exit key check (fail closed). A mismatch means
-        // the exit's key changed since we last pinned it; refuse to connect so
-        // the user can decide (reset pins in settings to accept a rotation).
-        built.exitId?.let { exitId ->
-            when (val verdict = localSettings.exitKeyVerdict(exitId, built.exitPubkeyHex)) {
-                is ExitKeyVerdict.Mismatch -> {
-                    Logger.w("WarrenConnectUseCase: exit key mismatch for $exitId, refusing")
-                    return Outcome.ExitKeyMismatch(
-                        exitId = exitId,
-                        pinnedPubkeyHex = verdict.pinned,
-                        observedPubkeyHex = built.exitPubkeyHex,
-                    )
-                }
-                ExitKeyVerdict.FirstSeen ->
-                    localSettings.trustExitKey(exitId, built.exitPubkeyHex)
-                ExitKeyVerdict.Match -> Unit
-            }
-        }
-
-        val config = built.copy(
-            allowLan = localSettings.allowLan.value,
-            mtu = localSettings.tunnelMtu.value,
-        )
         val configJson = config.toWireJson()
 
         MnemonicCache.put(mnemonic)
