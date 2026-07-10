@@ -7,20 +7,24 @@ import com.warrenbrowse.vpn.test.e2e.extension.getRequiredArgument
 
 const val LOG_TAG = "warren-e2e"
 
+// The infrastructure flavor dimension has a single flavor (`prod`), so AGP does
+// not emit a `FLAVOR_infrastructure` BuildConfig field. The canonical flavor
+// name surfaces via `BuildConfig.FLAVOR` directly (mirrors the app module, see
+// its `di/AppModule` note). Both resolve to "prod" here.
 fun Bundle.getPartnerAuth() =
     InstrumentationRegistry.getArguments()
-        .getString("warren.test.e2e.${BuildConfig.FLAVOR_infrastructure}.partnerAuth")
+        .getString("warren.test.e2e.${BuildConfig.FLAVOR}.partnerAuth")
 
 fun Bundle.getValidAccountNumber() =
     InstrumentationRegistry.getArguments()
         .getRequiredArgument(
-            "warren.test.e2e.${BuildConfig.FLAVOR_infrastructure}.accountNumber.valid"
+            "warren.test.e2e.${BuildConfig.FLAVOR}.accountNumber.valid"
         )
 
 fun Bundle.getInvalidAccountNumber() =
     InstrumentationRegistry.getArguments()
         .getRequiredArgument(
-            "warren.test.e2e.${BuildConfig.FLAVOR_infrastructure}.accountNumber.invalid"
+            "warren.test.e2e.${BuildConfig.FLAVOR}.accountNumber.invalid"
         )
 
 fun Bundle.isBillingEnabled(): Boolean =
