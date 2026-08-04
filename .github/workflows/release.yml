@@ -1080,7 +1080,9 @@ jobs:
     name: Sign + publish update metadata
     needs: [tag-guard, publish-release]
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    timeout-minutes: 15
+    # Sized for streaming ~800 MB of installers to the update host over a
+    # link measured at 0.5-1 MB/s, not just for the signing.
+    timeout-minutes: 60
     # Signs the per-platform version manifests and serves them so existing apps
     # detect the new release. Gated on a signing key being present: without it
     # the whole step is a no-op (same opt-in philosophy as the build signing).

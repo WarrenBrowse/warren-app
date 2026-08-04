@@ -61,7 +61,9 @@ jobs:
     # already published its own metadata.
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    timeout-minutes: 15
+    # Sized for streaming ~800 MB of installers to the update host over a
+    # link measured at 0.5-1 MB/s, not just for the re-signing.
+    timeout-minutes: 60
     strategy:
       # One channel must never take the other down with it.
       fail-fast: false
