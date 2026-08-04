@@ -1248,8 +1248,14 @@ jobs:
             dest="${WARREN_UPDATES_SSH_PATH}/beta"
             prefix=WarrenVPN-Beta
           fi
-          ssh="ssh -i $key -o StrictHostKeyChecking=accept-new"
+          # IdentitiesOnly: the runner's ssh-agent keys are offered before -i
+          # identities, and dropbear on the update host caps auth attempts at
+          # 3, so agent keys can exhaust the limit before ours is ever tried.
+          ssh="ssh -i $key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
           target="${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}"
+          # Public half of the deploy key, for comparing with the host's
+          # authorized_keys when auth fails. Never the private half.
+          ssh-keygen -y -f "$key"
           $ssh "$target" "mkdir -p '${dest}'"
           # The installers ship BESIDE the manifests, because the manifests
           # point at this host: the repo is private, so a GitHub release asset
