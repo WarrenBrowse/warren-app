@@ -187,12 +187,20 @@ ignored = ["prost"]
 # the same fork warren-core and warrenguard consume; the patch unifies the
 # transitive graph onto it (no vendored tree, no setup script).
 [patch.crates-io]
-quinn = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn" }
-quinn-proto = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn-proto" }
+quinn = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn" }
+quinn-proto = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn-proto" }
 # warrenguard-transport/-relay depend on quinn-udp directly (not only through
 # quinn), so it is patched too. Lib names stay quinn/quinn_proto/quinn_udp, so
 # every `use quinn` and the mullvad-logging crate-name filters are unchanged.
-quinn-udp = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn-udp" }
+quinn-udp = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn-udp" }
+
+# The warrenguard rev pinned in .warrenguard-version still declares the fork over
+# ssh://, which an anonymous clone cannot fetch; redirecting that source keeps the
+# whole graph on the single https URL instead of resolving two copies of quinn.
+# Drop this once the pin moves past warrenguard's own switch to https.
+[patch."ssh://git@github.com/WarrenBrowse/warren-quinn.git"]
+quinn = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn" }
+quinn-udp = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn-udp" }
 
 # warren-sdk-rs's own crates (consumed as path-deps below, e.g. warren-identity)
 # pin `warrenguard-*` as git deps in their OWN workspace, redirected to their
