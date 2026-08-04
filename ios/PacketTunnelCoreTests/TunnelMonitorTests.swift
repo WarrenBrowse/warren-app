@@ -6,11 +6,11 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadTypes
+import WarrenTypes
 import Network
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import PacketTunnelCore
 
 final class TunnelMonitorTests: XCTestCase {

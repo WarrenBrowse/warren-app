@@ -1,0 +1,5 @@
+framework module WarrenRustRuntimeProxy {
+   header "warren_rust_runtime.h"
+   link "libwarren_ios"
+   export *
+}

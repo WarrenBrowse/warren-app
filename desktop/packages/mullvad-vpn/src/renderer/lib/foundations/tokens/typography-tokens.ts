@@ -1,6 +1,8 @@
 export enum FontFamilyTokens {
   openSans = 'Open Sans',
   sourceSansPro = '"Source Sans Pro", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
+  // Brand display face for the WARREN wordmark only (Logo.tsx), not the UI text.
+  nunito = '"Nunito", sans-serif',
 }
 
 export enum FontWeightTokens {

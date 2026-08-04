@@ -49,7 +49,7 @@ pub enum SetCommands {
     /// The 'mullvad relay list' command shows the available relays and their
     /// geographical location.
     #[command(
-        override_usage = "mullvad relay set location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
+        override_usage = "warren relay set location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
 
   Select relay using a country:
 
@@ -133,7 +133,7 @@ pub enum EntryArgs {
     /// Location of entry relay. This can be 'any' or any location that is valid with 'set
     /// location', such as 'se got'.
     #[command(
-        override_usage = "mullvad relay set tunnel wireguard entry-location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
+        override_usage = "warren relay set tunnel wireguard entry-location <COUNTRY> [CITY] [HOSTNAME] | <HOSTNAME>
 
   Select entry location using a country:
 
@@ -284,7 +284,7 @@ impl Relay {
                 );
                 for relay in &city.relays {
                     let ownership = if relay.owned {
-                        "Mullvad-owned"
+                        "Warren-owned"
                     } else {
                         "rented"
                     };

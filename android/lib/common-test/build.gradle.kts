@@ -1,7 +1,7 @@
-plugins { alias(libs.plugins.mullvad.android.library) }
+plugins { alias(libs.plugins.warren.android.library) }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.common.test"
+    namespace = "com.warrenbrowse.vpn.lib.common.test"
 
     packaging {
         resources {

@@ -9,6 +9,9 @@ import {
   IpVersion,
   IWireguardEndpointData,
   LiftedConstraint,
+  NatPmpProto,
+  NatPmpSettings,
+  NatPmpStatus,
   ObfuscationSettings,
   ObfuscationType,
   Ownership,
@@ -17,6 +20,9 @@ import {
   RelayLocation,
   RelayOverride,
   RelayProtocol,
+  WarrenCustomExitSettings,
+  WarrenMultiHopSettings,
+  WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
 import { IGuiSettingsState } from '../../../shared/gui-settings-state';
 import { ReduxAction } from '../store';
@@ -81,6 +87,27 @@ export interface ISettingsReduxState {
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
+  // Persistent warren-api URL.
+  warrenApiUrl?: string;
+  warrenMaxRateBps?: number;
+  // Warren two-relayed QUIC multi-hop settings.
+  warrenMultiHop: WarrenMultiHopSettings;
+  // Advanced Warren custom-exit override.
+  warrenCustomExit: WarrenCustomExitSettings;
+  // Live Warren tunnel status (reconnect_count, last_reconnect_age,
+  // obfuscation_active). Undefined until the first push from the
+  // daemon WarrenStatusUpdates stream.
+  warrenStatus?: WarrenStatus;
+  // Persistent NAT-PMP port-forwarding settings.
+  warrenNatPmp: NatPmpSettings;
+  // Live NAT-PMP refresh-loop status. Undefined until the first push
+  // from the daemon NatPmpStatusUpdates stream; treat undefined as
+  // `{ state: 'disabled' }` UI-side.
+  natPmpStatus?: NatPmpStatus;
+  // Wall-clock instant (ms) the current `natPmpStatus` arrived. The
+  // rate-limit countdown anchors to this (see IUpdateNatPmpStatusAction)
+  // so a stale snapshot self-expires instead of re-flashing on mount.
+  natPmpStatusReceivedAt?: number;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -126,11 +153,40 @@ const initialState: ISettingsReduxState = {
   enableIpv6: true,
   lockdownMode: false,
   showBetaReleases: false,
+  warrenApiUrl: undefined,
+  warrenMaxRateBps: undefined,
+  warrenMultiHop: {
+    enabled: false,
+    entryCountry: '',
+    exitCountry: '',
+    hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+  },
+  warrenCustomExit: {
+    enabled: false,
+    endpoint: '',
+    pubkeyHex: '',
+    coverDomain: undefined,
+    label: '',
+    x25519MultihopPubkeyHex: '',
+    exitIdHex: '',
+  },
+  warrenStatus: undefined,
+  warrenNatPmp: {
+    enabled: false,
+    lifetimeSecs: 3600,
+    rules: [],
+    protocol: NatPmpProto.udp,
+    suggestedExternalPort: 0,
+    internalPort: 0,
+  },
+  natPmpStatus: undefined,
+  natPmpStatusReceivedAt: undefined,
   wireguard: {
     quantumResistant: true,
   },
   dns: {
     state: 'default',
+    allowExternalDns: false,
     defaultOptions: {
       blockAds: false,
       blockTrackers: false,
@@ -152,9 +208,6 @@ const initialState: ISettingsReduxState = {
       port: 'any',
     },
     shadowsocksSettings: {
-      port: 'any',
-    },
-    wireGuardPortSettings: {
       port: 'any',
     },
     lwoSettings: {
@@ -201,6 +254,49 @@ export default function (
       return {
         ...state,
         allowLan: action.allowLan,
+      };
+
+    case 'UPDATE_WARREN_API_URL':
+      return {
+        ...state,
+        warrenApiUrl: action.warrenApiUrl,
+      };
+
+    case 'UPDATE_WARREN_MAX_RATE_BPS':
+      return {
+        ...state,
+        warrenMaxRateBps: action.warrenMaxRateBps,
+      };
+
+    case 'UPDATE_WARREN_MULTI_HOP':
+      return {
+        ...state,
+        warrenMultiHop: action.warrenMultiHop,
+      };
+
+    case 'UPDATE_WARREN_CUSTOM_EXIT':
+      return {
+        ...state,
+        warrenCustomExit: action.warrenCustomExit,
+      };
+
+    case 'UPDATE_WARREN_STATUS':
+      return {
+        ...state,
+        warrenStatus: action.warrenStatus,
+      };
+
+    case 'UPDATE_NAT_PMP_SETTINGS':
+      return {
+        ...state,
+        warrenNatPmp: action.natPmpSettings,
+      };
+
+    case 'UPDATE_NAT_PMP_STATUS':
+      return {
+        ...state,
+        natPmpStatus: action.natPmpStatus,
+        natPmpStatusReceivedAt: action.receivedAt,
       };
 
     case 'UPDATE_ENABLE_IPV6':

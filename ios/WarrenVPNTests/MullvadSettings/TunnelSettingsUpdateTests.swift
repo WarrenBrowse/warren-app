@@ -1,0 +1,176 @@
+//
+//  TunnelSettingsUpdateTests.swift
+//  MullvadVPNTests
+//
+//  Created by Andrew Bulhak on 2024-02-14.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import WarrenTypes
+import Network
+import XCTest
+@testable import WarrenVPN
+
+@testable import WarrenSettings
+
+final class TunnelSettingsUpdateTests: XCTestCase {
+    func testApplyDNSSettings() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        var dnsSettings = DNSSettings()
+        dnsSettings.blockingOptions = [.blockAdvertising, .blockTracking]
+        dnsSettings.enableCustomDNS = true
+        dnsSettings.customDNSDomains = [.ipv4(IPv4Address("1.2.3.4")!)]
+        let update = TunnelSettingsUpdate.dnsSettings(dnsSettings)
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(settings.dnsSettings.blockingOptions, [.blockAdvertising, .blockTracking])
+        XCTAssertEqual(settings.dnsSettings.enableCustomDNS, true)
+        XCTAssertEqual(settings.dnsSettings.customDNSDomains, [.ipv4(IPv4Address("1.2.3.4")!)])
+    }
+
+    func testApplyObfuscation() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let update = TunnelSettingsUpdate.obfuscation(
+            WireGuardObfuscationSettings(
+                state: .udpOverTcp,
+                udpOverTcpPort: .port5001
+            ))
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(
+            settings.wireGuardObfuscation,
+            WireGuardObfuscationSettings(
+                state: .udpOverTcp,
+                udpOverTcpPort: .port5001
+            ))
+    }
+
+    func testApplyShadowsocksObfuscation() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let update = TunnelSettingsUpdate.obfuscation(
+            WireGuardObfuscationSettings(
+                state: .shadowsocks
+            ))
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(
+            settings.wireGuardObfuscation,
+            WireGuardObfuscationSettings(
+                state: .shadowsocks
+            ))
+    }
+
+    func testApplyQuicObfuscation() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let update = TunnelSettingsUpdate.obfuscation(
+            WireGuardObfuscationSettings(
+                state: .quic
+            ))
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(
+            settings.wireGuardObfuscation,
+            WireGuardObfuscationSettings(
+                state: .quic
+            ))
+    }
+
+    func testApplyRelayConstraints() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let filter: RelayConstraint = .only(RelayFilter(ownership: .rented, providers: .only(["foo", "bar"])))
+        let relayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.country("zz")])),
+            port: .only(9999),
+            entryFilter: filter,
+            exitFilter: filter
+        )
+        let update = TunnelSettingsUpdate.relayConstraints(relayConstraints)
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(settings.relayConstraints, relayConstraints)
+    }
+
+    func testApplyQuantumResistance() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        var update = TunnelSettingsUpdate.quantumResistance(.on)
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertTrue(settings.tunnelQuantumResistance.isEnabled)
+
+        // When again:
+        update = TunnelSettingsUpdate.quantumResistance(.on)
+        update.apply(to: &settings)
+
+        // Then again:
+        XCTAssertTrue(settings.tunnelQuantumResistance.isEnabled)
+    }
+
+    func testApplyMultihop() {
+        // Given:
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let update = TunnelSettingsUpdate.multihop(.always)
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(settings.tunnelMultihopState, .always)
+    }
+
+    func testApplyDAITA() {
+        // Given:
+        let daitaSettings = DAITASettings(daitaState: .on)
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let update = TunnelSettingsUpdate.daita(daitaSettings)
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(settings.daita, daitaSettings)
+    }
+
+    func testApplyIncludeAllNetworks() {
+        // Given:
+        let includeAllNetworksState = InclueAllNetworksState.on
+        let localNetworkSharingState = LocalNetworkSharingState.on
+        var settings = LatestTunnelSettings()
+
+        // When:
+        let update = TunnelSettingsUpdate.includeAllNetworks(
+            IncludeAllNetworksSettings(
+                includeAllNetworksState: includeAllNetworksState,
+                localNetworkSharingState: localNetworkSharingState
+            )
+        )
+        update.apply(to: &settings)
+
+        // Then:
+        XCTAssertEqual(settings.includeAllNetworks.includeAllNetworksIsEnabled, includeAllNetworksState.isEnabled)
+        XCTAssertEqual(settings.includeAllNetworks.localNetworkSharingIsEnabled, localNetworkSharingState.isEnabled)
+    }
+}

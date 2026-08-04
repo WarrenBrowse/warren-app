@@ -1,7 +1,6 @@
 import { Page } from 'playwright';
 
 export const createSelectors = (page: Page) => ({
-  wireguardPortButton: () => page.getByRole('button', { name: 'WireGuard Port settings' }),
   lwoSettingsButton: () => page.getByRole('button', { name: 'LWO settings' }),
   udpOverTcpSettingsButton: () => page.getByRole('button', { name: 'UDP-over-TCP settings' }),
   udpOverTcpOption: () => page.getByRole('option', { name: 'UDP-over-TCP' }),
@@ -14,5 +13,4 @@ export const createSelectors = (page: Page) => ({
   lwoOption: () => page.getByRole('option', { name: 'LWO' }),
   quicOption: () => page.getByRole('option', { name: 'QUIC' }),
   portObfuscationOption: () => page.getByRole('option', { name: 'Port', exact: true }),
-  wireguardPortOption: () => page.getByRole('option', { name: 'WireGuard Port' }),
 });

@@ -13,6 +13,6 @@
                  android:requestLegacyExternalStorage="true"
                  android:allowBackup="false"
                  android:banner="@mipmap/ic_banner"
-                 android:name=".app.MullvadApplication"
+                 android:name=".app.WarrenApplication"
                  tools:ignore="DataExtractionRules,GoogleAppIndexingWarning"/>
 </manifest>

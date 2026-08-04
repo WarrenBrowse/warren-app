@@ -1,6 +1,6 @@
 ## Overview
 The `gen-guide-screenshots.sh` script in this folder can be used to generate the app screenshots
-that are needed for the user guide at https://mullvad.net/en/help/using-mullvad-vpn-on-android
+that are needed for the Android user guide on the Warren website (https://warrenbrowse.com).
 
 ## Setup
 Before running the script, do the following:

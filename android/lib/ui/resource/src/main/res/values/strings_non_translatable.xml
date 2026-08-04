@@ -1,25 +1,23 @@
 <resources>
-    <string name="app_name" translatable="false">Mullvad VPN</string>
-    <string name="voucher_hint" translatable="false">XXXX-XXXX-XXXX-XXXX</string>
-    <string name="account_url" translatable="false">https://mullvad.net/account</string>
-    <string name="download_url" translatable="false">https://mullvad.net/download/vpn/android</string>
+    <string name="app_name" translatable="false">Warren VPN</string>
+    <string name="download_url" translatable="false">https://warren.ro/telecharger</string>
     <string name="market_uri" translatable="false">market://details?id=%s</string>
-    <string name="faqs_and_guides_url" translatable="false">https://mullvad.net/help/tag/mullvad-app/</string>
-    <string name="privacy_policy_url" translatable="false">https://mullvad.net/help/privacy-policy/</string>
-    <string name="lockdown_url" translatable="false">https://mullvad.net/l/android-lockdown</string>
+    <string name="faqs_and_guides_url" translatable="false">https://warren.ro/faq</string>
+    <string name="privacy_policy_url" translatable="false">https://warren.ro/confidentialite</string>
+    <string name="terms_of_use_url" translatable="false">https://warren.ro/cgu</string>
+    <string name="refund_policy_url" translatable="false">https://warren.ro/remboursement</string>
+    <!-- Abuse-report appeal page, named on the port-forwarding page and in the
+         suspension notice so the strike that can follow is foreseeable. -->
+    <string name="reports_url" translatable="false">https://warren.ro/signalements</string>
+    <string name="local_network_sharing_ip_ranges_plain" translatable="false">10.0.0.0/8\n172.16.0.0/12\n192.168.0.0/16\n169.254.0.0/16\nfe80::/10\nfc00::/7</string>
+    <string name="community_forum_url" translatable="false">https://forum.warrenbrowse.com</string>
+    <!-- Public help page (desktop `urls.help`): the triage door for a user who
+         has no account yet, since forum login is gated on having paid. -->
+    <string name="help_page_url" translatable="false">https://warren.ro/aide</string>
+    <string name="lockdown_url" translatable="false">https://warren.ro/faq</string>
     <string name="split_tunneling" translatable="false">Split tunneling</string>
-    <string name="wireguard" translatable="false">WireGuard</string>
-    <string name="socks5_remote" translatable="false">SOCKS5</string>
     <string name="shadowsocks" translatable="false">Shadowsocks</string>
     <string name="quic" translatable="false">QUIC</string>
     <string name="lwo" translatable="false">LWO</string>
-    <string name="local_network_sharing_ip_ranges" translatable="false">
-        <![CDATA[<ul><li>10.0.0.0/8</li><li>172.16.0.0/12</li><li>192.168.0.0/16</li><li>169.254.0.0/16</li><li>fe80::/10</li><li>fc00::/7</li></ul>]]>
-    </string>
     <string name="daita" translatable="false">DAITA</string>
-    <string name="daita_full" translatable="false">Defence against AI-guided Traffic Analysis</string>
-    <string name="support_email" translatable="false">support@mullvadvpn.net</string>
-    <string name="support_email_subject" translatable="false">Mullvad VPN App %s Android %s (%d) - %s %s</string>
-    <string name="app_name_game" translatable="false">Whack-a-mole</string>
-    <string name="app_name_ninja" translatable="false">Ninja Mole</string>
 </resources>

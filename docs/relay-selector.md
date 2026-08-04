@@ -1,20 +1,25 @@
 
+> **Warren note.** This document describes the relay selector inherited from upstream Mullvad.
+> On the Warren path, exits and relays come from the Warren API (`/v1/exits`) and the data plane
+> is always the QUIC tunnel on port 443; the WireGuard obfuscation attempt ladder below is
+> retained upstream logic that the Warren tunnel does not exercise.
+
 # Glossary
 
 - Relay - a server that provides one or multiple tunnel endpoints, and has a weight
   associated with it
 - Endpoint - a combination of a socket address and the transport protocol
 - Transport protocol - TCP or UDP
-- Obfuscation - Putting WireGuard or API traffic inside a protocol designed to make it
+- Obfuscation - Putting tunnel or API traffic inside a protocol designed to make it
   harder to fingerprint or block the contained traffic. This is used to circumvent censorship.
 - Anti-censorhip - Umbrella term for methods and protocols used to circumvent network censorship.
-  Obfuscation is a type of Anti-censorhip measurement that Mullvad use for this effort.
-- DAITA - Short for "Defense against AI-guided Traffic Analysis". A technique supported on some
-  WireGuard relays that makes website fingerprinting more difficult.
+  Obfuscation is a type of Anti-censorship measurement used for this effort.
+- DAITA - Short for "Defense against AI-guided Traffic Analysis". A technique that makes website
+  fingerprinting more difficult. Warren ships DAITA on the QUIC data plane, single and multi-hop.
 
 # Relay selector
 
-The relay selector's main purpose is to pick a configuration of one or more Mullvad relays taking
+The relay selector's main purpose is to pick a configuration of one or more relays taking
 into account certain user-configurable criteria. Relays can be filtered by their _location_
 (country, city, hostname), by the protocols and ports they support and by other constraints.
 The constraints are user specified and stored in the settings. The default value for location
@@ -33,7 +38,7 @@ Endpoints may be filtered by:
 - entry port
 - location (country, city, hostname)
 - provider
-- ownership (Mullvad-owned or rented)
+- ownership (provider-owned or rented)
 
 ### Default constraints for tunnel endpoints
 

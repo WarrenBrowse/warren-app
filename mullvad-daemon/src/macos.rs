@@ -11,8 +11,13 @@ use tokio::{fs::File, process::Command};
 
 use crate::device::AccountManagerHandle;
 
-/// Mullvad app install path
-const APP_PATH: &str = "/Applications/Mullvad VPN.app";
+/// Warren app install path, per product environment (the beta app installs
+/// as its own bundle next to prod).
+const APP_PATH: &str = match warren_product_env::CURRENT {
+    warren_product_env::ProductEnv::Prod => "/Applications/Warren VPN.app",
+    warren_product_env::ProductEnv::Staging => "/Applications/Warren VPN Staging.app",
+    warren_product_env::ProductEnv::Beta => "/Applications/Warren VPN Beta.app",
+};
 
 /// Bump filehandle limit
 pub fn bump_filehandle_limit() {
@@ -59,7 +64,7 @@ pub async fn handle_app_bundle_removal(
 
     /// Path to extract the uninstall script to.
     /// This directory must be owned by root to prevent privilege escalation.
-    const UNINSTALL_SCRIPT_PATH: &str = "/var/root/uninstall_mullvad.sh";
+    const UNINSTALL_SCRIPT_PATH: &str = "/var/root/uninstall_warren.sh";
 
     let mullvad_daemon = std::env::current_exe().context("Failed to get daemon path")?;
     let daemon_path = mullvad_daemon.clone();

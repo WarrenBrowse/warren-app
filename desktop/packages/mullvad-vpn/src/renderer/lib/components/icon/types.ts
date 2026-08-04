@@ -1,5 +1,6 @@
 export const icons = {
   'account-circle': 'icon-account-circle',
+  'account-outline': 'icon-account-outline',
   add: 'icon-add',
   'add-circle': 'icon-add-circle',
   'alert-circle': 'icon-alert-circle',
@@ -35,7 +36,9 @@ export const icons = {
   'search-circle': 'icon-search-circle',
   search: 'icon-search',
   'settings-filled': 'icon-settings-filled',
+  'settings-outline': 'icon-settings-outline',
   'settings-partial': 'icon-settings-partial',
   show: 'icon-show',
+  shuffle: 'icon-shuffle',
   trash: 'icon-trash',
 };

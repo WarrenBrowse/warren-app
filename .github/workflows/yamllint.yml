@@ -1,12 +1,8 @@
 ---
 name: YAML linting
 on:
-  pull_request:
-    paths:
-      - .github/workflows/yamllint.yml
-      - .yamllint
-      - '**/**.yml'
-      - '**/**.yaml'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

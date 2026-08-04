@@ -1,0 +1,5 @@
+<resources>
+    <!-- Staging flavor overlay: distinct launcher name so the staging app is
+         tellable from the prod and beta ones installed on the same device. -->
+    <string name="app_name" translatable="false">Warren VPN Staging</string>
+</resources>

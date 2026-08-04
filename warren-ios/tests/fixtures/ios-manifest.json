@@ -1,0 +1,21 @@
+{
+  "signatures": [
+    {
+      "keytype": "ed25519",
+      "keyid": "0f684bb245acd5a684c467ccc9b92bb5daa2252ef12e89a68583b806ea2560a0",
+      "sig": "ebace56e66d6cadca1c9aca25aaa4a3e89cc9e1568ffa09a6a6752e0f483e5e90830c46d9198fa70077272d2c89cc311b9d3b59a286b1dd7f1984aeb9b781d0f"
+    }
+  ],
+  "signed": {
+    "metadata_version": 14,
+    "metadata_expiry": "2027-01-06T02:06:12Z",
+    "minimum_supported_version": "2026.3",
+    "releases": [
+      {
+        "version": "2026.3",
+        "changelog": "",
+        "installers": []
+      }
+    ]
+  }
+}

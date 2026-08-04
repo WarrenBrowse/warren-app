@@ -1,0 +1,485 @@
+//
+//  MigrationManagerTests.swift
+//  MullvadVPNTests
+//
+//  Created by Marco Nikic on 2023-10-17.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import XCTest
+@testable import WarrenVPN
+
+@testable import WarrenMockData
+@testable import WarrenREST
+@testable import WarrenSettings
+@testable import WarrenTypes
+
+final class MigrationManagerTests: XCTestCase, @unchecked Sendable {
+    static let store = InMemorySettingsStore<SettingNotFound>()
+
+    var manager: MigrationManager!
+    var testFileURL: URL!
+    override static func setUp() {
+        SettingsManager.unitTestStore = store
+    }
+
+    override static func tearDown() {
+        store.reset()
+    }
+
+    override func setUpWithError() throws {
+        testFileURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("MigrationManagerTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: testFileURL, withIntermediateDirectories: true)
+        manager = MigrationManager(cacheDirectory: testFileURL)
+    }
+
+    override func tearDownWithError() throws {
+        try FileManager.default.removeItem(at: testFileURL)
+    }
+
+    func testNothingToMigrate() throws {
+        let store = Self.store
+        let settings = LatestTunnelSettings()
+        try SettingsManager.writeSettings(settings)
+
+        let nothingToMigrateExpectation = expectation(description: "No migration")
+        manager.migrateSettings(store: store) { result in
+            if case .nothing = result {
+                nothingToMigrateExpectation.fulfill()
+            }
+        }
+        wait(for: [nothingToMigrateExpectation], timeout: .UnitTest.timeout)
+    }
+
+    func testNothingToMigrateWhenSettingsAreNotFound() throws {
+        let store = InMemorySettingsStore<KeychainError>()
+        SettingsManager.unitTestStore = store
+
+        let nothingToMigrateExpectation = expectation(description: "No migration")
+        manager.migrateSettings(store: store) { result in
+            if case .nothing = result {
+                nothingToMigrateExpectation.fulfill()
+            }
+        }
+        wait(for: [nothingToMigrateExpectation], timeout: .UnitTest.timeout)
+
+        // Reset the `SettingsManager` unit test store to avoid affecting other tests
+        // since it's a globally shared instance
+        SettingsManager.unitTestStore = Self.store
+    }
+
+    func testFailedMigration() throws {
+        let store = Self.store
+        let failedMigrationExpectation = expectation(description: "Failed migration")
+        manager.migrateSettings(store: store) { result in
+            if case .failure = result {
+                failedMigrationExpectation.fulfill()
+            }
+        }
+        wait(for: [failedMigrationExpectation], timeout: .UnitTest.timeout)
+    }
+
+    func testFailedMigrationResetsSettings() throws {
+        let store = Self.store
+        let data = Data("Migration test".utf8)
+        try store.write(data, for: .settings)
+        try store.write(data, for: .deviceState)
+
+        // Failed migration should reset settings and device state keys
+        manager.migrateSettings(store: store) { _ in }
+
+        let assertDeletionFor: (SettingsKey) throws -> Void = { key in
+            try XCTAssertThrowsError(store.read(key: key)) { thrownError in
+                XCTAssertTrue(thrownError is SettingNotFound)
+            }
+        }
+
+        try assertDeletionFor(.deviceState)
+        try assertDeletionFor(.lastUsedAccount)
+    }
+
+    func testFailedMigrationIfRecordedSettingsVersionHigherThanLatestSettings() throws {
+        let store = Self.store
+        let settings = FutureVersionSettings()
+        try write(settings: settings, version: Int.max - 1, in: store)
+
+        manager.migrateSettings(store: store) { _ in }
+
+        let assertDeletionFor: (SettingsKey) throws -> Void = { key in
+            try XCTAssertThrowsError(store.read(key: key)) { thrownError in
+                XCTAssertTrue(thrownError is SettingNotFound)
+            }
+        }
+
+        try assertDeletionFor(.deviceState)
+        try assertDeletionFor(.lastUsedAccount)
+    }
+
+    func testFailedMigrationCorruptedSchemaResetsSettings() throws {
+        let store = Self.store
+        let settings = FutureVersionSettings()
+        try write(settings: settings, version: -42, in: store)
+
+        let failedMigrationExpectation = expectation(description: "Failed migration")
+        manager.migrateSettings(store: store) { result in
+            if case .failure = result {
+                failedMigrationExpectation.fulfill()
+            }
+        }
+        wait(for: [failedMigrationExpectation], timeout: .UnitTest.timeout)
+    }
+
+    func testSuccessfulMigrationFromV7ToLatest() throws {
+        var settingsV7 = TunnelSettingsV7()
+        let relayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV7.relayConstraints = relayConstraints
+        settingsV7.tunnelQuantumResistance = .off
+        settingsV7.wireGuardObfuscation = WireGuardObfuscationSettings(
+            state: .off,
+            udpOverTcpPort: .automatic
+        )
+        settingsV7.tunnelMultihopState = .off
+        settingsV7.daita = .init(daitaState: .on)
+
+        try migrateToLatest(settingsV7, version: .v6)
+
+        // Once the migration is done, settings should have been updated to the latest available version
+        // Verify that the old settings are still valid
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(settingsV7.relayConstraints, latestSettings.relayConstraints)
+        XCTAssertEqual(settingsV7.tunnelQuantumResistance, latestSettings.tunnelQuantumResistance)
+        XCTAssertEqual(settingsV7.wireGuardObfuscation, latestSettings.wireGuardObfuscation)
+        XCTAssertEqual(latestSettings.tunnelMultihopState, .never)
+        XCTAssertEqual(settingsV7.daita, latestSettings.daita)
+    }
+
+    func testSuccessfulMigrationFromV6ToLatest() throws {
+        var settingsV6 = TunnelSettingsV6()
+        let relayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV6.relayConstraints = relayConstraints
+        settingsV6.tunnelQuantumResistance = .off
+        settingsV6.wireGuardObfuscation = WireGuardObfuscationSettings(
+            state: .off,
+            udpOverTcpPort: .automatic
+        )
+        settingsV6.tunnelMultihopState = .off
+        settingsV6.daita = .init(daitaState: .on)
+
+        try migrateToLatest(settingsV6, version: .v6)
+
+        // Once the migration is done, settings should have been updated to the latest available version
+        // Verify that the old settings are still valid
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(settingsV6.relayConstraints, latestSettings.relayConstraints)
+        XCTAssertEqual(settingsV6.tunnelQuantumResistance, latestSettings.tunnelQuantumResistance)
+        XCTAssertEqual(settingsV6.wireGuardObfuscation, latestSettings.wireGuardObfuscation)
+        XCTAssertEqual(latestSettings.tunnelMultihopState, .never)
+        XCTAssertEqual(settingsV6.daita, latestSettings.daita)
+    }
+
+    func testSuccessfulMigrationFromV5ToLatest() throws {
+        var settingsV5 = TunnelSettingsV5()
+        let relayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV5.relayConstraints = relayConstraints
+        settingsV5.tunnelQuantumResistance = .off
+        settingsV5.wireGuardObfuscation = WireGuardObfuscationSettings(
+            state: .off,
+            udpOverTcpPort: .automatic
+        )
+        settingsV5.tunnelMultihopState = .off
+
+        try migrateToLatest(settingsV5, version: .v5)
+
+        // Once the migration is done, settings should have been updated to the latest available version
+        // Verify that the old settings are still valid
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(settingsV5.relayConstraints, latestSettings.relayConstraints)
+        XCTAssertEqual(settingsV5.tunnelQuantumResistance, latestSettings.tunnelQuantumResistance)
+        XCTAssertEqual(settingsV5.wireGuardObfuscation, latestSettings.wireGuardObfuscation)
+        XCTAssertEqual(latestSettings.tunnelMultihopState, .never)
+    }
+
+    func testSuccessfulMigrationFromV4ToLatest() throws {
+        var settingsV4 = TunnelSettingsV4()
+        let relayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV4.relayConstraints = relayConstraints
+        settingsV4.tunnelQuantumResistance = .off
+        settingsV4.wireGuardObfuscation = WireGuardObfuscationSettings(
+            state: .off,
+            udpOverTcpPort: .automatic
+        )
+
+        try migrateToLatest(settingsV4, version: .v4)
+
+        // Once the migration is done, settings should have been updated to the latest available version
+        // Verify that the old settings are still valid
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(settingsV4.relayConstraints, latestSettings.relayConstraints)
+        XCTAssertEqual(settingsV4.tunnelQuantumResistance, latestSettings.tunnelQuantumResistance)
+        XCTAssertEqual(settingsV4.wireGuardObfuscation, latestSettings.wireGuardObfuscation)
+    }
+
+    func testSuccessfulMigrationFromV3ToLatest() throws {
+        var settingsV3 = TunnelSettingsV3()
+        let relayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV3.relayConstraints = relayConstraints
+        settingsV3.dnsSettings = DNSSettings()
+        settingsV3.wireGuardObfuscation = WireGuardObfuscationSettings(
+            state: .udpOverTcp,
+            udpOverTcpPort: .port80
+        )
+
+        try migrateToLatest(settingsV3, version: .v3)
+
+        // Once the migration is done, settings should have been updated to the latest available version
+        // Verify that the old settings are still valid
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(settingsV3.relayConstraints, latestSettings.relayConstraints)
+        XCTAssertEqual(settingsV3.wireGuardObfuscation, latestSettings.wireGuardObfuscation)
+    }
+
+    func testSuccessfulMigrationFromV2ToLatest() throws {
+        var settingsV2 = TunnelSettingsV2()
+        let osakaRelayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV2.relayConstraints = osakaRelayConstraints
+
+        try migrateToLatest(settingsV2, version: .v2)
+
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(osakaRelayConstraints, latestSettings.relayConstraints)
+    }
+
+    func testSuccessfulMigrationFromV1ToLatest() throws {
+        var settingsV1 = TunnelSettingsV1()
+        let osakaRelayConstraints = RelayConstraints(
+            exitLocations: .only(UserSelectedRelays(locations: [.city("jp", "osa")]))
+        )
+
+        settingsV1.relayConstraints = osakaRelayConstraints
+
+        try migrateToLatest(settingsV1, version: .v1)
+
+        // Once the migration is done, settings should have been updated to the latest available version
+        // Verify that the old settings are still valid
+        let latestSettings = try SettingsManager.readSettings()
+        XCTAssertEqual(osakaRelayConstraints, latestSettings.relayConstraints)
+    }
+
+    /// Settings serialized by ios/2026.1-build5 had `includeAllNetworks` and `localNetworkSharing`
+    /// as Bool fields in TunnelSettingsV7. The IAN activation flow changed `includeAllNetworks`
+    /// to an `IncludeAllNetworksSettings` struct (absorbing `localNetworkSharing`) without bumping
+    /// the schema version, so existing V7 data must still deserialize correctly.
+    func testDeserializationOfV7SettingsFromBuild5() throws {
+        // Verbatim representation of default V7 settings as written by ios/2026.1-build5.
+        let oldSettingsJSON = Data(
+            """
+            {
+                "version": 7,
+                "data": {
+                    "relayConstraints": {
+                        "location": {"only": ["se"]},
+                        "locations": {"only": {"locations": [["se"]]}},
+                        "entryLocations": {"only": {"locations": [["se"]]}},
+                        "exitLocations": {"only": {"locations": [["se"]]}},
+                        "port": "any",
+                        "filter": "any"
+                    },
+                    "dnsSettings": {
+                        "blockingOptions": 0,
+                        "enableCustomDNS": false,
+                        "customDNSDomains": []
+                    },
+                    "wireGuardObfuscation": {
+                        "port": 0,
+                        "state": {"automatic": {}},
+                        "udpOverTcpPort": {"automatic": {}},
+                        "shadowsocksPort": {"automatic": {}}
+                    },
+                    "tunnelQuantumResistance": {"automatic": {}},
+                    "tunnelMultihopState": {"off": {}},
+                    "daita": {
+                        "state": {"off": {}},
+                        "daitaState": {"off": {}},
+                        "directOnlyState": {"off": {}}
+                    },
+                    "localNetworkSharing": true,
+                    "includeAllNetworks": true
+                }
+            }
+            """.utf8)
+
+        let parser = SettingsParser(decoder: JSONDecoder(), encoder: JSONEncoder())
+        let settings = try parser.parsePayload(as: TunnelSettingsV7.self, from: oldSettingsJSON)
+
+        XCTAssertFalse(settings.includeAllNetworks.includeAllNetworksIsEnabled)
+        XCTAssertFalse(settings.includeAllNetworks.localNetworkSharingIsEnabled)
+    }
+
+    /// A V8 payload stored before the NAT-PMP field existed must decode
+    /// with port forwarding OFF (safe default, no schema bump), and an
+    /// enabled value must survive an encode/decode round trip.
+    func testNatPmpDefaultsToDisabledWhenAbsentAndRoundTripsWhenSet() throws {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+
+        // Strip the natPmp key to simulate a pre-field stored payload.
+        let encoded = try encoder.encode(TunnelSettingsV8())
+        var json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        json.removeValue(forKey: "natPmp")
+        let legacyPayload = try JSONSerialization.data(withJSONObject: json)
+
+        let decodedLegacy = try decoder.decode(TunnelSettingsV8.self, from: legacyPayload)
+        XCTAssertFalse(decodedLegacy.natPmp.isEnabled, "absent natPmp key must default to disabled")
+
+        var enabledSettings = TunnelSettingsV8()
+        enabledSettings.natPmp = WarrenNatPmpSettings(state: .on)
+        let roundTripped = try decoder.decode(
+            TunnelSettingsV8.self,
+            from: encoder.encode(enabledSettings)
+        )
+        XCTAssertTrue(roundTripped.natPmp.isEnabled, "enabled natPmp must survive a round trip")
+    }
+
+    /// A V8 payload stored before the allow-external-DNS field existed must
+    /// decode with the setting OFF (safe default: DNS stays monopolized, no
+    /// schema bump), and an enabled value must survive an encode/decode
+    /// round trip.
+    func testAllowExternalDnsDefaultsToDisabledWhenAbsentAndRoundTripsWhenSet() throws {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+
+        // Strip the allowExternalDns key to simulate a pre-field stored payload.
+        let encoded = try encoder.encode(TunnelSettingsV8())
+        var json = try XCTUnwrap(
+            JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        )
+        json.removeValue(forKey: "allowExternalDns")
+        let legacyPayload = try JSONSerialization.data(withJSONObject: json)
+
+        let decodedLegacy = try decoder.decode(TunnelSettingsV8.self, from: legacyPayload)
+        XCTAssertFalse(
+            decodedLegacy.allowExternalDns.isEnabled,
+            "absent allowExternalDns key must default to disabled"
+        )
+
+        var enabledSettings = TunnelSettingsV8()
+        enabledSettings.allowExternalDns = WarrenAllowExternalDnsSettings(state: .on)
+        let roundTripped = try decoder.decode(
+            TunnelSettingsV8.self,
+            from: encoder.encode(enabledSettings)
+        )
+        XCTAssertTrue(
+            roundTripped.allowExternalDns.isEnabled,
+            "enabled allowExternalDns must survive a round trip"
+        )
+    }
+
+    /// Migration test: ensures that previously stored settings using the removed
+    /// `automatic` case for `tunnelQuantumResistance` are safely mapped to `.on`.
+    /// Prevents crashes and guarantees consistent behavior for existing users
+    /// after upgrading to versions where `automatic` no longer exists.
+    func testTunnelQuantumResistanceMigratesAutomaticToOn() throws {
+        let oldSettingsJSON = Data(
+            """
+            {
+                "version": 4,
+                "data": {
+                    "relayConstraints": {
+                        "location": {"only": ["se"]},
+                        "locations": {"only": {"locations": [["se"]]}},
+                        "entryLocations": {"only": {"locations": [["se"]]}},
+                        "exitLocations": {"only": {"locations": [["se"]]}},
+                        "port": "any",
+                        "filter": "any"
+                    },
+                    "dnsSettings": {
+                        "blockingOptions": 0,
+                        "enableCustomDNS": false,
+                        "customDNSDomains": []
+                    },
+                    "wireGuardObfuscation": {
+                        "port": 0,
+                        "state": {"automatic": {}},
+                        "udpOverTcpPort": {"automatic": {}},
+                        "shadowsocksPort": {"automatic": {}}
+                    },
+                    "tunnelQuantumResistance": {"automatic": {}}
+                }
+            }
+            """.utf8)
+
+        let store = Self.store
+        let parser = SettingsParser(decoder: JSONDecoder(), encoder: JSONEncoder())
+        let tunnelSettingsV4 = try parser.parsePayload(as: TunnelSettingsV4.self, from: oldSettingsJSON)
+        try write(settings: tunnelSettingsV4, version: 4, in: store)
+
+        let successfulMigrationExpectation = expectation(description: "Successful migration")
+        manager.migrateSettings(store: store) { result in
+            if case .success = result {
+                successfulMigrationExpectation.fulfill()
+            }
+        }
+        wait(for: [successfulMigrationExpectation], timeout: .UnitTest.timeout)
+
+        let latestSettingsData = try XCTUnwrap(store.read(key: .settings))
+        let latestSettings = try parser.parsePayload(as: LatestTunnelSettings.self, from: latestSettingsData)
+
+        XCTAssertEqual(latestSettings.tunnelQuantumResistance, .on)
+    }
+
+    private func migrateToLatest(_ settings: any TunnelSettings, version: SchemaVersion) throws {
+        let store = Self.store
+        try write(settings: settings, version: version.rawValue, in: store)
+
+        let successfulMigrationExpectation = expectation(description: "Successful migration")
+        manager.migrateSettings(store: store) { result in
+            if case .success = result {
+                successfulMigrationExpectation.fulfill()
+            }
+        }
+        wait(for: [successfulMigrationExpectation], timeout: .UnitTest.timeout)
+    }
+
+    func write(settings: any TunnelSettings, version: Int, in store: SettingsStore) throws {
+        let parser = SettingsParser(decoder: JSONDecoder(), encoder: JSONEncoder())
+        let payload = try parser.producePayload(settings, version: version)
+        try store.write(payload, for: .settings)
+    }
+}
+
+private struct FutureVersionSettings: TunnelSettings {
+    func upgradeToNextVersion() -> TunnelSettings { self }
+
+    var debugDescription: String {
+        "FutureVersionSettings"
+    }
+}
+
+struct SettingNotFound: Error, Instantiable {}
+
+extension KeychainError: Instantiable {
+    init() {
+        self = KeychainError.itemNotFound
+    }
+}

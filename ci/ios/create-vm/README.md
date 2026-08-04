@@ -1,4 +1,4 @@
-# Creating new macOS VMs to build MullvadVPN iOS in a CI environment
+# Creating new macOS VMs to build Warren VPN iOS in a CI environment
 This guide assumes you are running on macOS.
 ## Prerequisites
 In order to create VMs on the fly, we decided to use [tart](https://tart.run/) and [packer](https://developer.hashicorp.com/packer).

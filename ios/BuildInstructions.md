@@ -29,14 +29,6 @@ A protobuf compiler is also required in order to build some of the rust dependen
 brew install protobuf
 ```
 
-## Submodules
-
-The iOS app imports Mullvad's version of `wireguard-go` as a Git submodule. Before building, this must be checked out with
-
-```bash
-git submodule update --init --recursive ios/wireguard-apple
-```
-
 ## Configure Xcode project
 
 Copy template files of Xcode build configuration:
@@ -46,7 +38,7 @@ for file in ./ios/Configurations/*.template ; do cp $file ${file//.template/} ; 
 ```
 
 Template files provide our team ID and correct provisioning profiles and generally do not require
-any changes when configuring our build server or developer machines for members of Mullvad
+any changes when configuring our build server or developer machines for members of the Warren
 development team. In all other cases perform the following steps to configure the project:
 
 1. Edit `Base.xcconfig` and fill in your Apple development team ID, which can be found on Apple
@@ -59,7 +51,7 @@ development profile here as we never build UI testing targets for distribution. 
 you do not intend to generate screenshots for the app.
 
 Ensure you have a valid build profile for a development build for both
-MullvadVPN and PacketTunnel, both need the
+WarrenVPN and PacketTunnel, both need the
 `packet-tunnel-provider-systemextension` NetworkExtension entitlement.
 
 # The following instructions are only relevant for release builds.
@@ -199,10 +191,10 @@ rm distribution.{pem,cer} \
 
 We will now create the provisioning profiles listed below using the Apple developer console.
 
-| App ID                              | Provisioning Profile Name |
-|-------------------------------------|---------------------------|
-| net.mullvad.MullvadVPN              | Mullvad VPN Release       |
-| net.mullvad.MullvadVPN.PacketTunnel | Packet Tunnel Release     |
+| App ID                                  | Provisioning Profile Name      |
+|-----------------------------------------|--------------------------------|
+| com.warrenbrowse.vpn.ios                | Warren VPN Release             |
+| com.warrenbrowse.vpn.ios.PacketTunnel   | Warren Packet Tunnel Release   |
 
 Follow these steps to add each of provisioning profiles:
 

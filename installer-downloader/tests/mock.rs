@@ -180,8 +180,9 @@ impl<const EXE_SUCCEED: bool, const VERIFY_SUCCEED: bool, const LAUNCH_SUCCEED: 
 
     fn version(&self) -> &Version {
         &Version {
-            year: 2042,
-            incremental: 1337,
+            major: 2042,
+            minor: 1337,
+            patch: None,
             pre_stable: None,
             dev: None,
         }

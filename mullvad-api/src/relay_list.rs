@@ -73,7 +73,16 @@ impl RelayListProxy {
         prev_etag: Option<ETag>,
     ) -> impl Future<Output = Result<rest::Response<Incoming>, rest::Error>> {
         let service = self.handle.service.clone();
-        let request = self.handle.factory.get("app/v1/relays");
+        // `get_or_signed` injects the `X-Warren-*` headers when the
+        // factory has a `WarrenAuthSigner` configured (see
+        // `mullvad-daemon/src/warren_signer.rs`). In classic Mullvad
+        // mode (signer absent), behavior is identical to the legacy
+        // `factory.get(...)`. This is the first route converted to
+        // signed mode to validate end-to-end injection; the
+        // `app/v1/relays` endpoint is public server-side, so the
+        // Warren headers are ignored but still emitted on the wire
+        // - proof of integration.
+        let request = self.handle.factory.get_or_signed("app/v1/relays");
 
         async move {
             let mut request = request?

@@ -10,9 +10,9 @@ import utilities.libs
 class AndroidLibraryFeatureImplPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            apply(plugin = "mullvad.android-library")
-            apply(plugin = "mullvad.unit-test")
-            apply(plugin = "mullvad.android-library-instrumented-test")
+            apply(plugin = "warren.android-library")
+            apply(plugin = "warren.unit-test")
+            apply(plugin = "warren.android-library-instrumented-test")
 
             extensions.configure<LibraryExtension> {
                 testOptions.animationsDisabled = true

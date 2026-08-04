@@ -19,12 +19,18 @@ export function DisconnectButton() {
     }
   }, [disconnectTunnel]);
 
-  const displayAsCancel = tunnelState !== 'connected';
+  // Red "stop": disconnecting drops the user back to the exposed state, so the
+  // button signals its action, not the state. Orange (Cancel) while coming up,
+  // neutral in the blocked/error state where the action is "turn off the switch".
+  const connecting = tunnelState === 'connecting';
+  const connected = tunnelState === 'connected';
+  const variant = connected ? 'destructive' : connecting ? 'warning' : 'primary';
 
+  // While connecting the click aborts the attempt, so the button reads "Cancel".
   return (
-    <Button variant="destructive" onClick={onDisconnect}>
+    <Button variant={variant} onClick={onDisconnect}>
       <Button.Text>
-        {displayAsCancel ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
+        {connecting ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
       </Button.Text>
     </Button>
   );

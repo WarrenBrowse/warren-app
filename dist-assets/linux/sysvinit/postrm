@@ -1,0 +1,84 @@
+#!/bin/sh
+# sysvinit counterpart of dist-assets/linux/after-remove.sh. Keep the two in
+# step: this one additionally tears down the rc.d links update-rc.d created.
+set -eu
+
+NAME=warren-daemon@WARREN_SUFFIX@
+EARLY_BOOT=warren-early-boot-blocking@WARREN_SUFFIX@
+LOG_DIR=/var/log/warren-vpn@WARREN_SUFFIX@
+CACHE_DIR=/var/cache/warren-vpn@WARREN_SUFFIX@
+CONFIG_DIR=/etc/warren-vpn@WARREN_SUFFIX@
+APP_CONFIG_DIR="@WARREN_PRODUCT_NAME@"
+AUTOSTART_FILE=warren-vpn@WARREN_SUFFIX@.desktop
+
+remove_rc_links() {
+    # dpkg has already deleted /etc/init.d/*, which is what lets update-rc.d
+    # drop the runlevel links without -f.
+    update-rc.d "$NAME" remove > /dev/null || true
+    update-rc.d "$EARLY_BOOT" remove > /dev/null || true
+    rm -f "/run/$NAME.pid"
+}
+
+remove_logs_and_cache() {
+    rm -r --interactive=never "$LOG_DIR" || echo "Failed to remove warren-vpn logs"
+    rm -r --interactive=never "$CACHE_DIR" || echo "Failed to remove warren-vpn cache"
+}
+
+get_home_dirs() {
+    if [ -f /etc/passwd ] && command -v cut > /dev/null; then
+        cut -d: -f6 /etc/passwd
+    fi
+}
+
+clear_gpu_cache() {
+    # Different electron versions can have incompatible GPU caches. Clearing on
+    # upgrade keeps one version from reading another's.
+    get_home_dirs | while read -r home_dir; do
+        gpu_cache_dir="$home_dir/.config/$APP_CONFIG_DIR/GPUCache"
+        if [ -d "$gpu_cache_dir" ]; then
+            echo "Clearing GPU cache in $gpu_cache_dir"
+            rm -r --interactive=never "$gpu_cache_dir" || echo "Failed to clear GPU cache"
+        fi
+    done
+}
+
+remove_config() {
+    rm -r --interactive=never "$CONFIG_DIR" || echo "Failed to remove warren-vpn config"
+
+    # App settings and auto-launcher for every user. XDG_CONFIG_HOME is not
+    # honoured here, for the same reason as the systemd flavour: resolving it
+    # per user is more complexity than the cleanup is worth.
+    get_home_dirs | while read -r home_dir; do
+        warren_dir="$home_dir/.config/$APP_CONFIG_DIR"
+        if [ -d "$warren_dir" ]; then
+            echo "Removing warren-vpn app settings from $warren_dir"
+            rm -r --interactive=never "$warren_dir" || echo "Failed to remove warren-vpn app settings"
+        fi
+
+        autostart_path="$home_dir/.config/autostart/$AUTOSTART_FILE"
+        # The autostart entry can be a file or a symlink.
+        if [ -f "$autostart_path" ] || [ -L "$autostart_path" ]; then
+            echo "Removing warren-vpn app autostart file $autostart_path"
+            rm --interactive=never "$autostart_path" || echo "Failed to remove warren-vpn autostart file"
+        fi
+    done
+}
+
+case "${1:-remove}" in
+    purge)
+        remove_rc_links
+        remove_logs_and_cache
+        remove_config
+        ;;
+    remove)
+        remove_rc_links
+        ;;
+esac
+
+clear_gpu_cache
+
+# Remove apparmor profile
+if apparmor_parser -R /etc/apparmor.d/warren@WARREN_SUFFIX@ > /dev/null 2>&1; then
+    echo "Removing apparmor profile"
+    rm -f /etc/apparmor.d/warren@WARREN_SUFFIX@ || echo "Failed to delete apparmor profile"
+fi

@@ -1,11 +1,11 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
+    alias(libs.plugins.warren.android.library)
     alias(libs.plugins.compose)
     alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.ui.component"
+    namespace = "com.warrenbrowse.vpn.lib.ui.component"
 
     buildFeatures { compose = true }
 
@@ -14,6 +14,7 @@ android {
 
 dependencies {
     implementation(projects.lib.common)
+    implementation(projects.lib.commonCompose)
     implementation(projects.lib.model)
     implementation(projects.lib.ui.designsystem)
     implementation(projects.lib.ui.resource)
@@ -33,4 +34,8 @@ dependencies {
     implementation(libs.androidx.animation)
 
     implementation(libs.accompanist.drawablepainter)
+
+    // Warren wallet UI (D.5) - BiometricPrompt gating in `BiometricGate.kt`.
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment)
 }

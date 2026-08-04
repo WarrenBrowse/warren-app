@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import Network
 
 protocol Configuration {

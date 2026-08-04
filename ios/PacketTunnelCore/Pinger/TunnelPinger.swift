@@ -7,10 +7,19 @@
 //
 
 import Foundation
-import MullvadLogging
+import WarrenLogging
 import Network
 import PacketTunnelCore
-import WireGuardKit
+
+/// Errors emitted by [`TunnelPinger`]. Replaces the legacy
+/// `WireGuardAdapterError.invalidState` reference dropped during C.4.4
+/// WireGuardKit removal. Kept minimal to mirror the single variant we
+/// actually surface (caller stopped pinging).
+public enum TunnelPingerError: Error {
+    /// `startPinging(destAddress:)` was not called (or `stopPinging()`
+    /// already ran) before a `send()` attempt.
+    case invalidState
+}
 
 public final class TunnelPinger: PingerProtocol, @unchecked Sendable {
     private var sequenceNumber: UInt16 = 0
@@ -70,7 +79,7 @@ public final class TunnelPinger: PingerProtocol, @unchecked Sendable {
 
         stateLock.lock()
         defer { stateLock.unlock() }
-        guard destAddress != nil else { throw WireGuardAdapterError.invalidState }
+        guard destAddress != nil else { throw TunnelPingerError.invalidState }
         // NOTE: we cheat here by returning the destination address we were passed, rather than parsing it from the packet on the other side of the FFI boundary.
         try pingProvider.sendICMPPing(seqNumber: sequenceNumber)
 

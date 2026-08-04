@@ -44,7 +44,12 @@ use windows_sys::{
     core::{GUID, PWSTR},
 };
 
-pub const PRODUCT_NAME: &str = "Mullvad VPN";
+// Renamed to `Warren VPN` for the Warren fork - see
+// `unix.rs::PRODUCT_NAME` for the rationale (anti-collision with
+// Mullvad upstream). Non-prod product environments get their own
+// suffixed directory (`Warren VPN Beta`, ...) so a beta install
+// coexists with prod without sharing state.
+pub const PRODUCT_NAME: &str = warren_product_env::DISPLAY_NAME;
 
 pub fn get_allusersprofile_dir() -> Result<PathBuf> {
     match std::env::var_os("ALLUSERSPROFILE") {

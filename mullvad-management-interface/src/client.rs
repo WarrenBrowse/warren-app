@@ -5,24 +5,20 @@ use futures::{Stream, StreamExt};
 #[cfg(all(daita, not(target_os = "android")))]
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
-    access_method::AccessMethodSetting,
-    device::{DeviceEvent, RemoveDeviceEvent},
-    relay_list::RelayList,
-    settings::Settings,
-    states::TunnelState,
-    version::AppVersionInfo,
+    access_method::AccessMethodSetting, device::DeviceEvent, relay_list::RelayList,
+    settings::Settings, states::TunnelState, version::AppVersionInfo,
 };
 #[cfg(not(target_os = "android"))]
 use mullvad_types::{
     access_method::{self, AccessMethod},
     account::{AccountData, AccountNumber, VoucherSubmission},
     custom_list::{CustomList, Id},
-    device::{Device, DeviceId, DeviceState},
+    device::DeviceState,
     features::FeatureIndicators,
     relay_constraints::{AllowedIps, ObfuscationSettings, RelayOverride, RelaySettings},
     relay_list::BridgeList,
     settings::DnsOptions,
-    wireguard::{PublicKey, QuantumResistantState, RotationInterval},
+    wireguard::QuantumResistantState,
 };
 use std::net::IpAddr;
 #[cfg(not(target_os = "android"))]
@@ -44,11 +40,12 @@ pub struct MullvadProxyClient(crate::ManagementServiceClient);
 #[derive(Debug)]
 pub enum DaemonEvent {
     TunnelState(TunnelState),
-    Settings(Settings),
+    // Boxed because `Settings` dwarfs every other variant, so an unboxed
+    // variant would bloat every `DaemonEvent` moved across the event channel.
+    Settings(Box<Settings>),
     RelayList(RelayList),
     AppVersionInfo(AppVersionInfo),
     Device(DeviceEvent),
-    RemoveDevice(RemoveDeviceEvent),
     NewAccessMethod(AccessMethodSetting),
     LeakDetected(LeakInfo),
 }
@@ -62,7 +59,7 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
                 .map(DaemonEvent::TunnelState)
                 .map_err(Error::InvalidResponse),
             types::daemon_event::Event::Settings(settings) => Settings::try_from(settings)
-                .map(DaemonEvent::Settings)
+                .map(|settings| DaemonEvent::Settings(Box::new(settings)))
                 .map_err(Error::InvalidResponse),
             types::daemon_event::Event::RelayList(list) => RelayList::try_from(list)
                 .map(DaemonEvent::RelayList)
@@ -73,9 +70,11 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             types::daemon_event::Event::Device(event) => DeviceEvent::try_from(event)
                 .map(DaemonEvent::Device)
                 .map_err(Error::InvalidResponse),
-            types::daemon_event::Event::RemoveDevice(event) => RemoveDeviceEvent::try_from(event)
-                .map(DaemonEvent::RemoveDevice)
-                .map_err(Error::InvalidResponse),
+            types::daemon_event::Event::RemoveDevice(_event) => Err(Error::InvalidResponse(
+                types::FromProtobufTypeError::invalid_argument(
+                    "RemoveDevice events are not supported",
+                ),
+            )),
             types::daemon_event::Event::NewAccessMethod(event) => {
                 AccessMethodSetting::try_from(event)
                     .map(DaemonEvent::NewAccessMethod)
@@ -275,6 +274,95 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// URL persistante `Settings::warren_api_url`. `None` → unset (=
+    /// empty string sur le wire). Restart requis.
+    pub async fn set_warren_api_url(&mut self, url: Option<String>) -> Result<()> {
+        self.0.set_warren_api_url(url.unwrap_or_default()).await?;
+        Ok(())
+    }
+
+    /// Persisted `Settings::warren_n_connections`. `None` resets to the
+    /// compiled default (= 0 on the wire). Applied on the next
+    /// (re)connect; the daemon reconnects automatically when the tunnel
+    /// is up.
+    pub async fn set_warren_n_connections(&mut self, n: Option<u8>) -> Result<()> {
+        self.0
+            .set_warren_n_connections(u32::from(n.unwrap_or_default()))
+            .await?;
+        Ok(())
+    }
+
+    /// Persisted `Settings::warren_max_rate_bps` client-side bandwidth
+    /// ceiling in bits per second. `None` = unlimited (= 0 on the
+    /// wire). Applied to a live tunnel without a reconnect.
+    pub async fn set_warren_max_rate_bps(&mut self, bps: Option<u64>) -> Result<()> {
+        self.0
+            .set_warren_max_rate_bps(bps.unwrap_or_default())
+            .await?;
+        Ok(())
+    }
+
+    /// Persists the advanced `Settings::warren_custom_exit` override.
+    /// Field-content validation is deferred to the daemon
+    /// (`assemble_custom`); this just ships the value. Applied on the
+    /// next (re)connect; the daemon reconnects automatically when the
+    /// tunnel is up.
+    pub async fn set_warren_custom_exit(
+        &mut self,
+        custom: &mullvad_types::settings::WarrenCustomExitSettings,
+    ) -> Result<()> {
+        self.0
+            .set_warren_custom_exit(types::WarrenCustomExitSettings::from(custom))
+            .await?;
+        Ok(())
+    }
+
+    /// Reads the persisted Warren BIP39 recovery phrase so the user can
+    /// back it up (export). Returns an empty string when no identity
+    /// has been bootstrapped yet. The caller MUST NOT log the returned
+    /// value (no-log Warren): it is the secret that controls the
+    /// identity and its subscription.
+    pub async fn get_warren_mnemonic(&mut self) -> Result<String> {
+        Ok(self.0.get_warren_mnemonic(()).await?.into_inner())
+    }
+
+    /// Restores/imports a Warren identity from a BIP39 recovery phrase.
+    /// The daemon validates BIP39 before persisting and hot-swaps the
+    /// in-memory signer (no restart needed); an invalid phrase maps to
+    /// `InvalidArgument`. The caller MUST NOT log `mnemonic`.
+    pub async fn set_warren_mnemonic(&mut self, mnemonic: String) -> Result<()> {
+        self.0.set_warren_mnemonic(mnemonic).await?;
+        Ok(())
+    }
+
+    /// Read the persisted Warren NAT-PMP port-forwarding settings plus
+    /// the daemon's last-known refresh-loop status (the embedded
+    /// `mappings`). Returns the prost-generated type directly: NAT-PMP
+    /// has no richer `mullvad_types` mirror, so the CLI works the wire
+    /// message.
+    pub async fn get_nat_pmp_settings(&mut self) -> Result<types::NatPmpSettings> {
+        Ok(self.0.get_nat_pmp_settings(()).await?.into_inner())
+    }
+
+    /// Replace the Warren NAT-PMP settings wholesale (toggle, lifetime
+    /// and the full rule list). The daemon validates and applies live
+    /// when the tunnel is up, otherwise persists for the next connect.
+    pub async fn set_nat_pmp_settings(&mut self, settings: types::NatPmpSettings) -> Result<()> {
+        self.0.set_nat_pmp_settings(settings).await?;
+        Ok(())
+    }
+
+    /// Subscribe to the live NAT-PMP status stream: one `NatPmpStatus`
+    /// per refresh-loop transition (Requesting to Mapped, renewals,
+    /// failures, rate limits), carrying the granted public port. The
+    /// stream ends when the daemon shuts down.
+    pub async fn nat_pmp_status_updates(
+        &mut self,
+    ) -> Result<impl Stream<Item = Result<types::NatPmpStatus>>> {
+        let listener = self.0.nat_pmp_status_updates(()).await?.into_inner();
+        Ok(listener.map(|item| item.map_err(Error::from)))
+    }
+
     pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {
         self.0
             .set_wireguard_mtu(mtu.map(u32::from).unwrap_or(0))
@@ -403,59 +491,6 @@ impl MullvadProxyClient {
     pub async fn update_device(&mut self) -> Result<()> {
         self.0.update_device(()).await.map_err(map_device_error)?;
         Ok(())
-    }
-
-    pub async fn list_devices(&mut self, account: AccountNumber) -> Result<Vec<Device>> {
-        let list = self
-            .0
-            .list_devices(account)
-            .await
-            .map_err(map_device_error)?
-            .into_inner();
-        list.devices
-            .into_iter()
-            .map(|d| Device::try_from(d).map_err(Error::InvalidResponse))
-            .collect::<Result<_>>()
-    }
-
-    pub async fn remove_device(
-        &mut self,
-        account: AccountNumber,
-        device_id: DeviceId,
-    ) -> Result<()> {
-        self.0
-            .remove_device(types::DeviceRemoval {
-                account_number: account,
-                device_id,
-            })
-            .await
-            .map_err(map_device_error)?;
-        Ok(())
-    }
-
-    pub async fn set_wireguard_rotation_interval(
-        &mut self,
-        interval: RotationInterval,
-    ) -> Result<()> {
-        let duration = types::Duration::try_from(*interval.as_duration())
-            .map_err(|_| Error::DurationTooLarge)?;
-        self.0.set_wireguard_rotation_interval(duration).await?;
-        Ok(())
-    }
-
-    pub async fn reset_wireguard_rotation_interval(&mut self) -> Result<()> {
-        self.0.reset_wireguard_rotation_interval(()).await?;
-        Ok(())
-    }
-
-    pub async fn rotate_wireguard_key(&mut self) -> Result<()> {
-        self.0.rotate_wireguard_key(()).await?;
-        Ok(())
-    }
-
-    pub async fn get_wireguard_key(&mut self) -> Result<PublicKey> {
-        let key = self.0.get_wireguard_key(()).await?.into_inner();
-        PublicKey::try_from(key).map_err(Error::InvalidResponse)
     }
 
     pub async fn create_custom_list(&mut self, name: String) -> Result<Id> {

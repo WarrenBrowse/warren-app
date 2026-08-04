@@ -1,6 +1,6 @@
 import { sprintf } from 'sprintf-js';
 
-import { strings } from '../constants';
+import { strings, urls } from '../constants';
 import {
   AuthFailedError,
   ErrorStateCause,
@@ -131,19 +131,19 @@ export class ErrorNotificationProvider
           case 'win32':
             return messages.pgettext(
               'notifications',
-              'Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report.',
+              'Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum.',
             );
           case 'linux':
             return messages.pgettext(
               'notifications',
-              'Unable to block all network traffic. Try updating your kernel or send a problem report.',
+              'Unable to block all network traffic. Try updating your kernel or report the problem on our community forum.',
             );
         }
       }
 
       return messages.pgettext(
         'notifications',
-        'Unable to block all network traffic. Please troubleshoot or send a problem report.',
+        'Unable to block all network traffic. Please troubleshoot or report the problem on our community forum.',
       );
     } else {
       switch (errorState.cause) {
@@ -152,7 +152,7 @@ export class ErrorNotificationProvider
             case AuthFailedError.invalidAccount:
               return messages.pgettext(
                 'auth-failure',
-                'You are logged in with an invalid account number. Please log out and try another one.',
+                'You are logged in with an invalid public key. Please log out and try another one.',
               );
 
             case AuthFailedError.expiredAccount:
@@ -164,11 +164,28 @@ export class ErrorNotificationProvider
                 'Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly.',
               );
 
+            case AuthFailedError.banned:
+              return messages.pgettext(
+                'auth-failure',
+                'Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.',
+              );
+
+            case AuthFailedError.bannedPortForwarding:
+              // Points at the appeal procedure rather than at generic support:
+              // a strike is contestable, and the page states on what grounds.
+              return sprintf(
+                messages.pgettext(
+                  'auth-failure',
+                  'Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s',
+                ),
+                { url: urls.reports },
+              );
+
             case AuthFailedError.unknown:
             default:
               return messages.pgettext(
                 'auth-failure',
-                'Unable to authenticate account. Please send a problem report.',
+                'Unable to authenticate account. Please report the problem on our community forum.',
               );
           }
         case ErrorStateCause.ipv6Unavailable:
@@ -194,12 +211,12 @@ export class ErrorNotificationProvider
         case ErrorStateCause.setDnsError:
           return messages.pgettext(
             'notifications',
-            'Unable to set system DNS server. Please send a problem report.',
+            'Unable to set system DNS server. Please report the problem on our community forum.',
           );
         case ErrorStateCause.startTunnelError:
           return messages.pgettext(
             'notifications',
-            'Unable to start tunnel connection. Please send a problem report.',
+            'Unable to start tunnel connection. Please report the problem on our community forum.',
           );
         case ErrorStateCause.createTunnelDeviceError:
           if (errorState.osError === 4319) {
@@ -211,7 +228,7 @@ export class ErrorNotificationProvider
 
           return messages.pgettext(
             'notifications',
-            'Unable to start tunnel connection. Please send a problem report.',
+            'Unable to start tunnel connection. Please report the problem on our community forum.',
           );
         case ErrorStateCause.tunnelParameterError:
           return this.getTunnelParameterMessage(errorState.parameterError);
@@ -219,6 +236,11 @@ export class ErrorNotificationProvider
           return messages.pgettext(
             'notifications',
             'Your device is offline. The tunnel will automatically connect once your device is back online.',
+          );
+        case ErrorStateCause.warrenTunnelFlapping:
+          return messages.pgettext(
+            'notifications',
+            'Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled.',
           );
         case ErrorStateCause.needFullDiskPermissions:
           return messages.pgettext('notifications', 'Failed to enable split tunneling.');
@@ -232,7 +254,7 @@ export class ErrorNotificationProvider
             default:
               return messages.pgettext(
                 'notifications',
-                'Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report.',
+                'Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum.',
               );
           }
       }
@@ -264,6 +286,11 @@ export class ErrorNotificationProvider
         return messages.pgettext(
           'notifications',
           'IPv6 is not available, please try changing Device IP version setting.',
+        );
+      case TunnelParameterError.warrenPubkeyMismatch:
+        return messages.pgettext(
+          'notifications',
+          "Server identity mismatch detected. The exit node's public key has changed.",
         );
     }
   }
@@ -309,7 +336,7 @@ export class ErrorNotificationProvider
         troubleshoot: {
           details: messages.pgettext(
             'troubleshoot',
-            'This error can happen when something other than Mullvad is actively updating the DNS.',
+            'This error can happen when something other than Warren is actively updating the DNS.',
           ),
           steps: troubleshootSteps,
         },
@@ -341,7 +368,7 @@ export class ErrorNotificationProvider
           steps: [
             messages.pgettext(
               'troubleshoot',
-              'Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings.',
+              'Enable “Full Disk Access” for “Warren VPN” in the macOS system settings.',
             ),
           ],
           buttons: troubleshootButtons,
@@ -380,6 +407,25 @@ export class ErrorNotificationProvider
             messages.pgettext('troubleshoot', 'Try to uninstall VMware.'),
           ],
         },
+      };
+    }
+
+    // Every message above that asks the user to report the problem must
+    // give them a way to do it: the community forum is the support front
+    // door (the in-app report form was removed). Only the causes whose
+    // copy mentions reporting get the link; informational states (device
+    // offline, account out of time, unstable network) stay action-less.
+    if (
+      errorState.blockingError !== undefined ||
+      (errorState.cause === ErrorStateCause.authFailed &&
+        errorState.authFailedError === AuthFailedError.unknown) ||
+      errorState.cause === ErrorStateCause.startTunnelError ||
+      errorState.cause === ErrorStateCause.createTunnelDeviceError ||
+      errorState.cause === ErrorStateCause.splitTunnelError
+    ) {
+      return {
+        type: 'navigate-external',
+        link: { to: urls.forum },
       };
     }
   }

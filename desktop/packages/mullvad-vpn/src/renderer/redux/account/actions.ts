@@ -1,32 +1,14 @@
 import { hasExpired } from '../../../shared/account-expiry';
-import { AccountDataError, AccountNumber, IDevice } from '../../../shared/daemon-rpc-types';
-
-interface IStartLoginAction {
-  type: 'START_LOGIN';
-  accountNumber: AccountNumber;
-}
+import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { RenewalUiState } from '../../../shared/renewal';
 
 interface ILoggedInAction {
   type: 'LOGGED_IN';
-  accountNumber: AccountNumber;
-  deviceName?: string;
-}
-
-interface ILoginFailedAction {
-  type: 'LOGIN_FAILED';
-  error: AccountDataError['error'];
-}
-
-interface ILoginTooManyDevicesAction {
-  type: 'TOO_MANY_DEVICES';
+  pubkey: WarrenPubKey;
 }
 
 interface ILoggedOutAction {
   type: 'LOGGED_OUT';
-}
-
-interface IResetLoginErrorAction {
-  type: 'RESET_LOGIN_ERROR';
 }
 
 interface IDeviceRevokedAction {
@@ -42,10 +24,14 @@ interface ICreateAccountFailed {
   error: Error;
 }
 
+interface IAccountAwaitingBackup {
+  type: 'ACCOUNT_AWAITING_BACKUP';
+  pubkey: WarrenPubKey;
+}
+
 interface IAccountCreated {
   type: 'ACCOUNT_CREATED';
-  accountNumber: AccountNumber;
-  deviceName?: string;
+  pubkey: WarrenPubKey;
   expiry: string;
 }
 
@@ -53,18 +39,9 @@ interface IAccountSetupFinished {
   type: 'ACCOUNT_SETUP_FINISHED';
 }
 
-interface IHideNewDeviceBanner {
-  type: 'HIDE_NEW_DEVICE_BANNER';
-}
-
-interface IUpdateAccountNumberAction {
-  type: 'UPDATE_ACCOUNT_NUMBER';
-  accountNumber: AccountNumber;
-}
-
-interface IUpdateAccountHistoryAction {
-  type: 'UPDATE_ACCOUNT_HISTORY';
-  accountHistory?: AccountNumber;
+interface IUpdatePubKeyHistoryAction {
+  type: 'UPDATE_PUBKEY_HISTORY';
+  pubkeyHistory?: WarrenPubKey;
 }
 
 interface IUpdateAccountExpiryAction {
@@ -73,66 +50,46 @@ interface IUpdateAccountExpiryAction {
   expired?: boolean;
 }
 
-interface IUpdateDevicesAction {
-  type: 'UPDATE_DEVICES';
-  devices: Array<IDevice>;
+interface IUpdateRenewalStateAction {
+  type: 'UPDATE_RENEWAL_STATE';
+  renewalState?: RenewalUiState;
+}
+
+interface IUpdatePurchaseInFlightAction {
+  type: 'UPDATE_PURCHASE_IN_FLIGHT';
+  purchaseInFlight: boolean;
+}
+
+interface IUpdateForumHandleAction {
+  type: 'UPDATE_FORUM_HANDLE';
+  forumHandle?: string;
 }
 
 export type AccountAction =
-  | IStartLoginAction
   | ILoggedInAction
-  | ILoginFailedAction
-  | ILoginTooManyDevicesAction
   | ILoggedOutAction
-  | IResetLoginErrorAction
   | IDeviceRevokedAction
   | IStartCreateAccount
   | ICreateAccountFailed
+  | IAccountAwaitingBackup
   | IAccountCreated
   | IAccountSetupFinished
-  | IHideNewDeviceBanner
-  | IUpdateAccountNumberAction
-  | IUpdateAccountHistoryAction
+  | IUpdatePubKeyHistoryAction
   | IUpdateAccountExpiryAction
-  | IUpdateDevicesAction;
+  | IUpdatePurchaseInFlightAction
+  | IUpdateRenewalStateAction
+  | IUpdateForumHandleAction;
 
-function startLogin(accountNumber: AccountNumber): IStartLoginAction {
-  return {
-    type: 'START_LOGIN',
-    accountNumber,
-  };
-}
-
-function loggedIn(accountNumber: AccountNumber, device?: IDevice): ILoggedInAction {
+function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   return {
     type: 'LOGGED_IN',
-    accountNumber,
-    deviceName: device?.name,
-  };
-}
-
-function loginFailed(error: AccountDataError['error']): ILoginFailedAction {
-  return {
-    type: 'LOGIN_FAILED',
-    error,
-  };
-}
-
-function loginTooManyDevices(): ILoginTooManyDevicesAction {
-  return {
-    type: 'TOO_MANY_DEVICES',
+    pubkey,
   };
 }
 
 function loggedOut(): ILoggedOutAction {
   return {
     type: 'LOGGED_OUT',
-  };
-}
-
-function resetLoginError(): IResetLoginErrorAction {
-  return {
-    type: 'RESET_LOGIN_ERROR',
   };
 }
 
@@ -155,15 +112,17 @@ function createAccountFailed(error: Error): ICreateAccountFailed {
   };
 }
 
-function accountCreated(
-  accountNumber: AccountNumber,
-  device: IDevice | undefined,
-  expiry: string,
-): IAccountCreated {
+function accountAwaitingBackup(pubkey: WarrenPubKey): IAccountAwaitingBackup {
+  return {
+    type: 'ACCOUNT_AWAITING_BACKUP',
+    pubkey,
+  };
+}
+
+function accountCreated(pubkey: WarrenPubKey, expiry: string): IAccountCreated {
   return {
     type: 'ACCOUNT_CREATED',
-    accountNumber: accountNumber,
-    deviceName: device?.name,
+    pubkey,
     expiry,
   };
 }
@@ -172,21 +131,10 @@ function accountSetupFinished(): IAccountSetupFinished {
   return { type: 'ACCOUNT_SETUP_FINISHED' };
 }
 
-function hideNewDeviceBanner(): IHideNewDeviceBanner {
-  return { type: 'HIDE_NEW_DEVICE_BANNER' };
-}
-
-function updateAccountNumber(accountNumber: AccountNumber): IUpdateAccountNumberAction {
+function updatePubKeyHistory(pubkeyHistory?: WarrenPubKey): IUpdatePubKeyHistoryAction {
   return {
-    type: 'UPDATE_ACCOUNT_NUMBER',
-    accountNumber,
-  };
-}
-
-function updateAccountHistory(accountHistory?: AccountNumber): IUpdateAccountHistoryAction {
-  return {
-    type: 'UPDATE_ACCOUNT_HISTORY',
-    accountHistory,
+    type: 'UPDATE_PUBKEY_HISTORY',
+    pubkeyHistory,
   };
 }
 
@@ -198,28 +146,39 @@ function updateAccountExpiry(expiry?: string): IUpdateAccountExpiryAction {
   };
 }
 
-function updateDevices(devices: Array<IDevice>): IUpdateDevicesAction {
+function updatePurchaseInFlight(purchaseInFlight: boolean): IUpdatePurchaseInFlightAction {
   return {
-    type: 'UPDATE_DEVICES',
-    devices: devices.sort((a, b) => a.created.getTime() - b.created.getTime()),
+    type: 'UPDATE_PURCHASE_IN_FLIGHT',
+    purchaseInFlight,
+  };
+}
+
+function updateRenewalState(renewalState?: RenewalUiState): IUpdateRenewalStateAction {
+  return {
+    type: 'UPDATE_RENEWAL_STATE',
+    renewalState,
+  };
+}
+
+function updateForumHandle(forumHandle?: string): IUpdateForumHandleAction {
+  return {
+    type: 'UPDATE_FORUM_HANDLE',
+    forumHandle,
   };
 }
 
 export default {
-  startLogin,
   loggedIn,
-  loginFailed,
-  loginTooManyDevices,
   loggedOut,
-  resetLoginError,
   deviceRevoked,
   startCreateAccount,
   createAccountFailed,
+  accountAwaitingBackup,
   accountCreated,
   accountSetupFinished,
-  hideNewDeviceBanner,
-  updateAccountNumber,
-  updateAccountHistory,
+  updatePubKeyHistory,
   updateAccountExpiry,
-  updateDevices,
+  updatePurchaseInFlight,
+  updateRenewalState,
+  updateForumHandle,
 };

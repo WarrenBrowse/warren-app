@@ -222,19 +222,19 @@ mod service {
         /// Stop forwarding TCP that was previously started with `start_tcp_forward`.
         async fn stop_tcp_forward(id: net::SockHandleId) -> Result<(), Error>;
 
-        /// Restart the Mullvad VPN application.
+        /// Restart the Warren VPN application.
         async fn restart_mullvad_daemon() -> Result<(), Error>;
 
-        /// Stop the Mullvad VPN application.
+        /// Stop the Warren VPN application.
         async fn stop_mullvad_daemon() -> Result<(), Error>;
 
-        /// Start the Mullvad VPN application.
+        /// Start the Warren VPN application.
         async fn start_mullvad_daemon() -> Result<(), Error>;
 
-        /// Disable the Mullvad VPN system service.
+        /// Disable the Warren VPN system service.
         async fn disable_mullvad_daemon() -> Result<(), Error>;
 
-        /// Enable the Mullvad VPN system service.
+        /// Enable the Warren VPN system service.
         async fn enable_mullvad_daemon() -> Result<(), Error>;
 
         /// Sets the log level of the daemon service, the verbosity level represents the number of

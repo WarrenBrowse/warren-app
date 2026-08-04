@@ -1,14 +1,12 @@
 #![allow(clippy::identity_op)]
-use chrono::{DateTime, offset::Utc};
-use serde::{Deserialize, Deserializer, Serialize};
-use std::{fmt, str::FromStr, time::Duration};
+use serde::{Deserialize, Serialize};
+use std::{fmt, str::FromStr};
 use talpid_types::net::wireguard;
 
 use crate::Intersection;
 
-pub const MIN_ROTATION_INTERVAL: Duration = Duration::from_hours(24);
-pub const MAX_ROTATION_INTERVAL: Duration = Duration::from_hours(30 * 24);
-pub const DEFAULT_ROTATION_INTERVAL: Duration = MAX_ROTATION_INTERVAL;
+// `QuantumResistantState`, `DaitaSettings` and `TunnelOptions` feed the
+// Quinn tunnel's MTU/DAITA/quantum-resistant settings.
 
 #[derive(Serialize, Deserialize, Default, Copy, Clone, Debug, PartialEq, Eq, Intersection)]
 #[serde(rename_all = "lowercase")]
@@ -87,136 +85,6 @@ impl Default for DaitaSettings {
     }
 }
 
-/// Contains account specific wireguard data
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-pub struct WireguardData {
-    pub private_key: wireguard::PrivateKey,
-    pub addresses: AssociatedAddresses,
-    #[serde(default = "Utc::now")]
-    pub created: DateTime<Utc>,
-}
-
-impl WireguardData {
-    /// Create a public key
-    pub fn get_public_key(&self) -> PublicKey {
-        PublicKey {
-            key: self.private_key.public_key(),
-            created: self.created,
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum RotationIntervalError {
-    TooSmall,
-    TooLarge,
-}
-
-impl fmt::Display for RotationIntervalError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use RotationIntervalError::*;
-
-        match *self {
-            TooSmall => write!(
-                f,
-                "Rotation interval must be at least {} hours",
-                MIN_ROTATION_INTERVAL.as_secs() / 60 / 60
-            ),
-            TooLarge => write!(
-                f,
-                "Rotation interval must be at most {} hours",
-                MAX_ROTATION_INTERVAL.as_secs() / 60 / 60
-            ),
-        }
-    }
-}
-
-impl std::error::Error for RotationIntervalError {}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
-pub struct RotationInterval(Duration);
-
-impl RotationInterval {
-    pub fn new(interval: Duration) -> Result<RotationInterval, RotationIntervalError> {
-        if interval < MIN_ROTATION_INTERVAL {
-            Err(RotationIntervalError::TooSmall)
-        } else if interval > MAX_ROTATION_INTERVAL {
-            Err(RotationIntervalError::TooLarge)
-        } else {
-            Ok(RotationInterval(interval))
-        }
-    }
-
-    pub fn as_duration(&self) -> &Duration {
-        &self.0
-    }
-}
-
-impl<'de> Deserialize<'de> for RotationInterval {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        let ivl = <Duration>::deserialize(deserializer)?;
-        RotationInterval::new(ivl).map_err(|_error| {
-            serde::de::Error::invalid_value(
-                serde::de::Unexpected::Other("Duration"),
-                &"interval within allowed range",
-            )
-        })
-    }
-}
-
-impl TryFrom<Duration> for RotationInterval {
-    type Error = RotationIntervalError;
-
-    fn try_from(duration: Duration) -> Result<RotationInterval, RotationIntervalError> {
-        RotationInterval::new(duration)
-    }
-}
-
-impl fmt::Display for RotationInterval {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{} hours", self.as_duration().as_secs() / 60 / 60)
-    }
-}
-
-#[cfg(feature = "clap")]
-impl clap::builder::ValueParserFactory for RotationInterval {
-    type Parser = clap::builder::RangedU64ValueParser<RotationInterval>;
-
-    fn value_parser() -> Self::Parser {
-        clap::builder::RangedU64ValueParser::new().range(
-            (MIN_ROTATION_INTERVAL.as_secs() / 60 / 60)
-                ..=(MAX_ROTATION_INTERVAL.as_secs() / 60 / 60),
-        )
-    }
-}
-
-impl TryFrom<u64> for RotationInterval {
-    type Error = RotationIntervalError;
-
-    fn try_from(value: u64) -> Result<Self, Self::Error> {
-        // Convert a u64, specified in hours, to a `RotationInterval`
-        let val = value
-            .checked_mul(60 * 60)
-            .ok_or(RotationIntervalError::TooLarge)?;
-        RotationInterval::new(Duration::from_secs(val))
-    }
-}
-
-impl From<RotationInterval> for Duration {
-    fn from(interval: RotationInterval) -> Duration {
-        *interval.as_duration()
-    }
-}
-
-impl Default for RotationInterval {
-    fn default() -> RotationInterval {
-        RotationInterval::new(DEFAULT_ROTATION_INTERVAL).unwrap()
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default)]
 pub struct TunnelOptions {
@@ -229,8 +97,6 @@ pub struct TunnelOptions {
     pub daita: DaitaSettings,
     /// Use userspace WireGuard.
     pub userspace: bool,
-    /// Interval used for automatic key rotation
-    pub rotation_interval: Option<RotationInterval>,
 }
 
 #[expect(clippy::derivable_impls)]
@@ -242,7 +108,6 @@ impl Default for TunnelOptions {
             #[cfg(daita)]
             daita: DaitaSettings::default(),
             userspace: false,
-            rotation_interval: None,
         }
     }
 }
@@ -257,19 +122,4 @@ impl TunnelOptions {
             userspace: self.userspace,
         }
     }
-}
-
-/// Represents a published public key
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PublicKey {
-    pub key: wireguard::PublicKey,
-    pub created: DateTime<Utc>,
-}
-
-/// Contains a pair of local link addresses that are paired with a specific wireguard
-/// public/private keypair.
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
-pub struct AssociatedAddresses {
-    pub ipv4_address: ipnetwork::Ipv4Network,
-    pub ipv6_address: ipnetwork::Ipv6Network,
 }

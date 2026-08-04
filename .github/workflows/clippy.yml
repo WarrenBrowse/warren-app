@@ -1,13 +1,8 @@
 ---
 name: Rust - Run Clippy to check lints
 on:
-  pull_request:
-    paths:
-      - .github/workflows/clippy.yml
-      - 'ci/cargo-ci.sh'
-      - clippy.toml
-      - '**/Cargo.toml'  # Lint rules defined in toml files
-      - '**/*.rs'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}
@@ -52,6 +47,7 @@ jobs:
         with:
           rustup-components: clippy
           rust-cache-targets: ${{ runner.os == 'Windows' }}
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Clippy check
         shell: bash
@@ -75,12 +71,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Checkout wireguard-go submodule
-        run: |
-          git config --global --add safe.directory '*'
-          git submodule update --init wireguard-go-rs/libwg/wireguard-go
+      # Checks out the sibling path-dep repos so cargo can resolve them,
+      # mirroring clippy-check-desktop above. Without the token cargo fails on
+      # the ../warrenguard, ../warren-sdk-rs and ../warren-contract path-deps.
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          rustup-components: clippy
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
       - name: Clippy check
+        # Crate renamed mullvad-jni -> warren-jni in this fork.
         run: |
-          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package mullvad-jni --no-default-features
-          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package mullvad-jni --all-features
+          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package warren-jni --no-default-features
+          ci/cargo-ci.sh clippy --all-targets --target x86_64-linux-android --package warren-jni --all-features

@@ -1,6 +1,7 @@
 # Known issues
 
-A collection of known security and privacy issues currently affecting the Mullvad VPN app.
+A collection of known security and privacy issues currently affecting the Warren VPN app (most
+were identified upstream in Mullvad VPN and equally apply to this fork).
 
 This is not a bug tracker. This is not a collection of post mortems. This is not a historical
 record of past issues. This is not a list of issues we plan on solving soon.
@@ -45,7 +46,7 @@ Each issue in this document should provide, at least, the following:
 ### Potential leaks just after macOS boot
 
 Due to the inability to specify dependencies of system services in macOS `launchd` there is no way
-to ensure that our `mullvad-daemon` is started before any other service or program.
+to ensure that our `warren-daemon` is started before any other service or program.
 This means that traffic from both system and user programs can potentially leak for a short
 period of time after the computer has started up, even if the app has been configured to launch
 on start-up and auto-connect.
@@ -56,7 +57,7 @@ There is no good fix or mitigation we know of that we can add to the app for thi
 But some things user can do, depending on their threat model:
 
 * Disable the network before shutting the computer down, so it starts up without network.
-  This allows `mullvad-daemon` to start before any program has had any chance to leak.
+  This allows `warren-daemon` to start before any program has had any chance to leak.
 * Do not start any program generating sensitive network traffic until you have verified
   Mullvad is running and has secured the connection.
 
@@ -72,7 +73,7 @@ But some things user can do, depending on their threat model:
 
 ### iOS is vulnerable to TunnelVision/TunnelCrack LocalNet
 
-We have determined that from a security and privacy standpoint, in relation to the Mullvad VPN
+We have determined that from a security and privacy standpoint, in relation to the Warren VPN
 app, TunnelVision (CVE-2024-3661) and TunnelCrack LocalNet (CVE-2023-36672 and CVE-2023-35838)
 are virtually identical.
 
@@ -163,7 +164,7 @@ sporadically, on the first start after a system upgrade. Since this is hard to r
 we have not been able to locate the source of the issue, and as a result not figured out
 any mitigation neither.
 
-Since this seems to be an operating system bug, it affects all versions of the Mullvad VPN
+Since this seems to be an operating system bug, it affects all versions of the Warren VPN
 app. We have observed it on macOS 14.6 and newer, but it could very well have existed much earlier.
 
 #### Timeline
@@ -179,7 +180,7 @@ app. We have observed it on macOS 14.6 and newer, but it could very well have ex
 The Hyper-V Virtual Ethernet Adapter passes traffic to and from guests without letting the
 host’s firewall inspect the packets in the same way normal packets are inspected.
 The forwarded (NATed) packets are seen in the lower layers of WFP (OSI layer 2) as
-Ethernet frames only. This means that all the normal firewall rules inserted by the Mullvad app
+Ethernet frames only. This means that all the normal firewall rules inserted by the Warren app
 to stop leaks are circumvented.
 
 This problem affects all virtual machines, containers and software running on a Hyper-V virtual
@@ -224,7 +225,7 @@ as long as there are enough devices available on the account.
 
 When running the Microsoft Edge browser with Microsoft Defender Application Guard activated,
 the browser uses Hyper-V networking underneath. This makes the network traffic generated
-by the browser ignore the Mullvad firewall rules. On top of this, it even ignores the routing
+by the browser ignore the Warren firewall rules. On top of this, it even ignores the routing
 table, and *always* send the traffic directly on the physical network interface
 instead of the tunnel interface. Hence, the mitigation above is ineffective when the VPN tunnel is
 active.
@@ -261,7 +262,7 @@ network adjacent attacker (same local network) can figure out the IP address con
 tunnel interface by sending an ARP request for every private IPv4 address to the device.
 
 This can be used by an adversary on the same local network to make a qualified guess if the device
-is using Mullvad VPN. Furthermore, since the in-tunnel IP only changes monthly, the adversary can
+is using Warren VPN. Furthermore, since the in-tunnel IP only changes monthly, the adversary can
 also possibly identify a device over time.
 
 Android apps, including Mullvad VPN, do not have the permission to change kernel parameters such as

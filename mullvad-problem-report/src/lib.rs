@@ -1,4 +1,3 @@
-use mullvad_api::{ApiEndpoint, proxy::ApiConnectionMode};
 use regex::Regex;
 use std::{
     borrow::Cow,
@@ -15,10 +14,22 @@ use talpid_types::ErrorExt;
 pub mod metadata;
 
 /// Maximum number of bytes to read from each log file
-const LOG_MAX_READ_BYTES: usize = 128 * 1024;
-const EXTRA_BYTES: usize = 32 * 1024;
-/// Fit five logs plus some system information in the report.
-const REPORT_MAX_SIZE: usize = (5 * LOG_MAX_READ_BYTES) + EXTRA_BYTES;
+/// How much of each log file ends up in a report, counted from the END so the
+/// most recent events always survive.
+///
+/// Bounded by what the forum attach-logs transport accepts, not by taste:
+/// warren-connect (>= 0.9.13) caps the upload at ~12 MiB of gzip and 32 MiB
+/// decompressed, and Discourse accepts a 40 MB attachment. A report can carry
+/// up to about seven files (daemon, its rotation, the previous install's, plus
+/// the frontend main/renderer and their rotations), so 4 MiB each is 28 MiB
+/// decompressed, inside that ceiling.
+///
+/// Raising this further needs the connect-side caps AND the Discourse setting
+/// raised first, in that order, or reports get refused outright, which is
+/// worse for the reporter than a truncated tail. And note what actually eats
+/// the budget: a report is overwhelmingly `path probe` INFO lines from the
+/// engine, so quietening that source buys far more history than any cap here.
+const LOG_MAX_READ_BYTES: usize = 4 * 1024 * 1024;
 
 /// Field delimiter in generated problem report
 const LOG_DELIMITER: &str = "====================";
@@ -29,8 +40,6 @@ const LINE_SEPARATOR: &str = "\n";
 
 #[cfg(windows)]
 const LINE_SEPARATOR: &str = "\r\n";
-
-const MAX_SEND_ATTEMPTS: usize = 3;
 
 /// Custom macro to write a line to an output formatter that uses platform-specific newline
 /// character sequences.
@@ -52,29 +61,6 @@ pub enum Error {
         #[source]
         source: io::Error,
     },
-
-    #[error("Failed to read the problem report at {path}")]
-    ReadProblemReportError {
-        path: String,
-        #[source]
-        source: io::Error,
-    },
-
-    #[error("Unable to create REST client")]
-    CreateRpcClientError(#[source] mullvad_api::Error),
-
-    #[error("Failed to send problem report")]
-    SendProblemReportError(#[source] mullvad_api::rest::Error),
-
-    #[error("Failed to send problem report {} times", MAX_SEND_ATTEMPTS)]
-    SendFailedTooManyTimes,
-
-    #[error("Unable to spawn Tokio runtime")]
-    CreateRuntime(#[source] io::Error),
-
-    #[cfg(not(target_os = "android"))]
-    #[error("Unable to find cache directory")]
-    ObtainCacheDirectory(#[source] mullvad_paths::Error),
 }
 
 /// These are errors that can happen during problem report collection.
@@ -95,14 +81,6 @@ pub enum LogError {
 
     #[error("Error reading the contents of log file: {path}")]
     ReadLogError { path: String },
-
-    #[cfg(any(target_os = "linux", target_os = "macos"))]
-    #[error("No home directory for current user")]
-    NoHomeDir,
-
-    #[cfg(target_os = "windows")]
-    #[error("Missing %LOCALAPPDATA% environment variable")]
-    NoLocalAppDataDir,
 }
 
 /// Problem report collector
@@ -156,8 +134,19 @@ impl ProblemReportCollector {
                 problem_report.add_error("Failed to list logs in daemon log directory", &error)
             }
         };
-        match frontend_log_dir().map(|dir| dir.and_then(list_logs)) {
-            Some(Ok(frontend_logs)) => {
+        // Every candidate that answers contributes its logs. A candidate that
+        // does not exist is the normal case for all but one of them, so it is
+        // skipped in silence: only a report with NO frontend logs at all says
+        // so, and it says it as a fact rather than as a failure.
+        #[cfg(not(target_os = "android"))]
+        {
+            let candidates = FrontendLogDirs::from_env().candidates();
+            let mut dirs_read = 0usize;
+            for dir in &candidates {
+                let Ok(frontend_logs) = list_logs(dir) else {
+                    continue;
+                };
+                dirs_read += 1;
                 for log in frontend_logs {
                     match log {
                         Ok(path) => problem_report.add_log(&path),
@@ -165,10 +154,24 @@ impl ProblemReportCollector {
                     }
                 }
             }
-            Some(Err(error)) => {
-                problem_report.add_error("Failed to list logs in frontend log directory", &error)
+            if dirs_read == 0 {
+                let looked_in = candidates
+                    .iter()
+                    .map(|p| p.display().to_string())
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                problem_report.add_note(
+                    "Frontend logs",
+                    &format!(
+                        "No frontend log directory found. Looked in: {}",
+                        if looked_in.is_empty() {
+                            "nowhere (no home or app-data directory resolved)".to_owned()
+                        } else {
+                            looked_in
+                        }
+                    ),
+                );
             }
-            None => {}
         }
         #[cfg(target_os = "android")]
         {
@@ -278,35 +281,164 @@ fn list_logs(
         })
 }
 
-/// Returns the directory where the Mullvad GUI frontend stores its logs.
+/// Returns the directory where the Warren GUI frontend stores its logs.
 /// If the current platform has a separate directory for frontend logs.
-fn frontend_log_dir() -> Option<Result<PathBuf, LogError>> {
-    #[cfg(target_os = "linux")]
-    {
-        Some(
-            dirs::home_dir()
-                .ok_or(LogError::NoHomeDir)
-                .map(|home_dir| home_dir.join(".config/Mullvad VPN/logs")),
-        )
+//
+// These paths must match the Electron frontend's resolved `logs` dir, which
+// derives from the app `productName` (the per-environment display name,
+// "Warren VPN" for prod). If they drift, problem reports silently omit the
+// GUI logs.
+/// The platform whose log layout to resolve. Explicit so every arm is
+/// reachable from a test on any host.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum TargetOs {
+    Linux,
+    MacOs,
+    Windows,
+    Other,
+}
+
+impl TargetOs {
+    const HOST: Self = if cfg!(target_os = "linux") {
+        Self::Linux
+    } else if cfg!(target_os = "macos") {
+        Self::MacOs
+    } else if cfg!(target_os = "windows") {
+        Self::Windows
+    } else {
+        Self::Other
+    };
+}
+
+/// Where the desktop frontend may have put its logs, on any platform.
+///
+/// Deliberately several paths instead of one: Electron resolves its own base at
+/// runtime (`XDG_CONFIG_HOME` on Linux, the roaming/local split on Windows,
+/// `Library/Logs` vs the app-support dir on macOS), so a single hardcoded guess
+/// is one environment away from dropping the whole frontend half of a report.
+/// That is not hypothetical: a beta report from a Linux tester carried an error
+/// block where the frontend logs should have been, because only
+/// `~/.config/<display name>/logs` was ever looked at.
+///
+/// Built from explicit inputs rather than read straight from the environment so
+/// the resolution is testable without touching the machine's real env.
+#[derive(Debug, Default, Clone)]
+struct FrontendLogDirs {
+    home: Option<PathBuf>,
+    xdg_config_home: Option<PathBuf>,
+    local_app_data: Option<PathBuf>,
+    roaming_app_data: Option<PathBuf>,
+}
+
+impl FrontendLogDirs {
+    fn from_env() -> Self {
+        Self {
+            home: dirs::home_dir(),
+            xdg_config_home: std::env::var_os("XDG_CONFIG_HOME")
+                .filter(|v| !v.is_empty())
+                .map(PathBuf::from),
+            local_app_data: std::env::var_os("LOCALAPPDATA")
+                .filter(|v| !v.is_empty())
+                .map(PathBuf::from),
+            roaming_app_data: std::env::var_os("APPDATA")
+                .filter(|v| !v.is_empty())
+                .map(PathBuf::from),
+        }
     }
-    #[cfg(target_os = "macos")]
-    {
-        Some(
-            dirs::home_dir()
-                .ok_or(LogError::NoHomeDir)
-                .map(|home_dir| home_dir.join("Library/Logs/Mullvad VPN")),
-        )
+
+    /// Candidate directories for the host platform.
+    fn candidates(&self) -> Vec<PathBuf> {
+        self.candidates_for(TargetOs::HOST)
     }
-    #[cfg(target_os = "windows")]
-    {
-        Some(match std::env::var_os("LOCALAPPDATA") {
-            Some(dir) => Ok(Path::new(&dir).join("Mullvad VPN/logs")),
-            None => Err(LogError::NoLocalAppDataDir),
-        })
+
+    /// Candidate directories, most likely first, deduplicated.
+    ///
+    /// The platform is a parameter, not a `#[cfg]`: the bug this exists to fix
+    /// happened on Linux, and a Linux-only `cfg` arm is untestable from a macOS
+    /// or Windows dev machine, which is exactly how it stayed broken.
+    /// Directory names the frontend may have used, this environment first.
+    ///
+    /// Every environment's names are included, not just the current one: an
+    /// install predating the per-channel rename writes under the prod name
+    /// while a beta-built collector looks for the beta name, and that skew
+    /// alone loses the frontend logs. Each log block is labelled with its full
+    /// path in the report, so a stray section is readable rather than
+    /// confusing.
+    fn app_dir_names() -> Vec<&'static str> {
+        let mut names = vec![
+            warren_product_env::DISPLAY_NAME,
+            warren_product_env::UNIX_PRODUCT_DIR,
+        ];
+        for env in warren_product_env::ALL {
+            names.push(env.display_name());
+            names.push(env.unix_product_dir());
+        }
+        names.dedup();
+        let mut seen: Vec<&'static str> = Vec::with_capacity(names.len());
+        names.retain(|n| {
+            if seen.contains(n) {
+                false
+            } else {
+                seen.push(n);
+                true
+            }
+        });
+        names
     }
-    #[cfg(target_os = "android")]
-    {
-        None
+
+    fn candidates_for(&self, os: TargetOs) -> Vec<PathBuf> {
+        let names = Self::app_dir_names();
+        let mut out: Vec<PathBuf> = Vec::new();
+
+        if os == TargetOs::Linux {
+            // Electron honours XDG_CONFIG_HOME; when it is unset it falls back
+            // to ~/.config, so both are live possibilities on the same distro.
+            for name in &names {
+                if let Some(xdg) = &self.xdg_config_home {
+                    out.push(xdg.join(name).join("logs"));
+                }
+                if let Some(home) = &self.home {
+                    out.push(home.join(".config").join(name).join("logs"));
+                }
+            }
+        }
+
+        if os == TargetOs::MacOs
+            && let Some(home) = &self.home
+        {
+            for name in &names {
+                out.push(home.join("Library/Logs").join(name));
+                out.push(
+                    home.join("Library/Application Support")
+                        .join(name)
+                        .join("logs"),
+                );
+            }
+        }
+
+        if os == TargetOs::Windows {
+            for name in &names {
+                if let Some(local) = &self.local_app_data {
+                    out.push(local.join(name).join("logs"));
+                }
+                // The app forces LOCALAPPDATA, but an install predating that
+                // override, or one started before it runs, uses roaming.
+                if let Some(roaming) = &self.roaming_app_data {
+                    out.push(roaming.join(name).join("logs"));
+                }
+            }
+        }
+
+        let mut seen = Vec::with_capacity(out.len());
+        out.retain(|p| {
+            if seen.contains(p) {
+                false
+            } else {
+                seen.push(p.clone());
+                true
+            }
+        });
+        out
     }
 }
 
@@ -326,93 +458,6 @@ fn write_logcat_to_file(log_dir: &Path) -> Result<PathBuf, io::Error> {
         .stderr(stderr)
         .output()?;
     Ok(logcat_path)
-}
-
-pub fn send_problem_report(
-    user_email: &str,
-    user_message: &str,
-    account_token: Option<&str>,
-    report_path: &Path,
-    cache_dir: &Path,
-    endpoint: ApiEndpoint,
-) -> Result<(), Error> {
-    let report_content = normalize_newlines(
-        read_file_lossy(report_path, REPORT_MAX_SIZE).map_err(|source| {
-            Error::ReadProblemReportError {
-                path: report_path.display().to_string(),
-                source,
-            }
-        })?,
-    );
-
-    let runtime = tokio::runtime::Builder::new_multi_thread()
-        .worker_threads(2)
-        .enable_all()
-        .build()
-        .map_err(Error::CreateRuntime)?;
-    runtime.block_on(send_problem_report_inner(
-        user_email,
-        user_message,
-        account_token,
-        &report_content,
-        cache_dir,
-        &endpoint,
-    ))
-}
-
-async fn send_problem_report_inner(
-    user_email: &str,
-    user_message: &str,
-    account_token: Option<&str>,
-    report_content: &str,
-    cache_dir: &Path,
-    endpoint: &ApiEndpoint,
-) -> Result<(), Error> {
-    let metadata = ProblemReport::parse_metadata(report_content).unwrap_or_else(metadata::collect);
-    let api_runtime = mullvad_api::Runtime::with_cache(
-        endpoint,
-        cache_dir,
-        false,
-        #[cfg(target_os = "android")]
-        None,
-    )
-    .await
-    .map_err(Error::CreateRpcClientError)?;
-
-    let connection_mode = ApiConnectionMode::try_from_cache(cache_dir).await;
-    let api_client = mullvad_api::ProblemReportProxy::new(
-        api_runtime.mullvad_rest_handle(connection_mode.into_provider()),
-    );
-
-    let message: String = match account_token {
-        Some(account_token) => {
-            format!("{user_message}\naccount-token: {account_token}")
-        }
-        None => user_message.to_string(),
-    };
-
-    for _attempt in 0..MAX_SEND_ATTEMPTS {
-        match api_client
-            .problem_report(user_email, &message, report_content, &metadata)
-            .await
-        {
-            Ok(()) => {
-                return Ok(());
-            }
-            Err(error) => {
-                if !error.is_network_error() {
-                    return Err(Error::SendProblemReportError(error));
-                }
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg(
-                        "Failed to send problem report due to network error"
-                    )
-                );
-            }
-        }
-    }
-    Err(Error::SendFailedTooManyTimes)
 }
 
 #[derive(Debug)]
@@ -476,6 +521,14 @@ impl ProblemReport {
     }
 
     /// Attach an error to the report.
+    /// Adds an informational block. Unlike [`Self::add_error`] this does not
+    /// describe a failure: some states (a frontend that never wrote a log) are
+    /// normal, and dressing them as errors sends staff chasing a non-problem.
+    pub fn add_note(&mut self, title: &'static str, body: &str) {
+        let redacted = self.redact(body);
+        self.logs.push((title.to_string(), redacted));
+    }
+
     pub fn add_error(&mut self, message: &'static str, error: &impl ErrorExt) {
         let redacted_error = self.redact(&error.display_chain());
         self.logs.push((message.to_string(), redacted_error));
@@ -553,7 +606,9 @@ impl ProblemReport {
     }
 
     /// Tries to parse out the metadata map from a string that is supposed to be a report written by
-    /// this struct.
+    /// this struct. Only exercised by tests since the in-app send path was
+    /// removed, but kept: it pins the report header format `write_to` emits.
+    #[cfg(test)]
     pub fn parse_metadata(report: &str) -> Option<BTreeMap<String, String>> {
         // IMPORTANT: Make sure this implementation stays in sync with `write_to` above.
         const PATTERN: &str = ": ";
@@ -685,29 +740,206 @@ fn build_ipv6_regex() -> String {
 fn read_file_lossy(path: &Path, max_bytes: usize) -> io::Result<String> {
     let mut file = File::open(path)?;
     let file_size = file.metadata()?.len();
+    let truncated = file_size > max_bytes as u64;
 
-    if file_size > max_bytes as u64 {
+    if truncated {
         file.seek(SeekFrom::Start(file_size - max_bytes as u64))?;
     }
 
     let capacity = min(file_size, max_bytes as u64) as usize;
     let mut buffer = Vec::with_capacity(capacity);
     file.take(max_bytes as u64).read_to_end(&mut buffer)?;
-    Ok(String::from_utf8_lossy(&buffer).into_owned())
-}
-
-#[cfg(not(windows))]
-fn normalize_newlines(text: String) -> String {
-    text
-}
-
-#[cfg(windows)]
-fn normalize_newlines(text: String) -> String {
-    text.replace(LINE_SEPARATOR, "\n")
+    let content = String::from_utf8_lossy(&buffer).into_owned();
+    if !truncated {
+        return Ok(content);
+    }
+    // Say it out loud. Otherwise the only hint that a log was cut is its first
+    // line arriving half-written, which reads as corruption rather than as a
+    // deliberate tail, and hides that earlier events exist on the machine.
+    Ok(format!(
+        "[report] this log was truncated: showing the last {} bytes of {}\n{}",
+        max_bytes, file_size, content
+    ))
 }
 
 #[cfg(test)]
 mod tests {
+
+    fn every_base() -> FrontendLogDirs {
+        FrontendLogDirs {
+            home: Some(PathBuf::from("/home/tester")),
+            xdg_config_home: Some(PathBuf::from("/home/tester/.myconfig")),
+            local_app_data: Some(PathBuf::from(r"C:\Users\tester\AppData\Local")),
+            roaming_app_data: Some(PathBuf::from(r"C:\Users\tester\AppData\Roaming")),
+        }
+    }
+
+    fn joined(dirs: &FrontendLogDirs, os: TargetOs) -> String {
+        dirs.candidates_for(os)
+            .iter()
+            .map(|p| p.display().to_string())
+            .collect::<Vec<_>>()
+            .join("|")
+    }
+
+    #[test]
+    fn a_truncated_log_says_so_instead_of_starting_mid_line() {
+        // A cut tail used to surface only as a half-written first line, which
+        // reads as corruption and hides that earlier events still exist.
+        let dir = std::env::temp_dir().join(format!("warren-report-test-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).expect("tempdir");
+        let path = dir.join("daemon.log");
+        let body: String = (0..2000).map(|i| format!("line {i}\n")).collect();
+        std::fs::write(&path, &body).expect("write");
+        let cap = 512;
+
+        let out = read_file_lossy(&path, cap).expect("read");
+        assert!(
+            out.starts_with("[report] this log was truncated"),
+            "{out:.80}"
+        );
+        assert!(
+            out.contains(&format!("of {}", body.len())),
+            "the full size is stated: {out:.120}"
+        );
+        assert!(
+            out.contains("line 1999"),
+            "the tail is what survives, not the head"
+        );
+        assert!(!out.contains("line 0\n"), "the head is dropped");
+
+        // Under the cap: content is passed through untouched.
+        let small = dir.join("small.log");
+        std::fs::write(&small, "just this\n").expect("write");
+        assert_eq!(read_file_lossy(&small, cap).expect("read"), "just this\n");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn an_install_predating_the_per_channel_rename_is_still_found() {
+        // A beta installed before the rename writes under the prod name while a
+        // beta-built collector looks for the beta one. That skew alone lost the
+        // whole frontend half of a report.
+        let names = FrontendLogDirs::app_dir_names();
+        for env in warren_product_env::ALL {
+            assert!(
+                names.contains(&env.display_name()),
+                "{} missing from {names:?}",
+                env.display_name()
+            );
+            assert!(
+                names.contains(&env.unix_product_dir()),
+                "{} missing from {names:?}",
+                env.unix_product_dir()
+            );
+        }
+        assert_eq!(
+            names[0],
+            warren_product_env::DISPLAY_NAME,
+            "this build's own name is tried first"
+        );
+        let mut unique = names.clone();
+        unique.sort_unstable();
+        unique.dedup();
+        assert_eq!(names.len(), unique.len(), "no name repeats: {names:?}");
+    }
+
+    #[test]
+    fn linux_looks_where_electron_actually_writes() {
+        // The real failure: only ~/.config/<display name>/logs was ever tried,
+        // so a machine whose Electron used another base reported an error block
+        // instead of the frontend logs.
+        let out = joined(&every_base(), TargetOs::Linux);
+        assert!(
+            out.contains("/home/tester/.myconfig/"),
+            "XDG_CONFIG_HOME is what Electron honours: {out}"
+        );
+        assert!(
+            out.contains("/home/tester/.config/"),
+            "the XDG default stays a candidate: {out}"
+        );
+        assert!(
+            out.contains(warren_product_env::UNIX_PRODUCT_DIR),
+            "the kebab-case dir covers an Electron name that fell back to the \
+             package name: {out}"
+        );
+        assert!(
+            out.contains(warren_product_env::DISPLAY_NAME),
+            "and the product name itself: {out}"
+        );
+    }
+
+    #[test]
+    fn macos_and_windows_cover_both_of_their_bases() {
+        let dirs = every_base();
+        let mac = joined(&dirs, TargetOs::MacOs);
+        assert!(mac.contains("Library/Logs"), "{mac}");
+        assert!(mac.contains("Library/Application Support"), "{mac}");
+
+        let win = joined(&dirs, TargetOs::Windows);
+        assert!(win.contains("AppData\\Local"), "{win}");
+        assert!(
+            win.contains("AppData\\Roaming"),
+            "an install predating the LOCALAPPDATA override kept them in \
+             roaming: {win}"
+        );
+    }
+
+    #[test]
+    fn every_platform_yields_somewhere_to_look() {
+        // No platform may come back empty-handed when a base is known, or that
+        // platform silently ships reports with no frontend logs.
+        for os in [TargetOs::Linux, TargetOs::MacOs, TargetOs::Windows] {
+            assert!(
+                !every_base().candidates_for(os).is_empty(),
+                "{os:?} resolved nothing"
+            );
+        }
+    }
+
+    #[test]
+    fn frontend_log_candidates_never_repeat_a_directory() {
+        // XDG_CONFIG_HOME set to exactly the default must not make the report
+        // read, and append, the same log files twice.
+        let dirs = FrontendLogDirs {
+            home: Some(PathBuf::from("/home/tester")),
+            xdg_config_home: Some(PathBuf::from("/home/tester/.config")),
+            ..Default::default()
+        };
+        let candidates = dirs.candidates_for(TargetOs::Linux);
+        let mut unique = candidates.clone();
+        unique.sort();
+        unique.dedup();
+        assert_eq!(
+            candidates.len(),
+            unique.len(),
+            "duplicate candidate: {candidates:?}"
+        );
+    }
+
+    #[test]
+    fn no_base_at_all_yields_no_candidate() {
+        // No home and no app-data: nothing to guess. The caller turns this into
+        // a plain note, never an error block.
+        for os in [TargetOs::Linux, TargetOs::MacOs, TargetOs::Windows] {
+            assert!(FrontendLogDirs::default().candidates_for(os).is_empty());
+        }
+    }
+
+    #[test]
+    fn a_note_is_not_dressed_as_an_error() {
+        let mut report = ProblemReport::new(vec![]);
+        report.add_note("Frontend logs", "No frontend log directory found.");
+        let mut buf: Vec<u8> = Vec::new();
+        report.write_to(&mut buf).expect("render");
+        let rendered = String::from_utf8_lossy(&buf).into_owned();
+        assert!(rendered.contains("Frontend logs"), "{rendered}");
+        assert!(
+            !rendered.contains("Error:"),
+            "a normal state must not read as a failure: {rendered}"
+        );
+    }
     use super::*;
 
     #[test]

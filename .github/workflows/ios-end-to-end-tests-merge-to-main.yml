@@ -1,15 +1,9 @@
 ---
 name: iOS end-to-end merge to main tests
 on:
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
-    paths:
-      - .github/workflows/ios-end-to-end-tests*.yml
-      - ios/**
 
 permissions:
   contents: read

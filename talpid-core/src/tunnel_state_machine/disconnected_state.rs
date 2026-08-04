@@ -19,6 +19,11 @@ impl DisconnectedState {
         shared_values: &mut SharedTunnelStateValues,
         should_reset_firewall: bool,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
+        // Terminal backstop: internet must be fully restored here whatever
+        // path led in, so force out any Warren split (out-of-band from the
+        // `RouteManager`) even if a guard leaked. See `force_route_cleanup`.
+        talpid_warren_tunnel::force_route_cleanup();
+
         #[cfg(target_os = "macos")]
         if let Err(err) = shared_values
             .runtime
@@ -74,15 +79,10 @@ impl DisconnectedState {
         shared_values: &mut SharedTunnelStateValues,
         should_reset_firewall: bool,
     ) {
+        // The firewall's persistence is not set here: it tracks the lockdown
+        // setting through `set_lockdown_mode`, so it is already correct in
+        // every state, including the ones this daemon may die in.
         let result = if shared_values.lockdown_mode.bool() {
-            #[cfg(target_os = "windows")]
-            {
-                // Respect the persist flag of LockdownMode.
-                shared_values
-                    .firewall
-                    .persist(shared_values.lockdown_mode.should_persist());
-            }
-
             let policy = FirewallPolicy::Blocked {
                 allow_lan: shared_values.allow_lan,
                 allowed_endpoint: Some(shared_values.allowed_endpoint.clone()),
@@ -194,9 +194,13 @@ impl TunnelState for DisconnectedState {
             }
             #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
-                if shared_values.lockdown_mode != lockdown_mode {
-                    shared_values.lockdown_mode = lockdown_mode;
-
+                // `PartialEq` on `LockdownMode` only compares the boolean, so a
+                // change confined to the persistence flag compares equal. Apply
+                // it unconditionally, otherwise the firewall keeps the previous
+                // persistence and can outlive the product it belongs to.
+                let toggled = shared_values.lockdown_mode != lockdown_mode;
+                shared_values.set_lockdown_mode(lockdown_mode);
+                if toggled {
                     // TODO: Investigate if we can simply return
                     // `NewState(Self::enter(shared_values, true))`.
                     // The logic for updating the firewall in `DisconnectedState::enter` is

@@ -1,0 +1,23 @@
+[package]
+name = "warren-nm-vpn-service"
+edition.workspace = true
+rust-version.workspace = true
+description = "NetworkManager VPN service plugin, so the desktop shows Warren as a VPN"
+repository.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "warren-nm-vpn-service"
+path = "src/main.rs"
+
+[dependencies]
+log = { workspace = true }
+thiserror = { workspace = true }
+warren-product-env = { path = "../warren-product-env" }
+
+[target.'cfg(target_os = "linux")'.dependencies]
+dbus = "0.9"
+nix = { workspace = true, features = ["net"] }
+
+[lints]
+workspace = true

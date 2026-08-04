@@ -1,4 +1,5 @@
-import { AccountDataError, AccountNumber, IDevice } from '../../../shared/daemon-rpc-types';
+import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { RenewalUiState } from '../../../shared/renewal';
 import { ReduxAction } from '../store';
 
 type LoginMethod = 'existing_account' | 'new_account';
@@ -7,26 +8,38 @@ type ExpiredState = 'expired' | 'time_added';
 export type LoginState =
   | { type: 'none'; deviceRevoked: boolean }
   | { type: 'logging in'; method: LoginMethod }
-  | { type: 'ok'; method: LoginMethod; newDeviceBanner: boolean; expiredState?: ExpiredState }
-  | { type: 'too many devices'; method: LoginMethod }
-  | { type: 'failed'; method: 'existing_account'; error: AccountDataError['error'] }
+  // A new account has been minted + logged in daemon-side, but the GUI
+  // is holding on the login screen until the user backs up the freshly
+  // generated recovery phrase. Carries the new pubkey so the backup
+  // step can finalize via `accountCreated`.
+  | { type: 'backup-pending'; pubkey: WarrenPubKey }
+  | { type: 'ok'; method: LoginMethod; expiredState?: ExpiredState }
   | { type: 'failed'; method: 'new_account'; error: Error };
 export interface IAccountReduxState {
-  accountNumber?: AccountNumber;
-  deviceName?: string;
-  devices: Array<IDevice>;
-  accountHistory?: AccountNumber;
+  pubkey?: WarrenPubKey;
+  pubkeyHistory?: WarrenPubKey;
   expiry?: string; // ISO8601
   status: LoginState;
+  // Mirror of the main-process purchase poll (app-initiated checkout,
+  // doc 35). Drives the "Checking..." labels in the paywall views.
+  purchaseInFlight: boolean;
+  // Device-held auto-renewal mandate display state (warren-core doc 65); undefined
+  // when the logged-in account holds none.
+  renewalState?: RenewalUiState;
+  // This wallet's community-forum handle. Undefined until the user has signed
+  // in to the forum at least once: the derivation is keyed server side, so the
+  // app learns it from the login response and cannot compute it.
+  forumHandle?: string;
 }
 
 const initialState: IAccountReduxState = {
-  accountNumber: undefined,
-  deviceName: undefined,
-  devices: [],
-  accountHistory: undefined,
+  pubkey: undefined,
+  pubkeyHistory: undefined,
   expiry: undefined,
   status: { type: 'none', deviceRevoked: false },
+  purchaseInFlight: false,
+  renewalState: undefined,
+  forumHandle: undefined,
 };
 
 export default function (
@@ -34,44 +47,22 @@ export default function (
   action: ReduxAction,
 ): IAccountReduxState {
   switch (action.type) {
-    case 'START_LOGIN':
-      return {
-        ...state,
-        status: { type: 'logging in', method: 'existing_account' },
-        accountNumber: action.accountNumber,
-      };
     case 'LOGGED_IN':
       return {
         ...state,
         status: {
           type: 'ok',
           method: 'existing_account',
-          newDeviceBanner: state.status.type === 'logging in',
         },
-        accountNumber: action.accountNumber,
-        deviceName: action.deviceName,
-      };
-    case 'LOGIN_FAILED':
-      return {
-        ...state,
-        status: { type: 'failed', method: 'existing_account', error: action.error },
-      };
-    case 'TOO_MANY_DEVICES':
-      return {
-        ...state,
-        status: { type: 'too many devices', method: 'existing_account' },
+        pubkey: action.pubkey,
       };
     case 'LOGGED_OUT':
       return {
         ...state,
         status: { type: 'none', deviceRevoked: false },
-        accountNumber: undefined,
+        pubkey: undefined,
         expiry: undefined,
-      };
-    case 'RESET_LOGIN_ERROR':
-      return {
-        ...state,
-        status: { type: 'none', deviceRevoked: false },
+        forumHandle: undefined,
       };
     case 'DEVICE_REVOKED':
       return {
@@ -88,42 +79,32 @@ export default function (
         ...state,
         status: { type: 'failed', method: 'new_account', error: action.error },
       };
+    case 'ACCOUNT_AWAITING_BACKUP':
+      return {
+        ...state,
+        status: { type: 'backup-pending', pubkey: action.pubkey },
+        pubkey: action.pubkey,
+      };
     case 'ACCOUNT_CREATED':
       return {
         ...state,
         status: {
           type: 'ok',
           method: 'new_account',
-          newDeviceBanner: true,
           expiredState: 'expired',
         },
-        accountNumber: action.accountNumber,
-        deviceName: action.deviceName,
+        pubkey: action.pubkey,
         expiry: action.expiry,
       };
     case 'ACCOUNT_SETUP_FINISHED':
       return {
         ...state,
-        status: { type: 'ok', method: 'existing_account', newDeviceBanner: true },
+        status: { type: 'ok', method: 'existing_account' },
       };
-    case 'HIDE_NEW_DEVICE_BANNER':
-      if (state.status.type !== 'ok') {
-        return state;
-      }
-
+    case 'UPDATE_PUBKEY_HISTORY':
       return {
         ...state,
-        status: { ...state.status, newDeviceBanner: false },
-      };
-    case 'UPDATE_ACCOUNT_NUMBER':
-      return {
-        ...state,
-        accountNumber: action.accountNumber,
-      };
-    case 'UPDATE_ACCOUNT_HISTORY':
-      return {
-        ...state,
-        accountHistory: action.accountHistory,
+        pubkeyHistory: action.pubkeyHistory,
       };
     case 'UPDATE_ACCOUNT_EXPIRY': {
       const status = { ...state.status };
@@ -150,10 +131,20 @@ export default function (
         status,
       };
     }
-    case 'UPDATE_DEVICES':
+    case 'UPDATE_PURCHASE_IN_FLIGHT':
       return {
         ...state,
-        devices: action.devices,
+        purchaseInFlight: action.purchaseInFlight,
+      };
+    case 'UPDATE_RENEWAL_STATE':
+      return {
+        ...state,
+        renewalState: action.renewalState,
+      };
+    case 'UPDATE_FORUM_HANDLE':
+      return {
+        ...state,
+        forumHandle: action.forumHandle,
       };
   }
 

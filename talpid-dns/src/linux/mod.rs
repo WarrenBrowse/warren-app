@@ -17,6 +17,17 @@ use crate::ResolvedDnsConfig;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// Repair DNS state left behind by an unclean daemon exit, without
+/// constructing a monitor: restore a stranded `/etc/resolv.conf` from our
+/// backup and sweep stale resolvconf records. The systemd-resolved and
+/// NetworkManager backends need no repair (their per-link config died with
+/// the tunnel interface). Exists for `warren-setup reset-firewall`, the
+/// out-of-band rescue used when the daemon cannot come back up at all.
+pub(crate) fn recover_after_crash() -> Result<()> {
+    resolvconf::reclaim_stale_records_after_crash();
+    static_resolv_conf::restore_from_backup().map_err(Error::StaticResolvConf)
+}
+
 /// Errors that can happen in the Linux DNS monitor
 #[derive(thiserror::Error, Debug)]
 pub enum Error {

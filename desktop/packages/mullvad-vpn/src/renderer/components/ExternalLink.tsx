@@ -9,8 +9,8 @@ export type ExternalLinkProps = Omit<LinkProps, 'href' | 'as'> & {
   withAuth?: boolean;
 };
 
-function ExternalLink({ to, onClick, withAuth, ...props }: ExternalLinkProps) {
-  const { openUrl, openUrlWithAuth } = useAppContext();
+function ExternalLink({ to, onClick, withAuth: _withAuth, ...props }: ExternalLinkProps) {
+  const { openUrl } = useAppContext();
   const navigate = useCallback(
     (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault();
@@ -18,12 +18,9 @@ function ExternalLink({ to, onClick, withAuth, ...props }: ExternalLinkProps) {
         onClick(e);
       }
 
-      if (withAuth) {
-        return openUrlWithAuth(to);
-      }
       return openUrl(to);
     },
-    [onClick, openUrl, openUrlWithAuth, to, withAuth],
+    [onClick, openUrl, to],
   );
   return <Link href="" onClick={navigate} {...props} />;
 }

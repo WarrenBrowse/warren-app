@@ -120,6 +120,30 @@ pub fn is_version_supported(
         .any(|release| release.version.eq(&current_version))
 }
 
+/// Decide whether the running app version is still supported, i.e. allowed to
+/// keep running (the inverse of "must force-update").
+///
+/// If the manifest declares a [`Response::minimum_supported_version`], the app
+/// is supported iff it is at least that version. This is the forced-update
+/// lever: raise the minimum to hard-block older clients. Otherwise fall back to
+/// [`is_version_supported`] ("listed in `releases`"). Dev builds are always
+/// supported so local testing is never blocked.
+///
+/// Shared by the desktop daemon and the mobile (`warren-jni`) version check so
+/// every platform applies the same rule.
+pub fn is_current_version_supported(
+    current_version: &mullvad_version::Version,
+    response: &Response,
+) -> bool {
+    if current_version.is_dev() {
+        return true;
+    }
+    match response.minimum_supported_version.as_ref() {
+        Some(minimum) => current_version >= minimum,
+        None => is_version_supported(current_version.clone(), response),
+    }
+}
+
 #[cfg(test)]
 mod test {
     use std::str::FromStr;

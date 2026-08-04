@@ -38,6 +38,12 @@ impl DnsMonitorT for DnsMonitor {
     type Error = Error;
 
     fn new() -> Result<Self, Error> {
+        // No startup stale-resolver repair (unlike macOS / Linux
+        // static-resolv.conf / resolvconf): the `NameServer` registry value
+        // we write is keyed by the tunnel interface's GUID. After an unclean
+        // exit the tunnel adapter is destroyed and its GUID is not reused by a
+        // real adapter, so the orphaned value is inert. The
+        // DnsFlushResolverCache on set/reset covers the only cache that bites.
         Ok(DnsMonitor {
             current_guid: None,
             should_flush: true,

@@ -1,4 +1,4 @@
-Mullvad notes for creating an NSIS plug-in
+Warren notes for creating an NSIS plug-in
 ==
 
 Using `Visual Studio`, create a new DLL project.

@@ -2,19 +2,22 @@
 name = "mullvad-cli"
 edition.workspace = true
 rust-version.workspace = true
-description = "Manage the Mullvad VPN daemon via a convenient CLI"
+description = "Manage the Warren VPN daemon from the command line"
 repository.workspace = true
 license.workspace = true
 
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
-InternalName = "mullvad-cli"
-OriginalFilename = "mullvad.exe"
+ProductName = "Warren VPN"
+CompanyName = "Warren contributors"
+LegalCopyright = "(c) 2026 Warren contributors"
+InternalName = "warren-cli"
+OriginalFilename = "warren.exe"
 
+# Warren rebrand Level A: installed binary `warren` instead of
+# `mullvad`. The Cargo package name (`mullvad-cli`) is kept unchanged
+# to ease upstream Mullvad rebases.
 [[bin]]
-name = "mullvad"
+name = "warren"
 path = "src/main.rs"
 
 [dependencies]

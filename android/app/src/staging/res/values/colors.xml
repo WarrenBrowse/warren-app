@@ -1,0 +1,7 @@
+<resources>
+    <!-- Staging flavor overlay: the launcher icon keeps the prod mark on a
+         slate background, so three installed apps stay tellable apart at a
+         glance. Beta swaps the whole icon (its own foreground and monochrome
+         layers); staging is a dev-only build and only needs the tint. -->
+    <color name="icon_background">#1B2733</color>
+</resources>

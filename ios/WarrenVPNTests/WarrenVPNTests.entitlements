@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Gives the (non-hosted) XCTest bundle a keychain access group so the
+	  Warren wallet Keychain round-trip tests can create/read/delete items
+	  on the simulator instead of failing with errSecMissingEntitlement
+	  (-34018). WarrenWalletKeychain stores generic-password items without an
+	  explicit kSecAttrAccessGroup, so they land in this bundle's default
+	  group; the tests only need a consistent group of their own, not the
+	  app's.
+	-->
+	<key>keychain-access-groups</key>
+	<array>
+		<string>com.warrenbrowse.vpn.ios.Tests</string>
+	</array>
+</dict>
+</plist>

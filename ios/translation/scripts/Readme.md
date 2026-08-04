@@ -1,6 +1,6 @@
 # Localization Export Tool
 
-Automate exporting localizable strings (XLIFF) from the MullvadVPN iOS project using `xcodebuild`.
+Automate exporting localizable strings (XLIFF) from the WarrenVPN iOS project using `xcodebuild`.
 
 This folder contains a Bash workflow that:
 
@@ -15,7 +15,7 @@ This folder contains a Bash workflow that:
 ## Folder Structure
 
 ```
-/mullvadvpn-app/ios/translation
+/warren-app/ios/translation
 ├── locales
 │   └── en.xliff
 └── scripts

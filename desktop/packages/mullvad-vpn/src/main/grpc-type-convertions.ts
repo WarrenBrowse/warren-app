@@ -1,3 +1,4 @@
+import * as google_protobuf_duration_pb from 'google-protobuf/google/protobuf/duration_pb';
 import * as grpcTypes from 'management-interface/management-interface/grpc-types';
 
 import {
@@ -27,7 +28,6 @@ import {
   FirewallPolicyErrorType,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
   IObfuscationEndpoint,
   IRelayListCity,
   IRelayListCountry,
@@ -41,6 +41,11 @@ import {
   IWireguardEndpointData,
   LoggedInDeviceState,
   LoggedOutDeviceState,
+  NatPmpErrorReason,
+  NatPmpMapping,
+  NatPmpProto,
+  NatPmpSettings,
+  NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
@@ -55,8 +60,15 @@ import {
   SocksAuth,
   TunnelParameterError,
   TunnelState,
+  TunnelType,
+  WarrenCustomExitSettings,
+  WarrenMultiHopSettings,
+  WarrenNetworkInfo,
+  WarrenNotice,
+  WarrenStatus,
   wrapConstraint,
 } from '../shared/daemon-rpc-types';
+import log from '../shared/logging';
 import { parseChangelog } from './changelog';
 
 export class ResponseParseError extends Error {
@@ -146,6 +158,13 @@ function convertFromTransportProtocol(protocol: grpcTypes.TransportProtocol): Re
     [grpcTypes.TransportProtocol.UDP]: 'udp',
   };
   return protocolMap[protocol];
+}
+
+// Map the proto TunnelType enum (field 8 on TunnelEndpoint) to the TS union.
+// The gRPC stubs may not yet expose the field, so accept undefined gracefully.
+function convertFromTunnelType(tunnelType: number | undefined): TunnelType {
+  // Proto enum: WIREGUARD = 0, WARREN = 1
+  return tunnelType === 1 ? 'warren' : 'wireguard';
 }
 
 export function convertFromTunnelState(
@@ -269,13 +288,26 @@ function convertFromTunnelStateError(state: grpcTypes.ErrorState.AsObject): Erro
         ...baseError,
         cause: ErrorStateCause.needFullDiskPermissions,
       };
-    // These are only ever created on Android
+    case grpcTypes.ErrorState.Cause.WARREN_TUNNEL_FLAPPING:
+      return {
+        ...baseError,
+        cause: ErrorStateCause.warrenTunnelFlapping,
+      };
+    // Android-only causes, plus any cause a newer daemon adds before the
+    // gRPC bindings are regenerated. Never expected on desktop; degrade to
+    // a generic error state instead of throwing, which would crash the
+    // whole tunnel-state conversion and surface as a stream error.
     case grpcTypes.ErrorState.Cause.INVALID_DNS_SERVERS:
     case grpcTypes.ErrorState.Cause.NOT_PREPARED:
     case grpcTypes.ErrorState.Cause.OTHER_ALWAYS_ON_APP:
     case grpcTypes.ErrorState.Cause.OTHER_LEGACY_ALWAYS_ON_VPN:
     case grpcTypes.ErrorState.Cause.INVALID_IPV6_CONFIG:
-      throw new Error('Unsupported error state cause: ' + state.cause);
+    default:
+      log.warn('Unsupported error state cause: ' + state.cause);
+      return {
+        ...baseError,
+        cause: ErrorStateCause.startTunnelError,
+      };
   }
 }
 
@@ -303,6 +335,10 @@ function convertFromAuthFailedError(error: grpcTypes.ErrorState.AuthFailedError)
       return AuthFailedError.expiredAccount;
     case grpcTypes.ErrorState.AuthFailedError.TOO_MANY_CONNECTIONS:
       return AuthFailedError.tooManyConnections;
+    case grpcTypes.ErrorState.AuthFailedError.BANNED:
+      return AuthFailedError.banned;
+    case grpcTypes.ErrorState.AuthFailedError.BANNED_PORT_FORWARDING:
+      return AuthFailedError.bannedPortForwarding;
   }
 }
 
@@ -322,6 +358,8 @@ function convertFromParameterError(
       return TunnelParameterError.ipv4Unavailable;
     case grpcTypes.ErrorState.GenerationError.NETWORK_IPV6_UNAVAILABLE:
       return TunnelParameterError.ipv6Unavailable;
+    case grpcTypes.ErrorState.GenerationError.WARREN_PUBKEY_MISMATCH:
+      return TunnelParameterError.warrenPubkeyMismatch;
   }
 }
 
@@ -334,15 +372,11 @@ function convertFromTunnelStateRelayInfo(
       endpoint: {
         ...state.tunnelEndpoint,
         protocol: convertFromTransportProtocol(state.tunnelEndpoint.protocol),
-        obfuscationEndpoint:
-          state.tunnelEndpoint.obfuscation &&
-          state.tunnelEndpoint.obfuscation.single &&
-          state.tunnelEndpoint.obfuscation.single.endpoint &&
-          // TODO: Handle multiplexer?
-          convertFromObfuscationEndpoint(
-            state.tunnelEndpoint.obfuscation.single.obfuscationType,
-            state.tunnelEndpoint.obfuscation.single.endpoint,
-          ),
+        tunnelType: convertFromTunnelType(
+          (state.tunnelEndpoint as Record<string, unknown>).tunnelType as number | undefined,
+        ),
+        obfuscationEndpoint: convertFromObfuscationInfo(state.tunnelEndpoint.obfuscation),
+        effectiveMtu: state.tunnelEndpoint.effectiveMtu || undefined,
         entryEndpoint:
           state.tunnelEndpoint.entryEndpoint &&
           convertFromEntryEndpoint(state.tunnelEndpoint.entryEndpoint),
@@ -355,12 +389,14 @@ function convertFromTunnelStateRelayInfo(
 function convertFromFeatureIndicators(
   featureIndicators?: Array<grpcTypes.FeatureIndicator>,
 ): Array<FeatureIndicator> | undefined {
-  return featureIndicators?.map(convertFromFeatureIndicator);
+  return featureIndicators
+    ?.map(convertFromFeatureIndicator)
+    .filter((indicator): indicator is FeatureIndicator => indicator !== undefined);
 }
 
 function convertFromFeatureIndicator(
   featureIndicator: grpcTypes.FeatureIndicator,
-): FeatureIndicator {
+): FeatureIndicator | undefined {
   switch (featureIndicator) {
     case grpcTypes.FeatureIndicator.QUANTUM_RESISTANCE:
       return FeatureIndicator.quantumResistance;
@@ -378,6 +414,8 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.dnsContentBlockers;
     case grpcTypes.FeatureIndicator.CUSTOM_DNS:
       return FeatureIndicator.customDns;
+    case grpcTypes.FeatureIndicator.ALLOW_EXTERNAL_DNS:
+      return FeatureIndicator.allowExternalDns;
     case grpcTypes.FeatureIndicator.SERVER_IP_OVERRIDE:
       return FeatureIndicator.serverIpOverride;
     case grpcTypes.FeatureIndicator.CUSTOM_MTU:
@@ -386,21 +424,49 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.daita;
     case grpcTypes.FeatureIndicator.DAITA_MULTIHOP:
       return FeatureIndicator.daitaMultihop;
+    case grpcTypes.FeatureIndicator.REDUCED_MTU:
+      return FeatureIndicator.reducedMtu;
+    case grpcTypes.FeatureIndicator.DAITA_UNAVAILABLE:
+      return FeatureIndicator.daitaUnavailable;
     case grpcTypes.FeatureIndicator.SHADOWSOCKS:
       return FeatureIndicator.shadowsocks;
     case grpcTypes.FeatureIndicator.QUIC:
       return FeatureIndicator.quic;
     case grpcTypes.FeatureIndicator.LWO:
       return FeatureIndicator.lwo;
-    case grpcTypes.FeatureIndicator.WIREGUARD_PORT:
-      return FeatureIndicator.wireGuardPort;
+    default:
+      // Unknown / removed indicators (e.g. the legacy WireGuard port) are dropped.
+      return undefined;
   }
+}
+
+// Resolve the obfuscation endpoint shown in the connection panel from the
+// daemon's ObfuscationInfo (single OR multiplexed). For the multiplex case
+// the UI shows one badge, so the first obfuscator is taken as the
+// representative endpoint. Returns undefined when no obfuscation is active.
+function convertFromObfuscationInfo(
+  obfuscation: grpcTypes.ObfuscationInfo.AsObject | undefined,
+): IObfuscationEndpoint | undefined {
+  if (obfuscation?.single?.endpoint) {
+    return convertFromObfuscationEndpoint(
+      obfuscation.single.obfuscationType,
+      obfuscation.single.endpoint,
+    );
+  }
+  const firstMultiplexed = obfuscation?.multiple?.obfuscatorsList?.[0];
+  if (firstMultiplexed?.endpoint) {
+    return convertFromObfuscationEndpoint(
+      firstMultiplexed.obfuscationType,
+      firstMultiplexed.endpoint,
+    );
+  }
+  return undefined;
 }
 
 function convertFromObfuscationEndpoint(
   obfuscationType: grpcTypes.ObfuscationEndpoint.ObfuscationType,
   obfuscationEndpoint: grpcTypes.Endpoint.AsObject,
-): IObfuscationEndpoint {
+): IObfuscationEndpoint | undefined {
   let translatedType: EndpointObfuscationType;
   switch (obfuscationType) {
     case grpcTypes.ObfuscationEndpoint.ObfuscationType.UDP2TCP:
@@ -416,7 +482,10 @@ function convertFromObfuscationEndpoint(
       translatedType = 'lwo';
       break;
     default:
-      throw new Error('unsupported obfuscation protocol');
+      // Unknown type from a newer daemon than the bindings: drop the badge
+      // rather than throwing and crashing the tunnel-state conversion.
+      log.warn('Unsupported obfuscation protocol: ' + obfuscationType);
+      return undefined;
   }
 
   return {
@@ -443,6 +512,21 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   const apiAccessMethods = convertFromApiAccessMethodSettings(settings.getApiAccessMethods()!);
   const relayOverrides = settingsObject.relayOverridesList;
   const recents = convertFromRecents(settings.getRecents());
+  // Empty string proto → undefined on the ISettings side (aligned
+  // with mullvad_types::Settings::warren_api_url: Option<String>).
+  const warrenApiUrl =
+    settingsObject.warrenApiUrl && settingsObject.warrenApiUrl.length > 0
+      ? settingsObject.warrenApiUrl
+      : undefined;
+  // 0 on the wire = unset (unlimited).
+  const warrenMaxRateBps =
+    settingsObject.warrenMaxRateBps > 0 ? settingsObject.warrenMaxRateBps : undefined;
+  // Warren multi-hop is a nested message in proto3; the daemon always
+  // populates it (default = enabled:false), so a missing field here
+  // means the daemon is an older build and we fall back to OFF.
+  const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
+  const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
+  const warrenCustomExit = convertFromWarrenCustomExitSettings(settings.getWarrenCustomExit());
   return {
     ...settings.toObject(),
     relaySettings,
@@ -453,7 +537,294 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     apiAccessMethods,
     relayOverrides,
     recents,
+    warrenApiUrl,
+    warrenMaxRateBps,
+    warrenMultiHop,
+    warrenNatPmp,
+    warrenCustomExit,
   };
+}
+
+function convertFromWarrenCustomExitSettings(
+  settings: grpcTypes.WarrenCustomExitSettings | undefined,
+): WarrenCustomExitSettings {
+  if (!settings) {
+    // Older daemon without the field: assume OFF so the UI stays
+    // consistent when talking to an older binary.
+    return {
+      enabled: false,
+      endpoint: '',
+      pubkeyHex: '',
+      coverDomain: undefined,
+      label: '',
+      x25519MultihopPubkeyHex: '',
+      exitIdHex: '',
+    };
+  }
+  return {
+    enabled: settings.getEnabled(),
+    endpoint: settings.getEndpoint(),
+    pubkeyHex: settings.getPubkeyHex(),
+    // proto3 `optional`: absent stays undefined (= RPK-via-SNI mode).
+    coverDomain: settings.hasCoverDomain() ? settings.getCoverDomain() : undefined,
+    label: settings.getLabel(),
+    x25519MultihopPubkeyHex: settings.getX25519MultihopPubkeyHex(),
+    exitIdHex: settings.getExitIdHex(),
+  };
+}
+
+export function convertToWarrenCustomExitSettings(
+  settings: WarrenCustomExitSettings,
+): grpcTypes.WarrenCustomExitSettings {
+  const proto = new grpcTypes.WarrenCustomExitSettings();
+  proto.setEnabled(settings.enabled);
+  proto.setEndpoint(settings.endpoint);
+  proto.setPubkeyHex(settings.pubkeyHex);
+  // Only set the optional cover domain when present, so an unset value
+  // round-trips as "absent" (RPK-via-SNI) rather than an empty string.
+  if (settings.coverDomain !== undefined && settings.coverDomain !== '') {
+    proto.setCoverDomain(settings.coverDomain);
+  }
+  proto.setLabel(settings.label);
+  proto.setX25519MultihopPubkeyHex(settings.x25519MultihopPubkeyHex);
+  proto.setExitIdHex(settings.exitIdHex);
+  return proto;
+}
+
+function convertFromWarrenMultiHopSettings(
+  settings: grpcTypes.WarrenMultiHopSettings | undefined,
+): WarrenMultiHopSettings {
+  if (!settings) {
+    // Older daemon: assume OFF / 4h rotation defaults so the UI
+    // stays consistent even when talking to an older binary.
+    return {
+      enabled: false,
+      entryCountry: '',
+      exitCountry: '',
+      hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+    };
+  }
+  const rotation = settings.getHpkeEpochRotation();
+  const hpkeEpochRotationMs = rotation
+    ? rotation.getSeconds() * 1000 + Math.floor(rotation.getNanos() / 1e6)
+    : 4 * 60 * 60 * 1000;
+  return {
+    enabled: settings.getEnabled(),
+    entryCountry: settings.getEntryCountry(),
+    exitCountry: settings.getExitCountry(),
+    hpkeEpochRotationMs,
+  };
+}
+
+export function convertToWarrenMultiHopSettings(
+  settings: WarrenMultiHopSettings,
+): grpcTypes.WarrenMultiHopSettings {
+  const proto = new grpcTypes.WarrenMultiHopSettings();
+  proto.setEnabled(settings.enabled);
+  proto.setEntryCountry(settings.entryCountry);
+  proto.setExitCountry(settings.exitCountry);
+  const duration = new google_protobuf_duration_pb.Duration();
+  duration.setSeconds(Math.floor(settings.hpkeEpochRotationMs / 1000));
+  duration.setNanos((settings.hpkeEpochRotationMs % 1000) * 1_000_000);
+  proto.setHpkeEpochRotation(duration);
+  return proto;
+}
+
+export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenStatus {
+  const durationToMs = (d: google_protobuf_duration_pb.Duration | undefined): number | null =>
+    d ? d.getSeconds() * 1000 + Math.floor(d.getNanos() / 1e6) : null;
+  // gRPC client bindings predate the
+  // `pubkey_mismatch_pending` field. Until the bindings are
+  // regenerated (Tools/protoc round-trip), we feature-detect the
+  // getter so the type-checker stays happy and old daemons keep
+  // returning `null` (steady state).
+  const maybeMismatch = status.getPubkeyMismatchPending();
+  const pubkeyMismatchPending = maybeMismatch
+    ? {
+        exitIdHex: maybeMismatch.getExitIdHex(),
+        pinnedPubkeyHex: maybeMismatch.getPinnedPubkeyHex(),
+        observedPubkeyHex: maybeMismatch.getObservedPubkeyHex(),
+        countryCode: maybeMismatch.getCountryCode(),
+        city: maybeMismatch.getCity(),
+      }
+    : null;
+  return {
+    reconnectCount: status.getReconnectCount(),
+    lastReconnectAgeMs: durationToMs(status.getLastReconnectAge()),
+    obfuscationActive: status.getObfuscationActive(),
+    failoverCount: status.getFailoverCount(),
+    lastFailoverAgeMs: durationToMs(status.getLastFailoverAge()),
+    pubkeyMismatchPending,
+    maintenanceMigrationActive: status.getMaintenanceMigrationActive(),
+    portMigrationCancellations: status.getPortMigrationCancellations(),
+    portMigrationCancellationActive: status.getPortMigrationCancellationActive(),
+    hostOffline: status.getHostOffline(),
+    exitEgressDead: status.getExitEgressDead(),
+    networkInfo: convertFromWarrenNetworkInfo(status.getNetworkInfo()),
+    notices: status.getNoticesList().map(convertFromWarrenNotice),
+  };
+}
+
+function convertFromWarrenNotice(notice: grpcTypes.WarrenNotice): WarrenNotice {
+  return {
+    id: notice.getId(),
+    message: notice.getMessage(),
+    level: warrenNoticeLevel(notice.getLevel()),
+  };
+}
+
+function warrenNoticeLevel(level: grpcTypes.WarrenNoticeLevel): WarrenNotice['level'] {
+  switch (level) {
+    case grpcTypes.WarrenNoticeLevel.WARREN_NOTICE_WARNING:
+      return 'warning';
+    case grpcTypes.WarrenNoticeLevel.WARREN_NOTICE_ERROR:
+      return 'error';
+    default:
+      return 'info';
+  }
+}
+
+function convertFromWarrenNetworkInfo(
+  info: grpcTypes.WarrenNetworkInfo | undefined,
+): WarrenNetworkInfo | null {
+  if (!info) {
+    return null;
+  }
+  return {
+    environment: info.getEnvironment(),
+    degraded: info.getDegraded(),
+    defaultRateBps: info.hasDefaultRateBps() ? info.getDefaultRateBps() : undefined,
+    paymentsEnabled: info.getPaymentsEnabled(),
+  };
+}
+
+function protoFromNatPmpProto(protocol: NatPmpProto): grpcTypes.NatPmpSettings.Proto {
+  switch (protocol) {
+    case NatPmpProto.tcp:
+      return grpcTypes.NatPmpSettings.Proto.TCP;
+    case NatPmpProto.both:
+      return grpcTypes.NatPmpSettings.Proto.BOTH;
+    default:
+      return grpcTypes.NatPmpSettings.Proto.UDP;
+  }
+}
+
+function natPmpProtoFromProto(protoEnum: grpcTypes.NatPmpSettings.Proto): NatPmpProto {
+  switch (protoEnum) {
+    case grpcTypes.NatPmpSettings.Proto.TCP:
+      return NatPmpProto.tcp;
+    case grpcTypes.NatPmpSettings.Proto.BOTH:
+      return NatPmpProto.both;
+    default:
+      return NatPmpProto.udp;
+  }
+}
+
+export function convertFromNatPmpSettings(
+  settings: grpcTypes.NatPmpSettings | undefined,
+): NatPmpSettings {
+  if (!settings) {
+    // Older daemon: assume OFF / UDP / 1 h defaults so the UI
+    // stays consistent even when talking to an older binary.
+    return {
+      enabled: false,
+      lifetimeSecs: 3600,
+      rules: [],
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 0,
+    };
+  }
+  return {
+    enabled: settings.getEnabled(),
+    lifetimeSecs: settings.getLifetimeSecs(),
+    rules: settings.getRulesList().map((rule) => ({
+      protocol: natPmpProtoFromProto(rule.getProtocol()),
+      suggestedExternalPort: rule.getSuggestedExternalPort(),
+      internalPort: rule.getInternalPort(),
+    })),
+    protocol: natPmpProtoFromProto(settings.getProtocol()),
+    suggestedExternalPort: settings.getSuggestedExternalPort(),
+    internalPort: settings.getInternalPort(),
+  };
+}
+
+export function convertToNatPmpSettings(settings: NatPmpSettings): grpcTypes.NatPmpSettings {
+  const proto = new grpcTypes.NatPmpSettings();
+  proto.setEnabled(settings.enabled);
+  proto.setLifetimeSecs(settings.lifetimeSecs);
+  proto.setRulesList(
+    settings.rules.map((rule) => {
+      const protoRule = new grpcTypes.NatPmpSettings.Rule();
+      protoRule.setProtocol(protoFromNatPmpProto(rule.protocol));
+      protoRule.setSuggestedExternalPort(rule.suggestedExternalPort);
+      protoRule.setInternalPort(rule.internalPort);
+      return protoRule;
+    }),
+  );
+  proto.setProtocol(protoFromNatPmpProto(settings.protocol));
+  proto.setSuggestedExternalPort(settings.suggestedExternalPort);
+  proto.setInternalPort(settings.internalPort);
+  return proto;
+}
+
+function convertFromNatPmpMappingState(
+  mapping: grpcTypes.NatPmpStatus.Mapping,
+): NatPmpMapping['status'] {
+  switch (mapping.getState()) {
+    case grpcTypes.NatPmpStatus.State.MAPPED:
+      return {
+        state: 'mapped',
+        externalPort: mapping.getExternalPort() ?? 0,
+        lifetimeGrantedSecs: mapping.getLifetimeGrantedSecs() ?? 0,
+        // `hasAttemptsRemaining()` distinguishes "0 slots left" from "no
+        // budget trailer sent" (older exit) - only the former blocks the
+        // port controls in the UI.
+        attemptsRemaining: mapping.hasAttemptsRemaining()
+          ? mapping.getAttemptsRemaining()
+          : undefined,
+        windowResetSecs: mapping.getWindowResetSecs() ?? 0,
+      };
+    case grpcTypes.NatPmpStatus.State.RATE_LIMITED:
+      return { state: 'rate-limited', retryAfterSecs: mapping.getRetryAfterSecs() ?? 0 };
+    case grpcTypes.NatPmpStatus.State.FAILED:
+      return {
+        state: 'failed',
+        errorMessage: mapping.getErrorMessage() ?? '',
+        errorReason: convertFromNatPmpErrorReason(mapping.getErrorReason()),
+      };
+    case grpcTypes.NatPmpStatus.State.DISABLED:
+      return { state: 'disabled' };
+    case grpcTypes.NatPmpStatus.State.REQUESTING:
+    default:
+      return { state: 'requesting' };
+  }
+}
+
+export function convertFromNatPmpStatus(status: grpcTypes.NatPmpStatus): NatPmpStatus {
+  return {
+    mappings: status.getMappingsList().map((mapping) => ({
+      internalPort: mapping.getInternalPort(),
+      protocol: natPmpProtoFromProto(mapping.getProtocol()),
+      status: convertFromNatPmpMappingState(mapping),
+    })),
+  };
+}
+
+function convertFromNatPmpErrorReason(
+  reason: grpcTypes.NatPmpStatus.ErrorReason | undefined,
+): NatPmpErrorReason {
+  switch (reason) {
+    case grpcTypes.NatPmpStatus.ErrorReason.SUGGESTED_PORT_IN_USE:
+      return 'suggested-port-in-use';
+    case grpcTypes.NatPmpStatus.ErrorReason.OUT_OF_RESOURCES:
+      return 'out-of-resources';
+    case grpcTypes.NatPmpStatus.ErrorReason.NOT_AUTHORIZED:
+      return 'not-authorized';
+    case grpcTypes.NatPmpStatus.ErrorReason.UNKNOWN:
+    default:
+      return 'unknown';
+  }
 }
 
 function convertFromRecents(recents: grpcTypes.Recents | undefined): Recents | undefined {
@@ -593,6 +964,7 @@ function convertFromTunnelOptions(tunnelOptions: grpcTypes.TunnelOptions.AsObjec
         tunnelOptions.dnsOptions?.state === grpcTypes.DnsOptions.DnsState.CUSTOM
           ? 'custom'
           : 'default',
+      allowExternalDns: tunnelOptions.dnsOptions?.allowExternalDns ?? false,
       defaultOptions: {
         blockAds: tunnelOptions.dnsOptions?.defaultOptions?.blockAds ?? false,
         blockTrackers: tunnelOptions.dnsOptions?.defaultOptions?.blockTrackers ?? false,
@@ -637,9 +1009,6 @@ function convertFromObfuscationSettings(
     case grpcTypes.ObfuscationSettings.SelectedObfuscation.LWO:
       selectedObfuscationType = ObfuscationType.lwo;
       break;
-    case grpcTypes.ObfuscationSettings.SelectedObfuscation.WIREGUARD_PORT:
-      selectedObfuscationType = ObfuscationType.wireGuardPort;
-      break;
   }
 
   return {
@@ -649,9 +1018,6 @@ function convertFromObfuscationSettings(
       : { port: 'any' },
     shadowsocksSettings: obfuscationSettings?.shadowsocks
       ? { port: convertFromConstraint(obfuscationSettings.shadowsocks.port) }
-      : { port: 'any' },
-    wireGuardPortSettings: obfuscationSettings?.wireguardPort
-      ? { port: convertFromConstraint(obfuscationSettings.wireguardPort.port) }
       : { port: 'any' },
     lwoSettings: obfuscationSettings?.lwo
       ? { port: convertFromConstraint(obfuscationSettings.lwo.port) }
@@ -754,11 +1120,6 @@ export function convertFromDaemonEvent(data: grpcTypes.DaemonEvent): DaemonEvent
   const deviceConfig = data.getDevice();
   if (deviceConfig !== undefined) {
     return { device: convertFromDeviceEvent(deviceConfig) };
-  }
-
-  const deviceRemoval = data.getRemoveDevice();
-  if (deviceRemoval !== undefined) {
-    return { deviceRemoval: convertFromDeviceRemoval(deviceRemoval) };
   }
 
   const versionInfo = data.getVersionInfo();
@@ -942,12 +1303,13 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
   switch (deviceState.getState()) {
     case grpcTypes.DeviceState.State.LOGGED_IN: {
       const accountAndDevice = deviceState.getDevice()!;
-      const device = accountAndDevice.getDevice();
+      // The gRPC field is still named `account_number` for
+      // wire-format compatibility, but its content is the 64-char hex
+      // Warren pubkey.
       return {
         type: 'logged in',
-        accountAndDevice: {
-          accountNumber: accountAndDevice.getAccountNumber(),
-          device: device && convertFromDevice(device),
+        warrenIdentity: {
+          pubkey: accountAndDevice.getAccountNumber(),
         },
       };
     }
@@ -956,20 +1318,6 @@ export function convertFromDeviceState(deviceState: grpcTypes.DeviceState): Devi
     case grpcTypes.DeviceState.State.REVOKED:
       return { type: 'revoked' };
   }
-}
-
-function convertFromDeviceRemoval(deviceRemoval: grpcTypes.RemoveDeviceEvent): Array<IDevice> {
-  return deviceRemoval.getNewDeviceListList().map(convertFromDevice);
-}
-
-export function convertFromDevice(device: grpcTypes.Device): IDevice {
-  const created = ensureExists(device.getCreated(), "no 'created' field for device").toDate();
-  const asObject = device.toObject();
-
-  return {
-    ...asObject,
-    created: created,
-  };
 }
 
 function convertFromCustomListSettings(

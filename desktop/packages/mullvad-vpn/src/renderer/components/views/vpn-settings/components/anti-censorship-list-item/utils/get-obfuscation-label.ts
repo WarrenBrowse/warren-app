@@ -1,5 +1,3 @@
-import { sprintf } from 'sprintf-js';
-
 import { strings } from '../../../../../../../shared/constants';
 import { ObfuscationType } from '../../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../../shared/gettext';
@@ -18,10 +16,6 @@ export function getObfuscationLabel(obfuscationType: ObfuscationType): string {
       return messages.pgettext('wireguard-settings-view', 'UDP-over-TCP');
     case ObfuscationType.off:
       return messages.gettext('Off');
-    case ObfuscationType.wireGuardPort:
-      return sprintf(messages.pgettext('wireguard-settings-view', '%(wireguard)s port'), {
-        wireguard: strings.wireguard,
-      });
     default:
       return obfuscationType satisfies never;
   }

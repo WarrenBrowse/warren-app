@@ -248,7 +248,7 @@ impl RelaySelector {
     ) -> Result<GetRelay, Error> {
         let mut user_query = self.config.lock().unwrap().query.clone();
 
-        // Runtime parameters may shrink the set of usable IP versions — apply that *before*
+        // Runtime parameters may shrink the set of usable IP versions - apply that *before*
         // merging with retry_order so an IPv6-only retry attempt is correctly rejected when only
         // IPv4 is available.
         user_query.apply_ip_availability(runtime_ip_availability)?;

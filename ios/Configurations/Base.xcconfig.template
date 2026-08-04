@@ -2,20 +2,22 @@
 #include "Api.xcconfig"
 
 // Development team
-DEVELOPMENT_TEAM = CKG9MXH72F
+// Replace with the Warren Apple Developer Team ID (10-char alphanumeric)
+// when Warren account is provisioned. Placeholder until then.
+DEVELOPMENT_TEAM = XXXXXXXXXX
 
 // Product display name
-DISPLAY_NAME = Mullvad VPN
+DISPLAY_NAME = Warren VPN
 
 // Bundle ID
-APPLICATION_IDENTIFIER = net.mullvad.MullvadVPN
+APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios
 
 // Shared container security group ID
-SECURITY_GROUP_IDENTIFIER = group.net.mullvad.MullvadVPN
+SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn
 
 // Code signing style
 // Possible values: Manual or Automatic
-CODE_SIGN_STYLE = Manual
+CODE_SIGN_STYLE = Automatic
 
 // Code signing identity
 CODE_SIGN_IDENTITY[config=Debug] = Apple Development

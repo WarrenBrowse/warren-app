@@ -27,7 +27,8 @@ const execAsync = promisify(exec);
 
 export interface UserInterfaceDelegate {
   dismissActiveNotifications(): void;
-  updateAccountData(): void;
+  updateAccountData(): Promise<void>;
+  checkPendingPurchases(): void;
   connectTunnel(): void;
   reconnectTunnel(): void;
   disconnectTunnel(source: DisconnectSource): void;
@@ -50,7 +51,6 @@ export default class UserInterface implements WindowControllerDelegate {
   private browsingFiles = false;
 
   private blurNavigationResetScheduler = new Scheduler();
-  private backgroundThrottleScheduler = new Scheduler();
 
   public constructor(
     private delegate: UserInterfaceDelegate,
@@ -69,7 +69,7 @@ export default class UserInterface implements WindowControllerDelegate {
       IpcMainEventChannel.daemon.notifyTryStartEvent?.('start-requested');
 
       try {
-        const SETUP_PATH = `"\\"${resolveBin('mullvad-setup')}\\""`;
+        const SETUP_PATH = `"\\"${resolveBin('warren-setup')}\\""`;
         const SYSTEM_ROOT_PATH = process.env.SYSTEMROOT || process.env.windir || 'C:\\Windows';
         const PWSH_PATH = `${SYSTEM_ROOT_PATH}\\System32\\WindowsPowershell\\v1.0\\powershell.exe`;
 
@@ -93,27 +93,29 @@ export default class UserInterface implements WindowControllerDelegate {
           },
         );
         child.once('error', (error) => {
-          log.error(`"mullvad-setup.exe start-service" failed: ${error.message}`);
+          log.error(`"warren-setup.exe start-service" failed: ${error.message}`);
           IpcMainEventChannel.daemon.notifyTryStartEvent?.('stopped');
         });
 
         child.once('exit', (code) => {
           if (code !== 0) {
             log.error(
-              `"mullvad-setup.exe start-service" exited unexpectedly with exit code: ${code}`,
+              `"warren-setup.exe start-service" exited unexpectedly with exit code: ${code}`,
             );
             IpcMainEventChannel.daemon.notifyTryStartEvent?.('stopped');
           } else {
-            log.info('"mullvad-setup.exe start-service" succeeded');
+            log.info('"warren-setup.exe start-service" succeeded');
             // 'running' is set from onDaemonConnected event handler
           }
         });
       } catch (e) {
         const error = e as Error;
-        log.error(`Failed to run "mullvad-setup.exe start-service". Error: ${error.message}`);
+        log.error(`Failed to run "warren-setup.exe start-service". Error: ${error.message}`);
         IpcMainEventChannel.daemon.notifyTryStartEvent?.('stopped');
       }
     });
+
+    IpcMainEventChannel.daemon.handleUnblockNetwork(() => this.unblockNetwork());
 
     IpcMainEventChannel.app.handleShowOpenDialog(async (options) => {
       this.browsingFiles = true;
@@ -242,6 +244,13 @@ export default class UserInterface implements WindowControllerDelegate {
   public reloadWindow = () => this.windowController.window?.reload();
   public isWindowVisible = () => this.windowController.isVisible();
   public showWindow = () => this.windowController.show();
+
+  // Used when the app has finished a job the user started from a browser (a
+  // forum login, an attach-logs approval): hiding our own window hands focus
+  // back to whatever had it before, which is the page they are waiting on.
+  // There is no portable "focus that browser" API, and leaving the app in
+  // front is what made those flows feel stalled.
+  public hideWindow = () => this.windowController.hide();
   public updateTrayTheme = () => this.trayIconController?.updateTheme() ?? Promise.resolve();
   public setMonochromaticIcon = (value: boolean) =>
     this.trayIconController?.setMonochromaticIcon(value);
@@ -269,6 +278,11 @@ export default class UserInterface implements WindowControllerDelegate {
 
     this.windowController.close();
     this.trayIconController?.dispose();
+
+    // Destroy the tray explicitly. Otherwise the icon lingers in the menu bar
+    // until the process exits, so if the quit ever stalls the user is left with
+    // a visible-but-dead icon.
+    this.tray.destroy();
   };
 
   private createWindow(): BrowserWindow {
@@ -293,6 +307,11 @@ export default class UserInterface implements WindowControllerDelegate {
         contextIsolation: true,
         spellcheck: false,
         devTools: process.env.NODE_ENV === 'development',
+        // The menubar window hides on blur; without this Chromium
+        // throttles the hidden renderer's timers to ~1/min, stalling
+        // the paywall views' refresh polls exactly while the user
+        // pays in the external browser.
+        backgroundThrottling: false,
       },
     };
 
@@ -329,9 +348,11 @@ export default class UserInterface implements WindowControllerDelegate {
           // https://github.com/electron/electron/issues/25915
           alwaysOnTop: !unpinnedWindow,
           skipTaskbar: !unpinnedWindow,
-          // Workaround for sub-pixel anti-aliasing
-          // https://github.com/electron/electron/blob/main/docs/faq.md#the-font-looks-blurry-what-is-this-and-what-can-i-do
-          backgroundColor: '#fff',
+          // Transparent so the renderer can round the corners (no OS rounding for
+          // frameless windows here). The framed window keeps the opaque bg: the
+          // sub-pixel anti-aliasing workaround transparency would otherwise break.
+          transparent: !unpinnedWindow,
+          ...(unpinnedWindow ? { backgroundColor: '#fff' } : {}),
         });
         const WM_DEVICECHANGE = 0x0219;
         const DBT_DEVICEARRIVAL = 0x8000n;
@@ -374,9 +395,23 @@ export default class UserInterface implements WindowControllerDelegate {
       // cancel notifications when window appears
       this.delegate.dismissActiveNotifications();
 
-      this.delegate.updateAccountData();
+      // `updateAccountData` rejects when the API returns 404 (= no
+      // active subscription yet) or on transient network failures.
+      // The retry loop is owned by `account-data-cache` and we do not
+      // want each focus event to surface an `UnhandledPromiseRejectionWarning`
+      // in the daemon log - log at debug level and move on.
+      this.delegate.updateAccountData().catch((error) => {
+        log.debug(`updateAccountData on focus failed: ${error}`);
+      });
 
-      void this.delegate.getVersionInfo();
+      // Focus is the natural "user came back from paying in the
+      // browser" signal: give any pending app-initiated purchase an
+      // immediate redeem attempt (throttled internally).
+      this.delegate.checkPendingPurchases();
+
+      this.delegate.getVersionInfo().catch((error) => {
+        log.debug(`getVersionInfo on focus failed: ${error}`);
+      });
     });
 
     this.windowController.window?.on('blur', () => {
@@ -385,15 +420,13 @@ export default class UserInterface implements WindowControllerDelegate {
 
     // Use hide instead of blur to prevent the navigation reset from happening when bluring an
     // unpinned window.
+    // No setBackgroundThrottling(false/true) dance here anymore: the
+    // window is created with backgroundThrottling disabled for good,
+    // and re-enabling it after this reset would silently undo that.
     this.windowController.window?.on('hide', () => {
       if (process.env.NODE_ENV !== 'development' || !this.navigationResetDisabled) {
         this.blurNavigationResetScheduler.schedule(() => {
-          this.windowController.webContents?.setBackgroundThrottling(false);
           IpcMainEventChannel.navigation.notifyReset?.();
-
-          this.backgroundThrottleScheduler.schedule(() => {
-            this.windowController.webContents?.setBackgroundThrottling(true);
-          }, 1_000);
         }, 120_000);
       }
     });
@@ -483,7 +516,7 @@ export default class UserInterface implements WindowControllerDelegate {
 
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Mullvad VPN',
+        label: 'Warren VPN',
         submenu: mullvadVpnSubmenu,
       },
       {
@@ -503,7 +536,7 @@ export default class UserInterface implements WindowControllerDelegate {
   private setLinuxAppMenu() {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Mullvad VPN',
+        label: 'Warren VPN',
         submenu: [{ role: 'quit' }],
       },
     ];
@@ -581,7 +614,9 @@ export default class UserInterface implements WindowControllerDelegate {
           );
           this.tray?.on('click', () => this.windowController.show());
         } else {
-          this.tray?.on('right-click', () => this.windowController.hide());
+          this.tray?.on('right-click', () =>
+            this.popUpContextMenu(this.delegate.isLoggedIn(), this.delegate.getTunnelState()),
+          );
           this.tray?.on('click', () => this.windowController.toggle());
         }
         break;
@@ -644,7 +679,7 @@ export default class UserInterface implements WindowControllerDelegate {
       }
     }
 
-    return 'Mullvad VPN';
+    return 'Warren VPN';
   }
 
   private createLocationString(location?: ILocation): string | undefined {
@@ -669,7 +704,7 @@ export default class UserInterface implements WindowControllerDelegate {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: sprintf(messages.pgettext('tray-icon-context-menu', 'Open %(mullvadVpn)s'), {
-          mullvadVpn: 'Mullvad VPN',
+          mullvadVpn: 'Warren VPN',
         }),
         click: () => this.windowController.show(),
       },
@@ -694,7 +729,7 @@ export default class UserInterface implements WindowControllerDelegate {
       },
       { type: 'separator' },
       {
-        id: 'disconnect',
+        id: 'disconnect-and-quit',
         label:
           tunnelState.state === 'disconnected'
             ? messages.gettext('Quit')
@@ -704,6 +739,73 @@ export default class UserInterface implements WindowControllerDelegate {
     ];
 
     return Menu.buildFromTemplate(template);
+  }
+
+  // Last-resort rescue for a machine left fail-closed by a daemon that
+  // cannot come back up: run `warren-setup reset-firewall` (firewall reset
+  // plus DNS repair) behind the platform's native elevation prompt.
+  // warren-setup refuses to run while a daemon is reachable, so this can
+  // never fight a live daemon's own firewall management.
+  private unblockNetwork(): Promise<boolean> {
+    return new Promise((resolve) => {
+      try {
+        const setupPath = resolveBin('warren-setup');
+        let child;
+        if (process.platform === 'win32') {
+          const SETUP_PATH = `"\\"${setupPath}\\""`;
+          const SYSTEM_ROOT_PATH = process.env.SYSTEMROOT || process.env.windir || 'C:\\Windows';
+          const PWSH_PATH = `${SYSTEM_ROOT_PATH}\\System32\\WindowsPowershell\\v1.0\\powershell.exe`;
+          child = spawn(
+            PWSH_PATH,
+            [
+              '-Command',
+              'Start-Process',
+              SETUP_PATH,
+              'reset-firewall',
+              '-Verb',
+              'RunAs',
+              '-WindowStyle',
+              'Hidden',
+              '-Wait',
+            ],
+            { detached: false, stdio: 'ignore', windowsVerbatimArguments: true },
+          );
+        } else if (process.platform === 'darwin') {
+          // `quoted form of` runs inside AppleScript, so the space in the
+          // .app path survives; the custom prompt makes the admin dialog
+          // name the action instead of a bare "osascript wants to make
+          // changes". Escape quotes so a translation cannot break out of
+          // the AppleScript string.
+          const prompt = messages
+            .pgettext(
+              'launch-view',
+              'Warren VPN will restore internet access without VPN protection.',
+            )
+            .replace(/"/g, '\\"');
+          const script = `do shell script (quoted form of "${setupPath}") & " reset-firewall" with prompt "${prompt}" with administrator privileges`;
+          child = spawn('osascript', ['-e', script], { stdio: 'ignore' });
+        } else {
+          child = spawn('pkexec', [setupPath, 'reset-firewall'], { stdio: 'ignore' });
+        }
+
+        child.once('error', (error) => {
+          log.error(`"warren-setup reset-firewall" failed to spawn: ${error.message}`);
+          resolve(false);
+        });
+        child.once('exit', (code) => {
+          if (code === 0) {
+            log.info('"warren-setup reset-firewall" succeeded');
+          } else {
+            log.error(`"warren-setup reset-firewall" exited with code: ${code ?? 'null'}`);
+          }
+          resolve(code === 0);
+        });
+      } catch (e) {
+        const error = e as Error;
+        log.error(`Failed to run "warren-setup reset-firewall": ${error.message}`);
+        resolve(false);
+      }
+    });
   }
 
   private escapeContextMenuLabel(label: string): string {

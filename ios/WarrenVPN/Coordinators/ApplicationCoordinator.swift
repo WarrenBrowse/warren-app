@@ -1,0 +1,1290 @@
+//
+//  ApplicationCoordinator.swift
+//  MullvadVPN
+//
+//  Created by pronebird on 13/01/2023.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Combine
+import WarrenREST
+import WarrenRustRuntime
+import WarrenSettings
+import WarrenTypes
+import Routing
+import UIKit
+
+/**
+ Application coordinator managing split view and two navigation contexts.
+ */
+final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency RootContainerViewControllerDelegate,
+    UISplitViewControllerDelegate, @preconcurrency ApplicationRouterDelegate,
+    @preconcurrency NotificationManagerDelegate
+{
+    typealias RouteType = AppRoute
+
+    /**
+     Application router.
+     */
+    nonisolated(unsafe) private(set) var router: ApplicationRouter<AppRoute>!
+
+    /**
+     Navigation container.
+    
+     Used as a container for horizontal flows (TOS, Login, Revoked, Out-of-time).
+     */
+    private let navigationContainer = RootContainerViewController()
+
+    private let notificationController = NotificationController()
+    private var splitTunnelCoordinator: TunnelCoordinator?
+    private var splitLocationCoordinator: LocationCoordinator?
+
+    private let tunnelManager: TunnelManager
+    private let storePaymentManager: StorePaymentManager
+    private let relayCacheTracker: RelayCacheTracker
+
+    private let apiProxy: APIQuerying
+    private var tunnelObserver: TunnelObserver?
+    private var tunnelStateAccessibilityAnnouncer: TunnelStateAccessibilityAnnouncer?
+    private var appPreferences: AppPreferencesDataSource
+    private var accessMethodRepository: AccessMethodRepositoryProtocol
+    private let ipOverrideRepository: IPOverrideRepository
+    private let relaySelectorWrapper: RelaySelectorWrapper
+    private let breadcrumbsProvider: BreadcrumbsProvider
+    private var breadcrumbsObserver: BreadcrumbsBlockObserver?
+
+    private var outOfTimeTimer: Timer?
+
+    var rootViewController: UIViewController {
+        navigationContainer
+    }
+
+    init(
+        tunnelManager: TunnelManager,
+        storePaymentManager: StorePaymentManager,
+        relayCacheTracker: RelayCacheTracker,
+        apiProxy: APIQuerying,
+        appPreferences: AppPreferencesDataSource,
+        accessMethodRepository: AccessMethodRepositoryProtocol,
+        ipOverrideRepository: IPOverrideRepository,
+        relaySelectorWrapper: RelaySelectorWrapper,
+        breadcrumbsProvider: BreadcrumbsProvider
+    ) {
+        self.tunnelManager = tunnelManager
+        self.storePaymentManager = storePaymentManager
+        self.relayCacheTracker = relayCacheTracker
+        self.apiProxy = apiProxy
+        self.appPreferences = appPreferences
+        self.accessMethodRepository = accessMethodRepository
+        self.ipOverrideRepository = ipOverrideRepository
+        self.relaySelectorWrapper = relaySelectorWrapper
+        self.breadcrumbsProvider = breadcrumbsProvider
+
+        super.init()
+
+        navigationContainer.delegate = self
+        router = ApplicationRouter(self)
+
+        addTunnelObserver()
+        setUpBreadcrumbs()
+
+        Task { @MainActor in
+            self.tunnelStateAccessibilityAnnouncer = TunnelStateAccessibilityAnnouncer(tunnelManager: tunnelManager)
+        }
+
+        NotificationManager.shared.delegate = self
+    }
+
+    func start() {
+        navigationContainer.notificationController = notificationController
+        startVersionGateRefresh()
+        if !appPreferences.isNotificationPermissionAsked {
+            Task {
+                let isAllowed = await UNUserNotificationCenter.isAllowed
+                appPreferences.isNotificationPermissionAsked = isAllowed
+                continueFlow(animated: false)
+            }
+        } else {
+            continueFlow(animated: false)
+        }
+    }
+
+    // MARK: - ApplicationRouterDelegate
+
+    func applicationRouter(
+        _ router: ApplicationRouter<RouteType>,
+        presentWithContext context: RoutePresentationContext<RouteType>,
+        animated: Bool,
+        completion: @escaping @Sendable (Coordinator) -> Void
+    ) {
+        switch context.route {
+        case .account:
+            presentAccount(animated: animated, completion: completion)
+
+        case let .settings(subRoute):
+            presentSettings(route: subRoute, animated: animated, completion: completion)
+
+        case .daita:
+            presentDAITA(animated: animated, completion: completion)
+
+        case .apiAccess:
+            presentAccessMethods(animated: animated, completion: completion)
+
+        case .includeAllNetworks:
+            presentIncludeAllNetworks(animated: animated, completion: completion)
+
+        case .selectLocation:
+            presentSelectLocation(animated: animated, completion: completion)
+
+        case .outOfTime:
+            presentOutOfTime(animated: animated, completion: completion)
+
+        case .revoked:
+            presentRevoked(animated: animated, completion: completion)
+
+        case .blockedUpdate:
+            presentBlockedUpdate(animated: animated, completion: completion)
+
+        case .login:
+            presentLogin(animated: animated, completion: completion)
+
+        case .changelog:
+            presentChangeLog(animated: animated, completion: completion)
+
+        case .tos:
+            presentTOS(animated: animated, completion: completion)
+
+        case .warrenOnboarding:
+            presentWarrenOnboarding(animated: animated, completion: completion)
+
+        case .main:
+            presentMain(animated: animated, completion: completion)
+
+        case .alert:
+            presentAlert(animated: animated, context: context, completion: completion)
+        case let .vpnSettings(section):
+            presentVPNSettings(
+                section: section,
+                animated: animated,
+                completion: completion
+            )
+        case .multihop:
+            presentMultihop(animated: animated, completion: completion)
+        case .dnsSettings:
+            presentDNSSettings(animated: animated, completion: completion)
+        case .ipOverrides:
+            presentIPOverride(animated: animated, completion: completion)
+        }
+    }
+
+    func applicationRouter(
+        _ router: ApplicationRouter<RouteType>,
+        dismissWithContext context: RouteDismissalContext<RouteType>,
+        completion: @escaping @Sendable () -> Void
+    ) {
+        let dismissedRoute = context.dismissedRoutes.first!
+
+        // Warren onboarding and wallet login sit in the `.primary` group
+        // conceptually (root-level boot routes) but are presented modally via
+        // `presentChild`. Dismiss the modal explicitly before dropping the
+        // child, otherwise it stays visible behind the next route (and the
+        // generic primary/pop paths below would assert on it).
+        if dismissedRoute.route == .warrenOnboarding || dismissedRoute.route == .login,
+            let coordinator = dismissedRoute.coordinator as? Presentable
+        {
+            coordinator.dismiss(animated: context.isAnimated) {
+                coordinator.removeFromParent()
+                completion()
+            }
+            return
+        }
+
+        if context.isClosing {
+            switch dismissedRoute.route.routeGroup {
+            case .primary:
+                completion()
+                context.dismissedRoutes.forEach { $0.coordinator.removeFromParent() }
+
+            case .selectLocation, .account, .settings, .changelog, .alert:
+                guard let coordinator = dismissedRoute.coordinator as? Presentable else {
+                    completion()
+                    return assertionFailure("Expected presentable coordinator for \(dismissedRoute.route)")
+                }
+
+                coordinator.dismiss(animated: context.isAnimated, completion: completion)
+            }
+        } else {
+            assert(context.dismissedRoutes.count == 1)
+
+            switch dismissedRoute.route {
+            case .outOfTime:
+                guard let coordinator = dismissedRoute.coordinator as? Poppable else {
+                    completion()
+                    return assertionFailure("Expected presentable coordinator for \(dismissedRoute.route)")
+                }
+
+                coordinator.popFromNavigationStack(
+                    animated: context.isAnimated,
+                    completion: completion
+                )
+
+                coordinator.removeFromParent()
+
+            default:
+                assertionFailure("Unhandled dismissal for \(dismissedRoute.route)")
+                completion()
+            }
+        }
+    }
+
+    func applicationRouter(_ router: ApplicationRouter<RouteType>, shouldPresent route: RouteType) -> Bool {
+        switch route {
+        case .blockedUpdate:
+            // Only gate when the cached verified manifest still blocks us.
+            return WarrenAppVersionGate.shared.isBlocked
+
+        case .revoked:
+            // Check if device is still revoked.
+            return tunnelManager.deviceState == .revoked
+
+        case .outOfTime:
+            // Check if device is still out of time.
+            return tunnelManager.deviceState.accountData?.isExpired ?? false
+
+        default:
+            return true
+        }
+    }
+
+    func applicationRouter(
+        _ router: ApplicationRouter<RouteType>,
+        shouldDismissWithContext context: RouteDismissalContext<RouteType>
+    ) -> Bool {
+        context.dismissedRoutes.allSatisfy { dismissedRoute in
+            /*
+             Prevent dismissal of "out of time" route in response to device state change when
+             making payment. It will dismiss itself once done.
+             */
+            if dismissedRoute.route == .outOfTime {
+                guard let coordinator = dismissedRoute.coordinator as? OutOfTimeCoordinator else {
+                    return false
+                }
+                return !coordinator.isMakingPayment
+            }
+
+            return true
+        }
+    }
+
+    func applicationRouter(
+        _ router: ApplicationRouter<RouteType>,
+        handleSubNavigationWithContext context: RouteSubnavigationContext<RouteType>,
+        completion: @escaping @Sendable @MainActor () -> Void
+    ) {
+        switch context.route {
+        case let .settings(subRoute):
+            guard let coordinator = context.presentedRoute.coordinator as? SettingsCoordinator else { return }
+            if let subRoute {
+                coordinator.navigate(
+                    to: subRoute,
+                    animated: context.isAnimated,
+                    completion: completion
+                )
+            } else {
+                completion()
+            }
+
+        default:
+            completion()
+        }
+    }
+
+    // MARK: - Private
+
+    private var isPresentingAccountExpiryBanner = false
+
+    /**
+     Sets up breadcrumbs and observers for them.
+     */
+    private func setUpBreadcrumbs() {
+        let breadcrumbsObserver = BreadcrumbsBlockObserver(didUpdateBreadcrumbsHandler: { [weak self] in
+            self?.navigationContainer.breadcrumbs = $0
+        })
+        self.breadcrumbsObserver = breadcrumbsObserver
+        breadcrumbsProvider.add(observer: breadcrumbsObserver)
+
+        checkForAccessMethodCipherErrors()
+    }
+
+    private func checkForAccessMethodCipherErrors() {
+        let ciphers = accessMethodRepository.shadowsocksCiphers
+        let methods = accessMethodRepository.fetchAll()
+
+        let methodsWithInvalidCiphers = methods.filter { method in
+            if case .shadowsocks(let config) = method.proxyConfiguration {
+                !ciphers.contains(config.cipher)
+            } else {
+                false
+            }
+        }
+
+        if !methodsWithInvalidCiphers.isEmpty {
+            breadcrumbsProvider.add(breadcrumb: .warning(.apiAccess))
+        }
+    }
+
+    /**
+     Continues application flow by evaluating what route to present next.
+     */
+    private func continueFlow(animated: Bool) {
+        let nextRoutes = evaluateNextRoutes()
+
+        for nextRoute in nextRoutes {
+            router.present(nextRoute, animated: animated)
+        }
+    }
+
+    /**
+     Evaluates conditions and returns the routes that need to be presented next.
+     */
+    private func evaluateNextRoutes() -> [AppRoute] {
+        let walletExists = WarrenWalletInteractor().walletExists()
+        let routes = nextWarrenRoutes(
+            updateBlocked: WarrenAppVersionGate.shared.isBlocked,
+            agreedToTOS: appPreferences.isAgreedToTermsOfService,
+            onboardingComplete: appPreferences.hasCompletedWarrenOnboarding,
+            isRevoked: tunnelManager.deviceState == .revoked,
+            walletExists: walletExists,
+            isExpired: isAccountExpired
+        )
+
+        // Self-heal: a wallet exists but the device state is not logged in
+        // (first launch after upgrading into the wallet model, where the old
+        // state was .loggedOut, or a relaunch that landed mid-wizard). Promote
+        // it so StartTunnelOperation and the logged-in UI chrome work without
+        // forcing the user through login.
+        if routes == [.main] || routes == [.warrenOnboarding], !tunnelManager.deviceState.isLoggedIn {
+            promoteWalletToDeviceState()
+        }
+
+        return routes
+    }
+
+    /// Synthesizes a wallet-backed `DeviceState.loggedIn` from the Warren
+    /// wallet identity currently in the Keychain. No-op if no wallet.
+    private func promoteWalletToDeviceState() {
+        let interactor = WarrenWalletInteractor()
+        guard let ss58 = interactor.publicKeyAddress(),
+              let pubHex = interactor.publicKeyHex() else { return }
+        tunnelManager.setWalletBackedDeviceState(
+            ss58Address: ss58,
+            publicKeyHex: pubHex,
+            persist: true
+        )
+        // The synthesized device state starts with a placeholder expiry;
+        // fetch the real subscription expiry from warren-api now so the
+        // account chrome and expiry notifications reflect reality without
+        // waiting for the user to open the account screen.
+        tunnelManager.updateAccountData()
+    }
+
+    private func logoutRevokedDevice() {
+        Task { [weak self] in
+            guard let self else { return }
+            await MainActor.run {
+                WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+            }
+            continueFlow(animated: true)
+        }
+    }
+
+    private func didDismissAccount(_ reason: AccountDismissReason) {
+        if reason == .userLoggedOut {
+            router.dismissAll(.primary, animated: false)
+            continueFlow(animated: false)
+        }
+        router.dismiss(.account, animated: true)
+    }
+
+    private func presentTOS(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = TermsOfServiceCoordinator(navigationController: navigationContainer)
+
+        coordinator.didAgreeToTermsOfService = { [weak self] in
+            self?.appPreferences.isAgreedToTermsOfService = true
+            self?.continueFlow(animated: true)
+        }
+
+        addChild(coordinator)
+        coordinator.start()
+
+        completion(coordinator)
+    }
+
+    /// Presents the Warren onboarding wizard full-screen on top of the
+    /// navigation container. The wizard owns its own UINavigationController
+    /// so it does not pollute the main navigation stack. On finish the
+    /// coordinator flips `hasCompletedWarrenOnboarding`, dismisses itself
+    /// and re-enters `continueFlow` so the route evaluator picks the next
+    /// route (login / welcome / main / outOfTime / revoked).
+    private func presentWarrenOnboarding(
+        animated: Bool,
+        completion: @escaping (Coordinator) -> Void
+    ) {
+        let coordinator = OnboardingWizardCoordinator(
+            tunnelManager: tunnelManager,
+            storePaymentManager: storePaymentManager
+        )
+        coordinator.delegate = self
+
+        addChild(coordinator)
+        coordinator.start(animated: false)
+
+        presentChild(
+            coordinator,
+            animated: animated,
+            configuration: ModalPresentationConfiguration(
+                preferredContentSize: navigationContainer.preferredContentSize,
+                modalPresentationStyle: .fullScreen
+            )
+        )
+
+        completion(coordinator)
+    }
+
+    private func presentChangeLog(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = ChangeLogCoordinator(
+            route: .changelog,
+            navigationController: CustomNavigationController(),
+            viewModel: ChangeLogViewModel(changeLogReader: ChangeLogReader())
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.changelog, animated: animated)
+        }
+
+        coordinator.start(animated: false)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentMain(animated: Bool, completion: @Sendable @escaping (Coordinator) -> Void) {
+        let tunnelCoordinator = makeTunnelCoordinator()
+
+        navigationContainer.pushViewController(
+            tunnelCoordinator.rootViewController,
+            animated: animated
+        ) { [weak self] in
+            guard let self, appPreferences.isNotificationPermissionAsked == false else {
+                completion(tunnelCoordinator)
+                return
+            }
+            presentNotificationsPrompt(animated: animated, completion: completion)
+        }
+
+        addChild(tunnelCoordinator)
+        tunnelCoordinator.start()
+
+        completion(tunnelCoordinator)
+    }
+
+    /// Refreshes the signed-manifest version check off the main thread (at
+    /// most once per day) and raises the forced-update gate when the
+    /// verified verdict blocks the running version. The gate only replaces
+    /// the UI: an established tunnel is deliberately left running so the
+    /// user stays protected while updating.
+    private func startVersionGateRefresh() {
+        Task { [weak self] in
+            let blocked = await WarrenAppVersionGate.shared.refreshIfDue()
+            guard blocked else { return }
+            await MainActor.run {
+                self?.router.present(.blockedUpdate, animated: true)
+            }
+        }
+    }
+
+    private func presentBlockedUpdate(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = WarrenBlockedUpdateCoordinator(navigationController: navigationContainer)
+
+        addChild(coordinator)
+        coordinator.start(animated: animated)
+
+        completion(coordinator)
+    }
+
+    private func presentRevoked(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = RevokedCoordinator(
+            navigationController: navigationContainer,
+            tunnelManager: tunnelManager
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.logoutRevokedDevice()
+        }
+
+        addChild(coordinator)
+        coordinator.start(animated: animated)
+
+        completion(coordinator)
+    }
+
+    private func presentOutOfTime(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = OutOfTimeCoordinator(
+            navigationController: navigationContainer,
+            tunnelManager: tunnelManager,
+            storePaymentManager: storePaymentManager
+        )
+
+        coordinator.didFinishPayment = { [weak self] _ in
+            guard let self = self else { return }
+
+            Task { @MainActor in
+                if shouldDismissOutOfTime() {
+                    router.dismiss(.outOfTime, animated: true)
+                    continueFlow(animated: true)
+                }
+            }
+        }
+
+        addChild(coordinator)
+        coordinator.start(animated: animated)
+
+        completion(coordinator)
+    }
+
+    private func shouldDismissOutOfTime() -> Bool {
+        !(tunnelManager.deviceState.accountData?.isExpired ?? false)
+    }
+
+    private func presentSelectLocation(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = makeLocationCoordinator(forModalPresentation: true)
+        coordinator.start()
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentLogin(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = WarrenWalletLoginCoordinator()
+
+        coordinator.didFinish = { [weak self] _ in
+            guard let self else { return }
+            appPreferences.hasDoneFirstTimeLogin = true
+            appPreferences.isShownOnboarding = true
+            promoteWalletToDeviceState()
+            router.dismiss(.login, animated: animated)
+            continueFlow(animated: animated)
+        }
+
+        addChild(coordinator)
+        coordinator.start(animated: false)
+
+        presentChild(
+            coordinator,
+            animated: animated,
+            configuration: ModalPresentationConfiguration(
+                preferredContentSize: navigationContainer.preferredContentSize,
+                modalPresentationStyle: .fullScreen
+            )
+        )
+
+        completion(coordinator)
+    }
+
+    private func presentAlert(
+        animated: Bool,
+        context: RoutePresentationContext<RouteType>,
+        completion: @escaping (Coordinator) -> Void
+    ) {
+        guard let metadata = context.metadata as? AlertMetadata else {
+            assertionFailure("Could not get AlertMetadata from RoutePresentationContext.")
+            return
+        }
+
+        let coordinator = AlertCoordinator(presentation: metadata.presentation)
+
+        coordinator.didFinish = { [weak self] in
+            self?.router.dismiss(context.route)
+        }
+
+        coordinator.start()
+
+        metadata.context.presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func makeTunnelCoordinator() -> TunnelCoordinator {
+        let tunnelCoordinator = TunnelCoordinator(
+            tunnelManager: tunnelManager,
+            relayCacheTracker: relayCacheTracker
+        )
+
+        tunnelCoordinator.showSelectLocationPicker = { [weak self] in
+            self?.router.present(.selectLocation, animated: true)
+        }
+
+        tunnelCoordinator.showFeatureSetting = { [weak self] route in
+            self?.router.present(route, animated: true)
+        }
+
+        return tunnelCoordinator
+    }
+
+    private func makeLocationCoordinator(forModalPresentation isModalPresentation: Bool)
+        -> LocationCoordinator
+    {
+        let navigationController = CustomNavigationController()
+        navigationController.isNavigationBarHidden = !isModalPresentation
+
+        let locationCoordinator = LocationCoordinator(
+            navigationController: navigationController,
+            tunnelManager: tunnelManager,
+            relaySelectorWrapper: relaySelectorWrapper,
+            relayCacheTracker: relayCacheTracker,
+            customListRepository: CustomListRepository(),
+            recentConnectionsRepository: RecentConnectionsRepository(store: SettingsManager.store)
+        )
+
+        locationCoordinator.didFinish = { [weak self] _ in
+            if isModalPresentation {
+                self?.router.dismiss(.selectLocation, animated: true)
+            }
+        }
+
+        return locationCoordinator
+    }
+
+    private func presentAccount(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let accountInteractor = AccountInteractor(tunnelManager: tunnelManager)
+
+        let coordinator = AccountCoordinator(
+            navigationController: CustomNavigationController(),
+            interactor: accountInteractor,
+            storePaymentManager: storePaymentManager
+        )
+
+        coordinator.didFinish = { [weak self] _, reason in
+            self?.didDismissAccount(reason)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(
+            coordinator,
+            animated: animated
+        ) { [weak self] in
+            completion(coordinator)
+
+            self?.onShowAccount?()
+        }
+    }
+
+    private func presentSettings(
+        route: SettingsNavigationRoute?,
+        animated: Bool,
+        completion: @escaping @Sendable (Coordinator) -> Void
+    ) {
+        let interactorFactory = SettingsInteractorFactory(
+            tunnelManager: tunnelManager,
+            apiProxy: apiProxy,
+            relayCacheTracker: relayCacheTracker,
+            ipOverrideRepository: ipOverrideRepository
+        )
+
+        let navigationController = CustomNavigationController()
+        navigationController.view.setAccessibilityIdentifier(.settingsContainerView)
+
+        let configurationTester = ProxyConfigurationTester(
+            apiProxy: apiProxy
+        )
+
+        let coordinator = SettingsCoordinator(
+            navigationController: navigationController,
+            interactorFactory: interactorFactory,
+            accessMethodRepository: accessMethodRepository,
+            proxyConfigurationTester: configurationTester,
+            ipOverrideRepository: ipOverrideRepository,
+            appPreferences: appPreferences,
+            breadcrumbsProvider: breadcrumbsProvider
+        )
+
+        coordinator.didUpdateNotificationSettings = { [weak self] notificationSettings in
+            guard let self = self else { return }
+            appPreferences.notificationSettings = notificationSettings
+            onNewNotificationSettings?(notificationSettings)
+        }
+
+        coordinator.didFinish = { [weak self] _ in
+            Task { @MainActor in
+                self?.router.dismissAll(.settings, animated: true)
+            }
+        }
+
+        coordinator.willNavigate = { [weak self] _, _, to in
+            if to == .root {
+                self?.onShowSettings?()
+            }
+        }
+
+        coordinator.start(initialRoute: route)
+
+        presentChild(
+            coordinator,
+            animated: animated
+        ) {
+            completion(coordinator)
+        }
+    }
+
+    func presentVPNSettings(
+        section: VPNSettingsSection?,
+        animated: Bool,
+        completion: @escaping @Sendable (Coordinator) -> Void
+    ) {
+        let interactorFactory = SettingsInteractorFactory(
+            tunnelManager: tunnelManager,
+            apiProxy: apiProxy,
+            relayCacheTracker: relayCacheTracker,
+            ipOverrideRepository: ipOverrideRepository
+        )
+        let coordinator = VPNSettingsCoordinator(
+            navigationController: CustomNavigationController(),
+            interactorFactory: interactorFactory,
+            ipOverrideRepository: ipOverrideRepository,
+            route: .vpnSettings(section)
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.vpnSettings(section), animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentDAITA(animated: Bool, completion: @escaping @Sendable (Coordinator) -> Void) {
+        let viewModel = DAITATunnelSettingsViewModel(tunnelManager: tunnelManager)
+        let coordinator = DAITASettingsCoordinator(
+            navigationController: CustomNavigationController(),
+            route: .daita,
+            viewModel: viewModel
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.daita, animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentAccessMethods(animated: Bool, completion: @escaping @Sendable (Coordinator) -> Void) {
+        let coordinator = ListAccessMethodCoordinator(
+            navigationController: CustomNavigationController(),
+            accessMethodRepository: accessMethodRepository,
+            proxyConfigurationTester: ProxyConfigurationTester(apiProxy: apiProxy),
+            breadcrumbsProvider: breadcrumbsProvider,
+            route: .apiAccess
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.apiAccess, animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentIncludeAllNetworks(animated: Bool, completion: @escaping @Sendable (Coordinator) -> Void) {
+        let viewModel = IncludeAllNetworksSettingsViewModelImpl(
+            tunnelManager: tunnelManager,
+            appPreferences: appPreferences
+        )
+        let coordinator = IncludeAllNetworksSettingsCoordinator(
+            navigationController: CustomNavigationController(),
+            route: .includeAllNetworks,
+            viewModel: viewModel
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.includeAllNetworks, animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentMultihop(animated: Bool, completion: @escaping @Sendable (Coordinator) -> Void) {
+        let viewModel = MultihopTunnelSettingsViewModel(
+            tunnelManager: tunnelManager
+        )
+        let coordinator = MultihopSettingsCoordinator(
+            navigationController: CustomNavigationController(),
+            route: .multihop,
+            viewModel: viewModel
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.multihop, animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentIPOverride(animated: Bool, completion: @escaping @Sendable (Coordinator) -> Void) {
+        let coordinator = IPOverrideCoordinator(
+            navigationController: CustomNavigationController(),
+            repository: ipOverrideRepository,
+            tunnelManager: tunnelManager,
+            route: .ipOverrides
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.ipOverrides, animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentDNSSettings(animated: Bool, completion: @escaping @Sendable (Coordinator) -> Void) {
+        let coordinator = CustomDNSCoordinator(
+            navigationController: CustomNavigationController(),
+            interactor: VPNSettingsInteractor(
+                tunnelManager: tunnelManager,
+                relayCacheTracker: relayCacheTracker
+            ),
+            route: .dnsSettings
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.dnsSettings, animated: true)
+        }
+
+        coordinator.start(animated: animated)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
+    private func presentNotificationsPrompt(
+        animated: Bool, completion: @escaping @MainActor @Sendable (Coordinator) -> Void
+    ) {
+        let coordinator = NotificationPromptCoordinator(navigationController: CustomNavigationController())
+
+        coordinator.start(animated: animated)
+        coordinator.didConclude = { [weak self] coordinator in
+            self?.appPreferences.isNotificationPermissionAsked = true
+            coordinator.dismiss(animated: animated) {
+                completion(coordinator)
+            }
+        }
+        coordinator.onInteractiveDismissal { [weak self] coordinator in
+            self?.appPreferences.isNotificationPermissionAsked = true
+            completion(coordinator)
+        }
+        presentChild(
+            coordinator,
+            animated: true,
+            configuration: ModalPresentationConfiguration(modalPresentationStyle: .automatic)
+        )
+
+    }
+
+    private func addTunnelObserver() {
+        let tunnelObserver =
+            TunnelBlockObserver(
+                didUpdateTunnelStatus: { [weak self] _, tunnelStatus in
+                    if case let .error(observedState) = tunnelStatus.observedState,
+                        observedState.reason == .accountExpired
+                    {
+                        self?.router.present(.outOfTime)
+                    }
+                },
+                didUpdateDeviceState: { [weak self] _, deviceState, previousDeviceState in
+                    self?.deviceStateDidChange(deviceState, previousDeviceState: previousDeviceState)
+                }
+            )
+
+        tunnelManager.addObserver(tunnelObserver)
+
+        self.tunnelObserver = tunnelObserver
+
+        updateDeviceInfo(deviceState: tunnelManager.deviceState)
+    }
+
+    private func deviceStateDidChange(_ deviceState: DeviceState, previousDeviceState: DeviceState) {
+        updateDeviceInfo(deviceState: deviceState)
+
+        switch deviceState {
+        case let .loggedIn(accountData, _):
+            // Inside welcome / login / the wizard, expired is the normal
+            // starting state and the flow itself handles funding.
+            guard !isPresentingAccountProvisioningFlow else { return }
+
+            // Handle transition to and from expired state.
+            switch (previousDeviceState.accountData?.isExpired ?? false, accountData.isExpired) {
+            // add more credit
+            case (true, false):
+                updateOutOfTimeTimer(accountData: accountData)
+                continueFlow(animated: true)
+                router.dismiss(.outOfTime, animated: true)
+            // account was expired
+            case (false, true):
+                router.present(.outOfTime, animated: true)
+
+            default:
+                break
+            }
+        case .revoked:
+            appPreferences.isShownOnboarding = true
+            cancelOutOfTimeTimer()
+            router.present(.revoked, animated: true)
+        case .loggedOut:
+            appPreferences.isShownOnboarding = true
+            cancelOutOfTimeTimer()
+        }
+    }
+
+    private func updateDeviceInfo(deviceState: DeviceState) {
+        let rootDeviceInfoViewModel = RootDeviceInfoViewModel(
+            isPresentingAccountExpiryBanner: isPresentingAccountExpiryBanner,
+            deviceState: deviceState
+        )
+        self.navigationContainer.update(configuration: rootDeviceInfoViewModel.configuration)
+    }
+
+    private func handleNewAppVersionInAppNotification() {
+        let navigateToAppStore: @Sendable () -> Void = {
+            DispatchQueue.main.async {
+                let appStoreLink = WarrenAppStoreListing.url
+                if UIApplication.shared.canOpenURL(appStoreLink) {
+                    UIApplication.shared.open(appStoreLink, options: [:], completionHandler: nil)
+                }
+            }
+        }
+
+        // If IAN is disabled, skip the alert and go directly to AppStore.
+        guard tunnelManager.settings.includeAllNetworks.includeAllNetworksIsEnabled else {
+            navigateToAppStore()
+            return
+        }
+
+        let message = [
+            String(
+                format:
+                    NSLocalizedString(
+                        "“%@“ is enabled, please disable it before updating or you will lose network connectivity. "
+                            + "This will briefly expose your traffic as you reconnect to the VPN.", comment: ""),
+                NSLocalizedString("Force all apps", comment: "")
+            ),
+            String(
+                format: NSLocalizedString("After updating, you will have to enable “%@” manually again.", comment: ""),
+                NSLocalizedString("Force all apps", comment: "")
+            ),
+            String(
+                format: NSLocalizedString(
+                    "If you do not wish to disable “%@“, you can disconnect from the VPN instead.", comment: ""),
+                NSLocalizedString("Force all apps", comment: "")
+            ),
+        ].joinedParagraphs(lineBreaks: 1)
+
+        // Create a tunnel observer to check for connected state and a callback for reporting it to
+        // the outside.
+        var tunnelDidConnect: (() -> Void)?
+        let tunnelObserver = TunnelBlockObserver(
+            didUpdateTunnelStatus: { _, tunnelStatus in
+                if case .connected = tunnelStatus.state {
+                    DispatchQueue.main.async {
+                        tunnelDidConnect?()
+                    }
+                }
+            }
+        )
+
+        let presentation = AlertPresentation(
+            id: "new-app-version-in-app-notification",
+            icon: .info,
+            message: message,
+            buttons: [
+                AlertAction(
+                    title:
+                        String(
+                            format: NSLocalizedString("Disable “%@”", comment: ""),
+                            NSLocalizedString("Force all apps", comment: ""),
+                        ),
+                    style: .default,
+                    interactiveHandler: { [weak self] alertViewController, button in
+                        guard let self else { return }
+
+                        // Show loading spinner on button and then navigate to AppStore
+                        // when tunnel has reconnected.
+                        button.setLoading(true)
+
+                        // Add tunnel observer and wait for callback to report tunnel connection.
+                        tunnelDidConnect = { [weak self] in
+                            tunnelDidConnect = nil
+                            self?.tunnelManager.removeObserver(tunnelObserver)
+
+                            alertViewController.onDismiss?()
+                            navigateToAppStore()
+                        }
+                        tunnelManager.addObserver(tunnelObserver)
+
+                        // Turn off IAN and trigger a tunnel reconnection.
+                        let newIncludeAllNetworksSettings = IncludeAllNetworksSettings(
+                            includeAllNetworksState: .off,
+                            localNetworkSharingState: tunnelManager.settings.includeAllNetworks.localNetworkSharingState
+                        )
+                        tunnelManager.updateSettings([.includeAllNetworks(newIncludeAllNetworksSettings)])
+                    }
+                ),
+                AlertAction(
+                    title: NSLocalizedString("Cancel", comment: ""),
+                    style: .default,
+                    handler: { [weak self] in
+                        // Clear the callback and observer so that no navigation to AppStore i triggered when
+                        // tunnel has reconnected.
+                        tunnelDidConnect = nil
+                        self?.tunnelManager.removeObserver(tunnelObserver)
+                    }
+                ),
+            ]
+        )
+
+        AlertPresenter(context: self).showAlert(presentation: presentation, animated: true)
+    }
+
+    // MARK: - Out of time
+
+    private func updateOutOfTimeTimer(accountData: StoredAccountData) {
+        cancelOutOfTimeTimer()
+
+        guard !accountData.isExpired else { return }
+
+        let timer = Timer(
+            fire: accountData.expiry, interval: 0, repeats: false,
+            block: { [weak self] _ in
+                Task { @MainActor in
+                    self?.router.present(.outOfTime, animated: true)
+                }
+            })
+
+        RunLoop.main.add(timer, forMode: .common)
+
+        outOfTimeTimer = timer
+    }
+
+    private func cancelOutOfTimeTimer() {
+        outOfTimeTimer?.invalidate()
+        outOfTimeTimer = nil
+    }
+
+    // MARK: - Settings
+
+    /**
+     This closure is called each time when settings are presented or when navigating from any of sub-routes within
+     settings back to root.
+     */
+    var onShowSettings: (() -> Void)?
+
+    /**
+     This closure is called each time the notification settings are changed.
+     */
+    var onNewNotificationSettings: ((NotificationSettings) -> Void)?
+
+    /// This closure is called each time when account controller is being presented.
+    var onShowAccount: (() -> Void)?
+
+    /// Returns `true` if settings are being presented.
+    var isPresentingSettings: Bool {
+        router.isPresenting(group: .settings)
+    }
+
+    /// Returns `true` if account controller is being presented.
+    var isPresentingAccount: Bool {
+        router.isPresenting(group: .account)
+    }
+
+    /// True while the user is inside a flow whose job is establishing or
+    /// funding the account (wallet login, onboarding wizard).
+    private var isPresentingAccountProvisioningFlow: Bool {
+        router.isPresenting(route: .login)
+            || router.isPresenting(route: .warrenOnboarding)
+    }
+
+    /// Whether the stored subscription expiry is in the past. The env
+    /// override lets sim UI tests drive connect flows with unfunded
+    /// throwaway wallets without hitting the out-of-time gate.
+    private var isAccountExpired: Bool {
+        #if DEBUG
+            if ProcessInfo.processInfo.environment["WARREN_QA_ASSUME_SUBSCRIBED"] == "1" {
+                return false
+            }
+        #endif
+        return tunnelManager.deviceState.accountData?.isExpired ?? false
+    }
+
+    // MARK: - UISplitViewControllerDelegate
+
+    func primaryViewController(forExpanding splitViewController: UISplitViewController)
+        -> UIViewController?
+    {
+        splitLocationCoordinator?.navigationController
+    }
+
+    func primaryViewController(forCollapsing splitViewController: UISplitViewController)
+        -> UIViewController?
+    {
+        splitTunnelCoordinator?.rootViewController
+    }
+
+    func splitViewController(
+        _ splitViewController: UISplitViewController,
+        collapseSecondary secondaryViewController: UIViewController,
+        onto primaryViewController: UIViewController
+    ) -> Bool {
+        true
+    }
+
+    func splitViewController(
+        _ splitViewController: UISplitViewController,
+        separateSecondaryFrom primaryViewController: UIViewController
+    ) -> UIViewController? {
+        nil
+    }
+
+    func splitViewControllerDidExpand(_ svc: UISplitViewController) {
+        router.dismissAll(.selectLocation, animated: false)
+    }
+
+    // MARK: - RootContainerViewControllerDelegate
+
+    func rootContainerViewControllerShouldShowAccount(
+        _ controller: RootContainerViewController,
+        animated: Bool
+    ) {
+        router.present(.account, animated: animated)
+    }
+
+    func rootContainerViewControllerShouldShowSettings(
+        _ controller: RootContainerViewController,
+        navigateTo route: SettingsNavigationRoute?,
+        animated: Bool
+    ) {
+        router.present(.settings(route), animated: animated)
+    }
+
+    func rootContainerViewSupportedInterfaceOrientations(_ controller: RootContainerViewController)
+        -> UIInterfaceOrientationMask
+    {
+        return [.portrait]
+    }
+
+    func rootContainerViewAccessibilityPerformMagicTap(_ controller: RootContainerViewController)
+        -> Bool
+    {
+        guard tunnelManager.deviceState.isLoggedIn else { return false }
+
+        switch tunnelManager.tunnelStatus.state {
+        case .connected, .connecting, .reconnecting, .waitingForConnectivity(.noConnection), .error,
+            .negotiatingEphemeralPeer:
+            tunnelManager.reconnectTunnel(selectNewRelay: true)
+
+        case .disconnecting, .disconnected:
+            tunnelManager.startTunnel()
+
+        case .pendingReconnect, .waitingForConnectivity(.noNetwork):
+            break
+        }
+        return true
+    }
+
+    // MARK: - NotificationManagerDelegate
+
+    func notificationManagerDidUpdateInAppNotifications(
+        _ manager: NotificationManager,
+        notifications: [InAppNotificationDescriptor]
+    ) {
+        isPresentingAccountExpiryBanner =
+            notifications
+            .contains(where: { $0.identifier == .accountExpiryInAppNotification })
+        updateDeviceInfo(deviceState: tunnelManager.deviceState)
+        notificationController.setNotifications(notifications, animated: true)
+    }
+
+    func notificationManager(_ manager: NotificationManager, didReceiveResponse response: NotificationResponse) {
+        switch response.providerIdentifier {
+        case .accountExpirySystemNotification:
+            router.present(.account)
+        case .newAppVersionSystemNotification:
+            router.present(.includeAllNetworks)
+        case .newAppVersionInAppNotification:
+            handleNewAppVersionInAppNotification()
+        case .accountExpiryInAppNotification:
+            isPresentingAccountExpiryBanner = false
+            updateDeviceInfo(deviceState: tunnelManager.deviceState)
+        case .latestChangesInAppNotificationProvider:
+            router.present(.changelog)
+        case .tunnelStatusNotificationProvider:
+            switch response.actionIdentifier {
+            case TunnelStatusNotificationProvider.ActionIdentifier.showVPNSettings.rawValue:
+                router.present(.settings(.vpnSettings))
+            default: break
+            }
+        default: return
+        }
+    }
+
+    // MARK: - Presenting
+
+    var presentationContext: UIViewController {
+        navigationContainer.presentedViewController ?? navigationContainer
+    }
+}
+
+extension DeviceState {
+    var splitViewMode: UISplitViewController.DisplayMode {
+        isLoggedIn ? UISplitViewController.DisplayMode.oneBesideSecondary : .secondaryOnly
+    }
+}
+
+// MARK: - Warren onboarding wizard wire-in
+
+extension ApplicationCoordinator: @preconcurrency OnboardingWizardCoordinatorDelegate {
+    /// Called by `OnboardingWizardCoordinator` when the user finishes the
+    /// 5-step flow. We flip the persisted flag so the wizard is not
+    /// replayed on subsequent launches, dismiss the modal via the router
+    /// (which routes through `dismissWithContext` → modal dismiss arm) and
+    /// re-enter `continueFlow` so the route evaluator picks the next
+    /// route (login / welcome / main / outOfTime / revoked).
+    func onboardingWizardDidFinish(_ coordinator: OnboardingWizardCoordinator) {
+        appPreferences.hasCompletedWarrenOnboarding = true
+        appPreferences.isShownOnboarding = true
+        router.dismiss(.warrenOnboarding, animated: true)
+        continueFlow(animated: true)
+    }
+}

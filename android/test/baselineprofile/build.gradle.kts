@@ -5,13 +5,13 @@ import utilities.baselineFilter
 import utilities.matches
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.test)
     alias(libs.plugins.baselineprofile)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.test.baselineprofile"
+    namespace = "com.warrenbrowse.vpn.test.baselineprofile"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
@@ -34,10 +34,10 @@ android {
         testInstrumentationRunnerArguments += buildMap {
             put("clearPackageData", "true")
 
-            // Add all properties starting with "mullvad.test.baseline" to the
+            // Add all properties starting with "warren.test.baseline" to the
             // testInstrumentationRunnerArguments
             properties.forEach {
-                if (it.key.startsWith("mullvad.test.baseline")) {
+                if (it.key.startsWith("warren.test.baseline")) {
                     put(it.key, it.value.toString())
                 }
             }
@@ -46,26 +46,16 @@ android {
 
     targetProjectPath = ":app"
 
-    flavorDimensions += FlavorDimensions.BILLING
+    // BILLING flavor dropped (Mullvad OSS/PLAY split dead).
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) { dimension = FlavorDimensions.BILLING }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) {
             dimension = FlavorDimensions.INFRASTRUCTURE
             buildConfigField(
                 type = "String",
                 name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"mullvad.net\"",
-            )
-        }
-        create(Flavors.STAGEMOLE) {
-            dimension = FlavorDimensions.INFRASTRUCTURE
-            buildConfigField(
-                type = "String",
-                name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"stagemole.eu\"",
+                value = "\"warrenbrowse.com\"",
             )
         }
     }

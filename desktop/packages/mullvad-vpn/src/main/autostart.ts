@@ -5,7 +5,7 @@ import path from 'path';
 import log from '../shared/logging';
 import { getDesktopEntries } from './linux-desktop-entry';
 
-const DESKTOP_FILE_NAME = 'mullvad-vpn.desktop';
+const DESKTOP_FILE_NAME = 'warren-vpn.desktop';
 
 export function getOpenAtLogin() {
   if (process.platform === 'linux') {

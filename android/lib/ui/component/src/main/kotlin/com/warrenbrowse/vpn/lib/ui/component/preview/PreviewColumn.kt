@@ -1,0 +1,29 @@
+package com.warrenbrowse.vpn.lib.ui.component.preview
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+
+@Composable
+internal fun PreviewColumn(
+    modifier: Modifier = Modifier,
+    spacing: Dp = Dimens.listItemDivider,
+    verticalAlignment: Alignment.Vertical = Alignment.Bottom,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    AppTheme {
+        Column(
+            modifier = modifier,
+            verticalArrangement = Arrangement.spacedBy(spacing, verticalAlignment),
+            horizontalAlignment = horizontalAlignment,
+            content = content,
+        )
+    }
+}

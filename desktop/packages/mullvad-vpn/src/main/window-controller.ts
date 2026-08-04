@@ -217,7 +217,9 @@ export default class WindowController {
 
   public static getContentSize(unpinnedWindow: boolean): { width: number; height: number } {
     return {
-      width: 320,
+      // Widened from Mullvad's 320 to fit the full-bleed scenery art, whose
+      // 1417x2120 masters are authored at a 0.668 ratio (400 x 598 matches it).
+      width: 400,
       height: WindowController.getContentHeight(unpinnedWindow),
     };
   }
@@ -318,8 +320,9 @@ export default class WindowController {
   // On both Linux and Windows the app height is applied incorrectly:
   // https://github.com/electron/electron/issues/28777
   private static getContentHeight(unpinnedWindow: boolean): number {
-    // The height we want to achieve.
-    const contentHeight = 568;
+    // Matches the 0.668 aspect ratio of the full-bleed scenery masters (400/598),
+    // so `object-fit: cover` fills the width without cropping the sides.
+    const contentHeight = 598;
 
     switch (process.platform) {
       case 'win32':

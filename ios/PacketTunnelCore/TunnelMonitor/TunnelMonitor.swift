@@ -7,8 +7,8 @@
 //
 
 import Foundation
-import MullvadLogging
-import MullvadTypes
+import WarrenLogging
+import WarrenTypes
 import Network
 import NetworkExtension
 

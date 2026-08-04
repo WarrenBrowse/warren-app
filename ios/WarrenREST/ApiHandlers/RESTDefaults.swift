@@ -1,0 +1,37 @@
+//
+//  RESTDefaults.swift
+//  WarrenREST
+//
+//  Created by Sajad Vishkai on 2022-10-17.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Foundation
+import WarrenRustRuntime
+import WarrenTypes
+
+extension REST {
+    /// The API hostname and endpoint are defined in the Info.plist of the WarrenREST framework bundle
+    /// This is due to not being able to target `Bundle.main` from a Unit Test environment as it gets its own bundle that would not contain the above variables.
+    nonisolated(unsafe) private static let infoDictionary = Bundle(for: ProxyFactory.self).infoDictionary!
+
+    /// Default API hostname.
+    public static let defaultAPIHostname = infoDictionary["ApiHostName"] as! String
+
+    /// Default API endpoint.
+    public static let defaultAPIEndpoint = AnyIPEndpoint(string: infoDictionary["ApiEndpoint"] as! String)!
+
+    public static let encryptedDNSHostname = infoDictionary["EncryptedDnsHostName"] as! String
+
+    public static let domainFrontingFront = infoDictionary["DomainFrontingFront"] as! String
+    public static let domainFrontingProxyHost = infoDictionary["DomainFrontingProxyHost"] as! String
+
+    /// Disables API IP address cache when in staging environment and sticks to using default API endpoint instead.
+    public static let isStagingEnvironment = false
+
+    /// Default network timeout for API requests.
+    public static let defaultAPINetworkTimeout: Duration = .seconds(10)
+
+    /// "Am I Warren?" connectivity probe hostname (am.i.warrenbrowse.com or staging equivalent).
+    public static let amIWarrenHostname = infoDictionary["AmIWarren"] as! String
+}

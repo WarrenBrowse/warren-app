@@ -1,0 +1,383 @@
+//! Android bindings for the engine's in-tunnel egress liveness probe.
+//!
+//! Every guard the Android datapath already runs looks at the CLIENT half of
+//! the circuit: the supervisor's RX-silence watch sees QUIC keep-alives, and
+//! the goodput prober echoes paired probes off the tunnel gateway. An exit that
+//! answers both while forwarding NOTHING to the internet satisfies all of them,
+//! so the app kept rendering "You are protected" over a tunnel with no egress.
+//! Android was the last Warren platform with nothing that could see that class.
+//!
+//! The scheduler, the cadence, the debounce and the DNS probe are the engine's
+//! [`warrenguard_transport::egress_probe`]; this module supplies only the
+//! Android [`EgressProbeIo`] around them, mirroring the desktop daemon's
+//! `RealEgressProbeIo`. The probe queries the exit resolver
+//! ([`warrenguard_config::TUNNEL_GATEWAY_IP`]`:53`, the same server the
+//! `VpnService` hands to the system) through the TUN, so an answer proves the
+//! exit decapsulates, forwards and reaches its upstream, and the target is
+//! routable only inside the tunnel, so the probe can never leak.
+//!
+//! Everything except the datapath probe itself is portable, so the bindings are
+//! host-tested against the real engine scheduler with only the network (the one
+//! system boundary here) scripted.
+
+#![cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+
+use tokio::sync::watch;
+use warrenguard_transport::egress_probe::{
+    EgressProbeIo, ProbeOutcome, jittered, probe_gateway_dns,
+};
+use warrenguard_transport::supervisor::ClientWatch;
+
+/// Verdict value published when the in-tunnel probe declares the exit dead.
+///
+/// Deliberately DISTINCT from the goodput prober's "both sizes dead" rather
+/// than reusing it: the two verdicts answer different questions (nothing
+/// crosses the client to exit datapath, versus the exit forwards nothing to the
+/// internet) and are produced by independent probes, so a support log that
+/// cannot tell them apart cannot tell a client-side wedge from a broken exit.
+/// The UI maps both onto the same "connection interrupted" state, so the
+/// distinction costs no new user-facing copy.
+pub(crate) const PATH_HEALTH_EGRESS_DEAD: i32 = 3;
+
+/// Verdict sink. Production binds it to the JNI cell Kotlin polls through
+/// `getPathHealth`; a host test observes it directly.
+pub(crate) type VerdictSink = Arc<dyn Fn(bool) + Send + Sync>;
+
+/// Datapath probe override. `None` runs the engine's in-tunnel DNS probe; a
+/// host test scripts it, because the network is the only system boundary this
+/// module owns.
+pub(crate) type ProbeFn =
+    Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ProbeOutcome> + Send>> + Send + Sync>;
+
+/// Compose the single `i32` Kotlin polls out of the two independent verdict
+/// publishers (the supervisor's goodput prober and this probe).
+///
+/// They own separate cells on purpose: a single shared one would let the
+/// goodput publisher's next transition erase a live egress-dead verdict, and
+/// the two run on unrelated cadences. Egress-dead wins because it is the more
+/// specific finding, and both map to the same UI state anyway.
+pub(crate) fn compose_path_health(path_health: i32, egress_dead: bool) -> i32 {
+    if egress_dead {
+        PATH_HEALTH_EGRESS_DEAD
+    } else {
+        path_health
+    }
+}
+
+/// Per-tick jitter source, keeping a fleet of clients from probing in lockstep.
+///
+/// The desktop binding draws it from `rand`, which this crate pulls in only on
+/// the Android target, so a host-tested module cannot reach it. The sub-second
+/// wall clock is decorrelated enough for a spread whose only job is to smear a
+/// +/-15% window.
+fn jitter_fraction() -> f64 {
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.subsec_nanos());
+    f64::from(nanos) / 1e9
+}
+
+/// Android bindings for [`EgressProbeIo`].
+pub(crate) struct AndroidEgressProbeIo {
+    /// Steady-state cadence, used once a probe has proven the circuit forwards.
+    pub interval: Duration,
+    /// Faster cadence used while the circuit is unproven OR a failure is
+    /// pending, so neither a circuit dead from connect nor a suspicion raised
+    /// mid-session waits a full steady interval to be settled.
+    pub startup_interval: Duration,
+    /// Supervisor session watch. `None` (tests) reads as "session present".
+    pub sessions: Option<ClientWatch>,
+    /// Where the verdict goes. `None` disables publication.
+    pub verdict: Option<VerdictSink>,
+    /// Escalation channel: the session driver ends the session on `true`
+    /// (`SupervisedInputs::egress_dead`), which is how Android leaves
+    /// Connected and hands back to the Kotlin fail-closed policy.
+    pub escalate: Option<watch::Sender<bool>>,
+    /// Datapath probe; see [`ProbeFn`].
+    pub probe: Option<ProbeFn>,
+}
+
+impl EgressProbeIo for AndroidEgressProbeIo {
+    async fn next_tick(&mut self, settled: bool) -> bool {
+        let interval = if settled {
+            self.interval
+        } else {
+            self.startup_interval
+        };
+        tokio::time::sleep(jittered(interval, jitter_fraction())).await;
+        true
+    }
+
+    fn session_present(&mut self) -> bool {
+        match self.sessions.as_mut() {
+            Some(rx) => rx.borrow_and_update().is_some(),
+            None => true,
+        }
+    }
+
+    async fn probe(&mut self) -> ProbeOutcome {
+        match self.probe.as_ref() {
+            Some(scripted) => scripted().await,
+            None => probe_gateway_dns().await,
+        }
+    }
+
+    fn publish(&mut self, egress_dead: bool) {
+        if egress_dead {
+            log::warn!(
+                "egress probe: exit not forwarding (in-tunnel DNS probe dead while the \
+                 QUIC session is alive); the tunnel is no longer carrying traffic"
+            );
+        } else {
+            log::info!("egress probe: egress recovered");
+        }
+        if let Some(sink) = self.verdict.as_ref() {
+            sink(egress_dead);
+        }
+    }
+
+    /// Android subscribes no [`ExitDrainChannel`]: the supervised pumps here are
+    /// built without one, so no advisory ever arrives and the gap-free
+    /// migration branch must stay unreachable. Claiming a drain would swallow
+    /// the escalation and leave the user sitting on a dead exit.
+    ///
+    /// [`ExitDrainChannel`]: warrenguard_transport::supervised_pump::ExitDrainChannel
+    fn drain_active(&mut self) -> bool {
+        false
+    }
+
+    async fn try_migrate(&mut self) -> bool {
+        false
+    }
+
+    fn escalate_reconnect(&mut self, msg: String) {
+        match self.escalate.as_ref() {
+            // A closed receiver means the session is already tearing down, so
+            // the escalation has nothing left to do.
+            Some(tx) => {
+                log::warn!("egress probe: escalating reconnect: {msg}");
+                let _ = tx.send(true);
+            }
+            None => log::warn!(
+                "egress probe: exit not forwarding but no escalation channel wired; \
+                 verdict published only: {msg}"
+            ),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Mutex;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    use warrenguard_transport::egress_probe::run_egress_probe;
+
+    use super::*;
+
+    /// Cadences small enough that a paused-clock test walks many ticks fast,
+    /// while staying inside the engine's accepted ranges.
+    const TEST_INTERVAL: Duration = Duration::from_secs(25);
+    const TEST_STARTUP: Duration = Duration::from_secs(3);
+
+    /// Records what the bindings published, standing in for the JNI cell.
+    #[derive(Default)]
+    struct Sink(Mutex<Vec<bool>>);
+
+    impl Sink {
+        fn seen(&self) -> Vec<bool> {
+            self.0.lock().expect("sink never poisoned").clone()
+        }
+    }
+
+    /// Build the real bindings with the network scripted by `results`, cycling
+    /// on its last entry once exhausted so the loop can run indefinitely.
+    fn io_with(
+        results: Vec<bool>,
+        sink: &Arc<Sink>,
+        escalate: watch::Sender<bool>,
+    ) -> AndroidEgressProbeIo {
+        let calls = Arc::new(AtomicUsize::new(0));
+        let sink_cb = Arc::clone(sink);
+        AndroidEgressProbeIo {
+            interval: TEST_INTERVAL,
+            startup_interval: TEST_STARTUP,
+            sessions: None,
+            verdict: Some(Arc::new(move |dead| {
+                sink_cb.0.lock().expect("sink never poisoned").push(dead);
+            })),
+            escalate: Some(escalate),
+            probe: Some(Arc::new(move || {
+                let n = calls.fetch_add(1, Ordering::Relaxed);
+                let ok = *results
+                    .get(n)
+                    .unwrap_or_else(|| results.last().expect("non-empty script"));
+                let outcome = if ok {
+                    ProbeOutcome::Alive
+                } else {
+                    ProbeOutcome::Dead
+                };
+                Box::pin(async move { outcome })
+            })),
+        }
+    }
+
+    /// A forwarding exit must never raise the banner, however long the probe
+    /// runs: a false verdict tears down a healthy tunnel.
+    #[tokio::test(start_paused = true)]
+    async fn a_forwarding_exit_never_publishes_a_verdict() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, escalated) = watch::channel(false);
+        let mut io = io_with(vec![true], &sink, escalate);
+        // Bounded because a healthy probe loop never returns on its own.
+        let _ = tokio::time::timeout(Duration::from_secs(3600), run_egress_probe(&mut io, 3)).await;
+        assert!(
+            sink.seen().is_empty(),
+            "a forwarding exit must publish nothing: {:?}",
+            sink.seen()
+        );
+        assert!(!*escalated.borrow(), "and must never end the session");
+    }
+
+    /// The debounce is the whole point: a rollout hot-swap blip must not flap
+    /// the UI, so failures that are broken by a success never accumulate.
+    #[tokio::test(start_paused = true)]
+    async fn failures_broken_by_a_success_never_reach_the_threshold() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, escalated) = watch::channel(false);
+        let mut io = io_with(
+            vec![false, false, true, false, false, true],
+            &sink,
+            escalate,
+        );
+        let _ = tokio::time::timeout(Duration::from_secs(3600), run_egress_probe(&mut io, 3)).await;
+        assert!(
+            sink.seen().is_empty(),
+            "non-consecutive failures must not publish: {:?}",
+            sink.seen()
+        );
+        assert!(!*escalated.borrow(), "and must never end the session");
+    }
+
+    /// The gap this closes: an exit whose QUIC session is alive while it
+    /// forwards nothing must publish exactly one dead verdict and end the
+    /// session, so the card stops claiming protection and Kotlin redials.
+    #[tokio::test(start_paused = true)]
+    async fn consecutive_failures_publish_the_verdict_and_end_the_session() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, escalated) = watch::channel(false);
+        let mut io = io_with(vec![false], &sink, escalate);
+        tokio::time::timeout(Duration::from_secs(3600), run_egress_probe(&mut io, 3))
+            .await
+            .expect("an escalating probe returns on its own");
+        assert_eq!(
+            sink.seen(),
+            vec![true],
+            "the threshold must publish exactly one dead verdict"
+        );
+        assert!(
+            *escalated.borrow(),
+            "a dead exit with no gap-free migration must end the session"
+        );
+    }
+
+    /// A redial window must not conflate two exits: the failover may land
+    /// elsewhere, so the count restarts and the threshold is never reached.
+    #[tokio::test(start_paused = true)]
+    async fn a_redial_window_is_never_probed() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, _escalated) = watch::channel(false);
+        let (_sessions_tx, sessions) = watch::channel(None);
+        let mut io = io_with(vec![false], &sink, escalate);
+        io.sessions = Some(sessions);
+        let _ = tokio::time::timeout(Duration::from_secs(3600), run_egress_probe(&mut io, 1)).await;
+        assert!(
+            sink.seen().is_empty(),
+            "no published session means no probe and no verdict: {:?}",
+            sink.seen()
+        );
+    }
+
+    /// Recovery clears the banner: the sink mirrors the verdict in both
+    /// directions, so a cleared verdict reaches Kotlin as a cleared one.
+    #[test]
+    fn a_cleared_verdict_reaches_the_sink() {
+        let sink = Arc::new(Sink::default());
+        let sink_cb = Arc::clone(&sink);
+        let (escalate, _escalated) = watch::channel(false);
+        let mut io = AndroidEgressProbeIo {
+            interval: TEST_INTERVAL,
+            startup_interval: TEST_STARTUP,
+            sessions: None,
+            verdict: Some(Arc::new(move |dead| {
+                sink_cb.0.lock().expect("sink never poisoned").push(dead);
+            })),
+            escalate: Some(escalate),
+            probe: None,
+        };
+        io.publish(true);
+        io.publish(false);
+        assert_eq!(sink.seen(), vec![true, false]);
+    }
+
+    /// Android subscribes no exit-drain advisory (the supervised pumps are
+    /// built without a drain channel), so the gap-free migration branch must
+    /// never be taken: claiming a drain would swallow the escalation and leave
+    /// the user on a dead exit.
+    #[tokio::test]
+    async fn android_never_claims_a_gap_free_migration() {
+        let (escalate, _escalated) = watch::channel(false);
+        let mut io = AndroidEgressProbeIo {
+            interval: TEST_INTERVAL,
+            startup_interval: TEST_STARTUP,
+            sessions: None,
+            verdict: None,
+            escalate: Some(escalate),
+            probe: None,
+        };
+        assert!(!io.drain_active());
+        assert!(!io.try_migrate().await);
+    }
+
+    /// The escalation must be inert without a channel (and must not panic):
+    /// the verdict still bannered, nothing torn down.
+    #[test]
+    fn an_unwired_escalation_is_inert() {
+        let mut io = AndroidEgressProbeIo {
+            interval: TEST_INTERVAL,
+            startup_interval: TEST_STARTUP,
+            sessions: None,
+            verdict: None,
+            escalate: None,
+            probe: None,
+        };
+        io.publish(true);
+        io.escalate_reconnect("no channel".to_owned());
+    }
+
+    /// The two verdict publishers own separate cells, so composing them must
+    /// surface the egress verdict whatever the goodput prober currently reads,
+    /// and must not invent one when egress is fine.
+    #[test]
+    fn the_egress_verdict_outranks_the_goodput_reading() {
+        assert_eq!(compose_path_health(0, false), 0);
+        assert_eq!(compose_path_health(1, false), 1);
+        assert_eq!(compose_path_health(0, true), PATH_HEALTH_EGRESS_DEAD);
+        assert_eq!(compose_path_health(2, true), PATH_HEALTH_EGRESS_DEAD);
+    }
+
+    /// The jitter must stay inside the engine's window: outside it the cadence
+    /// silently changes.
+    #[test]
+    fn the_jitter_fraction_stays_in_range() {
+        for _ in 0..64 {
+            let f = jitter_fraction();
+            assert!((0.0..1.0).contains(&f), "jitter fraction out of range: {f}");
+        }
+    }
+}

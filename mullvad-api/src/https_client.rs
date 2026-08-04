@@ -259,7 +259,7 @@ impl InnerConnectionMode {
 /// Establish a TLS connection to the CDN without certificate verification.
 ///
 /// Certificate verification is intentionally skipped because the security of domain fronting
-/// does not depend on the CDN TLS — the actual API connection is secured by the inner TLS
+/// does not depend on the CDN TLS - the actual API connection is secured by the inner TLS
 /// layer to `api.mullvad.net`.
 async fn cdn_tls_connect(
     stream: TcpStream,

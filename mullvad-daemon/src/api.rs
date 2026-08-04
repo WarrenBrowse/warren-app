@@ -54,7 +54,7 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
                 AccessMethod::BuiltIn(BuiltInAccessMethod::Direct) => ApiConnectionMode::Direct,
                 AccessMethod::BuiltIn(BuiltInAccessMethod::Bridge) => {
                     let Some(bridge) = self.relay_selector.get_bridge_forced() else {
-                        log::warn!("Could not select a Mullvad bridge");
+                        log::warn!("Could not select a Warren bridge");
                         log::debug!("The relay list might be empty");
                         return None;
                     };
@@ -64,7 +64,7 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
                 AccessMethod::BuiltIn(BuiltInAccessMethod::EncryptedDnsProxy) => {
                     if let Err(error) = self
                         .encrypted_dns_proxy_cache
-                        .fetch_configs("frakta.eu")
+                        .fetch_configs("dns.warrenbrowse.com")
                         .await
                     {
                         log::warn!("Failed to fetch new Encrypted DNS Proxy configurations");
@@ -77,7 +77,16 @@ impl AccessMethodResolver for DaemonAccessMethodResolver {
                     ApiConnectionMode::Proxied(ProxyConfig::from(edp))
                 }
                 AccessMethod::BuiltIn(BuiltInAccessMethod::DomainFronting) => {
-                    mullvad_api::domain_fronting::resolve().await?
+                    // Warren operates no built-in domain-fronting endpoint
+                    // (the upstream Mullvad CDN77 front was dead code and
+                    // removed). The method stays disabled in settings for
+                    // upstream-rebase compatibility; if ever selected it
+                    // resolves to "unavailable". A real fronting endpoint can
+                    // still be added as a Custom access method.
+                    log::warn!(
+                        "DomainFronting has no Warren built-in endpoint; method unavailable"
+                    );
+                    return None;
                 }
                 AccessMethod::Custom(config) => {
                     ApiConnectionMode::Proxied(ProxyConfig::from(config.clone()))
@@ -128,7 +137,7 @@ pub fn allowed_clients(connection_mode: &ApiConnectionMode) -> AllowedClients {
                 daemon_exe
                     .parent()
                     .expect("missing executable parent directory")
-                    .join("mullvad-problem-report.exe"),
+                    .join("warren-problem-report.exe"),
                 daemon_exe,
             ]
             .into()
@@ -157,25 +166,47 @@ pub(crate) fn create_bypass_tx(
 }
 
 /// Forwards the received values from `offline_state_rx` to the [`ApiAvailability`].
+///
+/// `online_edge_tx` is bumped on every offline→online transition so
+/// background fetchers (the Warren multi-hop directory updater and exit
+/// list updater) can force an immediate refresh the moment connectivity
+/// returns, instead of waiting out their coarse periodic timers. This is
+/// the sleep/wake recovery path: after a wake the network is briefly
+/// unreachable and the periodic timers (whose monotonic clock does not
+/// advance during sleep on macOS) would otherwise leave the daemon on a
+/// stale directory for many minutes.
 pub(crate) fn forward_offline_state(
     api_availability: ApiAvailability,
     mut offline_state_rx: mpsc::UnboundedReceiver<Connectivity>,
+    online_edge_tx: tokio::sync::watch::Sender<u64>,
+    warren_status_cache: crate::warren_status::WarrenStatusCache,
 ) {
     tokio::spawn(async move {
-        let is_offline = offline_state_rx
+        let mut was_offline = offline_state_rx
             .next()
             .await
             .expect("missing initial offline state")
             .is_offline();
         log::info!(
             "Initial offline state - {state}",
-            state = if is_offline { "offline" } else { "online" },
+            state = if was_offline { "offline" } else { "online" },
         );
-        api_availability.set_offline(is_offline);
+        api_availability.set_offline(was_offline);
+        warren_status_cache.set_host_offline(was_offline);
 
         while let Some(state) = offline_state_rx.next().await {
             log::info!("Detecting changes to offline state - {state:?}");
-            api_availability.set_offline(state.is_offline());
+            let is_offline = state.is_offline();
+            // Offline→online edge: signal the Warren background updaters.
+            if was_offline && !is_offline {
+                online_edge_tx.send_modify(|n| *n = n.wrapping_add(1));
+            }
+            was_offline = is_offline;
+            api_availability.set_offline(is_offline);
+            // Push the verdict to the UI on the edge itself: the tunnel
+            // state machine holds Connected through its migration grace,
+            // so this flag is the user's only immediate signal.
+            warren_status_cache.set_host_offline(is_offline);
         }
     });
 }

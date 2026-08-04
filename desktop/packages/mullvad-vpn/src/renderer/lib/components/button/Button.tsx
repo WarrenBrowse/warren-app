@@ -7,7 +7,7 @@ import { ButtonProvider } from './ButtonContext';
 import { ButtonIcon, ButtonText, StyledButtonIcon, StyledButtonText } from './components';
 
 export type ButtonProps = React.ComponentPropsWithRef<'button'> & {
-  variant?: 'primary' | 'success' | 'destructive';
+  variant?: 'primary' | 'success' | 'destructive' | 'warning';
   width?: 'fill' | 'fit';
 };
 
@@ -31,6 +31,12 @@ const styles = {
       hover: colors.red80,
       pressed: colors.red40,
       disabled: colors.red40,
+    },
+    warning: {
+      background: colors.orange,
+      hover: colors.orange80,
+      pressed: colors.orange80,
+      disabled: colors.orange80,
     },
   },
 };

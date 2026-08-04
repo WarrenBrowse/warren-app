@@ -1,5 +1,4 @@
-CHANGE THIS BEFORE A RELEASE
-Each line is treated as a separate change item shown in the GUI the first time it runs after install.
-Start each line with a capital letter and end each line with a period.
-[macOS, Windows, linux] To make an entry platform specific, start the line with an angle bracket enclosed comma separated list of platforms to show the entry on.
-Only point out the major changes.
+First public beta release.
+Connect through a QUIC tunnel that looks like ordinary HTTPS traffic, with a TCP fallback where UDP is blocked.
+Keep your identity to yourself: a recovery phrase on your device replaces accounts, emails and passwords.
+Block ads, trackers and malware per category, resolved on the exit with no query log.

@@ -1,6 +1,99 @@
 These are instructions on how to build the app on desktop platforms. See the
 [readme](./README.md#building-the-app) for help building on other platforms.
 
+# Pré-requis Warren fork : trois repos voisins
+
+> ⚠️ **À lire avant tout `cargo build` ou `./build.sh`.**
+
+Le fork Warren consomme des crates via des **path-deps cross-repo** depuis trois
+repos voisins, checkout-és en parallèle de `warren-app` (le fork n'a **aucune
+dépendance sur `warren-core`**) :
+
+- [`warrenguard`](https://github.com/WarrenBrowse/warrenguard) : moteur data-plane
+  (`warrenguard-transport`, `-config`, `-wire`, `-multihop`, `-relay`, …). Pin
+  dans `.warrenguard-version`.
+- [`warren-sdk-rs`](https://github.com/WarrenBrowse/warren-sdk-rs) : SDK client
+  (`warren-api`, `warren-identity`). Pin dans `.warren-sdk-version`.
+- [`warren-contract`](https://github.com/WarrenBrowse/warren-contract) : contrat
+  client/serveur (`warren-contract`, `warren-discovery-core`). Pin dans
+  `.warren-contract-version`.
+
+Layout attendu :
+
+```
+warrenBros/
+├── warren-app/        ← ce repo (fork Mullvad)
+├── warrenguard/       ← moteur data-plane (crates warrenguard-*)
+├── warren-sdk-rs/     ← SDK client (warren-api, warren-identity)
+└── warren-contract/   ← contrat (warren-contract, warren-discovery-core)
+```
+
+Si un des siblings est absent ou à un autre path, `cargo metadata` /
+`./build.sh` échouent avec :
+
+```
+error: failed to load manifest for dependency `warrenguard-transport`
+Caused by: failed to read `../warrenguard/crates/warrenguard-transport/Cargo.toml`
+Caused by: No such file or directory (os error 2)
+```
+
+Setup minimal :
+
+```bash
+cd /path/to/warrenBros
+git clone git@github.com:WarrenBrowse/warrenguard.git
+git clone git@github.com:WarrenBrowse/warren-sdk-rs.git
+git clone git@github.com:WarrenBrowse/warren-contract.git
+git clone git@github.com:WarrenBrowse/warren-app.git
+cd warren-app && git submodule update --init
+```
+
+Les path-deps sont déclarés dans les manifestes crate (`talpid-core`,
+`talpid-warren-tunnel`, `mullvad-daemon`, `mullvad-types`, `warren-jni`,
+`warren-ios`) et le `[patch."https://github.com/WarrenBrowse/warrenguard.git"]`
+du `Cargo.toml` racine. La fork quinn est le git-dep publié
+`WarrenBrowse/warren-quinn` (pin par tag), câblé via `[patch.crates-io]`. Les
+builds Docker `cross` montent les trois siblings (voir [`Cross.toml`](Cross.toml)).
+
+# Product environments (prod | staging | beta)
+
+One build-time selector, the `WARREN_PRODUCT_ENV` env var (unset = `prod`),
+switches the whole product configuration: API host, desktop update channel
+(`{api}/updates/desktop`), install/settings/cache/log paths, RPC socket,
+service names and packaging identity. The single source of truth is the
+`warren-product-env` crate (`warren-product-env/src/lib.rs`); the desktop
+JS mirror is `desktop/packages/mullvad-vpn/src/shared/constants/product-env.ts`
+and the packaging table lives in
+`desktop/packages/mullvad-vpn/tasks/distribution.cjs`. A beta build is a
+separately installable app (`Warren VPN Beta`, `com.warrenbrowse.vpn.beta`)
+that coexists with a prod install without sharing any state.
+
+- Desktop: `./build.sh --beta [...]`, or `WARREN_PRODUCT_ENV=beta ./build.sh`
+  (the script exports it to cargo, vite and electron-builder; it validates
+  the value and defaults to prod).
+- Android: build the matching flavor, e.g. `./gradlew assembleBetaDebug` from
+  `android/`. The flavor drives `WARREN_PRODUCT_ENV` for the cargo build and
+  a per-variant guard refuses an APK whose `libwarren_jni.so` was compiled
+  for another environment. One flavor per Gradle invocation.
+- iOS: the Xcode project has a configuration for prod (Debug/Release) and one
+  for staging; beta is built by overriding `API_HOST_NAME`/`API_ENDPOINT` on
+  the `xcodebuild` line, which is what `scripts/dev/launch-ios.sh --beta`
+  does. The three share one bundle id, so they replace each other.
+- Plain `cargo build`/`cargo test` stay prod; prefix with
+  `WARREN_PRODUCT_ENV=beta` to compile/test the beta configuration.
+
+The dev launchers take the environment as `--prod`, `--beta` or `--staging`
+(falling back to `WARREN_PRODUCT_ENV`) and print their help instead of
+building anything when neither is given: `scripts/dev/warren-dev.sh`,
+`scripts/dev/launch-android.sh`, `scripts/dev/launch-ios.sh`,
+`scripts/dev/macos-vpn-smoke.sh`, `scripts/dev/macos-vpn-reconnect-smoke.sh`
+and `scripts/dev/windows/build-{daemon,app}.sh`. The shared selection helper
+is `scripts/utils/product-env.sh`, whose host and path tables the
+`warren-product-env` crate pins with a drift test.
+
+Runtime overrides (`WARREN_API_URL`, `WARREN_UPDATE_URL`, settings) still
+apply on top of the compiled defaults, unchanged.
+
 # Install toolchains and dependencies
 
 These instructions are probably not complete. If you find something more that needs installing
@@ -37,7 +130,7 @@ on your platform please submit an issue or a pull request.
     Install the `msi` hosted here: https://github.com/volta-cli/volta
 
 - Install Go (ideally version `1.21`) by following the [official instructions](https://golang.org/doc/install).
-  Newer versions may work too. This is optional if using `--gotatun`.
+  Newer versions may work too.
 
 - Install a protobuf compiler (version 3.15 and up), it can be installed on most major Linux distros
   via the package name `protobuf-compiler`, `protobuf` on macOS via Homebrew, and on Windows
@@ -70,6 +163,42 @@ sudo apt install gcc libdbus-1-dev
 # For building the installer
 sudo apt install rpm
 ```
+
+#### Warren fork : extra deps Linux
+
+Le fork Warren ajoute des dépendances natives au-delà des
+besoins upstream Mullvad. Sur Debian 12 / Ubuntu 22.04+ :
+
+```bash
+sudo apt install \
+  libprotobuf-dev protobuf-compiler \
+  libmnl-dev libnftnl-dev \
+  libnl-3-dev libnl-route-3-dev libnl-genl-3-dev \
+  build-essential clang pkg-config libssl-dev cmake ninja-build
+```
+
+- `libprotobuf-dev` : nécessaire pour les `.proto` standards
+  (`google/protobuf/empty.proto`, `timestamp.proto`, etc.) que
+  `mullvad-management-interface` importe.
+- `libmnl-dev` + `libnftnl-dev` : linking pour
+  `talpid-core::firewall::linux` (= nftnl-rs) qui appelle directement
+  la lib C. `protobuf-compiler` seul ne suffit pas.
+- `libnl-3-dev` + extensions : netlink helpers utilisés par
+  `talpid-routing::linux`.
+- `build.rs` de `mullvad-daemon` invoque `git log` pour embedder la
+  date du commit. Sur un VPS sans `.git/`, installer `git` puis
+  `git init` un dépôt vide (`git commit --allow-empty`).
+
+#### Cross-compile macOS vers Linux
+
+Le `cross` (Docker-based) est supporté : [`Cross.toml`](Cross.toml) monte les
+trois siblings (`../warrenguard`, `../warren-sdk-rs`, `../warren-contract`) dans
+le container `cross-rs/x86_64-unknown-linux-gnu:edge`, donc les path-deps
+cross-repo se résolvent comme sur un hôte natif. Il faut que les trois siblings
+soient checkout-és aux SHAs pin (voir la section pré-requis en tête de doc).
+
+Alternative sans Docker : build natif sur un runner/VPS Linux x86_64 (c'est ce
+que fait la CI release, pas de cross).
 
 ### Fedora/RHEL
 
@@ -204,8 +333,7 @@ Building this requires at least 1GB of memory.
 
 ## Notes on options
 
-- `--daemon-only` - This will build daemon only Linux packages (e.g. `mullvad-vpn-daemon`). You will need to install additional build tools: `cargo install cargo-deb cargo-generate-rpm`.
-- `--gotatun` - This will build with the `gotatun` Rust library instead the `wireguard-go-rs` Go library.
+- `--daemon-only` - This will build daemon only Linux packages (e.g. `warren-vpn-daemon`). You will need to install additional build tools: `cargo install cargo-deb cargo-generate-rpm`.
 
 ## Notes on targeting ARM64
 
@@ -238,7 +366,7 @@ You may have to specify `USE_SYSTEM_FPM=true` to generate the deb/rpm packages.
 
 ## Notes on building for RISC-V
 
-These instructions are for building, packaging and installing the Mullvad VPN daemon and CLI interface for use with RISC-V systems. It includes support for RVA22 and RVA23 profiles; for example, on Framework Laptop 13 with [DeepComputing RISC-V Mainboards](https://frame.work/marketplace/mainboards?search=risc-v) running Ubuntu.
+These instructions are for building, packaging and installing the Warren VPN daemon and CLI interface for use with RISC-V systems. It includes support for RVA22 and RVA23 profiles; for example, on Framework Laptop 13 with [DeepComputing RISC-V Mainboards](https://frame.work/marketplace/mainboards?search=risc-v) running Ubuntu.
 
 Build and package:
 ```bash
@@ -247,12 +375,12 @@ Build and package:
 
 Install on Debian/Ubuntu:
 ```bash
-sudo dpkg -i dist/mullvad-vpn-daemon_<version>_riscv64.deb
+sudo dpkg -i dist/warren-vpn-daemon_<version>_riscv64.deb
 ```
 
 Install on Fedora:
 ```bash
-sudo dnf install dist/mullvad-vpn-daemon_<version>_riscv64.rpm
+sudo dnf install dist/warren-vpn-daemon_<version>_riscv64.rpm
 ```
 
 ### Cross-compling for RISC-V from other hosts such as Debian/Ubuntu AMD64
@@ -286,9 +414,14 @@ Build and package:
 TARGETS="riscv64gc-unknown-linux-gnu" ./build.sh --daemon-only --optimize
 ```
 
-# Building and running mullvad-daemon
+# Building and running warren-daemon
 
 This section is for building the system service individually.
+
+> **Note (Warren fork)** : le package Cargo s'appelle toujours `mullvad-daemon`
+> (conservé pour faciliter les rebases upstream), mais le binaire produit est
+> `warren-daemon`. Idem env var : `WARREN_RESOURCE_DIR` est l'alias prioritaire,
+> `MULLVAD_RESOURCE_DIR` reste accepté en fallback.
 
 1. On Windows, build the C++ libraries:
     ```bash
@@ -313,7 +446,7 @@ This section is for building the system service individually.
 
 1. Run the daemon with verbose logging (from the root directory of the project):
     ```bash
-    sudo MULLVAD_RESOURCE_DIR="./dist-assets" ./target/debug/mullvad-daemon -vv
+    sudo WARREN_RESOURCE_DIR="./dist-assets" ./target/debug/warren-daemon -vv
     ```
     Leave out `sudo` on Windows. The daemon must run as root since it modifies the firewall and sets
     up virtual network interfaces etc.
@@ -341,5 +474,5 @@ If you change any javascript file while the development mode is running it will 
 transpile and reload the file so that the changes are visible almost immediately.
 
 Please note that the Electron app needs a running daemon to connect to in order to work. See
-[Building and running mullvad-daemon](#building-and-running-mullvad-daemon) for instructions
+[Building and running warren-daemon](#building-and-running-warren-daemon) for instructions
 on how to do that before starting the Electron app.

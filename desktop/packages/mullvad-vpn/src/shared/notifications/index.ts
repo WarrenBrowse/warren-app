@@ -9,5 +9,6 @@ export * from './error';
 export * from './inconsistent-version';
 export * from './notification';
 export * from './reconnecting';
+export * from './renewal';
 export * from './unsupported-version';
 export * from './update-available';

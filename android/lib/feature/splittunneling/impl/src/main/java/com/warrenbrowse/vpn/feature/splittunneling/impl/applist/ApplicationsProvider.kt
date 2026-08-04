@@ -1,0 +1,49 @@
+package com.warrenbrowse.vpn.feature.splittunneling.impl.applist
+
+import android.Manifest
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import com.warrenbrowse.vpn.lib.model.PackageName
+
+class ApplicationsProvider(
+    private val packageManager: PackageManager,
+    private val self: PackageName,
+) {
+    private val applicationFilterPredicate: (ApplicationInfo) -> Boolean = { appInfo ->
+        hasInternetPermission(appInfo.packageName) && !isSelfApplication(appInfo.packageName)
+    }
+
+    private val descendingByNameComparator = compareBy<AppData> { it.name.lowercase() }
+
+    @Suppress("QueryPermissionsNeeded")
+    fun apps(): List<AppData> {
+        return packageManager
+            .getInstalledApplications(PackageManager.GET_META_DATA)
+            .asSequence()
+            .filter(applicationFilterPredicate)
+            .map { info ->
+                AppData(
+                    PackageName(info.packageName),
+                    info.icon,
+                    info.loadLabel(packageManager).toString(),
+                    !isLaunchable(info.packageName),
+                )
+            }
+            .toList()
+            .sortedWith(descendingByNameComparator)
+    }
+
+    private fun hasInternetPermission(packageName: String): Boolean {
+        return PackageManager.PERMISSION_GRANTED ==
+            packageManager.checkPermission(Manifest.permission.INTERNET, packageName)
+    }
+
+    private fun isLaunchable(packageName: String): Boolean {
+        return packageManager.getLaunchIntentForPackage(packageName) != null ||
+            packageManager.getLeanbackLaunchIntentForPackage(packageName) != null
+    }
+
+    private fun isSelfApplication(packageName: String): Boolean {
+        return packageName == self.value
+    }
+}

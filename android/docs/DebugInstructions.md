@@ -3,8 +3,8 @@
 1. In `gradle.properties` or in your `$HOME/.gradle/gradle.properties` file set the following:
 
 ```
-mullvad.app.build.keepDebugSymbols=true
-mullvad.app.build.replaceRustPathPrefix=false
+warren.app.build.keepDebugSymbols=true
+warren.app.build.replaceRustPathPrefix=false
 ```
 
 2. In Android Studio, go to `Run -> Edit configurations...`

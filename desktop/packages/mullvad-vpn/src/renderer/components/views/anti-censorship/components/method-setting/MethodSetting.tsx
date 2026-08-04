@@ -12,7 +12,6 @@ import {
   QuicOption,
   ShadowsocksOption,
   UdpOverTcpOption,
-  WireguardPortOption,
 } from './components';
 
 export function MethodSetting() {
@@ -48,7 +47,6 @@ export function MethodSetting() {
       </SettingsListbox.Header>
       <SettingsListbox.Options>
         <AutomaticOption />
-        <WireguardPortOption />
         <LwoOption />
         <QuicOption />
         <ShadowsocksOption />

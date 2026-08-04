@@ -6,7 +6,13 @@ use std::{
 
 use crate::{Error, Result, UserPermissions};
 
-pub const PRODUCT_NAME: &str = "mullvad-vpn";
+// Renamed to `warren-vpn` for the Warren fork to avoid any
+// collision with an upstream Mullvad client installed on the same
+// machine (same RPC socket, same settings.json, same relays.json).
+// See tests/warren_collision_safety.rs. Non-prod product environments
+// get their own suffixed directory (`warren-vpn-beta`, ...) so a beta
+// install coexists with prod without sharing state or the RPC socket.
+pub const PRODUCT_NAME: &str = warren_product_env::UNIX_PRODUCT_DIR;
 
 impl UserPermissions {
     fn fs_permissions(self) -> fs::Permissions {

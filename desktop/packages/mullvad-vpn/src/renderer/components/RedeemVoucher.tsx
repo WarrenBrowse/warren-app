@@ -1,27 +1,39 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useRef, useState } from 'react';
 import { sprintf } from 'sprintf-js';
 
 import { formatDate } from '../../shared/account-expiry';
 import { VoucherResponse } from '../../shared/daemon-rpc-types';
 import { formatRelativeDate } from '../../shared/date-helper';
 import { messages } from '../../shared/gettext';
-import { isAccountNumber } from '../../shared/utils';
+import { isWarrenPubKey, isWarrenVoucher } from '../../shared/utils';
 import { useAppContext } from '../context';
 import { Button, ButtonProps, Flex, Spinner } from '../lib/components';
 import { IconBadge } from '../lib/icon-badge';
 import { useSelector } from '../redux/store';
 import { ModalAlert } from './Modal';
 import {
-  StyledAccountNumberInfo,
   StyledEmptyResponse,
   StyledErrorResponse,
   StyledInput,
   StyledLabel,
   StyledProgressResponse,
   StyledTitle,
+  StyledWarrenPubKeyInfo,
 } from './RedeemVoucherStyles';
 
-const MIN_VOUCHER_LENGTH = 16;
+// Warren voucher format (Crockford-32, see `shared/utils.ts`):
+// 16 raw chars displayed as `XXXX-XXXX-XXXX-XXXX` (19 chars). The
+// `FormattableTextInput` is configured below to enforce the
+// grouping live as the user types. Validation lives in
+// `shared/utils.ts::isWarrenVoucher` so the same regex governs the
+// `valueValid` gate (Submit button enable state) and the "did the
+// user paste their pubkey by mistake" recovery hint rendered in
+// `RedeemVoucherResponse`.
+const WARREN_VOUCHER_RAW_LENGTH = 16;
+// Crockford-32 alphabet uppercase: 0-9 + A-Z minus I/L/O/U. Passed
+// as a JS regex char class to `FormattableTextInput`. MUST stay in
+// sync with `warren_api::vouchers::VOUCHER_ALPHABET`.
+const WARREN_VOUCHER_ALLOWED_CHARS = '[0-9A-HJKM-NP-TV-Z]';
 
 interface IRedeemVoucherContextValue {
   onSubmit: () => void;
@@ -76,31 +88,52 @@ export function RedeemVoucherContainer(props: IRedeemVoucherProps) {
   const [submitting, setSubmitting] = useState(false);
   const [response, setResponse] = useState<VoucherResponse>();
 
-  const valueValid = value.length >= MIN_VOUCHER_LENGTH;
+  // Synchronous re-entry guard. The `submitting` state above is set via
+  // `setSubmitting(true)` which React batches until the end of the
+  // event handler; meanwhile the input's `disabled` prop has not yet
+  // been committed to the DOM. If the user fires the submit twice in
+  // quick succession (Enter key autorepeat, or click + Enter), the
+  // closure-captured `submitting` value is still `false` for both
+  // invocations and both calls race to `submitVoucher`. A `useRef`
+  // updated synchronously closes that window without depending on
+  // React's commit cycle. Reset to `false` in a `finally`-equivalent
+  // path so a real failure doesn't permanently block re-submission.
+  const inFlightRef = useRef(false);
+
+  const valueValid = isWarrenVoucher(value);
 
   const onSubmitWrapper = useCallback(async () => {
-    if (!valueValid) {
+    if (!valueValid || inFlightRef.current) {
       return;
     }
+    inFlightRef.current = true;
 
-    const submitTimestamp = Date.now();
-    setSubmitting(true);
-    setSubmittedValue(value);
-    onSubmit?.();
-    const response = await submitVoucher(value);
+    try {
+      const submitTimestamp = Date.now();
+      setSubmitting(true);
+      setSubmittedValue(value);
+      onSubmit?.();
+      const response = await submitVoucher(value);
 
-    // Show the spinner for at least half a second if it isn't successful.
-    const submitDuration = Date.now() - submitTimestamp;
-    if (response.type !== 'success' && submitDuration < 500) {
-      await new Promise((resolve) => setTimeout(resolve, 500 - submitDuration));
-    }
+      // Show the spinner for at least half a second if it isn't successful.
+      const submitDuration = Date.now() - submitTimestamp;
+      if (response.type !== 'success' && submitDuration < 500) {
+        await new Promise((resolve) => setTimeout(resolve, 500 - submitDuration));
+      }
 
-    setSubmitting(false);
-    setResponse(response);
-    if (response.type === 'success') {
-      onSuccess?.(response.newExpiry, response.secondsAdded);
-    } else {
-      onFailure?.();
+      setSubmitting(false);
+      setResponse(response);
+      if (response.type === 'success') {
+        onSuccess?.(response.newExpiry, response.secondsAdded);
+      } else {
+        onFailure?.();
+      }
+    } finally {
+      // Release the guard so a genuine retry (e.g. after a transient
+      // network error) can re-submit. The button's `disabled` state
+      // (driven by `submitting` / `response.type === 'success'`) keeps
+      // the UX honest while in flight.
+      inFlightRef.current = false;
     }
   }, [value, valueValid, onSubmit, submitVoucher, onSuccess, onFailure]);
 
@@ -147,11 +180,17 @@ export function RedeemVoucherInput(props: IRedeemVoucherInputProps) {
   return (
     <StyledInput
       className={props.className}
-      allowedCharacters="[A-Z0-9]"
+      // `FormattableTextInput` filters input character-by-character
+      // against `allowedCharacters`. `WARREN_VOUCHER_ALLOWED_CHARS`
+      // is the Crockford-32 char class - pasted I/L/O/U characters
+      // are silently dropped (matching the backend's strict alphabet
+      // gate, see `warren_api::vouchers::normalize_secret`'s "no
+      // Crockford aliasing" rationale).
+      allowedCharacters={WARREN_VOUCHER_ALLOWED_CHARS}
       separator="-"
       uppercaseOnly
       groupLength={4}
-      maxLength={16}
+      maxLength={WARREN_VOUCHER_RAW_LENGTH}
       addTrailingSeparator
       disabled={disabled}
       value={value}
@@ -186,13 +225,13 @@ export function RedeemVoucherResponse() {
             <StyledErrorResponse>
               {messages.pgettext('redeem-voucher-view', 'Voucher code is invalid.')}
             </StyledErrorResponse>
-            {isAccountNumber(submittedValue) ? (
-              <StyledAccountNumberInfo>
+            {isWarrenPubKey(submittedValue) ? (
+              <StyledWarrenPubKeyInfo>
                 {messages.pgettext(
                   'redeem-voucher-view',
-                  'It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first.',
+                  'It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first.',
                 )}
-              </StyledAccountNumberInfo>
+              </StyledWarrenPubKeyInfo>
             ) : null}
           </>
         );
@@ -202,6 +241,13 @@ export function RedeemVoucherResponse() {
             {messages.pgettext('redeem-voucher-view', 'Voucher code has already been used.')}
           </StyledErrorResponse>
         );
+      case 'expired':
+        return (
+          <StyledErrorResponse>
+            {messages.pgettext('redeem-voucher-view', 'Voucher code has expired.')}
+          </StyledErrorResponse>
+        );
+      case 'not_ready':
       case 'error':
         return (
           <StyledErrorResponse>

@@ -17,6 +17,8 @@ export function ConnectButton(props: ButtonProps) {
     }
   }, [connectTunnel]);
 
+  // Green "go": the button signals its action, not the state (the exposed state
+  // is already shown in red by the status card).
   return (
     <Button variant="success" onClick={onConnect} {...props}>
       <Button.Text>{messages.pgettext('tunnel-control', 'Connect')}</Button.Text>

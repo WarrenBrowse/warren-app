@@ -5,6 +5,12 @@ use super::ResolvedDnsConfig;
 #[error("Unknown Android DNS error")]
 pub struct Error;
 
+/// Nothing to repair on Android: DNS lives in the VpnService config, which
+/// the system tears down with the VPN.
+pub(crate) fn recover_after_crash() -> Result<(), Error> {
+    Ok(())
+}
+
 pub struct DnsMonitor;
 
 impl super::DnsMonitorT for DnsMonitor {

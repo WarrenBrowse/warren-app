@@ -1,18 +1,17 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
+    alias(libs.plugins.warren.android.library)
     alias(libs.plugins.kotlin.parcelize)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.usecase"
+    namespace = "com.warrenbrowse.vpn.lib.usecase"
 
     buildFeatures { buildConfig = true }
 }
 
 dependencies {
     implementation(projects.lib.common)
-    implementation(projects.lib.grpc)
     implementation(projects.lib.model)
     implementation(projects.lib.repository)
 

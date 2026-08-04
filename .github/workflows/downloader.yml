@@ -1,30 +1,9 @@
 ---
 name: Installer downloader - Size test
 on:
-  pull_request:
-    paths:
-      - '**'
-      - '!**/**.md'
-      - '!.github/workflows/**'
-      - '.github/workflows/downloader.yml'
-      - '!.github/CODEOWNERS'
-      - '!android/**'
-      - '!audits/**'
-      - '!build.sh'
-      - '!ci/**'
-      - '!clippy.toml'
-      - "!code-owners.json"
-      - '!deny.toml'
-      - '!rustfmt.toml'
-      - '!.yamllint'
-      - '!docs/**'
-      - '!graphics/**'
-      - '!desktop/**'
-      - '!ios/**'
-      - '!scripts/**'
-      - '!.*ignore'
-      - '!prepare-release.sh'
-      - '!**/osv-scanner.toml'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 permissions: {}
 
@@ -61,7 +40,7 @@ jobs:
       - name: Check file size
         uses: ./.github/actions/check-file-size
         with:
-          artifact: "./dist/Install Mullvad VPN.exe"
+          artifact: "./dist/Install Warren VPN.exe"
           max_size: ${{ env.MAX_BINARY_SIZE }}
 
   build-macos:
@@ -83,5 +62,5 @@ jobs:
       - name: Check file size
         uses: ./.github/actions/check-file-size
         with:
-          artifact: "./dist/Install Mullvad VPN.dmg"
+          artifact: "./dist/Install Warren VPN.dmg"
           max_size: ${{ env.MAX_BINARY_SIZE }}

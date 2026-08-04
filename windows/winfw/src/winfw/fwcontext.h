@@ -43,7 +43,8 @@ public:
 		const std::vector<std::wstring> &relayClients,
 		const std::wstring &tunnelInterfaceAlias,
 		const std::vector<wfp::IpAddress> &tunnelDnsServers,
-		const std::vector<wfp::IpAddress> &nonTunnelDnsServers
+		const std::vector<wfp::IpAddress> &nonTunnelDnsServers,
+		bool allowExternalDns
 	);
 
 	bool applyPolicyBlocked(

@@ -254,7 +254,7 @@ pub async fn test_detect_app_removal(
         .device
         .id;
 
-    rpc.exec("/bin/rm", ["-rf", "/Applications/Mullvad VPN.app"])
+    rpc.exec("/bin/rm", ["-rf", "/Applications/Warren VPN.app"])
         .await
         .context("Failed to delete Mullvad app")?;
 
@@ -369,7 +369,7 @@ pub async fn test_installation_idempotency(
     Ok(())
 }
 
-/// Test that mullvad-problem-report includes the expected logs
+/// Test that warren-problem-report includes the expected logs
 #[test_function]
 pub async fn test_problem_report_collect(
     _ctx: TestContext,
@@ -381,22 +381,22 @@ pub async fn test_problem_report_collect(
     let _result = run_test(&rpc, &["disconnected.spec"]).await;
 
     //
-    // Collect log paths from 'mullvad-problem-report collect --output -'
+    // Collect log paths from 'warren-problem-report collect --output -'
     //
     let problem_report_bin = if TEST_CONFIG.os == Os::Windows {
-        "mullvad-problem-report.exe"
+        "warren-problem-report.exe"
     } else {
-        "mullvad-problem-report"
+        "warren-problem-report"
     };
 
     let result = rpc
         .exec(problem_report_bin, ["collect", "--output", "-"])
         .await
-        .context("Failed to execute mullvad-problem-report")?;
+        .context("Failed to execute warren-problem-report")?;
 
     ensure!(
         result.success(),
-        "mullvad-problem-report failed with exit code: {:?}. stdout: {}. stderr: {}",
+        "warren-problem-report failed with exit code: {:?}. stdout: {}. stderr: {}",
         result.code,
         String::from_utf8_lossy(&result.stdout),
         String::from_utf8_lossy(&result.stderr)

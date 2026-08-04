@@ -17,7 +17,7 @@ body:
         please contact support instead of filing a bug report. Go to
         `Settings (cogwheel) -> Support -> Report a problem`.
         That way the support team gets redacted logs from your app and can help you out better.
-        You can also just email them at support@mullvadvpn.net.
+        You can also just email them at support@warrenbrowse.com.
       options:
         - label: I know this is an issue with the app, and contacting Mullvad support is not relevant.
           required: true
@@ -77,7 +77,7 @@ body:
         If the graphical part of the app does not work, you can get the logs via the terminal/console
         by running this command:
         ```
-        mullvad-problem-report collect --output mullvad-report.log
+        warren-problem-report collect --output mullvad-report.log
         ```
         And then copy the text from the file `mullvad-report.log` that was just created.
       render: shell

@@ -67,18 +67,75 @@ fn get_product_version(target: Target) -> String {
     };
     println!("cargo:rerun-if-changed={version_file_path}");
 
-    let release_version = fs::read_to_string(version_file_path)
+    let file_version = fs::read_to_string(version_file_path)
         .unwrap_or_else(|_| panic!("Failed to read {version_file_path}"))
         .trim()
         .to_owned();
 
-    // Compute the expected tag name for the release named `product_version`
+    // A release build IS its tag: CI stamped the version files from the tag it
+    // is building, so a release tag at HEAD naming that same version settles
+    // both the version and the (empty) suffix. Required for the beta channel:
+    // the fallback below only sees `v*` tags, so a `beta-v0.0.1` build would
+    // otherwise take the newer prod version and a `-dev-` suffix, shipping a
+    // beta artifact that reports a prod version and refuses update checks.
+    if let Some(tag) = release_tag_at_head(&file_version) {
+        return format!("{file_version}{}", get_suffix(&tag));
+    }
+
+    // Release builds are stamped by CI (a tag build overwrites the version
+    // files from the tag, see .github/actions/mullvad-build-env), so the
+    // committed files lag behind the latest release. A dev build that trusts
+    // the stale file reports an old base version, and the update check then
+    // suggests an "upgrade" that is older than the checkout. Prefer the nearest
+    // reachable `v*` release tag when it is newer than the file; keep the file
+    // as the source of truth when tags are unavailable (shallow CI clone,
+    // source tarball) or when the file is ahead (post-bump, pre-tag commits).
+    let release_version = match latest_reachable_release_version() {
+        Some(tag_version) if version_triple(&tag_version) > version_triple(&file_version) => {
+            tag_version
+        }
+        _ => file_version,
+    };
+
+    // Compute the expected tag name for the release named `product_version`.
+    // Warren tags desktop releases as `v{version}` (the release workflow triggers
+    // on `v*.*.*`), so the clean (suffix-less) build is the one whose HEAD is the
+    // `v{version}` tag. If that tag is absent, get_suffix falls back to `-dev-<hash>`.
     let release_tag = match target {
         Target::Android => format!("android/{release_version}"),
-        Target::Desktop => release_version.clone(),
+        Target::Desktop => format!("v{release_version}"),
     };
 
     format!("{release_version}{}", get_suffix(&release_tag))
+}
+
+/// Returns the release tag pointing at `HEAD` that names `version`, in either
+/// channel (`v{version}` prod, `beta-v{version}` beta), or `None`.
+fn release_tag_at_head(version: &str) -> Option<String> {
+    let tags = git_output(&["tag", "--points-at", "HEAD"])?;
+    let prod = format!("v{version}");
+    let beta = format!("beta-{prod}");
+    tags.lines()
+        .find(|tag| *tag == prod || *tag == beta)
+        .map(str::to_owned)
+}
+
+/// Returns the version of the nearest `v*` release tag reachable from `HEAD`
+/// (without the leading `v`), or `None` outside a git repository or when no
+/// release tag is reachable.
+fn latest_reachable_release_version() -> Option<String> {
+    let tag = git_output(&["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*"])?;
+    tag.strip_prefix('v').map(str::to_owned)
+}
+
+/// Leading numeric `(major, minor, patch)` of a version string; pre-release
+/// suffixes (`-beta1`, `-dev-...`) are ignored for the comparison.
+fn version_triple(version: &str) -> (u32, u32, u32) {
+    let mut parts = version
+        .split(['.', '-'])
+        .map(|part| part.parse().unwrap_or(0));
+    let mut next = || parts.next().unwrap_or(0);
+    (next(), next(), next())
 }
 
 /// Returns the suffix for the current build. If the build is done on a git tag named

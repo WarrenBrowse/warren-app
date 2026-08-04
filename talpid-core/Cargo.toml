@@ -8,6 +8,7 @@ license.workspace = true
 
 [dependencies]
 anyhow = { workspace = true }
+warren-product-env = { path = "../warren-product-env" }
 cfg-if = "1.0.4"
 futures = { workspace = true }
 ipnetwork = { workspace = true }
@@ -18,14 +19,18 @@ talpid-dns = { path = "../talpid-dns" }
 talpid-routing = { path = "../talpid-routing" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
-talpid-wireguard = { path = "../talpid-wireguard" }
+talpid-warren-tunnel = { path = "../talpid-warren-tunnel" }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs", "process", "rt-multi-thread"] }
 
 [dev-dependencies]
+# Test fixtures for `BackendParams::Warren` use deterministic Ed25519
+# seeds + warrenguard-wire newtypes (WarrenPubkey / WarrenExitAddr).
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true }
 test-log = "0.2.17"
 tokio = { workspace = true, features = ["io-util", "test-util", "time"] }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire" }
 
 [target.'cfg(target_os = "android")'.dependencies]
 jnix = { version = "0.5.1", features = ["derive"] }
@@ -101,8 +106,6 @@ features = [
 
 [features]
 cgroup2 = []
-multihop-pcap = ["talpid-wireguard/multihop-pcap"]
-wireguard-go = ["talpid-wireguard/wireguard-go"]
 
 [lints]
 workspace = true

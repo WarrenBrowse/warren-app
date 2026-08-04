@@ -2,6 +2,9 @@
 name: OSV-Scanner Scheduled Scan
 
 on:
+  # A scheduled vulnerability scan does not burden direct pushes to main, so it
+  # stays enabled. It scans committed lockfiles (no engine build needed),
+  # so no engine token is required here.
   schedule:
     - cron: "30 7 * * MON-FRI"
   workflow_dispatch:

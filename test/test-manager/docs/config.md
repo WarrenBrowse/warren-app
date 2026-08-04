@@ -2,6 +2,10 @@
 
 This document outlines the format of the configuration used by `test-manager` to perform end-to-end tests in virtualized environments.
 
+> **Warren note.** The `mullvad_host` values and example locations below reflect the inherited
+> upstream framework, which still targets Mullvad's infrastructure (see the note in
+> `test/README.md`). They are not Warren endpoints.
+
 ## Format
 
 The configuration is a JSON document with three values:

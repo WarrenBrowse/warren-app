@@ -1,8 +1,10 @@
 # Repository security policy
 
-Mullvad takes the security of our VPN app seriously. We perform third party security audits of the
-entire app every second year. We also do smaller more specialized audits for certain features.
-You can read more about these audits in the [audits directory](audits/README.md).
+Warren VPN is a GPL-3.0 fork of the Mullvad VPN app, and we take the security of the app
+seriously. The reports in the [audits directory](audits/README.md) are Mullvad's historical
+audits of the upstream app: they cover components Warren still ships (client UI, firewall and DNS
+leak protection, routing) but not Warren's QUIC data plane or its wallet account model. Warren has
+not yet commissioned its own external audit of the Warren-specific stack.
 
 ## Reporting security vulnerabilities
 
@@ -11,7 +13,7 @@ products and report any issues they find to us. We ask you to carry out responsi
 research and disclosure. This includes, but is not limited to refraining from:
 
 * Denial of service attacks against API endpoints used by the app
-* Trying to disrupt the Mullvad VPN service
+* Trying to disrupt the Warren VPN service
 * Publicly disclosing vulnerabilities before reporting them to us in private.
 
 Before reporting issues, we recommend that you read the following documents:
@@ -20,10 +22,9 @@ Before reporting issues, we recommend that you read the following documents:
 
 **Please do not report security vulnerabilities through GitHub issues or other
 public channels.** Instead please [create a vulnerability report on Github]. Or email our
-support on [support@mullvadvpn.net]. Preferrably encrypted with our [support's PGP] key.
+support on [support@warrenbrowse.com].
 
-[create a vulnerability report on Github]: https://github.com/mullvad/mullvadvpn-app/security/advisories/new
-[support@mullvadvpn.net]: mailto:support@mullvadvpn.net
-[support's PGP]: https://mullvad.net/static/gpg/mullvadvpn-support-mail.asc
+[create a vulnerability report on Github]: https://github.com/WarrenBrowse/warren-app/security/advisories/new
+[support@warrenbrowse.com]: mailto:support@warrenbrowse.com
 [known issues]: docs/known-issues.md
 [docs/security.md]: docs/security.md

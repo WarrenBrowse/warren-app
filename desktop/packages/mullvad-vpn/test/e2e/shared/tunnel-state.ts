@@ -6,6 +6,8 @@ import { anyOf } from '../utils';
 
 const DISCONNECTED_COLOR = colorTokens.red;
 const CONNECTED_COLOR = colorTokens.green;
+// Calm in-between header colour shown while (dis)connecting.
+const PENDING_COLOR = colorTokens.yellow;
 const WHITE_COLOR = colorTokens.white;
 
 const DISCONNECTED_BUTTON_COLOR = anyOf(colorTokens.red, colorTokens.red80);
@@ -29,7 +31,7 @@ export async function expectConnecting(page: Page) {
   await expectTunnelState(page, {
     labelText: 'CONNECTING...',
     labelColor: WHITE_COLOR,
-    headerColor: CONNECTED_COLOR,
+    headerColor: PENDING_COLOR,
     buttonText: 'Cancel',
     buttonColor: DISCONNECTED_BUTTON_COLOR,
   });

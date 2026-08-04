@@ -20,7 +20,9 @@ case "$(uname -s)" in
     ;;
   MINGW*|MSYS_NT*)
     arch="$(powershell -Command "(Get-CimInstance Win32_OperatingSystem).OSArchitecture")"
-    if [[ $arch == "ARM 64"* ]]; then
+    # OSArchitecture is localized (e.g. "ARM 64" in English, "Processeur ARM 64 bits"
+    # in French), so match the architecture loosely instead of a fixed prefix.
+    if [[ $arch == *ARM*64* ]]; then
         HOST="aarch64-pc-windows-msvc"
     else
         HOST="x86_64-pc-windows-msvc"

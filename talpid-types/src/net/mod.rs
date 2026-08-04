@@ -20,6 +20,29 @@ mod allowed_nets;
 
 pub use allowed_nets::*;
 
+/// Which underlying tunneling technology backs a [`TunnelEndpoint`].
+///
+/// Used by [`TunnelEndpoint::Display`] to print the correct protocol name and
+/// by the Warren UI path to distinguish QUIC-based exits from WireGuard ones.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum TunnelType {
+    /// Standard WireGuard tunnel (upstream Mullvad path).
+    #[default]
+    WireGuard,
+    /// Warren tunnel over Quinn/QUIC (Warren fork path).
+    Warren,
+}
+
+impl fmt::Display for TunnelType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TunnelType::WireGuard => f.write_str("WireGuard"),
+            TunnelType::Warren => f.write_str("Warren"),
+        }
+    }
+}
+
 /// A tunnel endpoint is broadcast during the connecting and connected states of the tunnel state
 /// machine.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -32,11 +55,20 @@ pub struct TunnelEndpoint {
     pub tunnel_interface: Option<String>,
     #[cfg(daita)]
     pub daita: bool,
+    /// Largest inner packet the live tunnel can carry in one datagram, set
+    /// only when it is below the TUN MTU (reduced-MTU underlay). Runtime
+    /// truth from the tunnel monitor, like `daita`: `None` until the
+    /// post-connect measurement settles, and on paths that fit the default.
+    #[serde(default)]
+    pub effective_mtu: Option<u16>,
+    /// The tunneling technology used for this endpoint.
+    #[serde(default)]
+    pub tunnel_type: TunnelType,
 }
 
 impl fmt::Display for TunnelEndpoint {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
-        write!(f, "WireGuard ")?;
+        write!(f, "{} ", self.tunnel_type)?;
         if self.quantum_resistant {
             write!(f, "(quantum resistant) ")?;
         }
@@ -552,5 +584,78 @@ impl IpAvailability {
     /// Whether IPv6 connectivity is available.
     pub fn has_ipv6(&self) -> bool {
         matches!(self, Self::Ipv6 | Self::Ipv4AndIpv6)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::net::{IpAddr, Ipv4Addr};
+
+    use super::*;
+
+    fn make_endpoint(tunnel_type: TunnelType) -> TunnelEndpoint {
+        TunnelEndpoint {
+            endpoint: Endpoint::new(
+                IpAddr::V4(Ipv4Addr::new(198, 51, 100, 1)),
+                1194,
+                TransportProtocol::Udp,
+            ),
+            quantum_resistant: false,
+            obfuscation: None,
+            entry_endpoint: None,
+            tunnel_interface: None,
+            #[cfg(daita)]
+            daita: false,
+            effective_mtu: None,
+            tunnel_type,
+        }
+    }
+
+    /// H-5 regression: Display must print "WireGuard" for WireGuard tunnels.
+    #[test]
+    fn display_wireguard_contains_wireguard() {
+        let ep = make_endpoint(TunnelType::WireGuard);
+        let s = format!("{ep}");
+        assert!(
+            s.contains("WireGuard"),
+            "expected 'WireGuard' in display, got: {s:?}"
+        );
+        assert!(
+            !s.contains("Warren"),
+            "WireGuard endpoint must not mention 'Warren': {s:?}"
+        );
+    }
+
+    /// H-5 regression: Display must print "Warren" for Warren/QUIC tunnels.
+    #[test]
+    fn display_warren_contains_warren() {
+        let ep = make_endpoint(TunnelType::Warren);
+        let s = format!("{ep}");
+        assert!(
+            s.contains("Warren"),
+            "expected 'Warren' in display, got: {s:?}"
+        );
+        assert!(
+            !s.contains("WireGuard"),
+            "Warren endpoint must not mention 'WireGuard': {s:?}"
+        );
+    }
+
+    /// H-5: TunnelType default must be WireGuard (backward compat with deserialization).
+    #[test]
+    fn tunnel_type_default_is_wireguard() {
+        assert_eq!(TunnelType::default(), TunnelType::WireGuard);
+    }
+
+    /// H-5: quantum-resistant flag appears in Display output.
+    #[test]
+    fn display_includes_quantum_resistant_flag() {
+        let mut ep = make_endpoint(TunnelType::WireGuard);
+        ep.quantum_resistant = true;
+        let s = format!("{ep}");
+        assert!(
+            s.contains("quantum resistant"),
+            "expected 'quantum resistant' in display, got: {s:?}"
+        );
     }
 }

@@ -55,9 +55,12 @@ function getRelayName(
     const location = relaySettings.normal.location;
 
     if (location === 'any') {
-      return 'Automatic';
+      return messages.gettext('Automatic');
     } else if ('customList' in location) {
-      return customLists.find((list) => list.id === location.customList)?.name ?? 'Unknown';
+      return (
+        customLists.find((list) => list.id === location.customList)?.name ??
+        messages.gettext('Unknown')
+      );
     } else if ('hostname' in location) {
       const country = locations.find(({ code }) => code === location.country);
       if (country) {
@@ -92,9 +95,9 @@ function getRelayName(
       }
     }
 
-    return 'Unknown';
+    return messages.gettext('Unknown');
   } else if (relaySettings.customTunnelEndpoint) {
-    return 'Custom';
+    return messages.gettext('Custom');
   } else {
     throw new Error('Unsupported relay settings.');
   }

@@ -1,0 +1,1292 @@
+---
+# Warren VPN - Release pipeline
+#
+# Builds Warren VPN installers for macOS (DMG/PKG), Linux (.deb + .rpm +
+# .pacman, plus a sysvinit .deb and a NixOS flake), Windows (MSI/NSIS) and
+# Android (AAB/APK), and uploads them to a GitHub Release. Code signing is
+# opt-in per platform: when the signing secrets are absent the jobs produce
+# UNSIGNED builds (the current default, since Warren has no company/store
+# accounts yet). iOS is disabled until an Apple Developer account exists
+# (re-enable by setting the repo variable WARREN_ENABLE_IOS=true).
+#
+# The two extra Linux artifacts cover distributions the deb/rpm/pacman set
+# cannot reach, and neither recompiles anything: both consume the .deb the
+# Linux job published to the draft release.
+#
+#   WarrenVPN-<ver>-linux-amd64-sysvinit.deb    MX Linux, antiX, Devuan
+#     The systemd package leaves dpkg half-configured on a host with no
+#     systemctl. This one ships LSB init scripts, a supervisor standing in for
+#     Restart=always, and update-rc.d maintainer scripts. build-linux-sysvinit
+#     installs, starts, crashes, stops and purges it inside a systemd-less
+#     Debian before it is published.
+#
+#   WarrenVPN-<ver>-linux-x86_64-nixos.tar.gz   NixOS
+#     A tarball flake pinning that release's .deb by URL and hash, with a
+#     package that relinks it against the Nix store and a NixOS module
+#     (services.warren-vpn). build-nixos runs a real `nix build` and evaluates
+#     the module into a unit before it is published. See nix/warren-vpn/.
+#
+# Trigger: a tag push, whose shape picks the channel. A run builds and
+# publishes exactly ONE channel, so a beta fix can never push an update to prod
+# clients (workspace rule shared/rules/50-release-channels.md):
+#
+#   v*.*.*       prod: prod artifacts, api.warrenbrowse.com update manifests
+#   beta-v*.*.*  beta: WARREN_PRODUCT_ENV=beta artifacts,
+#                api.beta.warrenbrowse.com update manifests
+#
+# The two version series are independent (beta-v0.0.1 is legal while v1.16.2
+# exists), so every version derivation strips the channel prefix and every
+# per-channel step is gated on the channel resolved by tag-guard.
+#
+# Required GitHub Secrets (configured at WarrenBrowse/warren-app repo Settings
+# > Secrets and variables > Actions):
+#
+#   WARREN_CORE_RO_TOKEN
+#     PAT with read access to the WarrenBrowse org sibling repos (warrenguard,
+#     warren-sdk-rs, warren-contract). Used by all build jobs to checkout the
+#     path-dep sibling repos (the secret name is historical; the app no longer
+#     depends on warren-core).
+#
+#   WARREN_CSC_LINK_MACOS, WARREN_CSC_KEY_PASSWORD_MACOS
+#     macOS Developer ID Application certificate (.p12 base64-encoded) and
+#     its password. The .p12 is decoded into a temp file during the job.
+#
+#   WARREN_NOTARIZE_KEYCHAIN, WARREN_NOTARIZE_KEYCHAIN_PROFILE
+#     Apple notarytool credentials for stapling the .pkg installer.
+#
+#   WARREN_CSC_LINK_WIN, WARREN_CSC_KEY_PASSWORD_WIN
+#     Windows Authenticode certificate (.pfx base64-encoded) and its password.
+#     The .pfx is imported into the Windows cert store and the thumbprint is
+#     resolved at runtime, then signtool references that thumbprint.
+#
+#   WARREN_UPDATE_SIGNING_KEY  (publish-update-metadata)
+#     Dedicated, offline-generated Ed25519 secret (hex) that signs the
+#     auto-update manifests. Its public key must match
+#     `mullvad-update/warren-trusted-metadata-signing-pubkeys`. Generate with
+#     `cargo run -p mullvad-release -- generate-key`. NEVER reuse the
+#     relay/admin signing key. When unset, update metadata is not published.
+#
+#   WARREN_UPDATES_SSH_KEY / _HOST / _USER / _PATH  (publish-update-metadata)
+#     SSH private key + target for scp'ing the signed `*.json` manifests to the
+#     Hetzner/Caddy host that serves them (Let's Encrypt cert, matching the
+#     client pin) at https://api.warrenbrowse.com/updates/desktop/. Values:
+#     _USER=warren-deploy, _HOST=204.168.244.76 (the API VPS IP),
+#     _PATH=/srv/warren-updates/desktop (a beta run uploads to its `beta/`
+#     subdirectory instead, served as /updates/desktop by the beta vhost). When
+#     unset, the signed manifests are only attached as a run artifact.
+#
+# Optional repository variables:
+#   WARREN_UPDATE_MIN_VERSION
+#     If set, becomes the manifest `minimum_supported_version`: clients older
+#     than this are hard-blocked by the forced-update screen until they update.
+#     Applies to desktop and Android (Android bakes the desktop tag version).
+#   WARREN_UPDATE_MIN_VERSION_IOS
+#     Same lever for ios.json, in the iOS calendar scheme (e.g. 2026.3). Keep
+#     it set: without a minimum, clients fall back to "version listed in
+#     releases", which would block iOS builds newer than the manifest.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+      - 'beta-v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (must already exist)"
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  # Preliminary gate: the full Warren test suite (daemon cargo test/clippy/fmt +
+  # desktop UI type-check/lint) must pass BEFORE any platform build runs. A
+  # release version IS its tag (the builds bake the tag version), so a
+  # stale-tagged operator clone can ship a version REGRESSION: v1.9.1 was cut
+  # while v1.11.0 was live because `git tag -l | tail` sorts lexicographically
+  # (v1.10... sorts before v1.8...) and hid the real latest (2026-07-19). The
+  # guard makes that mistake impossible: the pushed tag must be the strictly
+  # highest version tag OF ITS OWN SERIES on origin or every build and publish
+  # is skipped. The two series never sort together, so the beta line can start
+  # at beta-v0.0.1 while the prod line sits at v1.16.2.
+  tag-guard:
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 10
+    outputs:
+      channel: ${{ steps.channel.outputs.channel }}
+      version: ${{ steps.channel.outputs.version }}
+      api-url: ${{ steps.channel.outputs.api-url }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Resolve the release channel and version from the tag
+        id: channel
+        run: |
+          ref="${GITHUB_REF_NAME}"
+          # The API host follows the channel here and nowhere else, so a job
+          # can never bake one environment's exit list into the other's app.
+          case "$ref" in
+            beta-v*) channel=beta; api_url=https://api.beta.warrenbrowse.com ;;
+            *)       channel=prod; api_url=https://api.warrenbrowse.com ;;
+          esac
+          version="${ref#beta-}"
+          version="${version#v}"
+          {
+            echo "channel=$channel"
+            echo "version=$version"
+            echo "api-url=$api_url"
+          } >> "$GITHUB_OUTPUT"
+          echo "channel=$channel version=$version api=$api_url (tag $ref)"
+      - name: Refuse a version-regressing release tag
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          WARREN_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: |
+          git fetch --tags --force origin
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            pattern='beta-v[0-9]*'
+          else
+            # `v[0-9]*` cannot match a beta-v tag: the series stay disjoint.
+            pattern='v[0-9]*'
+          fi
+          highest=$(git tag -l "$pattern" | sort -V | tail -1)
+          if [ -z "$highest" ]; then
+            echo "no existing $WARREN_CHANNEL tag: ${GITHUB_REF_NAME} opens the series"
+            exit 0
+          fi
+          if [ "${GITHUB_REF_NAME}" != "$highest" ]; then
+            echo "::error::${GITHUB_REF_NAME} is not the highest $WARREN_CHANNEL tag ($highest): regression refused"
+            exit 1
+          fi
+
+  # build-* job `needs: [tests]`, so a red test skips all builds and the publish.
+  # Same reusable suite as the push/PR warren-checks.yml (single source of truth).
+  tests:
+    needs: [tag-guard]
+    uses: ./.github/workflows/warren-tests.yml
+    secrets: inherit
+
+  build-macos:
+    name: Build macOS DMG/PKG
+    needs: [tag-guard, tests]
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 60
+    env:
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      WARREN_CSC_LINK_MACOS_B64: ${{ secrets.WARREN_CSC_LINK_MACOS }}
+      WARREN_CSC_KEY_PASSWORD_MACOS: ${{ secrets.WARREN_CSC_KEY_PASSWORD_MACOS }}
+      WARREN_NOTARIZE_KEYCHAIN: ${{ secrets.WARREN_NOTARIZE_KEYCHAIN }}
+      WARREN_NOTARIZE_KEYCHAIN_PROFILE: ${{ secrets.WARREN_NOTARIZE_KEYCHAIN_PROFILE }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
+
+      - name: Decode signing certificate
+        if: env.WARREN_CSC_LINK_MACOS_B64 != ''
+        run: |
+          tmp=$(mktemp -t warren-csc-XXXXXX.p12)
+          printf '%s' "$WARREN_CSC_LINK_MACOS_B64" | base64 -d > "$tmp"
+          echo "WARREN_CSC_LINK_MACOS=$tmp" >> "$GITHUB_ENV"
+
+      - name: Build (signed + notarized)
+        if: env.WARREN_CHANNEL == 'prod' && env.WARREN_CSC_LINK_MACOS != ''
+        run: bash ci/build-with-retry.sh --optimize --sign --notarize
+
+      - name: Build (unsigned, signing assets missing)
+        if: env.WARREN_CHANNEL == 'prod' && env.WARREN_CSC_LINK_MACOS == ''
+        run: |
+          echo "::warning::WARREN_CSC_LINK_MACOS secret not set; producing unsigned dev build."
+          bash ci/build-with-retry.sh --optimize
+
+      - name: Stage release assets (harmonized names)
+        if: env.WARREN_CHANNEL == 'prod'
+        run: bash ci/stage-release-assets.sh macos "$WARREN_VERSION"
+
+      # Beta channel: the separately-installable app compiled with
+      # WARREN_PRODUCT_ENV=beta (own bundle id, product name, API host and
+      # update channel; artifacts named WarrenVPN-Beta-*). Same signing
+      # posture as the prod build.
+      - name: Build beta (signed + notarized)
+        if: env.WARREN_CHANNEL == 'beta' && env.WARREN_CSC_LINK_MACOS != ''
+        env:
+          WARREN_PRODUCT_ENV: beta
+        run: bash ci/build-with-retry.sh --optimize --sign --notarize
+
+      - name: Build beta (unsigned, signing assets missing)
+        if: env.WARREN_CHANNEL == 'beta' && env.WARREN_CSC_LINK_MACOS == ''
+        env:
+          WARREN_PRODUCT_ENV: beta
+        run: bash ci/build-with-retry.sh --optimize
+
+      - name: Stage beta release assets
+        if: env.WARREN_CHANNEL == 'beta'
+        run: bash ci/stage-release-assets.sh macos "$WARREN_VERSION" beta
+
+      - name: Wipe signing certificate from runner
+        if: always() && env.WARREN_CSC_LINK_MACOS != ''
+        run: rm -f "$WARREN_CSC_LINK_MACOS" || true
+
+      # Upload installers directly as GitHub Release assets instead of Actions
+      # artifacts: release assets live in separate storage that is NOT subject to
+      # the Actions artifact storage quota (which the artifact path kept hitting).
+      - name: Publish macOS installers to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+  build-linux:
+    name: Build Linux .deb/.rpm/.pacman
+    needs: [tag-guard, tests]
+    # Routed to the Mac Studio x86_64 Rosetta container runner (macstudio-rosetta).
+    # The Debian LXC runner stays registered but lacks this label, so it is no
+    # longer selected for this job.
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 130
+    # Build C dependencies (tikv-jemalloc-sys, etc.) with clang, not gcc: under
+    # the x86_64-Rosetta emulation gcc's cc1 intermittently SIGSEGVs mid-compile
+    # ("internal compiler error: Segmentation fault ... cc1"), failing the build
+    # nondeterministically. clang is stable under Rosetta (same fix warren-core
+    # CI uses for its vendored-OpenSSL build). cc-rs honours CC/CXX for all C/C++
+    # deps the Rust build shells out to.
+    env:
+      CC: clang
+      CXX: clang++
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
+
+      - name: Verify Linux packaging deps (preinstalled on self-hosted runner)
+        run: |
+          # The self-hosted Linux runner is pre-provisioned (rpm, build toolchain).
+          # No `sudo apt-get` here: the runner user has no passwordless sudo, and
+          # `fpm` is not an apt package (the build packages .deb/.rpm itself).
+          rpm --version
+
+      - name: Build
+        if: env.WARREN_CHANNEL == 'prod'
+        # rustc/cc1 intermittently SIGSEGV under the x86_64-Rosetta emulation on a
+        # random crate (e.g. idna_adapter, tikv-jemalloc-sys); it is not a real
+        # build error and succeeds on a re-run. Retry the whole build on a crash
+        # signature; real compile errors still fail immediately on the first pass.
+        run: |
+          # pipefail so `build.sh | tee` reports build.sh's exit code, not tee's:
+          # without it a failed build (e.g. ring/clang) looked green and the
+          # SIGSEGV-retry below never triggered.
+          set -o pipefail
+          for attempt in 1 2 3; do
+            if ./build.sh --optimize 2>&1 | tee /tmp/build-linux.log; then exit 0; fi
+            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux.log; then
+              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
+              continue
+            fi
+            exit 1
+          done
+          exit 1
+
+      - name: Stage release assets (harmonized names)
+        if: env.WARREN_CHANNEL == 'prod'
+        run: bash ci/stage-release-assets.sh linux "$WARREN_VERSION"
+
+      # Beta channel: WARREN_PRODUCT_ENV=beta build (own package name
+      # warren-vpn-beta, own unit names, artifacts WarrenVPN-Beta-*).
+      # Same Rosetta SIGSEGV retry discipline as the prod build above.
+      - name: Build beta
+        if: env.WARREN_CHANNEL == 'beta'
+        env:
+          WARREN_PRODUCT_ENV: beta
+        run: |
+          set -o pipefail
+          for attempt in 1 2 3; do
+            if ./build.sh --optimize 2>&1 | tee /tmp/build-linux-beta.log; then exit 0; fi
+            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux-beta.log; then
+              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
+              continue
+            fi
+            exit 1
+          done
+          exit 1
+
+      - name: Stage beta release assets
+        if: env.WARREN_CHANNEL == 'beta'
+        run: bash ci/stage-release-assets.sh linux "$WARREN_VERSION" beta
+
+      # Publish straight to the GitHub Release (release-asset storage), which is
+      # NOT subject to the Actions artifact storage quota that blocks
+      # upload-artifact. Mirrors the macOS job; runs on every ref (draft keyed by
+      # github.ref_name) so a v* tag run assembles the full multi-platform draft.
+      - name: Publish Linux installers to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: linux-installers
+          path: release-assets/*
+          if-no-files-found: warn
+          retention-days: 1
+
+  # Two Linux distributions the .deb/.rpm/.pacman set does not reach, each
+  # getting the artifact it can actually install. Both jobs consume the .deb
+  # build-linux already published to the draft release, so neither recompiles
+  # anything: they add minutes, not another hour of Rosetta build.
+  #
+  # They run on the docker-capable runner because both need a container the
+  # Rosetta build runner cannot give them: a systemd-less Debian to install
+  # into, and a nix that the build runner has no root to install.
+  build-linux-sysvinit:
+    name: Build Linux .deb (sysvinit)
+    needs: [tag-guard, build-linux]
+    runs-on: [self-hosted, Linux, X64, docker, macstudio-docker]
+    timeout-minutes: 40
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Resolve the artifact names of this channel
+        run: |
+          if [ "$WARREN_CHANNEL" = beta ]; then prefix=WarrenVPN-Beta; else prefix=WarrenVPN; fi
+          {
+            echo "WARREN_DEB=${prefix}-${WARREN_VERSION}-linux-amd64.deb"
+            echo "WARREN_SYSVINIT_DEB=${prefix}-${WARREN_VERSION}-linux-amd64-sysvinit.deb"
+          } >> "$GITHUB_ENV"
+
+      - name: Download the Linux .deb from the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads
+          gh release download "$TAG_NAME" --dir downloads --pattern "$WARREN_DEB"
+          ls -lh downloads
+
+      - name: Repack it for sysvinit
+        run: bash ci/build-sysvinit-deb.sh "downloads/$WARREN_DEB" "release-assets/$WARREN_SYSVINIT_DEB"
+
+      # The failure this guards against is invisible until a user hits it: the
+      # systemd package leaves dpkg half-configured on a host with no systemctl.
+      # So the package is installed, started, crashed, restarted and purged for
+      # real inside a systemd-less Debian.
+      - name: Install-test it on a systemd-less Debian
+        run: |
+          bash ci/test-sysvinit-deb.sh \
+            "release-assets/$WARREN_SYSVINIT_DEB" \
+            "downloads/$WARREN_DEB"
+
+      - name: Publish it to the GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+  build-nixos:
+    name: Build NixOS flake
+    needs: [tag-guard, build-linux]
+    runs-on: [self-hosted, Linux, X64, docker, macstudio-docker]
+    # The first run on a fresh runner downloads the whole nixpkgs closure the
+    # Electron dependencies pull in; later runs reuse the /nix docker volume.
+    timeout-minutes: 90
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Resolve the artifact names and the pinned download host
+        run: |
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            prefix=WarrenVPN-Beta
+            base=https://api.beta.warrenbrowse.com/updates/desktop
+          else
+            prefix=WarrenVPN
+            base=https://api.warrenbrowse.com/updates/desktop
+          fi
+          {
+            echo "WARREN_DEB=${prefix}-${WARREN_VERSION}-linux-amd64.deb"
+            echo "WARREN_NIXOS_TARBALL=${prefix}-${WARREN_VERSION}-linux-x86_64-nixos.tar.gz"
+            # The flake pins the update host, never the GitHub asset: the
+            # repository is private, so a release asset answers 404 without a
+            # token and `nix build` could fetch nothing.
+            echo "WARREN_ASSET_BASE=$base"
+          } >> "$GITHUB_ENV"
+
+      - name: Download the Linux .deb from the draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p downloads
+          gh release download "$TAG_NAME" --dir downloads --pattern "$WARREN_DEB"
+          ls -lh downloads
+
+      - name: Pin this release in the flake
+        run: |
+          bash ci/stage-nixos-flake.sh \
+            "downloads/$WARREN_DEB" nixos-stage "$WARREN_VERSION" "$WARREN_ASSET_BASE"
+
+      # A flake that only evaluates proves nothing: what breaks when packaging a
+      # prebuilt Electron app on NixOS is a shared library nobody provides, and
+      # that only shows up once the binaries are relinked. So the package is
+      # built, its binaries are run out of the store, and the NixOS module is
+      # evaluated into a real unit before anything is published.
+      - name: Build it with nix and pack the published tarball
+        run: |
+          bash ci/build-nixos-flake.sh \
+            nixos-stage "downloads/$WARREN_DEB" "release-assets/$WARREN_NIXOS_TARBALL"
+
+      - name: Publish it to the GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+  build-windows:
+    name: Build Windows MSI
+    needs: [tag-guard, tests]
+    runs-on: [self-hosted, Windows, macstudio-win]
+    timeout-minutes: 140
+    # Windows binaries are signed with Azure Trusted Signing (cloud HSM).
+    # Since 1 June 2023 (CA/Browser Forum Code Signing Baseline Requirements),
+    # OV/EV code-signing private keys must live on FIPS 140-2 hardware, so the
+    # legacy "import a downloadable .pfx and sign by thumbprint" model no longer
+    # works for newly issued public certificates. Trusted Signing keeps the key
+    # in Azure and signs via signtool's dlib, so no key material ever touches
+    # the runner. build.sh selects this path via WARREN_WIN_SIGN_BACKEND.
+    env:
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+      TRUSTED_SIGNING_ENDPOINT: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
+      TRUSTED_SIGNING_ACCOUNT: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
+      TRUSTED_SIGNING_PROFILE: ${{ secrets.TRUSTED_SIGNING_PROFILE }}
+    steps:
+      - name: Set git config for long paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          rust-cache-targets: "true"
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
+
+      - name: Install Trusted Signing client (resolve signtool dlib)
+        if: env.AZURE_CLIENT_ID != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pkgRoot = Join-Path $env:RUNNER_TEMP "trusted-signing"
+          New-Item -ItemType Directory -Force -Path $pkgRoot | Out-Null
+          # Ensure nuget.exe is available (self-hosted runners may not ship it).
+          $nuget = 'nuget'
+          if (-not (Get-Command nuget -ErrorAction SilentlyContinue)) {
+            $nuget = Join-Path $env:RUNNER_TEMP 'nuget.exe'
+            Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $nuget
+          }
+          # Azure.CodeSigning.Dlib.dll ships in the Microsoft.Trusted.Signing.Client package.
+          & $nuget install Microsoft.Trusted.Signing.Client -OutputDirectory $pkgRoot -Source https://api.nuget.org/v3/index.json
+          $dlib = Get-ChildItem -Path $pkgRoot -Recurse -Filter Azure.CodeSigning.Dlib.dll |
+            Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
+          if (-not $dlib) { throw "Azure.CodeSigning.Dlib.dll not found under $pkgRoot" }
+          "WARREN_TS_DLIB=$($dlib.FullName)" >> $env:GITHUB_ENV
+
+      - name: Write Trusted Signing metadata
+        if: env.AZURE_CLIENT_ID != ''
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $meta = @{
+            Endpoint               = $env:TRUSTED_SIGNING_ENDPOINT
+            CodeSigningAccountName = $env:TRUSTED_SIGNING_ACCOUNT
+            CertificateProfileName = $env:TRUSTED_SIGNING_PROFILE
+          } | ConvertTo-Json
+          $metaPath = Join-Path $env:RUNNER_TEMP "trusted-signing-metadata.json"
+          $meta | Out-File -FilePath $metaPath -Encoding ascii
+          "WARREN_TS_METADATA=$metaPath" >> $env:GITHUB_ENV
+          "WARREN_WIN_SIGN_BACKEND=trusted-signing" >> $env:GITHUB_ENV
+
+      # Self-heal a corrupt electron-builder winCodeSign cache on the persistent
+      # runner. A partial extraction (e.g. rcedit-x64.exe missing) is trusted and
+      # never re-downloaded, failing `pack:win` with ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
+      # even for unsigned builds (rcedit stamps the .exe resources). Purge the
+      # winCodeSign cache when its rcedit is absent so electron-builder refetches.
+      - name: Heal electron-builder winCodeSign cache
+        shell: pwsh
+        run: |
+          $roots = @(
+            (Join-Path $env:WINDIR 'SystemTemp\electron-builder-cache\winCodeSign'),
+            (Join-Path $env:LOCALAPPDATA 'electron-builder\Cache\winCodeSign'),
+            (Join-Path $env:TEMP 'electron-builder-cache\winCodeSign')
+          )
+          foreach ($cache in $roots) {
+            if (Test-Path $cache) {
+              $rcedit = Get-ChildItem -Path $cache -Recurse -Filter 'rcedit-x64.exe' -ErrorAction SilentlyContinue
+              if (-not $rcedit) {
+                Write-Host "Purging corrupt winCodeSign cache (rcedit missing): $cache"
+                Remove-Item -Recurse -Force $cache -ErrorAction SilentlyContinue
+              } else {
+                Write-Host "winCodeSign cache OK: $cache"
+              }
+            }
+          }
+
+      # Warren ships x64 Windows only. The runner is Windows-on-ARM (macstudio-win),
+      # so build the x86_64 target cross-compiled with the native ARM64 MSVC tools
+      # instead of --universal, whose aarch64 half has no shippable target.
+      - name: Build (signed via Trusted Signing)
+        if: env.WARREN_CHANNEL == 'prod' && env.AZURE_CLIENT_ID != ''
+        shell: bash
+        env:
+          TARGETS: x86_64-pc-windows-msvc
+        # Via build-with-retry.sh so a transient linker failure (LNK1181 "cannot
+        # open input file windows.0.52.0.lib", a shared cargo-registry / persistent
+        # target race under concurrent runners) triggers a clean-target retry
+        # instead of failing the whole release, exactly as the macOS job does.
+        run: bash ci/build-with-retry.sh --optimize --sign
+
+      - name: Build (unsigned, signing assets missing)
+        if: env.WARREN_CHANNEL == 'prod' && env.AZURE_CLIENT_ID == ''
+        shell: bash
+        env:
+          TARGETS: x86_64-pc-windows-msvc
+        run: |
+          echo "::warning::AZURE_CLIENT_ID secret not set; producing unsigned dev build."
+          bash ci/build-with-retry.sh --optimize
+
+      - name: Stage release assets (harmonized names)
+        if: env.WARREN_CHANNEL == 'prod'
+        shell: bash
+        run: bash ci/stage-release-assets.sh windows "$WARREN_VERSION"
+
+      # Beta channel: WARREN_PRODUCT_ENV=beta build (own appId, NSIS GUID and
+      # product name so it coexists with the prod install; artifacts
+      # WarrenVPN-Beta-*). Same signing posture as prod.
+      - name: Build beta (signed via Trusted Signing)
+        if: env.WARREN_CHANNEL == 'beta' && env.AZURE_CLIENT_ID != ''
+        shell: bash
+        env:
+          TARGETS: x86_64-pc-windows-msvc
+          WARREN_PRODUCT_ENV: beta
+        run: bash ci/build-with-retry.sh --optimize --sign
+
+      - name: Build beta (unsigned, signing assets missing)
+        if: env.WARREN_CHANNEL == 'beta' && env.AZURE_CLIENT_ID == ''
+        shell: bash
+        env:
+          TARGETS: x86_64-pc-windows-msvc
+          WARREN_PRODUCT_ENV: beta
+        run: bash ci/build-with-retry.sh --optimize
+
+      - name: Stage beta release assets
+        if: env.WARREN_CHANNEL == 'beta'
+        shell: bash
+        run: bash ci/stage-release-assets.sh windows "$WARREN_VERSION" beta
+
+      # Release-asset storage is not subject to the Actions artifact quota (see
+      # the Linux job). Publish the installer straight to the draft release.
+      - name: Publish Windows installers to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: windows-installers
+          path: release-assets/*
+          if-no-files-found: warn
+          retention-days: 1
+
+  build-ios:
+    name: Build iOS IPA + TestFlight upload
+    # iOS is DISABLED for now: Warren has no Apple Developer account yet (it
+    # requires a registered company + D-U-N-S number to open App Store Connect).
+    # To RE-ENABLE iOS later, set the repository variable WARREN_ENABLE_IOS to
+    # 'true' (Settings -> Secrets and variables -> Actions -> Variables tab).
+    # No code change needed; publish-release already treats iOS as non-blocking.
+    # Prod-only: there is no WARREN_PRODUCT_ENV=beta iOS build to produce.
+    if: ${{ vars.WARREN_ENABLE_IOS == 'true' && needs.tag-guard.outputs.channel == 'prod' }}
+    needs: [tag-guard, tests]
+    runs-on: macos-15
+    timeout-minutes: 90
+    env:
+      IOS_DISTRIBUTION_CERT_B64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
+      IOS_DISTRIBUTION_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_PASSWORD }}
+      IOS_PROVISIONING_PROFILE_B64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      APPSTORECONNECT_API_KEY_B64: ${{ secrets.APPSTORECONNECT_API_KEY_BASE64 }}
+      APPSTORECONNECT_API_KEY_ID: ${{ secrets.APPSTORECONNECT_API_KEY_ID }}
+      APPSTORECONNECT_API_ISSUER_ID: ${{ secrets.APPSTORECONNECT_API_ISSUER_ID }}
+      APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Setup iOS project toolchain
+        uses: ./.github/actions/ios/setup-project-toolchain
+
+      - name: Decode signing cert + provisioning profile
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        run: |
+          set -euo pipefail
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          tmp_cert=$(mktemp -t warren-ios-cert-XXXXXX.p12)
+          tmp_prov=$(mktemp -t warren-ios-prov-XXXXXX.mobileprovision)
+          printf '%s' "$IOS_DISTRIBUTION_CERT_B64" | base64 -d > "$tmp_cert"
+          printf '%s' "$IOS_PROVISIONING_PROFILE_B64" | base64 -d > "$tmp_prov"
+          security create-keychain -p "" warren-ios.keychain
+          security default-keychain -s warren-ios.keychain
+          security unlock-keychain -p "" warren-ios.keychain
+          security import "$tmp_cert" -k warren-ios.keychain -P "$IOS_DISTRIBUTION_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "" warren-ios.keychain
+          cp "$tmp_prov" ~/Library/MobileDevice/Provisioning\ Profiles/
+          echo "IOS_CERT_TMP=$tmp_cert" >> "$GITHUB_ENV"
+          echo "IOS_PROV_TMP=$tmp_prov" >> "$GITHUB_ENV"
+
+      - name: Archive WarrenVPN (signed)
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild archive \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -configuration Release \
+            -archivePath build/WarrenVPN.xcarchive \
+            -destination 'generic/platform=iOS' \
+            DEVELOPMENT_TEAM="$APPLE_DEVELOPER_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual
+
+      - name: Export IPA (signed)
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        working-directory: ios
+        run: |
+          cat > build/ExportOptions.plist <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>teamID</key><string>${APPLE_DEVELOPER_TEAM_ID}</string>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath build/WarrenVPN.xcarchive \
+            -exportPath build/ipa \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Upload to TestFlight
+        if: env.APPSTORECONNECT_API_KEY_B64 != ''
+        run: |
+          set -euo pipefail
+          tmp_key=$(mktemp -t appstore-api-key-XXXXXX.p8)
+          printf '%s' "$APPSTORECONNECT_API_KEY_B64" | base64 -d > "$tmp_key"
+          mkdir -p ~/.appstoreconnect/private_keys
+          cp "$tmp_key" ~/.appstoreconnect/private_keys/AuthKey_"$APPSTORECONNECT_API_KEY_ID".p8
+          ipa_path=$(ls ios/build/ipa/*.ipa | head -1)
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$ipa_path" \
+            --apiKey "$APPSTORECONNECT_API_KEY_ID" \
+            --apiIssuer "$APPSTORECONNECT_API_ISSUER_ID"
+          rm -f "$tmp_key" ~/.appstoreconnect/private_keys/AuthKey_"$APPSTORECONNECT_API_KEY_ID".p8
+
+      - name: Build (unsigned, signing assets missing)
+        if: env.IOS_DISTRIBUTION_CERT_B64 == ''
+        working-directory: ios
+        run: |
+          echo "::warning::IOS_DISTRIBUTION_CERT_BASE64 secret not set; producing unsigned dev archive."
+          xcodebuild archive \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -configuration Release \
+            -archivePath build/WarrenVPN.xcarchive \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Wipe signing material from runner
+        if: always() && env.IOS_DISTRIBUTION_CERT_B64 != ''
+        run: |
+          security delete-keychain warren-ios.keychain || true
+          [ -n "${IOS_CERT_TMP:-}" ] && rm -f "$IOS_CERT_TMP" || true
+          [ -n "${IOS_PROV_TMP:-}" ] && rm -f "$IOS_PROV_TMP" || true
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v6
+        with:
+          name: ios-installers
+          path: |
+            ios/build/ipa/*.ipa
+            ios/build/WarrenVPN.xcarchive
+          if-no-files-found: warn
+          retention-days: 1
+
+  build-android:
+    name: Build Android APK/AAB + Play Store internal-test upload
+    # Android is a first-class release platform: it builds and publishes the APK
+    # (attached to the GitHub Release by publish-release) on every version tag,
+    # and it blocks the release like the desktop builds. Signing is opt-in: with
+    # ANDROID_KEYSTORE_BASE64 set it produces a signed release APK + AAB and
+    # uploads the AAB to the Play internal-test track; without it, an unsigned
+    # debug APK is built and published (same opt-in model as the desktop builds).
+    needs: [tag-guard, tests]
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 60
+    env:
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      ANDROID_KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      # Raw service-account JSON (NOT base64): r0adkll/upload-google-play
+      # expects the plain JSON via serviceAccountJsonPlainText.
+      GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Add Android Rust targets
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+
+      - name: Decode upload keystore
+        if: env.ANDROID_KEYSTORE_B64 != ''
+        run: |
+          tmp=$(mktemp -t warren-android-keystore-XXXXXX.jks)
+          printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > "$tmp"
+          echo "WARREN_KEYSTORE_PATH=$tmp" >> "$GITHUB_ENV"
+          echo "WARREN_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "WARREN_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
+          echo "WARREN_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+
+      # The shared versionCode derivation (mullvad-version, YYVVXZZZ) has no
+      # room for the semver patch, so every 0.0.z beta would carry the SAME
+      # code. The beta app has its own applicationId (com.warrenbrowse.vpn.beta)
+      # and ships by direct APK, so its code only has to grow along its own
+      # version line: pack the tag as major*10000 + minor*100 + patch. A device
+      # holding a beta from before the 0.0.1 restart must uninstall first,
+      # Android refuses a versionCode downgrade. The prod flavor keeps the
+      # shared derivation untouched.
+      - name: Compute the beta Android versionCode
+        if: env.WARREN_CHANNEL == 'beta'
+        run: |
+          IFS=. read -r major minor patch <<< "${WARREN_VERSION%%-*}"
+          code=$((10#$major * 10000 + 10#$minor * 100 + 10#$patch))
+          echo "WARREN_BETA_VERSION_CODE=$code" >> "$GITHUB_ENV"
+          echo "beta versionCode $code for $WARREN_VERSION"
+
+      # ONE flavor per invocation: the variant-agnostic assembleRelease would
+      # request prod AND beta in a single Gradle run, which the per-variant
+      # WARREN_PRODUCT_ENV guard refuses (cargoBuild compiles the Rust .so
+      # for exactly one environment per invocation).
+      - name: Build signed AAB + APK (prod)
+        if: env.WARREN_CHANNEL == 'prod' && env.ANDROID_KEYSTORE_B64 != ''
+        working-directory: android
+        run: ./gradlew app:assembleProdRelease app:bundleProdRelease --parallel
+
+      - name: Build signed AAB + APK (beta)
+        if: env.WARREN_CHANNEL == 'beta' && env.ANDROID_KEYSTORE_B64 != ''
+        working-directory: android
+        run: |
+          ./gradlew app:assembleBetaRelease app:bundleBetaRelease --parallel \
+            -Pwarren.app.config.override.versionCode="$WARREN_BETA_VERSION_CODE"
+
+      - name: Build unsigned APK (prod)
+        if: env.WARREN_CHANNEL == 'prod' && env.ANDROID_KEYSTORE_B64 == ''
+        working-directory: android
+        run: |
+          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; producing unsigned dev build."
+          ./gradlew app:assembleProdDebug --parallel
+
+      - name: Build unsigned APK (beta)
+        if: env.WARREN_CHANNEL == 'beta' && env.ANDROID_KEYSTORE_B64 == ''
+        working-directory: android
+        run: |
+          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; producing unsigned dev build."
+          ./gradlew app:assembleBetaDebug --parallel \
+            -Pwarren.app.config.override.versionCode="$WARREN_BETA_VERSION_CODE"
+
+      # Prod only: the Play listing is the prod applicationId; the beta app is
+      # distributed as a direct APK and never uploaded.
+      - name: Upload to Google Play internal-test
+        if: env.WARREN_CHANNEL == 'prod' && env.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON != '' && env.ANDROID_KEYSTORE_B64 != ''
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.warrenbrowse.vpn
+          releaseFiles: android/app/build/outputs/bundle/prodRelease/app-prod-release.aab
+          track: internal
+          status: completed
+
+      - name: Wipe keystore from runner
+        if: always() && env.ANDROID_KEYSTORE_B64 != ''
+        run: |
+          [ -n "${WARREN_KEYSTORE_PATH:-}" ] && rm -f "$WARREN_KEYSTORE_PATH" || true
+
+      - name: Stage release assets (harmonized names)
+        if: env.WARREN_CHANNEL == 'prod'
+        run: bash ci/stage-release-assets.sh android "$WARREN_VERSION"
+
+      - name: Stage beta release assets
+        if: env.WARREN_CHANNEL == 'beta'
+        run: bash ci/stage-release-assets.sh android "$WARREN_VERSION" beta
+
+      # Release-asset storage is not subject to the Actions artifact quota (see
+      # the Linux job). Publish the APK/AAB straight to the draft release.
+      - name: Publish Android installers to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+      - name: Upload Android artifacts
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: android-installers
+          path: release-assets/*
+          if-no-files-found: warn
+          retention-days: 1
+
+  publish-release:
+    name: Publish GitHub Release
+    needs:
+      - tag-guard
+      - build-macos
+      - build-linux
+      - build-linux-sysvinit
+      - build-nixos
+      - build-windows
+      - build-ios
+      - build-android
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 15
+    # Publish as long as it's a tag and the desktop builds (macOS/Linux/Windows,
+    # the two extra Linux flavours included) AND Android all succeed. iOS stays
+    # non-blocking: it only builds when WARREN_ENABLE_IOS is 'true', and is
+    # never required for the release.
+    #
+    # The sysvinit and NixOS jobs gate the release like any other platform: both
+    # install-test what they produce, so a red one means the artifact does not
+    # work, and shipping a release without them would quietly drop two
+    # platforms off the download page.
+    if: >-
+      !cancelled() &&
+      startsWith(github.ref, 'refs/tags/') &&
+      needs.build-macos.result == 'success' &&
+      needs.build-linux.result == 'success' &&
+      needs.build-linux-sysvinit.result == 'success' &&
+      needs.build-nixos.result == 'success' &&
+      needs.build-windows.result == 'success' &&
+      needs.build-android.result == 'success'
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # The self-hosted Rosetta runner does not ship the gh CLI. Install it for
+      # the job (latest release binary, no sudo, PATH scoped to the job) so the
+      # finalise steps below can talk to the Releases API. Mirrors the rustup
+      # self-heal in mullvad-build-env.
+      - name: Ensure gh CLI
+        run: |
+          if command -v gh >/dev/null 2>&1; then echo "gh present: $(gh --version | head -1)"; exit 0; fi
+          ver=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+                  | sed -nE 's/.*"tag_name": *"v?([0-9.]+)".*/\1/p' | head -1)
+          [ -n "$ver" ] || ver=2.62.0
+          curl -fsSL "https://github.com/cli/cli/releases/download/v${ver}/gh_${ver}_linux_amd64.tar.gz" -o /tmp/gh.tgz
+          tar -xzf /tmp/gh.tgz -C /tmp
+          echo "/tmp/gh_${ver}_linux_amd64/bin" >> "$GITHUB_PATH"
+          echo "installed gh ${ver}"
+
+      # The per-platform build jobs already uploaded their installers straight to
+      # the draft release via softprops (release-asset storage bypasses the
+      # Actions artifact quota). This job only FINALISES that draft: it pulls the
+      # assets back down, computes checksums, and sets the title/notes. It does
+      # NOT re-create the release (that would clash with the existing draft).
+      - name: Download release assets (assembled by the build jobs)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-files
+          gh release download "$TAG_NAME" --dir release-files --pattern '*' || true
+          ls -lh release-files/ || true
+
+      - name: Compute SHA-256 checksums
+        run: |
+          cd release-files
+          # Exclude a pre-existing checksum file from a re-run.
+          rm -f SHA256SUMS
+          shopt -s nullglob
+          files=(*)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "::error::no release assets downloaded; build jobs did not publish installers"
+            exit 1
+          fi
+          sha256sum "${files[@]}" > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Finalise and publish the release (checksums + title + notes)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "$TAG_NAME" release-files/SHA256SUMS --clobber
+          # Build the release body. Do NOT pass the whole CHANGELOG.md: it is
+          # well over GitHub's ~125k-char release-body limit and the edit fails
+          # with HTTP 422. Extract just this version's section; cap defensively
+          # below the limit.
+          notes="$RUNNER_TEMP/release-notes.md"
+          # CHANGELOG headers look like:  ## [1.0.10] - 2026-06-24; the version
+          # has its channel prefix stripped, so both series find their section.
+          awk -v ver="$WARREN_VERSION" '
+            /^## /{ if (cap) exit; cap = index($0, "[" ver "]") > 0 }
+            cap { print }
+          ' CHANGELOG.md > "$notes" || true
+          # Release notes are optional: a tag without a CHANGELOG [version]
+          # section still ships, rather than failing the whole release after
+          # every platform already built. When the section is absent, fall back
+          # to GitHub's auto-generated notes (the commit list since the previous
+          # tag), then to a bare title. Write a CHANGELOG section when a release
+          # deserves curated user-facing notes; skip it for a quick fix.
+          if [ ! -s "$notes" ]; then
+            echo "::warning::CHANGELOG.md has no [$WARREN_VERSION] section; using auto-generated notes." >&2
+            gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" \
+              -f tag_name="$TAG_NAME" --jq .body > "$notes" 2>/dev/null || true
+            [ -s "$notes" ] || printf 'Warren VPN %s\n' "$TAG_NAME" > "$notes"
+          fi
+          # The placeholder what's-new renders verbatim in the in-app GUI, so it
+          # is never intended, but it is baked into installers already built:
+          # warn loudly instead of failing a finished release.
+          if grep -q 'CHANGE THIS BEFORE A RELEASE' desktop/packages/mullvad-vpn/changes.txt; then
+            echo "::warning::desktop changes.txt still carries the placeholder; the in-app what's-new will show it." >&2
+          fi
+          # GitHub caps the release body at 125000 chars; stay safely under it.
+          head -c 120000 "$notes" > "$notes.cut" && mv "$notes.cut" "$notes"
+          # Every build job succeeded (this job's `if` gate), so the draft is
+          # complete: publish it here. It MUST go non-draft before
+          # publish-update-metadata runs, because a draft release's asset URLs
+          # 404 and the signed manifests point straight at them: clients would
+          # see "update available" and fail to download it.
+          # A beta release NEVER moves the prod "latest" pointer: the beta
+          # channel is a pre-release line of its own. On the prod channel a tag
+          # with a pre-release suffix (v1.2.3-beta1) is also published as a
+          # pre-release and does not become "latest".
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            title="Warren VPN Beta $WARREN_VERSION"
+            prerelease=true
+            latest=false
+          else
+            title="Warren VPN $WARREN_VERSION"
+            case "$WARREN_VERSION" in
+              *-*) prerelease=true;  latest=false ;;
+              *)   prerelease=false; latest=true  ;;
+            esac
+          fi
+          gh release edit "$TAG_NAME" \
+            --title "$title" \
+            --notes-file "$notes" \
+            --draft=false \
+            --prerelease="$prerelease" \
+            --latest="$latest"
+
+      - name: Verify the release is published (assets must resolve)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The Releases API is eventually consistent right after the flip; give
+          # it a few seconds rather than letting the metadata job race it.
+          for _ in $(seq 1 10); do
+            if [ "$(gh release view "$TAG_NAME" --json isDraft --jq .isDraft)" = "false" ]; then
+              echo "release $TAG_NAME is published"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::release $TAG_NAME is still a draft; refusing to publish update metadata against 404 asset URLs"
+          exit 1
+
+  publish-update-metadata:
+    name: Sign + publish update metadata
+    needs: [tag-guard, publish-release]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 15
+    # Signs the per-platform version manifests and serves them so existing apps
+    # detect the new release. Gated on a signing key being present: without it
+    # the whole step is a no-op (same opt-in philosophy as the build signing).
+    #
+    # ONE channel per run: the manifests of the other channel are never
+    # regenerated nor re-uploaded here, which is what keeps a beta release from
+    # ever reaching a prod client.
+    #
+    # The installer URLs inside the manifest point at the GitHub Release assets,
+    # which only resolve once the release is non-draft. publish-release flips it
+    # and verifies it before this job runs, so the manifests never go live
+    # against 404 downloads. The forced-update floor is the repo variable
+    # WARREN_UPDATE_MIN_VERSION.
+    if: >-
+      !cancelled() &&
+      needs.publish-release.result == 'success'
+    env:
+      TAG_NAME: ${{ github.ref_name }}
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+      WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
+      WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
+      WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
+      WARREN_UPDATES_SSH_PATH: ${{ secrets.WARREN_UPDATES_SSH_PATH }}
+      WARREN_UPDATE_METADATA_BASE: https://api.warrenbrowse.com/updates/desktop
+      # Beta channel: same layout under the beta API host. The update host
+      # serves it from the beta/ subdirectory of the upload path (the beta
+      # vhost maps /updates/desktop onto it).
+      WARREN_UPDATE_METADATA_BASE_BETA: https://api.beta.warrenbrowse.com/updates/desktop
+      WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
+      WARREN_UPDATE_MIN_VERSION_IOS: ${{ vars.WARREN_UPDATE_MIN_VERSION_IOS }}
+    steps:
+      - name: Skip if no signing key
+        if: env.WARREN_UPDATE_SIGNING_KEY == ''
+        run: echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; skipping update metadata publish."
+
+      - name: Checkout repository
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: actions/checkout@v5
+
+      - name: Set up build env (Rust + siblings)
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      # The Rosetta runner does not ship the gh CLI; install it for the job the
+      # same way publish-release does, otherwise the download step below fails
+      # with "gh: command not found".
+      - name: Ensure gh CLI
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: |
+          if command -v gh >/dev/null 2>&1; then echo "gh present: $(gh --version | head -1)"; exit 0; fi
+          ver=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+                  | sed -nE 's/.*"tag_name": *"v?([0-9.]+)".*/\1/p' | head -1)
+          [ -n "$ver" ] || ver=2.62.0
+          curl -fsSL "https://github.com/cli/cli/releases/download/v${ver}/gh_${ver}_linux_amd64.tar.gz" -o /tmp/gh.tgz
+          tar -xzf /tmp/gh.tgz -C /tmp
+          echo "/tmp/gh_${ver}_linux_amd64/bin" >> "$GITHUB_PATH"
+          echo "installed gh ${ver}"
+
+      - name: Download installers from the release
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p release-files
+          gh release download "$TAG_NAME" --dir release-files --pattern 'WarrenVPN-*' --pattern 'SHA256SUMS'
+          ls -lh release-files
+
+      - name: Build the metadata signer
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: cargo build --release -p mullvad-update --bin mullvad-version-metadata --features sign,client
+
+      # The asset-name parser decides which platform, architecture and flavour
+      # every download is filed under on the website. Its doctests are the only
+      # thing standing between a renamed artifact and a download page quietly
+      # listing two rows both reading ".deb".
+      - name: Check the asset-name parser
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: python3 -m doctest ci/build-version-metadata.py
+
+      - name: Generate unsigned metadata (prod channel)
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_CHANNEL == 'prod'
+        run: |
+          python3 ci/build-version-metadata.py \
+            --tag "$TAG_NAME" \
+            --version "$WARREN_VERSION" \
+            --release-dir release-files \
+            --repo "$GITHUB_REPOSITORY" \
+            --changelog CHANGELOG.md \
+            --metadata-base-url "$WARREN_UPDATE_METADATA_BASE" \
+            --asset-base-url "$WARREN_UPDATE_METADATA_BASE" \
+            --channel prod \
+            --out-dir unsigned \
+            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            ${WARREN_UPDATE_MIN_VERSION:+--min-version "$WARREN_UPDATE_MIN_VERSION"} \
+            ${WARREN_UPDATE_MIN_VERSION_IOS:+--ios-min-version "$WARREN_UPDATE_MIN_VERSION_IOS"}
+
+      # Same generator against the WarrenVPN-Beta-* assets, served under the
+      # beta API host. No forced-update floor on the beta channel (a permanent
+      # free beta is never forced onto a version by the prod policy), and
+      # --channel beta puts the Android APK on the download page: the beta app
+      # id has no store listing, the sideload APK IS its distribution.
+      - name: Generate unsigned metadata (beta channel)
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_CHANNEL == 'beta'
+        run: |
+          python3 ci/build-version-metadata.py \
+            --tag "$TAG_NAME" \
+            --version "$WARREN_VERSION" \
+            --release-dir release-files \
+            --repo "$GITHUB_REPOSITORY" \
+            --changelog CHANGELOG.md \
+            --metadata-base-url "$WARREN_UPDATE_METADATA_BASE_BETA" \
+            --asset-base-url "$WARREN_UPDATE_METADATA_BASE_BETA" \
+            --artifact-prefix WarrenVPN-Beta \
+            --channel beta \
+            --out-dir unsigned \
+            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+      - name: Sign metadata
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        run: |
+          mkdir -p signed
+          signer=target/release/mullvad-version-metadata
+          # Both channels are signed by the same Warren update key; only the
+          # served host differs. iOS ships on the prod channel only.
+          platforms="macos windows linux android"
+          if [ "$WARREN_CHANNEL" = prod ]; then
+            platforms="$platforms ios"
+          fi
+          for platform in $platforms; do
+            [ -f "unsigned/${platform}.json" ] || continue
+            # The key is passed on argv: the runner is ephemeral and single-tenant
+            # and GitHub masks the value in logs.
+            "$signer" sign --file "unsigned/${platform}.json" --secret "$WARREN_UPDATE_SIGNING_KEY" \
+              > "signed/${platform}.json"
+          done
+          # Website manifest: not part of the signed app-update contract
+          # (integrity comes from TLS on the update host), shipped alongside.
+          cp unsigned/downloads.json signed/downloads.json
+          ls -lh signed
+
+      - name: Preflight ssh client
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          command -v scp >/dev/null || {
+            echo "::error::scp missing on this runner: bake openssh-client into the runner image (metadata upload cannot work without it)"
+            exit 1
+          }
+
+      - name: Upload installers + metadata to the update host
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          key="$RUNNER_TEMP/updates_ssh_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
+          # Beta manifests live in the beta/ subdirectory of the same upload
+          # path; the beta API vhost serves that dir as /updates/desktop. The
+          # prod directory is untouched by a beta run, and the reverse.
+          dest="${WARREN_UPDATES_SSH_PATH}"
+          prefix=WarrenVPN
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            dest="${WARREN_UPDATES_SSH_PATH}/beta"
+            prefix=WarrenVPN-Beta
+          fi
+          ssh="ssh -i $key -o StrictHostKeyChecking=accept-new"
+          target="${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}"
+          $ssh "$target" "mkdir -p '${dest}'"
+          # The installers ship BESIDE the manifests, because the manifests
+          # point at this host: the repo is private, so a GitHub release asset
+          # answers 404 without a token and no user could download anything.
+          # Version-anchored glob, so a prod run never sweeps up the beta
+          # artifacts sharing the same release.
+          scp -i "$key" -o StrictHostKeyChecking=accept-new \
+            release-files/"${prefix}-${WARREN_VERSION}"-* \
+            release-files/SHA256SUMS \
+            "${target}:${dest}/"
+          # Manifests last: until they land, the previous version stays served
+          # and coherent with the files already on the host.
+          scp -i "$key" -o StrictHostKeyChecking=accept-new \
+            signed/*.json \
+            "${target}:${dest}/"
+          # Bound the disk: only the version the manifests offer for download
+          # needs its installers mirrored. Scoped to installer names so no
+          # manifest can be caught by it.
+          $ssh "$target" "cd '$dest' && ls -1 \
+            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz)\$' \
+            | grep -v -F '${prefix}-${WARREN_VERSION}-' \
+            | xargs -r rm -f --"
+          $ssh "$target" "ls -lh '$dest'"
+          rm -f "$key"
+
+      - name: Warn when upload is skipped
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY == ''
+        run: echo "::warning::Signed metadata built but WARREN_UPDATES_SSH_* not set; not uploaded (see the update-metadata artifact)."
+
+      - name: Attach signed metadata to the run (audit + manual upload fallback)
+        # Best-effort audit copy. The manifests are already published to the
+        # update host by the SSH step above, so a failure here (e.g. the GitHub
+        # artifact-storage quota) must NOT fail the release.
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        continue-on-error: true
+        uses: actions/upload-artifact@v6
+        with:
+          name: update-metadata
+          path: signed/*.json
+          if-no-files-found: warn

@@ -8,7 +8,10 @@ export const colorPrimitives = {
   '--color-white-alpha20': colorTokens.whiteAlpha20,
 
   '--color-black': colorTokens.black,
+  '--color-black-alpha80': colorTokens.blackAlpha80,
+  '--color-black-alpha60': colorTokens.blackAlpha60,
   '--color-black-alpha50': colorTokens.blackAlpha50,
+  '--color-black-alpha40': colorTokens.blackAlpha40,
 
   '--color-red': colorTokens.red,
   '--color-new-red': colorTokens.newRed,
@@ -20,6 +23,14 @@ export const colorPrimitives = {
   '--color-green-alpha40': colorTokens.greenAlpha40,
   '--color-green80': colorTokens.green80,
   '--color-green40': colorTokens.green40,
+
+  '--color-orange': colorTokens.orange,
+  '--color-orange-alpha40': colorTokens.orangeAlpha40,
+  '--color-orange80': colorTokens.orange80,
+
+  '--color-red-text': colorTokens.redText,
+  '--color-green-text': colorTokens.greenText,
+  '--color-orange-text': colorTokens.orangeText,
 
   '--color-yellow': colorTokens.yellow,
   '--color-fur': colorTokens.fur,
@@ -73,7 +84,10 @@ export const colors: Record<keyof typeof colorTokens, `var(${keyof typeof colorP
   whiteAlpha20: 'var(--color-white-alpha20)',
 
   black: 'var(--color-black)',
+  blackAlpha80: 'var(--color-black-alpha80)',
+  blackAlpha60: 'var(--color-black-alpha60)',
   blackAlpha50: 'var(--color-black-alpha50)',
+  blackAlpha40: 'var(--color-black-alpha40)',
 
   red: 'var(--color-red)',
   newRed: 'var(--color-new-red)',
@@ -85,6 +99,14 @@ export const colors: Record<keyof typeof colorTokens, `var(${keyof typeof colorP
   greenAlpha40: 'var(--color-green-alpha40)',
   green80: 'var(--color-green80)',
   green40: 'var(--color-green40)',
+
+  orange: 'var(--color-orange)',
+  orangeAlpha40: 'var(--color-orange-alpha40)',
+  orange80: 'var(--color-orange80)',
+
+  redText: 'var(--color-red-text)',
+  greenText: 'var(--color-green-text)',
+  orangeText: 'var(--color-orange-text)',
 
   yellow: 'var(--color-yellow)',
   fur: 'var(--color-fur)',

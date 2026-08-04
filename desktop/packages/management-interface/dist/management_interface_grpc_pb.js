@@ -74,6 +74,17 @@ function deserialize_google_protobuf_UInt32Value(buffer_arg) {
   return google_protobuf_wrappers_pb.UInt32Value.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_google_protobuf_UInt64Value(arg) {
+  if (!(arg instanceof google_protobuf_wrappers_pb.UInt64Value)) {
+    throw new Error('Expected argument of type google.protobuf.UInt64Value');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_google_protobuf_UInt64Value(buffer_arg) {
+  return google_protobuf_wrappers_pb.UInt64Value.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_AccessMethodSetting(arg) {
   if (!(arg instanceof management_interface_pb.AccessMethodSetting)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.AccessMethodSetting');
@@ -261,6 +272,39 @@ function deserialize_mullvad_daemon_management_interface_FeatureIndicators(buffe
   return management_interface_pb.FeatureIndicators.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_ForumAttachLogsRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ForumAttachLogsRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumAttachLogsRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ForumAttachLogsRequest(buffer_arg) {
+  return management_interface_pb.ForumAttachLogsRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_ForumLoginRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ForumLoginRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumLoginRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ForumLoginRequest(buffer_arg) {
+  return management_interface_pb.ForumLoginRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_ForumLoginSignature(arg) {
+  if (!(arg instanceof management_interface_pb.ForumLoginSignature)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumLoginSignature');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ForumLoginSignature(buffer_arg) {
+  return management_interface_pb.ForumLoginSignature.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_LogFilter(arg) {
   if (!(arg instanceof management_interface_pb.LogFilter)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.LogFilter');
@@ -281,6 +325,28 @@ function serialize_mullvad_daemon_management_interface_LogMessage(arg) {
 
 function deserialize_mullvad_daemon_management_interface_LogMessage(buffer_arg) {
   return management_interface_pb.LogMessage.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_NatPmpSettings(arg) {
+  if (!(arg instanceof management_interface_pb.NatPmpSettings)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.NatPmpSettings');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_NatPmpSettings(buffer_arg) {
+  return management_interface_pb.NatPmpSettings.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_NatPmpStatus(arg) {
+  if (!(arg instanceof management_interface_pb.NatPmpStatus)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.NatPmpStatus');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_NatPmpStatus(buffer_arg) {
+  return management_interface_pb.NatPmpStatus.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 function serialize_mullvad_daemon_management_interface_NewAccessMethodSetting(arg) {
@@ -393,6 +459,28 @@ function deserialize_mullvad_daemon_management_interface_RelaySettings(buffer_ar
   return management_interface_pb.RelaySettings.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ReportPubkeyMismatchRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ReportPubkeyMismatchRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest(buffer_arg) {
+  return management_interface_pb.ReportPubkeyMismatchRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse(arg) {
+  if (!(arg instanceof management_interface_pb.ResetPinnedExitKeysResponse)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ResetPinnedExitKeysResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse(buffer_arg) {
+  return management_interface_pb.ResetPinnedExitKeysResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_Rollout(arg) {
   if (!(arg instanceof management_interface_pb.Rollout)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.Rollout');
@@ -437,6 +525,28 @@ function deserialize_mullvad_daemon_management_interface_SplitFilterMigration(bu
   return management_interface_pb.SplitFilterMigration.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest(arg) {
+  if (!(arg instanceof management_interface_pb.TrustNewExitKeyRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.TrustNewExitKeyRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest(buffer_arg) {
+  return management_interface_pb.TrustNewExitKeyRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse(arg) {
+  if (!(arg instanceof management_interface_pb.TrustNewExitKeyResponse)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.TrustNewExitKeyResponse');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse(buffer_arg) {
+  return management_interface_pb.TrustNewExitKeyResponse.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_TunnelState(arg) {
   if (!(arg instanceof management_interface_pb.TunnelState)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.TunnelState');
@@ -468,6 +578,39 @@ function serialize_mullvad_daemon_management_interface_VoucherSubmission(arg) {
 
 function deserialize_mullvad_daemon_management_interface_VoucherSubmission(buffer_arg) {
   return management_interface_pb.VoucherSubmission.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_WarrenCustomExitSettings(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenCustomExitSettings)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenCustomExitSettings');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenCustomExitSettings(buffer_arg) {
+  return management_interface_pb.WarrenCustomExitSettings.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenMultiHopSettings)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenMultiHopSettings');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(buffer_arg) {
+  return management_interface_pb.WarrenMultiHopSettings.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_WarrenStatus(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenStatus)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenStatus');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenStatus(buffer_arg) {
+  return management_interface_pb.WarrenStatus.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
 
@@ -843,6 +986,306 @@ getSettings: {
     requestDeserialize: deserialize_google_protobuf_BoolValue,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Persistent URL of the warren-api server (consumed by
+// WarrenRemote{Account,Device}Backend). Format
+// `http(s)://host:port` without a trailing slash. Empty string means
+// unset (= None on the Settings side, falls back to Mullvad upstream).
+// Overridable via the `WARREN_API_URL` env var. A daemon restart is
+// required to apply the change.
+setWarrenApiUrl: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenApiUrl',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Number of parallel QUIC connections for the Warren tunnel.
+// 0 = reset to the compiled default (8). Valid range 1..=16,
+// rejected otherwise. Applied on the next (re)connect; the daemon
+// reconnects automatically when the tunnel is up. The env var
+// `WARREN_N_CONNECTIONS` on the daemon takes priority over this
+// setting.
+setWarrenNConnections: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenNConnections',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.UInt32Value,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_UInt32Value,
+    requestDeserialize: deserialize_google_protobuf_UInt32Value,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // User-imposed ceiling on the Warren tunnel's own bandwidth, in bits
+// per second, enforced client-side on both directions independently.
+// 0 = unset (unlimited). Applied to a live tunnel without a
+// reconnect.
+setWarrenMaxRateBps: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMaxRateBps',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.UInt64Value,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_UInt64Value,
+    requestDeserialize: deserialize_google_protobuf_UInt64Value,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
+// user back it up. Empty string if the identity has never been
+// bootstrapped (= legacy Mullvad mode or first boot before
+// warren_signer).
+// **Sensitive**: the GUI caller must display it with a safety warning
+// and explicit user confirmation. The returned string is a
+// cryptographic secret, never logged by the daemon (no-log policy).
+getWarrenMnemonic: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenMnemonic',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_wrappers_pb.StringValue,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_StringValue,
+    responseDeserialize: deserialize_google_protobuf_StringValue,
+  },
+  // Replaces the user identity with the supplied BIP39 mnemonic.
+// **Irreversible**: any subscription tied to the current identity is
+// lost. The GUI caller must display a strong confirmation before
+// calling. No restart is needed: the daemon hot-swaps the in-memory
+// signer (reload_signer_from_disk) and triggers an auto-login so the
+// new identity takes effect in the running process. The payload is
+// BIP39-validated before being written to disk (= atomic rejection).
+setWarrenMnemonic: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMnemonic',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Signs a community-forum login challenge (DiscourseConnect wallet SSO,
+// warren-core doc 55). The GUI passes the `sid` from a
+// `warren://forum-login?sid=..` deep link; the daemon signs the fixed
+// canonical request `POST /v1/forum/login` with body `{"sid":"<sid>"}`
+// using the Warren identity key and returns the four X-Warren-* header
+// values. The GUI then POSTs them to the forum connect host. The key
+// never leaves the daemon. Errors if no identity is bootstrapped or the
+// sid is malformed.
+signForumLogin: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumLogin',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ForumLoginRequest,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ForumLoginRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
+  // Signs a community-forum attach-logs request (warren-core doc 55). The
+// GUI passes the `sid` + `topic_id` from a
+// `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped
+// redacted problem report; the daemon builds the canonical JSON body
+// `{"sid":"<sid>","topic_id":<topic>,"log_gz_b64":"<base64>"}`, signs
+// `POST /v1/forum/attach-logs` with the Warren identity key, and returns
+// the four X-Warren-* header values plus that exact body. The GUI POSTs
+// the body verbatim so the signed bytes and the sent bytes are identical.
+// The key never leaves the daemon. Errors if no identity is bootstrapped,
+// the sid is malformed, or the gzip is empty or exceeds 1 MiB.
+signForumAttachLogs: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumAttachLogs',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ForumAttachLogsRequest,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ForumAttachLogsRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumAttachLogsRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
+  // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
+// OFF by default per doctrine `warren_multihop_doctrine_v1` (full
+// bandwidth single-hop, opt-in privacy). entry_country / exit_country
+// are ISO 3166 alpha-2 codes ("fr", "de", ...); empty string means
+// auto-pick.
+getWarrenMultiHopSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenMultiHopSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenMultiHopSettings,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+  },
+  setWarrenMultiHopSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenMultiHopSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.WarrenMultiHopSettings,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Advanced "custom exit" override (Settings.warren_custom_exit). When
+// enabled with a valid endpoint+pubkey the daemon dials it directly,
+// bypassing the signed registry, failover, multi-hop and the TOFU
+// pin. Applied on the next (re)connect; the daemon reconnects
+// automatically when the tunnel is up. The current value is read back
+// through the Settings message (warren_custom_exit field).
+setWarrenCustomExit: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenCustomExit',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.WarrenCustomExitSettings,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_WarrenCustomExitSettings,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_WarrenCustomExitSettings,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Warren live tunnel status (reconnect_count + last_reconnect_age
+// surface the M4.E.D auto-reconnect supervisor; obfuscation_active
+// is always-true for /v1 per `warren_obfuscation_doctrine_v1`).
+getWarrenStatus: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenStatus',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenStatus,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
+  },
+  // Push stream emitting a new WarrenStatus whenever reconnect_count
+// changes or the tunnel state machine transitions. The GUI consumes
+// this for live UI updates without polling.
+warrenStatusUpdates: {
+    path: '/mullvad_daemon.management_interface.ManagementService/WarrenStatusUpdates',
+    requestStream: false,
+    responseStream: true,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenStatus,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
+  },
+  // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
+// verify hook refuses connects when the served Ed25519 pubkey for
+// a known `exit_id` differs from the locally pinned baseline; the
+// following RPCs let the user resolve the mismatch from the UI
+// modal without editing settings.json by hand.
+//
+// - TrustNewExitKey: replace the pinned key with the newly-observed
+//   one and resume connecting. Use case: legitimate key rotation
+//   announced by the operator.
+// - ResetPinnedExitKeys: clear the entire pin table. Use case: the
+//   user switches identity / device and wants a fresh TOFU baseline.
+// - DismissPubkeyMismatch: keep the existing pin, clear the
+//   pending-mismatch flag from WarrenStatus so the modal unmounts.
+//   The daemon stays disconnected; reconnecting would re-trigger
+//   the modal until the user picks Trust or Reset.
+// - ReportPubkeyMismatch: best-effort POST to
+//   `/v1/incidents/pubkey-mismatch`. No PII (cf. the field set).
+//   The mismatch flag is cleared regardless of the network outcome.
+trustNewExitKey: {
+    path: '/mullvad_daemon.management_interface.ManagementService/TrustNewExitKey',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.TrustNewExitKeyRequest,
+    responseType: management_interface_pb.TrustNewExitKeyResponse,
+    requestSerialize: serialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_TrustNewExitKeyRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_TrustNewExitKeyResponse,
+  },
+  resetPinnedExitKeys: {
+    path: '/mullvad_daemon.management_interface.ManagementService/ResetPinnedExitKeys',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.ResetPinnedExitKeysResponse,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ResetPinnedExitKeysResponse,
+  },
+  dismissPubkeyMismatch: {
+    path: '/mullvad_daemon.management_interface.ManagementService/DismissPubkeyMismatch',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  reportPubkeyMismatch: {
+    path: '/mullvad_daemon.management_interface.ManagementService/ReportPubkeyMismatch',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ReportPubkeyMismatchRequest,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ReportPubkeyMismatchRequest,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Warren NAT-PMP port-forwarding (RFC 6886). Warren's product
+// differentiator since Mullvad / IVPN dropped port-forwarding in
+// 2023. OFF by default; when ON the daemon spawns a refresh loop
+// against the exit's NAT-PMP server (UDP/5351 of the tunnel
+// gateway) and surfaces the granted public port to the UI through
+// the NatPmpStatusUpdates stream.
+getNatPmpSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetNatPmpSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.NatPmpSettings,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_NatPmpSettings,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpSettings,
+  },
+  setNatPmpSettings: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetNatPmpSettings',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.NatPmpSettings,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_NatPmpSettings,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpSettings,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Push stream emitting a new NatPmpStatus on every refresh loop
+// event (Mapped / Renewed / Failed / Cancelled).
+natPmpStatusUpdates: {
+    path: '/mullvad_daemon.management_interface.ManagementService/NatPmpStatusUpdates',
+    requestStream: false,
+    responseStream: true,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.NatPmpStatus,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_NatPmpStatus,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpStatus,
   },
   // Account management
 createNewAccount: {

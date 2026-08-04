@@ -44,7 +44,7 @@ export async function launchApplication(
 
   return new Promise((resolve, _reject) => {
     const scheduler = new Scheduler();
-    const proc = child_process.spawn('mullvad-exclude', excludeArguments, { detached: true });
+    const proc = child_process.spawn('warren-exclude', excludeArguments, { detached: true });
 
     // If the process exits within 200 milliseconds the user is notified that it failed to launch.
     scheduler.schedule(() => {

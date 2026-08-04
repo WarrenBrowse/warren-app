@@ -1,551 +1,420 @@
-import React, { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
-import { Url } from '../../../../shared/constants';
-import { AccountDataError, AccountNumber } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
+import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
-import { formatAccountNumber } from '../../../lib/account';
-import useActions from '../../../lib/actionsHook';
-import { Box, Button, Flex, Icon, Spinner, Text, TitleMedium } from '../../../lib/components';
+import { Button, Checkbox, Flex, Spinner, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
-import { Label } from '../../../lib/components/label';
 import { Link } from '../../../lib/components/link';
 import { View } from '../../../lib/components/view';
-import { colors } from '../../../lib/foundations';
+import { colors, Radius, spacings } from '../../../lib/foundations';
+import { LoginViewStep, loginViewStep } from '../../../lib/functions/login-step';
 import { formatHtml } from '../../../lib/html-formatter';
 import { IconBadge } from '../../../lib/icon-badge';
-import accountActions from '../../../redux/account/actions';
-import { LoginState } from '../../../redux/account/reducers';
 import { useSelector } from '../../../redux/store';
-import Accordion from '../../Accordion';
 import { AppMainHeader } from '../../app-main-header';
-import ClearAccountHistoryDialog from './ClearAccountHistoryDialog';
-import CreateAccountDialog from './CreateAccountDialog';
 import {
-  StyledAccountDropdownContainer,
-  StyledAccountDropdownItem,
-  StyledAccountDropdownItemButton,
-  StyledAccountDropdownItemIconButton,
-  StyledAccountInputBackdrop,
-  StyledAccountInputGroup,
+  CopyMnemonicButton,
+  countMnemonicWords,
+  MnemonicGrid,
+  MnemonicTextarea,
+  normalizeMnemonic,
+} from '../../warren-mnemonic';
+import { OnboardingForumHint } from '../onboarding/components';
+import {
   StyledBlockMessage,
   StyledBlockMessageContainer,
   StyledBlockTitle,
-  StyledDropdownSpacer,
-  StyledInput,
-  StyledLine,
   StyledStatusIcon,
 } from './LoginStyles';
 
+// The logged-out entry screen, redesigned around the Warren wallet
+// model: an identity IS a BIP39 recovery phrase, not a public key you
+// type in. Two paths:
+// - "Create a new account": the daemon mints a fresh identity (and logs
+//   in); the GUI then holds on this screen (redux `backup-pending`)
+//   showing the 12-word recovery phrase and requires the user to
+//   confirm they saved it before proceeding (mandatory backup step).
+// - "I already have an account": the user pastes their recovery phrase,
+//   which the daemon validates + hot-swaps to restore the identity.
+
+const DangerCallout = styled.div`
+  padding: ${spacings.tiny} ${spacings.small};
+  border-radius: ${Radius.radius4};
+  background-color: ${colors.redAlpha40};
+  border: 1px solid ${colors.red40};
+`;
+
+type Mode = 'pick' | 'restore';
+
 export function LoginView() {
-  const { openUrl, login, clearAccountHistory, createNewAccount } = useAppContext();
-  const { resetLoginError, updateAccountNumber } = useActions(accountActions);
+  const { createNewAccount, finishAccountBackup, getWarrenMnemonic, setWarrenMnemonic } =
+    useAppContext();
 
-  const { accountNumber, accountHistory, status } = useSelector((state) => state.account);
-
+  const status = useSelector((state) => state.account.status);
   const tunnelState = useSelector((state) => state.connection.status);
-  const showBlockMessage =
-    tunnelState.state === 'error' ||
-    (tunnelState.state === 'disconnected' && tunnelState.lockedDown);
-
   const isPerformingPostUpgrade = useSelector(
     (state) => state.userInterface.isPerformingPostUpgrade,
   );
 
-  return (
-    <Login
-      accountNumber={accountNumber}
-      accountHistory={accountHistory}
-      loginState={status}
-      showBlockMessage={showBlockMessage}
-      openExternalLink={openUrl}
-      login={login}
-      resetLoginError={resetLoginError}
-      updateAccountNumber={updateAccountNumber}
-      clearAccountHistory={clearAccountHistory}
-      createNewAccount={createNewAccount}
-      isPerformingPostUpgrade={isPerformingPostUpgrade}
-    />
-  );
-}
+  const showBlockMessage =
+    tunnelState.state === 'error' ||
+    (tunnelState.state === 'disconnected' && tunnelState.lockedDown);
 
-interface IProps {
-  accountNumber?: AccountNumber;
-  accountHistory?: AccountNumber;
-  loginState: LoginState;
-  showBlockMessage: boolean;
-  openExternalLink: (type: Url) => void;
-  login: (accountNumber: AccountNumber) => void;
-  resetLoginError: () => void;
-  updateAccountNumber: (accountNumber: AccountNumber) => void;
-  clearAccountHistory: () => Promise<void>;
-  createNewAccount: () => void;
-  isPerformingPostUpgrade?: boolean;
-}
+  const backupPubkey = status.type === 'backup-pending' ? status.pubkey : null;
+  // The daemon is busy minting + logging into the new identity.
+  const creating = status.type === 'logging in';
+  const createFailed = status.type === 'failed' ? status.error.message : null;
 
-interface IState {
-  isActive: boolean;
-  clearAccountHistoryDialogVisible: boolean;
-  createAccountDialogVisible: boolean;
-}
+  const [mode, setMode] = useState<Mode>('pick');
+  const step = loginViewStep(status.type, mode);
+  const isBackup = step === 'backup';
+  const [mnemonic, setMnemonic] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [restoreInput, setRestoreInput] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-const MIN_ACCOUNT_NUMBER_LENGTH = 10;
-
-class Login extends React.Component<IProps, IState> {
-  public state: IState = {
-    isActive: true,
-    clearAccountHistoryDialogVisible: false,
-    createAccountDialogVisible: false,
-  };
-
-  private accountInput = React.createRef<HTMLInputElement>();
-  private shouldResetLoginError = false;
-
-  constructor(props: IProps) {
-    super(props);
-
-    if (props.loginState.type === 'failed') {
-      this.shouldResetLoginError = true;
+  // Once the daemon has minted the identity (backup-pending), fetch the
+  // freshly generated phrase to display for backup.
+  useEffect(() => {
+    if (isBackup && mnemonic === null) {
+      getWarrenMnemonic()
+        .then((phrase) => {
+          if (phrase) {
+            setMnemonic(phrase);
+          } else {
+            setError(
+              messages.pgettext('login-view', 'Could not read the new recovery phrase. Try again.'),
+            );
+          }
+        })
+        .catch((e: unknown) => {
+          log.error(`getWarrenMnemonic failed: ${(e as Error).message}`);
+          setError(
+            messages.pgettext('login-view', 'Could not read the new recovery phrase. Try again.'),
+          );
+        });
     }
-  }
+  }, [isBackup, mnemonic, getWarrenMnemonic]);
 
-  public componentDidUpdate(prevProps: IProps, _prevState: IState) {
-    if (
-      this.props.loginState.type !== prevProps.loginState.type &&
-      this.props.loginState.type === 'failed'
-    ) {
-      this.shouldResetLoginError = true;
+  // Drop the secret from React memory when leaving the view.
+  useEffect(() => {
+    return () => {
+      setMnemonic(null);
+      setRestoreInput('');
+    };
+  }, []);
 
-      // focus on login field when failed to log in
-      this.accountInput.current?.focus();
+  const goRestore = useCallback(() => {
+    setError(null);
+    // Drop any freshly minted phrase still held in state and any stale
+    // create-failure before switching to the restore path.
+    setMnemonic(null);
+    setConfirmed(false);
+    setMode('restore');
+  }, []);
+
+  const goPick = useCallback(() => {
+    setError(null);
+    setMode('pick');
+  }, []);
+
+  const onCreate = useCallback(() => {
+    setError(null);
+    setMnemonic(null);
+    setConfirmed(false);
+    void createNewAccount();
+  }, [createNewAccount]);
+
+  const onConfirmBackup = useCallback(() => {
+    if (backupPubkey) {
+      finishAccountBackup(backupPubkey);
     }
-  }
+  }, [finishAccountBackup, backupPubkey]);
 
-  public render() {
-    const allowInteraction = this.allowInteraction();
-    return (
-      <View>
-        <AppMainHeader>
-          <AppMainHeader.SettingsButton disabled={!allowInteraction} />
-        </AppMainHeader>
-        <View.Content>
-          <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
-            <FlexColumn gap="medium">
-              <Flex justifyContent="center">
-                {this.props.showBlockMessage ? <BlockMessage /> : this.getStatusIcon()}
-              </Flex>
+  const restoreWordCount = countMnemonicWords(restoreInput);
+  const restoreValid = restoreWordCount === 12 || restoreWordCount === 24;
 
-              <View.Container
-                gap="large"
-                horizontalMargin="small"
-                justifyContent="center"
-                flexDirection="column">
-                <FlexColumn gap="small">
-                  <Text as="h1" variant="titleBig" aria-live="polite">
-                    {this.formTitle()}
-                  </Text>
-
-                  {this.createLoginForm()}
-                </FlexColumn>
-                <Flex justifyContent="center">
-                  <StyledLine margin={{ vertical: 'small', right: 'small' }} />
-                  <Text variant="labelTinySemiBold">
-                    {
-                      // TRANSLATORS: Text shown between two horizontal lines above the "create account" button.
-                      // TRANSLATORS: In this context it is used to separate the users alternative of logging in
-                      // TRANSLATORS: or creating a new account, "Login or Create a new account".
-                      messages.pgettext('login-view', 'Or')
-                    }
-                  </Text>
-                  <StyledLine margin={{ vertical: 'small', left: 'small' }} />
-                </Flex>
-              </View.Container>
-              {this.createFooter()}
-            </FlexColumn>
-          </View.Container>
-        </View.Content>
-      </View>
-    );
-  }
-
-  private onFocus = () => {
-    this.setState({ isActive: true });
-  };
-
-  private onBlur = () => {
-    this.setState({ isActive: false });
-  };
-
-  private onSubmit = (event?: React.FormEvent) => {
-    event?.preventDefault();
-
-    if (this.accountNumberValid()) {
-      this.props.login(this.props.accountNumber!);
-    }
-  };
-
-  private onInputChange = (accountNumber: string) => {
-    // reset error when user types in the new account number
-    if (this.shouldResetLoginError) {
-      this.shouldResetLoginError = false;
-      this.props.resetLoginError();
-    }
-
-    this.props.updateAccountNumber(accountNumber);
-  };
-
-  private formTitle() {
-    if (this.props.isPerformingPostUpgrade) {
-      return messages.pgettext('login-view', 'Upgrading...');
-    }
-
-    switch (this.props.loginState.type) {
-      case 'logging in':
-      case 'too many devices':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Logging in...')
-          : messages.pgettext('login-view', 'Creating account...');
-      case 'failed':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Login failed')
-          : messages.pgettext('login-view', 'Error');
-      case 'ok':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Logged in')
-          : messages.pgettext('login-view', 'Account created');
-      default:
-        return messages.pgettext('login-view', 'Login');
-    }
-  }
-
-  private formSubtitle() {
-    if (this.props.isPerformingPostUpgrade) {
-      return messages.pgettext('login-view', 'Finishing upgrade.');
-    }
-
-    switch (this.props.loginState.type) {
-      case 'failed':
-        return this.props.loginState.method === 'existing_account'
-          ? this.errorString(this.props.loginState.error)
-          : messages.pgettext('login-view', 'Failed to create account');
-      case 'too many devices':
-        return messages.pgettext('login-view', 'Too many devices');
-      case 'logging in':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Checking account number')
-          : messages.pgettext('login-view', 'Please wait');
-      case 'ok':
-        return this.props.loginState.method === 'existing_account'
-          ? messages.pgettext('login-view', 'Valid account number')
-          : messages.pgettext('login-view', 'Logged in');
-      default:
-        return messages.pgettext('login-view', 'Enter your account number');
-    }
-  }
-
-  private errorString(error: AccountDataError['error']): string {
-    switch (error) {
-      case 'invalid-account':
-        // TRANSLATORS: Error message shown above login input when trying to login with a
-        // TRANSLATORS: non-existent account number.
-        return messages.pgettext('login-view', 'Invalid account number');
-      case 'too-many-devices':
-        // TRANSLATORS: Error message shown above login input when trying to login to an account
-        // TRANSLATORS: with too many registered devices.
-        return messages.pgettext('login-view', 'Too many devices');
-      case 'list-devices':
-        // TRANSLATORS: Error message shown trying to login but the app fails
-        // TRANSLATORS: to fetch the list of registered devices.
-        return messages.gettext('Failed to fetch list of devices');
-      case 'communication':
-        return 'api.mullvad.net is blocked, please check your firewall';
-      default:
-        return messages.pgettext('login-view', 'Unknown error');
-    }
-  }
-
-  private getStatusIcon() {
-    return <StyledStatusIcon>{this.getStatusIconPath()}</StyledStatusIcon>;
-  }
-
-  private getStatusIconPath() {
-    if (this.props.isPerformingPostUpgrade) {
-      return <Spinner size="big" />;
-    }
-
-    switch (this.props.loginState.type) {
-      case 'logging in':
-        return <Spinner size="big" />;
-      case 'failed':
-        return <IconBadge state="negative" />;
-      case 'ok':
-        return <IconBadge state="positive" />;
-      default:
-        return null;
-    }
-  }
-
-  private allowInteraction() {
-    return (
-      !this.props.isPerformingPostUpgrade &&
-      this.props.loginState.type !== 'logging in' &&
-      this.props.loginState.type !== 'ok' &&
-      this.props.loginState.type !== 'too many devices'
-    );
-  }
-
-  private allowCreateAccount() {
-    const { accountNumber } = this.props;
-    return this.allowInteraction() && (accountNumber === undefined || accountNumber.length === 0);
-  }
-
-  private accountNumberValid(): boolean {
-    const { accountNumber } = this.props;
-    return accountNumber !== undefined && accountNumber.length >= MIN_ACCOUNT_NUMBER_LENGTH;
-  }
-
-  private shouldShowAccountHistory() {
-    return this.allowInteraction() && this.props.accountHistory !== undefined;
-  }
-
-  private onSelectAccountFromHistory = (accountNumber: string) => {
-    this.props.updateAccountNumber(accountNumber);
-    this.props.login(accountNumber);
-  };
-
-  private onClearAccountHistory = () => {
-    this.setState({ clearAccountHistoryDialogVisible: true });
-  };
-
-  private onConfirmClearAccountHistory = () => {
-    this.hideClearAccountHistoryDialog();
-    void this.clearAccountHistory();
-  };
-
-  private hideClearAccountHistoryDialog = () => {
-    this.setState({ clearAccountHistoryDialogVisible: false });
-  };
-
-  private async clearAccountHistory() {
+  const onRestore = useCallback(async () => {
+    setError(null);
+    setBusy(true);
     try {
-      await this.props.clearAccountHistory();
-
-      // TODO: Remove account from memory
-    } catch {
-      // TODO: Show error
+      await setWarrenMnemonic(normalizeMnemonic(restoreInput));
+      // On success the daemon logs in and emits a device event that
+      // navigates away from this screen. `busy` stays true on purpose:
+      // releasing it before the device event lands re-enables the
+      // submit button for a moment on a screen the user is leaving.
+    } catch (e) {
+      log.error(`Failed to restore identity: ${(e as Error).message}`);
+      setError(
+        messages.pgettext(
+          'login-view',
+          'Invalid recovery phrase. Check the words and their order, then try again.',
+        ),
+      );
+      setBusy(false);
     }
-  }
+  }, [restoreInput, setWarrenMnemonic]);
 
-  private onCreateNewAccount = () => {
-    if (this.props.accountHistory !== undefined) {
-      this.setState({ createAccountDialogVisible: true });
-    } else {
-      this.onConfirmCreateNewAccount();
-    }
-  };
+  const title = formTitle(step, isPerformingPostUpgrade);
+  const statusIcon = getStatusIcon(isPerformingPostUpgrade, createFailed !== null);
+  // The create-failure error belongs to the welcome (pick) step only. In
+  // restore/backup steps it would be stale, leftover text under the wrong
+  // title, so it is suppressed there.
+  const shownError = error ?? (!isBackup && mode === 'pick' ? createFailed : null);
 
-  private onConfirmCreateNewAccount = () => {
-    this.props.createNewAccount();
-    this.hideCreateAccountDialog();
-  };
+  return (
+    <View>
+      <AppMainHeader>
+        {/* Keep the user on the mandatory backup gate: no settings escape
+            while creating or while the new phrase is awaiting backup. */}
+        <AppMainHeader.SettingsButton disabled={isPerformingPostUpgrade || creating || isBackup} />
+      </AppMainHeader>
+      <View.Content>
+        <View.Container flexDirection="column" horizontalMargin="medium" justifyContent="center">
+          <FlexColumn gap="medium">
+            {(showBlockMessage || statusIcon) && (
+              <Flex justifyContent="center">
+                {showBlockMessage ? <BlockMessage /> : statusIcon}
+              </Flex>
+            )}
 
-  private hideCreateAccountDialog = () => {
-    this.setState({ createAccountDialogVisible: false });
-  };
+            <View.Container
+              gap="medium"
+              horizontalMargin="small"
+              justifyContent="center"
+              flexDirection="column">
+              <FlexColumn gap="small">
+                <Text as="h1" variant={isBackup ? 'titleMedium' : 'titleBig'} aria-live="polite">
+                  {title}
+                </Text>
 
-  private createLoginForm() {
-    const inputId = 'account-number-input';
-    const allowInteraction = this.allowInteraction();
-    const allowLogin = allowInteraction && this.accountNumberValid();
-    const hasError =
-      this.props.loginState.type === 'failed' &&
-      this.props.loginState.method === 'existing_account';
+                {shownError && (
+                  <FlexColumn gap="small">
+                    <Text variant="bodySmall" color="red">
+                      {shownError}
+                    </Text>
+                    <OnboardingForumHint />
+                  </FlexColumn>
+                )}
 
-    return (
-      <>
-        <Flex flexDirection="column" gap="tiny">
-          <Label
-            htmlFor={inputId}
-            variant="labelTinySemiBold"
-            color="whiteAlpha60"
-            data-testid="subtitle">
-            {this.formSubtitle()}
-          </Label>
-          <form onSubmit={this.onSubmit}>
-            <FlexColumn gap="large">
-              <StyledAccountInputGroup
-                $active={allowInteraction && this.state.isActive}
-                $editable={allowInteraction}
-                $error={hasError}>
-                <StyledAccountInputBackdrop>
-                  <StyledInput
-                    id={inputId}
-                    allowedCharacters="[0-9]"
-                    separator=" "
-                    groupLength={4}
-                    placeholder="0000 0000 0000 0000"
-                    value={this.props.accountNumber || ''}
-                    disabled={!allowInteraction}
-                    onFocus={this.onFocus}
-                    onBlur={this.onBlur}
-                    handleChange={this.onInputChange}
-                    autoFocus={true}
-                    ref={this.accountInput}
-                    aria-autocomplete="list"
+                {step === 'loggedIn' ? (
+                  // Neutral transition state: the view lingers here for
+                  // the navigation transition after login settles, and
+                  // rendering any real step in that window flashes the
+                  // wrong screen before the destination appears.
+                  <Flex justifyContent="center">
+                    <Spinner size="big" />
+                  </Flex>
+                ) : step === 'backup' ? (
+                  <BackupStep
+                    mnemonic={mnemonic}
+                    confirmed={confirmed}
+                    onConfirmedChange={setConfirmed}
+                    onContinue={onConfirmBackup}
                   />
-                </StyledAccountInputBackdrop>
-                <Accordion expanded={this.shouldShowAccountHistory()}>
-                  <StyledAccountDropdownContainer>
-                    <AccountDropdown
-                      item={this.props.accountHistory}
-                      onSelect={this.onSelectAccountFromHistory}
-                      onRemove={this.onClearAccountHistory}
-                    />
-                  </StyledAccountDropdownContainer>
-                </Accordion>
-              </StyledAccountInputGroup>
-              <Button
-                type="submit"
-                variant="success"
-                disabled={!allowLogin}
-                aria-label={
-                  // TRANSLATORS: This is used by screenreaders to communicate the login button.
-                  messages.pgettext('accessibility', 'Login')
-                }>
-                <Button.Text>
-                  {
-                    // TRANSLATORS: Label for the login button.
-                    messages.pgettext('login-view', 'Login')
-                  }
-                </Button.Text>
-              </Button>
-            </FlexColumn>
-          </form>
-        </Flex>
+                ) : step === 'restore' ? (
+                  <RestoreStep
+                    value={restoreInput}
+                    onValueChange={setRestoreInput}
+                    canSubmit={restoreValid && !busy}
+                    busy={busy}
+                    onSubmit={onRestore}
+                    onBack={goPick}
+                  />
+                ) : (
+                  <PickStep creating={creating} onCreate={onCreate} onRestore={goRestore} />
+                )}
+              </FlexColumn>
+            </View.Container>
+          </FlexColumn>
+        </View.Container>
+      </View.Content>
+    </View>
+  );
+}
 
-        <ClearAccountHistoryDialog
-          visible={this.state.clearAccountHistoryDialogVisible}
-          onConfirm={this.onConfirmClearAccountHistory}
-          onHide={this.hideClearAccountHistoryDialog}
-        />
-      </>
-    );
+function formTitle(step: LoginViewStep, isPerformingPostUpgrade?: boolean): string {
+  if (isPerformingPostUpgrade) {
+    return messages.pgettext('login-view', 'Upgrading...');
   }
+  switch (step) {
+    case 'loggedIn':
+      // Transition state: no text, any title here belongs to a step
+      // the user already left.
+      return '';
+    case 'backup':
+      // TRANSLATORS: Title of the step that shows the new recovery phrase.
+      return messages.pgettext('login-view', 'Back up your recovery phrase');
+    case 'restore':
+      // TRANSLATORS: Title of the step where the user enters their recovery phrase.
+      return messages.pgettext('login-view', 'Restore your account');
+    case 'pick':
+      // TRANSLATORS: Title of the logged-out welcome screen.
+      return messages.pgettext('login-view', 'Welcome to Warren');
+  }
+}
 
-  private createFooter() {
+function getStatusIcon(isPerformingPostUpgrade: boolean | undefined, failed: boolean) {
+  // Account creation shows its spinner on the "Create" button itself
+  // (see PickStep), so the prominent top spinner is reserved for the
+  // post-upgrade wait to avoid two spinners on screen at once.
+  if (isPerformingPostUpgrade) {
     return (
-      <>
-        <Flex flexDirection="column" gap="small" alignItems="center">
-          <Link as="button" onClick={this.onCreateNewAccount} disabled={!this.allowCreateAccount()}>
-            <Link.Text>
-              {
-                // TRANSLATORS: Text in button that allows user to create a new account.
-                messages.pgettext('login-view', 'Create a new account')
-              }
-            </Link.Text>
-          </Link>
-        </Flex>
-        <CreateAccountDialog
-          visible={this.state.createAccountDialogVisible}
-          onConfirm={this.onConfirmCreateNewAccount}
-          onHide={this.hideCreateAccountDialog}
-        />
-      </>
+      <StyledStatusIcon>
+        <Spinner size="big" />
+      </StyledStatusIcon>
     );
   }
-}
-
-interface IAccountDropdownProps {
-  item?: AccountNumber;
-  onSelect: (value: AccountNumber) => void;
-  onRemove: (value: AccountNumber) => void;
-}
-
-function AccountDropdown(props: IAccountDropdownProps) {
-  const accountNumber = props.item;
-  if (!accountNumber) {
-    return null;
+  if (failed) {
+    return (
+      <StyledStatusIcon>
+        <IconBadge state="negative" />
+      </StyledStatusIcon>
+    );
   }
-  const label = formatAccountNumber(accountNumber);
+  return null;
+}
+
+interface PickStepProps {
+  creating: boolean;
+  onCreate: () => void;
+  onRestore: () => void;
+}
+
+function PickStep({ creating, onCreate, onRestore }: PickStepProps) {
   return (
-    <AccountDropdownItem
-      value={accountNumber}
-      label={label}
-      onSelect={props.onSelect}
-      onRemove={props.onRemove}
-    />
+    <FlexColumn gap="medium">
+      <Text variant="bodySmall" color="whiteAlpha60">
+        {messages.pgettext(
+          'login-view',
+          'Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold.',
+        )}
+      </Text>
+      <Button variant="success" onClick={onCreate} disabled={creating} data-testid="login-create">
+        {creating ? (
+          <Spinner />
+        ) : (
+          // TRANSLATORS: Button that creates a brand-new account.
+          <Button.Text>{messages.pgettext('login-view', 'Create a new account')}</Button.Text>
+        )}
+      </Button>
+      <Button variant="primary" onClick={onRestore} disabled={creating} data-testid="login-restore">
+        <Button.Text>
+          {
+            // TRANSLATORS: Button that starts restoring an existing account from a recovery phrase.
+            messages.pgettext('login-view', 'I already have an account')
+          }
+        </Button.Text>
+      </Button>
+    </FlexColumn>
   );
 }
 
-interface AccountDropdownItemProps {
-  label: string;
-  value: AccountNumber;
-  onRemove: (value: AccountNumber) => void;
-  onSelect: (value: AccountNumber) => void;
+interface BackupStepProps {
+  mnemonic: string | null;
+  confirmed: boolean;
+  onConfirmedChange: (value: boolean) => void;
+  onContinue: () => void;
 }
 
-const StyledIcon = styled(Icon)({
-  backgroundColor: colors.whiteOnBlue20,
-});
-
-function AccountDropdownItem({ label, onRemove, onSelect, value }: AccountDropdownItemProps) {
-  const handleSelect = useCallback(() => {
-    onSelect(value);
-  }, [onSelect, value]);
-
-  const handleRemove = useCallback(
-    (event: React.MouseEvent<HTMLButtonElement>) => {
-      // Prevent login form from submitting
-      event.preventDefault();
-      onRemove(value);
-    },
-    [onRemove, value],
-  );
-
-  const itemId = React.useId();
-
+function BackupStep({ mnemonic, confirmed, onConfirmedChange, onContinue }: BackupStepProps) {
+  if (!mnemonic) {
+    return (
+      <Flex justifyContent="center">
+        <Spinner size="big" />
+      </Flex>
+    );
+  }
   return (
-    <>
-      <StyledDropdownSpacer />
-      <StyledAccountDropdownItem>
-        <Flex alignItems="center" justifyContent="space-between" flexGrow={1}>
-          <StyledAccountDropdownItemButton
-            id={itemId}
-            onClick={handleSelect}
-            type="button"
-            aria-label={sprintf(
-              // TRANSLATORS: This is used by screenreaders to communicate logging in with a saved account number.
-              // TRANSLATORS: Available placeholders:
-              // TRANSLATORS: %(accountNumber)s - the saved account number
-              messages.pgettext('accessibility', 'Login with account number %(accountNumber)s'),
-              {
-                accountNumber: label,
-              },
-            )}>
-            <TitleMedium color="blue80">{label}</TitleMedium>
-          </StyledAccountDropdownItemButton>
-          <Box $height="48px" $width="48px" center>
-            <StyledAccountDropdownItemIconButton
-              onClick={handleRemove}
-              type="button"
-              aria-controls={itemId}
-              aria-label={sprintf(
-                // TRANSLATORS: This is used by screenreaders to communicate the "x" button next to a saved account number.
-                // TRANSLATORS: Available placeholders:
-                // TRANSLATORS: %(accountNumber)s - the account number to the left of the button
-                messages.pgettext('accessibility', 'Forget account number %(accountNumber)s'),
-                {
-                  accountNumber: label,
-                },
-              )}>
-              <StyledIcon icon="cross-circle" size="small" />
-            </StyledAccountDropdownItemIconButton>
-          </Box>
+    <FlexColumn gap="small">
+      <DangerCallout>
+        <Text variant="footnoteMini" color="white">
+          {messages.pgettext(
+            'login-view',
+            'Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device.',
+          )}
+        </Text>
+      </DangerCallout>
+
+      <MnemonicGrid mnemonic={mnemonic} revealed data-testid="login-mnemonic-grid" />
+      <CopyMnemonicButton mnemonic={mnemonic} data-testid="login-mnemonic-copy" />
+
+      <Checkbox checked={confirmed} onCheckedChange={onConfirmedChange}>
+        <Flex gap="small" alignItems="flex-start">
+          <Checkbox.Trigger>
+            <Checkbox.Input />
+          </Checkbox.Trigger>
+          <Checkbox.Label>
+            {messages.pgettext(
+              'login-view',
+              'I have written down my recovery phrase in a safe place.',
+            )}
+          </Checkbox.Label>
         </Flex>
-      </StyledAccountDropdownItem>
-    </>
+      </Checkbox>
+
+      <Button
+        variant="success"
+        onClick={onContinue}
+        disabled={!confirmed}
+        data-testid="login-backup-continue">
+        <Button.Text>{messages.gettext('Continue')}</Button.Text>
+      </Button>
+    </FlexColumn>
+  );
+}
+
+interface RestoreStepProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  canSubmit: boolean;
+  busy: boolean;
+  onSubmit: () => void;
+  onBack: () => void;
+}
+
+function RestoreStep({
+  value,
+  onValueChange,
+  canSubmit,
+  busy,
+  onSubmit,
+  onBack,
+}: RestoreStepProps) {
+  return (
+    <FlexColumn gap="medium">
+      <Text variant="bodySmall" color="whiteAlpha60">
+        {messages.pgettext(
+          'login-view',
+          'Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device.',
+        )}
+      </Text>
+      <MnemonicTextarea
+        value={value}
+        onValueChange={onValueChange}
+        placeholder="abandon abandon abandon ... about"
+        data-testid="login-restore-input"
+      />
+      <Button
+        variant="success"
+        onClick={onSubmit}
+        disabled={!canSubmit}
+        data-testid="login-restore-submit">
+        {busy ? (
+          <Spinner />
+        ) : (
+          // TRANSLATORS: Button that restores the account from the entered recovery phrase.
+          <Button.Text>{messages.pgettext('login-view', 'Restore account')}</Button.Text>
+        )}
+      </Button>
+      <Link as="button" onClick={onBack} disabled={busy}>
+        <Link.Text>{messages.gettext('Back')}</Link.Text>
+      </Link>
+    </FlexColumn>
   );
 }
 
@@ -578,8 +447,7 @@ function BlockMessage() {
           ),
           { lockdownModeSettingName },
         )
-      : // This makes the translator comment appear on it's own line.
-        // TRANSLATORS: This is a warning message shown when the app is blocking the users
+      : // TRANSLATORS: This is a warning message shown when the app is blocking the users
         // TRANSLATORS: internet connection while logged out.
         messages.pgettext('login-view', 'Our kill switch is currently blocking your connection.'),
   );

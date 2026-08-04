@@ -26,7 +26,11 @@ export const AppMainHeaderBarAccountButton = (props: MainHeaderBarAccountButtonP
       data-testid="account-button"
       aria-label={messages.gettext('Account settings')}
       {...props}>
-      <IconButton.Icon icon="account-circle" />
+      {/* Outline rather than filled: the header floats over the artwork next to
+          the thin-stroke wordmark, and solid glyphs read heavier than the logo.
+          An open bust (no enclosing circle) so the initial keyboard-focus ring
+          does not read as a second circle around the glyph. */}
+      <IconButton.Icon icon="account-outline" />
     </MainHeader.IconButton>
   );
 };

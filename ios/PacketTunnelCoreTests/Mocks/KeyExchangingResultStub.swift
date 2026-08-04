@@ -6,8 +6,8 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-@testable import MullvadRustRuntime
-@testable import MullvadTypes
+@testable import WarrenRustRuntime
+@testable import WarrenTypes
 
 struct KeyExchangingResultStub: EphemeralPeerReceiving {
     var onFailure: (() -> Void)?
@@ -24,7 +24,7 @@ struct KeyExchangingResultStub: EphemeralPeerReceiving {
 
     public func receiveEphemeralPeerPrivateKey(
         _ ephemeralPeerPrivateKey: WireGuard.PrivateKey,
-        daitaParameters: MullvadTypes.DaitaV2Parameters?
+        daitaParameters: WarrenTypes.DaitaV2Parameters?
     ) async {
         await onReceiveEphemeralPeerPrivateKey?(ephemeralPeerPrivateKey, daitaParameters)
     }

@@ -16,7 +16,7 @@ use windows_sys::Win32::{
     UI::WindowsAndMessaging::EWX_FORCEIFHUNG,
 };
 
-const MULLVAD_WIN_REGISTRY: &str = r"SYSTEM\CurrentControlSet\Services\Mullvad VPN";
+const MULLVAD_WIN_REGISTRY: &str = r"SYSTEM\CurrentControlSet\Services\WarrenVPN";
 
 pub fn reboot() -> Result<(), test_rpc::Error> {
     grant_shutdown_privilege()?;
@@ -138,7 +138,7 @@ fn grant_shutdown_privilege() -> Result<(), test_rpc::Error> {
     Ok(())
 }
 
-/// Restart the Mullvad VPN application.
+/// Restart the Warren VPN application.
 ///
 /// This function waits for the app to successfully start again.
 pub async fn restart_app() -> Result<(), test_rpc::Error> {
@@ -147,38 +147,38 @@ pub async fn restart_app() -> Result<(), test_rpc::Error> {
     Ok(())
 }
 
-/// Stop the Mullvad VPN application.
+/// Stop the Warren VPN application.
 ///
 /// This function waits for the app to successfully shut down.
 pub async fn stop_app() -> Result<(), test_rpc::Error> {
     let _ = tokio::process::Command::new("net")
-        .args(["stop", "mullvadvpn"])
+        .args(["stop", "warrenvpn"])
         .status()
         .await
         .map_err(|e| test_rpc::Error::ServiceStop(e.to_string()))?;
     Ok(())
 }
 
-/// Start the Mullvad VPN application.
+/// Start the Warren VPN application.
 ///
 /// This function waits for the app to successfully start again.
 pub async fn start_app() -> Result<(), test_rpc::Error> {
     let _ = tokio::process::Command::new("net")
-        .args(["start", "mullvadvpn"])
+        .args(["start", "warrenvpn"])
         .status()
         .await
         .map_err(|e| test_rpc::Error::ServiceStart(e.to_string()))?;
     Ok(())
 }
 
-/// Disable the Mullvad VPN system service startup. This will not trigger the service to stop
+/// Disable the Warren VPN system service startup. This will not trigger the service to stop
 /// immediately, but it will prevent it from starting on the next system boot.
 pub async fn disable_system_service_startup() -> Result<(), test_rpc::Error> {
     let status = tokio::process::Command::new("powershell")
         .args([
             "-NoProfile",
             "-Command",
-            "Set-Service -Name MullvadVPN -StartupType Disabled",
+            "Set-Service -Name WarrenVPN -StartupType Disabled",
         ])
         .status()
         .await
@@ -186,20 +186,20 @@ pub async fn disable_system_service_startup() -> Result<(), test_rpc::Error> {
 
     if !status.success() {
         return Err(test_rpc::Error::ServiceChange(
-            "Failed to disable MullvadVPN service".to_string(),
+            "Failed to disable WarrenVPN service".to_string(),
         ));
     }
 
     Ok(())
 }
 
-/// Enable the Mullvad VPN system service startup. This will configure the service to start automatically on system boot.
+/// Enable the Warren VPN system service startup. This will configure the service to start automatically on system boot.
 pub async fn enable_system_service_startup() -> Result<(), test_rpc::Error> {
     let status = tokio::process::Command::new("powershell")
         .args([
             "-NoProfile",
             "-Command",
-            "Set-Service -Name MullvadVPN -StartupType Automatic",
+            "Set-Service -Name WarrenVPN -StartupType Automatic",
         ])
         .status()
         .await
@@ -207,7 +207,7 @@ pub async fn enable_system_service_startup() -> Result<(), test_rpc::Error> {
 
     if !status.success() {
         return Err(test_rpc::Error::ServiceChange(
-            "Failed to enable MullvadVPN service".to_string(),
+            "Failed to enable WarrenVPN service".to_string(),
         ));
     }
 
@@ -218,7 +218,7 @@ pub fn get_daemon_system_service_status() -> Result<ServiceStatus, test_rpc::Err
     let manager = ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)
         .map_err(|e| test_rpc::Error::ServiceNotFound(e.to_string()))?;
     let service = manager
-        .open_service("mullvadvpn", ServiceAccess::QUERY_STATUS)
+        .open_service("warrenvpn", ServiceAccess::QUERY_STATUS)
         .map_err(|e| test_rpc::Error::ServiceNotFound(e.to_string()))?;
 
     get_daemon_system_service_status_inner(&service)
@@ -284,7 +284,7 @@ pub async fn set_daemon_log_level(verbosity_level: Verbosity) -> Result<(), test
         .map_err(|e| test_rpc::Error::ServiceNotFound(e.to_string()))?;
     let service = manager
         .open_service(
-            "mullvadvpn",
+            "warrenvpn",
             ServiceAccess::QUERY_CONFIG
                 | ServiceAccess::QUERY_STATUS
                 | ServiceAccess::CHANGE_CONFIG
@@ -319,7 +319,7 @@ pub async fn set_daemon_log_level(verbosity_level: Verbosity) -> Result<(), test
         ))
     })?;
 
-    let executable_path = "C:\\Program Files\\Mullvad VPN\\resources\\mullvad-daemon.exe";
+    let executable_path = "C:\\Program Files\\Warren VPN\\resources\\warren-daemon.exe";
     let launch_arguments = vec![
         OsString::from("--run-as-service"),
         OsString::from(verbosity),
@@ -376,7 +376,7 @@ pub async fn set_daemon_environment(env: HashMap<String, String>) -> Result<(), 
     let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
     let path = Path::new(MULLVAD_WIN_REGISTRY).join("Environment");
     let (registry, _) = hklm.create_subkey(&path).map_err(|error| {
-        test_rpc::Error::Registry(format!("Failed to open Mullvad VPN subkey: {error}"))
+        test_rpc::Error::Registry(format!("Failed to open Warren VPN subkey: {error}"))
     })?;
     for (k, v) in env {
         registry.set_value(k, &v).map_err(|error| {
@@ -415,7 +415,7 @@ pub async fn get_daemon_environment() -> Result<HashMap<String, String>, test_rp
         tokio::task::spawn_blocking(|| -> Result<HashMap<String, String>, test_rpc::Error> {
             let hklm = RegKey::predef(HKEY_LOCAL_MACHINE);
             let key = hklm.open_subkey(MULLVAD_WIN_REGISTRY).map_err(|error| {
-                test_rpc::Error::Registry(format!("Failed to open Mullvad VPN subkey: {error}"))
+                test_rpc::Error::Registry(format!("Failed to open Warren VPN subkey: {error}"))
             })?;
 
             // The Strings will be quoted (surrounded by ") when read from the registry - we should

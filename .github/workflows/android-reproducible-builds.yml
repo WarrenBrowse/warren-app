@@ -1,31 +1,9 @@
 ---
 name: Android - Verify F-Droid and reproducible builds
 on:
-  schedule:
-    # At 04:20 UTC every monday.
-    # Notifications for scheduled workflows are sent to the user who last modified the cron
-    # syntax in the workflow file. If you update this you must have notifications for
-    # Github Actions enabled, so these don't go unnoticed.
-    # https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/notifications-for-workflow-runs
-    - cron: '20 6 * * 1'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
-    inputs:
-      commit_hash:
-        type: string
-        required: false
-  pull_request:
-    paths:
-      - '.github/workflows/android-reproducible-builds.yml'
-      - 'building/android-container-image.txt'
-      - 'dist-assets/android-version*'
-      - 'android/src/main/play/release-notes/en-US/default.txt'
-      - 'android/gradle/**'
-      - 'flake*'
-      - 'nix/android-*.nix'
-      - 'nix/common-toolchain.nix'
-  push:
-    tags:
-      - 'android/**'
 
 permissions: {}
 
@@ -120,26 +98,26 @@ jobs:
         with:
           path: app-metadata
           sparse-checkout: |
-            android/fdroid-build/metadata/net.mullvad.mullvadvpn.yml
+            android/fdroid-build/metadata/com.warrenbrowse.vpn.yml
           sparse-checkout-cone-mode: false
 
       - name: Prepare metadata
         run: |
           mkdir metadata
-          cp app-metadata/android/fdroid-build/metadata/net.mullvad.mullvadvpn.yml metadata/net.mullvad.mullvadvpn.yml
-          sed -i 's/commit-hash/${{ needs.set-up-env.outputs.COMMIT_HASH }}/' metadata/net.mullvad.mullvadvpn.yml
+          cp app-metadata/android/fdroid-build/metadata/com.warrenbrowse.vpn.yml metadata/com.warrenbrowse.vpn.yml
+          sed -i 's/commit-hash/${{ needs.set-up-env.outputs.COMMIT_HASH }}/' metadata/com.warrenbrowse.vpn.yml
 
       - name: Build app
         run: |
           export PATH=$PATH:/opt/gradle/gradle-${{ env.gradle_version }}/bin
-          fdroid build net.mullvad.mullvadvpn:1
+          fdroid build com.warrenbrowse.vpn:1
 
       - name: Upload apks
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
           name: apk-fdroidserver
           path: |
-            build/net\.mullvad\.mullvadvpn/android/app/build/outputs/apk/ossProd/release/app-oss-prod-release-unsigned.apk
+            build/com\.warrenbrowse\.vpn/android/app/build/outputs/apk/ossProd/release/app-oss-prod-release-unsigned.apk
           if-no-files-found: error
           retention-days: 7
 

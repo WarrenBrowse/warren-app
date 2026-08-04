@@ -1,11 +1,19 @@
 import { messages } from '../../../../shared/gettext';
 import { AutoConnectSetting, AutoStartSetting } from '../../../features/client/components';
+import { AllowExternalDnsSetting } from '../../../features/dns/components';
 import { AllowLanSetting } from '../../../features/lan-sharing/components';
 import {
   EnableIpv6Setting,
   LockdownModeSetting,
   QuantumResistantSetting,
 } from '../../../features/tunnel/components';
+import { WarrenCustomExitSetting } from '../../../features/warren-custom-exit/components/WarrenCustomExitSetting';
+import { useShowWarrenCustomExit } from '../../../features/warren-custom-exit/hooks/use-show-warren-custom-exit';
+// `warren-mode` settings (failover, API URL) are deliberately NOT
+// surfaced in the UI: they are developer/self-hosting toggles whose
+// defaults are the only sensible choice for end users. Power users can
+// still override them via `WARREN_FAILOVER`, `WARREN_API_URL` env vars
+// or by editing `/etc/warren-vpn/settings.json` directly.
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
@@ -21,11 +29,14 @@ import {
   IpOverrideSettings,
   IpVersionSetting,
   KillSwitchSetting,
+  MaxRateSetting,
   MtuSetting,
+  ResetPinnedExitKeys,
 } from './components';
 
 export function VpnSettingsView() {
   const { pop } = useHistory();
+  const showCustomExit = useShowWarrenCustomExit();
 
   return (
     <View backgroundColor="darkBlue">
@@ -54,6 +65,7 @@ export function VpnSettingsView() {
                   <FlexColumn gap="small">
                     <DnsBlockerSettings position="solo" />
                     <CustomDnsSettings position="solo" />
+                    <AllowExternalDnsSetting position="solo" />
                   </FlexColumn>
 
                   <EnableIpv6Setting />
@@ -65,7 +77,10 @@ export function VpnSettingsView() {
                   <QuantumResistantSetting position="solo" />
                   <IpVersionSetting />
                   <MtuSetting />
+                  <MaxRateSetting />
                   <IpOverrideSettings position="solo" />
+                  <ResetPinnedExitKeys position="solo" />
+                  {showCustomExit ? <WarrenCustomExitSetting position="solo" /> : null}
                 </FlexColumn>
               </View.Container>
             </View.Content>

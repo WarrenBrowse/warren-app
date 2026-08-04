@@ -1,7 +1,7 @@
 pub mod client;
 pub mod types;
 
-#[cfg(unix)]
+#[cfg(all(unix, not(target_os = "android")))]
 use std::{env, fs, os::unix::fs::PermissionsExt};
 use std::{
     future::Future,
@@ -26,12 +26,6 @@ pub use types::management_service_server::{ManagementService, ManagementServiceS
 
 pub use types::{RelaySelectorService, RelaySelectorServiceClient, RelaySelectorServiceServer};
 
-#[cfg(unix)]
-use std::sync::LazyLock;
-#[cfg(unix)]
-static MULLVAD_MANAGEMENT_SOCKET_GROUP: LazyLock<Option<String>> =
-    LazyLock::new(|| env::var("MULLVAD_MANAGEMENT_SOCKET_GROUP").ok());
-
 pub const API_ACCESS_METHOD_EXISTS_DETAILS: &[u8] = b"api_access_method_exists";
 pub const CUSTOM_LIST_LIST_NOT_FOUND_DETAILS: &[u8] = b"custom_list_list_not_found";
 pub const CUSTOM_LIST_LIST_EXISTS_DETAILS: &[u8] = b"custom_list_list_exists";
@@ -51,15 +45,15 @@ pub enum Error {
     #[error("Unable to set permissions for IPC endpoint")]
     PermissionsError(#[source] io::Error),
 
-    #[cfg(unix)]
+    #[cfg(all(unix, not(target_os = "android")))]
     #[error("Group not found")]
     NoGidError,
 
-    #[cfg(unix)]
+    #[cfg(all(unix, not(target_os = "android")))]
     #[error("Failed to obtain group ID")]
     ObtainGidError(#[source] nix::Error),
 
-    #[cfg(unix)]
+    #[cfg(all(unix, not(target_os = "android")))]
     #[error("Failed to set group ID")]
     SetGidError(#[source] nix::Error),
 
@@ -162,36 +156,50 @@ pub use client::MullvadProxyClient;
 
 pub type ServerJoinHandle = tokio::task::JoinHandle<()>;
 
+/// How the freshly bound management socket will be exposed, decided from
+/// explicit operator configuration only (see `plan_socket_access`).
+#[cfg(all(unix, not(target_os = "android")))]
+#[derive(Debug)]
+enum SocketAccessPlan {
+    RestrictToGroup(nix::unistd::Gid),
+    WorldAccessible,
+}
+
+/// Peer credentials of a connected management client, captured from the
+/// Unix domain socket via `SO_PEERCRED`. Used to authorize wallet/secret
+/// RPCs against the calling process. A `None` connect-info means the
+/// platform could not supply credentials (Windows named pipe), where
+/// access is gated by the pipe DACL + admin-ownership check instead.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PeerCredentials {
+    pub uid: u32,
+    pub gid: u32,
+    pub pid: Option<i32>,
+}
+
+/// Connect-info attached by tonic to every request's extensions. Handlers
+/// read it via `request.extensions().get::<ManagementConnectInfo>()`.
+pub type ManagementConnectInfo = Option<PeerCredentials>;
+
+/// Outcome of applying access control to the management socket.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SocketSecurity {
+    /// Socket is restricted to root + a Unix group; the kernel enforces
+    /// that only authorized users can connect at all.
+    GroupRestricted,
+    /// Socket is reachable by any local user (no group configured, or a
+    /// platform without Unix socket permissions). Wallet RPCs must be
+    /// gated per-uid by the caller.
+    WorldAccessible,
+}
+
 pub fn spawn_rpc_server(
     management_service: impl ManagementService,
     relay_selector_service: impl RelaySelectorService,
     abort_rx: impl Future<Output = ()> + Send + 'static,
     rpc_socket_path: PathBuf,
-) -> std::result::Result<ServerJoinHandle, Error> {
-    use futures::TryStreamExt;
-
-    let endpoint = create_endpoint(rpc_socket_path)?;
-
-    // Extract the path first, since `incoming()` takes ownership.
-    // Note: `endpoint.clone()` is not safe to use due to a use-after-free in `tipsy`.
-    // See https://github.com/aschey/tipsy/issues/50.
-    #[cfg(unix)]
-    let endpoint_path = endpoint.path().to_owned();
-
-    let incoming = endpoint
-        .incoming()
-        .map_err(Error::StartServerError)?
-        .map_ok(StreamBox);
-
-    #[cfg(unix)]
-    if let Some(group_name) = MULLVAD_MANAGEMENT_SOCKET_GROUP.as_ref() {
-        let group = nix::unistd::Group::from_name(group_name)
-            .map_err(Error::ObtainGidError)?
-            .ok_or(Error::NoGidError)?;
-        nix::unistd::chown(&endpoint_path, None, Some(group.gid)).map_err(Error::SetGidError)?;
-        fs::set_permissions(&endpoint_path, PermissionsExt::from_mode(0o760))
-            .map_err(Error::PermissionsError)?;
-    }
+) -> std::result::Result<(ServerJoinHandle, SocketSecurity), Error> {
+    let (incoming, security) = build_incoming(rpc_socket_path)?;
 
     let grpc_server = Server::builder()
         .add_service(ManagementServiceServer::new(management_service))
@@ -205,9 +213,153 @@ pub fn spawn_rpc_server(
         log::trace!("gRPC server is shutting down");
     });
 
-    Ok(server_task)
+    Ok((server_task, security))
 }
 
+/// Build the stream of incoming connections, capturing `SO_PEERCRED` per
+/// connection on Unix so wallet RPCs can authorize the calling process.
+#[cfg(all(unix, not(target_os = "android")))]
+fn build_incoming(
+    rpc_socket_path: PathBuf,
+) -> Result<
+    (
+        impl futures::Stream<Item = io::Result<StreamBox<tokio::net::UnixStream>>>,
+        SocketSecurity,
+    ),
+    Error,
+> {
+    use std::os::unix::fs::FileTypeExt;
+    use std::os::unix::net::UnixListener as StdUnixListener;
+
+    // The daemon removes a stale socket before spawning us, but guard
+    // against a leftover socket file from an unclean exit so bind()
+    // succeeds. Only remove an actual socket, never a regular file.
+    if let Ok(meta) = std::fs::symlink_metadata(&rpc_socket_path)
+        && meta.file_type().is_socket()
+    {
+        let _ = std::fs::remove_file(&rpc_socket_path);
+    }
+
+    let std_listener = StdUnixListener::bind(&rpc_socket_path).map_err(Error::StartServerError)?;
+    std_listener
+        .set_nonblocking(true)
+        .map_err(Error::StartServerError)?;
+    let security = apply_socket_permissions(&rpc_socket_path)?;
+    let listener =
+        tokio::net::UnixListener::from_std(std_listener).map_err(Error::StartServerError)?;
+
+    let incoming = futures::stream::unfold(listener, |listener| async move {
+        let item = match listener.accept().await {
+            Ok((stream, _addr)) => {
+                let creds = stream.peer_cred().ok().map(|c| PeerCredentials {
+                    uid: c.uid(),
+                    gid: c.gid(),
+                    pid: c.pid(),
+                });
+                Ok(StreamBox {
+                    inner: stream,
+                    creds,
+                })
+            }
+            Err(e) => Err(e),
+        };
+        Some((item, listener))
+    });
+
+    Ok((incoming, security))
+}
+
+/// Windows (named pipe) and Android keep the original `tipsy` transport.
+/// Peer credentials are not captured here; the named-pipe DACL plus the
+/// desktop's admin-ownership check are the access boundary on Windows.
+#[cfg(any(windows, target_os = "android"))]
+fn build_incoming(
+    rpc_socket_path: PathBuf,
+) -> Result<
+    (
+        impl futures::Stream<Item = io::Result<StreamBox<tipsy::Connection>>>,
+        SocketSecurity,
+    ),
+    Error,
+> {
+    use futures::TryStreamExt;
+
+    let endpoint = create_endpoint(rpc_socket_path)?;
+    let incoming = endpoint
+        .incoming()
+        .map_err(Error::StartServerError)?
+        .map_ok(|conn| StreamBox {
+            inner: conn,
+            creds: None,
+        });
+    Ok((incoming, SocketSecurity::WorldAccessible))
+}
+
+/// Decide how to expose the management socket. Only an explicitly
+/// configured group (env override) restricts it; the default is
+/// world-accessible with wallet/secret RPCs gated per-uid, matching
+/// upstream Mullvad's threat model (local users are trusted) and the
+/// wider industry practice. A group is deliberately never auto-detected:
+/// group membership only takes effect at the next login, so flipping on a
+/// pre-existing group would lock the freshly-installed GUI out of the
+/// socket until the user logs out and back in.
+#[cfg(all(unix, not(target_os = "android")))]
+fn plan_socket_access(
+    configured_group: Option<&str>,
+    resolve_group: impl FnOnce(&str) -> Result<Option<nix::unistd::Gid>, Error>,
+) -> Result<SocketAccessPlan, Error> {
+    match configured_group {
+        None => Ok(SocketAccessPlan::WorldAccessible),
+        Some(name) => match resolve_group(name)? {
+            Some(gid) => Ok(SocketAccessPlan::RestrictToGroup(gid)),
+            None => {
+                // Operator asked for a specific group that does not exist: fail
+                // closed rather than silently exposing the socket to all users.
+                log::error!(
+                    "Configured management socket group '{name}' does not exist; refusing to expose the management socket"
+                );
+                Err(Error::NoGidError)
+            }
+        },
+    }
+}
+
+/// Apply access control to the freshly-bound Unix socket per
+/// `plan_socket_access`.
+#[cfg(all(unix, not(target_os = "android")))]
+fn apply_socket_permissions(path: &std::path::Path) -> Result<SocketSecurity, Error> {
+    let env_group = env::var("WARREN_MANAGEMENT_SOCKET_GROUP")
+        .or_else(|_| env::var("MULLVAD_MANAGEMENT_SOCKET_GROUP"))
+        .ok();
+
+    let plan = plan_socket_access(env_group.as_deref(), |name| {
+        Ok(nix::unistd::Group::from_name(name)
+            .map_err(Error::ObtainGidError)?
+            .map(|group| group.gid))
+    })?;
+
+    match plan {
+        SocketAccessPlan::RestrictToGroup(gid) => {
+            nix::unistd::chown(path, None, Some(gid)).map_err(Error::SetGidError)?;
+            fs::set_permissions(path, PermissionsExt::from_mode(0o760))
+                .map_err(Error::PermissionsError)?;
+            Ok(SocketSecurity::GroupRestricted)
+        }
+        SocketAccessPlan::WorldAccessible => {
+            fs::set_permissions(path, PermissionsExt::from_mode(0o766))
+                .map_err(Error::PermissionsError)?;
+            log::info!(
+                "Management socket at {} is reachable by all local users; wallet/secret RPCs are \
+                 gated to the owning uid. Set WARREN_MANAGEMENT_SOCKET_GROUP to restrict the \
+                 socket to a dedicated Unix group instead.",
+                path.display()
+            );
+            Ok(SocketSecurity::WorldAccessible)
+        }
+    }
+}
+
+#[cfg(any(windows, target_os = "android"))]
 fn create_endpoint(rpc_socket_path: PathBuf) -> Result<IpcEndpoint, Error> {
     let endpoint = IpcEndpoint::new(rpc_socket_path, tipsy::OnConflict::Error)
         .map_err(Error::StartServerError)?;
@@ -221,12 +373,15 @@ fn create_endpoint(rpc_socket_path: PathBuf) -> Result<IpcEndpoint, Error> {
 }
 
 #[derive(Debug)]
-struct StreamBox<T: AsyncRead + AsyncWrite>(pub T);
+struct StreamBox<T: AsyncRead + AsyncWrite> {
+    inner: T,
+    creds: Option<PeerCredentials>,
+}
 impl<T: AsyncRead + AsyncWrite> Connected for StreamBox<T> {
-    type ConnectInfo = Option<()>;
+    type ConnectInfo = ManagementConnectInfo;
 
     fn connect_info(&self) -> Self::ConnectInfo {
-        None
+        self.creds
     }
 }
 impl<T: AsyncRead + AsyncWrite + Unpin> AsyncRead for StreamBox<T> {
@@ -235,7 +390,7 @@ impl<T: AsyncRead + AsyncWrite + Unpin> AsyncRead for StreamBox<T> {
         cx: &mut Context<'_>,
         buf: &mut ReadBuf<'_>,
     ) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_read(cx, buf)
+        Pin::new(&mut self.inner).poll_read(cx, buf)
     }
 }
 impl<T: AsyncRead + AsyncWrite + Unpin> AsyncWrite for StreamBox<T> {
@@ -244,14 +399,49 @@ impl<T: AsyncRead + AsyncWrite + Unpin> AsyncWrite for StreamBox<T> {
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.0).poll_write(cx, buf)
+        Pin::new(&mut self.inner).poll_write(cx, buf)
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_flush(cx)
+        Pin::new(&mut self.inner).poll_flush(cx)
     }
 
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_shutdown(cx)
+        Pin::new(&mut self.inner).poll_shutdown(cx)
+    }
+}
+
+#[cfg(all(test, unix, not(target_os = "android")))]
+mod socket_access_tests {
+    use super::*;
+
+    #[test]
+    fn no_configured_group_is_world_accessible_without_consulting_groups() {
+        // A stray `warren` group on the system must never flip the socket to
+        // group-restricted (locking the GUI out until the next login), so the
+        // group database must not even be consulted without explicit config.
+        let plan = plan_socket_access(None, |_| -> Result<Option<nix::unistd::Gid>, Error> {
+            panic!("group database consulted although no group was configured")
+        })
+        .unwrap();
+        assert!(matches!(plan, SocketAccessPlan::WorldAccessible));
+    }
+
+    #[test]
+    fn configured_group_restricts_to_that_gid() {
+        let plan = plan_socket_access(Some("vpnadmins"), |_| {
+            Ok(Some(nix::unistd::Gid::from_raw(4242)))
+        })
+        .unwrap();
+        match plan {
+            SocketAccessPlan::RestrictToGroup(gid) => assert_eq!(gid.as_raw(), 4242),
+            SocketAccessPlan::WorldAccessible => panic!("explicit group was ignored"),
+        }
+    }
+
+    #[test]
+    fn configured_but_missing_group_fails_closed() {
+        let result = plan_socket_access(Some("vpnadmins"), |_| Ok(None));
+        assert!(matches!(result, Err(Error::NoGidError)));
     }
 }

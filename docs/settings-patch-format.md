@@ -1,6 +1,6 @@
 # Settings patches
 
-Mullvad settings patch is a JSON format used to apply changes to Mullvad app settings. The purpose
+Warren settings patch is a JSON format used to apply changes to Warren app settings. The purpose
 is to make it easy to share or distribute useful configurations of the app, for example to make it
 work better in censored locations.
 

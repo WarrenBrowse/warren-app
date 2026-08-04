@@ -99,8 +99,8 @@ case "$TEST_TYPE" in
         exit 1
     fi
     USE_ORCHESTRATOR="false"
-    PACKAGE_NAME="net.mullvad.mullvadvpn"
-    TEST_PACKAGE_NAME="net.mullvad.mullvadvpn.test"
+    PACKAGE_NAME="com.warrenbrowse.vpn"
+    TEST_PACKAGE_NAME="com.warrenbrowse.vpn.test"
     TEST_APK_PATH="$APK_BASE_DIR/app/build/outputs/apk/androidTest/$BILLING_FLAVOR${INFRA_FLAVOR^}/debug/app-$BILLING_FLAVOR-$INFRA_FLAVOR-debug-androidTest.apk"
     ;;
     mockapi)
@@ -111,8 +111,8 @@ case "$TEST_TYPE" in
         exit 1
     fi
     USE_ORCHESTRATOR="true"
-    PACKAGE_NAME="net.mullvad.mullvadvpn"
-    TEST_PACKAGE_NAME="net.mullvad.mullvadvpn.test.mockapi"
+    PACKAGE_NAME="com.warrenbrowse.vpn"
+    TEST_PACKAGE_NAME="com.warrenbrowse.vpn.test.mockapi"
     TEST_APK_PATH="$APK_BASE_DIR/test/mockapi/build/outputs/apk/$BILLING_FLAVOR/debug/mockapi-$BILLING_FLAVOR-debug.apk"
     ;;
 
@@ -162,11 +162,11 @@ case "$TEST_TYPE" in
 
     OPTIONAL_TEST_ARGUMENTS+=" -e mullvad.test.e2e.config.runHighlyRateLimitedTests $ENABLE_HIGHLY_RATE_LIMITED_TESTS"
     USE_ORCHESTRATOR="true"
-    PACKAGE_NAME="net.mullvad.mullvadvpn"
+    PACKAGE_NAME="com.warrenbrowse.vpn"
     if [[ "$INFRA_FLAVOR" =~ ^(devmole|stagemole)$ ]]; then
         PACKAGE_NAME+=".$INFRA_FLAVOR"
     fi
-    TEST_PACKAGE_NAME="net.mullvad.mullvadvpn.test.e2e"
+    TEST_PACKAGE_NAME="com.warrenbrowse.vpn.test.e2e"
     TEST_APK_PATH="$APK_BASE_DIR/test/e2e/build/outputs/apk/$BILLING_FLAVOR${INFRA_FLAVOR^}/debug/e2e-$BILLING_FLAVOR-$INFRA_FLAVOR-debug.apk"
     ;;
 esac

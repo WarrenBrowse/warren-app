@@ -1,4 +1,10 @@
-# Mullvad VPN end to end test framework
+# Warren VPN end to end test framework (inherited from upstream Mullvad)
+
+> **Warren note.** This framework is inherited as-is from upstream: parts of it (account numbers,
+> `MULLVAD_HOST` values such as `mullvad.net` / `stagemole.eu`, `releases.mullvad.net` download
+> repositories, `am.i.mullvad.net` connchecks) still target Mullvad's infrastructure and account
+> model, and have not been ported to Warren's wallet-based accounts and
+> `api.warrenbrowse.com` backend. Treat those parts as reference, not as a working Warren setup.
 
 ## Project structure
 

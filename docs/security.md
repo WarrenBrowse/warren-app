@@ -1,6 +1,6 @@
-# Mullvad VPN app security
+# Warren VPN app security
 
-This document describes the security properties of the Mullvad VPN app.
+This document describes the security properties of the Warren VPN app.
 For the security policy on this code repository, see [SECURITY.md](../SECURITY.md).
 
 This document describes the security for all platforms, and their differences.
@@ -36,17 +36,17 @@ or traffic affected by [known issues].
 
 The only way an android app can filter network traffic is via the VPN Service API. This API allows
 *all traffic* to and from the device to be routed through a third party app. This API is what the
-Mullvad VPN app uses for the tunnel itself and for leak protection.
+Warren VPN app uses for the tunnel itself and for leak protection.
 
 When establishing a VPN connection using the default settings* the app will set the routes `0/0` and
 `::0/0` in order to force *all traffic* to be routed through the app. This also applies when the app is
 in a state where it blocks *all traffic*, such as the [connecting], [disconnecting] and [error]
 states. Additionally the android system has a setting called *Block connections without VPN* that
-enables the Android OS to block *all traffic* that is not routed through the Mullvad VPN.
+enables the Android OS to block *all traffic* that is not routed through the Warren VPN.
 
 Besides the [known issues], Android has many variants and flavors that may introduce variances to
 the default [Android Open Source Project](https://source.android.com/) behavior. This means that
-the Mullvad VPN app, like all other VPN apps, is subject to the limitations of the VPN Service API.
+the Warren VPN app, like all other VPN apps, is subject to the limitations of the VPN Service API.
 
 > **\*:** Local Network Sharing affects the routes and Split Tunneling will allow apps to bypass the
 tunnel.
@@ -130,22 +130,22 @@ The following network traffic is allowed or blocked independent of state:
 On Linux, any situation that permits incoming or outgoing traffic also allows that traffic to be
 forwarded. All other forward traffic is rejected.
 
-#### Mullvad API
+#### Warren API
 
 The firewall allows traffic to the API regardless of tunnel state, so the daemon is able to update
 keys, fetch account data and more. In the [Connected] state, API traffic is only allowed inside the tunnel.
-For the other states, API traffic will bypass the firewall. On Windows, only the Mullvad service and
+For the other states, API traffic will bypass the firewall. On Windows, only the Warren service and
 problem report tool are able to communicate with the API in any of the blocking states. On macOS and
 Linux all applications running as root are able to reach the API in blocking states.
 
 All API connections use TLS 1.3 with certificate pinning. The app comes bundled with the
 [Let's encrypt root certificate](../mullvad-api/le_root_cert.pem) and only accepts connections
-with servers having a valid certificate issued to `api.mullvad.net` and signed with this
+with servers having a valid certificate issued to `api.warrenbrowse.com` and signed with this
 bundled certificate.
 
 ### Disconnected
 
-This is the default state that the `mullvad-daemon` starts in when the device boots, unless
+This is the default state that the `warren-daemon` starts in when the device boots, unless
 "Launch app on start-up" and "Auto-connect" are **both** active. Then the app will proceed to the
 [connecting] state immediately.
 
@@ -153,7 +153,7 @@ The disconnected state behaves very differently depending on the value of the
 "Lockdown mode" setting. If this setting is enabled, the disconnected state behaves
 like and has the same security properties as, the [error] state. If the setting is
 disabled (the default), then it is the only state where the app does not enforce any firewall
-rules. It then behaves the same as if the `mullvad-daemon` was not even running. It lets
+rules. It then behaves the same as if the `warren-daemon` was not even running. It lets
 network traffic flow in and out of the computer freely.
 
 The disconnected state is not active while the app changes server or if the VPN tunnel goes down
@@ -181,15 +181,15 @@ This process/user check is important to not allow unprivileged programs
 to leak packets to this IP outside the tunnel, as those packets can be fingerprinted.
 
 Examples:
-1. Connecting to `a.b.c.d` port `1234` using WireGuard: Allow `a.b.c.d:1234/UDP` for
-  `mullvad-daemon.exe` or any process running as `root`.
+1. Connecting to `a.b.c.d` port `1234` using the QUIC tunnel: Allow `a.b.c.d:1234/UDP` for
+  `warren-daemon.exe` or any process running as `root`.
 1. Connecting to the same VPN server, but using multihop. The entry server is
   at IP `e.f.g.h` and we are using the port `5678` - Allow traffic to `e.f.g.h:5678/UDP` for
-  `mullvad-daemon.exe` or any process running as `root`, and incoming matching
+  `warren-daemon.exe` or any process running as `root`, and incoming matching
   traffic. Do not allow any direct communication with the exit server with IP `a.b.c.d`.
 
-When using WireGuard, traffic inside the tunnel is permitted immediately after the tunnel device
-has been created. See the [connected] state for details on this.
+Traffic inside the tunnel is permitted immediately after the tunnel device has been created. See
+the [connected] state for details on this.
 
 ### Connected
 
@@ -223,7 +223,7 @@ This state is only active when there is a problem/error. As described in other s
 will never unlock the firewall and allow network traffic outside the tunnel unless a
 disconnect/quit is explicitly requested by the user. At the same time there might be situations
 when the app can't establish a tunnel for the device. This includes, but is not limited to:
-* Account runs out of time
+* The account's subscription expires
 * The computer is offline
 * Some internal error parsing or modifying system routing table, DNS settings etc.
 
@@ -293,7 +293,7 @@ In the other states DNS is simply blocked.
 
 ## Anti-censorship, obfuscation and API access methods
 
-The app supports wrapping both VPN tunnel traffic and Mullvad API traffic in various
+The app supports wrapping both VPN tunnel traffic and Warren API traffic in various
 obfuscation protocols. The sole purpose of these protocols is to make the traffic harder to
 fingerprint and block. Some obfuscation protocols include their own encryption, but that
 encryption should not be considered a security boundary. They are anti-censorship tools,
@@ -312,7 +312,7 @@ traffic.
 ## Desktop system service
 
 On all desktop platforms the VPN tunnel and the device security is handled by a system
-service called `mullvad-daemon`. This service is installed as the administrator/root user
+service called `warren-daemon`. This service is installed as the administrator/root user
 during app install and is then always running in the background, even when the user
 quits the GUI and when no tunnels are running.
 
@@ -323,11 +323,11 @@ Any local process or user can therefore control the VPN state or extract account
 Protecting against this is outside of the app's threat model. However, the management
 interface must not be reachable by code running on websites open in a local browser.
 
-The `mullvad-daemon` transition to the [disconnected] state before exiting. To
+The `warren-daemon` transition to the [disconnected] state before exiting. To
 limit leaks during computer shutdown, it will maintain the blocking firewall
 rules upon exit in the following scenarios:
 - _Lockdown mode_ is enabled
-- A user didn't explicitly request for the `mullvad-daemon` to be shut down and
+- A user didn't explicitly request for the `warren-daemon` to be shut down and
   either or both of the following are true
     - The daemon is currently in one of the blocking states ([connected],
       [connecting], or [error])
@@ -347,10 +347,10 @@ enforce the blocking policy before being stopped.
 
 ### Linux
 
-Due to the dependence on various other services, the `mullvad-daemon` is not
+Due to the dependence on various other services, the `warren-daemon` is not
 started early enough to prevent leaks. To prevent this, another system unit is
 started during early boot that applies a blocking policy that persists until the
-`mullvad-daemon` is started.
+`warren-daemon` is started.
 
 ## Desktop Electron GUI
 
@@ -358,17 +358,17 @@ The graphical frontend for the app on desktop is an Electron app. This app only 
 local resources in the form of html, CSS and JavaScript directly from the installation
 directory of the app, and never from remote sources.
 
-The GUI only communicates with the system service (`mullvad-daemon`), it makes no other
+The GUI only communicates with the system service (`warren-daemon`), it makes no other
 network connections. Except when the user sends a problem report, then it spawn the
-`mullvad-problem-report` tool, which in turn communicate over TLS with our API.
+`warren-problem-report` tool, which in turn communicate over TLS with our API.
 
-## Mullvad VPN loader
+## Warren VPN loader
 
-See the threat model [document](../mullvad-update/threat-model.md) for the Mullvad VPN loader.
+See the threat model [document](../mullvad-update/threat-model.md) for the Warren VPN loader.
 
 ## Local privilege escalation (LPE)
 
-The `mullvad-daemon` runs as administrator/root, and the installers execute with elevated
+The `warren-daemon` runs as administrator/root, and the installers execute with elevated
 privileges on all platforms. It is important that neither the app nor the installers ever
 serve as a local privilege escalation vector. No unprivileged process should be able to use
 them to elevate its own permissions or execute code with higher privileges.

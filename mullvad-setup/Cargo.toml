@@ -7,7 +7,7 @@ repository.workspace = true
 license.workspace = true
 
 [[bin]]
-name = "mullvad-setup"
+name = "warren-setup"
 path = "src/main.rs"
 
 [dependencies]
@@ -19,6 +19,7 @@ mullvad-paths = { path = "../mullvad-paths" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 talpid-core = { path = "../talpid-core" }
+talpid-dns = { path = "../talpid-dns" }
 talpid-future = { path = "../talpid-future" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }

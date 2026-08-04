@@ -1,0 +1,28 @@
+#!/bin/sh
+# sysvinit counterpart of dist-assets/linux/before-remove.sh. Keep the two in
+# step: the systemd flavour drives systemctl, this one drives the init script.
+set -eu
+
+NAME=warren-daemon@WARREN_SUFFIX@
+SETUP="@WARREN_PRODUCT_DIR@/resources/warren-setup"
+
+# SIGTERM sometimes crashes the app; SIGINT is the one it handles cleanly.
+pkill -2 -x "warren-gui@WARREN_SUFFIX@" || true
+sleep 0.5
+pkill -9 -x "warren-gui@WARREN_SUFFIX@" || true
+
+case "${1:-remove}" in
+    upgrade | deconfigure | failed-upgrade) exit 0 ;;
+esac
+
+if command -v invoke-rc.d > /dev/null 2>&1; then
+    invoke-rc.d "$NAME" stop || true
+else
+    "/etc/init.d/$NAME" stop || true
+fi
+
+# Belt and braces after the daemon is gone: a daemon that died without running
+# its teardown leaves the kernel firewall blocking, and removing the package
+# would then take the machine off the network for good.
+"$SETUP" reset-firewall || echo "Failed to reset firewall"
+"$SETUP" remove-device || echo "Failed to remove device from account"

@@ -8,9 +8,9 @@
 
 import Combine
 import Foundation
-import MullvadREST
-import MullvadSettings
-import MullvadTypes
+import WarrenREST
+import WarrenSettings
+import WarrenTypes
 import Network
 
 /// A serializable representation of internal state.

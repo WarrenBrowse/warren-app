@@ -180,7 +180,7 @@ fn init_logger(
         logging::init_logger(config.log_level, log_location, config.log_stdout_timestamps)
             .map_err(|e| e.display_chain_with_msg("Unable to initialize logger"))?;
     log_panics::init();
-    version::log_version();
+    version::log_version(env!("CARGO_BIN_NAME"));
     Ok(log_handle)
 }
 
@@ -221,7 +221,7 @@ async fn run_standalone(
     #[cfg(not(windows))]
     cleanup_old_rpc_socket(mullvad_paths::get_rpc_socket_path()).await;
 
-    log::info!("Mullvad daemon is quitting");
+    log::info!("Warren daemon is quitting");
     thread::sleep(Duration::from_millis(500));
     Ok(())
 }

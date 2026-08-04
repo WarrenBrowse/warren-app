@@ -46,7 +46,7 @@ IDB_ARM64EXE BINARY "{arm64_installer}"
 
     println!("cargo:rerun-if-changed=windows-installer.manifest");
     res.set_manifest_file("windows-installer.manifest");
-    res.set("FileDescription", "Mullvad VPN installer");
+    res.set("FileDescription", "Warren VPN installer");
 
     res.compile().context("Failed to compile resources")
 }

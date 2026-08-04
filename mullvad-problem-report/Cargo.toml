@@ -2,28 +2,31 @@
 name = "mullvad-problem-report"
 edition.workspace = true
 rust-version.workspace = true
-description = "Collect Mullvad VPN logs into a report and send it to support"
+description = "Collect Warren VPN logs into a redacted report for the community forum"
 repository.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "warren-problem-report"
+path = "src/main.rs"
+
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
-InternalName = "mullvad-problem-report"
-OriginalFilename = "mullvad-problem-report.exe"
+ProductName = "Warren VPN"
+CompanyName = "Warren contributors"
+LegalCopyright = "(c) 2026 Warren contributors"
+InternalName = "warren-problem-report"
+OriginalFilename = "warren-problem-report.exe"
 
 [dependencies]
 dirs = { workspace = true }
 log = { workspace = true }
-mullvad-api = { path = "../mullvad-api" }
 mullvad-paths = { path = "../mullvad-paths" }
 mullvad-version = { path = "../mullvad-version" }
+warren-product-env = { path = "../warren-product-env" }
 regex = "1.0"
 talpid-platform-metadata = { path = "../talpid-platform-metadata" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["rt"] }
 uuid = { version = "1.4.1", features = ["v4"] }
 
 [target.'cfg(not(target_os="android"))'.dependencies]

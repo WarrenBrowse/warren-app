@@ -5,7 +5,7 @@ It all starts with `buildserver-build-ios.sh`. It does 2 main things:
 - tries to build _well signed_ tags that match `^ios/` with `run-build-and-upload.sh`.
 
 _Well signed_ in this case implies that the tag has been signed by a GPG key that is signed by
-Mullvad's code signing key.
+Warren's code signing key.
 
 
 ## `run-build-and-upload.sh`

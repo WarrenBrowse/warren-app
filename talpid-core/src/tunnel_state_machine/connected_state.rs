@@ -3,7 +3,7 @@ use futures::channel::{mpsc, oneshot};
 use futures::stream::Fuse;
 
 use talpid_tunnel::{TunnelEvent, TunnelMetadata};
-use talpid_types::net::{AllowedClients, AllowedEndpoint, wireguard::TunnelParameters};
+use talpid_types::net::{AllowedClients, AllowedEndpoint};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_types::{BoxedError, ErrorExt};
 
@@ -12,7 +12,12 @@ use crate::firewall::FirewallPolicy;
 use crate::resolver::LOCAL_DNS_RESOLVER;
 use talpid_dns::ResolvedDnsConfig;
 
-use super::connecting_state::TunnelCloseEvent;
+use std::time::Instant;
+
+use super::backend_params::BackendParams;
+use super::connecting_state::{
+    FLAP_MAX, FLAP_WINDOW, TunnelCloseEvent, note_reconnect_and_is_flapping, reset_flap_detector,
+};
 use super::{
     AfterDisconnect, ConnectingState, DisconnectingState, ErrorState, EventConsequence,
     EventResult, SharedTunnelStateValues, TunnelCommand, TunnelCommandReceiver, TunnelState,
@@ -22,13 +27,72 @@ use super::{
 pub(crate) type TunnelEventsReceiver =
     Fuse<mpsc::UnboundedReceiver<(TunnelEvent, oneshot::Sender<()>)>>;
 
+/// How long a multi-hop tunnel is held through an offline window
+/// before the state machine finally blocks with `IsOffline`. During a
+/// WiFi<->ethernet switch the offline edge is transient (link flap +
+/// DHCP, typically 2-5 s) and the QUIC connection migrates (or the
+/// supervisor force-redials) without any teardown; blocking
+/// immediately would destroy a tunnel that is about to self-heal.
+/// Holding Connected is fail-closed by construction: the Connected
+/// firewall policy only ever lets tunnel-interface traffic and
+/// root-owned UDP to the relay out of a physical NIC, no matter what
+/// the routing table does meanwhile.
+const OFFLINE_GRACE: std::time::Duration = std::time::Duration::from_secs(15);
+
+/// Decision for a `Connectivity` command while Connected. Pure so the
+/// 8-cell matrix (single/multi-hop x grace armed/not x online/offline)
+/// is unit-testable without a state machine harness.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GraceAction {
+    /// Offline on a multi-hop tunnel with no grace armed: arm it.
+    Arm,
+    /// Offline while the grace is already armed: keep waiting.
+    Hold,
+    /// Online: clear any armed grace, the tunnel survived.
+    Cancel,
+    /// Offline on a single-hop tunnel: block immediately (no
+    /// migration nor supervisor redial exists on that path).
+    Block,
+}
+
+fn grace_action(is_multi_hop: bool, grace_armed: bool, is_offline: bool) -> GraceAction {
+    match (is_offline, is_multi_hop, grace_armed) {
+        (false, _, _) => GraceAction::Cancel,
+        (true, false, _) => GraceAction::Block,
+        (true, true, false) => GraceAction::Arm,
+        (true, true, true) => GraceAction::Hold,
+    }
+}
+
+/// The `TunnelEndpoint` published on the Connected transition.
+///
+/// Unlike the Connecting transition (which can only echo the requested
+/// settings, negotiation has not happened yet), Connected overrides `daita`
+/// with the runtime truth carried by the tunnel monitor's metadata: a
+/// requested-but-ungranted defense must never be published as active.
+fn connected_tunnel_endpoint(
+    tunnel_parameters: &BackendParams,
+    metadata: &TunnelMetadata,
+) -> talpid_types::net::TunnelEndpoint {
+    talpid_types::net::TunnelEndpoint {
+        tunnel_interface: Some(metadata.interface.clone()),
+        daita: metadata.daita_active,
+        effective_mtu: metadata.effective_mtu,
+        ..tunnel_parameters.get_tunnel_endpoint()
+    }
+}
+
 /// The tunnel is up and working.
 pub struct ConnectedState {
     metadata: TunnelMetadata,
     tunnel_events: TunnelEventsReceiver,
-    tunnel_parameters: TunnelParameters,
+    tunnel_parameters: BackendParams,
     tunnel_close_event: TunnelCloseEvent,
     tunnel_close_tx: oneshot::Sender<()>,
+    /// Armed while the host is offline on a multi-hop tunnel: when it
+    /// expires with the host still offline, the state finally blocks
+    /// with `IsOffline` (exactly the pre-grace consequence, delayed).
+    offline_grace_deadline: Option<tokio::time::Instant>,
 }
 
 impl ConnectedState {
@@ -36,23 +100,45 @@ impl ConnectedState {
         shared_values: &mut SharedTunnelStateValues,
         metadata: TunnelMetadata,
         tunnel_events: TunnelEventsReceiver,
-        tunnel_parameters: TunnelParameters,
+        tunnel_parameters: BackendParams,
         tunnel_close_event: TunnelCloseEvent,
         tunnel_close_tx: oneshot::Sender<()>,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
-        let connected_state = ConnectedState {
+        let mut connected_state = ConnectedState {
             metadata,
             tunnel_events,
             tunnel_parameters,
             tunnel_close_event,
             tunnel_close_tx,
+            offline_grace_deadline: None,
         };
 
-        let tunnel_interface = Some(connected_state.metadata.interface.clone());
-        let tunnel_endpoint = talpid_types::net::TunnelEndpoint {
-            tunnel_interface,
-            ..connected_state.tunnel_parameters.get_tunnel_endpoint()
-        };
+        // The offline edge can land while the monitor is between `Up`
+        // and this `enter` (ConnectingState would otherwise have
+        // blocked already). Multi-hop arms the grace right away;
+        // single-hop blocks immediately, exactly as the Connectivity
+        // command would have.
+        if shared_values.connectivity.is_offline() {
+            if connected_state.tunnel_parameters.is_multi_hop() {
+                connected_state.offline_grace_deadline =
+                    Some(tokio::time::Instant::now() + OFFLINE_GRACE);
+                log::info!(
+                    "Entering connected state while offline; holding the tunnel for \
+                     migration (grace {OFFLINE_GRACE:?})"
+                );
+            } else {
+                return DisconnectingState::enter(
+                    connected_state.tunnel_close_tx,
+                    connected_state.tunnel_close_event,
+                    AfterDisconnect::Block(ErrorStateCause::IsOffline),
+                );
+            }
+        }
+
+        let tunnel_endpoint = connected_tunnel_endpoint(
+            &connected_state.tunnel_parameters,
+            &connected_state.metadata,
+        );
 
         if let Err(error) = connected_state.set_firewall_policy(shared_values) {
             DisconnectingState::enter(
@@ -218,6 +304,11 @@ impl ConnectedState {
         if let Err(error) = shared_values.route_manager.clear_routes() {
             log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
         }
+
+        // Warren split routes are out-of-band from the `RouteManager`.
+        // See `force_route_cleanup`.
+        talpid_warren_tunnel::force_route_cleanup();
+
         #[cfg(target_os = "linux")]
         if let Err(error) = shared_values
             .runtime
@@ -246,7 +337,7 @@ impl ConnectedState {
     }
 
     fn handle_commands(
-        self: Box<Self>,
+        mut self: Box<Self>,
         command: Option<TunnelCommand>,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
@@ -323,19 +414,40 @@ impl ConnectedState {
             }
             #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
-                shared_values.lockdown_mode = lockdown_mode;
+                shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
                 SameState(self)
             }
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
-                if connectivity.is_offline() {
-                    self.disconnect(
+                match grace_action(
+                    self.tunnel_parameters.is_multi_hop(),
+                    self.offline_grace_deadline.is_some(),
+                    connectivity.is_offline(),
+                ) {
+                    GraceAction::Block => self.disconnect(
                         shared_values,
                         AfterDisconnect::Block(ErrorStateCause::IsOffline),
-                    )
-                } else {
-                    SameState(self)
+                    ),
+                    GraceAction::Arm => {
+                        self.offline_grace_deadline =
+                            Some(tokio::time::Instant::now() + OFFLINE_GRACE);
+                        log::info!(
+                            "Offline edge while connected; holding the tunnel for \
+                             migration (grace {OFFLINE_GRACE:?})"
+                        );
+                        SameState(self)
+                    }
+                    GraceAction::Hold => SameState(self),
+                    GraceAction::Cancel => {
+                        if self.offline_grace_deadline.take().is_some() {
+                            log::info!(
+                                "Network restored within the offline grace; tunnel held \
+                                 (QUIC migration / supervisor redial takes over)"
+                            );
+                        }
+                        SameState(self)
+                    }
                 }
             }
             Some(TunnelCommand::Connect) => {
@@ -406,6 +518,18 @@ impl ConnectedState {
             Some((TunnelEvent::Down, _)) | None => {
                 self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
             }
+            Some((TunnelEvent::Up(new_metadata), _)) => {
+                // Mid-session metadata refresh from the tunnel monitor
+                // (e.g. the effective-MTU verdict settling once DPLPMTUD
+                // converges). Republish Connected with the fresh runtime
+                // truth so the daemon recomputes feature indicators; the
+                // state itself (firewall, DNS, close plumbing) carries
+                // over untouched.
+                let mut this = self;
+                this.metadata = new_metadata;
+                let endpoint = connected_tunnel_endpoint(&this.tunnel_parameters, &this.metadata);
+                NewState((this, TunnelStateTransition::Connected(endpoint)))
+            }
             Some(_) => SameState(self),
         }
     }
@@ -418,9 +542,39 @@ impl ConnectedState {
         use self::EventConsequence::*;
 
         if let Some(block_reason) = block_reason {
+            reset_flap_detector();
             Self::reset_dns(shared_values);
             Self::reset_routes(shared_values);
             return NewState(ErrorState::enter(shared_values, block_reason));
+        }
+
+        // A close during an offline window is the offline, not a flap:
+        // reconnect-churning here would mis-trip the flap detector into
+        // `WarrenTunnelFlapping`. `IsOffline` is honest and auto-recovers
+        // on the online edge.
+        if shared_values.connectivity.is_offline() {
+            reset_flap_detector();
+            Self::reset_dns(shared_values);
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(shared_values, ErrorStateCause::IsOffline));
+        }
+
+        // The premature `Up` means most laps drop through here, not
+        // `ConnectingState`; both must feed the shared window for the
+        // bound to hold. See [`RECENT_RECONNECTS`].
+        if note_reconnect_and_is_flapping(Instant::now()) {
+            log::error!(
+                "Warren tunnel is flapping (>{FLAP_MAX} reconnects within {FLAP_WINDOW:?}); \
+                 entering a stable blocked state instead of churning. \
+                 Disconnect to clear, then reconnect once the network is stable."
+            );
+            reset_flap_detector();
+            Self::reset_dns(shared_values);
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(
+                shared_values,
+                ErrorStateCause::WarrenTunnelFlapping,
+            ));
         }
 
         log::info!("Tunnel closed. Reconnecting.");
@@ -437,11 +591,22 @@ impl TunnelState for ConnectedState {
         commands: &mut TunnelCommandReceiver,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
+        let grace_deadline = self.offline_grace_deadline;
         let result = runtime.block_on(async {
+            use futures::FutureExt;
+            let grace = async move {
+                match grace_deadline {
+                    Some(deadline) => tokio::time::sleep_until(deadline).await,
+                    None => futures::future::pending::<()>().await,
+                }
+            }
+            .fuse();
+            futures::pin_mut!(grace);
             futures::select! {
                 command = commands.next() => EventResult::Command(command),
                 event = self.tunnel_events.next() => EventResult::Event(event),
                 result = &mut self.tunnel_close_event => EventResult::Close(result),
+                () = grace => EventResult::OfflineGraceExpired,
             }
         });
 
@@ -455,6 +620,129 @@ impl TunnelState for ConnectedState {
                 let block_reason = result.unwrap_or(None);
                 self.handle_tunnel_close_event(block_reason, shared_values)
             }
+            EventResult::OfflineGraceExpired => {
+                if shared_values.connectivity.is_offline() {
+                    log::info!("Offline persisted past the {OFFLINE_GRACE:?} grace; blocking");
+                    self.disconnect(
+                        shared_values,
+                        AfterDisconnect::Block(ErrorStateCause::IsOffline),
+                    )
+                } else {
+                    // The online command can be queued behind the timer:
+                    // connectivity is already back, just disarm.
+                    self.offline_grace_deadline = None;
+                    EventConsequence::SameState(self)
+                }
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod connected_endpoint_tests {
+    use talpid_tunnel::TunnelMetadata;
+
+    use super::connected_tunnel_endpoint;
+    use crate::tunnel_state_machine::backend_params::{BackendParams, WarrenBackendInfo};
+
+    fn params(enable_daita: bool) -> BackendParams {
+        BackendParams::Warren(WarrenBackendInfo {
+            exit_candidates: vec!["203.0.113.9:443".parse().unwrap()],
+            relay_endpoint: Some("198.51.100.10:443".parse().unwrap()),
+            exit_endpoint: None,
+            enable_daita,
+            single_node: false,
+        })
+    }
+
+    fn metadata(daita_active: bool) -> TunnelMetadata {
+        TunnelMetadata {
+            interface: "utun7".to_owned(),
+            ips: vec!["10.66.1.2".parse().unwrap()],
+            ipv4_gateway: "10.66.0.1".parse().unwrap(),
+            ipv6_gateway: None,
+            daita_active,
+            effective_mtu: None,
+        }
+    }
+
+    fn metadata_with_mtu(effective_mtu: Option<u16>) -> TunnelMetadata {
+        TunnelMetadata {
+            effective_mtu,
+            ..metadata(false)
+        }
+    }
+
+    /// The Connecting transition echoes the REQUESTED setting (negotiation has
+    /// not happened yet), but Connected must publish the NEGOTIATED truth from
+    /// the tunnel monitor: a requested-but-ungranted DAITA reads false here.
+    #[test]
+    fn connected_endpoint_reports_negotiated_daita_not_the_request() {
+        let endpoint = connected_tunnel_endpoint(&params(true), &metadata(false));
+        assert!(
+            !endpoint.daita,
+            "requested-but-ungranted DAITA must not be published as active"
+        );
+
+        let endpoint = connected_tunnel_endpoint(&params(true), &metadata(true));
+        assert!(
+            endpoint.daita,
+            "a granted DAITA must be published as active"
+        );
+    }
+
+    #[test]
+    fn connected_endpoint_carries_the_tunnel_interface() {
+        let endpoint = connected_tunnel_endpoint(&params(false), &metadata(false));
+        assert_eq!(endpoint.tunnel_interface.as_deref(), Some("utun7"));
+    }
+
+    /// The reduced-MTU verdict is runtime truth from the tunnel monitor: the
+    /// Connected endpoint must carry whatever the metadata measured, so a
+    /// mid-session metadata refresh can surface (or clear) the indicator.
+    #[test]
+    fn connected_endpoint_carries_the_effective_mtu_from_metadata() {
+        let endpoint = connected_tunnel_endpoint(&params(false), &metadata_with_mtu(None));
+        assert_eq!(
+            endpoint.effective_mtu, None,
+            "a full-MTU path publishes nothing"
+        );
+
+        let endpoint = connected_tunnel_endpoint(&params(false), &metadata_with_mtu(Some(1184)));
+        assert_eq!(
+            endpoint.effective_mtu,
+            Some(1184),
+            "a reduced-MTU measurement must reach the published endpoint"
+        );
+    }
+}
+
+#[cfg(test)]
+mod offline_grace_tests {
+    use super::{GraceAction, grace_action};
+
+    #[test]
+    fn online_always_cancels() {
+        // Whatever the backend and the armed state, an online edge
+        // clears the grace: the tunnel survived the window.
+        for multi in [false, true] {
+            for armed in [false, true] {
+                assert_eq!(grace_action(multi, armed, false), GraceAction::Cancel);
+            }
+        }
+    }
+
+    #[test]
+    fn single_hop_offline_blocks_immediately() {
+        // Single-hop has no migration nor supervisor redial: the
+        // pre-grace fail-closed behavior must be preserved verbatim.
+        assert_eq!(grace_action(false, false, true), GraceAction::Block);
+        assert_eq!(grace_action(false, true, true), GraceAction::Block);
+    }
+
+    #[test]
+    fn multi_hop_offline_arms_then_holds() {
+        assert_eq!(grace_action(true, false, true), GraceAction::Arm);
+        assert_eq!(grace_action(true, true, true), GraceAction::Hold);
     }
 }

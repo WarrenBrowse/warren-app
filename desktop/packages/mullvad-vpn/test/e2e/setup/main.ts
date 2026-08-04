@@ -46,13 +46,8 @@ class ApplicationMain {
 
   private deviceState: DeviceState = {
     type: 'logged in',
-    accountAndDevice: {
-      accountNumber: '1234123412341234',
-      device: {
-        id: '1234',
-        name: 'Testing Mole',
-        created: new Date(),
-      },
+    warrenIdentity: {
+      pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
     },
   };
 
@@ -85,8 +80,8 @@ class ApplicationMain {
 
     const window = new BrowserWindow({
       useContentSize: true,
-      width: 320,
-      height: 568,
+      width: 400,
+      height: 598,
       resizable: false,
       maximizable: false,
       fullscreenable: false,
@@ -140,11 +135,13 @@ class ApplicationMain {
       guiSettings: this.guiSettings,
       translations: this.translations,
       splitTunnelingApplications: [],
+      splitTunnelingSupported: true,
       macOsScrollbarVisibility: MacOsScrollbarVisibility.whenScrolling,
       changelog: [],
       navigationHistory: undefined,
       scrollPositions: {},
       isMacOs13OrNewer: true,
+      purchaseInFlight: false,
     }));
 
     IpcMainEventChannel.guiSettings.handleSetPreferredLocale((locale) => {

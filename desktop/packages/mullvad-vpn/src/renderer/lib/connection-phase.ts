@@ -1,0 +1,81 @@
+import { TunnelState } from '../../shared/daemon-rpc-types';
+import { Colors, colors } from './foundations';
+
+// The connect screen collapses the daemon tunnel states into four visual phases,
+// each with its own accent colour. This is the single source of truth so the
+// backdrop wash, the eye icon, the status label and the action button never
+// drift apart.
+//   exposed     : leaking, traffic in the clear (red)
+//   connecting  : tunnel coming up or down (orange)
+//   protected   : tunnel up (green)
+//   interrupted : tunnel nominally up but the host is offline (orange)
+//   blocked     : kill switch active, nothing leaks but nothing flows (neutral)
+export type ConnectionPhase = 'exposed' | 'connecting' | 'protected' | 'interrupted' | 'blocked';
+
+export function getConnectionPhase(
+  tunnelState: TunnelState,
+  hostOffline = false,
+  exitEgressDead = false,
+): ConnectionPhase {
+  switch (tunnelState.state) {
+    case 'connected':
+      // The daemon holds Connected through its offline migration grace
+      // window and the supervisor redials transparently, so "connected
+      // while the host is offline" is a real, user-visible window. A
+      // green "protected" there is a lie: nothing flows. Same for an
+      // exit that stopped forwarding (egress probe verdict): the QUIC
+      // session looks alive but no traffic gets through. Only this
+      // state degrades; every other state's presentation already tells
+      // the truth on its own.
+      return hostOffline || exitEgressDead ? 'interrupted' : 'protected';
+    case 'connecting':
+    case 'disconnecting':
+      return 'connecting';
+    case 'disconnected':
+      // Locked down = kill switch holding traffic, not raw exposure.
+      return tunnelState.lockedDown ? 'blocked' : 'exposed';
+    case 'error':
+      // blockingError = the daemon failed to install the block, so traffic may
+      // be leaking (exposed). Without it the kill switch holds: secured but
+      // offline (blocked). An error is never "connected".
+      return tunnelState.details.blockingError ? 'exposed' : 'blocked';
+  }
+}
+
+export function getPhaseAccentColor(phase: ConnectionPhase): string {
+  return colors[getPhaseAccentColorName(phase)];
+}
+
+// The accent as it must be written, not filled. The saturated accents carry
+// icons, rails and buttons, where 3:1 is enough; a title at text size needs the
+// lifted tint to clear 4.5:1 on the card's neutral surface.
+export function getPhaseTitleColorName(phase: ConnectionPhase): Colors {
+  switch (phase) {
+    case 'protected':
+      return 'greenText';
+    case 'connecting':
+    case 'interrupted':
+      return 'orangeText';
+    case 'exposed':
+      return 'redText';
+    case 'blocked':
+      // The kill-switch state has no hue of its own; neutral IS its signal.
+      return 'white';
+  }
+}
+
+// Same accent as a colour-token name, for APIs (like <Icon color>) that take a
+// token key rather than a resolved value.
+export function getPhaseAccentColorName(phase: ConnectionPhase): Colors {
+  switch (phase) {
+    case 'protected':
+      return 'green';
+    case 'connecting':
+    case 'interrupted':
+      return 'orange';
+    case 'exposed':
+      return 'red';
+    case 'blocked':
+      return 'white';
+  }
+}

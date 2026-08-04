@@ -1,4 +1,9 @@
 # Router setup
+
+> **Warren note.** This router belongs to upstream Mullvad's iOS test lab (stagemole staging
+> accounts, WireGuard configurations); it is not part of the Warren infrastructure and the
+> stagemole steps below cannot be followed for Warren. Kept as reference.
+
 ## Installing on a new router/computer
 - Obtain an x86 computer with 2 ethernet interfaces.
 - Install NixOS on the hardware following the [NixOS installation guide]

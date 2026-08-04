@@ -31,6 +31,26 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetAllowLan((allowLan) =>
       this.daemonRpc.setAllowLan(allowLan),
     );
+    // IPC handler for the warren-api URL.
+    IpcMainEventChannel.settings.handleSetWarrenApiUrl((url) =>
+      this.daemonRpc.setWarrenApiUrl(url),
+    );
+    // IPC handler for the client-side bandwidth ceiling.
+    IpcMainEventChannel.settings.handleSetWarrenMaxRateBps((bps?: number) =>
+      this.daemonRpc.setWarrenMaxRateBps(bps),
+    );
+    // IPC handler for the Warren multi-hop settings.
+    IpcMainEventChannel.settings.handleSetWarrenMultiHop((settings) =>
+      this.daemonRpc.setWarrenMultiHopSettings(settings),
+    );
+    // IPC handler for the advanced Warren custom-exit override.
+    IpcMainEventChannel.settings.handleSetWarrenCustomExit((settings) =>
+      this.daemonRpc.setWarrenCustomExit(settings),
+    );
+    // IPC handler for the NAT-PMP port-forwarding settings.
+    IpcMainEventChannel.settings.handleSetNatPmpSettings((settings) =>
+      this.daemonRpc.setNatPmpSettings(settings),
+    );
     IpcMainEventChannel.settings.handleSetShowBetaReleases((showBetaReleases) =>
       this.daemonRpc.setShowBetaReleases(showBetaReleases),
     );
@@ -96,6 +116,19 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetDaitaDirectOnly((value) => {
       return this.daemonRpc.setDaitaDirectOnly(value);
     });
+    // Pubkey-pinning user actions.
+    IpcMainEventChannel.settings.handleTrustNewExitKey((input) =>
+      this.daemonRpc.trustNewExitKey(input),
+    );
+    IpcMainEventChannel.settings.handleResetPinnedExitKeys(() =>
+      this.daemonRpc.resetPinnedExitKeys(),
+    );
+    IpcMainEventChannel.settings.handleDismissPubkeyMismatch(() =>
+      this.daemonRpc.dismissPubkeyMismatch(),
+    );
+    IpcMainEventChannel.settings.handleReportPubkeyMismatch((mismatch) =>
+      this.daemonRpc.reportPubkeyMismatch(mismatch),
+    );
 
     IpcMainEventChannel.guiSettings.handleSetEnableSystemNotifications((flag: boolean) => {
       this.guiSettings.enableSystemNotifications = flag;
@@ -120,6 +153,14 @@ export default class Settings implements Readonly<ISettings> {
 
     IpcMainEventChannel.guiSettings.handleSetAnimateMap((animateMap: boolean) => {
       this.guiSettings.animateMap = animateMap;
+    });
+
+    IpcMainEventChannel.guiSettings.handleSetOnboardingCompletedUnix((ts: number | undefined) => {
+      this.guiSettings.onboardingCompletedUnix = ts;
+    });
+
+    IpcMainEventChannel.guiSettings.handleSetBackupPending((backupPending: boolean) => {
+      this.guiSettings.backupPending = backupPending;
     });
 
     IpcMainEventChannel.currentVersion.handleDisplayedChangelog(() => {
@@ -174,6 +215,25 @@ export default class Settings implements Readonly<ISettings> {
     return this.settingsValue.relayOverrides;
   }
 
+  // Persistent warren-api URL (undefined if unset on the daemon side).
+  public get warrenApiUrl() {
+    return this.settingsValue.warrenApiUrl;
+  }
+  // Warren multi-hop settings. Daemon restart required to
+  // apply.
+  public get warrenMultiHop() {
+    return this.settingsValue.warrenMultiHop;
+  }
+  // Advanced custom-exit override. Live push: the daemon reconnects on
+  // change.
+  public get warrenCustomExit() {
+    return this.settingsValue.warrenCustomExit;
+  }
+  // NAT-PMP port-forwarding settings. Live push: no daemon restart
+  // needed.
+  public get warrenNatPmp() {
+    return this.settingsValue.warrenNatPmp;
+  }
   public get gui() {
     return this.guiSettings;
   }

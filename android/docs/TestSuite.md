@@ -1,6 +1,6 @@
 # Test Suite Overview
 
-This document provides an overview of the Mullvad VPN Android application test suite, including architecture tests, end-to-end tests, and various testing utilities.
+This document provides an overview of the Warren VPN Android application test suite, including architecture tests, end-to-end tests, and various testing utilities.
 
 ## Test Structure
 
@@ -19,33 +19,27 @@ Contains unit tests that test specific use-cases, viewmodels and repositories, e
 ### 3. End-to-End Tests (`test/e2e/`)
 
 Various tests that simulate a user interacting with the app using the Android UI automation framework.
-The e2e tests require a real API backend and real relays that the tests can connect to. The tests can be set
-to target different environments such as `prod` or `stagemole`.
-
-__Note:__ some of the e2e tests are written with the assumption that `stagemole` is used,
-and will fail if run on `prod`.
+The e2e tests require a real API backend and real relays that the tests can connect to. The tests
+target the `prod` environment (the `warrenbrowse.com` infrastructure).
 
 #### Example of E2E tests include:
 - Testing that the user can successfully login.
 - Testing that the user can connect to a relay.
-- Testing that the user can still connect via an obfuscation method (e.g. Shadowsocks) if Wireguard is blocked at the network level.
+- Testing that the user can still connect when plain UDP QUIC is blocked at the network level
+  (TCP carrier fallback).
 
 #### E2E tests setup:
 In order to run the e2e tests a few properties must be set in your `~/.gradle/properties.gradle` file:
 
 ```bash
 # For running the e2e tests on the production backend
-mullvad.test.e2e.prod.accountNumber.valid=INSERT_VALID_ACCOUNT_NUMBER_HERE
-mullvad.test.e2e.prod.accountNumber.invalid=1111222233334444
-
-# For running the e2e tests on the stagemole backend
-mullvad.test.e2e.stagemole.partnerAuth=INSER_PARTNER_AUTH_TOKEN_HERE
-mullvad.test.e2e.stagemole.accountNumber.invalid=1111222233334444
+warren.test.e2e.prod.accountNumber.valid=INSERT_VALID_ACCOUNT_NUMBER_HERE
+warren.test.e2e.prod.accountNumber.invalid=1111222233334444
 
 # For running e2e tests that require the RAAS router
-# (see: mullvadvpn-app/ci/ios/test-router)
-mullvad.test.e2e.config.raas.host=INSERT_RAAS_HOST_HERE
-mullvad.test.e2e.config.raas.enable=true
+# (see: ci/ios/test-router)
+warren.test.e2e.config.raas.host=INSERT_RAAS_HOST_HERE
+warren.test.e2e.config.raas.enable=true
 ```
 
 ### 4. Mock API Tests (`test/mockapi/`)
@@ -133,12 +127,7 @@ and then invokes the lambda that can call methods on the page.
 
 ### E2E tests
 ```bash
-./gradlew :test:e2e:connectedPlayStagemoleDebugAndroidTest
-```
-The e2e tests can also be run using the `prod` backend (but some tests may fail because
-they only work when running on the `stagemole` backend):
-```bash
-./gradlew :test:e2e:connectedPlayProdDebugAndroidTest
+./gradlew :test:e2e:connectedProdDebugAndroidTest
 ```
 
 ### Mock API tests

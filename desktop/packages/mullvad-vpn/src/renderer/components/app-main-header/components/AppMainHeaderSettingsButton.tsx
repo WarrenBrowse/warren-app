@@ -10,10 +10,12 @@ import { useSelector } from '../../../redux/store';
 
 export type MainHeaderSettingsButtonProps = Omit<IconButtonProps, 'icon'>;
 
+// Tucked onto the gear's upper-right tooth rather than the box corner, so it
+// reads as part of the icon instead of floating next to it.
 const StyledDot = styled(Dot)`
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 2px;
+  right: 2px;
 `;
 
 const StyledDiv = styled.div`
@@ -32,13 +34,16 @@ export function AppMainHeaderSettingsButton(props: MainHeaderSettingsButtonProps
 
   return (
     <MainHeader.IconButton onClick={openSettings} aria-label={messages.gettext('Settings')}>
+      {/* Outline rather than filled, matching the wordmark's thin stroke. The
+          outline gear is hollow, so the upgrade dot sits on it directly and the
+          notched "partial" variant is unnecessary. */}
       {suggestedUpgrade ? (
         <StyledDiv>
-          <IconButton.Icon icon="settings-partial" />
+          <IconButton.Icon icon="settings-outline" />
           <StyledDot variant="warning" size="tiny" />
         </StyledDiv>
       ) : (
-        <IconButton.Icon icon="settings-filled" />
+        <IconButton.Icon icon="settings-outline" />
       )}
     </MainHeader.IconButton>
   );

@@ -10,6 +10,15 @@ pub enum AuthFailed {
     InvalidAccount,
     ExpiredAccount,
     TooManyConnections,
+    /// Warren: the account was explicitly revoked (banned) by the operator,
+    /// carried as the `[BANNED]` token from the exit's CRL rejection. Distinct
+    /// from `ExpiredAccount` (renewable) so the app shows a suspension message.
+    Banned,
+    /// Warren: a ban specifically for port-forwarding abuse (the exit sealed
+    /// the port-forwarding reason code), carried as the `[BANNED_PORT_FORWARDING]`
+    /// token. Distinct from [`Self::Banned`] only so the app can show a
+    /// forwarded-port-specific suspension; both are equally fatal.
+    BannedPortForwarding,
     Unknown,
 }
 
@@ -20,6 +29,8 @@ impl<'a> From<&'a str> for AuthFailed {
             Some("INVALID_ACCOUNT") => InvalidAccount,
             Some("EXPIRED_ACCOUNT") => ExpiredAccount,
             Some("TOO_MANY_CONNECTIONS") => TooManyConnections,
+            Some("BANNED") => Banned,
+            Some("BANNED_PORT_FORWARDING") => BannedPortForwarding,
             Some(fail_id) => {
                 log::warn!(
                     "Received AUTH_FAILED message with unknown failure ID: {}",
@@ -42,6 +53,8 @@ impl AuthFailed {
             InvalidAccount => "[INVALID_ACCOUNT]",
             ExpiredAccount => "[EXPIRED_ACCOUNT]",
             TooManyConnections => "[TOO_MANY_CONNECTIONS]",
+            Banned => "[BANNED]",
+            BannedPortForwarding => "[BANNED_PORT_FORWARDING]",
             Unknown => "[Unknown]",
         }
     }
@@ -91,6 +104,15 @@ mod tests {
             (
                 Some("TOO_MANY_CONNECTIONS"),
                 "[TOO_MANY_CONNECTIONS] This Mullvad account is already used by the maximum number of simultaneous connections",
+            ),
+            (
+                Some("BANNED"),
+                "[BANNED] exit rejected the session (banned); access suspended",
+            ),
+            (
+                Some("BANNED_PORT_FORWARDING"),
+                "[BANNED_PORT_FORWARDING] exit rejected the session (banned); access suspended for \
+                 port-forwarding abuse",
             ),
             (None, "[Incomplete String"),
             (Some("REASON_REASON"), "[REASON_REASON]"),

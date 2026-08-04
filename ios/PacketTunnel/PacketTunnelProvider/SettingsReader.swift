@@ -7,7 +7,7 @@
 //
 
 import Foundation
-import MullvadSettings
+import WarrenSettings
 import PacketTunnelCore
 
 struct SettingsReader: SettingsReaderProtocol {

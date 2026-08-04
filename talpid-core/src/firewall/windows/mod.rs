@@ -78,15 +78,41 @@ pub enum Error {
 
 /// The Windows implementation for the firewall.
 pub struct Firewall {
-    /// If firewall rules should even if firewall module is shut down or dies.
+    /// Whether a still-blocking policy should be rewritten as boot-time
+    /// filters when this module shuts down or dies, so that it also blocks
+    /// across a reboot.
     ///
-    /// This should only very cautiously be turned off.
+    /// Mirrors the user's lockdown setting, and nothing else: it is kept in
+    /// sync by [`SharedTunnelStateValues::set_lockdown_mode`]. Boot-time
+    /// filters permit nothing at all, not even DHCP, and they are applied
+    /// before the daemon can run, so a machine that acquires them without the
+    /// user having asked for a persistent kill switch comes back from a reboot
+    /// with no address and no way to describe its own state.
+    ///
+    /// [`SharedTunnelStateValues::set_lockdown_mode`]: crate::tunnel_state_machine::SharedTunnelStateValues::set_lockdown_mode
     persist: bool,
 }
 
 impl Default for Firewall {
     fn default() -> Self {
-        Self { persist: true }
+        Self { persist: false }
+    }
+}
+
+/// Cleanup policy to hand to WinFw when this module goes away.
+///
+/// Neither variant unblocks: a blocking policy that is still active stays
+/// active. They differ in how long it outlives us, and that difference is the
+/// user's lockdown choice.
+const fn cleanup_policy(persist: bool) -> WinFwCleanupPolicy {
+    if persist {
+        // The user opted into a kill switch that survives a reboot, so cover
+        // the window before the daemon runs on the next boot.
+        WinFwCleanupPolicy::ContinueBlocking
+    } else {
+        // Keep blocking for the rest of this boot, then let the machine come
+        // back reachable. Recovery must never require the product itself.
+        WinFwCleanupPolicy::BlockingUntilReboot
     }
 }
 
@@ -201,6 +227,29 @@ impl Firewall {
         self.persist = persist;
     }
 
+    /// Recovery: remove blocking state left by ANY product environment, not
+    /// just this build's.
+    ///
+    /// [`Self::reset_policy`] only knows this build's WFP object keys, so it
+    /// cannot clear a block installed by another environment (or by a build
+    /// predating per-environment keys). That state has no other owner left on
+    /// the machine, which is exactly how a host ends up blocked with no way
+    /// out.
+    pub fn reset_policy_all_generations(&mut self) -> Result<(), Error> {
+        winfw::reset_all_generations().map_err(Error::ResettingPolicy)?;
+
+        with_wmi_if_enabled(|wmi| {
+            let result = hyperv::remove_blocking_hyperv_firewall_rules(wmi);
+            consume_and_log_hyperv_err("Remove block-all Hyper-V filter", result);
+        });
+
+        // Nothing of ours is left to persist, so a later drop must not
+        // resurrect a block.
+        self.persist = false;
+
+        Ok(())
+    }
+
     fn set_connecting_state(
         &mut self,
         peer_endpoints: &[AllowedEndpoint],
@@ -258,11 +307,7 @@ impl Drop for Firewall {
     fn drop(&mut self) {
         // Deinitialize WinFW with or without persistent filters.
         // All other filters should still remain intact.
-        let cleanup_policy = if self.persist {
-            WinFwCleanupPolicy::ContinueBlocking
-        } else {
-            WinFwCleanupPolicy::BlockingUntilReboot
-        };
+        let cleanup_policy = cleanup_policy(self.persist);
 
         match winfw::deinit(cleanup_policy) {
             Ok(()) => log::trace!("Successfully deinitialized windows firewall module"),
@@ -300,4 +345,68 @@ fn with_wmi_if_enabled(f: impl FnOnce(&wmi::WMIConnection)) {
             f(con)
         }
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Firewall, WinFwCleanupPolicy, cleanup_policy};
+    use crate::tunnel_state_machine::LockdownMode;
+
+    /// `WinFwCleanupPolicy` is a plain FFI enum without `PartialEq`.
+    fn policy_of(persist: bool) -> u32 {
+        cleanup_policy(persist) as u32
+    }
+
+    /// The regression that stranded a tester's machine: a daemon that dies
+    /// while blocked, for a user who never armed lockdown, must not leave
+    /// boot-time filters behind. Those permit nothing at all, DHCP included,
+    /// so the machine comes back from the reboot with no address, and no
+    /// later version of the product can remove them once its firewall object
+    /// keys have rotated.
+    #[test]
+    fn a_firewall_no_one_armed_never_persists_across_a_reboot() {
+        assert_eq!(
+            policy_of(Firewall::default().persist),
+            WinFwCleanupPolicy::BlockingUntilReboot as u32,
+            "the default firewall must not rewrite a blocking policy as boot-time filters"
+        );
+    }
+
+    /// The other half of the contract: opting into a persistent kill switch
+    /// must still cover the window before the daemon runs on the next boot.
+    #[test]
+    fn armed_lockdown_still_blocks_across_a_reboot() {
+        assert_eq!(
+            policy_of(LockdownMode::yes().should_persist()),
+            WinFwCleanupPolicy::ContinueBlocking as u32,
+            "an armed persistent kill switch must survive the reboot"
+        );
+    }
+
+    /// Every lockdown mode maps to exactly one cleanup policy. The
+    /// `Enabled { persist: false }` case is what an app upgrade injects, so
+    /// that a failed install cannot leave the user blocked with no product.
+    #[test]
+    fn cleanup_policy_follows_the_lockdown_mode() {
+        for (mode, expected) in [
+            (
+                LockdownMode::no(),
+                WinFwCleanupPolicy::BlockingUntilReboot as u32,
+            ),
+            (
+                LockdownMode::yes(),
+                WinFwCleanupPolicy::ContinueBlocking as u32,
+            ),
+            (
+                LockdownMode::yes().persist(false),
+                WinFwCleanupPolicy::BlockingUntilReboot as u32,
+            ),
+        ] {
+            assert_eq!(
+                policy_of(mode.should_persist()),
+                expected,
+                "wrong cleanup policy for {mode:?}"
+            );
+        }
+    }
 }

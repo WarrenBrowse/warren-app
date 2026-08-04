@@ -48,7 +48,8 @@ namespace
 void AppendSettingsRules
 (
 	FwContext::Ruleset &ruleset,
-	const WinFwSettings &settings
+	const WinFwSettings &settings,
+	bool allowExternalDns = false
 )
 {
 	if (settings.permitDhcp)
@@ -70,7 +71,15 @@ void AppendSettingsRules
 
 	ruleset.emplace_back(std::make_unique<baseline::PermitDns>());
 	ruleset.emplace_back(std::make_unique<dns::PermitLoopback>());
-	ruleset.emplace_back(std::make_unique<dns::BlockAll>());
+
+	// The block-all DNS rule is what enforces DNS leak protection. The advanced `allowExternalDns`
+	// opt-in skips it so queries to arbitrary resolvers are permitted (they still go through the
+	// tunnel). Without this rule, DNS falls through to the baseline sublayer and is permitted by the
+	// PermitVpnTunnel rule on the tunnel interface.
+	if (!allowExternalDns)
+	{
+		ruleset.emplace_back(std::make_unique<dns::BlockAll>());
+	}
 }
 
 //
@@ -308,13 +317,14 @@ bool FwContext::applyPolicyConnected
 	const std::vector<std::wstring> &relayClients,
 	const std::wstring &tunnelInterfaceAlias,
 	const std::vector<wfp::IpAddress> &tunnelDnsServers,
-	const std::vector<wfp::IpAddress> &nonTunnelDnsServers
+	const std::vector<wfp::IpAddress> &nonTunnelDnsServers,
+	bool allowExternalDns
 )
 {
 	Ruleset ruleset;
 
 	AppendNetBlockedRules(ruleset);
-	AppendSettingsRules(ruleset, settings);
+	AppendSettingsRules(ruleset, settings, allowExternalDns);
 
 	for (const auto &relay : relays)
 	{

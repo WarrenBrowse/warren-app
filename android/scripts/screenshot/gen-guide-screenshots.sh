@@ -49,7 +49,7 @@ adb shell am broadcast -a com.android.systemui.demo --es command clock --es hhmm
 cd "$ANDROID_DIR"
 
 # Redirect output to void and return true so 'set -e' doesn't kill the script
-adb uninstall net.mullvad.mullvadvpn > /dev/null 2>&1 || true
+adb uninstall com.warrenbrowse.vpn > /dev/null 2>&1 || true
 git apply "$SCRIPT_DIR/account_name_and_expiry.patch"
 ./gradlew installOssProdDebug
 git restore lib

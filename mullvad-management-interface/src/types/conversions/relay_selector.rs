@@ -125,7 +125,7 @@ impl From<RelayPartitions> for proto::RelayPartitions {
         // Display concern (not selection): surface `include_in_country = false` relays as
         // matches even though the relay selector itself never picks them at country level.
         // The UI consumes this list to show what the user could select, and these relays
-        // remain individually selectable via city or hostname constraints — so dropping
+        // remain individually selectable via city or hostname constraints - so dropping
         // them entirely would hide selectable relays from the relay-list view.
         let (fallbacks, true_discards): (Vec<_>, Vec<_>) = discards
             .into_iter()

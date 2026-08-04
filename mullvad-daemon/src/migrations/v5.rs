@@ -49,6 +49,7 @@ pub enum SelectedObfuscation {
 
 // ======================================================
 
+#[expect(dead_code)]
 pub struct MigrationData {
     pub token: AccountNumber,
     pub wg_data: Option<serde_json::Value>,

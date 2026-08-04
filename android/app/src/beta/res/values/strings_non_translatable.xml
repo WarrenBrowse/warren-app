@@ -1,0 +1,5 @@
+<resources>
+    <!-- Beta flavor overlay: distinct launcher name so the beta app is
+         tellable from the prod one installed on the same device. -->
+    <string name="app_name" translatable="false">Warren VPN Beta</string>
+</resources>

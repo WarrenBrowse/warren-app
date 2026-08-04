@@ -1,7 +1,7 @@
 
 
 
-# Mullvad VPN app architecture
+# Warren VPN app architecture
 
 This document describes the code architecture and how everything fits together.
 
@@ -46,7 +46,7 @@ messages from the daemon, to receive updates about the tunnel state, new setting
 version information and device events.
 
 
-### Talking to api.mullvad.net.
+### Talking to api.warrenbrowse.com.
 Reaching the API is done via a direct TLS connection to the API host or via a shadowsocks bridge, to
 increase censorship resistance. There are multiple components that interact with the API in an
 asynchronous fashion, so to manage them all, there's an actor that specifically deals with sending
@@ -188,32 +188,40 @@ metadata that might be useful.
 
 ### System DNS management
 
+While connected, the daemon sets the system resolver to a Warren address reached
+through the tunnel, and the firewall blocks DNS to anything else (unless the
+advanced `allow_external_dns` toggle is on, which lets a chosen external resolver
+through; queries still egress through the tunnel).
+
+**DNS content blockers.** The optional content blockers (ads, trackers, malware,
+adult content, gambling, social media) are not filtered on the device. The daemon
+encodes the user's selected categories as a bitmask in the last octet of a magic
+resolver IP `100.64.0.X` (CGNAT range, RFC 6598): ads=1, trackers=2, malware=4,
+adult=8, gambling=16, social=32, OR-combined. That address becomes the system DNS.
+On the exit, Warren's resolver (kresd, in the sibling `warren-core` repo) decodes
+the octet and applies the matching public RPZ blocklists, returning NXDOMAIN for a
+blocked name and otherwise resolving normally. With no category selected the octet
+is 0 and nothing is blocked (off by default).
+
+- Client mapping: `mullvad-daemon/src/dns.rs` (`addresses_from_options`),
+  `mullvad-types/src/settings/dns.rs` (`DefaultDnsOptions`, `allow_external_dns`).
+- Server side, scope, no-log, and transparency: see `warren-core`
+  `docs/37-DNS-CONTENT-BLOCKING.md` and `infra/dns/`.
+
+This mapping is inherited unchanged from upstream Mullvad; the only Warren
+addition here is `allow_external_dns`.
+
 ### Firewall integration
 
 ### Connection logic
 
-#### Quantum-resistant tunnels
+#### Quantum resistance
 
-To establish a quantum-resistant tunnel, a pre-shared key (PSK) is derived using a quantum-safe
-key encapsulation mechanism (KEM) with the relay. This is achieved by initiating a regular
-WireGuard tunnel to the relay and deriving the PSK within the tunnel.
-The PSK is stored in memory on the relay and the client, along with a new client generated ephemeral
-WireGuard key. Subsequently, a new tunnel is created using the new WireGuard key and the PSK,
-ensuring that the tunnel is quantum-resistant.
-See the [protocol definition file](../talpid-tunnel-config-client/proto/ephemeralpeer.proto) for
-more details on the protocol.
-
-#### Quantum-resistant tunnels & Multihop
-
-To create a multihop tunnel where both hops are quantum resistant the client must negotiate a unique
-PSK with both the entry and the exit relay separately. It must use the same ephemeral WireGuard key
-on both relays since the end result (just as with regular multihop tunnels) is two peers on a
-single WireGuard interface, which can only have a single key for the local peer.
-
-The PSKs are established by first creating a regular multihop tunnel to the exit via the entry relay
-and negotiate a PSK with the exit. Then establish a regular tunnel to just the entry and negotiate a
-PSK with it. Lastly the client can set up a multihop tunnel using the new ephemeral WireGuard key
-and the two PSKs via the entry to the exit.
+The upstream WireGuard PSK/KEM negotiation was removed together with the WireGuard data plane.
+On the Warren QUIC data plane, post-quantum protection is applied to the multi-hop seal: the
+payload for the exit is sealed with an X-Wing hybrid KEM (ML-KEM + X25519) against the exit's
+supervisor key, with an automatic classical fallback when the peer does not advertise a
+post-quantum key. The PQ seal is preferred by default on desktop and iOS.
 
 ### Detecting device offline
 
@@ -238,7 +246,7 @@ The conditions are affirmed by doing the following:
 #### Linux
 
 On Linux, connectivity is inferred by checking if there exists a route to a public IP address.
-Currently the Mullvad API IP is used, but the actual IP does not matter as long as it's not a local
+Currently the Warren API IP is used, but the actual IP does not matter as long as it's not a local
 one. This is done via Netlink and the route is queried via the exclusion firewall mark - otherwise,
 when a tunnel is connected, the address would always be routable as it'd be routed through the
 tunnel interface. As such, the offline monitor is somewhat coupled to routing and split tunnelling
@@ -265,8 +273,8 @@ is inferred if such a network exists.
 
 #### iOS
 
-The iOS app uses WireGuard kit's offline detection, which in turn uses [`NWPathMonitor`] to listen
-for changes to the route table and assumes connectivity if a default route exists.
+The iOS app uses [`NWPathMonitor`] to listen for changes to the route table and assumes
+connectivity if a default route exists.
 
 ### Split tunneling
 

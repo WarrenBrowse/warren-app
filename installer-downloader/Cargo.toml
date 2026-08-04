@@ -3,13 +3,13 @@ name = "installer-downloader"
 version = "1.2.0"
 edition.workspace = true
 rust-version.workspace = true
-description = "A secure minimal web installer for the Mullvad app"
+description = "A secure minimal web installer for the Warren app"
 repository.workspace = true
 license.workspace = true
 publish = false
 
 [package.metadata.winres]
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
+LegalCopyright = "(c) 2026 Warren contributors"
 
 [build-dependencies]
 anyhow = { workspace = true }

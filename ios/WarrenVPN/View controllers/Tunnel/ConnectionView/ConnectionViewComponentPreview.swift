@@ -1,0 +1,84 @@
+//
+//  ConnectionViewComponentPreview.swift
+//  MullvadVPN
+//
+//  Created by Andrew Bulhak on 2025-01-03.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import WarrenMockData
+import WarrenREST
+import WarrenSettings
+import WarrenTypes
+import PacketTunnelCore
+import SwiftUI
+
+struct ConnectionViewComponentPreview<Content: View>: View {
+    let showIndicators: Bool
+    let connectedTunnelStatus = TunnelStatus(
+        observedState: .connected(
+            ObservedConnectionState(
+                selectedRelays: RelaySelectorStub.selectedRelays,
+                relayConstraints: RelayConstraints(
+                    entryLocations: .any,
+                    exitLocations: .any,
+                    port: .any,
+                    entryFilter: .any,
+                    exitFilter: .any
+                ),
+                networkReachability: .reachable,
+                connectionAttemptCount: 0,
+                transportLayer: .udp,
+                remotePort: 80,
+                isPostQuantum: true,
+                isDaitaEnabled: true
+            )),
+        state:
+            .connected(
+                RelaySelectorStub.selectedRelays,
+                isPostQuantum: true,
+                isDaita: true
+            )
+    )
+
+    private var tunnelSettings: LatestTunnelSettings {
+        LatestTunnelSettings(
+            wireGuardObfuscation: WireGuardObfuscationSettings(state: showIndicators ? .udpOverTcp : .off),
+            tunnelQuantumResistance: showIndicators ? .on : .off,
+            tunnelMultihopState: showIndicators ? .always : .never,
+            daita: DAITASettings(daitaState: showIndicators ? .on : .off)
+        )
+    }
+
+    private let viewModel: ConnectionViewViewModel
+
+    var content: (FeatureIndicatorsViewModel, ConnectionViewViewModel, Binding<Bool>) -> Content
+
+    @State var isExpanded = false
+
+    init(
+        showIndicators: Bool,
+        content: @escaping (FeatureIndicatorsViewModel, ConnectionViewViewModel, Binding<Bool>) -> Content
+    ) {
+        self.showIndicators = showIndicators
+        self.content = content
+        viewModel = ConnectionViewViewModel(
+            tunnelStatus: connectedTunnelStatus,
+            relayConstraints: RelayConstraints(),
+            relayCache: RelayCache(cacheDirectory: ApplicationConfiguration.containerURL),
+            customListRepository: CustomListRepository()
+        )
+    }
+
+    var body: some View {
+        content(
+            FeatureIndicatorsViewModel(
+                tunnelSettings: tunnelSettings,
+                tunnelStatus: connectedTunnelStatus
+            ),
+            viewModel,
+            $isExpanded
+        )
+        .background(UIColor.secondaryColor.color)
+    }
+}

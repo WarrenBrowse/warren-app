@@ -4,7 +4,7 @@
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 /// Window title
-pub const WINDOW_TITLE: &str = "Mullvad VPN loader";
+pub const WINDOW_TITLE: &str = "Warren VPN loader";
 /// Window width
 pub const WINDOW_WIDTH: usize = 600;
 /// Window height
@@ -12,7 +12,7 @@ pub const WINDOW_HEIGHT: usize = 334;
 
 /// Text description in the top banner
 pub const BANNER_DESC: &str =
-    "The Mullvad VPN app installer will be downloaded and verified for authenticity.";
+    "The Warren VPN app installer will be downloaded and verified for authenticity.";
 
 /// Beta preface text
 pub const BETA_PREFACE_DESC: &str = "Want to try the new Beta version? ";
@@ -84,7 +84,7 @@ pub const DOWNLOAD_FAILED_CANCEL_BUTTON_TEXT: &str = "Cancel";
 pub const VERIFYING_CACHED: &str = "Verifying...";
 
 /// Displayed when download fails
-pub const VERIFICATION_FAILED_DESC: &str = "Failed to verify download, please try downloading again or contact our support by sending an email to support@mullvadvpn.net with a description of what happened.";
+pub const VERIFICATION_FAILED_DESC: &str = "Failed to verify download, please try downloading again or contact our support by sending an email to support@warrenbrowse.com with a description of what happened.";
 
 /// Displayed when download fails (retry button)
 pub const VERIFICATION_FAILED_RETRY_BUTTON_TEXT: &str = "Try again";
@@ -96,7 +96,7 @@ pub const VERIFICATION_FAILED_CANCEL_BUTTON_TEXT: &str = "Cancel";
 pub const VERIFICATION_SUCCEEDED_DESC: &str = "Verification successful. Starting install...";
 
 /// Displayed when launch fails
-pub const LAUNCH_FAILED_DESC: &str = "Failed to start installation, please try downloading again or contact our support by sending an email to support@mullvadvpn.net with a description of what happened.";
+pub const LAUNCH_FAILED_DESC: &str = "Failed to start installation, please try downloading again or contact our support by sending an email to support@warrenbrowse.com with a description of what happened.";
 
 /// Displayed when launch fails (retry button)
 pub const LAUNCH_FAILED_RETRY_BUTTON_TEXT: &str = "Try again";

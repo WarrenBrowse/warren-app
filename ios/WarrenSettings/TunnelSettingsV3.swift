@@ -1,0 +1,44 @@
+//
+//  TunnelSettingsV3.swift
+//  MullvadVPN
+//
+//  Created by Marco Nikic on 2023-10-17.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Foundation
+import WarrenTypes
+
+public struct TunnelSettingsV3: Codable, Equatable, TunnelSettings {
+    /// Relay constraints.
+    public var relayConstraints: RelayConstraints
+
+    /// DNS settings.
+    public var dnsSettings: DNSSettings
+
+    /// WireGuard obfuscation settings
+    public var wireGuardObfuscation: WireGuardObfuscationSettings
+
+    public init(
+        relayConstraints: RelayConstraints = RelayConstraints(),
+        dnsSettings: DNSSettings = DNSSettings(),
+        wireGuardObfuscation: WireGuardObfuscationSettings = WireGuardObfuscationSettings()
+    ) {
+        self.relayConstraints = relayConstraints
+        self.dnsSettings = dnsSettings
+        self.wireGuardObfuscation = wireGuardObfuscation
+    }
+
+    public func upgradeToNextVersion() -> any TunnelSettings {
+        TunnelSettingsV4(
+            relayConstraints: relayConstraints,
+            dnsSettings: dnsSettings,
+            wireGuardObfuscation: wireGuardObfuscation,
+            tunnelQuantumResistance: .on
+        )
+    }
+
+    public var debugDescription: String {
+        "TunnelSettingsV3(relayConstraints: \(relayConstraints), dnsSettings: \(dnsSettings), wireGuardObfuscation: \(wireGuardObfuscation))"
+    }
+}

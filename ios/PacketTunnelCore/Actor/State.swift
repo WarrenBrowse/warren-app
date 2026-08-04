@@ -7,10 +7,10 @@
 //
 
 import Foundation
-import MullvadREST
-import MullvadRustRuntime
-import MullvadSettings
-import MullvadTypes
+import WarrenREST
+import WarrenRustRuntime
+import WarrenSettings
+import WarrenTypes
 
 /**
  Tunnel actor state with metadata describing the current phase of packet tunnel lifecycle.

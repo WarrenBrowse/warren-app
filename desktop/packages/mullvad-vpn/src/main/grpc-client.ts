@@ -6,6 +6,7 @@ import {
   BoolValue,
   StringValue,
   UInt32Value,
+  UInt64Value,
 } from 'google-protobuf/google/protobuf/wrappers_pb.js';
 import { ManagementServiceClient } from 'management-interface/management-interface';
 import { promisify } from 'util';
@@ -158,6 +159,18 @@ export class GrpcClient {
     return this.call<UInt32Value, R>(fn, googleNumber);
   }
 
+  // 64-bit sibling of callNumber, for RPCs whose value can exceed
+  // u32 (e.g. a bandwidth cap in bits per second).
+  protected callNumber64<R>(fn: CallFunctionArgument<UInt64Value, R>, value?: number): Promise<R> {
+    const googleNumber = new UInt64Value();
+
+    if (value !== undefined) {
+      googleNumber.setValue(value);
+    }
+
+    return this.call<UInt64Value, R>(fn, googleNumber);
+  }
+
   protected call<T, R>(fn: CallFunctionArgument<T, R>, arg: T): Promise<R> {
     if (fn && this.isConnected) {
       return promisify<T, R>(fn.bind(this.client))(arg);
@@ -196,6 +209,13 @@ export class GrpcClient {
   }
 
   private connectivityChangeCallback(timeoutErr?: Error) {
+    // Once the client has been closed (e.g. while quitting) never reconnect.
+    // A daemon that drops its socket would otherwise trigger a reconnect here
+    // and resurrect the connection mid-shutdown, keeping the GUI alive.
+    if (this.isClosed) {
+      return;
+    }
+
     const channel = this.client.getChannel();
     const currentState = channel?.getConnectivityState(true);
     log.verbose(`GRPC Channel connectivity state changed to ${currentState}`);

@@ -6,7 +6,6 @@ import utilities.BuildTypes
 import utilities.FlavorDimensions
 import utilities.Flavors
 import utilities.Variant
-import utilities.allPlayDebugReleaseVariants
 import utilities.appVersionProvider
 import utilities.baselineFilter
 import utilities.fullReleaseTasks
@@ -14,41 +13,42 @@ import utilities.generateRemapArguments
 import utilities.getBooleanProperty
 import utilities.getStringListProperty
 import utilities.isReleaseBuild
-import utilities.leakCanaryImplementation
 import utilities.matchesAny
-import utilities.ossProdAnyBuildType
-import utilities.playImplementation
+import utilities.prodDebugReleaseVariants
 import utilities.registerReleaseTask
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.application)
     alias(libs.plugins.play.publisher)
     alias(libs.plugins.kotlin.parcelize)
+    // Required so the @Serializable WarrenTunnelConfig gets a generated
+    // serializer; without it Json.encodeToString/decodeFromString throw
+    // "Serializer not found" at runtime when (de)serialising the tunnel config.
+    alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.compose)
     alias(libs.plugins.baselineprofile)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
     alias(libs.plugins.rust.android)
     id("de.mannodermaus.android-junit5")
 }
 
 val repoRootPath = rootProject.projectDir.absoluteFile.parentFile.absolutePath
-val relayListDirectory = file("$repoRootPath/dist-assets/relays/").absolutePath
 val changelogAssetsDirectory = "$repoRootPath/android/src/main/play/release-notes/"
 val rustJniLibsDir = layout.buildDirectory.dir("rustJniLibs/android").get()
 
 val appVersion = appVersionProvider.get()
 
 android {
-    namespace = "net.mullvad.mullvadvpn"
+    namespace = "com.warrenbrowse.vpn"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
     ndkVersion = libs.versions.ndk.get()
 
     defaultConfig {
-        applicationId = "net.mullvad.mullvadvpn"
+        applicationId = "com.warrenbrowse.vpn"
         minSdk = libs.versions.min.sdk.get().toInt()
         targetSdk = libs.versions.target.sdk.get().toInt()
         versionCode = appVersion.code
@@ -66,9 +66,8 @@ android {
     }
 
     playConfigs {
-        register("playDevmoleRelease") { enabled = appVersion.isAlpha }
-        register("playStagemoleRelease") { enabled = appVersion.isAlpha }
-        register("playProdRelease") {
+        // BILLING flavor collapsed - variant is now `prodRelease`.
+        register("prodRelease") {
             enabled = !appVersion.isDev
             releaseStatus.set(ReleaseStatus.DRAFT)
             track.set(
@@ -90,9 +89,56 @@ android {
         generateLocaleConfig = false
     }
 
+    // Release signing: opt-in via Gradle properties OR env vars.
+    // The Gradle-property path is preferred (`-Pwarren.keystore.path=...`)
+    // because env-var reads happen at configure time and a long-lived
+    // Gradle daemon's environment is FROZEN at daemon start; a CI job
+    // that exports WARREN_KEYSTORE_* after the daemon is already warm
+    // will silently ship an UNSIGNED build. Gradle properties bypass
+    // the daemon-env trap because the property store is invalidated
+    // per-invocation. The env fallback is retained for local dev use.
+    //
+    // CI guidance: prefer
+    //   ./gradlew --no-daemon -Pwarren.keystore.path=$X ...
+    // or run `./gradlew --stop` before the signing build.
+    val warrenKeystorePath: String? =
+        (project.findProperty("warren.keystore.path") as String?)
+            ?: System.getenv("WARREN_KEYSTORE_PATH")
+    val warrenKeystorePassword: String? =
+        (project.findProperty("warren.keystore.password") as String?)
+            ?: System.getenv("WARREN_KEYSTORE_PASSWORD")
+    val warrenKeyAlias: String? =
+        (project.findProperty("warren.key.alias") as String?) ?: System.getenv("WARREN_KEY_ALIAS")
+    val warrenKeyPassword: String? =
+        (project.findProperty("warren.key.password") as String?)
+            ?: System.getenv("WARREN_KEY_PASSWORD")
+    val signingConfigured =
+        warrenKeystorePath != null &&
+            warrenKeystorePassword != null &&
+            warrenKeyAlias != null &&
+            warrenKeyPassword != null
+
+    if (signingConfigured) {
+        signingConfigs {
+            create("warrenRelease") {
+                storeFile = file(warrenKeystorePath!!)
+                storePassword = warrenKeystorePassword
+                keyAlias = warrenKeyAlias
+                keyPassword = warrenKeyPassword
+                // AGP defaults: v1 (jar) ON, v2 ON, v3 OFF, v4 OFF.
+                // Play Store accepts v2+, so the defaults are fine.
+            }
+        }
+    }
+
     buildTypes {
         getByName(BuildTypes.RELEASE) {
-            signingConfig = null
+            signingConfig =
+                if (signingConfigured) {
+                    signingConfigs.getByName("warrenRelease")
+                } else {
+                    null
+                }
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -101,47 +147,51 @@ android {
             )
         }
         getByName(BuildTypes.DEBUG) { isPseudoLocalesEnabled = true }
-        create(BuildTypes.LEAK_CANARY) {
-            initWith(buildTypes.getByName(BuildTypes.DEBUG))
-            applicationIdSuffix = ".leakcanary"
-            matchingFallbacks += BuildTypes.DEBUG
-        }
     }
 
-    flavorDimensions += FlavorDimensions.BILLING
+    // BILLING flavor dimension (OSS/PLAY) collapsed (Mullvad
+    // Play Store in-app purchase billing dead on Warren - single Warren
+    // build, no Play VPN-time subscriptions). INFRASTRUCTURE (PROD-only)
+    // kept for the API endpoint override slot used by debug/staging builds.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) {
-            dimension = FlavorDimensions.BILLING
-            isDefault = true
-        }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) {
             dimension = FlavorDimensions.INFRASTRUCTURE
             isDefault = true
             buildConfigField("String", "API_ENDPOINT", "\"\"")
             buildConfigField("String", "API_IP", "\"\"")
+            // Per-flavor deep-link scheme so the beta and prod apps never
+            // fight over the same URL registration on one device.
+            manifestPlaceholders["warrenDeepLinkScheme"] = "warren"
+            buildConfigField("String", "DEEP_LINK_SCHEME", "\"warren\"")
         }
-        create(Flavors.DEVMOLE) {
+        // Separate installable beta app (coexists with prod on one device):
+        // own applicationId, own label (src/beta res overlay). The endpoint
+        // that release builds actually honor is the one compiled into the
+        // Rust datapath: the cargo block below exports WARREN_PRODUCT_ENV
+        // matching the built flavor, guarded per-variant at execution time.
+        create(Flavors.BETA) {
             dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "net.mullvad.mullvadvpn.devmole"
-            buildConfigField("String", "API_ENDPOINT", "\"api-app.devmole.eu\"")
-            buildConfigField("String", "API_IP", "\"185.217.116.4\"")
+            applicationIdSuffix = ".beta"
+            buildConfigField("String", "API_ENDPOINT", "\"api.beta.warrenbrowse.com\"")
+            buildConfigField("String", "API_IP", "\"\"")
+            manifestPlaceholders["warrenDeepLinkScheme"] = "warren-beta"
+            buildConfigField("String", "DEEP_LINK_SCHEME", "\"warren-beta\"")
         }
-        create(Flavors.STAGEMOLE) {
+        // Same shape as beta, against the staging backend.
+        create(Flavors.STAGING) {
             dimension = FlavorDimensions.INFRASTRUCTURE
-            applicationId = "net.mullvad.mullvadvpn.stagemole"
-            buildConfigField("String", "API_ENDPOINT", "\"api-app.stagemole.eu\"")
-            buildConfigField("String", "API_IP", "\"185.217.116.132\"")
+            applicationIdSuffix = ".staging"
+            buildConfigField("String", "API_ENDPOINT", "\"api.staging.warrenbrowse.com\"")
+            buildConfigField("String", "API_IP", "\"\"")
+            manifestPlaceholders["warrenDeepLinkScheme"] = "warren-staging"
+            buildConfigField("String", "DEEP_LINK_SCHEME", "\"warren-staging\"")
         }
     }
 
     sourceSets {
-        getByName("main") {
-            assets.directories.add(relayListDirectory)
-            assets.directories.add(changelogAssetsDirectory)
-        }
+        getByName("main") { assets.directories.add(changelogAssetsDirectory) }
         // Workaround to include all instrumented tests in app module. Without this we'd have to
         // create an APK for each submodule and pass each on for testing with the orchestrator.
         getByName("androidTest") {
@@ -173,7 +223,7 @@ android {
     }
 
     packaging {
-        if (getBooleanProperty("mullvad.app.build.keepDebugSymbols")) {
+        if (getBooleanProperty("warren.app.build.keepDebugSymbols")) {
             jniLibs.keepDebugSymbols.add("**/*.so")
         }
         jniLibs.useLegacyPackaging = true
@@ -196,7 +246,6 @@ android {
 androidComponents {
     onVariants { variant ->
         val mainSources = variant.sources.getByName("main")
-        mainSources.addStaticSourceDirectory(relayListDirectory)
         mainSources.addStaticSourceDirectory(changelogAssetsDirectory)
     }
 
@@ -205,30 +254,20 @@ androidComponents {
             "ENABLE_IN_APP_VERSION_NOTIFICATIONS",
             BuildConfigField(
                 "boolean",
-                getBooleanProperty("mullvad.app.config.inAppVersionNotifications.enable"),
+                getBooleanProperty("warren.app.config.inAppVersionNotifications.enable"),
                 "Show in-app version notifications",
             ),
         )
-        val shouldRequireBundleRelayFile = isReleaseBuild() && !appVersion.isDev
-        it.buildConfigFields!!.put(
-            "REQUIRE_BUNDLED_RELAY_FILE",
-            BuildConfigField(
-                "boolean",
-                shouldRequireBundleRelayFile.toString(),
-                "Whether to require a bundled relay list or not.",
-            ),
-        )
+        // Warren fetches relays via warren-api-client at runtime, no
+        // bundled JSON asset to gate on. The upstream
+        // `REQUIRE_BUNDLED_RELAY_FILE` BuildConfig field was dropped.
     }
     onVariants {
         val productFlavors = it.productFlavors.toMap()
         val buildType = it.buildType
 
         val artifactSuffix = buildString {
-            productFlavors[FlavorDimensions.BILLING]?.let { billingFlavorName ->
-                if (billingFlavorName != Flavors.OSS) {
-                    append(".$billingFlavorName")
-                }
-            }
+            // BILLING flavor dropped, single Warren build.
 
             productFlavors[FlavorDimensions.INFRASTRUCTURE]?.let { infrastructureFlavorName ->
                 if (infrastructureFlavorName != Flavors.PROD) {
@@ -243,7 +282,7 @@ androidComponents {
 
         val variantName = it.name
         val capitalizedVariantName = variantName.capitalized()
-        val artifactName = "MullvadVPN-${appVersion.name}${artifactSuffix}"
+        val artifactName = "WarrenVPN-${appVersion.name}${artifactSuffix}"
 
         tasks.register<Copy>("create${capitalizedVariantName}DistApk") {
             from(it.artifacts.get(SingleArtifact.APK))
@@ -280,6 +319,26 @@ tasks
         // https://github.com/mozilla/rust-android-gradle/issues/118#issuecomment-1569407058
         inputs.dir(rustJniLibsDir)
         dependsOn("cargoBuild")
+        // Refuse to package a .so compiled for another product environment:
+        // a beta APK carrying a prod-compiled libwarren_jni.so would silently
+        // talk to the prod backend (release builds have no runtime override).
+        // Locals only (plain Strings): the closure must not capture the
+        // build script object or the configuration cache refuses to store.
+        val expectedEnv =
+            when {
+                name.contains("Beta") -> Flavors.BETA
+                name.contains("Staging") -> Flavors.STAGING
+                else -> Flavors.PROD
+            }
+        val actualEnv = rustProductEnv
+        val taskName = name
+        doFirst {
+            check(actualEnv == expectedEnv) {
+                "Variant '$taskName' needs WARREN_PRODUCT_ENV=$expectedEnv but cargoBuild ran " +
+                    "with '$actualEnv'. Build one flavor per invocation " +
+                    "(e.g. assembleBetaDebug) or pass -Pwarren.app.build.productEnv=$expectedEnv."
+            }
+        }
     }
 
 kotlin {
@@ -301,16 +360,42 @@ junitPlatform {
     }
 }
 
+// Rust product environment for this invocation. Release APKs ignore every
+// runtime endpoint override, so the beta flavor's endpoint MUST reach cargo
+// as WARREN_PRODUCT_ENV=beta (compiled into libwarren_jni.so). The cargo
+// plugin exposes ONE variant-agnostic cargoBuild task, so the environment
+// derives from the requested tasks (explicit -Pwarren.app.build.productEnv
+// wins); a mixed prod+beta invocation cannot be represented in a single
+// cargoBuild and is refused by the per-variant guard on the JNI merge tasks.
+val rustProductEnv: String = run {
+    val explicit = project.findProperty("warren.app.build.productEnv") as String?
+    val requested = gradle.startParameter.taskNames
+    val requestedEnvs =
+        listOf(Flavors.PROD to "Prod", Flavors.BETA to "Beta", Flavors.STAGING to "Staging")
+            .filter { (_, marker) -> requested.any { task -> task.contains(marker) } }
+            .map { (env, _) -> env }
+    // A mixed invocation names no single environment, so it falls back to prod
+    // and the per-variant guard on the JNI merge tasks refuses the non-prod
+    // half rather than packaging a .so built for the wrong backend.
+    explicit ?: requestedEnvs.singleOrNull() ?: Flavors.PROD
+}
+
 cargo {
     val isReleaseBuild = isReleaseBuild()
     val generateDebugSymbolsForReleaseBuilds =
-        getBooleanProperty("mullvad.app.build.cargo.generateDebugSymbolsForReleaseBuilds")
+        getBooleanProperty("warren.app.build.cargo.generateDebugSymbolsForReleaseBuilds")
     val enableApiOverride = !isReleaseBuild || appVersion.isDev || appVersion.isAlpha
+    environmentalOverrides["WARREN_PRODUCT_ENV"] = rustProductEnv
     module = repoRootPath
-    libname = "mullvad-jni"
+    libname = "warren-jni"
+    // The rust-android-gradle linker wrapper shells out to this command; default
+    // "python" no longer exists on modern macOS/CI (only "python3"), which makes
+    // the Android native link fail with exit 127. The wrapper script is python3
+    // compatible, so pin python3 explicitly.
+    pythonCommand = "python3"
     // All available targets:
     // https://github.com/mozilla/rust-android-gradle/tree/master?tab=readme-ov-file#targets
-    targets = getStringListProperty("mullvad.app.build.cargo.targets")
+    targets = getStringListProperty("warren.app.build.cargo.targets")
     profile =
         if (isReleaseBuild) {
             if (generateDebugSymbolsForReleaseBuilds) "release-debuginfo" else "release"
@@ -329,23 +414,50 @@ cargo {
 
         @Suppress("SpreadOperator") defaultAnd(*enabledFeatures)
     }
-    targetIncludes = arrayOf("libmullvad_jni.so")
+    targetIncludes = arrayOf("libwarren_jni.so")
     extraCargoBuildArguments = buildList {
-        add("--package=mullvad-jni")
+        add("--package=warren-jni")
         add("--locked")
     }
 
-    if (getBooleanProperty("mullvad.app.build.replaceRustPathPrefix")) {
+    if (getBooleanProperty("warren.app.build.replaceRustPathPrefix")) {
         environmentalOverrides["RUSTFLAGS"] = generateRemapArguments()
     }
 }
+
+// Every flavor writes its `libwarren_jni.so` into ONE shared directory, and
+// cargo only rewrites the ABIs it was asked for. An invocation that builds a
+// subset (-Pwarren.app.build.cargo.targets=arm64) therefore packages the
+// PREVIOUS environment's datapath for every other ABI, silently talking to
+// another backend. The merge guard cannot catch it: it compares the cargo
+// invocation with the variant, not the files on disk. So drop the directory
+// whenever the environment it holds is not the one being built. No declared
+// outputs: this must run on every build, including the ones where cargoBuild
+// itself is up to date.
+val dropForeignRustJniLibs =
+    tasks.register("dropForeignRustJniLibs") {
+        // Locals only (plain File/String): capturing the build script object
+        // makes the configuration cache refuse to store the entry.
+        val jniLibsDir = rustJniLibsDir.asFile
+        val stamp = File(jniLibsDir.parentFile, "warren-product-env.txt")
+        val env = rustProductEnv
+        doLast {
+            if (!stamp.isFile || stamp.readText().trim() != env) {
+                jniLibsDir.deleteRecursively()
+                stamp.parentFile.mkdirs()
+                stamp.writeText(env)
+            }
+        }
+    }
+
+tasks.matching { it.name == "cargoBuild" }.configureEach { dependsOn(dropForeignRustJniLibs) }
 
 tasks.register<Exec>("cargoClean") {
     workingDir = File(repoRootPath)
     commandLine("cargo", "clean")
 }
 
-if (getBooleanProperty("mullvad.app.build.cargo.cleanBuild")) {
+if (getBooleanProperty("warren.app.build.cargo.cleanBuild")) {
     tasks["clean"].dependsOn("cargoClean")
 }
 
@@ -355,7 +467,7 @@ androidComponents {
     beforeVariants { variantBuilder ->
         variantBuilder.enable =
             Variant(variantBuilder.buildType, variantBuilder.productFlavors)
-                .matchesAny(allPlayDebugReleaseVariants, ossProdAnyBuildType, baselineFilter)
+                .matchesAny(prodDebugReleaseVariants, baselineFilter)
     }
 }
 
@@ -398,51 +510,41 @@ play {
 dependencies {
     implementation(projects.lib.common)
     implementation(project(":lib:common-compose"))
-    implementation(projects.lib.grpc)
+    // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.endpoint)
-    implementation(projects.lib.feature.account.impl)
-    implementation(projects.lib.feature.addtime.impl)
-    implementation(projects.lib.feature.anticensorship.impl)
-    implementation(projects.lib.feature.anticensorship.api)
-    implementation(projects.lib.feature.apiaccess.impl)
-    implementation(projects.lib.feature.apiaccess.api)
-    implementation(projects.lib.feature.appicon.impl)
+    // account/addtime/deleteaccount/managedevices/redeemvoucher
+    // modules deleted (Mullvad-account features without Warren equivalent).
+    // anticensorship module deleted.
+    // apiaccess module deleted.
+    // feature.appicon dropped (Mullvad obfuscation dead).
     implementation(projects.lib.feature.appinfo.impl)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.applisting.impl)
     implementation(projects.lib.feature.applisting.api)
-    implementation(projects.lib.feature.appearance.impl)
     implementation(projects.lib.feature.autoconnect.impl)
-    implementation(projects.lib.feature.customlist.impl)
-    implementation(projects.lib.feature.customlist.api)
-    implementation(projects.lib.feature.daita.impl)
-    implementation(projects.lib.feature.deleteaccount.impl)
-    implementation(projects.lib.feature.daita.api)
-    implementation(projects.lib.feature.filter.impl)
+    // customlist + filter + location modules deleted
+    // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
+    // daita module deleted (DAITA via WarrenTunnelSettings).
     implementation(projects.lib.feature.home.impl)
     implementation(projects.lib.feature.home.api)
     implementation(projects.lib.feature.language.impl)
-    implementation(projects.lib.feature.location.impl)
-    implementation(projects.lib.feature.location.api)
     implementation(projects.lib.feature.login.impl)
     implementation(projects.lib.feature.login.api)
-    implementation(projects.lib.feature.managedevices.impl)
-    implementation(projects.lib.feature.multihop.impl)
+    // multihop module deleted (multi-hop via WarrenTunnelSettings).
     implementation(projects.lib.feature.notification.impl)
-    implementation(projects.lib.feature.problemreport.impl)
-    implementation(projects.lib.feature.redeemvoucher.impl)
-    implementation(projects.lib.feature.serveripoverride.impl)
-    implementation(projects.lib.feature.serveripoverride.api)
+    // serveripoverride module deleted (Warren exit fleet
+    // is sovereign, no per-relay IP overrides).
     implementation(projects.lib.feature.settings.impl)
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.impl)
-    implementation(projects.lib.feature.vpnsettings.impl)
-    implementation(projects.lib.feature.vpnsettings.api)
+    // feature.vpnsettings module deleted (Mullvad daemon
+    // settings sync dead - Warren-native settings live in feature.settings).
     implementation(projects.lib.map)
     implementation(projects.lib.model)
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.navigation)
-    implementation(projects.lib.payment)
+    // lib.payment + lib.billing dropped (Mullvad Play Store
+    // billing dead on Warren - BIP39 wallet replaces VPN subscriptions).
     implementation(projects.lib.repository)
     implementation(projects.lib.talpid)
     implementation(projects.lib.tv)
@@ -460,8 +562,7 @@ dependencies {
     // Baseline profile
     baselineProfile(projects.test.baselineprofile)
 
-    // Play implementation
-    playImplementation(projects.lib.billing)
+    // playImplementation(projects.lib.billing) dropped.
 
     // This dependency can be replaced when minimum SDK is 29 or higher.
     // It can then be replaced with InetAddress.isNumericAddress
@@ -475,6 +576,8 @@ dependencies {
     }
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
+    // FragmentActivity baseline for MainActivity (BiometricPrompt host).
+    implementation(libs.androidx.fragment)
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.coresplashscreen)
     implementation(libs.androidx.credentials) {
@@ -512,9 +615,6 @@ dependencies {
     // UI tooling
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)
-
-    // Leak canary
-    leakCanaryImplementation(libs.leakCanary)
 
     // HACK:
     // Not used by app module, but otherwise an older version pre 1.8.0 will be used at runtime for

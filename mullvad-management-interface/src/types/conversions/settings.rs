@@ -1,6 +1,5 @@
 use crate::types::{FromProtobufTypeError, proto};
 use mullvad_types::settings::CURRENT_SETTINGS_VERSION;
-use talpid_types::ErrorExt;
 
 impl From<&mullvad_types::settings::Settings> for proto::Settings {
     fn from(settings: &mullvad_types::settings::Settings) -> Self {
@@ -55,7 +54,202 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                 .collect(),
             recents: settings.recents.clone().map(proto::Recents::from),
             update_default_location: settings.update_default_location,
+            // None -> empty string on the wire (proto3 `string` has
+            // no "absent"; we use "" as a sentinel for "unset").
+            // Consistent with the reverse conversion on the
+            // `try_from(SettingsProto)` side.
+            warren_api_url: settings.warren_api_url.clone().unwrap_or_default(),
+            // None -> 0 on the wire (proto3 `uint32` has no "absent";
+            // 0 is outside the valid 1..=16 range so it is a safe
+            // "unset" sentinel).
+            warren_n_connections: u32::from(settings.warren_n_connections.unwrap_or_default()),
+            // None -> 0 on the wire (0 bps is not a usable cap, so it
+            // is a safe "unset" sentinel).
+            warren_max_rate_bps: settings.warren_max_rate_bps.unwrap_or_default(),
+            warren_multi_hop: Some(proto::WarrenMultiHopSettings::from(
+                &settings.warren_multi_hop,
+            )),
+            warren_nat_pmp: Some(proto::NatPmpSettings::from(&settings.warren_nat_pmp)),
+            warren_custom_exit: Some(proto::WarrenCustomExitSettings::from(
+                &settings.warren_custom_exit,
+            )),
         }
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenMultiHopSettings> for proto::WarrenMultiHopSettings {
+    fn from(value: &mullvad_types::settings::WarrenMultiHopSettings) -> Self {
+        proto::WarrenMultiHopSettings {
+            enabled: value.enabled,
+            entry_country: value.entry_country.clone(),
+            exit_country: value.exit_country.clone(),
+            hpke_epoch_rotation: Some(
+                prost_types::Duration::try_from(value.hpke_epoch_rotation).expect(
+                    "WarrenMultiHopSettings.hpke_epoch_rotation must fit in prost Duration",
+                ),
+            ),
+        }
+    }
+}
+
+impl TryFrom<proto::WarrenMultiHopSettings> for mullvad_types::settings::WarrenMultiHopSettings {
+    type Error = FromProtobufTypeError;
+
+    fn try_from(value: proto::WarrenMultiHopSettings) -> Result<Self, Self::Error> {
+        let hpke_epoch_rotation = value
+            .hpke_epoch_rotation
+            .map(std::time::Duration::try_from)
+            .transpose()
+            .map_err(|_| {
+                FromProtobufTypeError::invalid_argument("invalid hpke_epoch_rotation duration")
+            })?
+            .unwrap_or_else(|| std::time::Duration::from_secs(4 * 60 * 60));
+
+        Ok(mullvad_types::settings::WarrenMultiHopSettings {
+            enabled: value.enabled,
+            entry_country: value.entry_country,
+            exit_country: value.exit_country,
+            hpke_epoch_rotation,
+        })
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenCustomExitSettings> for proto::WarrenCustomExitSettings {
+    fn from(value: &mullvad_types::settings::WarrenCustomExitSettings) -> Self {
+        proto::WarrenCustomExitSettings {
+            enabled: value.enabled,
+            endpoint: value.endpoint.clone(),
+            pubkey_hex: value.pubkey_hex.clone(),
+            x25519_multihop_pubkey_hex: value.x25519_multihop_pubkey_hex.clone(),
+            exit_id_hex: value.exit_id_hex.clone(),
+            cover_domain: value.cover_domain.clone(),
+            label: value.label.clone(),
+        }
+    }
+}
+
+impl From<proto::WarrenCustomExitSettings> for mullvad_types::settings::WarrenCustomExitSettings {
+    /// Infallible: all fields are opaque strings here. Content validity
+    /// (parseable endpoint, well-formed pubkey) is checked downstream in
+    /// `assemble_custom`, so a bad value persists as "inactive" rather
+    /// than failing the whole settings conversion.
+    fn from(value: proto::WarrenCustomExitSettings) -> Self {
+        mullvad_types::settings::WarrenCustomExitSettings {
+            enabled: value.enabled,
+            endpoint: value.endpoint,
+            pubkey_hex: value.pubkey_hex,
+            x25519_multihop_pubkey_hex: value.x25519_multihop_pubkey_hex,
+            exit_id_hex: value.exit_id_hex,
+            cover_domain: value.cover_domain,
+            label: value.label,
+        }
+    }
+}
+
+/// Map a `WarrenNatPmpProto` to its proto enum discriminant.
+fn nat_pmp_proto_to_i32(p: mullvad_types::settings::WarrenNatPmpProto) -> i32 {
+    use mullvad_types::settings::WarrenNatPmpProto;
+    match p {
+        WarrenNatPmpProto::Udp => proto::nat_pmp_settings::Proto::Udp as i32,
+        WarrenNatPmpProto::Tcp => proto::nat_pmp_settings::Proto::Tcp as i32,
+        WarrenNatPmpProto::Both => proto::nat_pmp_settings::Proto::Both as i32,
+    }
+}
+
+/// Map a proto enum discriminant back to a `WarrenNatPmpProto`.
+fn nat_pmp_proto_from_i32(
+    v: i32,
+) -> Result<mullvad_types::settings::WarrenNatPmpProto, FromProtobufTypeError> {
+    use mullvad_types::settings::WarrenNatPmpProto;
+    match proto::nat_pmp_settings::Proto::try_from(v) {
+        Ok(proto::nat_pmp_settings::Proto::Udp) => Ok(WarrenNatPmpProto::Udp),
+        Ok(proto::nat_pmp_settings::Proto::Tcp) => Ok(WarrenNatPmpProto::Tcp),
+        Ok(proto::nat_pmp_settings::Proto::Both) => Ok(WarrenNatPmpProto::Both),
+        Err(_) => Err(FromProtobufTypeError::invalid_argument(
+            "invalid NatPmpSettings.protocol enum value",
+        )),
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenNatPmpRule> for proto::nat_pmp_settings::Rule {
+    fn from(value: &mullvad_types::settings::WarrenNatPmpRule) -> Self {
+        proto::nat_pmp_settings::Rule {
+            protocol: nat_pmp_proto_to_i32(value.protocol),
+            suggested_external_port: u32::from(value.suggested_external_port),
+            internal_port: u32::from(value.internal_port),
+        }
+    }
+}
+
+impl TryFrom<proto::nat_pmp_settings::Rule> for mullvad_types::settings::WarrenNatPmpRule {
+    type Error = FromProtobufTypeError;
+
+    fn try_from(value: proto::nat_pmp_settings::Rule) -> Result<Self, Self::Error> {
+        let protocol = nat_pmp_proto_from_i32(value.protocol)?;
+        let suggested_external_port =
+            u16::try_from(value.suggested_external_port).map_err(|_| {
+                FromProtobufTypeError::invalid_argument(
+                    "NatPmpRule.suggested_external_port > 65535",
+                )
+            })?;
+        let internal_port = u16::try_from(value.internal_port).map_err(|_| {
+            FromProtobufTypeError::invalid_argument("NatPmpRule.internal_port > 65535")
+        })?;
+        Ok(mullvad_types::settings::WarrenNatPmpRule {
+            protocol,
+            suggested_external_port,
+            internal_port,
+        })
+    }
+}
+
+impl From<&mullvad_types::settings::WarrenNatPmpSettings> for proto::NatPmpSettings {
+    fn from(value: &mullvad_types::settings::WarrenNatPmpSettings) -> Self {
+        proto::NatPmpSettings {
+            enabled: value.enabled,
+            lifetime_secs: value.lifetime_secs,
+            rules: value
+                .rules
+                .iter()
+                .map(proto::nat_pmp_settings::Rule::from)
+                .collect(),
+            protocol: nat_pmp_proto_to_i32(value.protocol),
+            suggested_external_port: u32::from(value.suggested_external_port),
+            internal_port: u32::from(value.internal_port),
+        }
+    }
+}
+
+impl TryFrom<proto::NatPmpSettings> for mullvad_types::settings::WarrenNatPmpSettings {
+    type Error = FromProtobufTypeError;
+
+    fn try_from(value: proto::NatPmpSettings) -> Result<Self, Self::Error> {
+        let protocol = nat_pmp_proto_from_i32(value.protocol)?;
+        // Ports are 16-bit; reject overflow rather than silently
+        // truncating, otherwise a malformed gRPC call would silently
+        // wrap to e.g. (65536 -> 0).
+        let suggested_external_port =
+            u16::try_from(value.suggested_external_port).map_err(|_| {
+                FromProtobufTypeError::invalid_argument(
+                    "NatPmpSettings.suggested_external_port > 65535",
+                )
+            })?;
+        let internal_port = u16::try_from(value.internal_port).map_err(|_| {
+            FromProtobufTypeError::invalid_argument("NatPmpSettings.internal_port > 65535")
+        })?;
+        let rules = value
+            .rules
+            .into_iter()
+            .map(mullvad_types::settings::WarrenNatPmpRule::try_from)
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(mullvad_types::settings::WarrenNatPmpSettings {
+            enabled: value.enabled,
+            lifetime_secs: value.lifetime_secs,
+            rules,
+            protocol,
+            suggested_external_port,
+            internal_port,
+        })
     }
 }
 
@@ -84,6 +278,7 @@ impl From<&mullvad_types::settings::DnsOptions> for proto::DnsOptions {
                     .map(|addr| addr.to_string())
                     .collect(),
             }),
+            allow_external_dns: options.allow_external_dns,
         }
     }
 }
@@ -92,11 +287,10 @@ impl From<&mullvad_types::settings::TunnelOptions> for proto::TunnelOptions {
     fn from(options: &mullvad_types::settings::TunnelOptions) -> Self {
         proto::TunnelOptions {
             mtu: options.wireguard.mtu.map(u32::from),
-            rotation_interval: options.wireguard.rotation_interval.map(|ivl| {
-                prost_types::Duration::try_from(std::time::Duration::from(ivl))
-                    .expect("Failed to convert std::time::Duration to prost_types::Duration for tunnel_options.rotation_interval")
-            }),
-            quantum_resistant: Some(proto::QuantumResistantState::from(options.wireguard.quantum_resistant)),
+            rotation_interval: None,
+            quantum_resistant: Some(proto::QuantumResistantState::from(
+                options.wireguard.quantum_resistant,
+            )),
             #[cfg(daita)]
             daita: Some(proto::DaitaSettings::from(options.wireguard.daita.clone())),
             #[cfg(not(daita))]
@@ -186,6 +380,47 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // included in the serializable settings, such as the below value.
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
+            // Empty string proto -> None on the mullvad_types side.
+            // Lets the gRPC UI/CLI unset the field by sending "".
+            warren_api_url: if settings.warren_api_url.is_empty() {
+                None
+            } else {
+                Some(settings.warren_api_url)
+            },
+            // 0 on the wire -> None (unset, compiled default). Other
+            // values must fit u8; range validation (1..=16) is done at
+            // the SetWarrenNConnections rpc and again at
+            // parameter-production time.
+            warren_n_connections: match settings.warren_n_connections {
+                0 => None,
+                n => Some(u8::try_from(n).map_err(|_| {
+                    FromProtobufTypeError::invalid_argument("warren_n_connections out of u8 range")
+                })?),
+            },
+            // 0 on the wire -> None (unset = unlimited).
+            warren_max_rate_bps: match settings.warren_max_rate_bps {
+                0 => None,
+                bps => Some(bps),
+            },
+            warren_multi_hop: settings
+                .warren_multi_hop
+                .map(mullvad_types::settings::WarrenMultiHopSettings::try_from)
+                .transpose()?
+                .unwrap_or_default(),
+            warren_nat_pmp: settings
+                .warren_nat_pmp
+                .map(mullvad_types::settings::WarrenNatPmpSettings::try_from)
+                .transpose()?
+                .unwrap_or_default(),
+            warren_custom_exit: settings
+                .warren_custom_exit
+                .map(mullvad_types::settings::WarrenCustomExitSettings::from)
+                .unwrap_or_default(),
+            // TOFU pinning storage is daemon-internal: never round-trip
+            // through gRPC `SetSettings` (would let a gRPC client wipe
+            // the pin table). Default-initialise from a gRPC update;
+            // the daemon retains its own copy.
+            warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
         })
     }
 }
@@ -216,20 +451,6 @@ impl TryFrom<proto::TunnelOptions> for mullvad_types::settings::TunnelOptions {
         Ok(Self {
             wireguard: mullvad_types::wireguard::TunnelOptions {
                 mtu: options.mtu.map(|mtu| mtu as u16),
-                rotation_interval: options
-                    .rotation_interval
-                    .map(std::time::Duration::try_from)
-                    .transpose()
-                    .map_err(|_| FromProtobufTypeError::invalid_argument("invalid duration"))?
-                    .map(mullvad_types::wireguard::RotationInterval::try_from)
-                    .transpose()
-                    .map_err(|error: mullvad_types::wireguard::RotationIntervalError| {
-                        log::error!(
-                            "{}",
-                            error.display_chain_with_msg("Invalid rotation interval")
-                        );
-                        FromProtobufTypeError::invalid_argument("invalid rotation interval")
-                    })?,
                 quantum_resistant: options
                     .quantum_resistant
                     .map(mullvad_types::wireguard::QuantumResistantState::try_from)
@@ -307,6 +528,7 @@ impl TryFrom<proto::DnsOptions> for mullvad_types::settings::DnsOptions {
                     })
                     .collect::<Result<Vec<_>, _>>()?,
             },
+            allow_external_dns: options.allow_external_dns,
         })
     }
 }
@@ -332,5 +554,143 @@ impl From<mullvad_types::settings::Recent> for proto::Recent {
                 })),
             },
         }
+    }
+}
+
+#[cfg(test)]
+mod warren_multi_hop_conversion_tests {
+    use super::*;
+    use mullvad_types::settings::WarrenMultiHopSettings;
+    use std::time::Duration;
+
+    #[test]
+    fn default_warren_multi_hop_settings_match_v1_doctrine() {
+        let defaults = WarrenMultiHopSettings::default();
+        assert!(
+            !defaults.enabled,
+            "warren-multihop OFF by default per doctrine `warren_multihop_doctrine_v1`"
+        );
+        assert!(defaults.entry_country.is_empty());
+        assert!(defaults.exit_country.is_empty());
+        assert_eq!(
+            defaults.hpke_epoch_rotation,
+            Duration::from_secs(4 * 60 * 60),
+            "default HPKE epoch rotation = 4h"
+        );
+    }
+
+    #[test]
+    fn proto_roundtrip_preserves_all_fields() {
+        let original = WarrenMultiHopSettings {
+            enabled: true,
+            entry_country: "fr".to_string(),
+            exit_country: "de".to_string(),
+            hpke_epoch_rotation: Duration::from_secs(7200),
+        };
+        let proto = proto::WarrenMultiHopSettings::from(&original);
+        let back = WarrenMultiHopSettings::try_from(proto).expect("roundtrip must succeed");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn proto_roundtrip_with_defaults_preserves_doctrine() {
+        let original = WarrenMultiHopSettings::default();
+        let proto = proto::WarrenMultiHopSettings::from(&original);
+        let back = WarrenMultiHopSettings::try_from(proto).expect("roundtrip");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn try_from_missing_duration_falls_back_to_4h() {
+        let proto = proto::WarrenMultiHopSettings {
+            enabled: true,
+            entry_country: "se".to_string(),
+            exit_country: "no".to_string(),
+            hpke_epoch_rotation: None,
+        };
+        let back = WarrenMultiHopSettings::try_from(proto).expect("None rotation accepted");
+        assert_eq!(back.hpke_epoch_rotation, Duration::from_secs(4 * 60 * 60));
+    }
+
+    #[test]
+    fn try_from_negative_duration_is_rejected() {
+        let proto = proto::WarrenMultiHopSettings {
+            enabled: false,
+            entry_country: String::new(),
+            exit_country: String::new(),
+            hpke_epoch_rotation: Some(prost_types::Duration {
+                seconds: -1,
+                nanos: 0,
+            }),
+        };
+        let result = WarrenMultiHopSettings::try_from(proto);
+        assert!(
+            result.is_err(),
+            "negative duration must be rejected as invalid"
+        );
+    }
+}
+
+#[cfg(test)]
+mod warren_nat_pmp_conversion_tests {
+    use super::*;
+    use mullvad_types::settings::{WarrenNatPmpProto, WarrenNatPmpRule, WarrenNatPmpSettings};
+
+    #[test]
+    fn proto_roundtrip_preserves_multi_port_rules() {
+        let original = WarrenNatPmpSettings {
+            enabled: true,
+            lifetime_secs: 3600,
+            rules: vec![
+                WarrenNatPmpRule {
+                    protocol: WarrenNatPmpProto::Udp,
+                    suggested_external_port: 51820,
+                    internal_port: 51820,
+                },
+                WarrenNatPmpRule {
+                    protocol: WarrenNatPmpProto::Tcp,
+                    suggested_external_port: 0,
+                    internal_port: 8080,
+                },
+                WarrenNatPmpRule {
+                    protocol: WarrenNatPmpProto::Both,
+                    suggested_external_port: 27015,
+                    internal_port: 27015,
+                },
+            ],
+            protocol: WarrenNatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        let proto = proto::NatPmpSettings::from(&original);
+        assert_eq!(proto.rules.len(), 3);
+        let back = WarrenNatPmpSettings::try_from(proto).expect("roundtrip must succeed");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn proto_roundtrip_empty_rules_preserves_defaults() {
+        let original = WarrenNatPmpSettings::default();
+        let proto = proto::NatPmpSettings::from(&original);
+        assert!(proto.rules.is_empty());
+        let back = WarrenNatPmpSettings::try_from(proto).expect("roundtrip");
+        assert_eq!(original, back);
+    }
+
+    #[test]
+    fn rule_port_overflow_is_rejected() {
+        let proto = proto::NatPmpSettings {
+            enabled: true,
+            lifetime_secs: 60,
+            rules: vec![proto::nat_pmp_settings::Rule {
+                protocol: proto::nat_pmp_settings::Proto::Udp as i32,
+                suggested_external_port: 70000, // > 65535
+                internal_port: 22,
+            }],
+            protocol: proto::nat_pmp_settings::Proto::Udp as i32,
+            suggested_external_port: 0,
+            internal_port: 0,
+        };
+        assert!(WarrenNatPmpSettings::try_from(proto).is_err());
     }
 }

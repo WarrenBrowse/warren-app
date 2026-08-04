@@ -1,0 +1,102 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          warren-daemon@WARREN_SUFFIX@
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Should-Start:      $network network-manager dbus
+# Should-Stop:       $network network-manager dbus
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Warren VPN daemon
+# Description:       Owns the tunnel and the kill switch. Counterpart of
+#                    dist-assets/linux/warren-daemon.service for init systems
+#                    without systemd (MX Linux and Devuan sysvinit editions).
+### END INIT INFO
+
+# Required-Start deliberately omits $network: the daemon has to be up before the
+# network is configured, which is what the systemd unit expresses with
+# Before=network-online.target. NetworkManager and dbus are Should-Start, the
+# soft equivalent of the unit's After= list: present them first when they exist,
+# never refuse to start when they do not.
+
+set -u
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+NAME=warren-daemon@WARREN_SUFFIX@
+DESC="Warren VPN daemon"
+DAEMON=/usr/bin/$NAME
+SUPERVISOR=/usr/lib/warren-vpn@WARREN_SUFFIX@/warren-daemon-supervise
+PIDFILE=/run/$NAME.pid
+
+[ -x "$SUPERVISOR" ] || exit 0
+[ -x "$DAEMON" ] || exit 0
+
+do_start() {
+    # --oknodo: a second `start` is a no-op rather than a failure, so an
+    # install over a running daemon does not report an error.
+    start-stop-daemon --start --quiet --oknodo --background \
+        --make-pidfile --pidfile "$PIDFILE" --exec "$SUPERVISOR"
+}
+
+do_stop() {
+    # The supervisor forwards the signal to the daemon and waits for it, so the
+    # retry window covers the daemon's own fail-closed teardown.
+    start-stop-daemon --stop --quiet --oknodo --retry TERM/30/KILL/5 \
+        --pidfile "$PIDFILE"
+    stop_status=$?
+    rm -f "$PIDFILE"
+    # A SIGKILLed supervisor leaves its child behind, still holding the
+    # management socket. Reap any daemon that outlived it, matched on the
+    # executable so no other process can be hit.
+    start-stop-daemon --stop --quiet --oknodo --retry TERM/30/KILL/5 \
+        --exec "$DAEMON" || true
+    return $stop_status
+}
+
+case "${1:-}" in
+    start)
+        printf '%s' "Starting $DESC: "
+        if do_start; then
+            echo "$NAME."
+        else
+            echo "failed."
+            exit 1
+        fi
+        ;;
+    stop)
+        printf '%s' "Stopping $DESC: "
+        if do_stop; then
+            echo "$NAME."
+        else
+            echo "failed."
+            exit 1
+        fi
+        ;;
+    restart | force-reload)
+        printf '%s' "Restarting $DESC: "
+        do_stop || true
+        # The daemon binds a management socket and the firewall tables; give the
+        # kernel a moment to release them before the new process claims them.
+        sleep 1
+        if do_start; then
+            echo "$NAME."
+        else
+            echo "failed."
+            exit 1
+        fi
+        ;;
+    status)
+        if start-stop-daemon --status --pidfile "$PIDFILE"; then
+            echo "$NAME is running."
+        else
+            echo "$NAME is not running."
+            exit 3
+        fi
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        exit 2
+        ;;
+esac
+
+exit 0

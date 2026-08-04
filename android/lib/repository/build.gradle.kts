@@ -1,12 +1,12 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
+    alias(libs.plugins.warren.android.library)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.protobuf.core)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.repository"
+    namespace = "com.warrenbrowse.vpn.lib.repository"
 
     buildFeatures { buildConfig = true }
 }
@@ -27,9 +27,7 @@ protobuf {
 dependencies {
     implementation(projects.lib.ui.resource)
     implementation(projects.lib.common)
-    implementation(projects.lib.grpc)
     implementation(projects.lib.model)
-    implementation(projects.lib.payment)
     implementation(projects.lib.endpoint)
 
     implementation(libs.arrow)
@@ -39,5 +37,6 @@ dependencies {
     implementation(libs.kotlin.stdlib)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.androidx.datastore)
+    implementation(libs.androidx.fragment)
     implementation(libs.protobuf.kotlin.lite)
 }

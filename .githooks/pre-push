@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Warren local guard: block a push that would fail the warren-tests CI gates for
+# code formatting or translation freshness. Those two reds are the commonest way
+# a push breaks the shared main or a release run, and both are cheap to check
+# locally: rustfmt does not compile, and the pot extractor is pure JS. This hook
+# replays the EXACT commands from .github/workflows/warren-tests.yml so it can
+# only ever agree with CI.
+#
+# It is change-scoped (skips when the pushed range touches no Rust / no desktop
+# UI) and fails OPEN on any missing toolchain (cargo, rustfmt, sibling repos,
+# desktop node_modules): a machine that cannot run a gate is warned and the gate
+# is skipped, never blocked, because CI still enforces it. It only ever blocks on
+# a real formatting diff or a genuinely stale messages.pot.
+#
+# Bypass: WARREN_SKIP_PREPUSH=1 git push, or git push --no-verify.
+set -euo pipefail
+
+[ "${WARREN_SKIP_PREPUSH:-0}" = "1" ] && exit 0
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root"
+
+zero=0000000000000000000000000000000000000000
+changed=""
+scope_all=0
+
+# Git feeds pre-push one line per ref on stdin:
+#   <local ref> <local sha> <remote ref> <remote sha>
+# Collect the files across every non-deleting ref update. A new branch has an
+# all-zero remote sha, so diff it against the fetched main instead. If a range
+# cannot be resolved, fall back to checking everything.
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ -z "${local_sha:-}" ] && continue
+  [ "$local_sha" = "$zero" ] && continue # deleting a remote ref: nothing to lint
+  if [ "$remote_sha" = "$zero" ]; then
+    base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
+    [ -z "$base" ] && { scope_all=1; break; }
+    range="$base..$local_sha"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+  if files=$(git diff --name-only "$range" 2>/dev/null); then
+    changed="$changed$files"$'\n'
+  else
+    scope_all=1
+    break
+  fi
+done
+
+# No ref lines on stdin (e.g. a manual run): check everything.
+[ -z "$changed" ] && scope_all=1
+
+has_rs=0
+has_ui=0
+if [ "$scope_all" -eq 1 ]; then
+  has_rs=1
+  has_ui=1
+else
+  if printf '%s' "$changed" | grep -qE '\.rs$'; then has_rs=1; fi
+  if printf '%s' "$changed" | grep -qE '^desktop/packages/mullvad-vpn/'; then has_ui=1; fi
+fi
+
+fail=0
+
+# Gate 1: cargo fmt --check, Warren scope. The -p list is copied verbatim from
+# warren-tests.yml so this and CI format the same crate set. cargo fmt resolves
+# the workspace (path-deps to the sibling repos), so it needs those present;
+# absent, we skip rather than fail on an unrelated resolution error.
+if [ "$has_rs" -eq 1 ]; then
+  siblings_ok=1
+  for s in warrenguard warren-sdk-rs warren-contract; do
+    [ -d "$repo_root/../$s" ] || siblings_ok=0
+  done
+  if ! command -v cargo >/dev/null 2>&1 || ! cargo fmt --version >/dev/null 2>&1; then
+    echo "warren pre-push: cargo/rustfmt not found; skipping the fmt gate (CI still enforces it)." >&2
+  elif [ "$siblings_ok" -eq 0 ]; then
+    echo "warren pre-push: sibling repos (../warrenguard, ../warren-sdk-rs, ../warren-contract) missing; skipping the fmt gate (CI still enforces it)." >&2
+  else
+    echo "warren pre-push: cargo fmt --check (Warren scope)..." >&2
+    # Stable rustfmt prints one benign warning per nightly-only rustfmt.toml
+    # option (CI does too). Drop just those from stderr so a real diff stands
+    # out; the diff itself is on stdout and the exit code is untouched.
+    if ! cargo fmt \
+      -p mullvad-daemon -p mullvad-api -p mullvad-types \
+      -p mullvad-management-interface -p mullvad-cli \
+      -p talpid-warren-tunnel -p talpid-core \
+      -p warren-jni -p warren-ios -p warren-forum \
+      -- --check \
+      2> >(grep -v 'unstable features are only available in nightly channel' >&2); then
+      echo "  FAIL: formatting drift. Run 'cargo fmt' (Warren scope) and commit before pushing." >&2
+      fail=1
+    fi
+  fi
+fi
+
+# Gate 2: messages.pot freshness. Mirrors the CI step exactly (extractor writes
+# only locales/messages.pot). If the pot is stale we regenerate it in the tree,
+# like the pre-commit auto-fix, then block so the dev reviews and commits it.
+if [ "$has_ui" -eq 1 ]; then
+  pkg="desktop/packages/mullvad-vpn"
+  if [ ! -d "$pkg/node_modules" ]; then
+    echo "warren pre-push: $pkg/node_modules missing; skipping the messages.pot gate (run the desktop install; CI still enforces it)." >&2
+  elif ! (cd "$pkg" && npm run --silent update-translations) >/dev/null 2>&1; then
+    echo "warren pre-push: update-translations could not run; skipping the messages.pot gate (CI still enforces it)." >&2
+  elif ! git diff --quiet -- "$pkg/locales/messages.pot"; then
+    echo "  FAIL: messages.pot is stale. Regenerated it in your working tree; review it, 'git add $pkg/locales/messages.pot' and commit before pushing." >&2
+    fail=1
+  fi
+fi
+
+exit "$fail"

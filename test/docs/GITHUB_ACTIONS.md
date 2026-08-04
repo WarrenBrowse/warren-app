@@ -2,7 +2,7 @@
 
 There exists a Workflow for running `test-manager` on a selection of different
 platforms. The Workflow file can be found
-[here](https://github.com/mullvad/mullvadvpn-app/blob/main/.github/workflows/desktop-e2e.yml).
+[here](https://github.com/WarrenBrowse/warren-app/blob/main/.github/workflows/desktop-e2e.yml).
 
 ## Adding a new platform
 
@@ -11,4 +11,4 @@ Basically everything related to adding a new virtual machine (VM) to the Workflo
 1. Create a new VM based on [these instructions](./BUILD_OS_IMAGE.md)
 2. Upload the newly-assembled VM to the GitHub Actions runner
 3. Add an entry for the VM in the [test-manager config file](../test-manager/docs/config.md) on the GitHub runner
-4. Update [this Workflow](https://github.com/mullvad/mullvadvpn-app/blob/main/.github/workflows/desktop-e2e.yml) in the [Mullvad App repository](https://github.com/mullvad/mullvadvpn-app/). This will enable GitHub Actions to trigger the `test-manager` with the new VM!
+4. Update [this Workflow](https://github.com/WarrenBrowse/warren-app/blob/main/.github/workflows/desktop-e2e.yml) in the [Warren App repository](https://github.com/WarrenBrowse/warren-app/). This will enable GitHub Actions to trigger the `test-manager` with the new VM!

@@ -84,6 +84,7 @@ test.describe('Connection states', () => {
         protocol: 'tcp',
         quantumResistant: false,
         daita: false,
+        tunnelType: 'wireguard',
       };
       await util.ipc.tunnel[''].notify({
         state: 'connected',

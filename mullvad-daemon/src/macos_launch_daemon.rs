@@ -1,4 +1,4 @@
-//! Provides functions to handle or query the status of the Mullvad launch
+//! Provides functions to handle or query the status of the Warren launch
 //! daemon/system service on macOS.
 //!
 //! If the service exists but needs to be approved by the user, this status
@@ -8,12 +8,29 @@
 use objc2_foundation::{NSOperatingSystemVersion, NSProcessInfo, NSURL, ns_string};
 use objc2_service_management::{SMAppService, SMAppServiceStatus};
 
-/// Path to the plist that defines the Mullvad launch daemon.
-/// It must be kept in sync with the path defined in
-/// `dist-assets/pkg-scripts/postinstall`.
-const DAEMON_PLIST_PATH: &str = "/Library/LaunchDaemons/net.mullvad.daemon.plist";
+/// Path to the plist that defines the Warren launch daemon. Must stay
+/// in sync with the `DAEMON_PLIST_PATH` literal in
+/// `dist-assets/pkg-scripts/{pre,post}install` (the postinstall script
+/// writes the plist here, the preinstall unloads it). A drift between
+/// the two paths surfaces as `LaunchDaemonStatus::NotFound` on every
+/// boot - the UI then prompts the user to re-approve a daemon that
+/// actually is running, an unrecoverable loop until one path is fixed.
+/// Non-prod environments use their own label (matching their bundle id) so a
+/// beta daemon registers next to the prod one; their pkg scripts must write
+/// the matching plist.
+const DAEMON_PLIST_PATH: &str = match warren_product_env::CURRENT {
+    warren_product_env::ProductEnv::Prod => {
+        "/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
+    }
+    warren_product_env::ProductEnv::Staging => {
+        "/Library/LaunchDaemons/com.warrenbrowse.vpn.staging.daemon.plist"
+    }
+    warren_product_env::ProductEnv::Beta => {
+        "/Library/LaunchDaemons/com.warrenbrowse.vpn.beta.daemon.plist"
+    }
+};
 
-/// Authorization status of the Mullvad daemon.
+/// Authorization status of the Warren daemon.
 #[repr(i32)]
 pub enum LaunchDaemonStatus {
     Ok = 0,
@@ -22,8 +39,9 @@ pub enum LaunchDaemonStatus {
     Unknown = 3,
 }
 
-/// Return whether the daemon is running, not found, or is not authorized.
-/// NOTE: On macos < 13, this function always returns `LaunchDaemonStatus::Ok`.
+/// Return whether the Warren daemon is running, not found, or is not
+/// authorized. NOTE: On macos < 13, this function always returns
+/// `LaunchDaemonStatus::Ok`.
 pub fn get_status() -> LaunchDaemonStatus {
     // `SMAppService` does not exist if the major version is less than 13.
     let os_version = get_os_version();

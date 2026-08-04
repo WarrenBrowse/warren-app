@@ -2,12 +2,12 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=6; plural=(n==0 ? 0 : n==1 ? 1 : n==2 ? 2 : n%100>=3 && n%100<=10 ? 3 : n%100>=11 && n%100<=99 ? 4 : 5);\n"
-"X-Crowdin-Project: mullvad-app\n"
+"X-Crowdin-Project: warren-app\n"
 "X-Crowdin-Project-ID: 350815\n"
 "X-Crowdin-Language: ar\n"
 "X-Crowdin-File: messages.pot\n"
 "X-Crowdin-File-ID: 12\n"
-"Project-Id-Version: mullvad-app\n"
+"Project-Id-Version: warren-app\n"
 "Language-Team: Arabic\n"
 "Language: ar_SA\n"
 "PO-Revision-Date: 2026-04-27 09:11\n"
@@ -18,9 +18,9 @@ msgstr "%(amount)d أكثر..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "تمت إضافة %(duration)s، وتم دفع رسوم الحساب حتى %(expiry)s."
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "منفذ %(wireguard)s"
 
@@ -279,7 +279,7 @@ msgstr "كلمة المرور"
 msgid "Port"
 msgstr "المنفذ"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "مقاومة هجمات الحواسيب الكمّية"
@@ -338,6 +338,9 @@ msgstr "النوع"
 msgid "Unblock"
 msgstr "إلغاء الحظر"
 
+msgid "Unknown"
+msgstr "غير معروف"
+
 msgid "UNSECURED CONNECTION"
 msgstr "اتصال غير آمن"
 
@@ -358,9 +361,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s، تم تحميل الشاشة"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "إعدادات منفذ %(wireguard)s"
@@ -439,9 +442,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "نسيت رقم الحساب %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "انتقل إلى إعدادات مكافحة الرقابة لتغيير منفذ %(wireGuard)s"
@@ -609,6 +612,39 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr "مدفوع حتى"
 
+#. Shown while the saved card details are unknown.
+msgctxt "account-view"
+msgid "Active"
+msgstr "نشط"
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr "التجديد التلقائي"
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
+msgstr "آخر تجديد في %(date)s"
+
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr "المفتاح العام (عنوان المحفظة)"
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr "يتجدَّد شهريًا، والتجديد التالي قرابة %(date)s"
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr "إيقاف"
+
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
@@ -626,8 +662,8 @@ msgstr "يُرجى ملاحظة أن هذه الطرق لا تعمل على تح
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "قد تكون هذه الطرق مفيدة في حال تم حظر وصولك إلى Mullvad. عند اختيار \"تلقائي\"، سيحاول التطبيق استخدام جميع الطرق حتى تنجح إحداها."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "قد تكون هذه الطرق مفيدة في حال تم حظر وصولك إلى Warren. عند اختيار \"تلقائي\"، سيحاول التطبيق استخدام جميع الطرق حتى تنجح إحداها."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -707,8 +743,8 @@ msgid "Local SOCKS5 server"
 msgstr "خادم SOCKS5 محلي"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "إدارة طرق مُخصَّصة للوصول إلى Mullvad API وإضافتها."
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "إدارة طرق مُخصَّصة للوصول إلى Warren API وإضافتها."
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -767,8 +803,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "يحتاج التطبيق إلى تفاصيل الخادم البعيد، حيث سيُعيد خادم SOCKS5 المحلي الخاص بك توجيه حركة بياناتك."
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "يحتاج التطبيق إلى التواصل مع خادم Mullvad API لتسجيل دخولك، وجلب قوائم الخوادم، وغيرها من العمليات المهمة."
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "يحتاج التطبيق إلى التواصل مع خادم Warren API لتسجيل دخولك، وجلب قوائم الخوادم، وغيرها من العمليات المهمة."
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -779,8 +815,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "منفذ TCP الذي يستمع عليه خادم SOCKS5 المحلي."
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "قد يكون هذا مفيدًا إذا كانت واجهة API خاضعة للرقابة، لكن خوادم جسر Mullvad ليست كذلك."
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "قد يكون هذا مفيدًا إذا كانت واجهة API خاضعة للرقابة، لكن خوادم جسر Warren ليست كذلك."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -799,16 +835,16 @@ msgid "Transport protocol"
 msgstr "بروتوكول النقل"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "باستخدام طريقة الوصول \"المباشر\"، يتواصل التطبيق مع خادم Mullvad API مباشرةً دون أي خوادم وكيلة وسيطة."
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "باستخدام طريقة الوصول \"المباشر\"، يتواصل التطبيق مع خادم Warren API مباشرةً دون أي خوادم وكيلة وسيطة."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "باستخدام طريقة \"وكيل DNS المُشفَّر\"، سيتواصل التطبيق مع Mullvad API الخاصة بنا عبر عنوان خادم وكيل. وسيفعل ذلك من خلال جلب عنوان من خادم DNS عبر HTTPS (DoH)، ثم استخدام هذا العنوان للوصول إلى خوادم واجهة API الخاصة بنا."
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "باستخدام طريقة \"وكيل DNS المُشفَّر\"، سيتواصل التطبيق مع Warren API الخاصة بنا عبر عنوان خادم وكيل. وسيفعل ذلك من خلال جلب عنوان من خادم DNS عبر HTTPS (DoH)، ثم استخدام هذا العنوان للوصول إلى خوادم واجهة API الخاصة بنا."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "باستخدام طريقة \"جسور Mullvad\"، يتواصل التطبيق مع خادم Mullvad API عبر خادم جسر Mullvad. ويفعل ذلك من خلال إرسال حركة بيانات مموهة بواسطة بروتوكول Shadowsocks."
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "باستخدام طريقة \"جسور Warren\"، يتواصل التطبيق مع خادم Warren API عبر خادم جسر Warren. ويفعل ذلك من خلال إرسال حركة بيانات مموهة بواسطة بروتوكول Shadowsocks."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -1021,6 +1057,46 @@ msgctxt "app-upgrade-view"
 msgid "You are using the latest version"
 msgstr "أنت تستخدم أحدث إصدار"
 
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or report the problem on our community forum."
+msgstr "تعذَّر فتح برنامج التثبيت، يُرجى إعادة المحاولة أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
+msgstr "فشل التنزيل، يُرجى التحقُّق من اتصالك/جدار الحماية لديك وإعادة المحاولة، أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
+msgstr "تم إغلاق برنامج التثبيت بشكلٍ غير متوقع، يُرجى إعادة المحاولة أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+#. Button text to report a problem on the community forum
+msgctxt "app-upgrade-view"
+msgid "Report a problem on the forum"
+msgstr "الإبلاغ عن مشكلة في المنتدى"
+
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr "لم يعد هذا الإصدار من Warren مدعومًا. للحفاظ على حماية اتصالك، يجب تحديث التطبيق لمواصلة استخدامه."
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
+msgstr "حدث خطأ غير مُتوقَّع. يُرجى إعادة المحاولة أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr "التحديث مطلوب"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or report the problem on our community forum."
+msgstr "فشل التحقُّق، يُرجى إعادة المحاولة أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
 msgctxt "auth-failure"
 msgid "Blocking internet: account is out of time"
 msgstr "الإنترنت محظور: انتهى وقت الحساب"
@@ -1036,6 +1112,68 @@ msgstr "تتعذَّر مصادقة الحساب. يُرجى إرسال بلاغ
 msgctxt "auth-failure"
 msgid "You are logged in with an invalid account number. Please log out and try another one."
 msgstr "لقد سجَّلت دخولك برقم حساب غير صالح. يُرجى تسجيل الخروج وتجربة حساب آخر."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "حظر الإنترنت: تم تعليق وصولك بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت ترى أن ذلك خطأ."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
+msgstr "حظر الإنترنت: تم تعليق وصولك بسبب إساءة استخدام منفذ مُعاد توجيهه. تواصل مع الدعم إذا كنت ترى أن ذلك خطأ."
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please report the problem on our community forum."
+msgstr "تتعذَّر مصادقة الحساب. يُرجى الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr "حول نسخة وارن التجريبية"
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr "BETA"
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr "شبكة تجريبية مجانية، نطاق ترددي محدود"
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr "شبكة تجريبية مجانية، السرعة محدودة بـ %(mbps)d ميغابت/ث"
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr "تعمل على شبكة منفصلة بنطاق ترددي محدود بـ %(mbps)d ميغابت/ث."
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr "تعمل على شبكة منفصلة بنطاق ترددي محدود."
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr "شارك ملاحظاتك في المنتدى"
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr "هذه ليست شروط الخدمة النهائية: الشبكة بالسرعة الكاملة منتج مدفوع منفصل."
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr "يستخدم هذا التطبيق نسخة وارن التجريبية المجانية، التي تساعدنا على التحقق من وارن في ظروف حقيقية."
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
+msgstr "نسخة وارن التجريبية"
 
 #. Text displayed when there are no updates for this platform in the app version
 msgctxt "changelog-view"
@@ -1152,6 +1290,52 @@ msgstr "يجب عليك إيقاف \"وضع التأمين\" حتى تتمكن �
 msgctxt "connect-view"
 msgid "You’re all set!"
 msgstr "كل شيء جاهز!"
+
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: not active on this server"
+msgstr "%(DAITA)s: غير مُفعَّل على هذا الخادم"
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
+msgstr "تعذَّر تحديث الوصول التجريبي. تحقَّق من اتصالك وأعد المحاولة."
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "إعادة توجيه المنافذ: محظورة"
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "إعادة توجيه المنافذ: المنفذ مستخدم"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr "MTU مُخفَّضة"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr "MTU مُخفَّضة (%(mtu)s)"
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
+msgstr "تحديث الوصول التجريبي"
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
+msgstr "يستخدم هذا التطبيق إصدار Warren التجريبي المجاني، ولا حاجة إلى أي دفع. حدِّث وصولك التجريبي للمتابعة."
 
 #. The hostname line displayed below the country on the main screen
 #. Available placeholders:
@@ -1332,8 +1516,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "ستتم إزالة الجهاز من القائمة وتسجيل الخروج."
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "هذا هو الاسم المُخصَّص للجهاز. يحصل كل جهاز مُسجَّل منه الدخول إلى حساب Mullvad على اسم فريد يساعدك على تمييزه عند إدارة أجهزتك في التطبيق أو على الموقع الإلكتروني."
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "هذا هو الاسم المُخصَّص للجهاز. يحصل كل جهاز مُسجَّل منه الدخول إلى حساب Warren على اسم فريد يساعدك على تمييزه عند إدارة أجهزتك في التطبيق أو على الموقع الإلكتروني."
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1357,8 +1541,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "يمكنك عرض جميع أجهزتك المُسجَّلة وإدارتها. يمكنك ربط ما يصل إلى 5 أجهزة بحسابٍ واحد في الوقت نفسه. يحصل كل جهاز على اسم عند تسجيل الدخول ليسهُل عليك تمييزه."
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "يمكنك تسجيل الدخول إلى ما يصل إلى 5 أجهزة على حساب Mullvad واحد."
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "يمكنك تسجيل الدخول إلى ما يصل إلى 5 أجهزة على حساب Warren واحد."
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1375,6 +1559,12 @@ msgctxt "error-boundary-view"
 msgid "Something went wrong. Please contact us at %(email)s"
 msgstr "حدث خطأ ما. يُرجى التواصل معنا عبر البريد الإلكتروني %(email)s"
 
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
+msgstr "إعادة تحميل التطبيق"
+
 #. Title label in navigation bar
 msgctxt "filter-nav"
 msgid "Filter"
@@ -1385,8 +1575,8 @@ msgid "All providers"
 msgstr "جميع موفري الخدمة"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "مملوك لـ Mullvad فقط"
+msgid "Warren owned only"
+msgstr "مملوك لـ Warren فقط"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1498,6 +1688,10 @@ msgstr "جارٍ تنزيل التحديث... %(appUpgradeDownloadProgressValue)
 
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr "هام"
+
+msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
 msgstr "ثبِّت أحدث إصدار من التطبيق للبقاء على اطلاع دائم بكل جديد."
 
@@ -1519,6 +1713,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr "تم تثبيت إصدار جديد"
 
 msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr "إشعار"
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr "يُرجى إغلاق التطبيق وإعادة تشغيله."
 
@@ -1528,6 +1726,10 @@ msgid "READY TO INSTALL UPDATE"
 msgstr "جاهز لتثبيت التحديث"
 
 #. Accessibility label for the button to retry download of the installer.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
+msgstr "اقرأ الرسالة كاملة"
+
 msgctxt "in-app-notifications"
 msgid "Retry download of the installer"
 msgstr "إعادة محاولة تنزيل أداة التثبيت"
@@ -1541,6 +1743,10 @@ msgstr "إعادة محاولة التثبيت"
 msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "إرسال بلاغ بالمشكلة"
+
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "صيانة الخادم"
 
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
@@ -1557,9 +1763,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "لم بنجح تشغيل أداة التثبيت."
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "منفذ %(wireGuard)s المُحدَّد غير مدعوم، يُرجى <a>تغييره ضمن إعدادات شبكة VPN.</a>"
@@ -1607,10 +1813,55 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr "فشل التحقُّق"
 
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
+msgstr "التجديد التلقائي قريبًا"
+
+msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr "تأجيل النقل مع الاحتفاظ بالمنفذ"
+
+msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "لا يوجد اتصال بالإنترنت"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
+msgstr "الإبلاغ في المنتدى"
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr "الخادم لا يمرِّر البيانات"
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr "توقَّف الخادم عن تمرير بياناتك. سيبدِّل Warren الخادم أو يعيد الاتصال تلقائيًا."
+
+msgctxt "in-app-notifications"
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr "يستغرق هذا وقتًا أطول من المعتاد. يواصل Warren المحاولة، وإذا لم يتم الاتصال، فأبلغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
+msgstr "هل تواجه مشكلة في الاتصال؟"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "جهازك غير متصل بالإنترنت. سيعيد Warren الاتصال تلقائيًا فور عودة الشبكة."
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr "المنفذ المُعاد توجيهه مستخدم على كل الخوادم البديلة، لذلك أبقاك Warren على الخادم الحالي. توقَّع انقطاعًا قصيرًا أثناء التحديث."
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr "سيتجدَّد وقت Warren لديك خلال الأيام القادمة. يمكنك إيقافه في أي وقت من إعدادات الحساب."
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "جارٍ الاتصال بخدمة نظام Mullvad..."
+msgid "Connecting to Warren system service..."
+msgstr "جارٍ الاتصال بخدمة نظام Warren..."
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1634,8 +1885,8 @@ msgstr "إذا لم تنجح هذه الخطوات، يُرجى إرسال بل�
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "تم إلغاء إذن خدمة Mullvad VPN. يُرجى الانتقال إلى إعدادات النظام والسماح بشبكة Mullvad VPN ضمن الإعداد \"السماح بالتشغيل في الخلفية\"."
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "تم إلغاء إذن خدمة Warren VPN. يُرجى الانتقال إلى إعدادات النظام والسماح بشبكة Warren VPN ضمن الإعداد \"السماح بالتشغيل في الخلفية\"."
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1644,13 +1895,13 @@ msgstr "إعادة تثبيت التطبيق"
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "إعادة تشغيل عملية Mullvad في الخلفية"
+msgid "Restarting the Warren background process"
+msgstr "إعادة تشغيل عملية Warren في الخلفية"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "إعادة تشغيل عملية Mullvad في الخلفية بالنقر على \"رجوع\"، ثم \"إعادة المحاولة\""
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "إعادة تشغيل عملية Warren في الخلفية بالنقر على \"رجوع\"، ثم \"إعادة المحاولة\""
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1669,8 +1920,8 @@ msgstr "جارٍ بدء التشغيل...."
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "فشل تشغيل عملية Mullvad في الخلفية. هذه العملية مسؤولة عن الأمن، ومفتاح الإيقاف التلقائي، ونفق شبكة VPN. يُرجى تجربة ما يلي:"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "فشل تشغيل عملية Warren في الخلفية. هذه العملية مسؤولة عن الأمن، ومفتاح الإيقاف التلقائي، ونفق شبكة VPN. يُرجى تجربة ما يلي:"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1679,8 +1930,34 @@ msgstr "إعادة المحاولة"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "يتعذَّر الاتصال بخدمة نظام Mullvad، قد يكون اتصالك غير آمن. يُرجى استكشاف المشكلة أو إرسال بلاغ بها من خلال النقر على الزر \"معرفة المزيد\"."
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "يتعذَّر الاتصال بخدمة نظام Warren، قد يكون اتصالك غير آمن. يُرجى استكشاف المشكلة أو إرسال بلاغ بها من خلال النقر على الزر \"معرفة المزيد\"."
+
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "إذا لم تنجح هذه الخطوات، فيُرجى الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
+msgctxt "launch-view"
+msgid "Restore internet without VPN"
+msgstr "استعادة الإنترنت بدون VPN"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr "يتعذَّر الاتصال بخدمة نظام Warren، وقد يكون اتصالك غير آمن. يُرجى استكشاف المشكلة بالنقر على زر «معرفة المزيد»، أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
+msgstr "سيستعيد Warren VPN الوصول إلى الإنترنت بدون حماية VPN."
+
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr "الإبلاغ في المنتدى"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1993,8 +2270,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "يتعذَّر حظر جميع بيانات الشبكة. حاول تحديث نواة جهازك أو إرسال بلاغ بالمشكلة."
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "يتعذَّر الاتصال ببرنامج تشغيل نواة Mullvad. جرِّب إعادة الاتصال أو إرسال بلاغ بالمشكلة."
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "يتعذَّر الاتصال ببرنامج تشغيل نواة Warren. جرِّب إعادة الاتصال أو إرسال بلاغ بالمشكلة."
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2033,6 +2310,77 @@ msgstr "قد تكون خصوصيتك في خطر مع هذا الإصدار غي
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
 msgstr "قد تكون خصوصيتك في خطر مع هذا الإصدار غير المدعوم من التطبيق. يُرجى التحديث الآن."
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr "تم تحصيل رسوم التجديد التلقائي: ستُضاف مدة شهر واحد إلى وقت Warren لديك. يمكنك إيقاف التجديد التلقائي في أي وقت من إعدادات الحساب."
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr "فشل التجديد التلقائي. حدِّث طريقة الدفع أو اشترِ رصيدًا يدويًا."
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
+msgstr "تم إيقاف التجديد التلقائي لهذا الحساب."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
+msgstr "يتعذَّر حظر جميع بيانات الشبكة. يُرجى استكشاف المشكلة وإصلاحها أو الإبلاغ عنها في منتدى مجتمعنا."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
+msgstr "يتعذَّر حظر جميع بيانات الشبكة. جرِّب إيقاف أي برنامج مكافحة فيروسات أو حماية تابع لجهة خارجية مؤقتًا، أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
+msgstr "يتعذَّر حظر جميع بيانات الشبكة. حاول تحديث نواة جهازك أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
+msgstr "يتعذَّر التواصل مع برنامج تشغيل نواة Warren. جرِّب إعادة الاتصال أو الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
+msgstr "يتعذَّر ضبط خادم DNS للنظام. يُرجى الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
+msgstr "يتعذَّر بدء اتصال النفق. يُرجى الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
+msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr "يطلب مصرفك تأكيدًا لإتمام التجديد. افتح Warren واشترِ رصيدًا للتأكيد."
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr "يبدو أن شبكتك غير مستقرة: أعاد النفق الاتصال مرات كثيرة متتالية. أعد الاتصال بعد استقرار اتصالك."
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr "يتجدَّد وقت Warren لديك تلقائيًا قرابة %(date)s بالسعر الشهري. يمكنك إيقاف التجديد التلقائي في أي وقت من إعدادات الحساب."
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr "سيتجدَّد وقت Warren لديك خلال الأيام القادمة. يمكنك إيقاف التجديد التلقائي في أي وقت من إعدادات الحساب."
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "تعيين منفذ متاح"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "اختيار خادم خروج آخر"
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr "معطَّل"
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr "هذا المنفذ العام مستخدم بالفعل على خادم الخروج هذا. يمكنك الاحتفاظ بمنفذك بتبديل خادم الخروج، أو ترك خادم الخروج يعيّن منفذًا عامًا متاحًا، أو كتابة منفذ آخر أعلاه."
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
@@ -2077,6 +2425,10 @@ msgstr "رمز القسيمة غير صالح."
 msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr "تم استرداد القسيمة بنجاح."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr "انتهت صلاحية رمز القسيمة."
 
 #. Title label in navigation bar
 msgctxt "select-language-nav"
@@ -2356,8 +2708,8 @@ msgid "Please try again or send a problem report."
 msgstr "يُرجى إعادة المحاولة أو إرسال بلاغ بالمشكلة."
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "إعادة تشغيل خدمة Mullvad"
+msgid "Restart Warren Service"
+msgstr "إعادة تشغيل خدمة Warren"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2368,8 +2720,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "لاستخدام %(splitTunneling)s، يُرجى التحديث إلى إصدار النواة على Linux الذي يدعم cgroup v2."
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "لاستخدام الانقسام النفقي، يُرجى تفعيل \"الوصول الكامل للقرص\" لـ \"Mullvad VPN\" في إعدادات نظام macOS."
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "لاستخدام الانقسام النفقي، يُرجى تفعيل \"الوصول الكامل للقرص\" لـ \"Warren VPN\" في إعدادات نظام macOS."
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2478,6 +2830,11 @@ msgctxt "support-view"
 msgid "Your email (optional)"
 msgstr "بريدك الإلكتروني (اختياري)"
 
+#. Link to the refund policy webpage
+msgctxt "support-view"
+msgid "Refund policy"
+msgstr "سياسة استرداد الأموال"
+
 msgctxt "tray-icon-context-menu"
 msgid "Disconnected from system service"
 msgstr "تم قطع الاتصال عن خدمة النظام"
@@ -2503,8 +2860,8 @@ msgid "Disable split tunneling"
 msgstr "إيقاف الانقسام النفقي"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "فعِّل \"الوصول الكامل للقرص\" لـ \"Mullvad VPN\" في إعدادات نظام macOS."
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "فعِّل \"الوصول الكامل للقرص\" لـ \"Warren VPN\" في إعدادات نظام macOS."
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2527,8 +2884,8 @@ msgid "Open system settings"
 msgstr "فتح إعدادات النظام"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "يمكن أن يحدث هذا الخطأ عندما يقوم شيء آخر غير Mullvad بتحديث DNS بشكلٍ نشط."
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "يمكن أن يحدث هذا الخطأ عندما يقوم شيء آخر غير Warren بتحديث DNS بشكلٍ نشط."
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2566,6 +2923,10 @@ msgctxt "troubleshoot"
 msgid "Update your kernel."
 msgstr "قم بتحديث النواة."
 
+msgctxt "troubleshoot"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "إذا لم تنجح هذه الخطوات، فيُرجى الإبلاغ عن المشكلة في منتدى مجتمعنا."
+
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "الاتصال"
@@ -2573,6 +2934,12 @@ msgstr "الاتصال"
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr "تبديل الموقع"
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "انقطع الاتصال"
 
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
@@ -2650,8 +3017,8 @@ msgid "Anti-censorship"
 msgstr "مكافحة الرقابة"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "انتبه: سيتطلَّب تفعيل هذا الإعداد اتصال Mullvad VPN دائمًا للوصول إلى الإنترنت."
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "انتبه: سيتطلَّب تفعيل هذا الإعداد اتصال Warren VPN دائمًا للوصول إلى الإنترنت."
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2761,8 +3128,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "يكمن الفرق بين مفتاح الإيقاف التلقائي ووضع التأمين في أن مفتاح الإيقاف التلقائي سيمنع حدوث أي تسريبات أثناء عمليات إعادة الاتصال التلقائية للنفق، أو تعطُّل البرنامج، أو الحوادث المماثلة."
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "يكمن الفرق بين مفتاح الإيقاف التلقائي ووضع التأمين في أن مفتاح الإيقاف التلقائي سيمنع حدوث أي تسريبات أثناء عمليات إعادة الاتصال التلقائية للنفق، أو تعطُّل البرنامج، أو الحوادث المماثلة. مع تفعيل وضع التأمين، يجب أن تكون متصلًا بخادم Mullvad VPN لتتمكن من الوصول إلى الإنترنت. وسيؤدي قطع الاتصال يدويًا أو مغادرة التطبيق إلى حظر اتصالك."
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "يكمن الفرق بين مفتاح الإيقاف التلقائي ووضع التأمين في أن مفتاح الإيقاف التلقائي سيمنع حدوث أي تسريبات أثناء عمليات إعادة الاتصال التلقائية للنفق، أو تعطُّل البرنامج، أو الحوادث المماثلة. مع تفعيل وضع التأمين، يجب أن تكون متصلًا بخادم Warren VPN لتتمكن من الوصول إلى الإنترنت. وسيؤدي قطع الاتصال يدويًا أو مغادرة التطبيق إلى حظر اتصالك."
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2813,8 +3180,168 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "عندما يتم تفعيل هذه الميزة، يمكن استخدام IPv6 جنبًا إلى جنب مع IPv4 في نفق VPN للاتصال بخدمات الإنترنت."
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "عند تفعيل وضع التأمين، يجب أن تكون متصلًا بخادم Mullvad VPN لتتمكن من الوصول إلى الإنترنت. سيؤدي قطع اتصال التطبيق أو إغلاقه يدويًا إلى حظر اتصالك."
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "عند تفعيل وضع التأمين، يجب أن تكون متصلًا بخادم Warren VPN لتتمكن من الوصول إلى الإنترنت. سيؤدي قطع اتصال التطبيق أو إغلاقه يدويًا إلى حظر اتصالك."
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr "معرّف الخروج"
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr "المفتاح العام"
+
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr "%(mbps)d Mbps"
+
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "السماح بـ DNS خارجي"
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "السماح بمحلِّلات DNS خارجية"
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr "عرض النطاق محدود بشبكة الإصدار التجريبي المجانية وتفرضه الخوادم. هذا الإعداد غير متاح خلال الفترة التجريبية."
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr "الاتصال بخادم خروج واحد مستضاف ذاتيًا تُدخله يدويًا، مع تجاوز قائمة الخوادم المُتحقَّق منها. لا تستخدم إلا خادم خروج تديره بنفسك أو تثق به تمامًا: فهو يرى بياناتك غير المشفَّرة."
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr "نطاق التمويه (اختياري)"
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr "خادم خروج مخصَّص (متقدم)"
+
+msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr "نقطة النهاية"
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr "عنوان خادم الخروج بصيغة host:port. ضع عنوان IPv6 بين قوسين معقوفين، مثل [2001:db8::1]:443."
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "للمستخدمين المتقدمين. عند التفعيل، يتوقَّف جدار الحماية عن حظر استعلامات DNS الموجَّهة إلى محلِّلات غير المحلِّل المُهيَّأ، فتعمل أدوات مثل «dig @1.1.1.1» أثناء الاتصال."
+
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr "حدِّد عرض نطاق VPN بوحدة Mbps، ويُطبَّق على الرفع والتنزيل كلٍّ على حدة. النطاق الصالح: %(min)d - %(max)d. اتركه فارغًا لإلغاء الحد. يُطبَّق فورًا."
+
+msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr "مُدار تلقائيًا"
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr "الحد الأقصى لعرض النطاق"
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr "اضبطه فقط عندما يستخدم خادم الخروج شهادة TLS عامة (وضع X.509). اتركه فارغًا لوضع المفتاح الخام الافتراضي."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr "مفتاح Ed25519 العام لخادم الخروج، 64 حرفًا ست عشريًا."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr "معرّف التوجيه لخادم الخروج، 32 حرفًا ست عشريًا."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr "مفتاح X25519 للقفز المتعدد لخادم الخروج، 64 حرفًا ست عشريًا."
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "تظل الاستعلامات تمر عبر نفق VPN، لكن المحلِّل الذي تختاره سيراها. اترك هذا الخيار مُعطَّلًا ما لم تكن تختبر تحليل DNS عن بُعد."
+
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr "بلا حدود"
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr "مفتاح X25519 للقفز المتعدد"
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr "تُربط بحسابك تلقائيًا قسيمة وصول تجريبي مدفوعة مسبقًا. لا دفع، ولا شيء عليك فعله."
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr "الوصول التجريبي نشط حتى %(date)s."
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr "تعذَّر تفعيل الوصول التجريبي حتى الآن (هل أنت متصل بالإنترنت؟). ستتم إعادة المحاولة تلقائيًا، ومرة أخرى عند التشغيل التالي. يمكنك المتابعة على أي حال."
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr "هل تواجه مشكلة؟ تفضَّل بزيارة صفحة المساعدة"
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr "إعادة المحاولة الآن"
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr "يعمل الإصدار التجريبي على شبكة منفصلة مجانية بعرض نطاق محدود عند %(mbps)d Mbps. هذه ليست شروط الخدمة النهائية."
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr "يعمل الإصدار التجريبي على شبكة منفصلة مجانية بعرض نطاق محدود. هذه ليست شروط الخدمة النهائية."
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr "وصولك التجريبي"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr "لم يعد العثور على خادم الخروج هذا ممكنًا. جرِّب إعادة الاتصال."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr "تعذَّر حفظ المفتاح الجديد. يُرجى إعادة المحاولة."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr "تعذَّر منح الثقة للمفتاح الجديد."
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr "تغيَّر المفتاح مرة أخرى قبل أن يتم منحه الثقة. راجع المفتاح الجديد وأعد المحاولة."
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2838,7 +3365,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "منفذ %(wireguard)s"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "منفذ %(wireGuard)s"
@@ -2869,10 +3396,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "إذا رصد مراقب حزم البيانات هذه، فإن ميزة %(daita)s تجعل من الصعب عليه بشكلٍ كبير تحديد المواقع الإلكترونية التي تزورها أو الأشخاص الذين تتواصل معهم."
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "يتم ذلك عبر إجراء تبادل مفاتيح إضافي باستخدام خوارزمية آمنة كموميًا، ودمج النتيجة ضمن التشفير القياسي لبروتوكول WireGuard."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "يتم ذلك عبر إجراء تبادل مفاتيح إضافي باستخدام خوارزمية آمنة كموميًا، ودمج النتيجة ضمن التشفير القياسي لبروتوكول QUIC."
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2888,8 +3415,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "يتم استخدام القفز المتعدد لتفعيل DAITA لموقعك المُحدَّد"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "يوجِّه القفز المتعدد حركة البيانات لديك من خادم WireGuard إلى آخر، مما يجعل من الصعب تتبُّعها. ويؤدي ذلك إلى زيادة زمن الوصول، لكنه يزيد من إخفاء الهوية على الإنترنت."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "يوجِّه القفز المتعدد حركة البيانات لديك من خادم QUIC إلى آخر، مما يجعل من الصعب تتبُّعها. ويؤدي ذلك إلى زيادة زمن الوصول، لكنه يزيد من إخفاء الهوية على الإنترنت."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2900,7 +3427,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "لم يتم تفعيل ميزة %(daita)s لكل خوادمنا. لذلك، فإننا نستخدم القفز المتعدد تلقائيًا لتفعيل ميزة %(daita)s مع أي خادم."
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "المنفذ"
@@ -2912,16 +3439,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "المنفذ: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "النفق المقاوم لهجمات الحواسيب الكمّية"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -2941,8 +3468,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "يمكن أن يكون المنفذ المُخصَّص أي قيمة ضمن النطاقات الصالحة: %(portRanges)s."
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "تجعل هذه الميزة نفق WireGuard مقاومًا للهجمات المحتملة من الحواسيب الكمّية."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "تجعل هذه الميزة نفق QUIC مقاومًا للهجمات المحتملة من الحواسيب الكمّية."
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -3006,8 +3533,8 @@ msgstr "تمت إضافة %s إلى حسابك."
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"Mullvad VPN\"."
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"Warren VPN\"."
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. لتفعيل الاتصال التلقائي، انقر على زر التبديل بجوار \"تشغيل VPN دائمًا\"."
@@ -3165,8 +3692,8 @@ msgstr "باختيار هذه الخانة، أوافق على تحمل المخ
 msgid "Can't connect?"
 msgstr "هل يتعذَّر الاتصال؟"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "تغيير عنوان ورمز تطبيق VPN على جهاز Android لديك. لن يؤدي ذلك إلى تغيير الرمز لأي إشعارات متعلقة بـ Mullvad VPN."
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "تغيير عنوان ورمز تطبيق VPN على جهاز Android لديك. لن يؤدي ذلك إلى تغيير الرمز لأي إشعارات متعلقة بـ Warren VPN."
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "قد لا تدخل التغييرات المتعلقة بإعدادات DNS حيز التنفيذ فورًا بسبب النتائج المُخزَّنة مؤقتًا."
@@ -3189,8 +3716,8 @@ msgstr "جارٍ الاتصال..."
 msgid "Continue"
 msgstr "استمرار"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "تم نسخ رقم حساب Mullvad إلى الحافظة"
+msgid "Copied Warren account number to clipboard"
+msgstr "تم نسخ رقم حساب Warren إلى الحافظة"
 
 msgid "Copied logs to clipboard"
 msgstr "تم نسخ السجلات إلى الحافظة"
@@ -3390,8 +3917,8 @@ msgstr "تكوين IPv6 غير صالح، يرجى تجربة تغيير إعد�
 msgid "Invalid or missing value \"%1$s\""
 msgstr "القيمة \"%1$s\" غير صالحة أو مفقودة"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "وتفعل ذلك من خلال إجراء تبادل مفتاح إضافي باستخدام خوارزمية آمنة ضد هجمات الحواسيب الكميّة، ودمج النتيجة في تشفير WireGuard الاعتيادي. تستهلك هذه الخطوة الإضافية حوالي 500 كيلو بايت من حركة البيانات في كل مرة يتم فيها إنشاء نفق جديد."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "وتفعل ذلك من خلال إجراء تبادل مفتاح إضافي باستخدام خوارزمية آمنة ضد هجمات الحواسيب الكميّة، ودمج النتيجة في تشفير QUIC الاعتيادي. تستهلك هذه الخطوة الإضافية حوالي 500 كيلو بايت من حركة البيانات في كل مرة يتم فيها إنشاء نفق جديد."
 
 msgid "Less than a day left on this account"
 msgstr "يتبقى أقل من يوم لهذا الحساب"
@@ -3420,8 +3947,8 @@ msgstr "يضمن هذا الخيار بقاء الجهاز متصلًا دائم
 msgid "More actions"
 msgstr "إجراءات إضافية"
 
-msgid "Mullvad services unavailable"
-msgstr "خدمات Mullvad غير متاحة"
+msgid "Warren services unavailable"
+msgstr "خدمات Warren غير متاحة"
 
 msgid "Multihop is disabled"
 msgstr "تم تعطيل القفز المتعدد"
@@ -3555,8 +4082,8 @@ msgstr "بحث"
 msgid "Send email"
 msgstr "إرسال رسالة بريد إلكتروني"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "قم بتعيين قيمة WireGuard MTU. النطاق الصالح: %1$d - %2$d."
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "قم بتعيين قيمة QUIC MTU. النطاق الصالح: %1$d - %2$d."
 
 msgid "Set as multihop entry"
 msgstr "تعيين كمدخل لقفزات متعددة"
@@ -3621,11 +4148,11 @@ msgstr "تُمثِّل الطريقة \"الحالية\" الطريقة التي
 msgid "The app is blocking internet, please disconnect first"
 msgstr "التطبيق يحظر الإنترنت، يُرجي قطع الاتصال أولًا"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "لم يتمكن التطبيق من إنشاء حساب لعدم قدرته على الوصول إلى Mullvad API."
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "لم يتمكن التطبيق من إنشاء حساب لعدم قدرته على الوصول إلى Warren API."
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "لم يتمكن التطبيق من تسجيل الدخول بسبب عدم قدرته على الوصول إلى Mullvad API."
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "لم يتمكن التطبيق من تسجيل الدخول بسبب عدم قدرته على الوصول إلى Warren API."
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "لن يعمل خادم DNS المحلي ما لم يتم تفعيل خاصية \"مشاركة الشبكة المحلية\" ضمن إعدادات شبكة VPN."
@@ -3633,8 +4160,8 @@ msgstr "لن يعمل خادم DNS المحلي ما لم يتم تفعيل خا
 msgid "The selected %s port is not supported, please change it under"
 msgstr "المنفذ المُحدَّد %s غير مدعوم، يُرجى تغييره ضمن"
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "قد تكون هذه الطرق مفيدة في حال تم حظر وصولك إلى Mullvad. عند اختيار \"تلقائي\"، سيحاول التطبيق استخدام جميع الطرق حتى تنجح إحداها."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "قد تكون هذه الطرق مفيدة في حال تم حظر وصولك إلى Warren. عند اختيار \"تلقائي\"، سيحاول التطبيق استخدام جميع الطرق حتى تنجح إحداها."
 
 msgid "This address has already been entered."
 msgstr "لقد تم إدخال هذا العنوان بالفعل."
@@ -3660,11 +4187,11 @@ msgstr "لإضافة مواقع إلى قائمة، اضغط على القلم �
 msgid "To create a custom list press the \"+\""
 msgstr "لإنشاء قائمة مُخصَّصة، اضغط على \"+\""
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "لحذف حسابك على Mullvad VPN، يرجى إدخال رقم الحساب أدناه."
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "لحذف حسابك على Warren VPN، يرجى إدخال رقم الحساب أدناه."
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "للتأكد من استخدامك للإصدار الأكثر أمانًا وإبلاغك بأي مشكلات في الإصدار الحالي قيد التشغيل، يُجري التطبيق عمليات فحص للإصدار تلقائيًا يتم خلالها إرسال إصدار التطبيق وإصدار نظام Android إلى خوادم Mullvad. تحتفظ Mullvad بعدادات لعدد إصدارات التطبيق وإصدارات Android المُستخدَمة. لا يتم تخزين البيانات أو استخدامها بأي طريقة يمكن من خلالها تحديد هويتك."
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "للتأكد من استخدامك للإصدار الأكثر أمانًا وإبلاغك بأي مشكلات في الإصدار الحالي قيد التشغيل، يُجري التطبيق عمليات فحص للإصدار تلقائيًا يتم خلالها إرسال إصدار التطبيق وإصدار نظام Android إلى خوادم Warren. تحتفظ Warren بعدادات لعدد إصدارات التطبيق وإصدارات Android المُستخدَمة. لا يتم تخزين البيانات أو استخدامها بأي طريقة يمكن من خلالها تحديد هويتك."
 
 msgid "Toggle VPN"
 msgstr "زر تبديل VPN"
@@ -3687,11 +4214,11 @@ msgstr "يتعذَّر الوصول إلى واجهة API"
 msgid "Unable to reach API, %s"
 msgstr "يتعذَّر الوصول إلى واجهة API، %s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" قبل استخدام Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" قبل استخدام Warren VPN."
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" لـ <b>%s</b> قبل استخدام Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" لـ <b>%s</b> قبل استخدام Warren VPN."
 
 msgid "Unable to verify account number, please contact support"
 msgstr "تعذر التحقق من رقم الحساب، يرجى الاتصال بالدعم"
@@ -3771,14 +4298,14 @@ msgstr "الطقس"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "مرحبًا، يُسمَّى هذا الجهاز الآن <b>%s</b>."
 
-msgid "WireGuard port"
-msgstr "منفذ WireGuard"
+msgid "QUIC port"
+msgstr "منفذ QUIC"
 
 msgid "Yes, log out device"
 msgstr "نعم، تسجيل الخروج من الجهاز"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "أنت على وشك حذف حساب Mullvad VPN."
+msgid "You are about to delete your Warren VPN account."
+msgstr "أنت على وشك حذف حساب Warren VPN."
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "يمكنك إضافة المزيد من الوقت من خلال طريقة عرض الحساب أو موقع الويب لمتابعة استخدام VPN."
@@ -3885,3 +4412,829 @@ msgstr[3] "ستفقد %d أيام متبقية لك."
 msgstr[4] "ستفقد %d يومًا متبقيًا لك."
 msgstr[5] "ستفقد %d يوم متبق لك."
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "تلقائي"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "فشل التعيين: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "يفتح منفذًا عامًا على خادم الخروج المتصل ويعيد توجيهه إلى جهازك. مفيد لتطبيقات الند للند أو مشاركة الملفات أو الخدمات المستضافة ذاتيًا."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "إعادة توجيه المنافذ"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "يجب أن يكون المنفذ بين 49152 و65535، أو فارغًا للوضع التلقائي."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "المنفذ المفضل"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "البروتوكول"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "المنفذ العام: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "التجديد خلال %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "الحالة: نشط"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "الحالة: جارٍ طلب تعيين المنفذ…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "الحالة: في انتظار اتصال نفق نشط لإعداد تعيين المنفذ."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "قد يعيّن الخادم منفذًا مختلفًا إذا كان المنفذ المفضل مستخدمًا بالفعل. تُطبَّق التغييرات فورًا دون إعادة الاتصال."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "النسخ الاحتياطي للمفاتيح"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "رفضت الخدمة العبارة الاسترجاعية. تحقق من الإملاء وعدد الكلمات، ثم حاول مرة أخرى."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "تم"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "أدخل عبارتك الاسترجاعية BIP39 المكوّنة من 12 كلمة (أو 24 كلمة)، مفصولة بمسافات."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "تعذّر استرجاع العبارة الاسترجاعية من الخدمة."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "لقد دوّنتها في مكان آمن."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "أُدرك أن هذا سيستبدل هويتي الحالية نهائياً."
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "تمت استعادة الهوية. محفظة Warren الجديدة نشطة الآن."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "المفاتيح"
+
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "لا توجد عبارة استرجاعية متاحة، سجّل الدخول أو استعد هوية أولاً."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "الاستعادة من العبارة الاسترجاعية"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "استعادة الهوية"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "جارٍ الاستعادة..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "إظهار العبارة الاسترجاعية"
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "تحذير: سيؤدي هذا إلى استبدال هويتك الحالية. أي اشتراك مرتبط بالهوية الحالية سيصبح غير قابل للاسترجاع."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "دوّنها على ورق. لا تحفظها أبداً في السحابة أو لقطة شاشة أو بريد إلكتروني."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "عبارتك الاسترجاعية المكوّنة من 12 كلمة هي الطريقة الوحيدة لاستعادة هوية Warren على جهاز آخر. في حال فقدانها، يصبح اشتراكك غير قابل للاسترجاع."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "كلمات"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "تم النسخ إلى الحافظة"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "نسخ إلى الحافظة"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "تجربة VPN دون أي تنازل عن الخصوصية. بلا سجلّات. بلا حسابات. بلا تتبّع. مجرد عرض نطاق."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "كل شيء جاهز"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "تحقق مرة أخرى"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "جارٍ التحقق... (انقر للتحديث الآن)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "اكتمل الإعداد. اختر دولة واتصل بـ Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "متابعة"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "تعذّر التحقق من حالة الاشتراك. يرجى المحاولة مرة أخرى."
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "إنشاء محفظتي الجديدة (مُوصى به)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "لا تحتوي الخدمة على عبارة استرجاعية بعد، سجّل الدخول أو أعد تشغيل التطبيق."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "رفضت الخدمة العبارة الاسترجاعية. تحقق من الإملاء وعدد الكلمات، ثم حاول مرة أخرى."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "تعذّر استرجاع العبارة الاسترجاعية من الخدمة."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "ابدأ الآن"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "لديّ اشتراك بالفعل"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "لقد دوّنتها في مكان آمن."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "استيراد عبارة استرجاعية موجودة"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "لم يُعثر على اشتراك نشط. يرجى شراء اشتراك أولاً."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "الصق عبارتك الاسترجاعية BIP39 المكوّنة من 12 كلمة لاستعادة هوية Warren الموجودة لديك."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "اختر دولة واتصل"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "اختر وسائل الحماية التي تريدها منذ اليوم الأول. يمكنك تغييرها جميعاً لاحقاً من الإعدادات."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "تفضيلات الخصوصية"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "استعادة المحفظة"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "تخطّي المعالج (متقدّم)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "عرض الباقات (يُفتح في متصفحك)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "يستخدم Warren محفظة غير وصائية (Ed25519 + BIP39). أنت تملك المفاتيح؛ ولا نراها أبداً."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "مرحباً بك في Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "دوّن هذه الكلمات الـ12 بالترتيب واحتفظ بها في مكان آمن. فهي الطريقة الوحيدة لاستعادة اشتراكك إذا فقدت الوصول إلى هذا الجهاز."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً، بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "محفظتك في Warren"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "اشتراكك"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• التمويه الدائم (مُفعّل افتراضياً): محاكاة HTTP/3 لكي تندمج حركة المرور مع الحركة العادية."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (مُعطّل افتراضياً): إضافة حشو لإحباط تحليل حركة المرور بالتعلّم الآلي. بتكلفة ~5-15% من عرض النطاق."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• تعدّد القفزات (مُعطّل افتراضياً): التوجيه عبر مُرحّلين لمنع الربط بين نقطتي الدخول والخروج."
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "احفظ عبارتي احتياطيًا"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "لقد قمت بعمل نسخة احتياطية من عبارة الاسترداد وأدرك أنه سيتم إزالة هذا الحساب من هذا الجهاز."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "إذا لم تقم بعمل نسخة احتياطية من عبارة الاسترداد، فسيتم فقدان اشتراكك نهائيًا."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "تسجيل الخروج من هذا الحساب؟"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "يؤدي تسجيل الخروج إلى مسح هذا الحساب من هذا الجهاز. لا يوجد بريد إلكتروني أو كلمة مرور لإعادة تسجيل الدخول, عبارة الاسترداد الخاصة بك هي الطريقة الوحيدة لاستعادته."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "احفظ عبارة الاسترداد احتياطيًا"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "تعذّرت قراءة عبارة الاسترداد الجديدة. حاول مرة أخرى."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "أدخل عبارة الاسترداد المكوّنة من 12 كلمة، مفصولة بمسافات، لاستعادة حسابك على هذا الجهاز."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "لديّ حساب بالفعل"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "لقد كتبت عبارة الاسترداد في مكان آمن."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "عبارة استرداد غير صالحة. تحقّق من الكلمات وترتيبها، ثم حاول مرة أخرى."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "استعادة الحساب"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "استعد حسابك"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "يستخدم Warren محفظة غير وصائية: حسابك هو عبارة استرداد مكوّنة من 12 كلمة تملكها أنت وحدك."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "مرحبًا بك في Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "اكتب هذه الكلمات الـ 12 واحتفظ بها في مكان آمن. إنها الطريقة الوحيدة لاستعادة حسابك إذا فقدت هذا الجهاز."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "لقد أكملت الدفع"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "الجلسة غير نشطة"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "انتهت جلستك. لإعادة الاتصال، ستحتاج إلى تسجيل الدخول مرة أخرى."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "تم اكتشاف عدم تطابق في هوية الخادم. لقد تغيّر المفتاح العام لعقدة الخروج."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "تجاوز الفشل التلقائي"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "التبديل تلقائيًا إلى خادم خروج آخر إذا أصبح الخادم الحالي غير قابل للوصول."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "يسري هذا الإعداد فورًا دون إعادة تشغيل الخدمة."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "عنوان URL لخادم warren-api. الصيغة http(s)://host:port. فارغ = غير مُعيَّن (العودة إلى الخلفية الافتراضية). أعد تشغيل الخدمة حتى يسري التغيير."
+
+msgid "OK"
+msgstr "موافق"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "نسخ المفتاح العام"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "إخفاء المفتاح العام"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "إظهار المفتاح العام"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "النسخ الاحتياطي للمفاتيح"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "المفتاح العام"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "شبكة توصيل المحتوى (CDN) المستخدمة هي CDN77 التابعة لـ Datapacket. لا يمكن لـ CDN سوى مراقبة حركة TLS المُمرَّرة، وليس محتواها."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "يتواصل التطبيق مع خادم Warren API عبر %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "يمكن أن يكون ذلك مفيدًا عندما يكون الوصول المباشر والطرق الأخرى محجوبة بسبب الرقابة."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "باستخدام طريقة الوصول %(domainFronting)s، يصل التطبيق إلى Warren API عبر CDN، فيختلط بذلك حركة المرور بكمٍّ كبير من حركة الإنترنت الأخرى، مما يجعل حجبها أكثر صعوبة."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "أنت مسجّل الدخول بمفتاح عام غير صالح. يُرجى تسجيل الخروج وتجربة مفتاح آخر."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "جارٍ التحقق... (انقر للتحديث الآن)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "هذا هو مفتاحك العام. احفظه!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "إعادة توجيه المنافذ: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "تعدد القفزات (قفزتان)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "تم تبديل خادم الخروج"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "أصبح خادم الخروج السابق غير قابل للوصول. وجّهك Warren تلقائيًا عبر خادم بديل."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "يتم تحديث الخادم الخاص بك. قام Warren بنقلك إلى خادم آخر تلقائيًا، لا حاجة لأي إجراء."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ إضافة منفذ"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "كل منفذ تضيفه يُفتح على خادم الخروج ويُعاد توجيهه إلى المنفذ نفسه على جهازك. تُطبَّق التغييرات فورًا دون الحاجة إلى إعادة الاتصال."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "آخر تغيير للمنفذ قبل حظر مؤقت. انتظر لحظة قبل تغييره مجددًا."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "تم بلوغ الحد الأقصى وهو %(max)d منفذ"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "لا يوجد منفذ بعد. أضف واحدًا لفتحه على خادم الخروج."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "المنفذ"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "يجب أن يكون المنفذ بين 49152 و65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "إزالة المنفذ"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "الحالة: في انتظار اتصال نفقي نشط لإعداد تعيينات المنافذ."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "هذا المنفذ موجود بالفعل في قائمتك."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "عدد كبير جدًا من تغييرات المنافذ. يمكنك تغيير المنافذ مجددًا خلال %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "جارٍ التطبيق…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "فشل"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "لا يوجد منفذ متاح"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "غير مسموح"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "مفتوح: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "قيد الانتظار…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "منفذ"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "المنفذ قيد الاستخدام"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "جارٍ الطلب…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "يبدو أنك أدخلت مفتاحًا عامًا بدلًا من رمز قسيمة. إذا كنت ترغب في تغيير الحساب النشط، فيُرجى تسجيل الخروج أولًا."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "إعادة توجيه المنافذ"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "إعادة تشغيل التهيئة الأولية"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "تم حذف %(count)s من إدخالات مفاتيح الخروج المثبَّتة."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "كل خادم خروج Warren اتصلت به سابقًا سيُعاد تثبيته عند الاتصال التالي (الثقة عند الاستخدام الأول)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "تم مسح جدول التثبيت"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "إعادة تعيين"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "إعادة تعيين الكل"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "فشلت إعادة التعيين"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "إعادة تعيين مفاتيح الخروج المثبَّتة"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "إعادة تعيين مفاتيح الخروج المثبَّتة؟"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "إلى أن تُنشأ التثبيتات الجديدة، تكون حماية كشف الاستبدال معطّلة لفترة وجيزة: فالمهاجم الذي استبدل خادم خروج بين عمليتي إعادة تعيين لن يُكتشف عند أول إعادة اتصال."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "عنوان URL لـ Warren api"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "بلد الدخول"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "بلد الخروج"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "توقّع نحو نصف عرض النطاق الترددي للقفزة الواحدة مقابل عدم إمكانية الربط بين عنوان IP للمستخدم وعنوان IP للوجهة. معطّل افتراضيًا؛ فعّله اختياريًا لحماية الخصوصية."
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "تعدد القفزات"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "أعد تشغيل خدمة Warren بعد تغيير هذا الإعداد."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "يوجّه حركة مرورك عبر مُرحِّلَي Warren باستخدام تشفير HPKE من طرف إلى طرف. لا يرى مُرحِّل الدخول سوى النص المشفَّر؛ ولا ترى عقدة الخروج سوى الحمولة المفكوكة التشفير، ولا ترى عنوان IP الخاص بك أبدًا. نمط مستوحى من Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "المقايضة: نحو نصف عرض النطاق الترددي للقفزة الواحدة. معطّل افتراضيًا؛ فعّله اختياريًا لحماية الخصوصية. يلزم إعادة تشغيل الخدمة بعد تغيير هذا الإعداد."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "تعدد قفزات Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "عند التفعيل، تُوجَّه حركة المرور عبر مُرحِّلَي Warren (الدخول ثم الخروج) باستخدام تشفير HPKE من طرف إلى طرف بين العميل وعقدة الخروج. لا يرى مُرحِّل الدخول سوى النص المشفَّر؛ ولا ترى عقدة الخروج سوى الحمولة المفكوكة التشفير، ولا ترى عنوان IP الخاص بالمستخدم أبدًا."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "تلقائي"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "تفاصيل عدم التطابق التشفيري"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "معرّف الخروج"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "الموقع"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "المفتاح المرصود حديثًا"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "المفتاح المثبَّت سابقًا"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "جارٍ معالجة اختيارك، يُرجى الانتظار."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "رفض (قطع الاتصال)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "ارفض وابقَ غير متصل"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "إبلاغ Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "تغيّرت هوية الخادم"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "خادم خروج Warren الذي كنت تثق به سابقًا يقدّم الآن هوية تشفيرية مختلفة."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "يعني هذا عادةً أن المشغّل قام بتدوير المفتاح، لكنه قد يشير أيضًا إلى أن الخادم قد استُبدل أو اختُرق. ارفض إذا لم تكن تتوقع حدوث تغيير."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "الوثوق بالمفتاح الجديد"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "محاكاة HTTP/3 (نشطة)"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "الأخير"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "إخفاء الهوية"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "إعادات الاتصال"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "غير نشط"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "أبدًا"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "تم طلب تسجيل الدخول إلى منتدى مجتمع Warren. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "الموافقة على تسجيل الدخول"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "يتطلب الوصول إلى المنتدى اشتراكاً في Warren. لم تشترك هذه المحفظة قط."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "لا يُستخدم بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار مجهول لا يمكن ربطه بحساب Warren الخاص بك. وافق فقط إذا كنت أنت من بدأ تسجيل الدخول هذا."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "تسجيل الدخول إلى منتدى مجتمع Warren؟"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "فشل تسجيل الدخول. يُرجى المحاولة مرة أخرى بعد قليل."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "جارٍ التوقيع، يُرجى الانتظار."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "منتدى المجتمع"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "جارٍ الاتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "تم إنشاء الاتصال"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "جارٍ تشفير اتصالك"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "موقع عشوائي"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "أنت محمي"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "أنت مكشوف"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "اتصالك غير مشفّر"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "جارٍ قطع الاتصال..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "جارٍ الاتصال"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "إرفاق السجلات"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "إرفاق سجلاتك بتقرير الخطأ؟"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "فشل إرفاق السجلات. يُرجى المحاولة مرة أخرى بعد قليل."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "إلغاء"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "يمكن لكاتب تقرير الخطأ وحده إرفاق السجلات به."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "جارٍ الإرسال، يُرجى الانتظار."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "ملف السجل كبير جداً بحيث لا يمكن إرفاقه."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "السجلات مجهولة الهوية: عناوين المحافظ والبيانات الشخصية محجوبة. تُرسل بشكل خاص إلى فريق دعم Warren ولا تظهر علناً على المنتدى أبداً. يمكنك معاينة ما سيُرسل بالضبط قبل الموافقة."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "انتهت صلاحية هذا الطلب. ابدأ من جديد من صفحة المنتدى."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "عرض السجلات"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "يطلب تقرير الخطأ الخاص بك على منتدى Warren (الموضوع %(topicId)d) إرفاق السجلات التقنية للتطبيق للمساعدة في تشخيص المشكلة."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "يطلب تقرير الخطأ الجديد الذي تكتبه حالياً على منتدى Warren إرفاق السجلات التقنية للتطبيق للمساعدة في تشخيص المشكلة."
+
+#. Status line confirming traffic obfuscation is on.
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr "إخفاء الهوية مفعّل."
+
+#. Status line shown if traffic obfuscation is off.
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr "إخفاء الهوية غير مفعّل حاليًا."
+
+#. Explains what obfuscation does and why it cannot be turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
+msgstr "لتجاوز الرقابة، يموّه Warren النفق ليبدو تصفحًا عاديًا للويب: يظهر على الشبكة كحركة متصفح عادية نحو موقع ويب عادي (HTTP/3 على المنفذ 443). لا يمكن إيقاف إخفاء الهوية، لأن الحركة المميزة يمكن حجبها."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "تضيف ميزة %(daita)s ضوضاء إلى الشبكة وتجعل جميع الحزم بالحجم نفسه، ما يجعل معرفة المواقع التي تزورها أو الأشخاص الذين تتواصل معهم أصعب بكثير."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
+msgstr "ميزة %(daita)s غير مُفعَّلة على الخادم الحالي: هذا الاتصال غير محمي بها. أعد الاتصال أو اختر موقعًا مختلفًا."
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "حتى مع التشفير، يمكن للذكاء الاصطناعي تحليل حزم البيانات الداخلة إلى جهازك والخارجة منه للكشف عن نشاطك."
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "ملاحظة: يزيد ذلك من حركة بيانات الشبكة وقد يخفض السرعة ويرفع زمن الاستجابة ويقلل عمر البطارية. استخدمه بحذر مع الباقات المحدودة."

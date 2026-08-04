@@ -40,7 +40,7 @@ enum ApplicationConfiguration {
         let filteredFilePaths: [URL] =
             filePathsInDirectory?.compactMap { path in
                 let pathIsLog = path.split(separator: ".").last == "log"
-                // Pattern should be "<Target Bundle ID>_", eg. "net.mullvad.MullvadVPN_".
+                // Pattern should be "<Target Bundle ID>_", eg. "com.warrenbrowse.vpn.ios_".
                 let pathBelongsToTarget = path.contains("\(target.bundleIdentifier)_")
 
                 return pathIsLog && pathBelongsToTarget ? containerURL.appendingPathComponent(path) : nil
@@ -62,21 +62,33 @@ enum ApplicationConfiguration {
     // Maximum file size for writing and reading logs.
     static let logMaximumFileSize: UInt64 = 131_072  // 128 kB.
 
+    // The website auto-detects the browser language, so the URLs below carry
+    // no language path segment; the `language` parameters are kept for call
+    // sites but unused.
+
     /// Privacy policy URL.
-    static func privacyPolicyLink(for language: String) -> String {
-        "https://\(Self.hostName)/\(language)/help/privacy-policy/"
+    static func privacyPolicyLink(for _: String) -> String {
+        "https://warren.ro/confidentialite"
     }
 
-    /// Make a start regarding  policy URL.
-    static func privacyGuidesURL(for language: String) -> URL {
-        URL(string: "https://\(Self.hostName)/\(language)/help/first-steps-towards-online-privacy/")!
+    /// Privacy first-steps guide URL.
+    static func privacyGuidesURL(for _: String) -> URL {
+        URL(string: "https://warren.ro/no-log")!
     }
 
     /// FAQ & Guides URL.
-    static func faqAndGuidesURL(for language: String) -> URL {
-        URL(string: "https://\(Self.hostName)/\(language)/help/tag/mullvad-app/")!
+    static func faqAndGuidesURL(for _: String) -> URL {
+        URL(string: "https://warren.ro/faq")!
     }
 
-    /// Maximum number of devices per account.
-    static let maxAllowedDevices = 5
+    /// Public help page (guest triage form, no account needed). Shown
+    /// under onboarding and login errors, matching the desktop app.
+    static var helpURL: URL {
+        URL(string: "https://warren.ro/aide")!
+    }
+
+    /// Maximum number of simultaneously connected devices per account,
+    /// matching the backend session-lease cap (warren-config
+    /// MAX_DEVICES_PER_ACCOUNT) and the published terms.
+    static let maxAllowedDevices = 3
 }

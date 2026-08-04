@@ -9,7 +9,7 @@
 import Operations
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 
 class OperationObserverTests: XCTestCase {
     func testBlockObserver() throws {

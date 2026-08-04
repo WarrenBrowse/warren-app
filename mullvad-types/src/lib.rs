@@ -13,6 +13,8 @@ pub mod relay_selector;
 pub mod settings;
 pub mod states;
 pub mod version;
+pub mod warren_identity;
+pub mod warren_pubkey;
 pub mod wireguard;
 
 mod custom_tunnel;

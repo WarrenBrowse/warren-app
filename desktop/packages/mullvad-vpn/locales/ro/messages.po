@@ -1,0 +1,4345 @@
+# Romanian translation of Warren VPN
+# Generated via DeepL API EN→RO with Warren EN-RO glossary.
+# Needs native-speaker review for: plural form 2 ("de" insertion),
+# tu/dumneavoastră register consistency, and gender agreements.
+msgid ""
+msgstr ""
+"Project-Id-Version: warren-app\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: ro\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : (n==0 || (n%100>0 && n%100<20)) ? 1 : 2);\n"
+
+
+msgid "%(amount)d more..."
+msgstr "%(amount)d mai mult..."
+
+msgid "%(duration)s was added, account paid until %(expiry)s."
+msgstr "%(duration)s a fost adăugat, contul fiind achitat până la data de %(expiry)s."
+
+#. The label for the QUIC port option.
+#. Available placeholders:
+#. %(wireguard)s - will be replaced with QUIC
+msgid "%(wireguard)s port"
+msgstr "%(wireguard)s port"
+
+msgid "1 day"
+msgid_plural "%d days"
+msgstr[0] "1 zi"
+msgstr[1] "%d zile"
+msgstr[2] "%d de zile"
+
+msgid "1 day left"
+msgid_plural "%d days left"
+msgstr[0] "Mai este o zi"
+msgstr[1] "%d zile rămase"
+msgstr[2] "%d de zile rămase"
+
+msgid "1 month"
+msgid_plural "%d months"
+msgstr[0] "1 lună"
+msgstr[1] "%d luni"
+msgstr[2] "%d de luni"
+
+msgid "1 month left"
+msgid_plural "%d months left"
+msgstr[0] "Mai este o lună"
+msgstr[1] "%d luni rămase"
+msgstr[2] "%d de luni rămase"
+
+msgid "1 year"
+msgid_plural "%d years"
+msgstr[0] "1 an"
+msgstr[1] "%d ani"
+msgstr[2] "%d de ani"
+
+msgid "1 year left"
+msgid_plural "%d years left"
+msgstr[0] "Mai este un an"
+msgstr[1] "%d ani rămași"
+msgstr[2] "%d de ani rămași"
+
+msgid "Account paid until %(expiry)s."
+msgstr "Contul este achitat până la data de %(expiry)s."
+
+msgid "Account settings"
+msgstr "Setări cont"
+
+msgid "Add"
+msgstr "Adăugați"
+
+msgid "Any"
+msgstr "Oricare"
+
+msgid "Apply"
+msgstr "Aplicați"
+
+msgid "Automatic"
+msgstr "Automat"
+
+msgid "Back"
+msgstr "Înapoi"
+
+msgid "BLOCKED CONNECTION"
+msgstr "CONEXIUNE BLOCATĂ"
+
+msgid "Blocking internet"
+msgstr "Blocarea accesului la internet"
+
+msgid "Buy credit"
+msgstr "Cumpărați credit"
+
+msgid "Buy more credit"
+msgstr "Cumpărați mai mult credit"
+
+msgid "Cancel"
+msgstr "Anulați"
+
+msgid "Cipher"
+msgstr "Cod"
+
+msgid "Clear"
+msgstr "Șterge"
+
+msgid "Close"
+msgstr "Închide"
+
+msgid "Connect"
+msgstr "Conectați-vă"
+
+msgid "Connected"
+msgstr "Conectat"
+
+msgid "CONNECTED"
+msgstr "CONECTAT"
+
+msgid "Connecting"
+msgstr "Conectare"
+
+msgid "CONNECTING..."
+msgstr "SE CONECTEAZĂ..."
+
+msgid "Create"
+msgstr "Creați"
+
+#. Creating a secure connection that isn't breakable by quantum computers.
+msgid "CREATING QUANTUM SECURE CONNECTION"
+msgstr "CREAREA UNEI CONEXIUNI SECURIZATE CU TEHNOLOGIE CUANTICĂ"
+
+msgid "CREATING SECURE CONNECTION"
+msgstr "CREAREA UNEI CONEXIUNI SIGURE"
+
+msgid "Custom"
+msgstr "Personalizat"
+
+#. This refers to the Custom DNS setting in the VPN settings view. This is
+#. displayed when the feature is on.
+msgid "Custom DNS"
+msgstr "DNS personalizat"
+
+msgid "Default"
+msgstr "Implicit"
+
+msgid "Delete"
+msgstr "Șterge"
+
+msgid "Delete list"
+msgstr "Șterge lista"
+
+msgid "Direct only"
+msgstr "Numai direct"
+
+msgid "Disable"
+msgstr "Dezactivați"
+
+msgid "Disconnect"
+msgstr "Deconectați"
+
+msgid "Disconnect & quit"
+msgstr "Deconectați-vă și ieșiți"
+
+msgid "Disconnected"
+msgstr "Deconectat"
+
+msgid "DISCONNECTED"
+msgstr "DEZCONECTAT"
+
+msgid "Disconnecting"
+msgstr "Deconectare"
+
+msgid "DISCONNECTING..."
+msgstr "SE DECONECTEAZĂ..."
+
+msgid "Edit"
+msgstr "Editare"
+
+msgid "Enable"
+msgstr "Activați"
+
+msgid "Enable anyway"
+msgstr "Activați oricum"
+
+#. A toggle that refers to the setting "Direct only".
+msgid "Enable direct only"
+msgstr "Activați doar opțiunea directă"
+
+#. Error message shown trying to login but the app fails
+#. to fetch the list of registered devices.
+msgid "Failed to fetch list of devices"
+msgstr "Nu s-a putut prelua lista dispozitivelor"
+
+msgid "FAILED TO SECURE CONNECTION"
+msgstr "NU S-A REUȘIT STABILIREA CONEXIUNII"
+
+msgid "Filters"
+msgstr "Filtre"
+
+#. Button label for system settings.
+msgid "Go to System Settings"
+msgstr "Accesați Setări sistem"
+
+msgid "Got it!"
+msgstr "Am înțeles!"
+
+msgid "Import"
+msgstr "Import"
+
+msgid "IPv4"
+msgstr "IPv4"
+
+msgid "IPv6"
+msgstr "IPv6"
+
+msgid "Learn more"
+msgstr "Aflați mai multe"
+
+msgid "less than a day"
+msgstr "mai puțin de o zi"
+
+msgid "less than a day left"
+msgstr "mai e mai puțin de o zi"
+
+#. This refers to the multihop setting in the VPN settings view. This is
+#. displayed when the feature is on.
+msgid "Multihop"
+msgstr "Multihop"
+
+msgid "Name"
+msgstr "Nume"
+
+msgid "New list"
+msgstr "Listă nouă"
+
+msgid "Next"
+msgstr "Următorul"
+
+msgid "No matching servers found"
+msgstr "Nu s-au găsit servere corespunzătoare"
+
+msgid "No result for <b>%(searchTerm)s</b>."
+msgstr "Nu s-au găsit rezultate pentru <b>%(searchTerm)s</b>."
+
+msgid "None"
+msgstr "Niciuna"
+
+msgid "Off"
+msgstr "Oprit"
+
+msgid "OK"
+msgstr "Bine"
+
+msgid "On"
+msgstr "Pe"
+
+msgid "Open URL"
+msgstr "Deschide adresa URL"
+
+msgid "Optional"
+msgstr "Opțional"
+
+msgid "Password"
+msgstr "Parolă"
+
+msgid "Port"
+msgstr "Port"
+
+#. This refers to the quantum resistance setting in the QUIC settings view.
+#. This is displayed when the feature is on.
+msgid "Quantum resistance"
+msgstr "Rezistență cuantică"
+
+#. The connection is secure and isn't breakable by quantum computers.
+msgid "QUANTUM SECURE CONNECTION"
+msgstr "CONEXIUNE SECURIZATĂ CU TEHNOLOGIE CUANTICĂ"
+
+msgid "Quit"
+msgstr "Ieși"
+
+msgid "Reconnect"
+msgstr "Reconectați-vă"
+
+#. Button label in confirmation dialog that confirms a remove action.
+msgid "Remove"
+msgstr "Eliminare"
+
+msgid "Remove from list"
+msgstr "Eliminați din listă"
+
+msgid "Required"
+msgstr "Obligatoriu"
+
+msgid "Save"
+msgstr "Salvare"
+
+msgid "Search for..."
+msgstr "Căutați..."
+
+#. Placeholder text for search field in select location view
+msgid "Search locations or servers"
+msgstr "Căutați locații sau servere"
+
+msgid "SECURE CONNECTION"
+msgstr "CONEXIUNE SECURIZATĂ"
+
+msgid "Settings"
+msgstr "Setări"
+
+msgid "System default"
+msgstr "Setarea implicită a sistemului"
+
+msgid "Test"
+msgstr "Test"
+
+msgid "Troubleshoot"
+msgstr "Depanare"
+
+msgid "Try a different search."
+msgstr "Încercați o altă căutare."
+
+msgid "Type"
+msgstr "Tip"
+
+msgid "Unblock"
+msgstr "Deblocați"
+
+msgid "Unknown"
+msgstr "Necunoscut"
+
+msgid "UNSECURED CONNECTION"
+msgstr "CONEXIUNE NESECURIZATĂ"
+
+msgid "Use"
+msgstr "Utilizare"
+
+msgid "Username"
+msgstr "Nume de utilizator"
+
+#. Text for screen readers to describe the LWO settings navigation button.
+#. Available placeholders:
+#. %(lwo)s - will be replaced with LWO
+msgctxt "accessibility"
+msgid "%(lwo)s settings"
+msgstr "%(lwo)s setări"
+
+msgctxt "accessibility"
+msgid "%(title)s, View loaded"
+msgstr "%(title)s, Imagine încărcată"
+
+#. Text for screen readers to describe the QUIC port settings navigation button.
+#. Available placeholders:
+#. %(wireguard)s - will be replaced with QUIC
+msgctxt "accessibility"
+msgid "%(wireguard)s port settings"
+msgstr "%(wireguard)s setări port"
+
+#. This is an accessibility label for a button that adds a location to a custom list.
+#. Available placeholders:
+#. %(location)s - The name of the location being added to the list.
+#. %(listName)s - The name of the custom list the location will be added to.
+msgctxt "accessibility"
+msgid "Add %(location)s to %(listName)s"
+msgstr "Adăugați %(location)s la %(listName)s"
+
+#. Accessibility label for button to add a location to a custom list.
+#. The placeholder is replaced with the name of the location.
+msgctxt "accessibility"
+msgid "Add %(locationName)s to custom list"
+msgstr "Adăugați „%(locationName)s” la lista personalizată"
+
+#. This is an accessibility label for a button that opens a dialog to create a new custom list.
+msgctxt "accessibility"
+msgid "Add a new custom list"
+msgstr "Adăugați o listă personalizată nouă"
+
+#. Accessibility description for button clearing the ownership filter.
+msgctxt "accessibility"
+msgid "Clear ownership filter"
+msgstr "Șterge filtrul de proprietate"
+
+msgctxt "accessibility"
+msgid "Close notification"
+msgstr "Închide notificarea"
+
+msgctxt "accessibility"
+msgid "Collapse %(location)s"
+msgstr "Reduce %(location)s"
+
+#. Accessibility label for a button that connects to a location.
+#. Available placeholders:
+#. %(location)s - The name of the location that will be connected to when the button is clicked.
+msgctxt "accessibility"
+msgid "Connect to %(location)s"
+msgstr "Accesați %(location)s"
+
+#. Provided to accessibility tools such as screenreaders to describe a button
+#. which copies the public key to the clipboard.
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Copiați cheia publică"
+
+#. Accessibility label for a carousel that explains the DAITA feature to the user.
+msgctxt "accessibility"
+msgid "DAITA information carousel"
+msgstr "Caruselul de informații DAITA"
+
+#. Accessibility label for button to delete a custom list.
+#. The placeholder is replaced with the name of the custom list.
+msgctxt "accessibility"
+msgid "Delete custom list %(listName)s"
+msgstr "Ștergeți lista personalizată d%(listName)s"
+
+#. Accessibility label for button to edit a custom list.
+#. The placeholder is replaced with the name of the custom list.
+msgctxt "accessibility"
+msgid "Edit custom list %(listName)s"
+msgstr "Editați lista personalizată %(listName)s"
+
+msgctxt "accessibility"
+msgid "Expand %(location)s"
+msgstr "Accesați %(location)s"
+
+#. This is used by screenreaders to communicate the "x" button next to a saved public key.
+#. Available placeholders:
+#. %(pubkey)s - the public key to the left of the button
+msgctxt "accessibility"
+msgid "Forget public key %(pubkey)s"
+msgstr "Uitați de %(pubkey)s cu cheie publică"
+
+#. Accessibility label for link to VPN settings where
+#. the user can change QUIC port.
+#. Available placeholders:
+#. %(wireGuard)s - Will be replaced with QUIC
+msgctxt "accessibility"
+msgid "Go to anti-censorship settings to change %(wireGuard)s port"
+msgstr "Accesați setările anti-cenzură pentru a modifica portul %(wireGuard)s"
+
+#. Accessibility label for link to app upgrade view.
+msgctxt "accessibility"
+msgid "Go to app update page"
+msgstr "Accesați pagina de actualizare a aplicației"
+
+#. Accessibility label for carousel indicators that allow navigation between slides.
+#. Available placeholders:
+#. %(index)s - Will be replaced with the slide index number.
+msgctxt "accessibility"
+msgid "Go to slide %(index)s"
+msgstr "Accesați diapozitivul %(index)s"
+
+#. Provided to accessibility tools such as screenreaders to describe
+#. the button which obscures the public key.
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Ascunde cheia publică"
+
+#. Alt text for an illustration showing VPN traffic with DAITA.
+msgctxt "accessibility"
+msgid "Illustration showing VPN traffic with DAITA enabled"
+msgstr "Ilustrație care prezintă traficul VPN cu funcția DAITA activată"
+
+#. Alt text for an illustration showing VPN traffic without DAITA.
+msgctxt "accessibility"
+msgid "Illustration showing VPN traffic without DAITA"
+msgstr "Ilustrație care prezintă traficul VPN fără DAITA"
+
+#. This is used by screenreaders to communicate the login button.
+msgctxt "accessibility"
+msgid "Login"
+msgstr "Autentificare"
+
+#. This is used by screenreaders to communicate logging in with a saved public key.
+#. Available placeholders:
+#. %(pubkey)s - the saved public key
+msgctxt "accessibility"
+msgid "Login with public key %(pubkey)s"
+msgstr "Autentificare cu cheia publică %(pubkey)s"
+
+msgctxt "accessibility"
+msgid "More information"
+msgstr "Mai multe informații"
+
+#. Accessibility label for link to go to download page.
+msgctxt "accessibility"
+msgid "New version available, click here to go to download page, opens externally"
+msgstr "Este disponibilă o nouă versiune; faceți clic aici pentru a accesa pagina de descărcare (se deschide într-o fereastră separată)"
+
+msgctxt "accessibility"
+msgid "New version available, click here to go to update view"
+msgstr "Este disponibilă o nouă versiune; faceți clic aici pentru a accesa pagina de actualizare"
+
+msgctxt "accessibility"
+msgid "New version installed, click here to see the changelog"
+msgstr "S-a instalat o nouă versiune; faceți clic aici pentru a vedea jurnalul de modificări"
+
+#. Accessibility label for a button that navigates to the next slide in a carousel.
+msgctxt "accessibility"
+msgid "Next slide"
+msgstr "Următorul slide"
+
+#. Accessibility label for button to open a custom list menu.
+#. The placeholder is replaced with the name of the custom list.
+msgctxt "accessibility"
+msgid "Open menu for %(listName)s"
+msgstr "Deschide meniul pentru „%(listName)s”"
+
+#. Accessibility label for button to open a location menu.
+#. The placeholder is replaced with the name of the location.
+#. Accessibility label for button to edit a geographical location.
+#. The placeholder is replaced with the name of the geographical location.
+msgctxt "accessibility"
+msgid "Open menu for %(locationName)s"
+msgstr "Deschide meniul pentru „%(locationName)s”"
+
+#. Label for button opening select location menu.
+msgctxt "accessibility"
+msgid "Open select location menu"
+msgstr "Deschide meniul de selectare a locației"
+
+#. Accessibility label for the button that opens the browser to buy credit.
+msgctxt "accessibility"
+msgid "Opens externally"
+msgstr "Se deschide într-o fereastră separată"
+
+#. Accessibility label for a button that navigates to the previous slide in a carousel.
+msgctxt "accessibility"
+msgid "Previous slide"
+msgstr "Diapozitivul anterior"
+
+#. Accessibility label for button to remove a location from a custom list.
+#. The first placeholder is replaced with the name of the location.
+#. The second placeholder is replaced with the name of the custom list.
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(customList)s"
+msgstr "Eliminați „%(location)s” de pe „%(customList)s”"
+
+#. Button action description provided to accessibility tools such as screen
+#. readers.
+#. Available placeholders:
+#. %(deviceName)s - The device name to remove.
+msgctxt "accessibility"
+msgid "Remove device named %(deviceName)s"
+msgstr "Eliminați dispozitivul numit „%(deviceName)s”"
+
+msgctxt "accessibility"
+msgid "Remove item"
+msgstr "Eliminați articolul"
+
+msgctxt "accessibility"
+msgid "Select location. Current location is %(location)s"
+msgstr "Selectați locația. Locația curentă este %(location)s"
+
+msgctxt "accessibility"
+msgid "Shadowsocks settings"
+msgstr "Setări Shadowsocks"
+
+#. Provided to accessibility tools such as screenreaders to describe
+#. the button which unobscures the public key.
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Afișați cheia publică"
+
+msgctxt "accessibility"
+msgid "UDP-over-TCP settings"
+msgstr "Setări UDP peste TCP"
+
+msgctxt "accessibility"
+msgid "Use the right arrow key to focus the settings button."
+msgstr "Folosiți tasta săgeată dreapta pentru a selecta butonul de setări."
+
+#. Title label in navigation bar
+msgctxt "account-view"
+msgid "Account"
+msgstr "Cont"
+
+#. Button label that opens the Keys
+#. backup view (= reveal/copy BIP39 mnemonic).
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Chei de rezervă"
+
+msgctxt "account-view"
+msgid "Currently unavailable"
+msgstr "Momentan indisponibil"
+
+#. Button label for logging out.
+msgctxt "account-view"
+msgid "Log out"
+msgstr "Deconectare"
+
+#. Link text in the account view to navigate to the manage devices view.
+msgctxt "account-view"
+msgid "Manage devices"
+msgstr "Gestionarea dispozitivelor"
+
+msgctxt "account-view"
+msgid "OUT OF TIME"
+msgstr "A EXPIRAT TIMPUL"
+
+msgctxt "account-view"
+msgid "Paid until"
+msgstr "Plătit până la"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Cheie publică"
+
+#. Shown while the saved card details are unknown.
+msgctxt "account-view"
+msgid "Active"
+msgstr "Activ"
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr "Reînnoire automată"
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
+msgstr "Ultima reînnoire: %(date)s"
+
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr "Cheie publică (adresa portofelului)"
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr "Se reînnoiește lunar, următoarea în jurul datei de %(date)s"
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr "Dezactivați"
+
+#. Page title for anti censorship settings view
+msgctxt "anti-censorship-view"
+msgid "Anti-censorship"
+msgstr "Împotriva cenzurii"
+
+#. The title for the obfuscation method selector.
+msgctxt "anti-censorship-view"
+msgid "Method"
+msgstr "Metodă"
+
+#. Second paragraph of description text in anti-censorship view
+msgctxt "anti-censorship-view"
+msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
+msgstr "Vă rugăm să rețineți că aceste metode nu îmbunătățesc performanța și pot crește gradul de utilizare a sistemului și consumul bateriei."
+
+#. First paragraph of description text in anti-censorship view
+msgctxt "anti-censorship-view"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "Aceste metode pot fi utile în situațiile în care nu puteți lua legătura cu Warren. Când este selectată opțiunea „Automat”, aplicația va încerca toate metodele până când una dintre ele va funcționa."
+
+msgctxt "api-access-methods-view"
+msgid "Add method"
+msgstr "Metoda Add"
+
+msgctxt "api-access-methods-view"
+msgid "Adding a new API access method also tests it."
+msgstr "Adăugarea unei noi metode de acces la API implică și testarea acesteia."
+
+msgctxt "api-access-methods-view"
+msgid "API reachable"
+msgstr "API accesibil"
+
+msgctxt "api-access-methods-view"
+msgid "API reachable, adding method…"
+msgstr "API accesibil, adăugare metodă…"
+
+msgctxt "api-access-methods-view"
+msgid "API reachable, saving method…"
+msgstr "API accesibil, metodă de salvare…"
+
+msgctxt "api-access-methods-view"
+msgid "API unreachable"
+msgstr "API-ul nu poate fi accesat"
+
+msgctxt "api-access-methods-view"
+msgid "API unreachable, add anyway?"
+msgstr "API-ul nu poate fi accesat, să adaug oricum?"
+
+msgctxt "api-access-methods-view"
+msgid "API unreachable, save anyway?"
+msgstr "API-ul nu poate fi accesat, să salvez oricum?"
+
+msgctxt "api-access-methods-view"
+msgid "Authentication"
+msgstr "Autentificare"
+
+#. %(save)s - Will be replaced with the translation for the word "Save".
+msgctxt "api-access-methods-view"
+msgid "Clicking “%(save)s” changes the in use method."
+msgstr "Dacă dai clic pe „%(save)s”, se schimbă metoda utilizată."
+
+msgctxt "api-access-methods-view"
+msgid "Delete %(name)s?"
+msgstr "Să șterg „%(name)s”?"
+
+msgctxt "api-access-methods-view"
+msgid "Edit method"
+msgstr "Metoda de editare"
+
+msgctxt "api-access-methods-view"
+msgid "Editing an API access method also tests it."
+msgstr "Modificarea unei metode de acces la API duce, de asemenea, la testarea acesteia."
+
+msgctxt "api-access-methods-view"
+msgid "Enter IP"
+msgstr "Introduceți adresa IP"
+
+msgctxt "api-access-methods-view"
+msgid "Enter name"
+msgstr "Introduceți numele"
+
+msgctxt "api-access-methods-view"
+msgid "Enter port"
+msgstr "Introduceți portul"
+
+msgctxt "api-access-methods-view"
+msgid "If you are not connected to our VPN, then the Encrypted DNS proxy will use your own non-VPN IP when connecting. The DoH servers are hosted by one of the following providers: Quad9 or Cloudflare."
+msgstr "Dacă nu sunteți conectat la VPN-ul nostru, proxy-ul DNS criptat va utiliza adresa IP proprie (fără VPN) la conectare. Serverele DoH sunt găzduite de unul dintre următorii furnizori: Quad9 sau Cloudflare."
+
+msgctxt "api-access-methods-view"
+msgid "In use"
+msgstr "În uz"
+
+msgctxt "api-access-methods-view"
+msgid "Local SOCKS5 server"
+msgstr "Server SOCKS5 local"
+
+msgctxt "api-access-methods-view"
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "Gestionați și adăugați metode personalizate pentru a accesa API-ul Warren."
+
+msgctxt "api-access-methods-view"
+msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
+msgstr "În anumite rețele, unde se aplică diverse forme de cenzură, este posibil ca serverele API să nu fie accesibile direct."
+
+msgctxt "api-access-methods-view"
+msgid "Please enter a valid IPv4 or IPv6 address."
+msgstr "Vă rugăm să introduceți o adresă IPv4 sau IPv6 validă."
+
+msgctxt "api-access-methods-view"
+msgid "Please enter a valid localhost port."
+msgstr "Vă rugăm să introduceți un port localhost valid."
+
+msgctxt "api-access-methods-view"
+msgid "Please enter a valid remote server port."
+msgstr "Vă rugăm să introduceți un port valid al serverului la distanță."
+
+msgctxt "api-access-methods-view"
+msgid "Please select a name for the access method not already in use."
+msgstr "Vă rugăm să alegeți un nume pentru metoda de acces care nu este deja utilizat."
+
+msgctxt "api-access-methods-view"
+msgid "Remote Server"
+msgstr "Server la distanță"
+
+msgctxt "api-access-methods-view"
+msgid "Server"
+msgstr "Server"
+
+msgctxt "api-access-methods-view"
+msgid "Server details"
+msgstr "Detalii despre server"
+
+msgctxt "api-access-methods-view"
+msgid "SOCKS5 local"
+msgstr "SOCKS5 local"
+
+msgctxt "api-access-methods-view"
+msgid "SOCKS5 remote"
+msgstr "SOCKS5 la distanță"
+
+msgctxt "api-access-methods-view"
+msgid "Testing method..."
+msgstr "Metoda de testare..."
+
+msgctxt "api-access-methods-view"
+msgid "Testing..."
+msgstr "Testare..."
+
+msgctxt "api-access-methods-view"
+msgid "The API could not be reached using the %(name)s method."
+msgstr "API-ul nu a putut fi accesat folosind metoda %(name)s."
+
+#. Part of a description of the 'Domain fronting' API access method
+#. which the app uses to reach Warren's API servers
+#. Available placeholders:
+#. %(domainFronting)s - Will be replaced with: 'Domain fronting'
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Aplicația comunică cu un server API Warren prin intermediul adresei %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "The app needs the remote server details, where your local SOCKS5 server will forward your traffic."
+msgstr "Aplicația are nevoie de datele serverului la distanță, către care serverul SOCKS5 local va redirecționa traficul."
+
+msgctxt "api-access-methods-view"
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "Aplicația trebuie să comunice cu un server API Warren pentru a vă autentifica, a prelua listele de servere și a efectua alte operațiuni esențiale."
+
+#. Part of a description of the 'Domain fronting' API access method
+#. which the app uses to reach Warren's API servers
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "CDN-ul utilizat este CDN77 de la Datapacket. CDN-ul poate monitoriza doar traficul TLS redirecționat prin proxy, nu și conținutul."
+
+msgctxt "api-access-methods-view"
+msgid "The in use API access method will change."
+msgstr "Metoda de acces la API utilizată în prezent se va modifica."
+
+msgctxt "api-access-methods-view"
+msgid "The TCP port where your local SOCKS5 server is listening."
+msgstr "Portul TCP pe care ascultă serverul SOCKS5 local."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "Acest lucru poate fi util în cazul în care API-ul este cenzurat, dar serverele-punte ale lui Warren nu sunt."
+
+#. Part of a description of the 'Domain fronting' API access method
+#. which the app uses to reach Warren's API servers
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Acest lucru poate fi util atunci când accesul direct și alte metode sunt blocate de cenzură."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when you are not affected by censorship."
+msgstr "Acest lucru poate fi util atunci când nu sunteți afectat de cenzură."
+
+msgctxt "api-access-methods-view"
+msgid "This feature allows you to circumvent that censorship by adding custom ways to access the API via proxies and similar methods."
+msgstr "Această funcție vă permite să ocoliți cenzura respectivă prin adăugarea unor modalități personalizate de accesare a API-ului prin intermediul unor servere proxy și al altor metode similare."
+
+msgctxt "api-access-methods-view"
+msgid "This is needed so our app can allow that traffic in the firewall."
+msgstr "Acest lucru este necesar pentru ca aplicația noastră să poată permite trecerea acelui trafic prin firewall."
+
+msgctxt "api-access-methods-view"
+msgid "Transport protocol"
+msgstr "Protocol de transport"
+
+msgctxt "api-access-methods-view"
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "Prin metoda „Direct”, aplicația comunică direct cu un server API Warren, fără proxy-uri intermediare."
+
+msgctxt "api-access-methods-view"
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "Prin metoda „Proxy DNS criptat”, aplicația va comunica cu API-ul nostru Warren prin intermediul unei adrese proxy. Pentru aceasta, aplicația preia o adresă de la un server DNS over HTTPS (DoH) și o utilizează pentru a accesa serverele noastre API."
+
+msgctxt "api-access-methods-view"
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "Prin metoda „Warren bridges”, aplicația comunică cu un server API Warren prin intermediul unui server Warren bridge. Acest lucru se realizează prin trimiterea traficului sub aspectul de ofuscare al Shadowsocks."
+
+#. Part of a description of the 'Domain fronting' API access method
+#. which the app uses to reach Warren's API servers
+#. Available placeholders:
+#. %(domainFronting)s - Will be replaced with: 'Domain fronting'
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Prin metoda de acces „%(domainFronting)s”, aplicația accesează API-ul Warren prin intermediul unui CDN, amestecând traficul cu o mulțime de alte fluxuri de trafic de internet, ceea ce face cenzurarea mai dificilă."
+
+#. Title of the app info view.
+msgctxt "app-info-view"
+msgid "App info"
+msgstr "Informații despre aplicație"
+
+#. Description for version list item when app is out of sync.
+msgctxt "app-info-view"
+msgid "App is out of sync. Please quit and restart."
+msgstr "Aplicația nu este sincronizată. Vă rugăm să o închideți și să o reporniți."
+
+#. Label for switch to toggle beta program.
+msgctxt "app-info-view"
+msgid "Beta program"
+msgstr "Programul beta"
+
+msgctxt "app-info-view"
+msgid "Enable to get notified when new beta versions of the app are released."
+msgstr "Activați opțiunea de a primi notificări atunci când sunt lansate noi versiuni beta ale aplicației."
+
+msgctxt "app-info-view"
+msgid "This option is unavailable while using a beta version."
+msgstr "Această opțiune nu este disponibilă atunci când se utilizează o versiune beta."
+
+#. Label for update available list item.
+msgctxt "app-info-view"
+msgid "Update available"
+msgstr "Este disponibilă o actualizare"
+
+#. Label for version list item.
+msgctxt "app-info-view"
+msgid "Version"
+msgstr "Versiune"
+
+#. Label for changelog list item.
+msgctxt "app-info-view"
+msgid "What’s new"
+msgstr "Noutăți"
+
+#. Status text displayed below a progress bar when the update is being downloaded
+#. with the estimated time of completion is within a few seconds.
+msgctxt "app-upgrade-view"
+msgid "A few seconds remaining..."
+msgstr "Au mai rămas câteva secunde..."
+
+#. Status text displayed below a progress bar when the update is being downloaded
+#. with the estimated time of completion represented in minutes.
+#. Available placeholders:
+#. %(minutes)s - Will be replaced with remaining minutes until download is complete
+msgctxt "app-upgrade-view"
+msgid "About %(minutes)s minutes remaining..."
+msgstr "Despre „%(minutes)s”, mai sunt câteva minute..."
+
+#. Status text displayed below a progress bar when the update is being downloaded
+#. with the estimated time of completion represented in seconds.
+#. Available placeholders:
+#. %(second)s - Will be replaced with remaining seconds until download is complete
+msgctxt "app-upgrade-view"
+msgid "About %(seconds)s seconds remaining..."
+msgstr "Despre%(seconds)s secunde rămase..."
+
+#. Label displayed when an error occurred due to the connection being blocked
+msgctxt "app-upgrade-view"
+msgid "Connection blocked. Try changing server or other settings."
+msgstr "Conexiunea a fost blocată. Încercați să schimbați serverul sau alte setări."
+
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or send a problem report."
+msgstr "Nu s-a putut deschide programul de instalare. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
+
+#. Button text to download and install an update
+msgctxt "app-upgrade-view"
+msgid "Download & install"
+msgstr "Descărcați și instalați"
+
+#. Status text displayed below a progress bar when the download of an update is complete
+msgctxt "app-upgrade-view"
+msgid "Download complete!"
+msgstr "Descărcarea s-a încheiat!"
+
+#. Status text displayed below a progress bar when the download of an update fails
+msgctxt "app-upgrade-view"
+msgid "Download failed"
+msgstr "Descărcarea a eșuat"
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
+msgstr "Descărcarea a eșuat. Vă rugăm să verificați conexiunea la internet sau setările firewall-ului și să încercați din nou sau să trimiteți un raport de eroare."
+
+#. Status text displayed below a progress bar when the download of an update has been paused
+#. Label displayed above a progress bar when the update is verified successfully
+msgctxt "app-upgrade-view"
+msgid "Download paused"
+msgstr "Descărcarea a fost întreruptă"
+
+#. Label displayed above a progress bar informing the user which server
+#. the update is downloading from
+msgctxt "app-upgrade-view"
+msgid "Downloading from: %(server)s"
+msgstr "Descărcare de pe: %(server)s"
+
+#. Label displayed above a progress bar when a download is in progress
+msgctxt "app-upgrade-view"
+msgid "Downloading..."
+msgstr "Se descarcă..."
+
+#. Link shown to optionally manually download the update
+#. due to repeated errors in the upgrade process.
+msgctxt "app-upgrade-view"
+msgid "Having problems? Try downloading the app from our website"
+msgstr "Aveți probleme? Încercați să descărcați aplicația de pe site-ul nostru"
+
+#. Button text to install an update
+msgctxt "app-upgrade-view"
+msgid "Install update"
+msgstr "Instalați actualizarea"
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or send a problem report."
+msgstr "Programul de instalare s-a închis neașteptat. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
+
+#. Info about which directory the app update will be downloaded to
+msgctxt "app-upgrade-view"
+msgid "Installer will be downloaded to <b>%(cacheDir)s</b>."
+msgstr "Programul de instalare va fi descărcat în <b>%(cacheDir)s</b>."
+
+msgctxt "app-upgrade-view"
+msgid "Latest version: %(version)s"
+msgstr "Ultima versiune: %(version)s"
+
+#. Text displayed when there are no updates for this platform in the next app version
+msgctxt "app-upgrade-view"
+msgid "No updates or changes were made in this release for this platform."
+msgstr "În această versiune nu s-au efectuat actualizări sau modificări pentru această platformă."
+
+#. Button text to pause the download of an update
+msgctxt "app-upgrade-view"
+msgid "Pause"
+msgstr "Pauză"
+
+#. Button text to report a problem
+msgctxt "app-upgrade-view"
+msgid "Report a problem"
+msgstr "Raportați o problemă"
+
+#. Button text to resume updating
+msgctxt "app-upgrade-view"
+msgid "Resume"
+msgstr "CV"
+
+#. Button text to try again
+msgctxt "app-upgrade-view"
+msgid "Retry"
+msgstr "Reîncercați"
+
+#. Button text to try download again
+msgctxt "app-upgrade-view"
+msgid "Retry download"
+msgstr "Reîncercați descărcarea"
+
+#. Status text displayed below a progress bar when the download of an update is starting
+msgctxt "app-upgrade-view"
+msgid "Starting download..."
+msgstr "Se începe descărcarea..."
+
+#. Button text to when starting the installer for an update
+msgctxt "app-upgrade-view"
+msgid "Starting installer..."
+msgstr "Se pornește programul de instalare..."
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or send a problem report."
+msgstr "A apărut o eroare necunoscută. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
+
+#. Title in navigation bar
+#. Main title for the update available view
+msgctxt "app-upgrade-view"
+msgid "Update available"
+msgstr "Este disponibilă o actualizare"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or send a problem report."
+msgstr "Verificarea a eșuat. Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
+
+#. Label displayed above a progress bar when the update is verified successfully
+msgctxt "app-upgrade-view"
+msgid "Verification successful!"
+msgstr "Verificarea s-a efectuat cu succes!"
+
+#. Label displayed above a progress bar when the update is being verified
+msgctxt "app-upgrade-view"
+msgid "Verifying installer..."
+msgstr "Se verifică programul de instalare..."
+
+#. Heading which shows the version of the app which can be upgraded to.
+#. Available placeholders:
+#. %(version)s - The new version of the app.
+msgctxt "app-upgrade-view"
+msgid "Version %(version)s"
+msgstr "Versiunea%(version)s"
+
+#. The user has the latest version of the app and does not need to be update
+msgctxt "app-upgrade-view"
+msgid "You are using the latest version"
+msgstr "Folosiți cea mai recentă versiune"
+
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or report the problem on our community forum."
+msgstr "Nu s-a putut deschide programul de instalare. Vă rugăm să încercați din nou sau să raportați problema pe forumul nostru."
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
+msgstr "Descărcarea a eșuat. Vă rugăm să verificați conexiunea sau setările firewall-ului și să încercați din nou ori să raportați problema pe forumul nostru."
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
+msgstr "Programul de instalare s-a închis neașteptat. Vă rugăm să încercați din nou sau să raportați problema pe forumul nostru."
+
+#. Button text to report a problem on the community forum
+msgctxt "app-upgrade-view"
+msgid "Report a problem on the forum"
+msgstr "Raportați problema pe forum"
+
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr "Această versiune Warren nu mai este acceptată. Pentru a vă păstra conexiunea protejată, trebuie să actualizați aplicația pentru a o folosi în continuare."
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
+msgstr "A apărut o eroare necunoscută. Vă rugăm să încercați din nou sau să raportați problema pe forumul nostru."
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr "Actualizare necesară"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or report the problem on our community forum."
+msgstr "Verificarea a eșuat. Vă rugăm să încercați din nou sau să raportați problema pe forumul nostru."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: account is out of time"
+msgstr "Blocarea accesului la internet: contul a expirat"
+
+msgctxt "auth-failure"
+msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
+msgstr "Există prea multe conexiuni simultane pe acest cont. Deconectați un alt dispozitiv sau încercați să vă reconectați în scurt timp."
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please send a problem report."
+msgstr "Nu se poate autentifica contul. Vă rugăm să trimiteți un raport de eroare."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "V-ați autentificat cu o cheie publică nevalidă. Vă rugăm să vă deconectați și să încercați cu o altă cheie."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blocarea accesului la internet: accesul dvs. a fost suspendat pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
+msgstr "Blocarea accesului la internet: accesul dvs. a fost suspendat pentru abuz pe un port redirecționat. Contactați asistența dacă considerați că este o greșeală."
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please report the problem on our community forum."
+msgstr "Nu se poate autentifica contul. Vă rugăm să raportați problema pe forumul nostru."
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr "Despre versiunea beta Warren"
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr "BETA"
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr "Rețea beta gratuită, lățime de bandă limitată"
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr "Rețea beta gratuită, viteză limitată la %(mbps)d Mbps"
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr "Funcționează pe o rețea separată, cu lățimea de bandă limitată la %(mbps)d Mbps."
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr "Funcționează pe o rețea separată, cu lățime de bandă limitată."
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr "Împărtășiți-vă părerea pe forum"
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr "Acestea nu sunt condițiile finale ale serviciului: rețeaua la viteză maximă este un produs plătit separat."
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr "Această aplicație folosește versiunea beta gratuită Warren, care ne ajută să validăm Warren în condiții reale."
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
+msgstr "Versiunea beta Warren"
+
+#. Text displayed when there are no updates for this platform in the app version
+msgctxt "changelog-view"
+msgid "No updates or changes were made in this release for this platform."
+msgstr "În această versiune nu s-au efectuat actualizări sau modificări pentru această platformă."
+
+#. Heading for the view of the changes and updates in the
+#. current version compared to the old version.
+msgctxt "changelog-view"
+msgid "What’s new"
+msgstr "Noutăți"
+
+#. The selected location label displayed on the main view, when a user selected a specific host to connect to.
+#. Example: Malmö (se-mma-001)
+#. Available placeholders:
+#. %(city)s - a city name
+#. %(hostname)s - a hostname
+msgctxt "connect-container"
+msgid "%(city)s (%(hostname)s)"
+msgstr "%(city)s (%(hostname)s)"
+
+#. This is used as a feature indicator to show that DAITA is enabled through
+#. multihop.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: Multihop"
+msgstr "%(DAITA)să: Multihop"
+
+msgctxt "connect-view"
+msgid "Active features"
+msgstr "Funcții active"
+
+msgctxt "connect-view"
+msgid "Congrats!"
+msgstr "Felicitări!"
+
+msgctxt "connect-view"
+msgid "Connection details"
+msgstr "Detalii privind conexiunea"
+
+#. Button label for disconnecting from the VPN.
+msgctxt "connect-view"
+msgid "Disconnect"
+msgstr "Deconectați"
+
+msgctxt "connect-view"
+msgid "Either buy credit on our website or redeem a voucher."
+msgstr "Puteți cumpăra credit de pe site-ul nostru sau puteți valorifica un voucher."
+
+msgctxt "connect-view"
+msgid "Enter voucher code"
+msgstr "Introduceți voucherul promoțional"
+
+msgctxt "connect-view"
+msgid "Go ahead and start using the app to begin reclaiming your online privacy."
+msgstr "Nu ezitați să începeți să folosiți aplicația pentru a vă recâștiga confidențialitatea online."
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Iată cheia dvs. publică. Salvați-o!"
+
+#. Button label for opening privacy information link.
+msgctxt "connect-view"
+msgid "Learn about privacy"
+msgstr "Aflați mai multe despre confidențialitate"
+
+msgctxt "connect-view"
+msgid "Out of time"
+msgstr "A expirat timpul"
+
+#. Button label for navigating to the voucher redemption view.
+msgctxt "connect-view"
+msgid "Redeem voucher"
+msgstr "Valorificați voucherul"
+
+msgctxt "connect-view"
+msgid "Remember, turning it off will allow network traffic while the VPN is disconnected until you turn it back on under Advanced settings."
+msgstr "Rețineți că, dacă dezactivați această opțiune, traficul de rețea va fi permis în timp ce VPN-ul este deconectat, până când o veți reactiva din secțiunea Setări avansate."
+
+#. Button label for starting the app.
+msgctxt "connect-view"
+msgid "Start using the app"
+msgstr "Începeți să folosiți aplicația"
+
+msgctxt "connect-view"
+msgid "Time was successfully added"
+msgstr "Ora a fost adăugată cu succes"
+
+msgctxt "connect-view"
+msgid "To add more, you will need to disconnect and access the Internet with an unsecure connection."
+msgstr "În plus, va trebui să vă deconectați și să accesați internetul printr-o conexiune nesecurizată."
+
+msgctxt "connect-view"
+msgid "To continue your journey as a privacy ninja, visit our website to pick up other privacy-friendly habits and tools."
+msgstr "Pentru a vă continua parcursul ca „ninja al confidențialității”, vizitați site-ul nostru web pentru a descoperi alte obiceiuri și instrumente care vă protejează confidențialitatea."
+
+msgctxt "connect-view"
+msgid "To start using the app, you first need to add time to your account."
+msgstr "Pentru a începe să folosiți aplicația, trebuie mai întâi să vă încărcați credit în cont."
+
+msgctxt "connect-view"
+msgid "Voucher was successfully redeemed"
+msgstr "Voucherul a fost valorificat cu succes"
+
+msgctxt "connect-view"
+msgid "You have no more VPN time left on this account."
+msgstr "Nu mai aveți timp de utilizare a VPN-ului disponibil pe acest cont."
+
+msgctxt "connect-view"
+msgid "You need to disable \"Lockdown mode\" in order to access the Internet to add time."
+msgstr "Trebuie să dezactivați „Mod Blocare” pentru a putea accesa internetul și a adăuga timp."
+
+msgctxt "connect-view"
+msgid "You’re all set!"
+msgstr "Gata!"
+
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: not active on this server"
+msgstr "%(DAITA)s: nu este activă pe acest server"
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
+msgstr "Nu s-a putut reîmprospăta accesul beta. Verificați conexiunea și încercați din nou."
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "Redirecționarea porturilor: blocată"
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "Redirecționarea porturilor: port ocupat"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr "MTU redus"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr "MTU redus (%(mtu)s)"
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
+msgstr "Reîmprospătați accesul beta"
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
+msgstr "Această aplicație folosește versiunea beta gratuită Warren: nu este necesară nicio plată. Reîmprospătați accesul beta pentru a continua."
+
+#. The hostname line displayed below the country on the main screen
+#. Available placeholders:
+#. %(relay)s - the relay hostname
+#. %(entry)s - the entry relay hostname
+msgctxt "connection-info"
+msgid "%(relay)s via %(entry)s"
+msgstr "%(relay)s prin intermediul site-ului %(entry)s"
+
+msgctxt "connection-info"
+msgid "In"
+msgstr "În"
+
+msgctxt "connection-info"
+msgid "Out"
+msgstr "Afară"
+
+#. Label for disabled menu option when a location has already been added to a custom list.
+#. Available placeholders:
+#. %(customList)s - The name of the custom list the location has been added to.
+msgctxt "custom-list-feature"
+msgid "%(customList)s (Added)"
+msgstr "%(customList)s (Adăugat)"
+
+#. This is a label shown above a list of options.
+#. Available placeholder:
+#. %(locationName)s - The name of the location being added to the list.
+msgctxt "custom-list-feature"
+msgid "Add %(locationName)s to list"
+msgstr "Adăugați „%(locationName)s” la listă"
+
+#. Label for button to create a new custom list with a specific location.
+#. Available placeholder:
+#. %(locationName)s - The name of the location being added to the list.
+msgctxt "custom-list-feature"
+msgid "Add %(locationName)s to new list"
+msgstr "Adăugați „%(locationName)s” la lista nouă"
+
+#. This is a label shown above a list of options.
+#. Available placeholder:
+#. %(locationType) - Could be either "Country", "City" and "Relay"
+msgctxt "custom-list-feature"
+msgid "Add %(locationType)s to list"
+msgstr "Adăugați „%(locationType)s” la listă"
+
+msgctxt "custom-list-feature"
+msgid "City"
+msgstr "Oraș"
+
+msgctxt "custom-list-feature"
+msgid "Country"
+msgstr "Țară"
+
+#. Label for the input where the user can enter the name of a new custom list.
+msgctxt "custom-list-feature"
+msgid "Create list"
+msgstr "Creați o listă"
+
+#. Label for the option to delete a custom list in a menu.
+msgctxt "custom-list-feature"
+msgid "Delete"
+msgstr "Șterge"
+
+#. Confirmation message shown when the user tries to delete a custom list.
+#. Asks the user if they are sure they want to delete the list.
+#. Available placeholder:
+#. %(list)s - The name of the custom list that is about to be deleted.
+msgctxt "custom-list-feature"
+msgid "Do you want to delete the list %(list)s?"
+msgstr "Doriți să ștergeți lista „%(list)s”?"
+
+msgctxt "custom-list-feature"
+msgid "Edit list name"
+msgstr "Editați numele listei"
+
+#. Label for the option to edit a custom list in a menu.
+msgctxt "custom-list-feature"
+msgid "Edit name"
+msgstr "Editați numele"
+
+msgctxt "custom-list-feature"
+msgid "Enter a name for the list"
+msgstr "Introduceți un nume pentru listă"
+
+msgctxt "custom-list-feature"
+msgid "Enter a new name for the list"
+msgstr "Introduceți un nou nume pentru listă"
+
+msgctxt "custom-list-feature"
+msgid "List names must be unique"
+msgstr "Numele din listă trebuie să fie unice"
+
+msgctxt "custom-list-feature"
+msgid "Relay"
+msgstr "Releu"
+
+#. Button for continuing login process.
+msgctxt "device-management"
+msgid "Continue with login"
+msgstr "Continuați cu autentificarea"
+
+#. Label informing the user when a device was created.
+#. Available placeholders:
+#. %(createdDate)s - The creation date of the device.
+msgctxt "device-management"
+msgid "Created: %(createdDate)s"
+msgstr "Creat: %(createdDate)s"
+
+#. Label indicating that this device is the current device.
+msgctxt "device-management"
+msgid "Current device"
+msgstr "Dispozitivul curent"
+
+msgctxt "device-management"
+msgid "Device is inactive"
+msgstr "Dispozitivul este inactiv"
+
+msgctxt "device-management"
+msgid "Device name"
+msgstr "Numele dispozitivului"
+
+#. A label that will display the newly created device name to inform the user
+#. about it.
+#. Available placeholders:
+#. %(deviceName)s - The name of the current device
+msgctxt "device-management"
+msgid "Device name: %(deviceName)s"
+msgstr "Numele dispozitivului: %(deviceName)s"
+
+msgctxt "device-management"
+msgid "Failed to remove device"
+msgstr "Nu s-a putut dezinstala dispozitivul"
+
+#. Button label for navigating to login.
+msgctxt "device-management"
+msgid "Go to login"
+msgstr "Accesați pagina de autentificare"
+
+msgctxt "device-management"
+msgid "Going to login will unblock the Internet on this device."
+msgstr "Dacă vă autentificați, conexiunea la internet va fi restabilită pe acest dispozitiv."
+
+msgctxt "device-management"
+msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
+msgstr "Dacă vă deconectați, dispozitivul și numele acestuia vor fi șterse. Când vă veți reconecta, dispozitivul va primi un nume nou."
+
+#. Title label in navigation bar for the manage devices view.
+#. Title text in the manage devices view
+msgctxt "device-management"
+msgid "Manage devices"
+msgstr "Gestionarea dispozitivelor"
+
+msgctxt "device-management"
+msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
+msgstr "Vă rugăm să vă deconectați de la cel puțin unul dintre ele, eliminându-l din lista de mai jos. Puteți găsi numele dispozitivului corespunzător în secțiunea Setări cont a dispozitivului respectiv."
+
+#. Button label for confirming removing a device.
+msgctxt "device-management"
+msgid "Remove"
+msgstr "Eliminare"
+
+#. Text displayed above button which logs out another device.
+#. The text enclosed in "<b></b>" will appear bold.
+#. Available placeholders:
+#. %(deviceName)s - The name of the device to log out.
+msgctxt "device-management"
+msgid "Remove <em>%(deviceName)s?</em>"
+msgstr "Eliminare <em>%(deviceName)s?</em>"
+
+#. Page title informing user that enough devices has been removed to continue
+#. login process.
+msgctxt "device-management"
+msgid "Super!"
+msgstr "Super!"
+
+msgctxt "device-management"
+msgid "The device will be removed from the list and logged out."
+msgstr "Dispozitivul va fi eliminat din listă și deconectat."
+
+msgctxt "device-management"
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "Acesta este numele atribuit dispozitivului. Fiecare dispozitiv conectat la un cont Warren primește un nume unic care vă ajută să îl identificați atunci când vă gestionați dispozitivele în aplicație sau pe site-ul web."
+
+msgctxt "device-management"
+msgid "Time left: %(timeLeft)s"
+msgstr "Timp rămas: %(timeLeft)s"
+
+#. Page title informing user that the login failed due to too many registered
+#. devices on account.
+msgctxt "device-management"
+msgid "Too many devices"
+msgstr "Prea multe dispozitive"
+
+#. Button text to retry fetching devices.
+msgctxt "device-management"
+msgid "Try again"
+msgstr "Încercați din nou"
+
+#. Subtitle text in the manage devices view, explaining
+#. devices and what they can do in the manage devices view.
+msgctxt "device-management"
+msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
+msgstr "Vizualizați și gestionați toate dispozitivele conectate. Puteți avea până la 5 dispozitive conectate simultan la un singur cont. Fiecare dispozitiv primește un nume la conectare, pentru a vă ajuta să le deosebiți cu ușurință."
+
+msgctxt "device-management"
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "Poți avea până la 5 dispozitive conectate la un singur cont Warren."
+
+msgctxt "device-management"
+msgid "You can now continue logging in on this device."
+msgstr "Acum vă puteți autentifica în continuare pe acest dispozitiv."
+
+msgctxt "device-management"
+msgid "You have removed this device. To connect again, you will need to log back in."
+msgstr "Ați deconectat acest dispozitiv. Pentru a vă reconecta, va trebui să vă autentificați din nou."
+
+#. The message displayed to the user in case of critical error in the GUI
+#. Available placeholders:
+#. %(email)s - support email
+msgctxt "error-boundary-view"
+msgid "Something went wrong. Please contact us at %(email)s"
+msgstr "A apărut o eroare. Te rugăm să ne contactezi la adresa %(email)s"
+
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
+msgstr "Reîncărcați aplicația"
+
+#. Title label in navigation bar
+msgctxt "filter-nav"
+msgid "Filter"
+msgstr "Filtru"
+
+msgctxt "filter-view"
+msgid "All providers"
+msgstr "Toți furnizorii"
+
+msgctxt "filter-view"
+msgid "Warren owned only"
+msgstr "Warren deținea doar"
+
+msgctxt "filter-view"
+msgid "Owned"
+msgstr "Deținut"
+
+msgctxt "filter-view"
+msgid "Ownership"
+msgstr "Proprietate"
+
+msgctxt "filter-view"
+msgid "Providers"
+msgstr "Furnizori"
+
+msgctxt "filter-view"
+msgid "Rented"
+msgstr "Închiriat"
+
+msgctxt "filter-view"
+msgid "Rented only"
+msgstr "Doar închiriere"
+
+msgctxt "in-app-notifications"
+msgid "%(duration)s. Buy more credit."
+msgstr "%(duration)s. Cumpărați mai mult credit."
+
+#. Notification subtitle when the app upgrade is ready to install.
+#. Available placeholders:
+#. - %(suggestedUpgradeVersion)s: Upgrade version to be installed.
+msgctxt "in-app-notifications"
+msgid "%(suggestedUpgradeVersion)s is ready to be installed."
+msgstr "%(suggestedUpgradeVersion)s este gata de instalare."
+
+msgctxt "in-app-notifications"
+msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“ or disable “%(lockdownModeSettingName)s“ to unblock internet."
+msgstr "<a>%(lockdownModeSettingName)s</a> este activată. Vă rugăm să faceți clic pe „Conectare“ sau să dezactivați opțiunea „%(lockdownModeSettingName)s“ pentru a debloca accesul la internet."
+
+msgctxt "in-app-notifications"
+msgid "ACCOUNT CREDIT EXPIRES SOON"
+msgstr "SOLDUL CONTULUI EXPIRĂ ÎN CURÂND"
+
+msgctxt "in-app-notifications"
+msgid "APP IS OUT OF SYNC"
+msgstr "APLICAȚIA NU ESTE SINCRONIZATĂ"
+
+msgctxt "in-app-notifications"
+msgid "BETA UPDATE AVAILABLE"
+msgstr "ACTUALIZARE BETA DISPONIBILĂ"
+
+msgctxt "in-app-notifications"
+msgid "BLOCKING INTERNET"
+msgstr "BLOCAREA INTERNETULUI"
+
+#. Notification subtitle when the app upgrade is ready to install.
+msgctxt "in-app-notifications"
+msgid "Click here to install update."
+msgstr "Faceți clic aici pentru a instala actualizarea."
+
+#. Notification subtitle when the installer failed.
+msgctxt "in-app-notifications"
+msgid "Click here to retry"
+msgstr "Faceți clic aici pentru a încerca din nou"
+
+#. Notification subtitle when the download of the installer failed
+#. and the user can try downloading again.
+msgctxt "in-app-notifications"
+msgid "Click here to retry download"
+msgstr "Faceți clic aici pentru a încerca din nou descărcarea"
+
+msgctxt "in-app-notifications"
+msgid "Click here to see what’s new."
+msgstr "Faceți clic aici pentru a vedea noutățile."
+
+#. Link text to go to the app upgrade view
+msgctxt "in-app-notifications"
+msgid "Click here to update"
+msgstr "Faceți clic aici pentru a actualiza"
+
+#. Notification subtitle when the installer download failed.
+msgctxt "in-app-notifications"
+msgid "Could not download installer."
+msgstr "Nu s-a putut descărca programul de instalare."
+
+#. Generic notification subtitle when the app upgrade failed.
+msgctxt "in-app-notifications"
+msgid "Could not upgrade the app."
+msgstr "Nu s-a putut actualiza aplicația."
+
+#. Notification title when app upgrade is verifying the installer.
+msgctxt "in-app-notifications"
+msgid "DOWNLOAD COMPLETE! VERIFYING..."
+msgstr "DESCĂRCAREA S-A ÎNCHEIAT! SE VERIFICĂ..."
+
+#. Notification title when the installer download failed.
+msgctxt "in-app-notifications"
+msgid "DOWNLOAD FAILED"
+msgstr "DESCĂRCAREA A EȘUAT"
+
+#. Generic notification title when app upgrade is downloading the installer.
+msgctxt "in-app-notifications"
+msgid "DOWNLOADING UPDATE..."
+msgstr "SE DESCARCĂ ACTUALIZAREA..."
+
+#. Notification title when the app upgrade is in progress.
+#. Available placeholders:
+#. - %(appUpgradeDownloadProgressValue)s: The download progress value.
+msgctxt "in-app-notifications"
+msgid "DOWNLOADING UPDATE... %(appUpgradeDownloadProgressValue)s%%"
+msgstr "SE DESCARCĂ ACTUALIZAREA... %(appUpgradeDownloadProgressValue)s %%"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "IEȘIRE COMANDATĂ"
+
+#. The in-app banner displayed to the user when the app update is available.
+msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr "IMPORTANT"
+
+msgctxt "in-app-notifications"
+msgid "Install the latest app version to stay up to date."
+msgstr "Instalați cea mai recentă versiune a aplicației pentru a fi la curent cu noutățile."
+
+#. Notification title when the installer failed.
+msgctxt "in-app-notifications"
+msgid "INSTALLER FAILED"
+msgstr "INSTALAREA A EȘUAT"
+
+msgctxt "in-app-notifications"
+msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
+msgstr "E POSIBIL SĂ EXISTE O SCURGERI DE TRAFIC DE REȚEA"
+
+msgctxt "in-app-notifications"
+msgid "NEW DEVICE CREATED"
+msgstr "S-A CREAT UN NOU DISPOZITIV"
+
+msgctxt "in-app-notifications"
+msgid "NEW VERSION INSTALLED"
+msgstr "S-A INSTALAT O NOUĂ VERSIUNE"
+
+msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr "ANUNȚ"
+
+msgctxt "in-app-notifications"
+msgid "Please quit and restart the app."
+msgstr "Vă rugăm să închideți și să redeschideți aplicația."
+
+#. Notification title when the app upgrade is ready to install.
+msgctxt "in-app-notifications"
+msgid "READY TO INSTALL UPDATE"
+msgstr "GATA DE INSTALARE ACTUALIZARE"
+
+#. Accessibility label for the button to retry download of the installer.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
+msgstr "Citește mesajul complet"
+
+msgctxt "in-app-notifications"
+msgid "Retry download of the installer"
+msgstr "Reîncercați descărcarea programului de instalare"
+
+#. Accessibility label for the button to retry the installation.
+msgctxt "in-app-notifications"
+msgid "Retry installation"
+msgstr "Reîncercați instalarea"
+
+#. Button label to send a problem report.
+msgctxt "in-app-notifications"
+msgid "Send problem report"
+msgstr "Trimiteți un raport de problemă"
+
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "MENTENANȚĂ SERVER"
+
+#. Notification subtitle when the installer verification failed.
+msgctxt "in-app-notifications"
+msgid "The installer could not be verified."
+msgstr "Nu s-a putut verifica programul de instalare."
+
+#. Notification subtitle when the installer failed.
+msgctxt "in-app-notifications"
+msgid "The installer did not complete successfully."
+msgstr "Instalarea nu s-a finalizat cu succes."
+
+#. Notification subtitle when the installer failed.
+msgctxt "in-app-notifications"
+msgid "The installer did not start successfully."
+msgstr "Programul de instalare nu a pornit cu succes."
+
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
+#. Available placeholders:
+#. %(wireGuard)s - Will be replaced with QUIC
+msgctxt "in-app-notifications"
+msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
+msgstr "Portul %(wireGuard)s selectat nu este acceptat; vă rugăm să-l <a>modificați în setările VPN.</a>"
+
+#. Notification text when a new device has been created.
+#. Available placeholders:
+#. - %(deviceName)s: Name of created device.
+msgctxt "in-app-notifications"
+msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
+msgstr "Acest dispozitiv se numește acum <em>%(deviceName)s</em>. Vezi mai multe la <a>Gestionare dispozitive</a> din Cont."
+
+#. The in-app banner displayed to the user when the app beta update is
+#. available.
+#. Available placeholders:
+#. %(version)s - The version number of the new beta version.
+msgctxt "in-app-notifications"
+msgid "Try out the newest beta version (%(version)s)."
+msgstr "Încercați cea mai nouă versiune beta (%(version)s)."
+
+msgctxt "in-app-notifications"
+msgid "UNSUPPORTED VERSION"
+msgstr "VERSIUNE NEASISTATĂ"
+
+msgctxt "in-app-notifications"
+msgid "UPDATE AVAILABLE"
+msgstr "ACTUALIZARE DISPONIBILĂ"
+
+#. Generic notification title when the app upgrade failed.
+msgctxt "in-app-notifications"
+msgid "UPDATE FAILED"
+msgstr "ACTUALIZAREA A EȘUAT"
+
+#. Notification title when app upgrade is ready for the user to launch the installer.
+msgctxt "in-app-notifications"
+msgid "VERIFICATION COMPLETE! INSTALLER READY!"
+msgstr "VERIFICARE FINALIZATĂ! PROGRAMUL DE INSTALARE ESTE GATA!"
+
+#. Notification title when app upgrade is launching the installer.
+msgctxt "in-app-notifications"
+msgid "VERIFICATION COMPLETE! LAUNCHING INSTALLER..."
+msgstr "VERIFICAREA S-A ÎNCHEIAT! SE LANSEAZĂ PROGRAMUL DE INSTALARE..."
+
+#. Notification title when the installer verification failed.
+msgctxt "in-app-notifications"
+msgid "VERIFICATION FAILED"
+msgstr "VERIFICAREA A EȘUAT"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Ieșirea pe care ați folosit-o anterior nu mai este accesibilă. Warren v-a redirecționat automat către un server alternativ."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Serverul dvs. este în curs de actualizare. Warren v-a mutat automat pe alt server, nicio acțiune necesară."
+
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
+msgstr "REÎNNOIRE AUTOMATĂ ÎN CURÂND"
+
+msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr "MIGRARE AMÂNATĂ, PORT PĂSTRAT"
+
+msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "FĂRĂ CONEXIUNE LA INTERNET"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
+msgstr "Raportați pe forum"
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr "SERVERUL NU TRANSMITE TRAFICUL"
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr "Serverul a încetat să vă mai transmită traficul. Warren va schimba serverul sau se va reconecta automat."
+
+msgctxt "in-app-notifications"
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr "Durează mai mult decât de obicei. Warren încearcă în continuare; dacă nu se conectează, raportați problema pe forumul nostru."
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
+msgstr "PROBLEME LA CONECTARE?"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "Dispozitivul dvs. este offline. Warren se va reconecta automat imediat ce revine rețeaua."
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr "Portul dvs. redirecționat este ocupat pe toate serverele alternative, așa că Warren v-a păstrat pe cel curent. Este posibilă o scurtă întrerupere în timpul actualizării."
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr "Timpul dvs. Warren se reînnoiește în zilele următoare. Puteți dezactiva oricând această opțiune în setările contului."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Chei de rezervă"
+
+#. Shown when the daemon rejects the mnemonic
+#. (typically: invalid BIP39 word, bad checksum,
+#. wrong word count). User must check + retry.
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Serviciul a respins fraza mnemonică. Verificați ortografia și numărul de cuvinte, apoi încercați din nou."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Gata"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Introduceți fraza mnemonică BIP39 formată din 12 (sau 24) cuvinte, separate prin spații."
+
+#. Generic error when the daemon RPC fails. Shown
+#. only on transient connection issues.
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Nu s-a putut prelua fraza mnemonică de la demon."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Am pus-o la loc sigur."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Înțeleg că acest lucru îmi va înlocui definitiv identitatea actuală."
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Identitatea a fost restabilită. Noul tău portofel Warren este acum activ."
+
+#. Title label in navigation bar
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Chei"
+
+#. Shown when the daemon has no Warren BIP39 mnemonic
+#. stored (= identity never bootstrapped). User must
+#. log in or restore from mnemonic first.
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Nu există frază mnemonică disponibilă. Autentificați-vă sau restabiliți mai întâi o identitate."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Restaurare din frază mnemonică"
+
+#. Title label in navigation bar
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Restabilirea identității"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Se reîncarcă..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Afișați fraza mnemonică"
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "ATENȚIE: Această acțiune va ÎNLOCUI identitatea dvs. actuală. Orice abonament asociat identității actuale va fi irecuperabil."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "cuvinte"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Notați-l pe hârtie. Nu-l salvați niciodată în cloud, sub formă de captură de ecran sau într-un e-mail."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Fraza mnemonică din cele 12 cuvinte reprezintă SINGURA modalitate de a vă restabili contul Warren pe un alt dispozitiv. În cazul pierderii acestora, abonamentul dvs. nu mai poate fi recuperat."
+
+#. Status text app is trying to connect to the system service.
+msgctxt "launch-view"
+msgid "Connecting to Warren system service..."
+msgstr "Se realizează conexiunea la serviciul sistemului Warren..."
+
+#. Button label for opening dialog with troubleshooting details.
+msgctxt "launch-view"
+msgid "Details"
+msgstr "Detalii"
+
+#. List item in troubleshooting modal advising user disable third party antivirus.
+msgctxt "launch-view"
+msgid "Disabling third party antivirus software"
+msgstr "Dezactivarea programelor antivirus de la terți"
+
+#. Status text shown when app fails to start.
+msgctxt "launch-view"
+msgid "Failed to start the app, please try again or click “Details” for more info"
+msgstr "Nu s-a putut porni aplicația. Vă rugăm să încercați din nou sau să faceți clic pe „Detalii” pentru mai multe informații"
+
+#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work please send a problem report."
+msgstr "Dacă acești pași nu dau rezultate, vă rugăm să trimiteți un raport de eroare."
+
+#. Message in launch view when the background process permissions have been revoked.
+msgctxt "launch-view"
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Permisiunea pentru serviciul Warren VPN a fost revocată. Vă rugăm să accesați Setările sistemului și să activați opțiunea Warren VPN în cadrul setării „Permite în fundal”."
+
+#. List item in troubleshooting modal advising user to reinstall the app.
+msgctxt "launch-view"
+msgid "Reinstalling the app"
+msgstr "Reinstalarea aplicației"
+
+#. List item in troubleshooting modal advising user to restart background process.
+msgctxt "launch-view"
+msgid "Restarting the Warren background process"
+msgstr "Repornirea procesului de fundal Warren"
+
+#. List item in troubleshooting modal instructing user how to restart the background process.
+msgctxt "launch-view"
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "Repornirea procesului de fundal Warren făcând clic pe „Înapoi”, apoi pe „Încercați din nou”"
+
+#. List item in troubleshooting modal advising user to restart their computer.
+msgctxt "launch-view"
+msgid "Restarting your computer"
+msgstr "Repornirea computerului"
+
+#. Button label for sending a problem report.
+msgctxt "launch-view"
+msgid "Send problem report"
+msgstr "Trimiteți un raport de problemă"
+
+#. Status text shown when app is starting.
+msgctxt "launch-view"
+msgid "Starting up...."
+msgstr "Se pornește..."
+
+#. Message in troubleshooting modal when the background process failed to start.
+msgctxt "launch-view"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "Procesul de fundal Warren nu a putut fi pornit. Acest proces de fundal este responsabil pentru securitate, Kill Switch și tunelul VPN. Vă rugăm să încercați:"
+
+#. Button label for trying to restart the daemon again.
+msgctxt "launch-view"
+msgid "Try again"
+msgstr "Încercați din nou"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "Nu se poate stabili conexiunea cu serviciul sistemului Warren; este posibil ca conexiunea dumneavoastră să nu fie securizată. Vă rugăm să remediați problema sau să trimiteți un raport de eroare făcând clic pe butonul „Aflați mai multe”."
+
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "Dacă acești pași nu funcționează, vă rugăm să raportați problema pe forumul nostru."
+
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
+msgctxt "launch-view"
+msgid "Restore internet without VPN"
+msgstr "Restabiliți internetul fără VPN"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr "Nu se poate stabili conexiunea cu serviciul de sistem Warren; este posibil ca aceasta să nu fie securizată. Vă rugăm să remediați problema făcând clic pe butonul „Aflați mai multe” sau să raportați problema pe forumul nostru."
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
+msgstr "Warren VPN va restabili accesul la internet fără protecție VPN."
+
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr "Raportați pe forum"
+
+#. This is used for appending information about a location.
+#. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
+#. Available placeholders:
+#. %(location)s - Translated location name
+#. %(info)s - Information about the location
+msgctxt "locations-feature"
+msgid "%(location)s (%(info)s)"
+msgstr "%(location)s (%(info)s)"
+
+msgctxt "locations-feature"
+msgid "Disabling recents will also clear history."
+msgstr "Dacă dezactivați funcția „Recente”, se va șterge și istoricul."
+
+msgctxt "locations-feature"
+msgid "Entry"
+msgstr "Intrare"
+
+msgctxt "locations-feature"
+msgid "Exit"
+msgstr "Ieșire"
+
+#. This is a warning message shown when the app is blocking the users
+#. internet connection while logged out.
+#. Available placeholder:
+#. %(lockdownModeSettingName)s - The translation of "Lockdown mode"
+msgctxt "login-view"
+msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
+msgstr "<b>%(lockdownModeSettingName)s</b> este activată. Dezactiveaz-o pentru a debloca conexiunea."
+
+msgctxt "login-view"
+msgid "Account created"
+msgstr "Cont creat"
+
+msgctxt "login-view"
+msgid "Checking public key"
+msgstr "Verificarea cheii publice"
+
+#. Text in button that allows user to create a new account.
+msgctxt "login-view"
+msgid "Create a new account"
+msgstr "Creați un cont nou"
+
+#. Button which confirms the action to create a new account.
+msgctxt "login-view"
+msgid "Create new account"
+msgstr "Creați un cont nou"
+
+msgctxt "login-view"
+msgid "Creating account..."
+msgstr "Se creează contul..."
+
+#. Text that asks the user if they really want to create a new account.
+msgctxt "login-view"
+msgid "Do you want to create a new account?"
+msgstr "Doriți să creați un cont nou?"
+
+#. Text that asks the user if they really want to remove the saved public key.
+msgctxt "login-view"
+msgid "Do you want to remove the saved public key?"
+msgstr "Doriți să ștergeți cheia publică salvată?"
+
+msgctxt "login-view"
+msgid "Enter your public key"
+msgstr "Introduceți cheia publică"
+
+msgctxt "login-view"
+msgid "Error"
+msgstr "Eroare"
+
+msgctxt "login-view"
+msgid "Failed to create account"
+msgstr "Nu s-a putut crea contul"
+
+msgctxt "login-view"
+msgid "Finishing upgrade."
+msgstr "Finalizarea actualizării."
+
+#. Error message shown above login input when trying to login with a
+#. non-existent public key.
+msgctxt "login-view"
+msgid "Invalid public key"
+msgstr "Cheie publică nevalidă"
+
+msgctxt "login-view"
+msgid "Logged in"
+msgstr "Conectat"
+
+msgctxt "login-view"
+msgid "Logging in..."
+msgstr "Se efectuează autentificarea..."
+
+#. Label for the login button.
+msgctxt "login-view"
+msgid "Login"
+msgstr "Autentificare"
+
+msgctxt "login-view"
+msgid "Login failed"
+msgstr "Autentificarea a eșuat"
+
+#. Text shown between two horizontal lines above the "create account" button.
+#. In this context it is used to separate the users alternative of logging in
+#. or creating a new account, "Login or Create a new account".
+msgctxt "login-view"
+msgid "Or"
+msgstr "Sau"
+
+#. This is a warning message shown when the app is blocking the users
+#. internet connection while logged out.
+msgctxt "login-view"
+msgid "Our kill switch is currently blocking your connection."
+msgstr "Kill Switch-ul nostru vă blochează în prezent conexiunea."
+
+msgctxt "login-view"
+msgid "Please wait"
+msgstr "Vă rugăm să așteptați"
+
+#. Text that informs the user about the consequences of clearing the saved
+#. public key.
+msgctxt "login-view"
+msgid "Removing the saved public key from this device cannot be undone."
+msgstr "Ștergerea cheii publice salvate de pe acest dispozitiv este ireversibilă."
+
+#. Error message shown above login input when trying to login to an account
+#. with too many registered devices.
+msgctxt "login-view"
+msgid "Too many devices"
+msgstr "Prea multe dispozitive"
+
+msgctxt "login-view"
+msgid "Unknown error"
+msgstr "Eroare necunoscută"
+
+msgctxt "login-view"
+msgid "Upgrading..."
+msgstr "Se actualizează..."
+
+msgctxt "login-view"
+msgid "Valid public key"
+msgstr "Cheie publică validă"
+
+#. Text that informs the users about consequences of creating a new account.
+msgctxt "login-view"
+msgid "You already have a saved public key, by creating a new account the saved public key will be removed from this device. This cannot be undone."
+msgstr "Ai deja o cheie publică salvată; prin crearea unui cont nou, cheia publică salvată va fi ștersă de pe acest dispozitiv. Această acțiune nu poate fi anulată."
+
+#. The title for the LWO port selector.
+msgctxt "lwo-settings-view"
+msgid "Port"
+msgstr "Port"
+
+#. Text showing currently selected port.
+#. Available placeholders:
+#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
+msgctxt "lwo-settings-view"
+msgid "Port: %(port)s"
+msgstr "Link: %(port)s"
+
+msgctxt "lwo-settings-view"
+msgid "The automatic setting will randomly choose from the valid port ranges shown below."
+msgstr "Setarea automată va alege aleatoriu din intervalele de porturi valide prezentate mai jos."
+
+msgctxt "lwo-settings-view"
+msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
+msgstr "Portul personalizat poate avea orice valoare din intervalele valide: %(portRanges)s."
+
+#. Text describing the valid port ranges for a port selector.
+#. Available placeholders:
+#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
+msgctxt "lwo-settings-view"
+msgid "Valid ranges: %(portRanges)s"
+msgstr "Intervale valabile: %(portRanges)s"
+
+#. Title label in navigation bar
+msgctxt "navigation-bar"
+msgid "API access"
+msgstr "Acces la API"
+
+#. The system notification displayed to the user when the account credit is close to expiry.
+#. Available placeholder:
+#. %(duration)s - remaining time, e.g. "2 days"
+msgctxt "notifications"
+msgid "Account credit expires in %(duration)s. Buy more credit."
+msgstr "Creditul contului expiră în %(duration)s. Cumpărați mai mult credit."
+
+msgctxt "notifications"
+msgid "Account is out of time"
+msgstr "Contul a expirat"
+
+msgctxt "notifications"
+msgid "App is out of sync. Please quit and restart."
+msgstr "Aplicația nu este sincronizată. Vă rugăm să o închideți și să o reporniți."
+
+#. The system notification that notifies the user when a beta update is
+#. available.
+#. Available placeholders:
+#. %(version)s - The version number of the new beta version.
+msgctxt "notifications"
+msgid "Beta update available. Try out the newest beta version (%(version)s)."
+msgstr "Este disponibilă o actualizare beta. Încercați cea mai nouă versiune beta (%(version)s)."
+
+msgctxt "notifications"
+msgid "Buy more"
+msgstr "Cumpărați mai mult"
+
+msgctxt "notifications"
+msgid "Connected"
+msgstr "Conectat"
+
+#. The message showed when a server has been connected to.
+#. Available placeholder:
+#. %(location) - name of the server location we're connected to (e.g. "se-got-003")
+msgctxt "notifications"
+msgid "Connected to %(location)s"
+msgstr "Conectat la %(location)s"
+
+msgctxt "notifications"
+msgid "Connecting"
+msgstr "Conectare"
+
+#. The message showed when a server is being connected to.
+#. Available placeholder:
+#. %(location) - name of the server location we're connecting to (e.g. "se-got-003")
+msgctxt "notifications"
+msgid "Connecting to %(location)s"
+msgstr "Conectarea la %(location)s"
+
+msgctxt "notifications"
+msgid "Connection might be unsecured. App lost contact with system service, please troubleshoot."
+msgstr "Este posibil ca conexiunea să nu fie securizată. Aplicația a pierdut legătura cu serviciul de sistem; vă rugăm să rezolvați problema."
+
+msgctxt "notifications"
+msgid "Could not configure IPv6. Disable it in the app or enable it on your device."
+msgstr "Nu s-a putut configura IPv6. Dezactivați-l în aplicație sau activați-l pe dispozitivul dvs."
+
+msgctxt "notifications"
+msgid "Disconnected and unsecure"
+msgstr "Deconectat și nesigur"
+
+msgctxt "notifications"
+msgid "Failed to enable split tunneling."
+msgstr "Nu s-a reușit activarea Split tunneling-ului."
+
+msgctxt "notifications"
+msgid "Failed to enable split tunneling. Please try reconnecting or disable split tunneling."
+msgstr "Nu s-a reușit activarea Split tunneling-ului. Vă rugăm să încercați să vă reconectați sau să dezactivați Split tunneling-ul."
+
+#. Label for the system notification when the app encountered an error
+#. and will block network traffic until the error is resolved.
+#. Label for the in-app banner when the app encountered an error
+msgctxt "notifications"
+msgid "Failed to start %(splitTunneling)s. To unblock network traffic, disable split tunneling."
+msgstr "Nu s-a putut porni %(splitTunneling)s. Pentru a debloca traficul de rețea, dezactivați funcția „Split tunneling”."
+
+#. Label for notification when IPv4 is not available.
+msgctxt "notifications"
+msgid "IPv4 is not available, please try changing Device IP version setting."
+msgstr "IPv4 nu este disponibil; vă rugăm să încercați să modificați setarea versiunii IP a dispozitivului."
+
+#. Label for notification when IPv6 is not available.
+msgctxt "notifications"
+msgid "IPv6 is not available, please try changing Device IP version setting."
+msgstr "IPv6 nu este disponibil; vă rugăm să încercați să modificați setarea versiunii IP a dispozitivului."
+
+msgctxt "notifications"
+msgid "Lockdown mode active, connection blocked"
+msgstr "Mod Blocare este activ, conexiunea este blocată"
+
+msgctxt "notifications"
+msgid "No servers match your settings, try changing server or other settings."
+msgstr "Nu există servere care să corespundă setărilor dvs.; încercați să schimbați serverul sau alte setări."
+
+#. A link in the in-app banner to encourage the user to update the app.
+#. The in-app banner is is displayed to the user when the running app becomes unsupported.
+msgctxt "notifications"
+msgid "Please click here to update now"
+msgstr "Vă rugăm să faceți clic aici pentru a actualiza acum"
+
+msgctxt "notifications"
+msgid "Reconnecting"
+msgstr "Reconectare"
+
+msgctxt "notifications"
+msgid "The apps excluded with %(splitTunneling)s might not work properly right now."
+msgstr "Este posibil ca aplicațiile excluse prin funcția „%(splitTunneling)s” să nu funcționeze corect în acest moment."
+
+msgctxt "notifications"
+msgid "Unable to apply firewall rules."
+msgstr "Nu se pot aplica regulile de firewall."
+
+msgctxt "notifications"
+msgid "Unable to apply firewall rules. Try temporarily disabling any third-party antivirus or security software."
+msgstr "Nu se pot aplica regulile firewall-ului. Încercați să dezactivați temporar orice program antivirus sau de securitate de la terți."
+
+msgctxt "notifications"
+msgid "Unable to apply firewall rules. Try updating your kernel."
+msgstr "Nu se pot aplica regulile firewall-ului. Încercați să actualizați kernel-ul."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
+msgstr "Nu se poate bloca întregul trafic de rețea. Vă rugăm să remediați problema sau să trimiteți un raport de eroare."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
+msgstr "Nu se poate bloca întregul trafic de rețea. Încercați să dezactivați temporar orice program antivirus sau de securitate de la terți sau trimiteți un raport de eroare."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
+msgstr "Nu se poate bloca întregul trafic de rețea. Încercați să actualizați kernelul sau trimiteți un raport de eroare."
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "Nu se poate stabili conexiunea cu driverul de kernel Warren. Încercați să vă reconectați sau trimiteți un raport de eroare."
+
+msgctxt "notifications"
+msgid "Unable to resolve host of custom tunnel. Try changing your settings."
+msgstr "Nu se poate identifica gazda tunelului personalizat. Încercați să modificați setările."
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please send a problem report."
+msgstr "Nu se poate configura serverul DNS al sistemului. Vă rugăm să trimiteți un raport de eroare."
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please send a problem report."
+msgstr "Nu se poate iniția conexiunea prin tunel. Vă rugăm să trimiteți un raport de eroare."
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. This could be because of conflicts with VMware, please troubleshoot."
+msgstr "Nu se poate iniția conexiunea prin tunel. Aceasta s-ar putea datora unor conflicte cu VMware; vă rugăm să remediați problema."
+
+msgctxt "notifications"
+msgid "Update available. Install the latest app version to stay up to date"
+msgstr "Este disponibilă o actualizare. Instalați cea mai recentă versiune a aplicației pentru a fi la curent cu noutățile"
+
+msgctxt "notifications"
+msgid "Upgrade"
+msgstr "Actualizare"
+
+msgctxt "notifications"
+msgid "Your device is offline. The tunnel will automatically connect once your device is back online."
+msgstr "Dispozitivul dvs. este offline. Tunelul se va conecta automat imediat ce dispozitivul dvs. va fi din nou online."
+
+#. The in-app banner which is displayed to the user when the running app becomes unsupported.
+msgctxt "notifications"
+msgid "Your privacy might be at risk with this unsupported app version."
+msgstr "Confidențialitatea dvs. ar putea fi pusă în pericol de această versiune a aplicației care nu mai beneficiază de asistență."
+
+#. The system notification which is displayed to the user when the running app becomes unsupported.
+msgctxt "notifications"
+msgid "Your privacy might be at risk with this unsupported app version. Please update now."
+msgstr "Confidențialitatea dvs. ar putea fi pusă în pericol de această versiune a aplicației care nu mai beneficiază de asistență. Te rugăm să o actualizezi acum."
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr "Reînnoirea automată a fost facturată: 1 lună va fi adăugată la timpul dvs. Warren. Puteți dezactiva oricând reînnoirea automată în setările contului."
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr "Reînnoirea automată a eșuat. Actualizați metoda de plată sau cumpărați credit manual."
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
+msgstr "Reînnoirea automată a fost dezactivată pentru acest cont."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
+msgstr "Nu se poate bloca întregul trafic de rețea. Vă rugăm să remediați problema sau să o raportați pe forumul nostru."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
+msgstr "Nu se poate bloca întregul trafic de rețea. Încercați să dezactivați temporar orice program antivirus sau de securitate de la terți ori raportați problema pe forumul nostru."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
+msgstr "Nu se poate bloca întregul trafic de rețea. Încercați să actualizați kernelul sau raportați problema pe forumul nostru."
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
+msgstr "Nu se poate stabili conexiunea cu driverul de kernel Warren. Încercați să vă reconectați sau raportați problema pe forumul nostru."
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
+msgstr "Nu se poate configura serverul DNS al sistemului. Vă rugăm să raportați problema pe forumul nostru."
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
+msgstr "Nu se poate iniția conexiunea prin tunel. Vă rugăm să raportați problema pe forumul nostru."
+
+msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr "Banca dvs. solicită o confirmare pentru reînnoire. Deschideți Warren și cumpărați credit pentru a confirma."
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr "Rețeaua dvs. pare instabilă: tunelul s-a reconectat de prea multe ori la rând. Reconectați-vă după ce conexiunea se stabilizează."
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr "Timpul dvs. Warren se reînnoiește automat în jurul datei de %(date)s, la tariful lunar. Puteți dezactiva oricând reînnoirea automată în setările contului."
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr "Timpul dvs. Warren se reînnoiește în zilele următoare. Puteți dezactiva oricând reînnoirea automată în setările contului."
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Eroare la generarea hărții: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Redirecționarea porturilor"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Port public: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Reînnoirea în cadrul programului „%(countdown)s”"
+
+msgctxt "port-forwarding-view"
+msgid "Requesting port mapping..."
+msgstr "Se solicită redirecționarea porturilor..."
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Deschide un port public pe serverul de ieșire conectat și îl redirecționează către dispozitivul dvs. Util pentru aplicații peer-to-peer, partajare de fișiere sau servicii găzduite local."
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "Atribuie un port liber"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "Alege alt server de ieșire"
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr "dezactivat"
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr "Acest port public este deja ocupat pe acest server de ieșire. Păstrează-ți portul schimbând serverul de ieșire, lasă serverul să atribuie un port public liber sau scrie mai sus alt port."
+
+#. Cancel button label for voucher redemption.
+msgctxt "redeem-voucher-alert"
+msgid "Cancel"
+msgstr "Anulați"
+
+#. Input field label for voucher code.
+msgctxt "redeem-voucher-alert"
+msgid "Enter voucher code"
+msgstr "Introduceți voucherul promoțional"
+
+#. Button label for redeeming a voucher.
+msgctxt "redeem-voucher-alert"
+msgid "Redeem voucher"
+msgstr "Valorificați voucherul"
+
+msgctxt "redeem-voucher-view"
+msgid "An error occurred."
+msgstr "A apărut o eroare."
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Se pare că ați introdus o cheie publică în loc de un voucher. Dacă doriți să schimbați contul activ, vă rugăm să vă deconectați mai întâi."
+
+#. Button label for voucher redemption.
+msgctxt "redeem-voucher-view"
+msgid "Redeem"
+msgstr "Valorificați"
+
+msgctxt "redeem-voucher-view"
+msgid "Verifying voucher..."
+msgstr "Se verifică voucherul..."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has already been used."
+msgstr "Voucherul promoțional a fost deja utilizat."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code is invalid."
+msgstr "Voucherul nu este valabil."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher was successfully redeemed."
+msgstr "Voucherul a fost valorificat cu succes."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr "Voucherul promoțional a expirat."
+
+#. Title label in navigation bar
+msgctxt "select-language-nav"
+msgid "Select language"
+msgstr "Selectați limba"
+
+#. Title label in navigation bar
+msgctxt "select-location-nav"
+msgid "Select location"
+msgstr "Selectați locația"
+
+#. Message shown when the user has no custom lists.
+#. Instructs the user how to create a custom list.
+msgctxt "select-location-view"
+msgid "Add a custom list by clicking the “+” icon"
+msgstr "Adăugați o listă personalizată făcând clic pe pictograma „+”"
+
+msgctxt "select-location-view"
+msgid "All locations"
+msgstr "Toate locațiile"
+
+#. Message shown in the custom list section when the user has at least one custom list.
+#. Instructs the user how to add locations to the custom list.
+msgctxt "select-location-view"
+msgid "Click “+“ on a location to add it to a list"
+msgstr "Dă clic pe „+“ lângă o locație pentru a o adăuga la o listă"
+
+msgctxt "select-location-view"
+msgid "Custom lists"
+msgstr "Liste personalizate"
+
+msgctxt "select-location-view"
+msgid "Disable recents"
+msgstr "Dezactivați istoricul"
+
+#. Label for custom lists that don't have any locations added to them yet.
+msgctxt "select-location-view"
+msgid "Empty"
+msgstr "Gol"
+
+msgctxt "select-location-view"
+msgid "Enable recents"
+msgstr "Activați istoricul"
+
+msgctxt "select-location-view"
+msgid "Entry"
+msgstr "Intrare"
+
+msgctxt "select-location-view"
+msgid "Exit"
+msgstr "Ieșire"
+
+msgctxt "select-location-view"
+msgid "Filtered:"
+msgstr "Filtrat:"
+
+#. Message shown when the user has no recent locations.
+msgctxt "select-location-view"
+msgid "No recent selection history"
+msgstr "Nu există istoric recent al selecțiilor"
+
+#. Label for indicator that shows that obfuscation is being used as a filter.
+#. Available placeholders:
+#. %(obfuscation)s - type of obfuscation in use
+msgctxt "select-location-view"
+msgid "Obfuscation: %(obfuscation)s"
+msgstr "Ofuscare: %(obfuscation)s"
+
+msgctxt "select-location-view"
+msgid "Open %(daita)s settings"
+msgstr "Deschideți setările aplicației „%(daita)s”"
+
+msgctxt "select-location-view"
+msgid "Providers: %(numberOfProviders)d"
+msgstr "Furnizori: %(numberOfProviders)d"
+
+#. Title for section showing recently used locations.
+msgctxt "select-location-view"
+msgid "Recents"
+msgstr "Cele mai recente"
+
+msgctxt "select-location-view"
+msgid "Setting: %(settingName)s"
+msgstr "Link: %(settingName)s"
+
+#. Text showing how many locations are currently shown out of the total number of locations, e.g. "Showing 5 of 250"
+#. Available placeholders:
+#. %(visibleRelays)s: The number of relays currently shown
+#. %(totalRelays)s: The total number of relays
+msgctxt "select-location-view"
+msgid "Showing %(visibleRelays)s of %(totalRelays)s"
+msgstr "Se afișează %(visibleRelays)s din %(totalRelays)s"
+
+msgctxt "select-location-view"
+msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. To select an entry server, please first enable “%(directOnly)s” or disable \"%(daita)s\" in the settings."
+msgstr "Serverul de acces pentru %(multihop)s este în prezent suprascris de %(daita)s. Pentru a selecta un server de acces, vă rugăm să activați mai întâi opțiunea „%(directOnly)s” sau să dezactivați opțiunea „%(daita)s” din setări."
+
+msgctxt "settings-import"
+msgid "Clear all overrides"
+msgstr "Șterge toate suprascrierile"
+
+msgctxt "settings-import"
+msgid "Clear all overrides?"
+msgstr "Să ștergi toate suprascrierile?"
+
+msgctxt "settings-import"
+msgid "Clearing the imported overrides changes the server IPs, in the Select location view, back to default."
+msgstr "Ștergerea setărilor de suprascriere importate readuce adresele IP ale serverelor la valorile implicite în vizualizarea „Selectare locație”."
+
+msgctxt "settings-import"
+msgid "If you are having issues connecting to VPN servers, please contact support."
+msgstr "Dacă întâmpinați probleme la conectarea la serverele VPN, vă rugăm să contactați serviciul de asistență."
+
+msgctxt "settings-import"
+msgid "Import file"
+msgstr "Importare fișier"
+
+msgctxt "settings-import"
+msgid "Import files or text with new IP addresses for the servers in the Select location view."
+msgstr "Importați fișiere sau text cu noile adrese IP pentru serverele din vizualizarea „Selectați locația”."
+
+msgctxt "settings-import"
+msgid "Import of file %(fileName)s was successful, overrides are now active."
+msgstr "Importul fișierului „%(fileName)s” s-a realizat cu succes; modificările sunt acum active."
+
+msgctxt "settings-import"
+msgid "Import of file %(fileName)s was unsuccessful, please try again."
+msgstr "Importul fișierului „%(fileName)s” nu a reușit; vă rugăm să încercați din nou."
+
+msgctxt "settings-import"
+msgid "Import of text was successful, overrides are now active."
+msgstr "Importul textului s-a realizat cu succes, modificările sunt acum active."
+
+msgctxt "settings-import"
+msgid "Import of text was unsuccessful, please try again."
+msgstr "Importul textului nu a reușit; vă rugăm să încercați din nou."
+
+msgctxt "settings-import"
+msgid "IMPORT SUCCESSFUL"
+msgstr "IMPORTUL S-A EFECTUAT CU SUCCES"
+
+#. Title label in navigation bar
+msgctxt "settings-import"
+msgid "Import via text"
+msgstr "Import din text"
+
+msgctxt "settings-import"
+msgid "NO OVERRIDES IMPORTED"
+msgstr "NU S-AU IMPORTAT NICIUN FILE DE SUPRASCRIS"
+
+msgctxt "settings-import"
+msgid "On some networks, where various types of censorship are being used, our server IP addresses are sometimes blocked."
+msgstr "În unele rețele, unde se practică diverse forme de cenzură, adresele IP ale serverelor noastre sunt uneori blocate."
+
+msgctxt "settings-import"
+msgid "OVERRIDES ACTIVE"
+msgstr "SUPRASCRIERI ACTIVE"
+
+#. Title label in navigation bar. This is for a feature that lets
+#. users import server IP settings.
+msgctxt "settings-import"
+msgid "Server IP override"
+msgstr "Suprascrierea adresei IP a serverului"
+
+msgctxt "settings-import"
+msgid "To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view."
+msgstr "Pentru a rezolva această problemă, puteți importa un fișier sau un text, furnizat de echipa noastră de asistență, care conține adrese IP noi ce înlocuiesc adresele implicite ale serverelor din vizualizarea „Selectați locația”."
+
+#. Navigation button to the 'API access methods' view
+msgctxt "settings-view"
+msgid "API access"
+msgstr "Acces la API"
+
+#. Navigation button to the 'App info' view
+msgctxt "settings-view"
+msgid "App info"
+msgstr "Informații despre aplicație"
+
+msgctxt "settings-view"
+msgid "Multihop"
+msgstr "Multihop"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Redare proces de integrare"
+
+#. Title label in navigation bar
+msgctxt "settings-view"
+msgid "Settings"
+msgstr "Setări"
+
+#. Navigation button to the 'Support' view
+msgctxt "settings-view"
+msgid "Support"
+msgstr "Asistență"
+
+#. Label for the app info list item indicating that an update is available and can be downloaded
+msgctxt "settings-view"
+msgid "Update available"
+msgstr "Este disponibilă o actualizare"
+
+#. Navigation button to the 'User interface settings' view
+msgctxt "settings-view"
+msgid "User interface settings"
+msgstr "Setări ale interfeței cu utilizatorul"
+
+#. Navigation button to the 'VPN settings' view
+msgctxt "settings-view"
+msgid "VPN settings"
+msgstr "Setări VPN"
+
+msgctxt "settings-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
+msgstr "%(applicationName)s este problematic și nu poate fi exclus din tunelul VPN."
+
+#. Information about split tunneling not being supported on the system.
+#. Available placeholders:
+#. %(splitTunneling)s - will be replaced with Split tunneling
+msgctxt "split-tunneling-view"
+msgid "%(splitTunneling)s is not supported by your system."
+msgstr "%(splitTunneling)s nu este acceptat de sistemul dumneavoastră."
+
+msgctxt "split-tunneling-view"
+msgid "Add"
+msgstr "Adăugați"
+
+msgctxt "split-tunneling-view"
+msgid "All apps"
+msgstr "Toate aplicațiile"
+
+msgctxt "split-tunneling-view"
+msgid "Choose the apps you want to exclude from the VPN tunnel."
+msgstr "Alegeți aplicațiile pe care doriți să le excludeți din tunelul VPN."
+
+#. Link for learning more
+msgctxt "split-tunneling-view"
+msgid "Click here to learn more"
+msgstr "Faceți clic aici pentru mai multe informații"
+
+msgctxt "split-tunneling-view"
+msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
+msgstr "Dați clic pe o aplicație pentru a o deschide. Traficul acesteia va ocoli tunelul VPN până când o veți închide."
+
+msgctxt "split-tunneling-view"
+msgid "Enabled \"Full disk access\" and still having issues?"
+msgstr "Ați activat opțiunea „Acces complet la disc” și încă aveți probleme?"
+
+msgctxt "split-tunneling-view"
+msgid "Excluded apps"
+msgstr "Aplicații excluse"
+
+#. Button label for browsing applications with split tunneling.
+msgctxt "split-tunneling-view"
+msgid "Find another app"
+msgstr "Căutați o altă aplicație"
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
+msgstr "Dacă aplicația rulează deja, închideți-o %(applicationName)s înainte de a o lansa de aici. În caz contrar, s-ar putea să nu fie inclusă în tunelul VPN."
+
+#. Button label for launching an application with split tunneling.
+msgctxt "split-tunneling-view"
+msgid "Launch"
+msgstr "Lansare"
+
+msgctxt "split-tunneling-view"
+msgid "Open System Settings"
+msgstr "Deschideți Setările sistemului"
+
+#. This error message is shown if the user tries to launch a Linux desktop
+#. entry file that doesn't contain the required 'Exec' value.
+msgctxt "split-tunneling-view"
+msgid "Please send a problem report."
+msgstr "Vă rugăm să trimiteți un raport de eroare."
+
+#. This error message is shown if the user tries to launch an app that
+#. doesn't exist.
+#. This error message is shown if an application fails during startup.
+msgctxt "split-tunneling-view"
+msgid "Please try again or send a problem report."
+msgstr "Vă rugăm să încercați din nou sau să trimiteți un raport de eroare."
+
+msgctxt "split-tunneling-view"
+msgid "Restart Warren Service"
+msgstr "Repornirea serviciului Warren"
+
+#. Information about split tunneling being unavailable due to
+#. missing support in the user's operating system.
+#. Available placeholders:
+#. %(splitTunneling)s - will be replaced with Split tunneling
+msgctxt "split-tunneling-view"
+msgid "To use %(splitTunneling)s, please update to a Linux kernel version that supports cgroup v2."
+msgstr "Pentru a utiliza „%(splitTunneling)s”, vă rugăm să actualizați la o versiune a nucleului Linux care acceptă cgroup v2."
+
+msgctxt "split-tunneling-view"
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "Pentru a utiliza funcția de Split tunneling, vă rugăm să activați opțiunea „Acces complet la disc” pentru „Warren VPN” în setările de sistem ale macOS."
+
+#. Error message showed in a dialog when an application fails to launch.
+msgctxt "split-tunneling-view"
+msgid "Unable to launch selection. %(detailedErrorMessage)s"
+msgstr "Nu se poate lansa selecția. %(detailedErrorMessage)s"
+
+#. Button label for continuing problem report submission with an outdated app version.
+msgctxt "support-view"
+msgid "Continue anyway"
+msgstr "Continuați oricum"
+
+#. Button text to edit the message after a failed attempt to send the problem report.
+msgctxt "support-view"
+msgid "Edit message"
+msgstr "Editați mesajul"
+
+msgctxt "support-view"
+msgid "Failed to send"
+msgstr "Nu s-a putut trimite"
+
+#. Link to the webpage
+msgctxt "support-view"
+msgid "FAQs & Guides"
+msgstr "Întrebări frecvente și ghiduri"
+
+#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
+#. Available placeholders:
+#. %(email)s
+msgctxt "support-view"
+msgid "If needed we will contact you at %(email)s"
+msgstr "Dacă este necesar, vă vom contacta la adresa %(email)s"
+
+msgctxt "support-view"
+msgid "If you exit the form and try again later, the information you already entered will still be here."
+msgstr "Dacă ieșiți din formular și încercați din nou mai târziu, informațiile pe care le-ați introdus deja vor fi încă disponibile."
+
+#. Title label in navigation bar
+#. Navigation button to the 'Report a problem' help view
+msgctxt "support-view"
+msgid "Report a problem"
+msgstr "Raportați o problemă"
+
+#. Button label for sending the problem report.
+msgctxt "support-view"
+msgid "Send"
+msgstr "Trimite"
+
+#. Button label for sending the problem report without an email address.
+msgctxt "support-view"
+msgid "Send anyway"
+msgstr "Trimite oricum"
+
+msgctxt "support-view"
+msgid "Sending..."
+msgstr "Se trimite..."
+
+msgctxt "support-view"
+msgid "Sent"
+msgstr "Trimis"
+
+#. Title label in navigation bar
+msgctxt "support-view"
+msgid "Support"
+msgstr "Asistență"
+
+msgctxt "support-view"
+msgid "Thanks!"
+msgstr "Mulțumesc!"
+
+msgctxt "support-view"
+msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
+msgstr "Pentru a vă putea ajuta mai bine, vă rugăm să scrieți în engleză sau suedeză și să menționați din ce țară ne contactați."
+
+msgctxt "support-view"
+msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
+msgstr "Pentru a vă oferi un ajutor mai eficient, fișierul log al aplicației dvs. va fi atașat la acest mesaj. Datele dvs. vor rămâne în siguranță și confidențiale, deoarece sunt anonimizate înainte de a fi transmise printr-un canal criptat."
+
+#. Button label for retrying problem report submission after a failure.
+msgctxt "support-view"
+msgid "Try again"
+msgstr "Încercați din nou"
+
+#. Button label for updating the app to the latest version.
+msgctxt "support-view"
+msgid "Update app"
+msgstr "Actualizați aplicația"
+
+#. Button label for opening app logs.
+msgctxt "support-view"
+msgid "View app logs"
+msgstr "Vizualizați logurile aplicației"
+
+msgctxt "support-view"
+msgid "We will look into this."
+msgstr "Vom analiza această chestiune."
+
+msgctxt "support-view"
+msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
+msgstr "Sunteți pe punctul de a trimite raportul de problemă fără să ne oferiți o modalitate de a vă contacta. Dacă doriți să primiți un răspuns la raportul dumneavoastră, va trebui să introduceți o adresă de e-mail."
+
+msgctxt "support-view"
+msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
+msgstr "Folosești o versiune veche a aplicației. Te rugăm să o actualizezi și să verifici dacă problema persistă înainte de a trimite un raport."
+
+msgctxt "support-view"
+msgid "Your email (optional)"
+msgstr "Adresa dvs. de e-mail (opțional)"
+
+#. Link to the refund policy webpage
+msgctxt "support-view"
+msgid "Refund policy"
+msgstr "Politica de rambursare"
+
+msgctxt "tray-icon-context-menu"
+msgid "Disconnected from system service"
+msgstr "Deconectat de la serviciul de sistem"
+
+msgctxt "tray-icon-context-menu"
+msgid "Open %(mullvadVpn)s"
+msgstr "Accesați %(mullvadVpn)s"
+
+msgctxt "tray-icon-tooltip"
+msgid "%(city)s, %(country)s"
+msgstr "%(city)s, %(country)s"
+
+msgctxt "tray-icon-tooltip"
+msgid "Connected. %(location)s"
+msgstr "Conectat. %(location)s"
+
+msgctxt "tray-icon-tooltip"
+msgid "Connecting. %(location)s"
+msgstr "Conectare. %(location)s"
+
+msgctxt "troubleshoot"
+msgid "Disable split tunneling"
+msgstr "Dezactivați Split tunneling"
+
+msgctxt "troubleshoot"
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "Activați opțiunea „Acces complet la disc” pentru „Warren VPN” în setările de sistem ale macOS."
+
+msgctxt "troubleshoot"
+msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
+msgstr "Nu s-a reușit activarea Split tunneling-ului. Acest lucru se datorează faptului că aplicației îi lipsesc permisiunile de sistem. Ce puteți face:"
+
+msgctxt "troubleshoot"
+msgid "If these steps do not work please send a problem report."
+msgstr "Dacă acești pași nu dau rezultate, vă rugăm să trimiteți un raport de eroare."
+
+msgctxt "troubleshoot"
+msgid "If you have installed another VPN then try to uninstall that."
+msgstr "Dacă ați instalat un alt VPN, încercați să-l dezinstalați."
+
+msgctxt "troubleshoot"
+msgid "Make sure you have NF tables support."
+msgstr "Asigurați-vă că aveți suport pentru tabele NF."
+
+msgctxt "troubleshoot"
+msgid "Open system settings"
+msgstr "Deschide setările sistemului"
+
+msgctxt "troubleshoot"
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "Această eroare poate apărea atunci când un alt serviciu decât Warren actualizează în mod activ DNS-ul."
+
+msgctxt "troubleshoot"
+msgid "This might be caused by an outdated kernel."
+msgstr "Aceasta ar putea fi cauzată de un kernel învechit."
+
+msgctxt "troubleshoot"
+msgid "Try restarting your device."
+msgstr "Încercați să reporniți dispozitivul."
+
+msgctxt "troubleshoot"
+msgid "Try to reinstall VMware."
+msgstr "Încercați să reinstalați VMware."
+
+msgctxt "troubleshoot"
+msgid "Try to turn Wi-Fi Calling off in the FaceTime app settings and restart the Mac."
+msgstr "Încercați să dezactivați opțiunea „Apeluri prin Wi-Fi” din setările aplicației FaceTime și să reporniți Mac-ul."
+
+msgctxt "troubleshoot"
+msgid "Try to uninstall VMware."
+msgstr "Încercați să dezinstalați VMware."
+
+msgctxt "troubleshoot"
+msgid "Unable to communicate with the split tunnel driver."
+msgstr "Nu se poate stabili comunicarea cu driverul de Split tunneling."
+
+msgctxt "troubleshoot"
+msgid "Unable to start tunnel connection because of a failure when creating the tunnel device. This is often caused by conflicts with the VMware Bridge Protocol."
+msgstr "Nu se poate iniția conexiunea de tip tunel din cauza unei erori apărute la crearea dispozitivului de tunel. Această problemă este adesea cauzată de conflicte cu protocolul VMware Bridge."
+
+msgctxt "troubleshoot"
+msgid "Uninstall or disable other DNS, networking and ads/website blocking apps."
+msgstr "Dezinstalați sau dezactivați alte aplicații de tip DNS, de rețea și de blocare a reclamelor/site-urilor web."
+
+msgctxt "troubleshoot"
+msgid "Update your kernel."
+msgstr "Actualizați-vă kernelul."
+
+msgctxt "troubleshoot"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "Dacă acești pași nu funcționează, vă rugăm să raportați problema pe forumul nostru."
+
+msgctxt "tunnel-control"
+msgid "Connect"
+msgstr "Conectați-vă"
+
+msgctxt "tunnel-control"
+msgid "Switch location"
+msgstr "Schimbați locația"
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "Conexiune întreruptă"
+
+msgctxt "user-interface-settings-view"
+msgid "Animate map"
+msgstr "Harta animată"
+
+msgctxt "user-interface-settings-view"
+msgid "Animate map movements."
+msgstr "Animați mișcările hărții."
+
+msgctxt "user-interface-settings-view"
+msgid "Enable or disable system notifications. The critical notifications will always be displayed."
+msgstr "Activați sau dezactivați notificările de sistem. Notificările importante vor fi afișate întotdeauna."
+
+msgctxt "user-interface-settings-view"
+msgid "Enable to move the app around as a free-standing window."
+msgstr "Permite mutarea aplicației ca fereastră independentă."
+
+#. Navigation button to the 'Language' settings view
+msgctxt "user-interface-settings-view"
+msgid "Language"
+msgstr "Limba"
+
+msgctxt "user-interface-settings-view"
+msgid "Monochromatic tray icon"
+msgstr "Pictogramă monocromă pentru tavă"
+
+msgctxt "user-interface-settings-view"
+msgid "Notifications"
+msgstr "Notificări"
+
+msgctxt "user-interface-settings-view"
+msgid "Show only the tray icon when the app starts."
+msgstr "Afișați doar pictograma din bara de sistem la pornirea aplicației."
+
+msgctxt "user-interface-settings-view"
+msgid "Start minimized"
+msgstr "Pornește în modul minimizat"
+
+msgctxt "user-interface-settings-view"
+msgid "Unpin app from taskbar"
+msgstr "Deschide aplicația din bara de activități"
+
+msgctxt "user-interface-settings-view"
+msgid "Use a monochromatic tray icon instead of a colored one."
+msgstr "Folosiți o pictogramă monocromă pentru bara de activități, în loc de una colorată."
+
+#. Title label in navigation bar
+msgctxt "user-interface-settings-view"
+msgid "User interface settings"
+msgstr "Setări ale interfeței cu utilizatorul"
+
+msgctxt "vpn-settings-view"
+msgid "Add a server"
+msgstr "Adăugați un server"
+
+#. Button label to add a private IP DNS server despite warning.
+msgctxt "vpn-settings-view"
+msgid "Add anyway"
+msgstr "Adăugați oricum"
+
+#. Label for settings that enables ad blocking.
+msgctxt "vpn-settings-view"
+msgid "Ads"
+msgstr "Reclame"
+
+#. Label for settings that enables block of adult content.
+msgctxt "vpn-settings-view"
+msgid "Adult content"
+msgstr "Conținut pentru adulți"
+
+#. Label for list item that navigates to anti-censorship
+#. settings view.
+msgctxt "vpn-settings-view"
+msgid "Anti-censorship"
+msgstr "Împotriva cenzurii"
+
+msgctxt "vpn-settings-view"
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "Atenție: activarea acestei opțiuni va necesita întotdeauna o conexiune VPN Warren pentru a accesa internetul."
+
+msgctxt "vpn-settings-view"
+msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
+msgstr "Atenție: această setare nu poate fi utilizată împreună cu <b>%(customDnsFeatureName)s</b>"
+
+msgctxt "vpn-settings-view"
+msgid "Auto-connect"
+msgstr "Conectare automată"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically connect to a server when the app launches."
+msgstr "Conectați-vă automat la un server la lansarea aplicației."
+
+#. This is displayed when the custom DNS setting is turned on which makes the block
+#. ads/trackers settings disabled. The text enclosed in "<b></b>" will appear bold.
+#. Available placeholders:
+#. %(customDnsFeatureName)s - The name displayed next to the custom DNS toggle.
+msgctxt "vpn-settings-view"
+msgid "Disable \"%(customDnsFeatureName)s\" below to activate these settings."
+msgstr "Dezactivați opțiunea „%(customDnsFeatureName)s” de mai jos pentru a activa aceste setări."
+
+#. This is displayed when either or both of the block ads/trackers settings are
+#. turned on which makes the custom DNS setting disabled.
+#. Available placeholders:
+#. %(preferencesPageName)s - The page title showed on top in the preferences page.
+msgctxt "vpn-settings-view"
+msgid "Disable all <b>DNS content blockers</b> above to activate this setting."
+msgstr "Dezactivați toate <b>blocatoarele de conținut DNS</b> de mai sus pentru a activa această setare."
+
+msgctxt "vpn-settings-view"
+msgid "DNS content blockers"
+msgstr "Programe de blocare a conținutului DNS"
+
+#. %(count)s = number of pin entries dropped.
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Au fost eliminate intrările legate de tasta de ieșire fixată d%(count)s."
+
+msgctxt "vpn-settings-view"
+msgid "Enable to add at least one DNS server."
+msgstr "Permite adăugarea a cel puțin unui server DNS."
+
+#. Description of in-tunnel IPv6 setting.
+msgctxt "vpn-settings-view"
+msgid "Enable to allow IPv6 traffic through the tunnel."
+msgstr "Activați această opțiune pentru a permite traficul IPv6 prin tunel."
+
+msgctxt "vpn-settings-view"
+msgid "Enter IP"
+msgstr "Introduceți adresa IP"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Fiecare ieșire Warren la care v-ați conectat anterior va fi reasociată la următoarea conexiune (Trust On First Use)."
+
+#. Label for settings that enables block of gamling related websites.
+msgctxt "vpn-settings-view"
+msgid "Gambling"
+msgstr "Jocurile de noroc"
+
+#. Title of in-tunnel IPv6 setting.
+msgctxt "vpn-settings-view"
+msgid "In-tunnel IPv6"
+msgstr "IPv6 în tunel"
+
+msgctxt "vpn-settings-view"
+msgid "IPv4 is always enabled and the majority of websites and applications use this protocol. We do not recommend enabling IPv6 unless you know you need it."
+msgstr "IPv4 este întotdeauna activat, iar majoritatea site-urilor web și a aplicațiilor utilizează acest protocol. Nu recomandăm activarea IPv6 decât dacă știți cu siguranță că aveți nevoie de el."
+
+#. A complimentary description for the setting Device IP version,
+#. explaining why the user might want to configure the setting.
+msgctxt "vpn-settings-view"
+msgid "It can be useful when you are aware of problems caused by a certain IP version."
+msgstr "Poate fi util să știi care sunt problemele cauzate de o anumită versiune IP."
+
+msgctxt "vpn-settings-view"
+msgid "It does this by allowing network communication outside the tunnel to local multicast and broadcast ranges as well as to and from these private IP ranges:"
+msgstr "Acest lucru se realizează prin permiterea comunicării în rețea în afara tunelului către intervalele locale de multicast și difuzare, precum și către și dinspre aceste intervale de adrese IP private:"
+
+msgctxt "vpn-settings-view"
+msgid "Kill switch"
+msgstr "Kill Switch de oprire de urgență"
+
+msgctxt "vpn-settings-view"
+msgid "Launch app on start-up"
+msgstr "Pornește aplicația la pornirea sistemului"
+
+msgctxt "vpn-settings-view"
+msgid "Local network sharing"
+msgstr "Partajarea rețelei locale"
+
+msgctxt "vpn-settings-view"
+msgid "Lockdown mode"
+msgstr "Mod Blocare"
+
+#. Label for settings that enables malware blocking.
+msgctxt "vpn-settings-view"
+msgid "Malware"
+msgstr "Malware"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Tabelul cu pin-uri a fost șters"
+
+#. CTA opening the confirmation modal that
+#. wipes the TOFU pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Resetare"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Resetați tot"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Resetarea a eșuat"
+
+#. Label for the action that clears every entry
+#. from the Warren TOFU pubkey pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Resetare taste de ieșire fixate"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Să resetez tastele de ieșire fixate?"
+
+msgctxt "vpn-settings-view"
+msgid "Restart the daemon for the change to take effect."
+msgstr "Reporniți serviciul pentru ca modificarea să intre în vigoare."
+
+msgctxt "vpn-settings-view"
+msgid "Server IP override"
+msgstr "Suprascrierea adresei IP a serverului"
+
+#. Label for settings that enables block of social media.
+msgctxt "vpn-settings-view"
+msgid "Social media"
+msgstr "Rețelele sociale"
+
+msgctxt "vpn-settings-view"
+msgid "The app’s built-in kill switch is always on. This setting will additionally block the internet if clicking Disconnect or Quit."
+msgstr "Funcția de Kill Switch integrată în aplicație este activată permanent. Această setare va bloca, de asemenea, conexiunea la internet dacă dai clic pe „Deconectare” sau „Ieșire”."
+
+msgctxt "vpn-settings-view"
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents."
+msgstr "Diferența dintre funcția „Kill Switch” și Modul Blocare constă în faptul că funcția „Kill Switch” va împiedica orice scurgere de date în timpul reconectărilor automate ale tunelului, al blocărilor software-ului și al altor incidente similare."
+
+msgctxt "vpn-settings-view"
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Diferența dintre funcția Kill Switch și Modul Blocare constă în faptul că funcția Kill Switch va împiedica apariția oricăror scurgeri de date în timpul reconectărilor automate la tunel, a blocărilor software și a altor incidente similare. Când Modul Blocare este activat, trebuie să fiți conectat la un server VPN Warren pentru a putea accesa internetul. Deconectarea manuală sau închiderea aplicației va bloca conexiunea."
+
+msgctxt "vpn-settings-view"
+msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
+msgstr "Serverul DNS pe care doriți să îl adăugați are o adresă IP privată. Trebuie să vă asigurați că interfețele de rețea sunt configurate să îl utilizeze."
+
+msgctxt "vpn-settings-view"
+msgid "This built-in feature prevents your traffic from leaking outside of the VPN tunnel if your network suddenly stops working or if the tunnel fails, it does this by blocking your traffic until your connection is reestablished."
+msgstr "Această funcție integrată împiedică scurgerea traficului în afara tunelului VPN în cazul în care rețeaua se întrerupe brusc sau tunelul se defectează; aceasta se realizează prin blocarea traficului până la restabilirea conexiunii."
+
+msgctxt "vpn-settings-view"
+msgid "This feature allows access to other devices on the local network, such as for sharing, printing, streaming, etc."
+msgstr "Această funcție permite accesul la alte dispozitive din rețeaua locală, de exemplu pentru partajare, imprimare, redare în flux etc."
+
+#. A description for the setting Device IP version,
+#. explaining how the user can configure the setting.
+msgctxt "vpn-settings-view"
+msgid "This feature allows you to choose whether to use only IPv4, only IPv6, or allow the app to automatically decide the best option when connecting to a server."
+msgstr "Această funcție vă permite să alegeți dacă doriți să utilizați doar IPv4, doar IPv6 sau să lăsați aplicația să aleagă automat cea mai bună opțiune la conectarea la un server."
+
+msgctxt "vpn-settings-view"
+msgid "This might cause issues on certain websites, services, and apps."
+msgstr "Acest lucru ar putea cauza probleme pe anumite site-uri web, servicii și aplicații."
+
+#. Label for settings that enables tracker blocking.
+msgctxt "vpn-settings-view"
+msgid "Trackers"
+msgstr "Dispozitive de urmărire"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Până la stabilirea noilor pini, mecanismul de detectare a substituirii este temporar dezactivat: un atacator care a înlocuit o ieșire între resetări nu ar fi semnalat la prima reconectare."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to default). Restart the daemon for the change to take effect."
+msgstr "Adresa URL a serverului warren-api. Format: http(s)://host:port. Câmp gol = neconfigurat (se utilizează valoarea implicită). Reporniți serviciul pentru ca modificarea să intre în vigoare."
+
+msgctxt "vpn-settings-view"
+msgid "Use custom DNS server"
+msgstr "Utilizați un server DNS personalizat"
+
+#. Title label in navigation bar
+msgctxt "vpn-settings-view"
+msgid "VPN settings"
+msgstr "Setări VPN"
+
+msgctxt "vpn-settings-view"
+msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
+msgstr "Atenție: Programul de blocare a programelor malware nu este un antivirus și nu trebuie considerat ca atare; acesta reprezintă doar un nivel suplimentar de protecție."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL-ul API-ului Warren"
+
+msgctxt "vpn-settings-view"
+msgid "Warren local account"
+msgstr "Contul local Warren"
+
+msgctxt "vpn-settings-view"
+msgid "Warren tunnel mode"
+msgstr "Modul tunel Warren"
+
+msgctxt "vpn-settings-view"
+msgid "When enabled, the daemon uses a self-hosted account derived from the local Warren mnemonic instead of contacting a remote account API."
+msgstr "Când această opțiune este activată, daemonul utilizează un cont auto-găzduit, generat pe baza frazei mnemonice Warren locale, în loc să contacteze API-ul unui cont la distanță."
+
+msgctxt "vpn-settings-view"
+msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
+msgstr "Când această funcție este activată, ea împiedică dispozitivul să acceseze anumite domenii sau site-uri web cunoscute pentru distribuirea de reclame, programe malware, modulele de urmărire și altele."
+
+msgctxt "vpn-settings-view"
+msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN tunnel to communicate with internet services."
+msgstr "Când această funcție este activată, IPv6 poate fi utilizat împreună cu IPv4 în tunelul VPN pentru a comunica cu serviciile de internet."
+
+msgctxt "vpn-settings-view"
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Când Modul Blocare este activat, trebuie să fiți conectat la un server VPN Warren pentru a putea accesa internetul. Dacă vă deconectați manual sau închideți aplicația, conexiunea dvs. va fi blocată."
+
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr "%(mbps)d Mbps"
+
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "Permite DNS extern"
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "Permite servere DNS externe"
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr "Lățimea de bandă este limitată de rețeaua beta gratuită și impusă de servere. Această setare nu este disponibilă în perioada beta."
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr "Conectare la un singur server de ieșire găzduit de dvs., introdus manual, ocolind lista de servere verificate. Folosiți doar un server pe care îl administrați sau în care aveți încredere deplină: acesta vede traficul dvs. necriptat."
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr "Domeniu de acoperire (opțional)"
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr "Server de ieșire personalizat (avansat)"
+
+msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr "Punct final"
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr "Adresa serverului de ieșire în formatul host:port. Puneți adresele IPv6 între paranteze drepte, de exemplu [2001:db8::1]:443."
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "Pentru utilizatori avansați. Când este activată, firewall-ul nu mai blochează interogările DNS către alte servere decât cel configurat, astfel încât instrumente precum „dig @1.1.1.1” funcționează în timp ce sunteți conectat."
+
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr "Limitați lățimea de bandă VPN în Mbps, aplicată separat la încărcare și la descărcare. Interval valid: %(min)d - %(max)d. Lăsați gol pentru a nu aplica nicio limită. Se aplică imediat."
+
+msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr "Gestionat"
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr "Lățime de bandă maximă"
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr "Completați doar dacă serverul de ieșire folosește un certificat TLS public (modul X.509). Lăsați gol pentru modul implicit cu cheie brută."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr "Cheia publică Ed25519 a serverului de ieșire, 64 de caractere hexazecimale."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr "Identificatorul de rutare al serverului de ieșire, 32 de caractere hexazecimale."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr "Cheia X25519 multi-hop a serverului de ieșire, 64 de caractere hexazecimale."
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "Interogările trec în continuare prin tunelul VPN, dar serverul DNS ales de dvs. le va vedea. Lăsați această opțiune dezactivată dacă nu testați rezolvarea DNS la distanță."
+
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr "Nelimitat"
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr "Cheie X25519 multi-hop"
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr "ID ieșire"
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr "Cheie publică"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Țara de intrare"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Țara de ieșire"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Expectați că lățimea de bandă va fi aproximativ la jumătate, în schimbul imposibilității de a face legătura între adresa IP a utilizatorului și cea a destinației. Opțiunea este dezactivată în mod implicit; activați-o pentru a vă proteja confidențialitatea."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Opțional: introduceți codurile țărilor de intrare și de ieșire (coduri ISO 3166 alfa-2, cum ar fi fr, de, se). Lăsați câmpul gol pentru selectare automată."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Reporniți serviciul Warren după ce modificați această setare."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Direcționează traficul prin două relee Warren, utilizând criptarea end-to-end HPKE. Releul de intrare vede doar textul cifrat, iar cel de ieșire vede doar încărcătura utilă decriptată, fără a avea acces la adresa dvs. IP. Model inspirat de Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Modul activ Warren cu un singur salt. Lățime de bandă completă, garanții de confidențialitate identice cu cele ale modului implicit cu un singur salt."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Compromis: aproximativ jumătate din lățimea de bandă single-hop. Opțiune dezactivată implicit; se activează manual pentru a asigura confidențialitatea. Este necesară repornirea serviciului după modificarea acestei setări."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Când această opțiune este activată, traficul este redirecționat prin două relee Warren (intrare, apoi ieșire), utilizând criptarea end-to-end HPKE între client și punctul de ieșire. Releul de intrare vede doar textul cifrat, iar cel de ieșire vede doar încărcătura utilă decriptată, fără a avea acces la adresa IP a utilizatorului."
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Copiat în clipboard"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Copiați în clipboard"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Ofuscare permanentă (activată implicit): mimetism HTTP/3 pentru ca traficul să se confunde cu cel normal."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (dezactivat implicit): adaugă padding pentru a contracara analiza traficului bazată pe învățare automată. ~5-15% din lățimea de bandă."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (dezactivat implicit): rutare prin două relee pentru a asigura imposibilitatea corelării intrării cu ieșirea."
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "O experiență VPN fără compromisuri în ceea ce privește confidențialitatea. Fără loguri. Fără conturi. Fără urmărire. Doar lățime de bandă."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Totul e gata"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "Creați-mi un portofel nou (recomandat)"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Se verifică... (dă clic pentru a reîmprospăta pagina)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Configurarea s-a finalizat. Alegeți o țară și conectați-vă la Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Continuați"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "Serviciul nu are încă o frază mnemonică, autentificați-vă sau reporniți aplicația."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Serviciul a respins fraza mnemonică. Verificați ortografia și numărul de cuvinte, apoi încercați din nou."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Nu s-a putut prelua fraza mnemonică de la demon."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Începeți"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "Am deja un abonament"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "Am pus-o la loc sigur."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Importați o frază mnemonică existentă"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Nu s-a găsit niciun abonament activ. Vă rugăm să achiziționați unul mai întâi."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Lipiți frază mnemonică BIP39 formată din 12 cuvinte pentru a vă restabili identitatea Warren existentă."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Alegeți o țară și conectați-vă"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Alegeți opțiunile de securitate dorite încă din prima zi. Le puteți modifica ulterior din secțiunea Setări."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Preferințe de confidențialitate"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Restaurați portofelul"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Omiteți asistentul (opțiuni avansate)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Vizualizați planurile (se deschide în browserul dvs.)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren utilizează un portofel non-custodial (Ed25519 + BIP39). Cheile vă aparțin; noi nu le vedem niciodată."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Bine ați venit la Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Notați aceste 12 cuvinte în ordine și păstrați-le într-un loc sigur. Este singura modalitate de a vă restaura abonamentul dacă pierdeți accesul la acest dispozitiv."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "Încă nu aveți un abonament activ. Tarifele încep de la câțiva euro pe lună, fără facturare recurentă, fără crearea unui cont, plătiți doar ce folosiți."
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Abonamentul dumneavoastră"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Portofelul dvs. Warren"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Verificați din nou"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Nu s-a putut verifica starea abonamentului. Vă rugăm să încercați din nou."
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr "Un voucher preplătit de acces beta este asociat automat contului dvs. Nicio plată, nimic de făcut."
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr "Acces beta activ până la %(date)s."
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr "Accesul beta nu a putut fi activat încă (sunteți online?). Se reîncearcă automat, precum și la următoarea pornire. Puteți continua oricum."
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr "Aveți probleme? Vizitați pagina noastră de ajutor"
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr "Reîncercați acum"
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr "Versiunea beta funcționează pe o rețea separată, gratuită, cu lățimea de bandă limitată la %(mbps)d Mbps. Acestea nu sunt condițiile finale ale serviciului."
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr "Versiunea beta funcționează pe o rețea separată, gratuită, cu lățime de bandă limitată. Acestea nu sunt condițiile finale ale serviciului."
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr "Accesul dvs. beta"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Detalii privind neconcordanțele criptografice"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "ID ieșire"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Locație"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Cheie recent observată"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Cheie marcată anterior"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Se procesează opțiunea aleasă, vă rugăm să așteptați."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Respingeți (deconectați)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Respingeți și rămâneți deconectat"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Raport către Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Identitatea serverului s-a modificat"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Serverul de ieșire Warren în care ați avut anterior încredere prezintă acum o identitate criptografică diferită."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "De obicei, acest lucru înseamnă că operatorul a schimbat cheia, dar poate indica și faptul că serverul a fost înlocuit sau compromis. Refuzați dacă nu vă așteptați la o astfel de schimbare."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Confirmați noua cheie"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr "Acest server de ieșire nu mai poate fi găsit. Încercați să vă reconectați."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr "Noua cheie nu a putut fi salvată. Încercați din nou."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr "Nu s-a putut acorda încredere noii chei."
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr "Cheia s-a schimbat din nou înainte de a i se putea acorda încredere. Verificați noua cheie și încercați din nou."
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "Mimetismul HTTP/3 (activ)"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "inactiv"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Ultimul"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Metodele de ofuscare tradiționale (Shadowsocks, UDP-over-TCP, QUIC, LWO) nu se aplică atunci când opțiunea warren_mode este activată."
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "niciodată"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Ofuscare"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Se reconectează"
+
+#. Title label in navigation bar
+msgctxt "wireguard-settings-nav"
+msgid "Shadowsocks"
+msgstr "Shadowsocks"
+
+#. Title label in navigation bar
+msgctxt "wireguard-settings-nav"
+msgid "UDP-over-TCP"
+msgstr "UDP peste TCP"
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
+msgstr "%(daita)s (%(daitaFull)s) ascunde tiparele din traficul dvs. VPN criptat."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
+msgstr "%(daita)s realizează acest lucru prin adăugarea atentă a zgomotului de rețea și prin uniformizarea dimensiunii tuturor pachetelor de rețea."
+
+msgctxt "wireguard-settings-view"
+msgid "%(wireguard)s port"
+msgstr "%(wireguard)s port"
+
+#. Page title for QUIC port view
+msgctxt "wireguard-settings-view"
+msgid "%(wireGuard)s port"
+msgstr "%(wireGuard)s port"
+
+msgctxt "wireguard-settings-view"
+msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
+msgstr "Atenție: această funcție crește traficul de rețea și va afecta negativ viteza, latența și consumul bateriei. Se recomandă utilizarea cu precauție în cazul abonamentelor cu date limitate."
+
+msgctxt "wireguard-settings-view"
+msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
+msgstr "Dacă activați opțiunea „%(directOnly)s”, va trebui să selectați manual un server care acceptă funcția „%(daita)s”. Acest lucru poate duce la blocarea aplicației până când selectați un server compatibil în fereastra „Selectați locația”."
+
+msgctxt "wireguard-settings-view"
+msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
+msgstr "Prin utilizarea unor tehnologii sofisticate de inteligență artificială, este posibilă analizarea traficului de pachete de date care intră și ies din dispozitivul dumneavoastră (chiar dacă traficul este criptat)."
+
+msgctxt "wireguard-settings-view"
+msgid "Cancel"
+msgstr "Anulați"
+
+#. Title for device IP version setting.
+msgctxt "wireguard-settings-view"
+msgid "Device IP version"
+msgstr "Versiunea IP a dispozitivului"
+
+msgctxt "wireguard-settings-view"
+msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
+msgstr "Dacă un observator monitorizează aceste pachete de date, tehnologia „%(daita)s” îi îngreunează considerabil identificarea site-urilor web pe care le vizitați sau a persoanelor cu care comunicați."
+
+msgctxt "wireguard-settings-view"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "Acest lucru se realizează prin efectuarea unui schimb suplimentar de chei folosind un algoritm rezistent la atacuri cuantice și prin integrarea rezultatului în procesul obișnuit de criptare al QUIC."
+
+#. The title for the QUIC MTU setting. MTU stands for Maximum
+#. Transmission Unit and controls the maximum size of packets sent over
+#. the VPN tunnel.
+msgctxt "wireguard-settings-view"
+msgid "MTU"
+msgstr "MTU"
+
+msgctxt "wireguard-settings-view"
+msgid "Multihop"
+msgstr "Multihop"
+
+msgctxt "wireguard-settings-view"
+msgid "Multihop is being used to enable DAITA for your selected location"
+msgstr "Se utilizează tehnologia Multihop pentru a activa DAITA în locația selectată"
+
+msgctxt "wireguard-settings-view"
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "Rutare multihop direcționează traficul către un server QUIC și îl redirecționează către altul, făcându-l mai greu de urmărit. Acest lucru duce la o latență mai mare, dar sporește anonimatul online."
+
+#. Warning text in a dialog that is displayed after a setting is toggled.
+msgctxt "wireguard-settings-view"
+msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, you might have to select a new location after enabling."
+msgstr "Nu toate serverele noastre au funcția „%(daita)s” activată. Pentru a putea utiliza internetul, s-ar putea să fie necesar să selectați o nouă locație după activarea funcției."
+
+msgctxt "wireguard-settings-view"
+msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
+msgstr "Nu toate serverele noastre acceptă funcția „%(daita)s”. Prin urmare, folosim automat funcția „multihop” pentru a activa funcția „%(daita)s” cu orice server."
+
+#. The title for the QUIC port selector.
+msgctxt "wireguard-settings-view"
+msgid "Port"
+msgstr "Port"
+
+#. Text showing currently selected port.
+#. Available placeholders:
+#. %(port)s - Can be either a number between 1 and 65535 or the text "Automatic".
+msgctxt "wireguard-settings-view"
+msgid "Port: %(port)s"
+msgstr "Link: %(port)s"
+
+#. The title for the QUIC quantum resistance selector. This setting
+#. makes the cryptography resistant to the future abilities of quantum
+#. computers.
+msgctxt "wireguard-settings-view"
+msgid "Quantum-resistant tunnel"
+msgstr "Tunel rezistent la atacuri cuantice"
+
+#. The hint displayed below the QUIC MTU input field.
+#. Available placeholders:
+#. %(wireguard)s - Will be replaced with the string "QUIC"
+#. %(max)d - the maximum possible wireguard mtu value
+#. %(min)d - the minimum possible wireguard mtu value
+msgctxt "wireguard-settings-view"
+msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
+msgstr "Setați o valoare MTU d%(wireguard)s. Interval valid: %(min)d - %(max)d."
+
+msgctxt "wireguard-settings-view"
+msgid "Shadowsocks"
+msgstr "Shadowsocks"
+
+msgctxt "wireguard-settings-view"
+msgid "The automatic setting will randomly choose from the valid port ranges shown below."
+msgstr "Setarea automată va alege aleatoriu din intervalele de porturi valide prezentate mai jos."
+
+msgctxt "wireguard-settings-view"
+msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
+msgstr "Portul personalizat poate avea orice valoare din intervalele valide: %(portRanges)s."
+
+msgctxt "wireguard-settings-view"
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "Această caracteristică face ca tunelul QUIC să fie rezistent la potențialele atacuri din partea computerelor cuantice."
+
+msgctxt "wireguard-settings-view"
+msgid "UDP-over-TCP"
+msgstr "UDP peste TCP"
+
+#. Text describing the valid port range for a port selector.
+msgctxt "wireguard-settings-view"
+msgid "Valid range: %(min)s - %(max)s"
+msgstr "Interval valid: %(min)s - %(max)s"
+
+#. Text describing the valid port ranges for a port selector.
+#. Available placeholders:
+#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
+msgctxt "wireguard-settings-view"
+msgid "Valid ranges: %(portRanges)s"
+msgstr "Intervale valide: %(portRanges)s"
+
+msgctxt "wireguard-settings-view"
+msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
+msgstr "La ce port TCP trebuie să se conecteze protocolul de ofuscare UDP-over-TCP pe serverul VPN."
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automat"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Portul trebuie să fie între 49152 și 65535 sau gol pentru automat."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Port preferat"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protocol"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Stare: activ"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Stare: se solicită maparea portului…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Stare: se așteaptă o conexiune de tunel activă pentru a configura maparea portului."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Serverul poate atribui un alt port dacă cel preferat este deja ocupat. Modificările se aplică imediat, fără reconectare."
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Salvează fraza mea"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Am salvat fraza mea de recuperare și înțeleg că acest cont va fi eliminat de pe acest dispozitiv."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Dacă nu ți-ai salvat fraza de recuperare, abonamentul tău va fi pierdut definitiv."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Te deconectezi de la acest cont?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Deconectarea șterge acest cont de pe acest dispozitiv. Nu există e-mail sau parolă pentru reconectare, fraza ta de recuperare este SINGURUL mod de a-l restaura."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Salvează-ți fraza de recuperare"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Nu s-a putut citi noua frază de recuperare. Încearcă din nou."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Introdu fraza de recuperare din 12 cuvinte, separate prin spații, pentru a-ți restaura contul pe acest dispozitiv."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Am deja un cont"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Mi-am notat fraza de recuperare într-un loc sigur."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Frază de recuperare invalidă. Verifică cuvintele și ordinea lor, apoi încearcă din nou."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Restaurează contul"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Restaurează-ți contul"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren folosește un portofel fără custodie: contul tău este o frază de recuperare din 12 cuvinte pe care doar tu o deții."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Bun venit la Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Notează aceste 12 cuvinte și păstrează-le în siguranță. Sunt singurul mod de a-ți restaura contul dacă pierzi acest dispozitiv."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Am finalizat plata"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sesiune inactivă"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Sesiunea ta s-a încheiat. Pentru a te conecta din nou, va trebui să te autentifici iar."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Nepotrivire de identitate a serverului detectată. Cheia publică a nodului de ieșire s-a schimbat."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Comutare automată"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Comută automat la alt server de ieșire dacă cel curent devine inaccesibil."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Această setare intră în vigoare imediat, fără repornirea serviciului."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL-ul serverului warren-api. Format http(s)://host:port. Gol = nesetat (revine la backendul implicit). Repornește serviciul pentru ca modificarea să intre în vigoare."
+
+msgid "Continue"
+msgstr "Continuă"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Se verifică... (apasă pentru a reîmprospăta acum)"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Redirecționare porturi: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 salturi)"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Adaugă un port"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Fiecare port pe care îl adaugi este deschis pe serverul de ieșire și redirecționat către același port de pe dispozitivul tău. Modificările se aplică imediat, fără reconectare."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Ultima modificare de port înainte de o blocare temporară. Așteaptă un moment înainte de a-l schimba din nou."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "S-a atins maximul de %(max)d porturi"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Niciun port deocamdată. Adaugă unul pentru a-l deschide pe serverul de ieșire."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Portul trebuie să fie între 49152 și 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Elimină portul"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Stare: se așteaptă o conexiune activă la tunel pentru a configura maparea porturilor."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Acest port este deja în lista ta."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Prea multe modificări de port. Poți schimba porturile din nou în %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "se aplică…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "eșuat"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "niciun port disponibil"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "nepermis"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "deschis: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "în așteptare…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "port ocupat"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "se solicită…"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Redirecționare porturi"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "S-a solicitat autentificarea pe forumul comunității Warren. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Aprobă autentificarea"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Anulează"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată un abonament."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Te autentifici pe forumul comunității Warren?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Autentificarea a eșuat. Te rugăm să încerci din nou peste un moment."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Se semnează, te rugăm să aștepți."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Forumul comunității"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Se conectează..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Conexiune stabilită"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Se criptează conexiunea"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Locație aleatorie"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Ești protejat"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Ești vizibil"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Conexiunea ta nu este criptată"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Se deconectează..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Conectare în curs"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Atașează logurile"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Atașezi logurile la raportul de eroare?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Atașarea logurilor a eșuat. Te rugăm să încerci din nou peste un moment."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Anulează"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Doar autorul raportului de eroare poate atașa loguri la acesta."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Se trimite, te rugăm să aștepți."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Fișierul log este prea mare pentru a fi atașat."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Logurile sunt anonimizate: adresele portofelului și datele personale sunt ascunse. Sunt trimise în privat echipei de asistență Warren și nu apar niciodată public pe forum. Poți vedea exact ce va fi trimis înainte de a aproba."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Această cerere a expirat. Începe din nou de pe pagina forumului."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Vizualizează logurile"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Raportul tău de eroare de pe forumul Warren (subiectul %(topicId)d) cere atașarea logurilor tehnice ale aplicației pentru a ajuta la diagnosticarea problemei."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Noul raport de eroare pe care îl compui pe forumul Warren cere atașarea logurilor tehnice ale aplicației pentru a ajuta la diagnosticarea problemei."
+
+#. Status line confirming traffic obfuscation is on.
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr "Ofuscarea este activă."
+
+#. Status line shown if traffic obfuscation is off.
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr "Ofuscarea este momentan inactivă."
+
+#. Explains what obfuscation does and why it cannot be turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
+msgstr "Pentru a ocoli cenzura, Warren deghizează tunelul în navigare web obișnuită: în rețea arată ca traficul normal al unui browser către un site web obișnuit (HTTP/3 pe portul 443). Ofuscarea nu poate fi dezactivată, deoarece traficul care iese în evidență este trafic care poate fi blocat."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "%(daita)s adaugă zgomot în rețea și face toate pachetele de aceeași dimensiune, astfel încât este mult mai greu de aflat ce site-uri vizitați sau cu cine comunicați."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
+msgstr "%(daita)s nu este activă pe serverul curent: această conexiune nu este protejată de ea. Reconectați-vă sau alegeți altă locație."
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "Chiar și criptate, pachetele de date care intră și ies din dispozitivul dvs. pot fi analizate de inteligența artificială pentru a vă dezvălui activitatea."
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "Notă: aceasta crește traficul de rețea și poate afecta viteza, latența și autonomia bateriei. Folosiți cu prudență pe abonamentele cu trafic limitat."

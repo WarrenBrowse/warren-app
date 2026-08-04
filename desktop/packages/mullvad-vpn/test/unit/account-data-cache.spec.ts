@@ -4,7 +4,8 @@ import AccountDataCache, { AccountFetchError } from '../../src/main/account-data
 import { AccountDataResponse, IAccountData } from '../../src/shared/daemon-rpc-types';
 
 describe('IAccountData cache', () => {
-  const dummyAccountNumber = '9876543210';
+  // 64-char lowercase hex Warren pubkey
+  const dummyPubKey = '9876543210abcdef9876543210abcdef9876543210abcdef9876543210abcdef';
   const dummyAccountData: AccountDataResponse = {
     type: 'success',
     expiry: new Date('2038-01-01').toISOString(),
@@ -25,7 +26,7 @@ describe('IAccountData cache', () => {
     );
 
     const watcher = new Promise<void>((resolve, reject) => {
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: () => resolve(),
         onError: (_error: AccountFetchError) => reject(),
       });
@@ -41,7 +42,7 @@ describe('IAccountData cache', () => {
     );
 
     const watcher = new Promise<void>((resolve, reject) => {
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: () => resolve(),
         onError: (_error: AccountFetchError) => reject(),
       });
@@ -57,7 +58,7 @@ describe('IAccountData cache', () => {
         () => resolve(),
       );
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: () => {},
         onError: (_error: AccountFetchError) => reject(),
       });
@@ -82,7 +83,7 @@ describe('IAccountData cache', () => {
 
       const cache = new AccountDataCache(fetch, () => resolve());
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: () => reject(),
         onError: (_error: AccountFetchError) => {},
       });
@@ -101,7 +102,7 @@ describe('IAccountData cache', () => {
         if (firstAttempt) {
           firstAttempt = false;
 
-          cache.fetch('1231231231', {
+          cache.fetch('1231231231abcdef1231231231abcdef1231231231abcdef1231231231abcdef', {
             onFinish: secondSuccess,
             onError: () => reject(),
           });
@@ -121,7 +122,7 @@ describe('IAccountData cache', () => {
 
       setTimeout(resolve, 12000);
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: reject,
         onError: firstError,
       });
@@ -158,12 +159,12 @@ describe('IAccountData cache', () => {
 
       const cache = new AccountDataCache(fetch, updateHandler);
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: () => {},
         onError: (_error: AccountFetchError) => firstError(),
       });
       setTimeout(() => {
-        cache.fetch(dummyAccountNumber, {
+        cache.fetch(dummyPubKey, {
           onFinish: () => {
             secondSuccess();
             setTimeout(resolve);
@@ -192,8 +193,8 @@ describe('IAccountData cache', () => {
 
       const cache = new AccountDataCache(fetch, () => {});
       const onError = (_error: AccountFetchError) => {};
-      cache.fetch(dummyAccountNumber, { onFinish: () => {}, onError });
-      cache.fetch(dummyAccountNumber, { onFinish: () => resolve(), onError });
+      cache.fetch(dummyPubKey, { onFinish: () => {}, onError });
+      cache.fetch(dummyPubKey, { onFinish: () => resolve(), onError });
     });
 
     return expect(update)
@@ -223,7 +224,7 @@ describe('IAccountData cache', () => {
 
       const cache = new AccountDataCache(fetch, () => {});
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: () => {},
         onError: (_error: AccountFetchError) => reject(),
       });
@@ -245,19 +246,19 @@ describe('IAccountData cache', () => {
         () => {},
       );
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: async () => {
           vi.advanceTimersByTime(59_000);
           // Timeout to let asynchronous tasks finish
           await new Promise((resolve) => setTimeout(resolve));
 
-          cache.fetch(dummyAccountNumber, {
+          cache.fetch(dummyPubKey, {
             onFinish: async () => {
               vi.advanceTimersByTime(1_000);
               // Timeout to let asynchronous tasks finish
               await new Promise((resolve) => setTimeout(resolve));
 
-              cache.fetch(dummyAccountNumber, {
+              cache.fetch(dummyPubKey, {
                 onFinish: () => resolve(),
                 onError: (_error: AccountFetchError) => reject(),
               });
@@ -289,19 +290,19 @@ describe('IAccountData cache', () => {
         () => {},
       );
 
-      cache.fetch(dummyAccountNumber, {
+      cache.fetch(dummyPubKey, {
         onFinish: async () => {
           vi.advanceTimersByTime(9_000);
           // Timeout to let asynchronous tasks finish
           await new Promise((resolve) => setTimeout(resolve));
 
-          cache.fetch(dummyAccountNumber, {
+          cache.fetch(dummyPubKey, {
             onFinish: async () => {
               vi.advanceTimersByTime(1_000);
               // Timeout to let asynchronous tasks finish
               await new Promise((resolve) => setTimeout(resolve));
 
-              cache.fetch(dummyAccountNumber, {
+              cache.fetch(dummyPubKey, {
                 onFinish: () => resolve(),
                 onError: (_error: AccountFetchError) => reject(),
               });

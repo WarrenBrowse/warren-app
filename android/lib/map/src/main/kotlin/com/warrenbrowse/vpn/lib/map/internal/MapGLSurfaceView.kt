@@ -1,0 +1,47 @@
+package com.warrenbrowse.vpn.lib.map.internal
+
+import android.content.Context
+import android.opengl.GLSurfaceView
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import com.warrenbrowse.vpn.lib.map.BuildConfig
+import com.warrenbrowse.vpn.lib.map.data.MapViewState
+
+internal class MapGLSurfaceView(context: Context) : GLSurfaceView(context) {
+
+    private val renderer: MapGLRenderer
+    var lifecycle: Lifecycle? = null
+        set(value) {
+            field?.removeObserver(observer)
+            value?.addObserver(observer)
+            field = value
+        }
+
+    private val observer = LifecycleEventObserver { source, event ->
+        when (event) {
+            Lifecycle.Event.ON_RESUME -> onResume()
+            Lifecycle.Event.ON_PAUSE -> onPause()
+            else -> {}
+        }
+    }
+
+    init {
+        // Create an OpenGL ES 2.0 context
+        setEGLContextClientVersion(2)
+
+        if (BuildConfig.DEBUG) {
+            debugFlags = DEBUG_CHECK_GL_ERROR or DEBUG_LOG_GL_CALLS
+        }
+
+        renderer = MapGLRenderer(context.resources)
+
+        // Set the Renderer for drawing on the GLSurfaceView
+        setRenderer(renderer)
+        renderMode = RENDERMODE_WHEN_DIRTY
+    }
+
+    fun setData(viewState: MapViewState) {
+        renderer.setViewState(viewState)
+        requestRender()
+    }
+}

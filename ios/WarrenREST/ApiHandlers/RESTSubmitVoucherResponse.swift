@@ -1,0 +1,28 @@
+//
+//  RESTAPIProxy.swift
+//  WarrenREST
+//
+//  Created by pronebird on 10/07/2020.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Foundation
+import WarrenRustRuntime
+import WarrenTypes
+import Operations
+
+extension REST {
+    public struct SubmitVoucherResponse: Decodable, Sendable {
+        public let timeAdded: Int
+        public let newExpiry: Date
+
+        public init(timeAdded: Int, newExpiry: Date) {
+            self.timeAdded = timeAdded
+            self.newExpiry = newExpiry
+        }
+
+        public var dateComponents: DateComponents {
+            DateComponents(second: timeAdded)
+        }
+    }
+}

@@ -40,18 +40,21 @@ export enum ConnectionState {
   noMarker,
 }
 
-// Color of "space" as seen in the corners when zooming out
-const spaceColor: ColorRgba = [10 / 255, 25 / 255, 35 / 255, 1];
-// Color values for various components of the map.
-const landColor: ColorRgba = [0.16, 0.302, 0.45, 1.0];
-const oceanColor: ColorRgba = [0.098, 0.18, 0.271, 1.0];
+// Warren map palette (see color-tokens.ts for the universe).
+// Land/ocean are NEUTRAL grey and dark so the map recedes quietly and never
+// casts a warm tint over the screen (it is the single largest surface).
+// Color of "space" as seen in the corners when zooming out.
+const spaceColor: ColorRgba = [18 / 255, 18 / 255, 19 / 255, 1];
+// Land is a subtle, neutral step lighter than the ocean.
+const landColor: ColorRgba = [0.224, 0.224, 0.231, 1.0];
+const oceanColor: ColorRgba = [0.11, 0.11, 0.118, 1.0];
 // The color of borders between geographical entities
 const contourColor: ColorRgba = oceanColor;
 
-// The green color of the location marker when in the secured state
-const locationMarkerSecureColor: ColorRgb = [0.267, 0.678, 0.302];
-// The red color of the location marken when in the unsecured state
-const locationMarkerUnsecureColor: ColorRgb = [0.89, 0.251, 0.224];
+// The olive-moss color of the location marker when in the secured state
+const locationMarkerSecureColor: ColorRgb = [0.494, 0.588, 0.306];
+// The terracotta color of the location marker when in the unsecured state
+const locationMarkerUnsecureColor: ColorRgb = [0.769, 0.306, 0.227];
 
 // The angle in degrees that the camera sees in
 const angleOfView = 70;

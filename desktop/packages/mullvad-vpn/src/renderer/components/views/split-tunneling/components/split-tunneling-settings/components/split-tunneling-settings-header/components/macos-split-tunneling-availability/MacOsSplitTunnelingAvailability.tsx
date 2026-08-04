@@ -13,7 +13,7 @@ export function MacOsSplitTunnelingAvailability() {
       <HeaderSubTitle>
         {messages.pgettext(
           'split-tunneling-view',
-          'To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings.',
+          'To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings.',
         )}
       </HeaderSubTitle>
       <Flex flexDirection="column" gap="small">
@@ -32,7 +32,7 @@ export function MacOsSplitTunnelingAvailability() {
         </Flex>
         <Button onClick={restartDaemon}>
           <Button.Text>
-            {messages.pgettext('split-tunneling-view', 'Restart Mullvad Service')}
+            {messages.pgettext('split-tunneling-view', 'Restart Warren Service')}
           </Button.Text>
         </Button>
       </Flex>

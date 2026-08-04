@@ -1,0 +1,22 @@
+# Systemd service unit file for the Warren VPN daemon (Mullvad fork).
+
+[Unit]
+Description=Warren VPN daemon
+Before=network-online.target
+After=warren-early-boot-blocking.service NetworkManager.service systemd-resolved.service
+
+# Never stop retrying: the daemon exits fail-closed on a panic (kernel
+# firewall left blocking), so a supervisor that gives up after a burst of
+# crashes would strand the machine offline with no daemon to talk to.
+# Retrying forever matches launchd (KeepAlive) and the Windows SCM.
+StartLimitIntervalSec=0
+RequiresMountsFor=/opt/Warren\x20VPN/resources/
+
+[Service]
+Restart=always
+RestartSec=1
+ExecStart=/usr/bin/warren-daemon -vv --disable-stdout-timestamps
+Environment="WARREN_RESOURCE_DIR=/opt/Warren VPN/resources/"
+
+[Install]
+WantedBy=multi-user.target

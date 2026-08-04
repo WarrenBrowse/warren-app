@@ -7,42 +7,60 @@ import { IconButtonIcon, StyledIconButtonIcon } from './components';
 import { IconButtonProvider } from './IconButtonContext';
 
 export type IconButtonVariant = 'primary' | 'secondary';
+export type IconButtonTone = 'light' | 'dark';
 
 export type IconButtonProps = React.ComponentPropsWithRef<'button'> & {
   variant?: IconButtonVariant;
+  tone?: IconButtonTone;
   size?: IconProps['size'];
 };
 
-const variants: Record<
-  IconButtonVariant,
-  {
-    background: string;
-    hover: string;
-    pressed: string;
-    disabled: string;
-  }
+const toneVariants: Record<
+  IconButtonTone,
+  Record<
+    IconButtonVariant,
+    { background: string; hover: string; pressed: string; disabled: string }
+  >
 > = {
-  primary: {
-    background: colors.white,
-    hover: colors.whiteAlpha60,
-    pressed: colors.whiteAlpha40,
-    disabled: colors.whiteAlpha40,
+  light: {
+    primary: {
+      background: colors.white,
+      hover: colors.whiteAlpha60,
+      pressed: colors.whiteAlpha40,
+      disabled: colors.whiteAlpha40,
+    },
+    secondary: {
+      background: colors.whiteAlpha60,
+      hover: colors.whiteAlpha80,
+      pressed: colors.white,
+      disabled: colors.whiteAlpha40,
+    },
   },
-  secondary: {
-    background: colors.whiteAlpha60,
-    hover: colors.whiteAlpha80,
-    pressed: colors.white,
-    disabled: colors.whiteAlpha40,
+  dark: {
+    primary: {
+      background: colors.black,
+      hover: colors.blackAlpha60,
+      pressed: colors.blackAlpha40,
+      disabled: colors.blackAlpha40,
+    },
+    secondary: {
+      background: colors.blackAlpha60,
+      hover: colors.blackAlpha80,
+      pressed: colors.black,
+      disabled: colors.blackAlpha40,
+    },
   },
 } as const;
 
 const StyledButton = styled.button<{
   $size: IconButtonProps['size'];
   $variant: IconButtonVariant;
+  $tone: IconButtonTone;
 }>`
-  ${({ $size = 'medium', $variant = 'primary' }) => {
+  ${({ $size = 'medium', $variant = 'primary', $tone = 'light' }) => {
     const size = iconSizes[$size];
-    const variant = variants[$variant];
+    const variant = toneVariants[$tone][$variant];
+    const focusRingColor = $tone === 'dark' ? colors.black : colors.white;
     return css`
       --size: ${size}px;
 
@@ -58,7 +76,7 @@ const StyledButton = styled.button<{
       border-radius: 100%;
 
       &&:focus-visible {
-        outline: 2px solid ${colors.white};
+        outline: 2px solid ${focusRingColor};
         outline-offset: 1px;
       }
 
@@ -86,10 +104,16 @@ const StyledButton = styled.button<{
   }}
 `;
 
-function IconButton({ variant = 'primary', size = 'medium', disabled, ...props }: IconButtonProps) {
+function IconButton({
+  variant = 'primary',
+  tone = 'light',
+  size = 'medium',
+  disabled,
+  ...props
+}: IconButtonProps) {
   return (
     <IconButtonProvider size={size} variant={variant} disabled={disabled}>
-      <StyledButton disabled={disabled} $variant={variant} $size={size} {...props} />
+      <StyledButton disabled={disabled} $variant={variant} $tone={tone} $size={size} {...props} />
     </IconButtonProvider>
   );
 }

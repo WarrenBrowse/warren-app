@@ -2,16 +2,7 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 
-msgid "%(amount)d more..."
-msgstr ""
-
 msgid "%(duration)s was added, account paid until %(expiry)s."
-msgstr ""
-
-#. The label for the WireGuard port option.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
-msgid "%(wireguard)s port"
 msgstr ""
 
 msgid "1 day"
@@ -95,13 +86,10 @@ msgstr ""
 msgid "Connected"
 msgstr ""
 
-msgid "CONNECTED"
-msgstr ""
-
 msgid "Connecting"
 msgstr ""
 
-msgid "CONNECTING..."
+msgid "Continue"
 msgstr ""
 
 msgid "Create"
@@ -146,13 +134,7 @@ msgstr ""
 msgid "Disconnected"
 msgstr ""
 
-msgid "DISCONNECTED"
-msgstr ""
-
 msgid "Disconnecting"
-msgstr ""
-
-msgid "DISCONNECTING..."
 msgstr ""
 
 msgid "Edit"
@@ -168,15 +150,7 @@ msgstr ""
 msgid "Enable direct only"
 msgstr ""
 
-#. Error message shown trying to login but the app fails
-#. to fetch the list of registered devices.
-msgid "Failed to fetch list of devices"
-msgstr ""
-
 msgid "FAILED TO SECURE CONNECTION"
-msgstr ""
-
-msgid "Filters"
 msgstr ""
 
 #. Button label for system settings.
@@ -230,6 +204,9 @@ msgstr ""
 msgid "Off"
 msgstr ""
 
+msgid "OK"
+msgstr ""
+
 msgid "On"
 msgstr ""
 
@@ -258,10 +235,6 @@ msgid "Quit"
 msgstr ""
 
 msgid "Reconnect"
-msgstr ""
-
-#. Button label in confirmation dialog that confirms a remove action.
-msgid "Remove"
 msgstr ""
 
 msgid "Remove from list"
@@ -304,6 +277,9 @@ msgstr ""
 msgid "Unblock"
 msgstr ""
 
+msgid "Unknown"
+msgstr ""
+
 msgid "UNSECURED CONNECTION"
 msgstr ""
 
@@ -322,13 +298,6 @@ msgstr ""
 
 msgctxt "accessibility"
 msgid "%(title)s, View loaded"
-msgstr ""
-
-#. Text for screen readers to describe the WireGuard port settings navigation button.
-#. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
-msgctxt "accessibility"
-msgid "%(wireguard)s port settings"
 msgstr ""
 
 #. This is an accessibility label for a button that adds a location to a custom list.
@@ -371,9 +340,9 @@ msgid "Connect to %(location)s"
 msgstr ""
 
 #. Provided to accessibility tools such as screenreaders to describe a button
-#. which copies the account number to the clipboard.
+#. which copies the public key to the clipboard.
 msgctxt "accessibility"
-msgid "Copy account number"
+msgid "Copy public key"
 msgstr ""
 
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
@@ -397,21 +366,6 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr ""
 
-#. This is used by screenreaders to communicate the "x" button next to a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the account number to the left of the button
-msgctxt "accessibility"
-msgid "Forget account number %(accountNumber)s"
-msgstr ""
-
-#. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
-msgctxt "accessibility"
-msgid "Go to anti-censorship settings to change %(wireGuard)s port"
-msgstr ""
-
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -424,12 +378,6 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr ""
 
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which obscures the account number.
-msgctxt "accessibility"
-msgid "Hide account number"
-msgstr ""
-
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -438,18 +386,6 @@ msgstr ""
 #. Alt text for an illustration showing VPN traffic without DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic without DAITA"
-msgstr ""
-
-#. This is used by screenreaders to communicate the login button.
-msgctxt "accessibility"
-msgid "Login"
-msgstr ""
-
-#. This is used by screenreaders to communicate logging in with a saved account number.
-#. Available placeholders:
-#. %(accountNumber)s - the saved account number
-msgctxt "accessibility"
-msgid "Login with account number %(accountNumber)s"
 msgstr ""
 
 msgctxt "accessibility"
@@ -510,14 +446,6 @@ msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
 msgstr ""
 
-#. Button action description provided to accessibility tools such as screen
-#. readers.
-#. Available placeholders:
-#. %(deviceName)s - The device name to remove.
-msgctxt "accessibility"
-msgid "Remove device named %(deviceName)s"
-msgstr ""
-
 msgctxt "accessibility"
 msgid "Remove item"
 msgstr ""
@@ -528,12 +456,6 @@ msgstr ""
 
 msgctxt "accessibility"
 msgid "Shadowsocks settings"
-msgstr ""
-
-#. Provided to accessibility tools such as screenreaders to describe
-#. the button which unobscures the account number.
-msgctxt "accessibility"
-msgid "Show account number"
 msgstr ""
 
 msgctxt "accessibility"
@@ -549,12 +471,51 @@ msgctxt "account-view"
 msgid "Account"
 msgstr ""
 
+#. Shown while the saved card details are unknown.
 msgctxt "account-view"
-msgid "Account number"
+msgid "Active"
+msgstr ""
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr ""
+
+#. Button that opens the recovery-phrase backup view before logging out.
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr ""
+
+#. Button label that opens the Keys
+#. backup view (= reveal/copy BIP39 mnemonic).
+msgctxt "account-view"
+msgid "Backup keys"
 msgstr ""
 
 msgctxt "account-view"
 msgid "Currently unavailable"
+msgstr ""
+
+#. Label of the community-forum name derived
+#. from this wallet. Shown only after the
+#. user has signed in to the forum once.
+msgctxt "account-view"
+msgid "Forum name"
+msgstr ""
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr ""
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr ""
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
 msgstr ""
 
 #. Button label for logging out.
@@ -562,9 +523,12 @@ msgctxt "account-view"
 msgid "Log out"
 msgstr ""
 
-#. Link text in the account view to navigate to the manage devices view.
 msgctxt "account-view"
-msgid "Manage devices"
+msgid "Log out of this account?"
+msgstr ""
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr ""
 
 msgctxt "account-view"
@@ -575,6 +539,22 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr ""
 
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr ""
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr ""
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr ""
+
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
@@ -583,16 +563,6 @@ msgstr ""
 #. The title for the obfuscation method selector.
 msgctxt "anti-censorship-view"
 msgid "Method"
-msgstr ""
-
-#. Second paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "Please note that these methods do not improve performance, and may increase system utilization and battery consumption."
-msgstr ""
-
-#. First paragraph of description text in anti-censorship view
-msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
 msgstr ""
 
 msgctxt "api-access-methods-view"
@@ -673,7 +643,7 @@ msgid "Local SOCKS5 server"
 msgstr ""
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
+msgid "Manage and add custom methods to access the Warren API."
 msgstr ""
 
 msgctxt "api-access-methods-view"
@@ -729,11 +699,11 @@ msgid "The API could not be reached using the %(name)s method."
 msgstr ""
 
 #. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Mullvad's API servers
+#. which the app uses to reach Warren's API servers
 #. Available placeholders:
 #. %(domainFronting)s - Will be replaced with: 'Domain fronting'
 msgctxt "api-access-methods-view"
-msgid "The app communicates with a Mullvad API server via %(domainFronting)s."
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
 msgstr ""
 
 msgctxt "api-access-methods-view"
@@ -741,11 +711,11 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr ""
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
 msgstr ""
 
 #. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Mullvad's API servers
+#. which the app uses to reach Warren's API servers
 msgctxt "api-access-methods-view"
 msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
 msgstr ""
@@ -759,11 +729,11 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr ""
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
 msgstr ""
 
 #. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Mullvad's API servers
+#. which the app uses to reach Warren's API servers
 msgctxt "api-access-methods-view"
 msgid "This can be useful when direct access and other methods are blocked by censorship."
 msgstr ""
@@ -785,23 +755,23 @@ msgid "Transport protocol"
 msgstr ""
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
 msgstr ""
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
 msgstr ""
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
 msgstr ""
 
 #. Part of a description of the 'Domain fronting' API access method
-#. which the app uses to reach Mullvad's API servers
+#. which the app uses to reach Warren's API servers
 #. Available placeholders:
 #. %(domainFronting)s - Will be replaced with: 'Domain fronting'
 msgctxt "api-access-methods-view"
-msgid "With the %(domainFronting)s access method, the app reaches the Mullvad API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
 msgstr ""
 
 #. Title of the app info view.
@@ -872,7 +842,7 @@ msgstr ""
 #. Label displayed when an error occurred due to the installer failing to start
 #. and the suggested resolution is to download the update again.
 msgctxt "app-upgrade-view"
-msgid "Could not open installer, please try again or send a problem report."
+msgid "Could not open installer, please try again or report the problem on our community forum."
 msgstr ""
 
 #. Button text to download and install an update
@@ -892,7 +862,7 @@ msgstr ""
 
 #. Label displayed when an error occurred due to the download failing
 msgctxt "app-upgrade-view"
-msgid "Download failed, please check your connection/firewall and try again, or send a problem report."
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
 msgstr ""
 
 #. Status text displayed below a progress bar when the download of an update has been paused
@@ -925,7 +895,7 @@ msgstr ""
 
 #. Label displayed when an error occurred within the installer
 msgctxt "app-upgrade-view"
-msgid "Installer quit unexpectedly, please try again or send a problem report."
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
 msgstr ""
 
 #. Info about which directory the app update will be downloaded to
@@ -947,9 +917,9 @@ msgctxt "app-upgrade-view"
 msgid "Pause"
 msgstr ""
 
-#. Button text to report a problem
+#. Button text to report a problem on the community forum
 msgctxt "app-upgrade-view"
-msgid "Report a problem"
+msgid "Report a problem on the forum"
 msgstr ""
 
 #. Button text to resume updating
@@ -977,9 +947,13 @@ msgctxt "app-upgrade-view"
 msgid "Starting installer..."
 msgstr ""
 
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr ""
+
 #. Label displayed when an unknown error occurred
 msgctxt "app-upgrade-view"
-msgid "Unknown error occurred. Please try again or send a problem report."
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
 msgstr ""
 
 #. Title in navigation bar
@@ -988,9 +962,14 @@ msgctxt "app-upgrade-view"
 msgid "Update available"
 msgstr ""
 
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr ""
+
 #. Label displayed when an error occurred due to the installer failed verification
 msgctxt "app-upgrade-view"
-msgid "Verification failed, please try again or send a problem report."
+msgid "Verification failed, please try again or report the problem on our community forum."
 msgstr ""
 
 #. Label displayed above a progress bar when the update is verified successfully
@@ -1020,15 +999,73 @@ msgid "Blocking internet: account is out of time"
 msgstr ""
 
 msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr ""
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr ""
+
+msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr ""
 
 msgctxt "auth-failure"
-msgid "Unable to authenticate account. Please send a problem report."
+msgid "Unable to authenticate account. Please report the problem on our community forum."
 msgstr ""
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid account number. Please log out and try another one."
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr ""
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr ""
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr ""
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr ""
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr ""
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr ""
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr ""
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr ""
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr ""
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr ""
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
 msgstr ""
 
 #. Text displayed when there are no updates for this platform in the app version
@@ -1059,8 +1096,17 @@ msgctxt "connect-view"
 msgid "%(DAITA)s: Multihop"
 msgstr ""
 
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
 msgctxt "connect-view"
-msgid "Active features"
+msgid "%(DAITA)s: not active on this server"
+msgstr ""
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
 msgstr ""
 
 msgctxt "connect-view"
@@ -1069,6 +1115,10 @@ msgstr ""
 
 msgctxt "connect-view"
 msgid "Connection details"
+msgstr ""
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
 msgstr ""
 
 #. Button label for disconnecting from the VPN.
@@ -1089,7 +1139,11 @@ msgid "Go ahead and start using the app to begin reclaiming your online privacy.
 msgstr ""
 
 msgctxt "connect-view"
-msgid "Here’s your account number. Save it!"
+msgid "Here’s your public key. Save it!"
+msgstr ""
+
+msgctxt "connect-view"
+msgid "I've completed payment"
 msgstr ""
 
 #. Button label for opening privacy information link.
@@ -1101,9 +1155,45 @@ msgctxt "connect-view"
 msgid "Out of time"
 msgstr ""
 
+#. Active-feature chip on the main screen, shown when
+#. port forwarding is active. Available placeholders:
+#. %(ports)s - comma-separated "port PROTO" list
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr ""
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr ""
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr ""
+
 #. Button label for navigating to the voucher redemption view.
 msgctxt "connect-view"
 msgid "Redeem voucher"
+msgstr ""
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr ""
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr ""
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
 msgstr ""
 
 msgctxt "connect-view"
@@ -1113,6 +1203,10 @@ msgstr ""
 #. Button label for starting the app.
 msgctxt "connect-view"
 msgid "Start using the app"
+msgstr ""
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
 msgstr ""
 
 msgctxt "connect-view"
@@ -1157,6 +1251,10 @@ msgstr ""
 
 msgctxt "connection-info"
 msgid "In"
+msgstr ""
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
 msgstr ""
 
 msgctxt "connection-info"
@@ -1242,43 +1340,6 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr ""
 
-#. Button for continuing login process.
-msgctxt "device-management"
-msgid "Continue with login"
-msgstr ""
-
-#. Label informing the user when a device was created.
-#. Available placeholders:
-#. %(createdDate)s - The creation date of the device.
-msgctxt "device-management"
-msgid "Created: %(createdDate)s"
-msgstr ""
-
-#. Label indicating that this device is the current device.
-msgctxt "device-management"
-msgid "Current device"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Device is inactive"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Device name"
-msgstr ""
-
-#. A label that will display the newly created device name to inform the user
-#. about it.
-#. Available placeholders:
-#. %(deviceName)s - The name of the current device
-msgctxt "device-management"
-msgid "Device name: %(deviceName)s"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Failed to remove device"
-msgstr ""
-
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1289,77 +1350,25 @@ msgid "Going to login will unblock the Internet on this device."
 msgstr ""
 
 msgctxt "device-management"
-msgid "If you log out, the device and the device name is removed. When you log back in again, the device will get a new name."
+msgid "Session is inactive"
 msgstr ""
 
-#. Title label in navigation bar for the manage devices view.
-#. Title text in the manage devices view
-msgctxt "device-management"
-msgid "Manage devices"
-msgstr ""
-
-msgctxt "device-management"
-msgid "Please log out of at least one by removing it from the list below. You can find the corresponding device name under the device’s Account settings."
-msgstr ""
-
-#. Button label for confirming removing a device.
-msgctxt "device-management"
-msgid "Remove"
-msgstr ""
-
-#. Text displayed above button which logs out another device.
-#. The text enclosed in "<b></b>" will appear bold.
+#. Label in the main header showing the remaining
+#. subscription time.
 #. Available placeholders:
-#. %(deviceName)s - The name of the device to log out.
-msgctxt "device-management"
-msgid "Remove <em>%(deviceName)s?</em>"
-msgstr ""
-
-#. Page title informing user that enough devices has been removed to continue
-#. login process.
-msgctxt "device-management"
-msgid "Super!"
-msgstr ""
-
-msgctxt "device-management"
-msgid "The device will be removed from the list and logged out."
-msgstr ""
-
-msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr ""
-
+#. %(timeLeft)s - the remaining time, e.g. "29 days"
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr ""
 
-#. Page title informing user that the login failed due to too many registered
-#. devices on account.
 msgctxt "device-management"
-msgid "Too many devices"
+msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr ""
 
-#. Button text to retry fetching devices.
-msgctxt "device-management"
-msgid "Try again"
-msgstr ""
-
-#. Subtitle text in the manage devices view, explaining
-#. devices and what they can do in the manage devices view.
-msgctxt "device-management"
-msgid "View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily."
-msgstr ""
-
-msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr ""
-
-msgctxt "device-management"
-msgid "You can now continue logging in on this device."
-msgstr ""
-
-msgctxt "device-management"
-msgid "You have removed this device. To connect again, you will need to log back in."
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
 msgstr ""
 
 #. The message displayed to the user in case of critical error in the GUI
@@ -1376,10 +1385,6 @@ msgstr ""
 
 msgctxt "filter-view"
 msgid "All providers"
-msgstr ""
-
-msgctxt "filter-view"
-msgid "Mullvad owned only"
 msgstr ""
 
 msgctxt "filter-view"
@@ -1400,6 +1405,90 @@ msgstr ""
 
 msgctxt "filter-view"
 msgid "Rented only"
+msgstr ""
+
+msgctxt "filter-view"
+msgid "Warren owned only"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr ""
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
 msgstr ""
 
 msgctxt "in-app-notifications"
@@ -1423,6 +1512,10 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "APP IS OUT OF SYNC"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
 msgstr ""
 
 msgctxt "in-app-notifications"
@@ -1490,6 +1583,14 @@ msgctxt "in-app-notifications"
 msgid "DOWNLOADING UPDATE... %(appUpgradeDownloadProgressValue)s%%"
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr ""
+
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
@@ -1501,11 +1602,11 @@ msgid "INSTALLER FAILED"
 msgstr ""
 
 msgctxt "in-app-notifications"
-msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
+msgid "MIGRATION POSTPONED, PORT KEPT"
 msgstr ""
 
 msgctxt "in-app-notifications"
-msgid "NEW DEVICE CREATED"
+msgid "NETWORK TRAFFIC MIGHT BE LEAKING"
 msgstr ""
 
 msgctxt "in-app-notifications"
@@ -1513,12 +1614,31 @@ msgid "NEW VERSION INSTALLED"
 msgstr ""
 
 msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr ""
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
+msgstr ""
+
+#. Shown under a banner whose text was too long
+#. to fit; opens the full message.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
 msgstr ""
 
 #. Notification title when the app upgrade is ready to install.
 msgctxt "in-app-notifications"
 msgid "READY TO INSTALL UPDATE"
+msgstr ""
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
 msgstr ""
 
 #. Accessibility label for the button to retry download of the installer.
@@ -1531,9 +1651,12 @@ msgctxt "in-app-notifications"
 msgid "Retry installation"
 msgstr ""
 
-#. Button label to send a problem report.
 msgctxt "in-app-notifications"
-msgid "Send problem report"
+msgid "SERVER MAINTENANCE"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
 msgstr ""
 
 #. Notification subtitle when the installer verification failed.
@@ -1551,18 +1674,16 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr ""
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
-#. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
 msgctxt "in-app-notifications"
-msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
 msgstr ""
 
-#. Notification text when a new device has been created.
-#. Available placeholders:
-#. - %(deviceName)s: Name of created device.
 msgctxt "in-app-notifications"
-msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
 msgstr ""
 
 #. The in-app banner displayed to the user when the app beta update is
@@ -1601,9 +1722,105 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "words"
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr ""
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr ""
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
+msgid "Connecting to Warren system service..."
 msgstr ""
 
 #. Button label for opening dialog with troubleshooting details.
@@ -1621,14 +1838,14 @@ msgctxt "launch-view"
 msgid "Failed to start the app, please try again or click “Details” for more info"
 msgstr ""
 
-#. Message in troubleshooting modal advising user to send a problem report if the steps do not work.
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
 msgctxt "launch-view"
-msgid "If these steps do not work please send a problem report."
+msgid "If these steps do not work, please report the problem on our community forum."
 msgstr ""
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
 msgstr ""
 
 #. List item in troubleshooting modal advising user to reinstall the app.
@@ -1636,14 +1853,19 @@ msgctxt "launch-view"
 msgid "Reinstalling the app"
 msgstr ""
 
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr ""
+
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
+msgid "Restarting the Warren background process"
 msgstr ""
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
 msgstr ""
 
 #. List item in troubleshooting modal advising user to restart their computer.
@@ -1651,9 +1873,11 @@ msgctxt "launch-view"
 msgid "Restarting your computer"
 msgstr ""
 
-#. Button label for sending a problem report.
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
 msgctxt "launch-view"
-msgid "Send problem report"
+msgid "Restore internet without VPN"
 msgstr ""
 
 #. Status text shown when app is starting.
@@ -1663,7 +1887,7 @@ msgstr ""
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
 msgstr ""
 
 #. Button label for trying to restart the daemon again.
@@ -1673,7 +1897,11 @@ msgstr ""
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr ""
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
 msgstr ""
 
 #. This is used for appending information about a location.
@@ -1705,108 +1933,48 @@ msgctxt "login-view"
 msgid "<b>%(lockdownModeSettingName)s</b> is enabled. Disable it to unblock your connection."
 msgstr ""
 
+#. Title of the step that shows the new recovery phrase.
 msgctxt "login-view"
-msgid "Account created"
+msgid "Back up your recovery phrase"
 msgstr ""
 
 msgctxt "login-view"
-msgid "Checking account number"
+msgid "Could not read the new recovery phrase. Try again."
 msgstr ""
 
-#. Text in button that allows user to create a new account.
 msgctxt "login-view"
 msgid "Create a new account"
 msgstr ""
 
-#. Button which confirms the action to create a new account.
 msgctxt "login-view"
-msgid "Create new account"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr ""
+
+#. Button that starts restoring an existing account from a recovery phrase.
+msgctxt "login-view"
+msgid "I already have an account"
 msgstr ""
 
 msgctxt "login-view"
-msgid "Creating account..."
-msgstr ""
-
-#. Text that asks the user if they really want to create a new account.
-msgctxt "login-view"
-msgid "Do you want to create a new account?"
-msgstr ""
-
-#. Text that asks the user if they really want to remove the saved account.
-msgctxt "login-view"
-msgid "Do you want to remove the saved account number?"
+msgid "I have written down my recovery phrase in a safe place."
 msgstr ""
 
 msgctxt "login-view"
-msgid "Enter your account number"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
 msgstr ""
 
-msgctxt "login-view"
-msgid "Error"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Failed to create account"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Finishing upgrade."
-msgstr ""
-
-#. Error message shown above login input when trying to login with a
-#. non-existent account number.
-msgctxt "login-view"
-msgid "Invalid account number"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Logged in"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Logging in..."
-msgstr ""
-
-#. Label for the login button.
-msgctxt "login-view"
-msgid "Login"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Login failed"
-msgstr ""
-
-#. Text shown between two horizontal lines above the "create account" button.
-#. In this context it is used to separate the users alternative of logging in
-#. or creating a new account, "Login or Create a new account".
-msgctxt "login-view"
-msgid "Or"
-msgstr ""
-
-#. This is a warning message shown when the app is blocking the users
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
 msgstr ""
 
 msgctxt "login-view"
-msgid "Please wait"
+msgid "Restore account"
 msgstr ""
 
-#. Text that informs the user about the consequences of clearing the saved
-#. account number.
+#. Title of the step where the user enters their recovery phrase.
 msgctxt "login-view"
-msgid "Removing the saved account number from this device cannot be undone."
-msgstr ""
-
-#. Error message shown above login input when trying to login to an account
-#. with too many registered devices.
-msgctxt "login-view"
-msgid "Too many devices"
-msgstr ""
-
-msgctxt "login-view"
-msgid "Unknown error"
+msgid "Restore your account"
 msgstr ""
 
 msgctxt "login-view"
@@ -1814,12 +1982,16 @@ msgid "Upgrading..."
 msgstr ""
 
 msgctxt "login-view"
-msgid "Valid account number"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
 msgstr ""
 
-#. Text that informs the users about consequences of creating a new account.
+#. Title of the logged-out welcome screen.
 msgctxt "login-view"
-msgid "You already have a saved account number, by creating a new account the saved account number will be removed from this device. This cannot be undone."
+msgid "Welcome to Warren"
+msgstr ""
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
 msgstr ""
 
 #. The title for the LWO port selector.
@@ -1867,6 +2039,18 @@ msgstr ""
 
 msgctxt "notifications"
 msgid "App is out of sync. Please quit and restart."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
 msgstr ""
 
 #. The system notification that notifies the user when a beta update is
@@ -1959,6 +2143,10 @@ msgid "Reconnecting"
 msgstr ""
 
 msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr ""
+
+msgctxt "notifications"
 msgid "The apps excluded with %(splitTunneling)s might not work properly right now."
 msgstr ""
 
@@ -1975,19 +2163,19 @@ msgid "Unable to apply firewall rules. Try updating your kernel."
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Please troubleshoot or send a problem report."
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software or send a problem report."
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to block all network traffic. Try updating your kernel or send a problem report."
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
 msgstr ""
 
 msgctxt "notifications"
@@ -1995,11 +2183,11 @@ msgid "Unable to resolve host of custom tunnel. Try changing your settings."
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to set system DNS server. Please send a problem report."
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
 msgstr ""
 
 msgctxt "notifications"
-msgid "Unable to start tunnel connection. Please send a problem report."
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
 msgstr ""
 
 msgctxt "notifications"
@@ -2015,7 +2203,15 @@ msgid "Upgrade"
 msgstr ""
 
 msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr ""
+
+msgctxt "notifications"
 msgid "Your device is offline. The tunnel will automatically connect once your device is back online."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
 msgstr ""
 
 #. The in-app banner which is displayed to the user when the running app becomes unsupported.
@@ -2026,6 +2222,129 @@ msgstr ""
 #. The system notification which is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
+msgstr ""
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
 msgstr ""
 
 #. Cancel button label for voucher redemption.
@@ -2048,7 +2367,7 @@ msgid "An error occurred."
 msgstr ""
 
 msgctxt "redeem-voucher-view"
-msgid "It looks like you’ve entered an account number instead of a voucher code. If you would like to change the active account, please log out first."
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
 msgstr ""
 
 #. Button label for voucher redemption.
@@ -2062,6 +2381,10 @@ msgstr ""
 
 msgctxt "redeem-voucher-view"
 msgid "Voucher code has already been used."
+msgstr ""
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
 msgstr ""
 
 msgctxt "redeem-voucher-view"
@@ -2253,6 +2576,14 @@ msgctxt "settings-view"
 msgid "Multihop"
 msgstr ""
 
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr ""
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr ""
+
 #. Title label in navigation bar
 msgctxt "settings-view"
 msgid "Settings"
@@ -2350,7 +2681,7 @@ msgid "Please try again or send a problem report."
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
+msgid "Restart Warren Service"
 msgstr ""
 
 #. Information about split tunneling being unavailable due to
@@ -2362,7 +2693,7 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr ""
 
 #. Error message showed in a dialog when an application fails to launch.
@@ -2370,18 +2701,9 @@ msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
 msgstr ""
 
-#. Button label for continuing problem report submission with an outdated app version.
+#. Link to the community + support forum
 msgctxt "support-view"
-msgid "Continue anyway"
-msgstr ""
-
-#. Button text to edit the message after a failed attempt to send the problem report.
-msgctxt "support-view"
-msgid "Edit message"
-msgstr ""
-
-msgctxt "support-view"
-msgid "Failed to send"
+msgid "Community forum"
 msgstr ""
 
 #. Link to the webpage
@@ -2389,39 +2711,9 @@ msgctxt "support-view"
 msgid "FAQs & Guides"
 msgstr ""
 
-#. The message displayed to the user after submitting the problem report, given that the user left his or her email for us to reach back.
-#. Available placeholders:
-#. %(email)s
+#. Link to the refund policy webpage
 msgctxt "support-view"
-msgid "If needed we will contact you at %(email)s"
-msgstr ""
-
-msgctxt "support-view"
-msgid "If you exit the form and try again later, the information you already entered will still be here."
-msgstr ""
-
-#. Title label in navigation bar
-#. Navigation button to the 'Report a problem' help view
-msgctxt "support-view"
-msgid "Report a problem"
-msgstr ""
-
-#. Button label for sending the problem report.
-msgctxt "support-view"
-msgid "Send"
-msgstr ""
-
-#. Button label for sending the problem report without an email address.
-msgctxt "support-view"
-msgid "Send anyway"
-msgstr ""
-
-msgctxt "support-view"
-msgid "Sending..."
-msgstr ""
-
-msgctxt "support-view"
-msgid "Sent"
+msgid "Refund policy"
 msgstr ""
 
 #. Title label in navigation bar
@@ -2429,47 +2721,9 @@ msgctxt "support-view"
 msgid "Support"
 msgstr ""
 
+#. Link to the terms of use webpage
 msgctxt "support-view"
-msgid "Thanks!"
-msgstr ""
-
-msgctxt "support-view"
-msgid "To assist you better, please write in English or Swedish and include which country you are connecting from."
-msgstr ""
-
-msgctxt "support-view"
-msgid "To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel."
-msgstr ""
-
-#. Button label for retrying problem report submission after a failure.
-msgctxt "support-view"
-msgid "Try again"
-msgstr ""
-
-#. Button label for updating the app to the latest version.
-msgctxt "support-view"
-msgid "Update app"
-msgstr ""
-
-#. Button label for opening app logs.
-msgctxt "support-view"
-msgid "View app logs"
-msgstr ""
-
-msgctxt "support-view"
-msgid "We will look into this."
-msgstr ""
-
-msgctxt "support-view"
-msgid "You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address."
-msgstr ""
-
-msgctxt "support-view"
-msgid "You are using an old version of the app. Please upgrade and see if the problem still exists before sending a report."
-msgstr ""
-
-msgctxt "support-view"
-msgid "Your email (optional)"
+msgid "Terms of use"
 msgstr ""
 
 msgctxt "tray-icon-context-menu"
@@ -2497,7 +2751,7 @@ msgid "Disable split tunneling"
 msgstr ""
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
 msgstr ""
 
 msgctxt "troubleshoot"
@@ -2505,7 +2759,7 @@ msgid "Failed to enable split tunneling. This is because the app is missing syst
 msgstr ""
 
 msgctxt "troubleshoot"
-msgid "If these steps do not work please send a problem report."
+msgid "If these steps do not work, please report the problem on our community forum."
 msgstr ""
 
 msgctxt "troubleshoot"
@@ -2521,7 +2775,7 @@ msgid "Open system settings"
 msgstr ""
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
+msgid "This error can happen when something other than Warren is actively updating the DNS."
 msgstr ""
 
 msgctxt "troubleshoot"
@@ -2564,16 +2818,47 @@ msgctxt "tunnel-control"
 msgid "Connect"
 msgstr ""
 
+#. Bold status title shown when the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr ""
+
+#. Secondary line shown while the tunnel is coming up.
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr ""
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr ""
+
+#. Secondary line shown while the tunnel is being torn down.
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr ""
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr ""
+
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr ""
 
-msgctxt "user-interface-settings-view"
-msgid "Animate map"
+#. Secondary line shown below the status title when protected.
+msgctxt "tunnel-control"
+msgid "You are protected"
 msgstr ""
 
-msgctxt "user-interface-settings-view"
-msgid "Animate map movements."
+#. Bold status title shown when traffic is not protected.
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr ""
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
 msgstr ""
 
 msgctxt "user-interface-settings-view"
@@ -2618,6 +2903,13 @@ msgctxt "user-interface-settings-view"
 msgid "User interface settings"
 msgstr ""
 
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr ""
+
 msgctxt "vpn-settings-view"
 msgid "Add a server"
 msgstr ""
@@ -2637,6 +2929,18 @@ msgctxt "vpn-settings-view"
 msgid "Adult content"
 msgstr ""
 
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr ""
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr ""
+
 #. Label for list item that navigates to anti-censorship
 #. settings view.
 msgctxt "vpn-settings-view"
@@ -2644,7 +2948,7 @@ msgid "Anti-censorship"
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -2657,6 +2961,23 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Automatically connect to a server when the app launches."
+msgstr ""
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
 msgstr ""
 
 #. This is displayed when the custom DNS setting is turned on which makes the block
@@ -2679,6 +3000,11 @@ msgctxt "vpn-settings-view"
 msgid "DNS content blockers"
 msgstr ""
 
+#. %(count)s = number of pin entries dropped.
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr ""
+
 msgctxt "vpn-settings-view"
 msgid "Enable to add at least one DNS server."
 msgstr ""
@@ -2689,7 +3015,27 @@ msgid "Enable to allow IPv6 traffic through the tunnel."
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "Enter IP"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
 msgstr ""
 
 #. Label for settings that enables block of gamling related websites.
@@ -2724,6 +3070,14 @@ msgctxt "vpn-settings-view"
 msgid "Launch app on start-up"
 msgstr ""
 
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr ""
+
 msgctxt "vpn-settings-view"
 msgid "Local network sharing"
 msgstr ""
@@ -2738,7 +3092,52 @@ msgid "Malware"
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr ""
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr ""
+
+#. CTA opening the confirmation modal that
+#. wipes the TOFU pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr ""
+
+#. Label for the action that clears every entry
+#. from the Warren TOFU pubkey pin table.
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "Server IP override"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
 msgstr ""
 
 #. Label for settings that enables block of social media.
@@ -2755,11 +3154,27 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
 msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -2785,6 +3200,19 @@ msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr ""
 
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr ""
+
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
 msgstr ""
@@ -2799,6 +3227,10 @@ msgid "Warning: The malware blocker is not an anti-virus and should not be treat
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
 msgstr ""
 
@@ -2807,7 +3239,307 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr ""
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr ""
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr ""
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr ""
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr ""
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr ""
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr ""
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr ""
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr ""
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr ""
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr ""
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr ""
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr ""
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr ""
+
+#. Explains what obfuscation does and why it cannot be
+#. turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
 msgstr ""
 
 #. Title label in navigation bar
@@ -2825,28 +3557,15 @@ msgid "%(daita)s (%(daitaFull)s) hides patterns in your encrypted VPN traffic."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "%(daita)s does this by carefully adding network noise and making all network packets the same size."
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "%(wireguard)s port"
-msgstr ""
-
-#. Page title for WireGuard port view
-msgctxt "wireguard-settings-view"
-msgid "%(wireGuard)s port"
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "Attention: This increases network traffic and will also negatively affect speed, latency, and battery usage. Use with caution on limited plans."
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
 msgid "By enabling “%(directOnly)s” you will have to manually select a server that is %(daita)s-enabled. This can cause you to end up in a blocked state until you have selected a compatible server in the “Select location” view."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "By using sophisticated AI it’s possible to analyze the traffic of data packets going in and out of your device (even if the traffic is encrypted)."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
@@ -2859,11 +3578,11 @@ msgid "Device IP version"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "If an observer monitors these data packets, %(daita)s makes it significantly harder for them to identify which websites you are visiting or with whom you are communicating."
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
 msgstr ""
 
 #. The title for the WireGuard MTU setting. MTU stands for Maximum
@@ -2882,7 +3601,7 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
 msgstr ""
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
@@ -2891,7 +3610,7 @@ msgid "Not all our servers are %(daita)s-enabled. In order to use the internet, 
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr ""
 
 #. The title for the WireGuard port selector.
@@ -2927,15 +3646,7 @@ msgid "Shadowsocks"
 msgstr ""
 
 msgctxt "wireguard-settings-view"
-msgid "The automatic setting will randomly choose from the valid port ranges shown below."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "The custom port can be any value inside the valid ranges: %(portRanges)s."
-msgstr ""
-
-msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
 msgstr ""
 
 msgctxt "wireguard-settings-view"
@@ -2947,938 +3658,6 @@ msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
 msgstr ""
 
-#. Text describing the valid port ranges for a port selector.
-#. Available placeholders:
-#. %(portRanges)s - will be replaced with a comma-separated list of port ranges
-msgctxt "wireguard-settings-view"
-msgid "Valid ranges: %(portRanges)s"
-msgstr ""
-
 msgctxt "wireguard-settings-view"
 msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
 msgstr ""
-
-msgid "%1$d out of %2$d"
-msgstr ""
-
-msgid "%1$s more..."
-msgstr ""
-
-msgid "%1$s was added to \"%2$s\""
-msgstr ""
-
-msgid "%1$s was removed from \"%2$s\""
-msgstr ""
-
-msgid "%1$s, %2$s, %3$s"
-msgstr ""
-
-msgid "%s (Entry)"
-msgstr ""
-
-msgid "%s (Exit)"
-msgstr ""
-
-msgid "%s (added)"
-msgstr ""
-
-msgid "%s (removed)"
-msgstr ""
-
-msgid "%s is already selected as entry relay"
-msgstr ""
-
-msgid "%s is already selected as exit relay"
-msgstr ""
-
-msgid "%s is unavailable"
-msgstr ""
-
-msgid "%s settings."
-msgstr ""
-
-msgid "%s was added to your account."
-msgstr ""
-
-msgid "(%d)"
-msgstr ""
-
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr ""
-
-msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
-msgstr ""
-
-msgid "3. To enable Lockdown mode, click on the toggle next to \"Block connections without VPN\".<br /><br /><b>Warning: This setting blocks split apps and the Local Network Sharing feature.</b>"
-msgstr ""
-
-msgid "30 days was added to your account."
-msgstr ""
-
-msgid "90 days was added to your account."
-msgstr ""
-
-msgid "<b>Account recovery will not be possible.</b>"
-msgstr ""
-
-msgid "<b>Attention:</b> Only some servers support the full port range."
-msgstr ""
-
-msgid "<b>Attention:</b> The app will close automatically and needs to be manually opened again after selecting a new icon and title. This will not impact your VPN connection."
-msgstr ""
-
-msgid "<b>Please note that these methods do not improve performance, and may increase system utilization and battery consumption.</b>"
-msgstr ""
-
-msgid "<b>This action cannot be undone.</b>"
-msgstr ""
-
-msgid "<b>Warning:</b>"
-msgstr ""
-
-msgid "<b>You will lose access to this account on all devices.</b>"
-msgstr ""
-
-msgid "API reachable, adding method..."
-msgstr ""
-
-msgid "API unreachable, save method anyway?"
-msgstr ""
-
-msgid "Account credit expires in a few minutes"
-msgstr ""
-
-msgid "Account deleted"
-msgstr ""
-
-msgid "Account number must match"
-msgstr ""
-
-msgid "Account recovery will not be possible."
-msgstr ""
-
-msgid "Account time reminders"
-msgstr ""
-
-msgid "Add 30 days time (%s)"
-msgstr ""
-
-msgid "Add 90 days time (%s)"
-msgstr ""
-
-msgid "Add DNS server"
-msgstr ""
-
-msgid "Add locations"
-msgstr ""
-
-msgid "Add time"
-msgstr ""
-
-msgid "Add to list"
-msgstr ""
-
-msgid "Adding method..."
-msgstr ""
-
-msgid "After updating a VPN app on Android 16, devices might end up in a state where VPN apps are no longer able to reach the internet."
-msgstr ""
-
-msgid "Agree and continue"
-msgstr ""
-
-msgid "All"
-msgstr ""
-
-msgid "All applications"
-msgstr ""
-
-msgid "All overrides will be reset and servers IP addresses, in the Select location view, will go back to default."
-msgstr ""
-
-msgid "Always-on VPN assigned to %s"
-msgstr ""
-
-msgid "Always-on VPN assigned to other VPN"
-msgstr ""
-
-msgid "Android 16 has a known issue. Please restart your device and try again. To learn more,"
-msgstr ""
-
-msgid "Any remaining time will be null and void."
-msgstr ""
-
-msgid "App icon"
-msgstr ""
-
-msgid "Appearance"
-msgstr ""
-
-msgid "Applying changes..."
-msgstr ""
-
-msgid "Are you sure you want to log <b>%s</b> out?"
-msgstr ""
-
-msgid "At least one method needs to be enabled"
-msgstr ""
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, \"Local network sharing\" will not work."
-msgstr ""
-
-msgid "Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk."
-msgstr ""
-
-msgid "Attention: this setting cannot be used in combination with \"Use custom DNS server\"."
-msgstr ""
-
-msgid "Auto-connect & Lockdown mode"
-msgstr ""
-
-msgid "Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart."
-msgstr ""
-
-msgid "Automatically connect on device start-up."
-msgstr ""
-
-msgid "Blocking internet (device offline)"
-msgstr ""
-
-msgid "Blocking..."
-msgstr ""
-
-msgid "Browser"
-msgstr ""
-
-msgid "By attaching your account token it links this report to your account, which helps us resolve your issue quicker. All reports are automatically deleted after a period of time."
-msgstr ""
-
-msgid "By checking this box I agree to the risks involved with deleting my account"
-msgstr ""
-
-msgid "Can’t connect?"
-msgstr ""
-
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr ""
-
-msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
-msgstr ""
-
-msgid "Clear input"
-msgstr ""
-
-msgid "Collapse"
-msgstr ""
-
-msgid "Connect on device start-up"
-msgstr ""
-
-msgid "Connect to a different network"
-msgstr ""
-
-msgid "Connecting..."
-msgstr ""
-
-msgid "Continue"
-msgstr ""
-
-msgid "Copied Mullvad account number to clipboard"
-msgstr ""
-
-msgid "Copied logs to clipboard"
-msgstr ""
-
-msgid "Copy"
-msgstr ""
-
-msgid "Could not display remaining days."
-msgstr ""
-
-msgid "Create new list"
-msgstr ""
-
-msgid "Critical error (your attention is required)"
-msgstr ""
-
-msgid "Current: %s"
-msgstr ""
-
-msgid "Custom DNS server addresses %1$s are invalid"
-msgstr ""
-
-msgid "DNS settings might not go into effect immediately"
-msgstr ""
-
-msgid "Delete \"%s\"?"
-msgstr ""
-
-msgid "Delete account"
-msgstr ""
-
-msgid "Delete method"
-msgstr ""
-
-msgid "Delete method?"
-msgstr ""
-
-msgid "Deleting your account cannot be undone."
-msgstr ""
-
-msgid "Deleting your account:"
-msgstr ""
-
-msgid "Direct"
-msgstr ""
-
-msgid "Disable all \"%s\" above to activate this setting."
-msgstr ""
-
-msgid "Disable multihop"
-msgstr ""
-
-msgid "Discard"
-msgstr ""
-
-msgid "Discard changes?"
-msgstr ""
-
-msgid "Disconnected (No VPN permission)"
-msgstr ""
-
-msgid "Disconnecting..."
-msgstr ""
-
-msgid "Dismiss"
-msgstr ""
-
-msgid "Edit custom lists"
-msgstr ""
-
-msgid "Edit list"
-msgstr ""
-
-msgid "Edit lists"
-msgstr ""
-
-msgid "Edit locations"
-msgstr ""
-
-msgid "Enable %1$s"
-msgstr ""
-
-msgid "Enable all & retry"
-msgstr ""
-
-msgid "Enable all access methods in the app"
-msgstr ""
-
-msgid "Enable method"
-msgstr ""
-
-msgid "Enable multihop"
-msgstr ""
-
-msgid "Enter MTU"
-msgstr ""
-
-msgid "Enter account number digits"
-msgstr ""
-
-msgid "Enter an account number"
-msgstr ""
-
-msgid "Entry relay is the same as exit relay"
-msgstr ""
-
-msgid "Excluded applications"
-msgstr ""
-
-msgid "Expand"
-msgstr ""
-
-msgid "External link"
-msgstr ""
-
-msgid "FAILED TO CONNECT"
-msgstr ""
-
-msgid "Failed to apply patch"
-msgstr ""
-
-msgid "Failed to delete account, please contact support"
-msgstr ""
-
-msgid "Failed to load products, please try again"
-msgstr ""
-
-msgid "Failed to set to current - API not reachable"
-msgstr ""
-
-msgid "Failed to set to current - Unknown reason"
-msgstr ""
-
-msgid "File"
-msgstr ""
-
-msgid "For details, please see our %s."
-msgstr ""
-
-msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr ""
-
-msgid "Generating..."
-msgstr ""
-
-msgid "Go to VPN settings"
-msgstr ""
-
-msgid "Going to login will unblock the internet on this device."
-msgstr ""
-
-msgid "Google Play payment pending"
-msgstr ""
-
-msgid "Google Play payment pending, this might take some time"
-msgstr ""
-
-msgid "Google Play unavailable"
-msgstr ""
-
-msgid "IPv4 is not available, please try changing \"Device IP version\" setting."
-msgstr ""
-
-msgid "IPv6 is not available, please try changing \"Device IP version\" setting."
-msgstr ""
-
-msgid "Icon and title"
-msgstr ""
-
-msgid "If the icon and title is still not changed after the app has closed, please try restarting the device."
-msgstr ""
-
-msgid "If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device."
-msgstr ""
-
-msgid "If these steps don’t work, please send an email to support using the button below. It will automatically attach the logs which have been anonymized."
-msgstr ""
-
-msgid "Import new overrides by"
-msgstr ""
-
-msgid "Import successful, overrides active"
-msgstr ""
-
-msgid "Importing new overrides might replace some previously imported overrides."
-msgstr ""
-
-msgid "In-app products unavailable, please make sure you have the latest version of Google Play."
-msgstr ""
-
-msgid "Include my account token for faster help with payment or account related issues"
-msgstr ""
-
-msgid "Invalid IP address"
-msgstr ""
-
-msgid "Invalid IPv6 config, please try to change the VPN settings."
-msgstr ""
-
-msgid "Invalid MTU value"
-msgstr ""
-
-msgid "Invalid or missing value \"%1$s\""
-msgstr ""
-
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr ""
-
-msgid "Less than a day left on this account"
-msgstr ""
-
-msgid "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
-msgstr ""
-
-msgid "List name"
-msgstr ""
-
-msgid "Loading products"
-msgstr ""
-
-msgid "Locations"
-msgstr ""
-
-msgid "Locations were changed for \"%s\""
-msgstr ""
-
-msgid "Log in"
-msgstr ""
-
-msgid "Makes sure the device is always on the VPN tunnel."
-msgstr ""
-
-msgid "More actions"
-msgstr ""
-
-msgid "Mullvad services unavailable"
-msgstr ""
-
-msgid "Multihop is disabled"
-msgstr ""
-
-msgid "Multihop is enabled"
-msgstr ""
-
-msgid "Name is already taken."
-msgstr ""
-
-msgid "Name was changed to %s"
-msgstr ""
-
-msgid "Navigate"
-msgstr ""
-
-msgid "No Android app store installed, could not open link"
-msgstr ""
-
-msgid "No browser app installed, could not open link"
-msgstr ""
-
-msgid "No changelog was added for this version"
-msgstr ""
-
-msgid "No custom lists available"
-msgstr ""
-
-msgid "No email app available on the device"
-msgstr ""
-
-msgid "No entry server match your settings, try changing server or other settings."
-msgstr ""
-
-msgid "No exit server match your settings, try changing server or other settings."
-msgstr ""
-
-msgid "No internet connection"
-msgstr ""
-
-msgid "No matching servers found."
-msgstr ""
-
-msgid "No result for \"%s\", please try a different search"
-msgstr ""
-
-msgid "Not found"
-msgstr ""
-
-msgid "Notes"
-msgstr ""
-
-msgid "Notification settings"
-msgstr ""
-
-msgid "Open app details"
-msgstr ""
-
-msgid "Overrides active"
-msgstr ""
-
-msgid "Overrides cleared"
-msgstr ""
-
-msgid "Overrides inactive"
-msgstr ""
-
-msgid "Password (optional)"
-msgstr ""
-
-msgid "Paste or write overrides to be imported"
-msgstr ""
-
-msgid "Patch not matching specification"
-msgstr ""
-
-msgid "Please enter a message"
-msgstr ""
-
-msgid "Please enter a name"
-msgstr ""
-
-msgid "Please enter a port"
-msgstr ""
-
-msgid "Please enter a valid IPv4 or IPv6 address"
-msgstr ""
-
-msgid "Please enter a valid remote server port"
-msgstr ""
-
-msgid "Please enter a value"
-msgstr ""
-
-msgid "Please enter an IP address"
-msgstr ""
-
-msgid "Please enter an IP override text"
-msgstr ""
-
-msgid "Please press connect to request VPN permission"
-msgstr ""
-
-msgid "Please remove a device before continuing logging in"
-msgstr ""
-
-msgid "Please restart your device and try connecting again. If this does not work, please write an email to %s in Swedish or English."
-msgstr ""
-
-msgid "Please try changing your filters."
-msgstr ""
-
-msgid "Port is out of range"
-msgstr ""
-
-msgid "Privacy"
-msgstr ""
-
-msgid "Privacy policy"
-msgstr ""
-
-msgid "Read more"
-msgstr ""
-
-msgid "Recents disabled and history cleared"
-msgstr ""
-
-msgid "Recursion limit"
-msgstr ""
-
-msgid "Refunds will not be possible."
-msgstr ""
-
-msgid "Remove %s?"
-msgstr ""
-
-msgid "Remove custom port"
-msgstr ""
-
-msgid "Reset"
-msgstr ""
-
-msgid "Reset all overrides"
-msgstr ""
-
-msgid "Reset overrides"
-msgstr ""
-
-msgid "Reset to default"
-msgstr ""
-
-msgid "Restart your device"
-msgstr ""
-
-msgid "Search"
-msgstr ""
-
-msgid "Send email"
-msgstr ""
-
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr ""
-
-msgid "Set as multihop entry"
-msgstr ""
-
-msgid "Set as multihop entry (incompatible)"
-msgstr ""
-
-msgid "Set as multihop exit"
-msgstr ""
-
-msgid "Set as multihop exit (incompatible)"
-msgstr ""
-
-msgid "Set port"
-msgstr ""
-
-msgid "Share…"
-msgstr ""
-
-msgid "Show location in notification"
-msgstr ""
-
-msgid "Show system apps"
-msgstr ""
-
-msgid "Shows current VPN tunnel status"
-msgstr ""
-
-msgid "Shows reminders when the account time is about to expire"
-msgstr ""
-
-msgid "Submit"
-msgstr ""
-
-msgid "TCP"
-msgstr ""
-
-msgid "Test method"
-msgstr ""
-
-msgid "Testing %s..."
-msgstr ""
-
-msgid "Text"
-msgstr ""
-
-msgid "Thanks for being part of our community.\\nPrivacy is for the people!"
-msgstr ""
-
-msgid "The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both."
-msgstr ""
-
-msgid "The IPv6 DNS server will not work unless you enable \"IPv6\" under VPN settings."
-msgstr ""
-
-msgid "The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about"
-msgstr ""
-
-msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr ""
-
-msgid "The app is blocking internet, please disconnect first"
-msgstr ""
-
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr ""
-
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr ""
-
-msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
-msgstr ""
-
-msgid "The selected %s port is not supported, please change it under"
-msgstr ""
-
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr ""
-
-msgid "This address has already been entered."
-msgstr ""
-
-msgid "This field is required"
-msgstr ""
-
-msgid "This impacts your anonymity"
-msgstr ""
-
-msgid "This is already set as current"
-msgstr ""
-
-msgid "This might be due to censorship or network issues. Please try to:"
-msgstr ""
-
-msgid "Time added"
-msgstr ""
-
-msgid "To add locations to a list, press the pen or long press on a country, city, or server."
-msgstr ""
-
-msgid "To create a custom list press the \"+\""
-msgstr ""
-
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr ""
-
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr ""
-
-msgid "Toggle VPN"
-msgstr ""
-
-msgid "Too many attempts, please try again later"
-msgstr ""
-
-msgid "UDP"
-msgstr ""
-
-msgid "Unable to apply firewall rules. Please troubleshoot or send a problem report."
-msgstr ""
-
-msgid "Unable to parse patch"
-msgstr ""
-
-msgid "Unable to reach API"
-msgstr ""
-
-msgid "Unable to reach API, %s"
-msgstr ""
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr ""
-
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr ""
-
-msgid "Unable to verify account number, please contact support"
-msgstr ""
-
-msgid "Unavailable"
-msgstr ""
-
-msgid "Undo"
-msgstr ""
-
-msgid "Unknown or prohibited key \"%1$s\""
-msgstr ""
-
-msgid "Update DNS server"
-msgstr ""
-
-msgid "Update list name"
-msgstr ""
-
-msgid "Update server list"
-msgstr ""
-
-msgid "Updating server list in the background..."
-msgstr ""
-
-msgid "Use method"
-msgstr ""
-
-msgid "VPN Settings not available on device"
-msgstr ""
-
-msgid "VPN permission error"
-msgstr ""
-
-msgid "VPN permission was denied"
-msgstr ""
-
-msgid "VPN permission was denied or another app has \"Always-on VPN\" enabled"
-msgstr ""
-
-msgid "VPN tunnel status"
-msgstr ""
-
-msgid "Valid range for all servers: %s"
-msgstr ""
-
-msgid "Value: %s"
-msgstr ""
-
-msgid "Verifying API method..."
-msgstr ""
-
-msgid "Verifying purchase"
-msgstr ""
-
-msgid "Verifying purchase..."
-msgstr ""
-
-msgid "Verifying voucher…"
-msgstr ""
-
-msgid "Voucher code is too short"
-msgstr ""
-
-msgid "Warning"
-msgstr ""
-
-msgid "We are still verifying your purchase, this might take some time. Your time will be added if the verification is successful."
-msgstr ""
-
-msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr ""
-
-msgid "We were unable to start the payment process, please try again later."
-msgstr ""
-
-msgid "Weather"
-msgstr ""
-
-msgid "Welcome, this device is now called <b>%s</b>."
-msgstr ""
-
-msgid "WireGuard port"
-msgstr ""
-
-msgid "Yes, log out device"
-msgstr ""
-
-msgid "You are about to delete your Mullvad VPN account."
-msgstr ""
-
-msgid "You can add more time via the account view or website to continue using the VPN."
-msgstr ""
-
-msgid "You can add more time via the account view to continue using the VPN."
-msgstr ""
-
-msgid "You will lose access to this account on all devices."
-msgstr ""
-
-msgid "You will lose your remaining"
-msgstr ""
-
-msgid "\"%s\" was created"
-msgstr ""
-
-msgid "\"%s\" was deleted"
-msgstr ""
-
-msgid "click here"
-msgstr ""
-
-msgid "here"
-msgstr ""
-
-msgid "less than one day"
-msgstr ""
-
-msgid "privacy policy"
-msgstr ""
-
-msgid "read more here"
-msgstr ""
-
-msgid "%d day"
-msgid_plural "%d days"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "%d location"
-msgid_plural "%d locations"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "%d month"
-msgid_plural "%d months"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "1 day left on this account"
-msgid_plural "%d days left on this account"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "1 year left on this account"
-msgid_plural "%d years left on this account"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "Account credit expires in a day"
-msgid_plural "Account credit expires in %d days"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "Account credit expires in an hour"
-msgid_plural "Account credit expires in %d hours"
-msgstr[0] ""
-msgstr[1] ""
-
-msgid "You will lose your remaining day."
-msgid_plural "You will lose your remaining %d days."
-msgstr[0] ""
-msgstr[1] ""

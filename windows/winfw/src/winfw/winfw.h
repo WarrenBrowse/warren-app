@@ -203,6 +203,10 @@ WinFw_ApplyPolicyConnecting(
 //   IP address of the exit relay, if it differs from `relay`. Otherwise, this should be set to
 //   `nullptr`.
 //
+// allowExternalDns:
+//   When true, the DNS leak protection (block-all DNS) rule is not installed, so DNS requests to
+//   arbitrary resolvers are permitted (they still travel through the VPN tunnel). Advanced opt-in.
+//
 extern "C"
 WINFW_LINKAGE
 WINFW_POLICY_STATUS
@@ -218,7 +222,8 @@ WinFw_ApplyPolicyConnected(
 	const wchar_t * const *tunnelDnsServers,
 	size_t numTunnelDnsServers,
 	const wchar_t * const *nonTunnelDnsServers,
-	size_t numNonTunnelDnsServers
+	size_t numNonTunnelDnsServers,
+	bool allowExternalDns
 );
 
 //
@@ -246,3 +251,29 @@ WINFW_LINKAGE
 WINFW_POLICY_STATUS
 WINFW_API
 WinFw_Reset();
+
+//
+// ResetAllGenerations:
+//
+// Recovery entry point. Removes our WFP objects under every environment salt
+// in `salts`, not only the one this module was built for, and deinitializes
+// any live context first.
+//
+// Why it exists: a kill switch outlives the process that armed it, and each
+// product environment keys its objects differently. A machine that changed
+// environment (or ran a build predating the salt) can therefore hold blocking
+// objects that the current build cannot see, hence cannot remove, leaving it
+// with no network and no way out. Only recovery may call this: outside that
+// context, deleting another environment's objects would disarm a kill switch
+// that environment is relying on.
+//
+// Returns GENERAL_FAILURE if `salts` is null or `saltCount` is zero.
+//
+extern "C"
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_ResetAllGenerations(
+	const uint32_t *salts,
+	uint32_t saltCount
+);

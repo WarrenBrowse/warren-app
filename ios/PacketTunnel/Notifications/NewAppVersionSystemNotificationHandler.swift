@@ -6,10 +6,10 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadLogging
-import MullvadREST
-import MullvadSettings
-import MullvadTypes
+import WarrenLogging
+import WarrenREST
+import WarrenSettings
+import WarrenTypes
 import UserNotifications
 
 final class NewAppVersionSystemNotificationHandler {

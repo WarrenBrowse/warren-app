@@ -6,9 +6,14 @@ import {
   IDaitaSettings,
   IDnsOptions,
   IWireguardEndpointData,
+  NatPmpSettings,
+  NatPmpStatus,
   ObfuscationSettings,
   type Recents,
   RelayOverride,
+  WarrenCustomExitSettings,
+  WarrenMultiHopSettings,
+  WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
 import { IGuiSettingsState } from '../../../shared/gui-settings-state';
 import { IRelayLocationCountryRedux, RelaySettingsRedux } from './reducers';
@@ -36,6 +41,58 @@ export interface IUpdateWireguardEndpointData {
 export interface IUpdateAllowLanAction {
   type: 'UPDATE_ALLOW_LAN';
   allowLan: boolean;
+}
+
+// Update action for the warren-api URL.
+export interface IUpdateWarrenApiUrlAction {
+  type: 'UPDATE_WARREN_API_URL';
+  warrenApiUrl?: string;
+}
+
+// Update action for the client-side bandwidth ceiling.
+export interface IUpdateWarrenMaxRateBpsAction {
+  type: 'UPDATE_WARREN_MAX_RATE_BPS';
+  warrenMaxRateBps?: number;
+}
+
+// Update action for the Warren multi-hop settings.
+export interface IUpdateWarrenMultiHopAction {
+  type: 'UPDATE_WARREN_MULTI_HOP';
+  warrenMultiHop: WarrenMultiHopSettings;
+}
+
+// Update action for the advanced Warren custom-exit override.
+export interface IUpdateWarrenCustomExitAction {
+  type: 'UPDATE_WARREN_CUSTOM_EXIT';
+  warrenCustomExit: WarrenCustomExitSettings;
+}
+
+// Update action for the live Warren status (reconnect_count + age).
+export interface IUpdateWarrenStatusAction {
+  type: 'UPDATE_WARREN_STATUS';
+  warrenStatus: WarrenStatus;
+}
+
+// Update action for the persisted NAT-PMP settings (toggle + lifetime
+// + protocol + ports). Dispatched on every Settings.warrenNatPmp
+// change so the port-forwarding view stays in sync.
+export interface IUpdateNatPmpSettingsAction {
+  type: 'UPDATE_NAT_PMP_SETTINGS';
+  natPmpSettings: NatPmpSettings;
+}
+
+// Update action for the live NAT-PMP status (refresh-loop lifecycle).
+export interface IUpdateNatPmpStatusAction {
+  type: 'UPDATE_NAT_PMP_STATUS';
+  natPmpStatus: NatPmpStatus;
+  // Wall-clock instant (ms) the snapshot arrived from the daemon. The
+  // exit's rate-limit `windowResetSecs` / `retryAfterSecs` are relative
+  // to this moment, so the UI countdown must anchor to it - NOT to a
+  // component mount time. Otherwise a stale snapshot (no new event for
+  // ~30 min between renewals) re-starts a fresh countdown on every
+  // navigation, making the warning flicker and persist long after the
+  // rate-limit window has actually cleared.
+  receivedAt: number;
 }
 
 export interface IUpdateEnableIpv6Action {
@@ -129,6 +186,13 @@ export type SettingsAction =
   | IUpdateRelayLocationsAction
   | IUpdateWireguardEndpointData
   | IUpdateAllowLanAction
+  | IUpdateWarrenApiUrlAction
+  | IUpdateWarrenMaxRateBpsAction
+  | IUpdateWarrenMultiHopAction
+  | IUpdateWarrenCustomExitAction
+  | IUpdateWarrenStatusAction
+  | IUpdateNatPmpSettingsAction
+  | IUpdateNatPmpStatusAction
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
@@ -183,6 +247,58 @@ function updateAllowLan(allowLan: boolean): IUpdateAllowLanAction {
   return {
     type: 'UPDATE_ALLOW_LAN',
     allowLan,
+  };
+}
+
+function updateWarrenApiUrl(warrenApiUrl?: string): IUpdateWarrenApiUrlAction {
+  return {
+    type: 'UPDATE_WARREN_API_URL',
+    warrenApiUrl,
+  };
+}
+
+function updateWarrenMaxRateBps(warrenMaxRateBps?: number): IUpdateWarrenMaxRateBpsAction {
+  return {
+    type: 'UPDATE_WARREN_MAX_RATE_BPS',
+    warrenMaxRateBps,
+  };
+}
+
+function updateWarrenMultiHop(warrenMultiHop: WarrenMultiHopSettings): IUpdateWarrenMultiHopAction {
+  return {
+    type: 'UPDATE_WARREN_MULTI_HOP',
+    warrenMultiHop,
+  };
+}
+
+function updateWarrenCustomExit(
+  warrenCustomExit: WarrenCustomExitSettings,
+): IUpdateWarrenCustomExitAction {
+  return {
+    type: 'UPDATE_WARREN_CUSTOM_EXIT',
+    warrenCustomExit,
+  };
+}
+
+function updateWarrenStatus(warrenStatus: WarrenStatus): IUpdateWarrenStatusAction {
+  return {
+    type: 'UPDATE_WARREN_STATUS',
+    warrenStatus,
+  };
+}
+
+function updateNatPmpSettings(natPmpSettings: NatPmpSettings): IUpdateNatPmpSettingsAction {
+  return {
+    type: 'UPDATE_NAT_PMP_SETTINGS',
+    natPmpSettings,
+  };
+}
+
+function updateNatPmpStatus(natPmpStatus: NatPmpStatus): IUpdateNatPmpStatusAction {
+  return {
+    type: 'UPDATE_NAT_PMP_STATUS',
+    natPmpStatus,
+    receivedAt: Date.now(),
   };
 }
 
@@ -317,6 +433,13 @@ export default {
   updateRelayLocations,
   updateWireguardEndpointData,
   updateAllowLan,
+  updateWarrenApiUrl,
+  updateWarrenMaxRateBps,
+  updateWarrenMultiHop,
+  updateWarrenCustomExit,
+  updateWarrenStatus,
+  updateNatPmpSettings,
+  updateNatPmpStatus,
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,

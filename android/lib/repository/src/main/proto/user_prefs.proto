@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option java_package = "net.mullvad.mullvadvpn.repository";
+option java_package = "com.warrenbrowse.vpn.repository";
 option java_multiple_files = true;
 
 message UserPreferences {
@@ -10,4 +10,7 @@ message UserPreferences {
   bool show_android_16_connect_warning = 4;
   bool show_location_in_system_notification = 5;
   bool show_system_apps_split_tunneling = 6;
+  // Version string of the update prompt the user dismissed. Empty means
+  // nothing was dismissed; a newer upgrade raises the banner again.
+  string dismissed_upgrade_version = 7;
 }

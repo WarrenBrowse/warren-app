@@ -15,9 +15,9 @@ export function LaunchView() {
           flexGrow={1}
           margin={{ vertical: 'large' }}
           alignItems="center"
+          justifyContent="center"
           gap="medium">
-          <Flex flexDirection="column" gap="medium">
-            <Logo variant="icon" size="2" />
+          <Flex flexDirection="column" gap="medium" alignItems="center">
             <Logo variant="text" size="2" />
           </Flex>
           <StatusText />

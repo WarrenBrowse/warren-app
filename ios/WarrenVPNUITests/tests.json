@@ -1,0 +1,22 @@
+{
+    "tests": {
+        "nightly": [
+            "WalletFlowTests",
+            "ConnectivityTests",
+            "CustomListsTests",
+            "LeakTests",
+            "RelayTests"
+        ],
+        "pr-merge-to-main": [
+            "WalletFlowTests",
+            "RelayTests"
+        ],
+        "api-tests": [
+            "WalletFlowTests"
+        ],
+        "pr-opened": [
+            "WalletFlowTests",
+            "RelayTests"
+        ]
+    }
+}

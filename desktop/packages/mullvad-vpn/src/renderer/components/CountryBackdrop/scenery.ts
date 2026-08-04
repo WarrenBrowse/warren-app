@@ -1,0 +1,63 @@
+import { ConnectionPhase } from '../../lib/connection-phase';
+
+// Runtime path (served statically from the app root, like every other asset).
+const SCENERY_BASE = 'assets/images/scenery';
+
+// Only these exits have dedicated cityscape art. Every other country falls back
+// to the generic plain. Keys are the normalized (lower-case, trimmed) advertised
+// country name.
+const COUNTRY_IMAGE: Readonly<Record<string, string>> = {
+  finland: 'finland.webp',
+  germany: 'germany.webp',
+  netherlands: 'netherlands.webp',
+  singapore: 'singapore.webp',
+};
+
+// The open plain, with the two cameras trained on it: home when no tunnel
+// carries the traffic, and the backdrop of any exit with no bespoke art.
+export const PLAINE_IMAGE = `${SCENERY_BASE}/plaine.webp`;
+export const TERRIER_IMAGE = `${SCENERY_BASE}/terrier.webp`;
+export const BULA_IMAGE = `${SCENERY_BASE}/bula.webp`;
+
+export interface Scenery {
+  // Full asset path of the background landscape.
+  image: string;
+  // Whether Bula sits exposed on the grass (outside the burrow).
+  showBula: boolean;
+  // Whether the landscape is blurred (the connecting animation).
+  blurred: boolean;
+}
+
+export function resolveCountryImage(country: string | undefined): string {
+  const key = (country ?? '').trim().toLowerCase();
+  const file = COUNTRY_IMAGE[key];
+  return file ? `${SCENERY_BASE}/${file}` : PLAINE_IMAGE;
+}
+
+// The scenery is driven purely by the visual phase plus, when connecting or
+// protected, the exit country. Without a tunnel the backdrop is the watched
+// plain, so an unprotected screen shows what unprotected means, and the country
+// art is reserved for the states where traffic really goes there.
+export function resolveScenery(phase: ConnectionPhase, exitCountry: string | undefined): Scenery {
+  switch (phase) {
+    case 'exposed':
+      return { image: PLAINE_IMAGE, showBula: true, blurred: false };
+    case 'connecting':
+      // Background swaps to the target country and blurs; the rabbit is left
+      // untouched (still outside) until the tunnel is actually up.
+      return { image: resolveCountryImage(exitCountry), showBula: true, blurred: true };
+    case 'protected':
+      return { image: resolveCountryImage(exitCountry), showBula: false, blurred: false };
+    case 'interrupted':
+      // Host offline on a nominally-up tunnel: same visual language as
+      // the connecting transition (blurred city) so the scene reads
+      // "not settled", with the rabbit still tucked in (the kill
+      // switch holds, nothing leaks).
+      return { image: resolveCountryImage(exitCountry), showBula: false, blurred: true };
+    case 'blocked':
+      // Kill switch: nothing leaks, so the rabbit is tucked in the burrow and
+      // the watched world outside is only seen through the blur, never sharp
+      // like the exposed state.
+      return { image: PLAINE_IMAGE, showBula: false, blurred: true };
+  }
+}

@@ -16,6 +16,9 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   changelogDisplayedForVersion: 'string',
   updateDismissedForVersion: 'string',
   animateMap: 'boolean',
+  onboardingCompletedUnix: 'number',
+  backupPending: 'boolean',
+  pendingPurchases: 'Array<string>',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -29,6 +32,8 @@ const defaultSettings: IGuiSettingsState = {
   changelogDisplayedForVersion: '',
   updateDismissedForVersion: '',
   animateMap: true,
+  backupPending: false,
+  pendingPurchases: [],
 };
 
 export default class GuiSettings {
@@ -134,6 +139,39 @@ export default class GuiSettings {
 
   get animateMap(): boolean {
     return this.stateValue.animateMap;
+  }
+
+  // Onboarding-completion timestamp. `undefined` clears the
+  // flag so the wizard re-runs on next boot (Settings "Replay
+  // onboarding" CTA). The renderer-side AppRouter consults
+  // `onboardingCompletedUnix` via `getNavigationBase` and redirects
+  // to `RoutePath.onboardingWelcome` when it is unset.
+  set onboardingCompletedUnix(newValue: number | undefined) {
+    this.changeStateAndNotify({ ...this.stateValue, onboardingCompletedUnix: newValue });
+  }
+
+  get onboardingCompletedUnix(): number | undefined {
+    return this.stateValue.onboardingCompletedUnix;
+  }
+
+  // Persisted backup gate. Survives a GUI restart so a freshly minted,
+  // un-backed-up identity cannot land on the main view (see the field
+  // doc in gui-settings-state.ts).
+  set backupPending(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, backupPending: newValue });
+  }
+
+  get backupPending(): boolean {
+    return this.stateValue.backupPending ?? false;
+  }
+
+  // Pending app-initiated purchases (see gui-settings-state.ts).
+  set pendingPurchases(newValue: Array<string>) {
+    this.changeStateAndNotify({ ...this.stateValue, pendingPurchases: newValue });
+  }
+
+  get pendingPurchases(): Array<string> {
+    return this.stateValue.pendingPurchases ?? [];
   }
 
   public load() {

@@ -34,6 +34,7 @@ impl TunnelParameters {
     pub fn get_tunnel_endpoint(&self) -> TunnelEndpoint {
         TunnelEndpoint {
             quantum_resistant: self.options.quantum_resistant,
+            effective_mtu: None,
             endpoint: self
                 .connection
                 .get_exit_endpoint()
@@ -46,6 +47,7 @@ impl TunnelParameters {
             tunnel_interface: None,
             #[cfg(daita)]
             daita: self.options.daita,
+            tunnel_type: crate::net::TunnelType::WireGuard,
         }
     }
 
@@ -59,8 +61,9 @@ impl TunnelParameters {
         cfg!(target_os = "macos")
             || self.options.userspace
             || self.options.daita
-            // Always prefer GotaTun for multihop on Windows
-            || (cfg!(target_os = "windows") && cfg!(not(feature = "wireguard-go")) && self.connection.exit_peer.is_some())
+            // Always prefer GotaTun for multihop on Windows (the legacy
+            // userspace wireguard-go bridge has been removed).
+            || (cfg!(target_os = "windows") && self.connection.exit_peer.is_some())
     }
 }
 

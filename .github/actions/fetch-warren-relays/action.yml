@@ -1,0 +1,85 @@
+name: Fetch + verify Warren exit list bootstrap
+description: >
+  Fetches the live signed Warren exit list from GET {warren-api-url}/v1/exits,
+  verifies its Ed25519 signature against the pinned production server pubkey
+  (build-time, authoritative canonicalization via warren-discovery-core's
+  warren_relays_verify), and writes it to dist-assets/warren-relays.json so the
+  packaged client ships with an up-to-date bootstrap cache. Freshly installed
+  clients then start pre-populated; the daemon's WarrenRelayListUpdater keeps it
+  refreshed at runtime.
+
+  Robustness: a fetch failure (API down / offline runner) is a WARNING, not a
+  failure, the client ships without a baked list and fetches on first launch.
+  A successfully fetched but signature-INVALID list FAILS the build (never bake
+  an unverifiable bootstrap).
+
+inputs:
+  warren-api-url:
+    description: >
+      Base URL of the warren-api backend for the channel being built. No
+      default on purpose: a default silently baked the production network's
+      exit list into whatever was being built, which stays invisible while
+      both hosts answer and becomes a wrong-network app the moment they
+      diverge. The caller names its channel's host.
+    required: true
+  expected-pubkey:
+    description: >
+      Pinned Ed25519 server pubkey (64-char hex). MUST mirror the production
+      warren-api server signing key.
+    required: false
+    default: 4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e
+
+runs:
+  using: composite
+  steps:
+    - name: Fetch + verify + bake warren-relays.json
+      shell: bash
+      run: |
+        set -uo pipefail
+        OUT="dist-assets/warren-relays.json"
+        API="${{ inputs.warren-api-url }}"
+        # `required: true` is advisory in composite actions, so enforce it here:
+        # failing loudly beats baking someone else's network.
+        if [ -z "$API" ]; then
+          echo "::error title=Warren bootstrap::warren-api-url is empty; pass the channel's API host"
+          exit 1
+        fi
+        URL="$API/v1/exits"
+        echo "Fetching signed Warren exit list: $URL"
+        if ! curl -fsS --max-time 30 "$URL" -o "$OUT"; then
+          echo "::warning title=Warren bootstrap::could not fetch $URL; shipping WITHOUT a baked exit list (clients fetch on first launch)"
+          rm -f "$OUT"
+          exit 0
+        fi
+        echo "Verifying signature against pinned server pubkey (build-time gate)…"
+        # warren-contract is checked out as a sibling by the mullvad-build-env
+        # action; warren-discovery-core carries the same verify_signed_relay_list
+        # the daemon uses at runtime, so the canonicalization cannot drift.
+        #
+        # Building the verifier can SIGSEGV intermittently on the x86_64-Rosetta
+        # Linux runner (rustc crashes compiling e.g. libc); that is NOT a
+        # signature failure. Retry on a crash signature, but fail immediately on a
+        # genuine non-zero (an actually-invalid signature), so we never bake an
+        # unverifiable list nor wrongly reject a valid one over a compiler crash.
+        ok=0
+        for attempt in 1 2 3; do
+          cargo run --quiet \
+            --manifest-path ../warren-contract/warren-discovery/Cargo.toml \
+            -p warren-discovery-core --bin warren_relays_verify -- \
+            "$OUT" --expected-pubkey "${{ inputs.expected-pubkey }}" 2>&1 | tee /tmp/warren-relays-verify.log
+          rc=${PIPESTATUS[0]}
+          if [ "$rc" -eq 0 ]; then ok=1; break; fi
+          if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/warren-relays-verify.log; then
+            echo "::warning title=Warren bootstrap::verifier build crashed under Rosetta (attempt $attempt/3); retrying"
+            continue
+          fi
+          echo "::error title=Warren bootstrap::fetched exit list FAILED signature verification; refusing to bake into the release"
+          rm -f "$OUT"
+          exit 1
+        done
+        if [ "$ok" -ne 1 ]; then
+          echo "::error title=Warren bootstrap::verifier kept crashing under Rosetta; cannot validate the bootstrap list"
+          rm -f "$OUT"
+          exit 1
+        fi
+        echo "Baked verified warren-relays.json ($(wc -c < "$OUT" | tr -d ' ') bytes)"

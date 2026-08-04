@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::{
     collections::{BTreeSet, HashMap},
     fmt, mem,
-    net::{IpAddr, SocketAddr},
+    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr, UdpSocket},
     sync::{Arc, RwLock, mpsc as sync_mpsc},
     thread,
     time::Duration,
@@ -134,6 +134,17 @@ impl State {
 
     /// Merge `new_state` set by the OS with a previous `prev_state`, but ignore any service whose
     /// addresses are `ignore_addresses`.
+    ///
+    /// A captured `Some` original is never downgraded by a `None`/absent
+    /// reading: configd makes the per-service DNS keys flicker while it
+    /// recomputes the network state (utun removal, primary-service flap), and
+    /// `reset()` re-merges one last snapshot right in that window. Trusting
+    /// the flicker would clobber the primary interface's backup, so the
+    /// restore would delete its real DNS and leave the host resolver-less until
+    /// the next DHCP lease/RA rewrote it (minutes on Ethernet, ~30 s on WiFi).
+    /// A retained-but-stale entry is the lesser
+    /// evil: `State:` keys are configd-owned and get rewritten by the next
+    /// lease anyway.
     fn merge_states(
         new_state: &HashMap<ServicePath, Option<DnsSettings>>,
         mut prev_state: HashMap<ServicePath, Option<DnsSettings>>,
@@ -149,6 +160,13 @@ impl State {
                     let settings = old_entry.unwrap_or_else(|| Some(settings.to_owned()));
                     modified_state.insert(path.to_owned(), settings);
                 }
+                // A None reading while a Some original is on file: keep the
+                // original (see the function doc; this is the teardown
+                // flicker that broke DNS restore).
+                None if matches!(old_entry, Some(Some(_))) => {
+                    let original = old_entry.expect("matched Some above");
+                    modified_state.insert(path.to_owned(), original);
+                }
                 // Otherwise, save the new settings
                 settings => {
                     let servers = settings
@@ -161,8 +179,17 @@ impl State {
             }
         }
 
-        for path in prev_state.keys() {
-            log::debug!("DNS removed for {path}");
+        // Services whose keys vanished from this snapshot: retain their Some
+        // backups instead of dropping them (same flicker as above). If the
+        // service is truly gone, restoring its key at reset just writes an
+        // orphan entry that configd ignores.
+        for (path, settings) in prev_state {
+            if settings.is_some() {
+                log::debug!("Retaining DNS backup for vanished service {path}");
+                modified_state.insert(path, settings);
+            } else {
+                log::debug!("DNS removed for {path}");
+            }
         }
 
         modified_state
@@ -388,10 +415,14 @@ impl super::DnsMonitorT for DnsMonitor {
     fn new() -> Result<Self> {
         let state = Arc::new(Mutex::new(State::new()));
         Self::spawn(state.clone())?;
-        Ok(DnsMonitor {
+        let monitor = DnsMonitor {
             store: SCDynamicStoreBuilder::new("mullvad-dns").build(),
             state,
-        })
+        };
+        // Repair any DNS the daemon left pointing at a now-dead local resolver
+        // after a previous unclean exit, before we start managing DNS ourselves.
+        remove_stale_loopback_dns(&monitor.store);
+        Ok(monitor)
     }
 
     /// Update the system config to use the DNS `config`.
@@ -402,12 +433,25 @@ impl super::DnsMonitorT for DnsMonitor {
         let port = config.port;
         let servers: Vec<_> = config.addresses().collect();
 
-        let mut state = self.state.lock();
-        state.apply_new_config(&self.store, interface, &servers, port)
+        let result = {
+            let mut state = self.state.lock();
+            state.apply_new_config(&self.store, interface, &servers, port)
+        };
+        // Nudge the resolver whether or not the apply fully succeeded: a partial
+        // apply can leave some services pointing at the new resolver while
+        // mDNSResponder still caches answers from the old one, so flush
+        // unconditionally (same reasoning as `reset`).
+        flush_dns_cache();
+        result
     }
 
     fn reset(&mut self) -> Result<()> {
-        self.state.lock().reset(&self.store)
+        let result = self.state.lock().reset(&self.store);
+        // Always nudge the resolver on teardown, even if restoring the store
+        // entries reported an error: the goal is to leave the system with a
+        // working resolver, not stranded on a dead in-tunnel one.
+        flush_dns_cache();
+        result
     }
 }
 
@@ -420,8 +464,13 @@ impl DnsMonitor {
             Ok(store) => {
                 result_tx.send(Ok(())).unwrap();
                 run_dynamic_store_runloop(store);
-                // TODO(linus): This is critical. Improve later by sending error signal to Daemon
-                log::error!("Core Foundation main loop exited! It should run forever");
+                // the Core Foundation main loop should only exit when macOS is shut down.
+                // If it exits in any other case, that would be a bug,
+                // and DNS monitoring would break.
+                //
+                // If we start seeing this happen on a running system, we should add error
+                // handling that tries to restart the main loop (or even the entire daemon).
+                log::warn!("Core Foundation main loop exited! Is macOS shutting down?");
             }
             Err(e) => result_tx.send(Err(e)).unwrap(),
         });
@@ -536,13 +585,158 @@ fn state_to_setup_path(state_path: &str) -> Option<String> {
     }
 }
 
+/// Remove any DNS override left behind by a previous, unclean daemon exit
+/// (SIGKILL, crash, or a `reset` that never completed).
+///
+/// While (re)establishing a tunnel we point the system DNS at our local
+/// resolver, which binds to a random address in the `127/8` range (see
+/// `talpid_core::resolver`). If the daemon dies before restoring the DNS, the
+/// system is left pointing at a loopback resolver that no longer exists and
+/// all name resolution breaks until a tunnel takes over again.
+///
+/// This runs once, when the [`DnsMonitor`] is created at startup - before we
+/// have pointed the system DNS at our own resolver - so any service whose
+/// servers are *all* loopback addresses is a candidate leftover. We spare the
+/// canonical `127.0.0.1`/`::1` (which a user-run resolver such as
+/// dnscrypt-proxy would use; our resolver never binds those).
+///
+/// Crucially we only reclaim an override whose resolver is actually **dead**
+/// (see [`loopback_resolver_is_live`]): a *stale* override by definition points
+/// at a resolver that no longer exists. A loopback resolver that is still
+/// answering belongs to a running daemon - ours from this very run, or, when a
+/// second VPN daemon coexists on the host (e.g. a separately-installed Mullvad
+/// app whose own resolver also binds a non-canonical `127/8` address), theirs.
+/// The previous code removed *every* non-canonical loopback override blindly,
+/// which wiped the other daemon's live DNS and broke all name resolution on the
+/// host the moment this daemon started. Do NOT drop the liveness check.
+/// Repair DNS left pointing at a dead local resolver by an unclean daemon
+/// exit, without constructing a monitor. The monitor runs the same repair at
+/// startup; this entry point exists for `warren-setup reset-firewall`, the
+/// out-of-band rescue used when the daemon cannot come back up at all.
+pub(crate) fn recover_after_crash() -> Result<()> {
+    let store = SCDynamicStoreBuilder::new("warren-dns-recovery").build();
+    remove_stale_loopback_dns(&store);
+    flush_dns_cache();
+    Ok(())
+}
+
+fn remove_stale_loopback_dns(store: &SCDynamicStore) {
+    for (path, settings) in read_all_dns(store) {
+        let Some(settings) = settings else { continue };
+        let addresses = settings.server_addresses();
+        let all_reclaimable_loopback = !addresses.is_empty()
+            && addresses
+                .iter()
+                .map(SocketAddr::ip)
+                .all(is_reclaimable_loopback);
+        if !all_reclaimable_loopback {
+            continue;
+        }
+        // Keep the override if ANY of its resolvers is still live: that is a
+        // running resolver (ours or a coexisting daemon's), not a leftover.
+        // Probe each resolver on its OWN port (parsed from the store, which can
+        // carry a non-53 ServerPort), not a hardcoded 53: a coexisting resolver
+        // bound on e.g. 127.x:5353 must read as live, otherwise we probe the
+        // wrong port, find it free, and reclaim a live foreign override.
+        if addresses
+            .iter()
+            .any(|sa| loopback_resolver_is_live(sa.ip(), sa.port()))
+        {
+            continue;
+        }
+        log::warn!(
+            "Removing stale loopback DNS override at {path} \
+             (leftover from a previous unclean daemon exit)"
+        );
+        if !store.remove(CFString::new(&path)) {
+            log::error!("Failed to remove stale DNS override at {path}");
+        }
+    }
+}
+
+/// Force mDNSResponder to reload DNS configuration and drop its cache.
+///
+/// Rewriting the `State:/Network/Service/.../DNS` entries is not always enough
+/// on disconnect: mDNSResponder can keep serving the previous resolver (a
+/// now-dead in-tunnel address such as the multi-hop gateway) until it is told
+/// to reload, leaving every app unable to resolve names even though the store
+/// is correct. Flushing the cache and sending SIGHUP forces an immediate
+/// reload, so `getaddrinfo` recovers without a manual fix. Best-effort: any
+/// failure is logged, never propagated, since a missing tool must not turn a
+/// teardown into a hard error.
+fn flush_dns_cache() {
+    for (bin, args) in [
+        ("/usr/bin/dscacheutil", &["-flushcache"][..]),
+        ("/usr/bin/killall", &["-HUP", "mDNSResponder"][..]),
+    ] {
+        match std::process::Command::new(bin).args(args).status() {
+            Ok(status) if status.success() => {}
+            Ok(status) => log::debug!("{bin} {args:?} exited with {status}"),
+            Err(e) => log::warn!("failed to run {bin} to flush DNS cache: {e}"),
+        }
+    }
+}
+
+/// Whether a DNS resolver is currently listening on `addr:port`.
+///
+/// Probed by attempting to bind the address: a successful bind means nothing is
+/// listening (the override is a dead leftover, safe to reclaim); `AddrInUse`
+/// means a live resolver holds it and must be left alone. Any other bind error
+/// is treated as "live" (fail-safe: never reclaim on uncertainty, so we cannot
+/// clobber a working resolver). macOS routes the whole `127/8` to loopback, so
+/// binding an arbitrary `127.x` address works without an interface alias.
+fn loopback_resolver_is_live(addr: IpAddr, port: u16) -> bool {
+    match UdpSocket::bind((addr, port)) {
+        Ok(_) => false,
+        Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => true,
+        Err(_) => true,
+    }
+}
+
+/// Whether `ip` is a loopback address our local resolver may have bound,
+/// excluding the canonical localhost addresses a user-run resolver would use.
+fn is_reclaimable_loopback(ip: IpAddr) -> bool {
+    ip.is_loopback()
+        && ip != IpAddr::V4(Ipv4Addr::LOCALHOST)
+        && ip != IpAddr::V6(Ipv6Addr::LOCALHOST)
+}
+
 #[cfg(test)]
 mod test {
-    use super::{DNS_PORT, DnsSettings, State};
+    use super::{DNS_PORT, DnsSettings, State, loopback_resolver_is_live};
     use std::{
         collections::{BTreeSet, HashMap},
         net::SocketAddr,
+        net::{IpAddr, Ipv4Addr, UdpSocket},
     };
+
+    #[test]
+    fn live_loopback_resolver_is_detected_and_preserved() {
+        // Regression: the stale-override cleanup must NOT reclaim a loopback
+        // override whose resolver is still answering - that is exactly how a
+        // coexisting Mullvad app's live resolver (a non-canonical 127/8
+        // address) got wiped, killing all DNS on daemon start.
+        let live =
+            UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind live");
+        let live_addr = live.local_addr().expect("live addr");
+        assert!(
+            loopback_resolver_is_live(live_addr.ip(), live_addr.port()),
+            "a bound loopback resolver must read as live (preserved, never reclaimed)"
+        );
+    }
+
+    #[test]
+    fn dead_loopback_address_is_reclaimable() {
+        // A loopback address with no listener must read as not-live, so a
+        // genuine stale leftover from an unclean exit is still cleaned up.
+        let probe = UdpSocket::bind((IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 0)).expect("bind");
+        let free = probe.local_addr().expect("addr");
+        drop(probe); // release the port so nothing is listening
+        assert!(
+            !loopback_resolver_is_live(free.ip(), free.port()),
+            "an address with no resolver must read as not-live (reclaimable)"
+        );
+    }
 
     /// The initial backup should equal whatever the first provided state is.
     #[test]
@@ -680,9 +874,11 @@ mod test {
         assert_eq!(merged_state, expect_state);
     }
 
-    /// Services not specified in the new state should be removed from the backed up state
+    /// Services with a `Some` backup that vanish from a snapshot are RETAINED
+    /// (configd key flicker at teardown must not clobber the backup); only
+    /// `None` entries are dropped.
     #[test]
-    fn test_backup_remove_dns_config() {
+    fn test_backup_retains_vanished_services() {
         let prev_state = HashMap::from([
             (
                 "a".to_owned(),
@@ -703,12 +899,55 @@ mod test {
             ("c".to_owned(), None),
         ]);
         let new_state = HashMap::from([("c".to_owned(), None)]);
-        let expected_state = new_state.clone();
+        let mut expected_state = prev_state.clone();
+        expected_state.insert("c".to_owned(), None);
 
         let desired_addresses: BTreeSet<SocketAddr> = ["10.64.0.1:53".parse().unwrap()].into();
 
         let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
 
+        assert_eq!(merged_state, expected_state);
+    }
+
+    /// Regression test for the teardown-flicker failure mode: at tunnel teardown,
+    /// configd transiently hides the primary service's DNS key (absent from
+    /// the snapshot) or reads it as `None`. The captured originals must
+    /// survive that snapshot, otherwise `reset()` deletes the primary
+    /// interface's real DNS and the host is left resolver-less until the next
+    /// DHCP lease (minutes on Ethernet).
+    #[test]
+    fn test_backup_survives_teardown_flicker() {
+        let en0_original = Some(DnsSettings::from_server_addresses(
+            &["fd0f:ee:b0::1".to_owned()],
+            "en0".to_owned(),
+            DNS_PORT,
+        ));
+        let en1_original = Some(DnsSettings::from_server_addresses(
+            &["fd0f:ee:b0::1".to_owned()],
+            "en1".to_owned(),
+            DNS_PORT,
+        ));
+        let prev_state = HashMap::from([
+            (
+                "State:/Network/Service/EN0/DNS".to_owned(),
+                en0_original.clone(),
+            ),
+            (
+                "State:/Network/Service/EN1/DNS".to_owned(),
+                en1_original.clone(),
+            ),
+        ]);
+        // Mid-teardown snapshot: en0's key is gone entirely, en1's reads None.
+        let new_state = HashMap::from([("State:/Network/Service/EN1/DNS".to_owned(), None)]);
+
+        let desired_addresses: BTreeSet<SocketAddr> = ["10.64.0.1:53".parse().unwrap()].into();
+
+        let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
+
+        let expected_state = HashMap::from([
+            ("State:/Network/Service/EN0/DNS".to_owned(), en0_original),
+            ("State:/Network/Service/EN1/DNS".to_owned(), en1_original),
+        ]);
         assert_eq!(merged_state, expected_state);
     }
 

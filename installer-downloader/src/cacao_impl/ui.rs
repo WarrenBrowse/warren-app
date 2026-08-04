@@ -425,7 +425,7 @@ impl AppWindow {
 }
 
 impl WindowDelegate for AppWindowWrapper {
-    const NAME: &'static str = "MullvadInstallerDelegate";
+    const NAME: &'static str = "WarrenInstallerDelegate";
 
     fn did_load(&mut self, window: Window) {
         window.set_title(WINDOW_TITLE);

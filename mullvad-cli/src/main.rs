@@ -8,10 +8,11 @@ use cmds::*;
 pub const BIN_NAME: &str = env!("CARGO_BIN_NAME");
 
 #[derive(Debug, Parser)]
+#[command(name = "warren", bin_name = "warren")]
 #[command(version = mullvad_version::VERSION, about, long_about = None)]
 #[command(propagate_version = true)]
 enum Cli {
-    /// Control and display information about your Mullvad account
+    /// Control and display information about your Warren account
     #[clap(subcommand)]
     Account(account::Account),
 
@@ -66,19 +67,19 @@ enum Cli {
     /// Manage relay and tunnel constraints
     #[clap(subcommand)]
     Relay(relay::Relay),
-    /// Manage Mullvad API access methods.
+    /// Manage Warren API access methods.
     ///
-    /// Access methods are used to connect to the Mullvad API via one of
-    /// Mullvad's bridge servers or a custom proxy (SOCKS5 & Shadowsocks) when
+    /// Access methods are used to connect to the Warren API via one of
+    /// Warren's bridge servers or a custom proxy (SOCKS5 & Shadowsocks) when
     /// and where establishing a direct connection does not work.
     ///
-    /// If the Mullvad daemon is unable to connect to the Mullvad API, it will
+    /// If the Warren daemon is unable to connect to the Warren API, it will
     /// automatically try to use any other configured access method and re-try
     /// the API call. If it succeeds, all subsequent API calls are made using
     /// the new access method. Otherwise it will re-try using yet another access
     /// method.
     ///
-    /// The Mullvad API is used for logging in, accessing the relay list,
+    /// The Warren API is used for logging in, accessing the relay list,
     /// rotating Wireguard keys and more.
     #[clap(subcommand)]
     ApiAccess(api_access::ApiAccess),
@@ -105,7 +106,22 @@ enum Cli {
     #[clap(subcommand)]
     Tunnel(tunnel::Tunnel),
 
-    /// Show information about the current Mullvad version
+    /// Configure Warren NAT-PMP port forwarding (headless equivalent of
+    /// the GUI port-forward panel): enable/disable, manage forward
+    /// rules, and observe the granted public port.
+    #[clap(subcommand)]
+    PortForward(port_forward::PortForward),
+
+    /// Restore internet access from any blocked state.
+    ///
+    /// Warren fails closed, so a tunnel that never comes up, a daemon that
+    /// cannot stay alive, or firewall state left by another install can leave
+    /// the machine with no traffic. This disarms lockdown and disconnects
+    /// through the daemon; with `--deep` it also sweeps firewall state left by
+    /// other Warren installs, which needs administrator privileges.
+    Unblock(unblock::Unblock),
+
+    /// Show information about the current Warren version
     /// and available versions
     Version,
 
@@ -154,6 +170,12 @@ enum Cli {
     /// Manage logs and tracing
     #[clap(subcommand)]
     Log(log::Log),
+
+    /// Manage Warren settings (warren-api URL, recovery mnemonic,
+    /// parallel connection count). The api-url change requires a
+    /// daemon restart; n-connections applies on the next (re)connect.
+    #[clap(subcommand)]
+    Warren(warren::Warren),
 }
 
 #[tokio::main]
@@ -177,17 +199,20 @@ async fn main() -> Result<()> {
         Cli::Lan(cmd) => cmd.handle().await,
         Cli::AntiCensorship(cmd) => cmd.handle().await,
         Cli::ApiAccess(cmd) => cmd.handle().await,
+        Cli::Unblock(cmd) => cmd.handle().await,
         Cli::Version => version::print().await,
         Cli::FactoryReset { assume_yes } => reset::handle_factory_reset(assume_yes).await,
         Cli::ResetSettings { assume_yes } => reset::handle_settings_reset(assume_yes).await,
         Cli::Relay(cmd) => cmd.handle().await,
         Cli::Tunnel(cmd) => cmd.handle().await,
+        Cli::PortForward(cmd) => cmd.handle().await,
         Cli::SplitTunnel(cmd) => cmd.handle().await,
         Cli::Status { cmd, args } => status::handle(cmd, args).await,
         Cli::CustomList(cmd) => cmd.handle().await,
         Cli::ImportSettings { file } => patch::import(file).await,
         Cli::ExportSettings { file } => patch::export(file).await,
         Cli::Log(cmd) => cmd.handle().await,
+        Cli::Warren(cmd) => cmd.handle().await,
 
         #[cfg(all(unix, not(target_os = "android")))]
         Cli::ShellCompletions { shell, dir } => {

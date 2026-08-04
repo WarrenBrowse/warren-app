@@ -1,5 +1,6 @@
 import { hasExpired } from '../account-expiry';
 import { urls } from '../constants';
+import { isBetaBuild } from '../constants/product-env';
 import { TunnelState } from '../daemon-rpc-types';
 import { messages } from '../gettext';
 import {
@@ -31,14 +32,17 @@ export class AccountExpiredNotificationProvider implements SystemNotificationPro
       category: SystemNotificationCategory.expiry,
       severity: SystemNotificationSeverityType.high,
       presentOnce: { value: true, name: this.constructor.name },
-      action: {
-        type: 'navigate-external',
-        link: {
-          text: messages.pgettext('notifications', 'Buy more'),
-          to: urls.purchase,
-          withAuth: true,
-        },
-      },
+      // Beta builds carry no purchase surface: the out-of-time view offers
+      // the free "refresh beta access" recovery instead.
+      action: isBetaBuild
+        ? undefined
+        : {
+            type: 'navigate-external',
+            link: {
+              text: messages.pgettext('notifications', 'Buy more'),
+              to: urls.purchase,
+            },
+          },
     };
   }
 }

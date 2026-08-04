@@ -1,11 +1,11 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.android.library)
+    alias(libs.plugins.warren.unit.test)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.kotlin.ksp)
 }
 
-android { namespace = "net.mullvad.mullvadvpn.lib.model" }
+android { namespace = "com.warrenbrowse.vpn.lib.model" }
 
 dependencies {
     implementation(libs.kotlinx.serialization.json)

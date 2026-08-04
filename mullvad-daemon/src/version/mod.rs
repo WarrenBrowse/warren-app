@@ -51,11 +51,12 @@ pub fn is_dev_version() -> bool {
     mullvad_version::VERSION.contains("dev")
 }
 
-pub fn log_version() {
+pub fn log_version(bin_name: &str) {
     log::info!(
-        "Starting {} - {} {}",
-        env!("CARGO_PKG_NAME"),
+        "Starting {} - {} {} (product env: {})",
+        bin_name,
         mullvad_version::VERSION,
         COMMIT_DATE,
+        warren_product_env::ENV_NAME,
     )
 }

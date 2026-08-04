@@ -1,7 +1,7 @@
 use std::{env, path::PathBuf};
 
 pub fn get_resource_dir() -> PathBuf {
-    match env::var_os("MULLVAD_RESOURCE_DIR") {
+    match env::var_os("WARREN_RESOURCE_DIR").or_else(|| env::var_os("MULLVAD_RESOURCE_DIR")) {
         Some(path) => PathBuf::from(path),
         None => get_default_resource_dir(),
     }

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react';
 
 import { RoutePath } from '../../shared/routes';
-import { useScheduler } from '../../shared/scheduler';
 import { getNavigationBase } from '../lib/functions/navigation-base';
 import { TransitionType, useHistory } from '../lib/history';
 import { useEffectEvent } from '../lib/utility-hooks';
@@ -12,33 +11,71 @@ export default function StateTriggeredNavigation() {
 
   const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
   const loginState = useSelector((state) => state.account.status);
+  const onboardingCompletedUnix = useSelector(
+    (state) => state.settings.guiSettings.onboardingCompletedUnix,
+  );
 
-  const delayScheduler = useScheduler();
-
-  const prevPath = useRef<RoutePath>(getNavigationBase(connectedToDaemon, loginState));
+  const prevPath = useRef<RoutePath>(
+    getNavigationBase(connectedToDaemon, loginState, onboardingCompletedUnix),
+  );
   const nextPath = useMemo(
-    () => getNavigationBase(connectedToDaemon, loginState),
-    [connectedToDaemon, loginState],
+    () => getNavigationBase(connectedToDaemon, loginState, onboardingCompletedUnix),
+    [connectedToDaemon, loginState, onboardingCompletedUnix],
   );
 
   const updatePath = useEffectEvent((nextPath: RoutePath) => {
     const currentPath = location.pathname as RoutePath;
 
+    // `voucherSuccess` is a parameterized child route of `timeAdded`
+    // (`/main/voucher/success/:newExpiry/:secondsAdded` vs
+    // `/main/time-added`) - both surface the "subscription credit was
+    // applied" UX, with `voucherSuccess` carrying a more specific
+    // title ("Voucher was successfully redeemed"). When a user
+    // redeems a voucher, `RedeemVoucher.tsx` imperatively pushes
+    // `voucherSuccess` AND the account-expiry refresh that follows
+    // transitions `expiredState` from `'expired'` to `'time_added'`,
+    // which makes `getNavigationBase` reactively return `timeAdded`.
+    // Without this guard the user is bounced from `voucherSuccess`
+    // to the generic `timeAdded` view a moment after seeing the
+    // voucher-specific one - observed as "the success screen appears
+    // twice in a row".
+    if (nextPath === RoutePath.timeAdded && currentPath.startsWith('/main/voucher/success/')) {
+      return;
+    }
+
+    // While the user is inside the onboarding wizard, account state churns by
+    // design: minting and crediting the first subscription flips `expiredState`
+    // from `expired` to `time_added` to `undefined`, and each change makes
+    // `getNavigationBase` return `expired`, then `timeAdded`, then
+    // `onboardingWelcome`. Letting those drive navigation yanks the user out of
+    // whatever step they are on and dumps them back on step 1 (welcome), so they
+    // can never reach the final step that persists `onboardingCompletedUnix` -
+    // an inescapable loop (observed on Windows). The wizard owns its forward
+    // navigation (each view pushes the next and the final step routes to `main`),
+    // so ignore these state-triggered redirects while the user is within it.
+    // Genuine interrupts (logout -> login, daemon disconnect -> launch, device
+    // revoked) are not in this set and still go through.
+    const inOnboarding =
+      currentPath === RoutePath.onboardingWelcome ||
+      currentPath.startsWith(`${RoutePath.onboardingWelcome}/`);
+    if (
+      inOnboarding &&
+      (nextPath === RoutePath.expired ||
+        nextPath === RoutePath.timeAdded ||
+        nextPath === RoutePath.onboardingWelcome)
+    ) {
+      return;
+    }
+
     if (currentPath !== nextPath) {
-      delayScheduler.cancel();
-
-      const transition = getNavigationTransition(currentPath, nextPath);
-      const delay = getNavigationDelay(currentPath, nextPath);
-
-      const navigate = () => {
-        reset(nextPath, { transition });
-      };
-
-      if (delay) {
-        delayScheduler.schedule(navigate, delay);
-      } else {
-        navigate();
-      }
+      // Navigate on the same render cycle as the state change. The
+      // 1000ms login-to-main/expired delay inherited from Mullvad
+      // existed to show its "logged in" checkmark; Warren has no such
+      // interstitial, so any delay here is a window where the source
+      // view renders content for a state the user already left
+      // (observed as the welcome screen flashing between the backup
+      // step and the expired/congrats screen).
+      reset(nextPath, { transition: getNavigationTransition(currentPath, nextPath) });
     }
   });
 
@@ -52,15 +89,6 @@ export default function StateTriggeredNavigation() {
   }, [nextPath]);
 
   return null;
-}
-
-function getNavigationDelay(currentPath: RoutePath, nextPath: RoutePath): number | void {
-  if (
-    currentPath === RoutePath.login &&
-    (nextPath === RoutePath.main || nextPath === RoutePath.expired)
-  ) {
-    return 1000;
-  }
 }
 
 function getNavigationTransition(currentPath: RoutePath, nextPath: RoutePath) {
@@ -78,19 +106,16 @@ function getNavigationTransition(currentPath: RoutePath, nextPath: RoutePath) {
       [RoutePath.launch]: TransitionType.push,
       [RoutePath.main]: TransitionType.pop,
       [RoutePath.deviceRevoked]: TransitionType.pop,
-      [RoutePath.tooManyDevices]: TransitionType.pop,
       '*': TransitionType.dismiss,
     },
     [RoutePath.main]: {
       [RoutePath.launch]: TransitionType.push,
       [RoutePath.login]: TransitionType.push,
-      [RoutePath.tooManyDevices]: TransitionType.push,
       '*': TransitionType.dismiss,
     },
     [RoutePath.expired]: {
       [RoutePath.launch]: TransitionType.push,
       [RoutePath.login]: TransitionType.push,
-      [RoutePath.tooManyDevices]: TransitionType.push,
       '*': TransitionType.dismiss,
     },
     [RoutePath.timeAdded]: {
@@ -100,9 +125,6 @@ function getNavigationTransition(currentPath: RoutePath, nextPath: RoutePath) {
     },
     [RoutePath.deviceRevoked]: {
       '*': TransitionType.pop,
-    },
-    [RoutePath.tooManyDevices]: {
-      [RoutePath.login]: TransitionType.push,
     },
   };
 

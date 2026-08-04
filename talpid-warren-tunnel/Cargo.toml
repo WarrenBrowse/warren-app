@@ -1,0 +1,108 @@
+[package]
+name = "talpid-warren-tunnel"
+edition.workspace = true
+rust-version.workspace = true
+description = "Warren adapter for the talpid tunnel state machine, on top of the WarrenGuard client transport engine (Quinn upstream)"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+futures = { workspace = true }
+ipnetwork = { workspace = true }
+talpid-routing = { path = "../talpid-routing" }
+talpid-tunnel = { path = "../talpid-tunnel" }
+talpid-types = { path = "../talpid-types" }
+thiserror = { workspace = true }
+# `time` + `macros` for the migration watchdog (sleep/select), `process`
+# for its Linux `ip route replace` bypass nudge. These were previously
+# satisfied only by workspace feature unification; spelled out so the
+# crate compiles standalone.
+tokio = { workspace = true, features = [
+  "rt-multi-thread",
+  "sync",
+  "io-util",
+  "time",
+  "macros",
+  "process",
+] }
+log = { workspace = true }
+# The engine's `DaitaShared` pump-state alias is `Arc<parking_lot::Mutex<..>>`;
+# constructing it here requires the same mutex type.
+parking_lot = "0.12"
+
+# `tun08` is the same `tun = 0.8.x` crate used by `talpid-tunnel`
+# (default features to get async). Strict pin on the same version to
+# avoid a diamond dependency between
+# `talpid-tunnel::tun_provider::unix.rs` (which exposes
+# `tun08::AsyncDevice` via `into_async_device`) and the
+# `MullvadTunPacketDevice` adapter on the Warren side. warren-tunnel
+# itself uses `tun-rs = 2`, so the adapter bridges the two.
+tun08 = { package = "tun", version = "0.8.5", default-features = false, features = [
+  "async",
+] }
+
+# WarrenGuard engine crates consumed as path-deps cross-repo (the client
+# transport datapath, carved out of warren-core into the neutral engine).
+# The expected warrenguard checkout SHA is pinned in `.warrenguard-version`
+# at the warren-app repo root.
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", features = ["system-vpn", "pq-hpke"] }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
+warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump" }
+# `knobs` (env-tuning registry, e.g. `WARREN_IDLE_COVER`).
+warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
+# Privileged system-VPN routing: default-route split + bypass CIDR.
+warrenguard-route-split = { path = "../../warrenguard/crates/warrenguard-route-split" }
+# `SocketBypass` + `WARREN_TUNNEL_FWMARK`, named directly so the carrier-socket
+# bypass wiring below can spell the type it hands to `warrenguard-transport`
+# (already a transitive dependency via warrenguard-route-split; named here only
+# so this crate's own code can reference the type).
+warrenguard-tun-core = { path = "../../warrenguard/crates/warrenguard-tun-core" }
+# `apply()`: the migration watchdog reapplies the carrier's socket bypass to
+# the fresh socket it rebinds onto (macOS only; a plain dep like
+# warrenguard-tun-core above since `apply` is a no-op Err on other targets).
+warrenguard-socket-bypass = { path = "../../warrenguard/crates/warrenguard-socket-bypass" }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire" }
+# NAT-PMP client + RFC 6886 wire types. The client crate exposes the
+# `refresh_loop` helper consumed by `mullvad-daemon::warren_nat_pmp` to
+# keep the exit-side mapping alive. The protocol crate is pulled
+# transitively but also re-exported here so daemon code references
+# `talpid_warren_tunnel::NatPmpProto` without depending on warren-core
+# directly.
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client" }
+warrenguard-natpmp-protocol = { path = "../../warrenguard/crates/warrenguard-natpmp-protocol" }
+# Multi-hop stack consumed by the dispatcher in `lib.rs`: every session
+# rides the multi-hop wire protocol via `MultiHopClient` (a 1-hop circuit
+# when the user has not opted into multi-hop).
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
+warrenguard-relay = { path = "../../warrenguard/crates/warrenguard-relay" }
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
+# Token buckets for the client-side bandwidth ceiling
+# (Settings::warren_max_rate_bps) enforced in rate_limiter.rs.
+warrenguard-ratelimit = { path = "../../warrenguard/crates/warrenguard-ratelimit" }
+
+rand = { workspace = true }
+
+# Ed25519 signing key carried in `WarrenTunnelParameters`. ed25519-dalek
+# is also re-exported via `warren-relay-selector::warren_types` upstream
+# warren-core, but we depend on it directly to avoid pulling the whole
+# selector crate.
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
+  "std",
+] }
+anyhow = "1"
+
+[target.'cfg(windows)'.dependencies]
+# `AddressFamily` for the migration watchdog's default-route gate
+# (`talpid_routing::get_best_default_route` takes it on Windows).
+talpid-windows = { path = "../talpid-windows" }
+
+[dev-dependencies]
+# Compile-time trait-implementation assertions used in the test module
+# (e.g. `assert_not_impl_any!(WarrenTunnelParameters: Clone)`).
+static_assertions = "1"
+# `start_paused` virtual-clock tests for the migration watchdog policy.
+tokio = { workspace = true, features = ["test-util", "macros", "time"] }
+
+[lints]
+workspace = true

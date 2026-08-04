@@ -47,7 +47,7 @@ pub fn stop_and_delete_service(name: &str) -> Result<(), windows_service::Error>
         Err(e) => return Err(e),
     };
 
-    // Attempt to stop the service (ignore errors — it may already be stopped)
+    // Attempt to stop the service (ignore errors - it may already be stopped)
     let _ = service.stop();
 
     // Wait up to MAX_WAIT for it to stop

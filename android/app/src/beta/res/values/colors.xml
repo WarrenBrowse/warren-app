@@ -1,0 +1,8 @@
+<resources>
+    <!-- Beta flavor overlay: the launcher icon wears the palette swapped
+         (brown background, sand mark) plus an amber BETA badge, so the beta
+         app is tellable from the prod one at a glance on the home screen. The
+         matching foreground and monochrome layers live in this flavor's
+         drawable-nodpi, and the desktop builds carry the same badge. -->
+    <color name="icon_background">#332818</color>
+</resources>

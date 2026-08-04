@@ -13,6 +13,7 @@ pub mod lan;
 pub mod lockdown;
 pub mod log;
 pub mod patch;
+pub mod port_forward;
 pub mod proxies;
 pub mod relay;
 pub mod relay_constraints;
@@ -21,7 +22,9 @@ pub mod split_tunnel;
 pub mod status;
 pub mod tunnel;
 pub mod tunnel_state;
+pub mod unblock;
 pub mod version;
+pub mod warren;
 
 /// A value parser that parses "on" or "off" into a boolean
 #[derive(Debug, Clone, Copy)]

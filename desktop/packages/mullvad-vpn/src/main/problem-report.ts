@@ -8,12 +8,6 @@ import { IpcMainEventChannel } from './ipc-event-channel';
 import { resolveBin } from './proc';
 
 export function registerIpcListeners() {
-  IpcMainEventChannel.problemReport.handleCollectLogs(collectLogs);
-
-  IpcMainEventChannel.problemReport.handleSendReport(({ email, message, savedReportId }) => {
-    return send(email, message, savedReportId);
-  });
-
   IpcMainEventChannel.problemReport.handleViewLog((savedReportId) => {
     const problemReportPath = getProblemReportPath(savedReportId);
     if (process.platform === 'linux') {
@@ -38,10 +32,12 @@ export function registerIpcListeners() {
   });
 }
 
-function collectLogs(toRedact?: string): Promise<string> {
+// Also used by the forum attach-logs flow (forum-attach.ts): the report is
+// collected when the deep link arrives so the consent prompt can show it.
+export function collectLogs(toRedact?: string): Promise<string> {
   const id = randomUUID();
   const reportPath = getProblemReportPath(id);
-  const executable = resolveBin('mullvad-problem-report');
+  const executable = resolveBin('warren-problem-report');
   const args = ['collect', '--output', reportPath];
   if (toRedact) {
     args.push('--redact', toRedact);
@@ -64,28 +60,16 @@ function collectLogs(toRedact?: string): Promise<string> {
   });
 }
 
-function send(email: string, message: string, savedReportId: string): Promise<void> {
-  const executable = resolveBin('mullvad-problem-report');
-  const reportPath = getProblemReportPath(savedReportId);
-  const args = ['send', '--email', email, '--message', message, '--report', reportPath];
+// The id is always a `randomUUID()` the main process issued (see
+// `collectLogs`), but it crosses the IPC boundary from the renderer
+// before being joined into a filesystem path. Validate it against the
+// canonical UUID shape so a malicious/buggy renderer cannot inject path
+// traversal (e.g. `../../etc/passwd`) into the report path.
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-  return new Promise((resolve, reject) => {
-    execFile(executable, args, { windowsHide: true }, (error, stdout, stderr) => {
-      if (error) {
-        log.error(
-          `Failed to send a problem report.
-          Stdout: ${stdout.toString()}
-          Stderr: ${stderr.toString()}`,
-        );
-        reject(error.message);
-      } else {
-        log.info('Problem report was sent.');
-        resolve();
-      }
-    });
-  });
-}
-
-function getProblemReportPath(id: string): string {
+export function getProblemReportPath(id: string): string {
+  if (!UUID_REGEX.test(id)) {
+    throw new Error('Invalid problem report id');
+  }
   return path.join(app.getPath('temp'), `${id}.log`);
 }

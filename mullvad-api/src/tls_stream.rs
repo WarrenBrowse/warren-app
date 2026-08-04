@@ -1,5 +1,12 @@
 //! Provides a TLS 1.3 stream, accepting only LE for root cert.
-//! SNI is disabled.
+//!
+//! SNI policy is gated on [`API_PINNED_IP`]: it is **sent** when the API is
+//! reached via DNS (the shared reverse proxy needs SNI to select the cert),
+//! and **omitted** when an API IP is pinned (the dedicated endpoint presents
+//! the cert without SNI via Caddy `default_sni`). Omitting SNI keeps the
+//! hostname off the wire - bootstrap-privacy parity with upstream Mullvad.
+//! Certificate validation always binds to the hostname (SAN), regardless.
+use mullvad_api_constants::API_PINNED_IP;
 use std::{
     io::{self, ErrorKind},
     pin::Pin,
@@ -30,8 +37,12 @@ static TLS_CONFIG: LazyLock<Arc<ClientConfig>> = LazyLock::new(|| {
                 .expect("ring crypt-prover should support TLS 1.3")
                 .with_root_certificates(read_cert_store().expect("Failed to parse pem file"))
                 .with_no_client_auth();
-        // This assumes that the server hello/certificates will include certificate for the domain.
-        config.enable_sni = false;
+        // Send SNI only on the DNS-resolved path (the shared reverse proxy
+        // needs it to pick the cert). With a pinned API IP the dedicated
+        // endpoint serves the cert without SNI (Caddy `default_sni`), so we
+        // omit it to keep the hostname off the wire. `API_PINNED_IP` is `None`
+        // by default → SNI stays enabled (unchanged behaviour).
+        config.enable_sni = API_PINNED_IP.is_none();
         config
     };
     Arc::new(config)

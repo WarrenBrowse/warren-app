@@ -76,7 +76,7 @@ export function ApiAccessView() {
               message={[
                 messages.pgettext(
                   'api-access-methods-view',
-                  'The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations.',
+                  'The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations.',
                 ),
                 messages.pgettext(
                   'api-access-methods-view',
@@ -97,7 +97,7 @@ export function ApiAccessView() {
                 <HeaderSubTitle>
                   {messages.pgettext(
                     'api-access-methods-view',
-                    'Manage and add custom methods to access the Mullvad API.',
+                    'Manage and add custom methods to access the Warren API.',
                   )}
                 </HeaderSubTitle>
               </SettingsHeader>
@@ -257,7 +257,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               messages.pgettext(
                 'api-access-methods-view',
-                'With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies.',
+                'With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies.',
               ),
               messages.pgettext(
                 'api-access-methods-view',
@@ -271,11 +271,11 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               messages.pgettext(
                 'api-access-methods-view',
-                'With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks.',
+                'With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks.',
               ),
               messages.pgettext(
                 'api-access-methods-view',
-                'This can be useful if the API is censored but Mullvad’s bridge servers are not.',
+                'This can be useful if the API is censored but Warren’s bridge servers are not.',
               ),
             ]}
           />
@@ -286,7 +286,7 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               messages.pgettext(
                 'api-access-methods-view',
-                'With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.',
+                'With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers.',
               ),
               messages.pgettext(
                 'api-access-methods-view',
@@ -300,12 +300,12 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
             message={[
               sprintf(
                 // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-                // TRANSLATORS: which the app uses to reach Mullvad's API servers
+                // TRANSLATORS: which the app uses to reach Warren's API servers
                 // TRANSLATORS: Available placeholders:
                 // TRANSLATORS: %(domainFronting)s - Will be replaced with: 'Domain fronting'
                 messages.pgettext(
                   'api-access-methods-view',
-                  'The app communicates with a Mullvad API server via %(domainFronting)s.',
+                  'The app communicates with a Warren API server via %(domainFronting)s.',
                 ),
                 {
                   domainFronting: strings.domainFronting,
@@ -313,25 +313,25 @@ function ApiAccessMethod(props: ApiAccessMethodProps) {
               ),
               sprintf(
                 // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-                // TRANSLATORS: which the app uses to reach Mullvad's API servers
+                // TRANSLATORS: which the app uses to reach Warren's API servers
                 // TRANSLATORS: Available placeholders:
                 // TRANSLATORS: %(domainFronting)s - Will be replaced with: 'Domain fronting'
                 messages.pgettext(
                   'api-access-methods-view',
-                  'With the %(domainFronting)s access method, the app reaches the Mullvad API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor.',
+                  'With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor.',
                 ),
                 {
                   domainFronting: strings.domainFronting,
                 },
               ),
               // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-              // TRANSLATORS: which the app uses to reach Mullvad's API servers
+              // TRANSLATORS: which the app uses to reach Warren's API servers
               messages.pgettext(
                 'api-access-methods-view',
                 'This can be useful when direct access and other methods are blocked by censorship.',
               ),
               // TRANSLATORS: Part of a description of the 'Domain fronting' API access method
-              // TRANSLATORS: which the app uses to reach Mullvad's API servers
+              // TRANSLATORS: which the app uses to reach Warren's API servers
               messages.pgettext(
                 'api-access-methods-view',
                 'The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents.',

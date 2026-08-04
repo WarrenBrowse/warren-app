@@ -28,6 +28,13 @@ pub use imp::{
 
 pub use imp::{Error, RouteManagerHandle};
 
+// `CallbackMessage` is the item yielded by the Linux `change_listener`
+// stream; re-exported so out-of-crate consumers (the Warren migration
+// watchdog) can match on route add/del events. Both the type and the
+// listener are Linux-only.
+#[cfg(target_os = "linux")]
+pub use imp::CallbackMessage;
+
 /// Link-layer/MAC address
 #[cfg(target_os = "macos")]
 #[derive(Debug, Eq, PartialEq, Clone, Copy)]
@@ -118,6 +125,14 @@ impl Route {
     #[cfg(target_os = "linux")]
     pub fn get_node(&self) -> &Node {
         &self.node
+    }
+
+    /// Returns the destination network prefix of the route. Used by the
+    /// Warren migration watchdog to recognize a default-route (prefix 0)
+    /// change among the unix `change_listener` events.
+    #[cfg(not(target_os = "android"))]
+    pub fn prefix(&self) -> IpNetwork {
+        self.prefix
     }
 }
 

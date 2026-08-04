@@ -1,8 +1,10 @@
 #include "Base.xcconfig"
 
 // Provisioning profiles
-// Comment out the lines below if using automatic code sign
-PROVISIONING_PROFILE_SPECIFIER[config=Debug][sdk=*][arch=*] = Mullvad VPN Development
-PROVISIONING_PROFILE_SPECIFIER[config=Staging][sdk=*][arch=*] = Mullvad VPN Development
-PROVISIONING_PROFILE_SPECIFIER[config=MockRelease][sdk=*][arch=*] = Mullvad VPN Development
-PROVISIONING_PROFILE_SPECIFIER[config=Release][sdk=*][arch=*] = Mullvad VPN Release
+// Warren defaults to Automatic code signing (see Base.xcconfig). Uncomment
+// and adjust the lines below when switching to manual signing with
+// Warren-named profiles (e.g. "Warren VPN Development").
+// PROVISIONING_PROFILE_SPECIFIER[config=Debug][sdk=*][arch=*] = Warren VPN Development
+// PROVISIONING_PROFILE_SPECIFIER[config=Staging][sdk=*][arch=*] = Warren VPN Development
+// PROVISIONING_PROFILE_SPECIFIER[config=MockRelease][sdk=*][arch=*] = Warren VPN Development
+// PROVISIONING_PROFILE_SPECIFIER[config=Release][sdk=*][arch=*] = Warren VPN Release

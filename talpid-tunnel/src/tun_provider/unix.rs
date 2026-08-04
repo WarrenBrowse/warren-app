@@ -1,8 +1,8 @@
-#[cfg(feature = "wireguard-go")]
-pub use tun05_imp::{Error, UnixTun, UnixTunProvider};
-#[cfg(not(feature = "wireguard-go"))]
 pub use tun08_imp::{Error, UnixTun, UnixTunProvider};
-#[cfg(feature = "wireguard-go")]
+
+// Legacy WireGuard-Go tun 0.5 backend removed: Warren tunnels via QUIC,
+// `tun08_imp` is the only Unix backend.
+#[cfg(any())]
 mod tun05_imp {
     use std::{
         net::IpAddr,
@@ -215,7 +215,6 @@ mod tun05_imp {
     }
 }
 
-#[cfg(not(feature = "wireguard-go"))]
 mod tun08_imp {
     use std::net::IpAddr;
     use std::os::fd::{AsRawFd, RawFd};
@@ -378,6 +377,21 @@ mod tun08_imp {
     }
 
     impl TunnelDevice {
+        /// Consumes the device and returns the underlying
+        /// `tun08::AsyncDevice`. Lets a custom tunnel backend (see
+        /// `talpid-warren-tunnel`) take the device to wire a direct
+        /// async I/O pump on it, without going through the operations
+        /// managed by `TunnelDevice` (set_ip, set_up).
+        ///
+        /// **Warren fork**: required so that the
+        /// bidirectional TUN <-> QUIC datagram pump of the
+        /// `WarrenTunnelMonitor` backend can share an `Arc<AsyncDevice>`
+        /// between the uplink task and the downlink task.
+        #[must_use]
+        pub fn into_async_device(self) -> tun08::AsyncDevice {
+            self.dev
+        }
+
         pub(crate) fn set_ip(&mut self, ip: IpAddr) -> Result<(), Error> {
             match ip {
                 IpAddr::V4(ipv4) => {

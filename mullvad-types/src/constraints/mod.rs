@@ -165,10 +165,10 @@ mod tests {
 
     #[derive(Debug, Clone, PartialEq, Intersection)]
     enum Color {
-        /// Unit variant — no inner data.
+        /// Unit variant - no inner data.
         Red,
         Green,
-        /// Newtype variant — inner value must itself implement `Intersection`.
+        /// Newtype variant - inner value must itself implement `Intersection`.
         Custom(u16),
     }
 

@@ -2,3 +2,8 @@ build
 .gradle
 .kotlin
 local.properties
+
+# Signing keystores - production .jks lives in 1Password, dev .jks is
+# generated locally via android/scripts/gen-dev-keystore.sh.
+*.jks
+keystore.properties

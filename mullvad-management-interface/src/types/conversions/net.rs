@@ -15,6 +15,11 @@ impl From<talpid_types::net::TunnelEndpoint> for proto::TunnelEndpoint {
             daita: endpoint.daita,
             #[cfg(not(daita))]
             daita: false,
+            tunnel_type: i32::from(match endpoint.tunnel_type {
+                talpid_types::net::TunnelType::WireGuard => proto::TunnelType::Wireguard,
+                talpid_types::net::TunnelType::Warren => proto::TunnelType::Warren,
+            }),
+            effective_mtu: endpoint.effective_mtu.map(u32::from),
         }
     }
 }
@@ -177,6 +182,14 @@ impl TryFrom<proto::TunnelEndpoint> for talpid_types::net::TunnelEndpoint {
                 .map(|tunnel_metadata| tunnel_metadata.tunnel_interface),
             #[cfg(daita)]
             daita: endpoint.daita,
+            effective_mtu: endpoint
+                .effective_mtu
+                .map(|mtu| u16::try_from(mtu).unwrap_or(u16::MAX)),
+            tunnel_type: match proto::TunnelType::try_from(endpoint.tunnel_type) {
+                Ok(proto::TunnelType::Warren) => talpid_types::net::TunnelType::Warren,
+                // Default to WireGuard for unknown or zero values (backward compat).
+                _ => talpid_types::net::TunnelType::WireGuard,
+            },
         })
     }
 }

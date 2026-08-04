@@ -6,10 +6,10 @@
     "packages/*"
   ],
   "author": {
-    "name": "Mullvad VPN",
-    "email": "support@mullvadvpn.net"
+    "name": "Warren VPN",
+    "email": "support@warrenbrowse.com"
   },
-  "repository": "https://github.com/mullvad/mullvadvpn-app",
+  "repository": "https://github.com/WarrenBrowse/warren-app",
   "license": "GPL-3.0-or-later",
   "scripts": {
     "lint": "eslint --ignore-pattern packages/ . && npm run lint --workspaces --if-present",
@@ -29,6 +29,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "postcss": "8.5.15",
     "prettier": "^3.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.15.0"
@@ -42,9 +43,6 @@
     "npm": "11.12.1"
   },
   "overrides": {
-    "styled-components": {
-      "postcss": "8.5.13"
-    },
     "grpc_tools_node_protoc_ts": {
       "handlebars": "^4.7.9"
     }

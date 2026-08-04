@@ -1,0 +1,247 @@
+//
+//  SimulatorTunnelProviderHost.swift
+//  MullvadVPN
+//
+//  Created by pronebird on 10/02/2020.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+#if targetEnvironment(simulator)
+
+    @preconcurrency import Foundation
+    import WarrenLogging
+    import WarrenREST
+    import WarrenSettings
+    import WarrenTypes
+    import NetworkExtension
+    import PacketTunnelCore
+
+    final class SimulatorTunnelProviderHost: SimulatorTunnelProviderDelegate, @unchecked Sendable {
+        private var observedState: ObservedState = .disconnected
+        private var selectedRelays: SelectedRelays?
+        private let apiRequestProxy: APIRequestProxy
+        private let relaySelector: RelaySelectorProtocol
+
+        private let providerLogger = Logger(label: "SimulatorTunnelProviderHost")
+        private let dispatchQueue = DispatchQueue(label: "SimulatorTunnelProviderHostQueue")
+
+        public var onHandleProviderMessage: ((TunnelProviderMessage) -> Void)?
+
+        init(
+            relaySelector: RelaySelectorProtocol,
+            apiTransportProvider: APITransportProvider
+        ) {
+            self.relaySelector = relaySelector
+            self.apiRequestProxy = APIRequestProxy(
+                dispatchQueue: dispatchQueue,
+                transportProvider: apiTransportProvider
+            )
+        }
+
+        override func startTunnel(
+            options: [String: NSObject]?,
+            completionHandler: @escaping @Sendable (Error?) -> Void
+        ) {
+            dispatchQueue.async { [weak self] in
+                guard let self else {
+                    completionHandler(nil)
+                    return
+                }
+
+                var selectedRelays: SelectedRelays?
+
+                do {
+                    let tunnelOptions = PacketTunnelOptions(rawOptions: options ?? [:])
+
+                    selectedRelays = try tunnelOptions.getSelectedRelays()
+                } catch {
+                    providerLogger.error(
+                        error: error,
+                        message: """
+                            Failed to decode selected relay passed from the app. \
+                            Will continue by picking new relay.
+                            """
+                    )
+                }
+
+                do {
+                    setInternalStateConnected(with: try selectedRelays ?? pickRelays())
+                    completionHandler(nil)
+                } catch let error as NoRelaysSatisfyingConstraintsError {
+                    // Surface WHICH constraint zeroed the candidates: the
+                    // blocked state alone is undiagnosable from logs.
+                    providerLogger.error("Relay selection failed: \(error.reason)")
+                    observedState = .error(ObservedBlockedState(reason: .noRelaysSatisfyingConstraints))
+                    completionHandler(error)
+                } catch {
+                    providerLogger.error(
+                        error: error,
+                        message: "Failed to pick relay."
+                    )
+                    completionHandler(error)
+                }
+            }
+        }
+
+        override func stopTunnel(with reason: NEProviderStopReason, completionHandler: @escaping @Sendable () -> Void) {
+            dispatchQueue.async { [weak self] in
+                self?.selectedRelays = nil
+                self?.observedState = .disconnected
+
+                completionHandler()
+            }
+        }
+
+        override func handleAppMessage(_ messageData: Data, completionHandler: ((Data?) -> Void)?) {
+            dispatchQueue.sync {
+                do {
+                    let message = try TunnelProviderMessage(messageData: messageData)
+
+                    self.handleProviderMessage(message, completionHandler: completionHandler)
+                } catch {
+                    self.providerLogger.error(
+                        error: error,
+                        message: "Failed to decode app message."
+                    )
+
+                    completionHandler?(nil)
+                }
+            }
+        }
+
+        private func handleProviderMessage(
+            _ message: TunnelProviderMessage,
+            completionHandler: ((Data?) -> Void)?
+        ) {
+            nonisolated(unsafe) let handler = completionHandler
+            switch message {
+            case .getTunnelStatus:
+                var reply: Data?
+                do {
+                    reply = try TunnelProviderReply(observedState).encode()
+                } catch {
+                    self.providerLogger.error(
+                        error: error,
+                        message: "Failed to encode tunnel status."
+                    )
+                }
+
+                handler?(reply)
+
+            case let .reconnectTunnel(nextRelay):
+                reasserting = true
+
+                switch nextRelay {
+                case let .preSelected(selectedRelays):
+                    self.selectedRelays = selectedRelays
+                case .random:
+                    if let nextRelays = try? pickRelays() {
+                        self.selectedRelays = nextRelays
+                    }
+                case .current:
+                    break
+                }
+
+                setInternalStateReconnecting(with: selectedRelays)
+                reasserting = false
+
+                completionHandler?(nil)
+
+                // The PacketTunnel does not run on the simulator.
+                // Fake a reconnecting state that becomes connected after long enough for the UI to change appropriately.
+                dispatchQueue.asyncAfter(deadline: .now() + .milliseconds(600)) { [weak self] in
+                    self?.setInternalStateConnected(with: self?.selectedRelays)
+                }
+
+            case let .sendAPIRequest(proxyRequest):
+                apiRequestProxy.sendRequest(proxyRequest) { response in
+                    var reply: Data?
+                    do {
+                        reply = try TunnelProviderReply(response).encode()
+                    } catch {
+                        self.providerLogger.error(
+                            error: error,
+                            message: "Failed to encode ProxyURLResponse."
+                        )
+                    }
+                    handler?(reply)
+                }
+
+            case let .cancelAPIRequest(listId):
+                apiRequestProxy.cancelRequest(identifier: listId)
+
+                completionHandler?(nil)
+
+            case .privateKeyRotation:
+                completionHandler?(nil)
+            }
+
+            onHandleProviderMessage?(message)
+        }
+
+        private func pickRelays() throws -> SelectedRelays {
+            let settings = try SettingsManager.readSettings()
+            // Selection inputs, so a blocked state is diagnosable. No
+            // identity material: toggles and location constraints only.
+            providerLogger.debug(
+                "Picking relays: multihop=\(settings.tunnelMultihopState), daita=\(settings.daita.isEnabled), obfuscation=\(settings.wireGuardObfuscation.state), exitLocations=\(settings.relayConstraints.exitLocations)"
+            )
+            return try relaySelector.selectRelays(
+                tunnelSettings: settings,
+                connectionAttemptCount: 0
+            )
+        }
+
+        private func setInternalStateReconnecting(with selectedRelays: SelectedRelays?) {
+            guard let selectedRelays = selectedRelays else { return }
+
+            do {
+                let settings = try SettingsManager.readSettings()
+                observedState = .reconnecting(
+                    ObservedConnectionState(
+                        selectedRelays: selectedRelays,
+                        relayConstraints: settings.relayConstraints,
+                        networkReachability: .reachable,
+                        connectionAttemptCount: 0,
+                        transportLayer: .udp,
+                        remotePort: selectedRelays.entry?.endpoint.socketAddress.port
+                            ?? selectedRelays.exit.endpoint.socketAddress.port,
+                        isPostQuantum: settings.tunnelQuantumResistance.isEnabled,
+                        isDaitaEnabled: settings.daita.isEnabled
+                    )
+                )
+            } catch {
+                providerLogger.error(error: error, message: "Failed to read device settings")
+            }
+        }
+
+        private func setInternalStateConnected(with selectedRelays: SelectedRelays?) {
+            guard let selectedRelays = selectedRelays else { return }
+
+            self.selectedRelays = selectedRelays
+
+            do {
+                let settings = try SettingsManager.readSettings()
+                observedState = .connected(
+                    ObservedConnectionState(
+                        selectedRelays: selectedRelays,
+                        relayConstraints: settings.relayConstraints,
+                        networkReachability: .reachable,
+                        connectionAttemptCount: 0,
+                        transportLayer: .udp,
+                        remotePort: selectedRelays.entry?.endpoint.socketAddress.port
+                            ?? selectedRelays.exit.endpoint.socketAddress.port,
+                        isPostQuantum: settings.tunnelQuantumResistance.isEnabled,
+                        isDaitaEnabled: settings.daita.isEnabled
+                    )
+                )
+            } catch {
+                providerLogger.error(
+                    error: error,
+                    message: "Failed to read device settings."
+                )
+            }
+        }
+    }
+
+#endif

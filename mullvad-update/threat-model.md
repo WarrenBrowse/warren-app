@@ -1,28 +1,31 @@
 # Introduction
 
-This threat model describes the code backing Mullvad VPN loader and in-app updates on the two
-platforms it supports (Windows and macOS). The loader is a graphical application used by Mullvad
-users to install and upgrade the Mullvad VPN app on their devices, and in-app updates allows users
-to update the app from within the app. The library crate `mullvad-update` is responsible for
-verifying the integrity of the software that it downloads and installs on the user's device to
-ensure that the software has not been tampered with. It allows the app to be hosted on untrusted
-third-party CDNs without compromising security.
+This threat model describes the code backing Warren VPN loader and in-app updates on the two
+platforms it supports (Windows and macOS). The loader is a graphical application used by Warren
+users to install and upgrade the Warren VPN app on their devices, and in-app updates allows users
+to update the app from within the app. The library crate `mullvad-update` (inherited crate name)
+is responsible for verifying the integrity of the software that it downloads and installs on the
+user's device to ensure that the software has not been tampered with. Its design allows artifacts
+to be hosted on untrusted third-party hosts without compromising security; Warren currently serves
+both the signed metadata and the artifacts from its own update host
+(`api.warrenbrowse.com/updates`).
 
-These tools perform network requests towards Mullvad API endpoints and above mentioned third-party
-CDNs, and requires both read & write access to the target device file system.
+These tools perform network requests towards the Warren API host and requires both read & write
+access to the target device file system.
 
-## Acquiring Mullvad VPN loader
+## Acquiring Warren VPN loader
 
-The loader application is initially downloaded from Mullvad’s website or the Mullvad VPN app GitHub
-repository. For the installation artifacts on our website and GitHub, we provides detached PGP
-signatures for integrity verification.
+The loader application is initially downloaded from Warren's website
+([warrenbrowse.com](https://warrenbrowse.com)) or the Warren VPN app GitHub repository
+([github.com/WarrenBrowse/warren-app](https://github.com/WarrenBrowse/warren-app)). The update
+metadata consumed by `mullvad-update` is signed with Warren's release signing key, and release
+artifacts are checksummed in that signed metadata.
 
 # Who do we trust
 
-Some Mullvad employees - Access to publish metadata information to be consumed by `mullvad-update`
-is segmented and has been granted to select individuals which are trusted within the company to make
-app releases.
-
+Some Warren maintainers - Access to publish metadata information to be consumed by
+`mullvad-update` is segmented and has been granted to select individuals which are trusted to make
+app releases. The release signing key is held only in a dedicated, secured signing environment.
 
 # Who is the attacker
 
@@ -42,7 +45,7 @@ With the goal to …
 
 # Capabilities of the attacker
 
-* Changing what is served from the third party CDN network or the Mullvad API server
+* Changing what is served from the update host or any mirror in front of it
 
   * Serving malicious software or version metadata
   * Serving legitimate, but old versions of the version metadata or app binaries with known
@@ -74,7 +77,7 @@ in `mullvad-update` and the loader/in-app upgrade mechanisms:
 
 * Abort downloading the metadata if it is larger than a hardcoded max size
 
-* Only allow trusted people to publish metadata via secured Qubes machines
+* Only allow trusted people to publish metadata, from a dedicated, secured signing environment
 
 * When relevant, only read/use downloaded software artifacts from a location that the loader (or
   admin) controls, to prevent privilege escalation

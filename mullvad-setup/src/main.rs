@@ -1,10 +1,8 @@
 use clap::Parser;
-use mullvad_api::{ApiEndpoint, DEVICE_NOT_FOUND, proxy::ApiConnectionMode};
 use mullvad_management_interface::MullvadProxyClient;
 use mullvad_version::Version;
-use std::{path::PathBuf, process, str::FromStr, sync::LazyLock, time::Duration};
+use std::{path::PathBuf, process, str::FromStr, sync::LazyLock};
 use talpid_core::firewall::{self, Firewall};
-use talpid_future::retry::{ConstantInterval, retry_future};
 use talpid_types::ErrorExt;
 use tracing_subscriber::EnvFilter;
 
@@ -15,8 +13,6 @@ mod service;
 
 static APP_VERSION: LazyLock<Version> =
     LazyLock::new(|| Version::from_str(mullvad_version::VERSION).unwrap());
-
-const DEVICE_REMOVAL_STRATEGY: ConstantInterval = ConstantInterval::new(Duration::ZERO, Some(5));
 
 #[repr(i32)]
 enum ExitStatus {
@@ -49,11 +45,8 @@ pub enum Error {
     #[error("Firewall error")]
     FirewallError(#[source] firewall::Error),
 
-    #[error("Failed to initialize mullvad RPC runtime")]
-    RpcInitializationError(#[source] mullvad_api::Error),
-
-    #[error("Failed to remove device from account")]
-    RemoveDeviceError(#[source] mullvad_api::rest::Error),
+    #[error("Failed to restore DNS state")]
+    DnsRecoveryError(#[source] talpid_dns::Error),
 
     #[error("Failed to obtain settings directory path")]
     SettingsPathError(#[source] mullvad_paths::Error),
@@ -162,8 +155,6 @@ enum DriverCommand {
 enum DriverRemoveCommand {
     /// Reset split tunnel driver, uninstall the ST device, stop and delete the service
     SplitTunnel,
-    /// Remove the WireGuard-NT driver (loads mullvad-wireguard.dll from the same directory)
-    WgNt,
     /// Remove the Wintun driver (loads wintun.dll from the same directory)
     Wintun,
     /// Uninstall an abandoned Wintun network adapter with the legacy GUID
@@ -192,7 +183,6 @@ async fn main() {
         #[cfg(target_os = "windows")]
         Cli::Driver(DriverCommand::Remove(cmd)) => match cmd {
             DriverRemoveCommand::SplitTunnel => driver_setup::remove_split_tunnel(),
-            DriverRemoveCommand::WgNt => driver_setup::remove_wg_nt(),
             DriverRemoveCommand::Wintun => driver_setup::remove_wintun(),
             DriverRemoveCommand::WintunAbandonedDevice => {
                 driver_setup::remove_wintun_abandoned_device()
@@ -231,7 +221,7 @@ async fn reset_firewall() -> Result<(), Error> {
         return Err(Error::DaemonIsRunning);
     }
 
-    Firewall::new(
+    let firewall_result = Firewall::new(
         #[cfg(target_os = "linux")]
         mullvad_types::TUNNEL_FWMARK,
         #[cfg(target_os = "linux")]
@@ -240,46 +230,35 @@ async fn reset_firewall() -> Result<(), Error> {
         #[cfg(target_os = "linux")]
         None,
     )
-    .map_err(Error::FirewallError)?
-    .reset_policy()
     .map_err(Error::FirewallError)
+    // Sweep every product environment, not just this build's. This command is
+    // the last resort for a machine that is blocked with no working product,
+    // and the block it has to lift may have been installed by an environment
+    // that is no longer present: an install that moved channel, or one
+    // predating the current firewall identity scheme. A scoped reset silently
+    // leaves that machine offline, with every product-side indicator green.
+    .and_then(|mut firewall| {
+        firewall
+            .reset_policy_all_generations()
+            .map_err(Error::FirewallError)
+    });
+
+    // Repair DNS too, and even if the firewall reset failed: this command is
+    // the rescue for a machine whose daemon cannot come back up, and an
+    // unblocked firewall with resolution still aimed at a dead in-tunnel
+    // resolver would leave the user just as offline.
+    let dns_result = talpid_dns::recover_after_crash().map_err(Error::DnsRecoveryError);
+
+    firewall_result.and(dns_result)
 }
 
 async fn remove_device() -> Result<(), Error> {
-    let (cache_path, settings_path) = get_paths()?;
+    // Clears the local login-state cache if a login state is present.
+    let (_cache_path, settings_path) = get_paths()?;
     let (cacher, state) = mullvad_daemon::device::DeviceCacher::new(&settings_path)
         .await
         .map_err(Error::ReadDeviceCacheError)?;
-    if let Some(device) = state.into_device() {
-        let api_runtime =
-            mullvad_api::Runtime::with_cache(&ApiEndpoint::from_env_vars(), &cache_path, false)
-                .await
-                .map_err(Error::RpcInitializationError)?;
-
-        let connection_mode = ApiConnectionMode::try_from_cache(&cache_path).await;
-        let proxy = mullvad_api::DevicesProxy::new(
-            api_runtime.mullvad_rest_handle(connection_mode.into_provider()),
-        );
-
-        let device_removal = retry_future(
-            move || proxy.remove(device.account_number.clone(), device.device.id.clone()),
-            move |result| match result {
-                Err(error) => error.is_network_error(),
-                _ => false,
-            },
-            DEVICE_REMOVAL_STRATEGY,
-        )
-        .await;
-
-        // `DEVICE_NOT_FOUND` is not considered to be an error in this context.
-        match device_removal {
-            Ok(_) => Ok(()),
-            Err(mullvad_api::rest::Error::ApiError(_status, code)) if code == DEVICE_NOT_FOUND => {
-                Ok(())
-            }
-            Err(e) => Err(Error::RemoveDeviceError(e)),
-        }?;
-
+    if state.pubkey().is_some() {
         cacher
             .remove()
             .await

@@ -2,8 +2,51 @@
 
 #include "guidhash.h"
 #include <guiddef.h>
+#include <cstdint>
 #include <unordered_set>
 #include <map>
+
+//
+// Every WFP object this app installs is keyed by a GUID, and the purge removes
+// every object carrying our provider key. Those keys live in one machine-wide
+// namespace, so a non-production build sharing them would tear down a
+// production install's kill-switch (and vice versa). Each environment derives
+// its own key set from a build-time salt instead.
+//
+// Production's salt is 0, so its GUIDs stay bit for bit what they have always
+// been: an upgrade keeps recognising the objects it installed before, and the
+// change cannot affect production at all. The salt is injected by the native
+// module build from WARREN_PRODUCT_ENV.
+//
+#ifndef WARREN_FW_GUID_SALT
+#define WARREN_FW_GUID_SALT 0ul
+#endif
+
+constexpr GUID WarrenEnvGuid(GUID g)
+{
+	g.Data1 ^= static_cast<unsigned long>(WARREN_FW_GUID_SALT);
+	return g;
+}
+
+//
+// Rekeys one of our object keys to another environment's salt.
+//
+// Needed by recovery only. A kill switch outlives the process that armed it,
+// so a machine can carry blocking objects keyed for an environment it no
+// longer runs (an install that moved from one channel to another, or a build
+// that predates the salt). Those objects answer to no current build: the
+// running one purges its own key set and never sees them, which leaves the
+// machine blocked with no way out. Recovery therefore sweeps every known salt.
+//
+// This is deliberately NOT used on the normal startup purge: outside recovery,
+// deleting another environment's objects would disarm a kill switch that
+// environment is actively relying on.
+//
+constexpr GUID WarrenGuidForSalt(GUID g, uint32_t salt)
+{
+	g.Data1 ^= static_cast<unsigned long>(WARREN_FW_GUID_SALT) ^ static_cast<unsigned long>(salt);
+	return g;
+}
 
 class MullvadGuids
 {

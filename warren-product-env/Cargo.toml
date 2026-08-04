@@ -1,0 +1,12 @@
+[package]
+name = "warren-product-env"
+description = "Compile-time Warren product environment selection (prod | staging | beta)"
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true

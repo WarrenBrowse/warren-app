@@ -1,4 +1,9 @@
-# Mullvad VPN app build containers
+# App build containers (inherited from upstream Mullvad)
+
+> **Warren note.** Warren consumes the upstream Mullvad build images pinned in
+> `android-container-image.txt` / `linux-container-image.txt` as-is. The publish flow below
+> (signing and pushing to `ghcr.io/mullvad`) requires Mullvad's private keys and registry access
+> and is therefore **not actionable for Warren**; it is kept as upstream reference only.
 
 Substitute `${repo}` with the actual absolute path to this repository
 

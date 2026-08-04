@@ -1,61 +1,50 @@
 import utilities.FlavorDimensions
 import utilities.Flavors
 import utilities.Variant
-import utilities.matchesAny
-import utilities.ossProdDebug
-import utilities.playStagemoleDebug
+import utilities.matches
+import utilities.prodDebug
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.test)
     alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.test.e2e"
+    namespace = "com.warrenbrowse.vpn.test.e2e"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
 
     defaultConfig {
         minSdk = libs.versions.min.sdk.get().toInt()
-        testApplicationId = "net.mullvad.mullvadvpn.test.e2e"
+        testApplicationId = "com.warrenbrowse.vpn.test.e2e"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         targetProjectPath = ":app"
 
         testInstrumentationRunnerArguments += buildMap {
             put("clearPackageData", "true")
 
-            // Add all properties starting with "mullvad.test.e2e" to the
+            // Add all properties starting with "warren.test.e2e" to the
             // testInstrumentationRunnerArguments
             properties.forEach {
-                if (it.key.startsWith("mullvad.test.e2e")) {
+                if (it.key.startsWith("warren.test.e2e")) {
                     put(it.key, it.value.toString())
                 }
             }
         }
     }
 
-    flavorDimensions += FlavorDimensions.BILLING
+    // BILLING flavor dropped.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) { dimension = FlavorDimensions.BILLING }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) {
             dimension = FlavorDimensions.INFRASTRUCTURE
             buildConfigField(
                 type = "String",
                 name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"mullvad.net\"",
-            )
-        }
-        create(Flavors.STAGEMOLE) {
-            dimension = FlavorDimensions.INFRASTRUCTURE
-            buildConfigField(
-                type = "String",
-                name = "INFRASTRUCTURE_BASE_DOMAIN",
-                value = "\"stagemole.eu\"",
+                value = "\"warrenbrowse.com\"",
             )
         }
     }
@@ -87,7 +76,7 @@ androidComponents {
     beforeVariants { variantBuilder ->
         variantBuilder.enable =
             Variant(variantBuilder.buildType, variantBuilder.productFlavors)
-                .matchesAny(ossProdDebug, playStagemoleDebug)
+                .matches(prodDebug)
     }
 }
 

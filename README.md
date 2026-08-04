@@ -1,468 +1,512 @@
-# Mullvad VPN desktop and mobile app
+# Warren VPN desktop app
 
-Welcome to the Mullvad VPN client app source code repository.
-This is the VPN client software for the Mullvad VPN service.
-For more information about the service, please visit our website,
-[mullvad.net](https://mullvad.net) (Also accessible via Tor on our
-[onion service](http://o54hon2e2vj6c7m3aqqu6uyece65by3vgoxxhlqlsvkmacw6a7m7kiad.onion/)).
+Welcome to the Warren VPN client app source code repository.
 
-This repository contains all the source code for the
-desktop and mobile versions of the app. For desktop this includes the system service/daemon
-([`mullvad-daemon`](mullvad-daemon/)), a graphical user interface ([GUI](desktop/)) and a command
-line interface ([CLI](mullvad-cli/)). The Android app uses the same backing system service for the
-tunnel and security but has a dedicated frontend in [android/](android/). iOS consists of a
-completely standalone implementation that resides in [ios/](ios/).
+Warren VPN carries traffic over a **QUIC** tunnel and identifies its users by a non-custodial
+wallet. One Ed25519 key, derived from a BIP39 mnemonic that never leaves the device, authenticates
+the tunnel's TLS handshake to the exit and signs every request to the Warren backend, which serves
+accounts, subscriptions and devices. There is no account number and no bearer token. The backend
+host follows the build channel (`api.beta.warrenbrowse.com` for the beta builds shipped today).
 
-## Releases
+This repository holds the desktop and mobile client: the Rust service
+([`mullvad-daemon`](mullvad-daemon/), built as the `warren-daemon` binary), the Electron GUI
+([`desktop/`](desktop/)) and the CLI ([`mullvad-cli`](mullvad-cli/), built as the `warren` binary).
+The network security guarantees (firewall lockdown, killswitch, split-tunneling) apply to the QUIC
+tunnel. See [`docs/warren-architecture.md`](docs/warren-architecture.md) for the usage guide.
 
-There are built and signed releases for macOS, Windows, Linux and Android available on
-[our website](https://mullvad.net/download/) and on
-[GitHub](https://github.com/mullvad/mullvadvpn-app/releases/). The Android app is also available
-on [Google Play] and [F-Droid] and the iOS version on [App Store].
+## TL;DR: run the app in dev
 
-[Google Play]: https://play.google.com/store/apps/details?id=net.mullvad.mullvadvpn
-[F-Droid]: https://f-droid.org/packages/net.mullvad.mullvadvpn/
-[App Store]: https://apps.apple.com/us/app/mullvad-vpn/id1488466513
+Prerequisites: clone the three sibling repos **`warrenguard`, `warren-sdk-rs`, `warren-contract`
+next to `warren-app`** (same parent directory), plus
+`cargo` + `protoc` (daemon) and `node` + `npm` (GUI). The Quinn fork is the published
+`WarrenBrowse/warren-quinn` git-dep pinned by tag in the root `[patch.crates-io]`, so cargo
+fetches it automatically; there is no local fork to rebuild and no manual step.
 
-You can find our code signing keys as well as instructions for how to cryptographically verify
-your download on [Mullvad's Open Source page].
+```bash
+# Terminal 1: Rust daemon in release (real tunnel performance)
+./scripts/dev/warren-dev.sh daemon --release
 
-### Platform/OS support
+# Terminal 2: Electron GUI (hot-reload)
+./scripts/dev/warren-dev.sh app
+```
 
-See [Supported Platforms](docs/supported-platforms.md) for details on which operating
-systems, versions and architectures are supported, and which ones are covered by our
-automated test suite.
+All-in-one: `./scripts/dev/warren-dev.sh both --release` (Ctrl+C stops both). Details and
+options: [Running the app from source (dev)](#running-the-app-from-source-dev).
+
+## Status
+
+The app ships on the **beta** channel, cut from `beta-v*` tags. Every release publishes Linux,
+macOS, Windows and Android builds carrying the QUIC tunnel, the BIP39 wallet identity and the
+Warren GUI. The production channel (`v*` tags, its own backend host and app identity) is wired and
+dormant; it opens when the first production tag is cut, and the two channels install side by side
+without touching each other's settings, firewall rules or update feed.
+
+### Supported platforms
+
+| Platform | Status |
+|---|---|
+| Linux (x86_64) | ✅ published (deb, rpm, pacman) |
+| macOS (arm64 / x86_64) | ✅ published (universal pkg) |
+| Windows (x64) | ✅ published (NSIS installer) |
+| Android | ✅ published (APK) |
+| iOS | ⏸ not shipped yet |
+
+For the matrix of OS versions and architectures the underlying codebase supports, see
+[Supported Platforms](docs/supported-platforms.md).
 
 ## Features
 
-Here is a table containing the features of the app across platforms. This is intended to reflect
-the current state of the latest code in git, not necessarily any existing release.
+| | Linux (Warren) | macOS (Warren) | Notes |
+|---|:-:|:-:|---|
+| **Warren tunnel (QUIC + Ed25519)** | ✓ | ✓ | The fork's only tunnel mode |
+| **Warren account/subscription (BIP39 + warren-api)** | ✓ | ✓ | BIP39 identity, subscription served by warren-api |
+| Split tunneling | ✓ | ✓ | |
+| Custom DNS server | ✓ | ✓ | |
+| Content blockers (Ads etc) | ✓ | ✓ | |
+| Killswitch / lockdown mode | ✓ | ✓ | |
+| Local network access (optional) | ✓ | ✓ | |
 
-|                                         | Windows | Linux | macOS | Android | iOS |
-|-----------------------------------------|:-------:|:-----:|:-----:|:-------:|:---:|
-| WireGuard                               |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| Quantum-resistant tunnels               |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| [DAITA]                                 |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| WireGuard multihop                      |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| WireGuard over TCP                      |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| WireGuard over Shadowsocks              |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| WireGuard over QUIC                     |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| Lightweight WireGuard Obfuscation (LWO) |    ✓    |   ✓   |   ✓   |    ✓    |     |
-| Split tunneling                         |    ✓    |   ✓   |   ✓   |    ✓    |     |
-| Custom DNS server                       |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| Content blockers (Ads etc)              |    ✓    |   ✓   |   ✓   |    ✓    |  ✓  |
-| Optional local network access           |    ✓    |   ✓   |   ✓   |    ✓    |  ✓\* |
-| [Externally audited](./audits)          |    ✓    |   ✓   |   ✓   |    ✓    |  ✓ |
+The upstream WireGuard obfuscation modes (WireGuard over TCP / Shadowsocks / LWO) were removed
+along with the WireGuard data plane: the Warren tunnel runs QUIC on 443 natively and ships its own
+DAITA (defense against AI-guided traffic analysis) on the QUIC path, single and multi-hop.
 
-\* The local network is always accessible on iOS with the current implementation
+## User security, privacy, anonymity
 
-[DAITA]: https://mullvad.net/en/blog/introducing-defense-against-ai-guided-traffic-analysis-daita
+The fork inherits the Mullvad client guarantees: it is a privacy-respecting VPN client that does its
+best to prevent traffic leaks, with security-oriented defaults. The
+[dedicated security document](docs/security.md) describes in detail what the app blocks, what it
+allows, and how.
 
-## User security, privacy and anonymity
-
-This app is a privacy preserving VPN client. As such it goes to great lengths to stop traffic
-leaks. And basically all settings default to the more secure/private option. The user has to
-explicitly allow more loose rules if desired. See the [dedicated security document] for details
-on what the app blocks and allows, as well as how it does it.
-
-[dedicated security document]: docs/security.md
+**Warren-specific**: the identity is carried by an Ed25519 key derived from a BIP39 mnemonic
+(12 words) stored in the OS secret vault (macOS Keychain / Windows DPAPI / file
+`<settings_dir>/secrets/warren_mnemonic.txt` 0600 on Linux). No account number, no bearer token.
+That same key authenticates the QUIC TLS handshake to the exit *and* signs Warren API requests
+(`X-Warren-{PubKey,Signature,Timestamp,Nonce}` headers). See
+[`docs/warren-architecture.md`](docs/warren-architecture.md) section "Crypto handshake".
 
 ## Secure development
 
-Since the security of the users of the app is a top priority, by extension the security
-of the development and release process also becomes a top priority. This is something we work
-actively on.
-
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9411/badge)](https://www.bestpractices.dev/projects/9411)
+The fork keeps the upstream signing and review practices:
 
 ### Git signatures
 
-All merge commits to the main branch must be PGP (gpg) signed in git. This signs off the entire
-feature branch. The individual commits in the feature branch do not need to be signed,
-unless they change one or more of the files deemed extra important.
+Every merge commit on the `main` branch must be PGP-signed. Individual commits in a feature branch
+do not need to be signed, unless they modify a *locked-down* file listed in
+[`verify-locked-down-signatures`](.github/workflows/verify-locked-down-signatures.yml).
 
-The list of files requiring signatures to every commit that change them is defined in the
-[`verify-locked-down-signatures`](.github/workflows/verify-locked-down-signatures.yml)
-workflow.
+### External audits (upstream)
 
-### Audits, pentests and external security reviews
+The upstream Mullvad app is audited every two years by external experts. The results are published
+raw in [`audits/`](./audits/README.md). The Warren fork **does not have a dedicated audit yet**; the
+changes introduced by the fork are not covered by the existing Mullvad audits. To report a security
+issue, see [SECURITY.md](SECURITY.md).
 
-This app is audited by external security experts and penetration testers every second year.
-We also carry out feature specific audits for certain security critical features and changes.
+## Getting the code
 
-The results of these audits are always made public in their unredacted original form, for
-full transparency towards the users. See the [audits readme](./audits/README.md) for this.
+This repo uses submodules. To clone:
 
-Moreover, we welcome any individual to review the security of this app and submit any found
-issue to us. See [SECURITY.md](SECURITY.md) for more.
-
-## Checking out the code
-
-This repository contains submodules needed for building the app. However, some of those submodules
-also have further submodules that are quite large and not needed to build the app. So unless
-you want the source code for all submodules you should avoid a recursive clone of the repository.
-Instead clone the repository normally and then get one level of submodules:
 ```bash
-git clone https://github.com/mullvad/mullvadvpn-app.git
-cd mullvadvpn-app
+git clone git@github.com:WarrenBrowse/warren-app.git
+cd warren-app
 git submodule update --init
 ```
 
-On Android, Windows, Linux and macOS you also want to checkout the wireguard-go submodule:
-```bash
-git submodule update --init wireguard-go-rs/libwg/wireguard-go
-```
-Further details on why this is necessary can be found in the [wireguard-go-rs crate](./wireguard-go-rs/README.md).
+### `dist-assets/binaries` submodule
 
-We sign every merge commit to the `main` branch as well as our release tags.
-If you would like to verify your checkout, you can find our developer keys on
-[Mullvad's Open Source page].
+The submodule at `dist-assets/binaries` contains third-party binaries bundled with the app (Wintun,
+etc.). It still points at the upstream Mullvad repo; the fork does not (yet) have its own binaries
+mirror.
 
-### Binaries submodule
+### Warren crates consumed via `path`
 
-This repository has a git submodule at `dist-assets/binaries`. This submodule contains binaries and
-build scripts for third party code we need to bundle with the app, such as Wintun.
+The fork pulls Warren crates by path from three sibling repos (no `warren-core`):
 
-This submodule conforms to the same integrity/security standards as this repository. Every merge
-commit should be signed. And this main repository should only ever point to a signed merge commit
-of the binaries submodule.
+- Data-plane engine crates from [`warrenguard/`](../warrenguard/):
+  `warrenguard-transport`, `-route-split`, `-config`, `-wire`, `-multihop`,
+  `-relay`, `-natpmp-client`, `-natpmp-protocol`, `-backoff`. Pinned in
+  [`.warrenguard-version`](.warrenguard-version).
+- Client SDK crates from [`warren-sdk-rs/`](../warren-sdk-rs/): `warren-api`,
+  `warren-identity`. Pinned in [`.warren-sdk-version`](.warren-sdk-version).
+- Neutral contract crates from [`warren-contract/`](../warren-contract/):
+  `warren-contract`, `warren-discovery-core`. Pinned in
+  [`.warren-contract-version`](.warren-contract-version).
 
-See the [binaries submodule's](https://github.com/mullvad/mullvadvpn-app-binaries) README for more
-details about that repository.
+The workspace crate [`talpid-warren-tunnel`](talpid-warren-tunnel/) bridges the talpid state machine
+and these crates. The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag),
+consumed via `[patch.crates-io]` in [`Cargo.toml`](Cargo.toml); warrenguard uses the same fork.
 
 ## Building the app
 
-See the [build instructions](BuildInstructions.md) for help building the app on desktop platforms.
+See the [build instructions](BuildInstructions.md) (three-sibling layout, Linux native deps,
+cross-compile via `Cross.toml`). Fork-specific notes in
+[`docs/warren-architecture.md`](docs/warren-architecture.md).
 
-For building the Android app, see the [instructions](./android/docs/BuildInstructions.md) for Android.
+## Running the app from source (dev)
 
-For building the iOS app, see the [instructions](./ios/BuildInstructions.md) for iOS.
+To iterate locally without packaging, the repo provides a dev launcher:
+[`scripts/dev/warren-dev.sh`](scripts/dev/warren-dev.sh). It builds and runs the Rust daemon
+(`warren-daemon`, with sudo) and the Electron GUI (Vite hot-reload), handling the lifecycle cleanly
+(Ctrl+C, socket cleanup, macOS DNS restore if the daemon is killed before restoring it).
+
+Prerequisites: **`warrenguard`, `warren-sdk-rs`, `warren-contract` cloned next to `warren-app`**
+(the daemon consumes their path crates; the Quinn fork is the published
+`WarrenBrowse/warren-quinn` git-dep fetched automatically by cargo),
+`cargo` + `protoc` for the daemon, `node` + `npm` for the GUI (Linux/macOS).
+
+### Two-terminal workflow
+
+```bash
+# Terminal 1: daemon in release (real tunnel performance)
+./scripts/dev/warren-dev.sh daemon --release
+
+# Terminal 2: Electron GUI (hot-reload)
+./scripts/dev/warren-dev.sh app
+```
+
+### Single-terminal workflow
+
+`both` runs both with a unified lifecycle (Ctrl+C stops the daemon **and** the app; daemon logs are
+prefixed with `[daemon]`):
+
+```bash
+./scripts/dev/warren-dev.sh both --release
+```
+
+### Commands and options
+
+```
+daemon   Build & run the Rust daemon in foreground (sudo)
+app      Run the Electron GUI only (Vite hot-reload)
+both     Daemon + app, unified lifecycle (Ctrl+C stops both)
+stop     Stop a daemon started in the background
+status   Show the running components
+
+Daemon options:
+  --release        Build the daemon in release mode
+  -v / -vv / -vvv  Log verbosity (default: -v / INFO)
+  --no-log-file    Log to stdout only
+  -- <args>        Pass extra args to warren-daemon
+```
+
+> **Note on "release mode"**: `--release` only applies to the **daemon**. The `app` command always
+> runs the GUI via `npm run develop` (dev hot-reload); there is no release variant of the GUI in this
+> script. The workflow above is therefore "daemon release + GUI dev", useful to measure real tunnel
+> performance without recompiling the Rust in debug. For a real packaged GUI build, see
+> `npm run pack:<OS>` below.
+
+Useful dev behavior details:
+
+- The dev daemon runs with `WARREN_USE_PLAINTEXT_STORAGE=1`: it persists the mnemonic in a
+  `0600 root:root` file under `<settings_dir>/secrets/` instead of the macOS Keychain / Windows
+  DPAPI. On an unsigned dev build, the binary hash changes on every `cargo build`, which would
+  trigger a macOS authorization prompt on every launch; this variable keeps the dev loop
+  friction-free. A signed release build (stable Developer ID) should leave it unset.
+- Management socket: `/var/run/warren-vpn`. The GUI warns if the daemon is not up yet.
+- Background daemon: logs to `/tmp/warren-daemon-dev.log`, PID in `/tmp/warren-daemon-dev.pid`.
 
 ## Releasing the app
 
-See [this](Release.md) for instructions on how to make a new release.
+The upstream release procedure is documented in [Release.md](Release.md). **No public Warren release
+yet**; the repo stays private during the POC phase.
 
-## Environment variables used by the service
+## Environment variables used by the daemon
 
-* `TALPID_FIREWALL_DEBUG` - Helps debugging the firewall. Does different things depending on
-  platform:
-  * Linux: Set to `"1"` to add packet counters to all firewall rules.
-  * macOS: Makes rules log the packets they match to the `pflog0` interface.
-    * Set to `"all"` to add logging to all rules.
-    * Set to `"pass"` to add logging to rules allowing packets.
-    * Set to `"drop"` to add logging to rules blocking packets.
+### Warren-specific
 
-* `TALPID_FIREWALL_DONT_SET_SRC_VALID_MARK` - Set this variable to `1` to stop the daemon from
-    setting the `net.ipv4.conf.all.src_valid_mark` kernel parameter to `1` on Linux when a tunnel
-    is established.
-    The kernel config parameter is set by default, because otherwise strict reverse path filtering
-    may prevent relay traffic from reaching the daemon. If `rp_filter` is set to `1` on the interface
-    that will be receiving relay traffic, and `src_valid_mark` is not set to `1`, the daemon will
-    not be able to receive relay traffic.
+* `WARREN_API_URL`: URL of the warren-api backend (account/subscription/device). Empty = compiled
+  default (`https://api.warrenbrowse.com`).
 
-* `TALPID_FIREWALL_DONT_SET_ARP_IGNORE` - Set this variable to `1` to stop the daemon from
-    setting the `net.ipv4.conf.all.arp_ignore` kernel parameter to `2` on Linux when a tunnel
-    is established.
-    The kernel config parameter is set by default, because otherwise an attacker who can send ARP
-    requests to the device running Mullvad can figure out the in-tunnel IP.
+* `WARREN_SETTINGS_DIR`, `WARREN_LOG_DIR`, `WARREN_CACHE_DIR`, `WARREN_RPC_SOCKET_PATH`: Override the
+  daemon paths. If unset, the upstream `MULLVAD_*` variants are consulted as a fallback (compat
+  aliases).
 
-* `TALPID_DNS_MODULE` - Allows changing the method that will be used for DNS configuration.
-  By default this is automatically detected, but you can set it to one of the options below to
-  choose a specific method.
+### Inherited from upstream (all still valid)
 
-  * Linux
-    * `"static-file"`: change the `/etc/resolv.conf` file directly
-    * `"resolvconf"`: use the `resolvconf` program
-    * `"systemd"`: use systemd's `resolved` service through DBus
-    * `"network-manager"`: use `NetworkManager` service through DBus
+* `TALPID_FIREWALL_DEBUG`: Firewall debug helper (Linux: packet counters; macOS: log of matched
+  packets on `pflog0`, values `all` / `pass` / `drop`).
 
-  * Windows
-    * `iphlpapi`: use the IP helper API
-    * `netsh`: use the `netsh` program
-    * `tcpip`: set TCP/IP parameters in the registry
+* `TALPID_FIREWALL_DONT_SET_SRC_VALID_MARK`, Linux: prevents the daemon from setting
+  `net.ipv4.conf.all.src_valid_mark=1` when a tunnel is established. Use only if you understand the
+  consequences on strict `rp_filter`.
 
-* `TALPID_DISABLE_LOCAL_DNS_RESOLVER` - Set this variable to `1` to disable the local DNS resolver
-  (macOS only).
+* `TALPID_FIREWALL_DONT_SET_ARP_IGNORE`, Linux: prevents the daemon from setting
+  `net.ipv4.conf.all.arp_ignore=2`. The default protects the in-tunnel IP from ARP probes.
 
-* `TALPID_NEVER_FILTER_AAAA_QUERIES` - Set this variable to `1` to never ignore DNS AAAA queries
-  (macOS only).
+* `TALPID_DNS_MODULE`: Forces the DNS config method. Linux: `static-file` / `resolvconf` /
+  `systemd` / `network-manager`. Windows: `iphlpapi` / `netsh` / `tcpip`.
 
-* `TALPID_FORCE_USERSPACE_WIREGUARD` - Forces the daemon to use the userspace implementation of
-   WireGuard.
+* `TALPID_DISABLE_LOCAL_DNS_RESOLVER`: macOS only. Set to `1` to disable the local DNS resolver.
 
-* `TALPID_DISABLE_OFFLINE_MONITOR` - Forces the daemon to always assume the host is online.
+* `TALPID_NEVER_FILTER_AAAA_QUERIES`: macOS only. Set to `1` to never drop AAAA DNS queries.
 
-* `TALPID_CGROUP2_FS` - On Linux, forces the daemon to look for the cgroup2 filesystem at the
-  specified path, instead of `/sys/fs/cgroup`. The cgroup2 used for split tunneling will be created
-  in this directory.
+* `TALPID_DISABLE_OFFLINE_MONITOR`: Forces the daemon to always consider the host online.
 
-* `TALPID_NET_CLS_MOUNT_DIR` - On Linux, forces the daemon to mount the `net_cls` controller in the
-  specified directory if it isn't mounted already. This will only have an effect on older systems
-  where cgroup v1 is used for split tunneling.
+* `TALPID_CGROUP2_FS`, Linux: overrides the cgroup2 path (default `/sys/fs/cgroup`) used for split
+  tunneling.
 
-* `MULLVAD_MANAGEMENT_SOCKET_GROUP` - On Linux and macOS, this restricts access to the management
-  interface UDS socket to users in the specified group. This means that only users in that group can
-  use the CLI and GUI. By default, everyone has access to the socket.
+* `TALPID_NET_CLS_MOUNT_DIR`, Linux: forces the mount point of the `net_cls` controller (cgroup v1
+  legacy split tunneling).
 
-* `MULLVAD_BACKTRACE_ON_FAULT` - When enabled, if the daemon encounters a fault (e.g. `SIGSEGV`),
-  it will log a backtrace to stdout, and to `daemon.log`. By default, this is disabled in
-  release-builds and enabled in debug-builds. Set variable to `1` or `0` to explicitly enable or
-  disable this feature. Logging the backtrace causes heap allocation. Allocation is not signal safe,
-  but here it runs in the signal handler. This is technically undefined behavior and therefore
-  disabled by default. This usually works, but enable at your own risk.
+* `WARREN_MANAGEMENT_SOCKET_GROUP` (inherited alias: `MULLVAD_MANAGEMENT_SOCKET_GROUP`), Linux/macOS:
+  restricts access to the management UDS socket to a given Unix group (= only root and that group can
+  drive the CLI/GUI and read the wallet mnemonic phrase). If the variable is set but the group does
+  not exist, the daemon refuses to start the socket (fail-closed). If it is not set, the daemon uses
+  the `warren` group (created by the installer). If that group is absent, the socket falls back to
+  global access (`0o766`) with a warning: in that mode, the wallet/secrets RPCs are restricted to the
+  first local uid that connects (trust-on-first-use). For multi-user safety, create the `warren`
+  group and add your desktop user to it.
+
+* `MULLVAD_BACKTRACE_ON_FAULT`: On SIGSEGV etc., logs a backtrace to `daemon.log`. Enabled by default
+  in debug builds, disabled in release builds. Allocating from the signal handler is technically UB;
+  enable at your own risk.
 
 ### Development builds only
 
-* `MULLVAD_API_HOST` - Set the hostname to use in API requests. E.g. `api.mullvad.net`.
+* `MULLVAD_API_HOST`: Hostname to use for warren-api requests (overrides the compiled
+  `api.warrenbrowse.com` default; upstream variable name kept for compatibility).
 
-* `MULLVAD_API_ADDR` - Set the IP address and port to use in API requests. E.g. `10.10.1.2:443`.
+* `MULLVAD_API_ADDR`: IP:port to use for warren-api requests.
 
-* `MULLVAD_API_DISABLE_TLS` - Use plain HTTP for API requests.
+* `MULLVAD_API_DISABLE_TLS`: Forces cleartext HTTP for API requests.
 
-* `MULLVAD_CONNCHECK_HOST` - Set the hostname to use in connection check requests. E.g. `am.i.mullvad.net`.
-
-* `MULLVAD_ENABLE_DEV_UPDATES` - Enable version checks in development builds.
-
-### Setting environment variables
-
-#### Windows
-
-Use `setx` from an elevated shell:
-
-```bat
-setx TALPID_DISABLE_OFFLINE 1 /m
-```
-
-For the change to take effect, restart the daemon:
-
-```bat
-sc.exe stop mullvadvpn
-sc.exe start mullvadvpn
-```
+### Setting the environment variables
 
 #### Linux
 
-Edit the systemd unit file via `systemctl edit mullvad-daemon.service`:
+Edit the systemd unit via `systemctl edit warren-daemon.service`:
 
 ```ini
 [Service]
-Environment="TALPID_DISABLE_OFFLINE_MONITOR=1"
+Environment="WARREN_API_URL=https://api.warrenbrowse.com"
 ```
 
-For the change to take effect, restart the daemon:
+Restart the daemon:
 
 ```bash
-sudo systemctl restart mullvad-daemon
+sudo systemctl restart warren-daemon
 ```
 
 #### macOS
 
-Use `plutil`:
+Use `plutil` (plist path to confirm depending on the fork installer):
 
 ```bash
-sudo plutil -replace EnvironmentVariables -json '{"TALPID_DISABLE_OFFLINE_MONITOR": "1"}' /Library/LaunchDaemons/net.mullvad.daemon.plist
+sudo plutil -replace EnvironmentVariables -json \
+  '{"WARREN_API_URL": "https://api.warrenbrowse.com"}' \
+  /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist
+launchctl unload -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist
+launchctl load   -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist
 ```
 
-For the change to take effect, restart the daemon:
+#### Windows
 
-```bash
-launchctl unload -w /Library/LaunchDaemons/net.mullvad.daemon.plist
-launchctl load -w /Library/LaunchDaemons/net.mullvad.daemon.plist
-```
+Inherited from upstream, `setx` from an elevated shell, then `sc.exe stop / start`.
 
 ## Environment variables used by the desktop frontend
 
-* `MULLVAD_PATH` - Allows changing the path to the folder with the `mullvad-problem-report` tool
-   when running in development mode. Defaults to: `<repo>/target/debug/`.
-* `MULLVAD_DISABLE_UPDATE_NOTIFICATION` - If set to `1`, notification will be disabled when
-   an update is available.
+* `MULLVAD_PATH`: Path of the folder containing the auxiliary tools (`warren-problem-report`) in dev.
+  Default: `<repo>/target/debug/`.
+* `MULLVAD_DISABLE_UPDATE_NOTIFICATION`: Set to `1` to disable the update notification.
 
+## Electron development commands
 
-## Command line tools for Electron app development
-
-- `$ npm run develop` - develop app with live-reload enabled
-- `$ npm run lint` - lint code
-- `$ npm run pack:<OS>` - prepare app for distribution for your platform. Where `<OS>` can be
-  `linux`, `mac` or `win`
-- `$ npm test` - run tests
-
+- `npm run develop`: develop the app with live-reload
+- `npm run lint`: lint the code
+- `npm run pack:<OS>`: package the app for distribution (`linux`, `mac`, `win`)
+- `npm test`: run the tests
 
 ## Tray icon on Linux
 
-The requirements for displaying a tray icon vary between different desktop environments. If the
-tray icon does not appear, try one of the following methods:
+The prerequisites vary depending on the desktop environment. If the tray does not appear:
 
 ### GNOME
 
-If you're using GNOME, you might have to install additional GNOME shell extensions to display the tray icon properly.
-
-We recommend `AppIndicator and KStatusNotifierItem Support`. It can be installed via GNOME's extension website:
+Install the shell extension `AppIndicator and KStatusNotifierItem Support`:
 https://extensions.gnome.org/extension/615/appindicator-support/
 
-### Other desktop environments
+### Other DEs
 
-Try installing one of these packages using the system's package manager:
+Install one of:
 - `libappindicator3-1`
 - `libappindicator1`
 - `libappindicator`
 
-## Repository structure
+## Repo structure
 
-### Electron app and electron-builder packaging assets
-- **desktop/packages/mullvad-vpn/**
-  - **assets/** - Graphical assets and stylesheets
+### Electron app + electron-builder assets
+
+- **desktop/packages/mullvad-vpn/** (the package name is kept to avoid merge conflicts with upstream;
+  the Electron `productName` is `Warren VPN`)
+  - **assets/**: graphic assets + stylesheets
   - **src/**
-    - **main/**
-      - **index.ts** - Entry file for the main process
-    - **renderer/**
-      - **app.tsx** - Entry file for the renderer process
-      - **routes.tsx** - Routes configurator
-      - **transitions.ts** - Transition rules between views
-  - **tasks/** - Gulp tasks used to build app and watch for changes during development
-    - **distribution.js** - Configuration for `electron-builder`
-  - **test/** - Electron GUI tests
-- **dist-assets/** - Icons, binaries and other files used when creating the distributables
-  - **binaries/** - Git submodule containing binaries bundled with the app. See the README
-    in the submodule for details
-  - **linux/** - Scripts and configuration files for the deb and rpm artifacts
-  - **pkg-scripts/** - Scripts bundled with and executed by the macOS pkg installer
-  - **windows/** - Windows NSIS installer configuration and assets
+    - **main/index.ts**: main process entry
+    - **renderer/app.tsx**: renderer process entry
+    - **renderer/routes.tsx**: route configuration
+    - **renderer/transitions.ts**: transition rules between views
+  - **tasks/**: Gulp tasks for build + dev watch
+    - **distribution.js**: `electron-builder` config
+  - **test/**: Electron GUI tests
+- **dist-assets/**: icons, binaries and files used to produce the distributables
+  - **binaries/**: submodule (still upstream Mullvad)
+  - **linux/**: scripts + config for deb and rpm
+  - **pkg-scripts/**: macOS pkg bundle scripts
+  - **windows/**: NSIS installer config + assets
 
+### Build, tests, misc
 
-### Building, testing and misc
-- **build-windows-modules.sh** - Compiles the C++ libraries needed on Windows
-- **build.sh** - Sanity checks the working directory state and then builds installers for the app
+- **build-windows-modules.sh**: compiles the Windows C++ libs
+- **build.sh**: working dir sanity check + installer build
 
-### Mullvad Daemon
+### Warren daemon
 
-The daemon is implemented in Rust and is implemented in several crates. The main, or top level,
-crate that builds the final daemon binary is `mullvad-daemon` which then depend on the others.
+The daemon is in Rust, multi-crate. The top-level crate that produces the `warren-daemon` binary is
+[`mullvad-daemon`](mullvad-daemon/) (upstream package name kept, binary renamed via
+`[[bin]] name = "warren-daemon"`).
 
-In general one can look at the daemon as split into two parts, the crates starting with `talpid`
-and the crates starting with `mullvad`. The `talpid` crates are supposed to be completely unrelated
-to Mullvad specific things. A `talpid` crate is not allowed to know anything about the API through
-which the daemon fetch Mullvad account details or download VPN server lists for example. The
-`talpid` components should be viewed as a generic VPN client with extra privacy and anonymity
-preserving features. The crates having `mullvad` in their name on the other hand make use of the
-`talpid` components to build a secure and Mullvad specific VPN client.
+Like upstream, the code splits into two families:
 
+- `talpid-*` crates: generic VPN library, *agnostic* of the account backend. The fork adds
+  [`talpid-warren-tunnel`](talpid-warren-tunnel/), which plugs the Warren QUIC tunnel into the talpid
+  state machine.
+- `mullvad-*` crates: app-specific code (settings, management interface, GUI integration). The fork
+  adds the `warren_*` modules in `mullvad-daemon/src/` (see the list in
+  [`docs/warren-architecture.md`](docs/warren-architecture.md)).
 
-- **Cargo.toml** - Main Rust workspace definition. See this file for which folders here are daemon
-  Rust crates.
-- **mullvad-daemon/** - Main Rust crate building the daemon binary.
-- **talpid-core/** - Main crate of the VPN client implementation itself. Completely Mullvad agnostic
-  privacy preserving VPN client library.
+Files worth knowing:
 
+- **Cargo.toml**: workspace root. Lists the 52 member crates, the `warren-*`/`warrenguard-*` path
+  deps on the two siblings, and a `[patch.crates-io]` that points `quinn`/`quinn-proto`/`quinn-udp`
+  at the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag).
+- **mullvad-daemon/**: crate that builds the `warren-daemon` binary.
+- **mullvad-cli/**: crate that builds the `warren` binary (CLI frontend).
+- **talpid-core/**: core of the VPN implementation, Mullvad/Warren agnostic.
+- **talpid-warren-tunnel/**: Warren QUIC tunnel adapter for the talpid state machine (fork-only).
 
 ## Vocabulary
 
-Explanations for some common words used in the documentation and code in this repository.
+- **App**: this whole repo = "Warren VPN App".
+  - **Daemon**: headless `warren-daemon` process (Rust), exposes a management interface.
+  - **Frontend**: any program that connects to the management interface to drive the daemon.
+    - **GUI**: Electron + React app (bundled `Warren VPN` binary).
+    - **CLI**: Rust `warren` binary (terminal frontend).
+- **Warren tunnel**: the Warren QUIC tunnel (Ed25519 TLS handshake). It is the fork's only tunnel
+  backend: there is no longer a toggle to enable/disable it.
+- **Warren account**: account/device/subscription operations go through warren-api (remote backend,
+  Ed25519-signed). The identity comes from the local BIP39 mnemonic. "Create an account" generates a
+  fresh mnemonic (mandatory on-screen backup of the phrase before continuing); "Restore" imports an
+  existing phrase; "Log out" wipes the mnemonic from this device (a real logout). There is no public
+  key login: you identify yourself with the restore phrase.
+- **Mnemonic**: BIP39 12 words stored in the OS secret vault (Keychain / DPAPI / file
+  `secrets/warren_mnemonic.txt` 0600 on Linux), source of the Ed25519 `SigningKey` that serves as the
+  Warren identity.
+- **EndpointId / WarrenPubKey**: Ed25519 pubkey (32 bytes) that identifies a Warren exit in the
+  `warren-relays.json`.
 
-- **App** - This entire product (everything in this repository) is the "Mullvad VPN App", or App for
-  short.
-  - **Daemon** - Refers to the `mullvad-daemon` Rust program. This headless program exposes a
-    management interface that can be used to control the daemon
-  - **Frontend** - Term used for any program or component that connects to the daemon management
-    interface and allows a user to control the daemon.
-    - **GUI** - The Electron + React program that is a graphical frontend for the Mullvad VPN App.
-    - **CLI** - The Rust program named `mullvad` that is a terminal based frontend for the Mullvad
-      VPN app.
-
-
-## File paths used by Mullvad VPN app
-
-A list of file paths written to and read from by the various components of the Mullvad VPN app
+## File paths used by the Warren app
 
 ### Daemon
 
-On Windows, when a process runs as a system service the variable `%LOCALAPPDATA%` expands to
+All paths are defined in the [`mullvad-paths`](mullvad-paths/) crate and include the `WARREN_*`
+aliases (priority) + `MULLVAD_*` (compat fallback).
+
+On Windows, when a process runs as a service, `%LOCALAPPDATA%` resolves to
 `C:\Windows\system32\config\systemprofile\AppData\Local`.
 
-All directory paths are defined in, and fetched from, the `mullvad-paths` crate.
-
-#### Settings
-
-The settings directory can be changed by setting the `MULLVAD_SETTINGS_DIR` environment variable.
+#### Settings (env override: `WARREN_SETTINGS_DIR`)
 
 | Platform | Path |
-|----------|------|
-| Linux | `/etc/mullvad-vpn/` |
-| macOS | `/etc/mullvad-vpn/` |
-| Windows | `%LOCALAPPDATA%\Mullvad VPN\` |
-| Android | [`getFilesDir()`](https://developer.android.com/reference/android/content/Context#getFilesDir()) |
+|---|---|
+| Linux | `/etc/warren-vpn/` |
+| macOS | `/etc/warren-vpn/` |
+| Windows | `%LOCALAPPDATA%\Warren VPN\` |
 
-#### Logs
-
-The log directory can be changed by setting the `MULLVAD_LOG_DIR` environment variable.
+#### Logs (env override: `WARREN_LOG_DIR`)
 
 | Platform | Path |
-|----------|------|
-| Linux | `/var/log/mullvad-vpn/` + systemd |
-| macOS | `/var/log/mullvad-vpn/` |
-| Windows | `C:\ProgramData\Mullvad VPN\` |
-| Android | [`getFilesDir()`](https://developer.android.com/reference/android/content/Context#getFilesDir()) |
+|---|---|
+| Linux | `/var/log/warren-vpn/` + systemd |
+| macOS | `/var/log/warren-vpn/` |
+| Windows | `C:\ProgramData\Warren VPN\` |
 
-#### Cache
-
-The cache directory can be changed by setting the `MULLVAD_CACHE_DIR` environment variable.
+#### Cache (env override: `WARREN_CACHE_DIR`)
 
 | Platform | Path |
-|----------|------|
-| Linux | `/var/cache/mullvad-vpn/` |
-| macOS | `/Library/Caches/mullvad-vpn/` |
-| Windows | `C:\ProgramData\Mullvad VPN\cache` |
-| Android | [`getCacheDir()`](https://developer.android.com/reference/android/content/Context#getCacheDir())  |
+|---|---|
+| Linux | `/var/cache/warren-vpn/` |
+| macOS | `/Library/Caches/warren-vpn/` |
+| Windows | `C:\ProgramData\Warren VPN\cache` |
 
-#### RPC address file
-
-The full path to the RPC address file can be changed by setting the `MULLVAD_RPC_SOCKET_PATH`
-environment variable.
+#### RPC socket (env override: `WARREN_RPC_SOCKET_PATH`)
 
 | Platform | Path |
-|----------|------|
-| Linux | `/var/run/mullvad-vpn` |
-| macOS | `/var/run/mullvad-vpn` |
-| Windows | `//./pipe/Mullvad VPN` |
-| Android | [`getNoBackupFilesDir()`](https://developer.android.com/reference/android/content/ContextWrapper#getNoBackupFilesDir()) |
+|---|---|
+| Linux | `/var/run/warren-vpn` |
+| macOS | `/var/run/warren-vpn` |
+| Windows | `//./pipe/Warren VPN` |
+
+The `PRODUCT_NAME` rename (from `mullvad-vpn` to `warren-vpn`) is deliberate: it avoids
+filesystem/socket collisions with an upstream Mullvad client installed in parallel on the same
+machine. See `mullvad-paths/tests/warren_collision_safety.rs`.
+
+#### Warren-only files under `<settings_dir>/`
+
+| File | Role |
+|---|---|
+| `secrets/warren_mnemonic.txt` | BIP39 12-word mnemonic: only the Linux/plaintext fallback (perms 0600, owner root); on macOS/Windows it lives in the Keychain/DPAPI. A legacy `<settings_dir>/warren_mnemonic.txt` file is migrated then deleted at boot. |
+
+#### Warren-only files under `<cache_dir>/`
+
+| File | Role |
+|---|---|
+| `warren-relays.json` | Ed25519-signed list of Warren exits (v2 format). Format detailed in [`docs/warren-architecture.md`](docs/warren-architecture.md) |
 
 ### Desktop Electron app
 
-The desktop Electron app has a specific settings file that is configured for each user. The path is
-set in the `desktop/packages/mullvad-vpn/src/main/gui-settings.ts` file.
-
 | Platform | Path |
-|----------|------|
-| Linux | `$XDG_CONFIG_HOME/Mullvad VPN/gui_settings.json` |
-| macOS | `~/Library/Application Support/Mullvad VPN/gui_settings.json` |
-| Windows | `%LOCALAPPDATA%\Mullvad VPN\gui_settings.json` |
-| Android | Present in Android's `logcat` |
+|---|---|
+| Linux | `$XDG_CONFIG_HOME/Warren VPN/gui_settings.json` |
+| macOS | `~/Library/Application Support/Warren VPN/gui_settings.json` |
+| Windows | `%LOCALAPPDATA%\Warren VPN\gui_settings.json` |
 
 ## Icons
 
-See [graphics README](graphics/README.md) for information about icons.
+See the [graphics README](graphics/README.md). The Warren icons are not integrated yet; the upstream
+assets are temporarily reused.
 
 ## Locales and translations
 
-Instructions for how to handle locales and translations are found
-[here](./desktop/packages/mullvad-vpn/locales/README.md).
+General procedure: [locales README](./desktop/packages/mullvad-vpn/locales/README.md). The
+user-facing "Mullvad VPN" strings were replaced with "Warren VPN", and the Warren-specific strings
+are translated in all 23 shipped locales.
 
-For instructions specific to the Android app, see [here](./android/README.md).
+## Upstream lineage
 
-For instructions specific to the iOS app, see [here](./ios/translation/README.md).
+The Warren VPN **app** is a fork of the
+[Mullvad VPN app](https://github.com/mullvad/mullvadvpn-app). The fork replaces the WireGuard data
+plane with the Warren QUIC tunnel and the account-number system with the BIP39 wallet identity,
+while keeping the upstream client architecture: the daemon / frontend split, the per-platform
+firewall and DNS management, and the leak-prevention design that goes with them.
+
+This lineage covers the client codebase. The Warren service itself, its protocol, its exit fleet
+and its backend are Warren's own work and share no code with Mullvad.
+
+Upstream releases are merged in periodically. That is why the source tree keeps upstream directory
+and crate names (`mullvad-daemon`, `mullvad-cli`, `desktop/packages/mullvad-vpn`) while the built
+binaries and the installed product carry the Warren name.
 
 # License
 
-Copyright (C) 2026  Mullvad VPN AB
+This repo is a **GPL-3.0** fork of [`mullvadvpn-app`](https://github.com/mullvad/mullvadvpn-app).
+
+Original copyright: (C) 2026  Mullvad VPN AB
+Fork modifications: (C) 2026  Warren contributors
 
 This program is free software: you can redistribute it and/or modify it under the terms of the
 GNU General Public License as published by the Free Software Foundation, either version 3 of
 the License, or (at your option) any later version.
 
-For the full license agreement, see the LICENSE.md file
+For the full license agreement, see [LICENSE.md](LICENSE.md).
 
-The source code for the iOS app is GPL-3 licensed like everything else in this repository.
-But the distributed app on the Apple App Store is not GPL licensed,
-it falls under the [Apple App Store EULA].
-
-[Apple App Store EULA]: https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
-[Mullvad's Open Source page]: https://mullvad.net/en/guides/open-source/
+**Trademarks**: the names "Mullvad" and "Mullvad VPN" and the associated logo are trademarks of
+Mullvad VPN AB **not covered by the GPL**. The Warren fork does not use these trademarks in its
+distributed binaries (rebranded `productName` + paths + bin names).

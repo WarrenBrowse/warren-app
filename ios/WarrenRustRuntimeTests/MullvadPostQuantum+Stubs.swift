@@ -1,0 +1,77 @@
+//
+//  MullvadPostQuantum+Stubs.swift
+//  WarrenRustRuntimeTests
+//
+//  Created by Marco Nikic on 2024-06-12.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import NetworkExtension
+
+@testable import WarrenRustRuntime
+@testable import WarrenTypes
+@testable import PacketTunnelCore
+
+class TunnelProviderStub: TunnelProvider {
+    func tunnelHandle() throws -> Int32 {
+        0
+    }
+
+    func wgFunctions() -> WarrenTypes.WgFunctionPointers {
+        return WarrenTypes.WgFunctionPointers(
+            open: { _, _, _ in return 0 },
+            close: { _, _ in return 0 },
+            receive: { _, _, _, _ in return 0 },
+            send: { _, _, _, _ in return 0 }
+        )
+    }
+}
+
+class FailedNegotiatorStub: EphemeralPeerNegotiating {
+    var onCancelKeyNegotiation: (() -> Void)?
+
+    required init() {
+        onCancelKeyNegotiation = nil
+    }
+
+    init(onCancelKeyNegotiation: (() -> Void)? = nil) {
+        self.onCancelKeyNegotiation = onCancelKeyNegotiation
+    }
+
+    func startNegotiation(
+        devicePublicKey: WireGuard.PublicKey,
+        presharedKey: WireGuard.PrivateKey,
+        peerReceiver: any WarrenTypes.TunnelProvider,
+        ephemeralPeerParams: EphemeralPeerParameters
+    ) -> Bool {
+        false
+    }
+
+    func cancelKeyNegotiation() {
+        onCancelKeyNegotiation?()
+    }
+}
+
+class SuccessfulNegotiatorStub: EphemeralPeerNegotiating {
+    var onCancelKeyNegotiation: (() -> Void)?
+    required init() {
+        onCancelKeyNegotiation = nil
+    }
+
+    init(onCancelKeyNegotiation: (() -> Void)? = nil) {
+        self.onCancelKeyNegotiation = onCancelKeyNegotiation
+    }
+
+    func startNegotiation(
+        devicePublicKey: WireGuard.PublicKey,
+        presharedKey: WireGuard.PrivateKey,
+        peerReceiver: any WarrenTypes.TunnelProvider,
+        ephemeralPeerParams: EphemeralPeerParameters
+    ) -> Bool {
+        true
+    }
+
+    func cancelKeyNegotiation() {
+        onCancelKeyNegotiation?()
+    }
+}

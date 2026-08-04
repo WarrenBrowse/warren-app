@@ -22,9 +22,29 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Added
+- Add a "Get subscription" button in wallet settings that opens the checkout page.
+- Add custom location lists to the exit picker (create a list, add/remove exits, delete).
+- Pin each exit's public key on first use and refuse to connect if it changes; add a
+  "Reset pinned exit keys" action in tunnel settings to accept a legitimate key rotation.
+- Add Romanian as a new language in the app.
+
 ### Changed
 - Optimize LWO performance. The throughput is around 3 times higher in our benchmarks.
+- Replace the non-functional multi-hop toggle with a read-only indicator: multi-hop is
+  available on the desktop app and the Android tunnel connects single-hop for now.
+- Include native logs in problem reports so they are more useful for diagnostics.
+- Translate the wallet, onboarding, and tunnel settings screens into every supported
+  language; previously these Warren screens were only shown in English.
 
+### Fixed
+- Show the Warren wordmark in the app header instead of the Mullvad one.
+
+
+## [Mullvad upstream history]
+
+All dated entries below are inherited Mullvad VPN release history, kept as-is
+from the upstream project. Warren-specific changes live in [Unreleased] above.
 
 ## [android/2026.4-beta2] - 2026-04-14
 ### Fixed
@@ -530,7 +550,7 @@ Identical to `android/2024.3-beta1` except for updated translations.
 - Set auto-connect setting as legacy on platforms with system vpn settings.
 - Change default obfuscation setting to `auto`.
 - Migrate obfuscation settings for existing users from `off` to `auto`.
-- Update support email address to new email address, support@mullvadvpn.net.
+- Update support email address to new email address, support@warrenbrowse.com.
 
 ### Fixed
 - Improve DPAD navigation.

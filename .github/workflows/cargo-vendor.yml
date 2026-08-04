@@ -5,11 +5,8 @@
 # dependency has multiple sources: https://github.com/mullvad/mullvadvpn-app/issues/4848
 name: Rust - Vendor dependencies
 on:
-  pull_request:
-    paths:
-      - .github/workflows/cargo-vendor.yml
-      - Cargo.lock
-      - '**/Cargo.toml'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions: {}

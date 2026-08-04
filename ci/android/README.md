@@ -2,6 +2,10 @@
 
 # Android team build machine setup
 
+> **Warren note.** This describes upstream Mullvad's Android build infrastructure (**bender**,
+> **terminator**), kept as reference. Warren CI runs on the WarrenBrowse org's own self-hosted
+> runners.
+
 Currently, the Android team's self hosted build infrastructure consists of our build server (named **bender**) and our
 router-as-a-service (RAAS) (named **terminator**).
 

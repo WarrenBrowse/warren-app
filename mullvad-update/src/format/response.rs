@@ -32,6 +32,12 @@ pub struct Response {
     pub metadata_version: usize,
     /// When the signature expires
     pub metadata_expiry: chrono::DateTime<chrono::Utc>,
+    /// Lowest app version still permitted to run. A client older than this
+    /// must be hard-blocked until it updates (forced update). Absent means
+    /// "no minimum": support then falls back to whether the running version
+    /// is listed in `releases`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub minimum_supported_version: Option<mullvad_version::Version>,
     /// Available app releases
     pub releases: Vec<Release>,
 }

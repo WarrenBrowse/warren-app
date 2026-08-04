@@ -29,7 +29,7 @@
     <uses-feature android:glEsVersion="0x00020000"
                   android:required="false" />
 
-    <application android:name=".app.MullvadApplication"
+    <application android:name=".app.WarrenApplication"
                  android:allowBackup="false"
                  tools:targetApi="33"
                  android:memtagMode="async"
@@ -64,27 +64,42 @@
             since after that it has been patched on a OS level.
         -->
         <activity
-            android:name="net.mullvad.mullvadvpn.app.MainActivity"
+            android:name="com.warrenbrowse.vpn.app.MainActivity"
             android:enableOnBackInvokedCallback="true"
             android:launchMode="singleInstance"
             android:screenOrientation="fullUser"
             android:windowSoftInputMode="adjustResize"
             android:enabled="true"
-            android:exported="false"
+            android:exported="true"
             android:icon="@mipmap/ic_launcher"
             android:banner="@mipmap/ic_banner"
-            android:targetActivity="net.mullvad.mullvadvpn.ui.MainActivity"
             tools:ignore="DiscouragedApi,UnusedAttribute">
 
             <intent-filter>
-                <action android:name="net.mullvad.mullvadvpn.request_vpn_permission" />
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.warrenbrowse.vpn.request_vpn_permission" />
+            </intent-filter>
+            <!--
+                Community-forum wallet login (doc 55): the connect provider's
+                approval page invokes `warren://forum-login?sid=..&host=..`; the
+                OS hands it here (MainActivity.handleIntent validates + prompts).
+            -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="${warrenDeepLinkScheme}" android:host="forum-login" />
             </intent-filter>
         </activity>
         <!--
             foregroundServiceType="systemExempted" is required in Android 14+
             https://developer.android.com/guide/components/fg-service-types#system-exempted
             -->
-        <service android:name="net.mullvad.mullvadvpn.app.service.MullvadVpnService"
+        <service android:name="com.warrenbrowse.vpn.app.service.WarrenVpnService"
                  android:exported="false"
                  android:foregroundServiceType="systemExempted"
                  android:permission="android.permission.BIND_VPN_SERVICE"
@@ -94,24 +109,24 @@
                 <action android:name="android.net.VpnService" />
             </intent-filter>
             <intent-filter>
-                <action android:name="net.mullvad.mullvadvpn.connect_action" />
+                <action android:name="com.warrenbrowse.vpn.connect_action" />
             </intent-filter>
             <intent-filter>
-                <action android:name="net.mullvad.mullvadvpn.reconnect_action" />
+                <action android:name="com.warrenbrowse.vpn.reconnect_action" />
             </intent-filter>
             <intent-filter>
-                <action android:name="net.mullvad.mullvadvpn.disconnect_action" />
+                <action android:name="com.warrenbrowse.vpn.disconnect_action" />
             </intent-filter>
             <intent-filter>
-                <action android:name="net.mullvad.mullvadvpn.quit_action" />
+                <action android:name="com.warrenbrowse.vpn.quit_action" />
             </intent-filter>
         </service>
         <!--
-            MullvadTileService
+            WarrenTileService
             Tile services must be exported and protected by the bind tile permission
             (android.permission.BIND_QUICK_SETTINGS_TILE).
         -->
-        <service android:name="net.mullvad.mullvadvpn.app.tile.MullvadTileService"
+        <service android:name="com.warrenbrowse.vpn.app.tile.WarrenTileService"
                  android:exported="true"
                  android:icon="@drawable/small_logo_black"
                  android:label="@string/toggle_vpn"
@@ -122,22 +137,13 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
-        <provider android:name="net.mullvad.mullvadvpn.feature.problemreport.impl.provider.MullvadFileProvider"
-                  android:authorities="${applicationId}.FileProvider"
-                  android:exported="false"
-                  android:grantUriPermissions="true">
-            <meta-data android:name="android.support.FILE_PROVIDER_PATHS"
-                       android:resource="@xml/provider_paths" />
-        </provider>
         <receiver android:name=".receiver.LocaleChangedBroadcastReceiver"
                   android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.LOCALE_CHANGED" />
             </intent-filter>
         </receiver>
-        <receiver
-                android:name=".lib.pushnotification.receiver.NotificationAlarmReceiver"
-                android:exported="false" />
+        <!-- D.4 step 38: NotificationAlarmReceiver removed (account-expiry alarm dead). -->
         <receiver
                 android:name=".receiver.AutoStartVpnBootCompletedReceiver"
                 android:enabled="false"
@@ -147,14 +153,9 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <receiver
-                android:name=".receiver.ScheduleNotificationBootCompletedReceiver"
-                android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
+        <!-- D.4 step 38: ScheduleNotificationBootCompletedReceiver removed
+             (was rescheduling account-expiry alarms after boot). -->
+
         <!--
          Receiver to warn Android 16 users about VPN upgrade issue
          https://issuetracker.google.com/issues/441315112

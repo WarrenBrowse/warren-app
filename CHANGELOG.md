@@ -22,6 +22,44 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+
+## [1.0.0] - 2026-08-05
+First public beta release. Free during the open beta.
+### Added
+- Tunnel all traffic through a QUIC transport indistinguishable from HTTP/3, with a TLS-over-TCP
+  fallback carrier raced against UDP so the tunnel comes up even where UDP is blocked.
+- Identify with a wallet recovery phrase instead of an account: no email, no password, nothing to
+  leak. The phrase never leaves the device and every API request is signed.
+- Hold traffic with a fail-closed kill switch whenever the tunnel is not up, on all platforms.
+- Block ads, trackers, adult, gambling, malware and social domains per category, resolved on the
+  exit with no query log.
+- Route through two hops with a blind relay (HPKE-sealed setup), sealed post-quantum
+  (X-Wing / ML-KEM-768) when the exit advertises a key.
+- Offer DAITA traffic shaping and NAT-PMP port forwarding.
+- Split tunneling: exclude chosen apps from the VPN on desktop and Android.
+- Show the tunnel in the GNOME and KDE network indicators on Linux, and ship sysvinit and NixOS
+  packages beside the .deb, .rpm and .pacman ones.
+- Adapt to hostile last miles: FQ-CoDel queueing, BDP-sized buffers, TCP MSS clamping to the live
+  path budget, and a Reduced MTU indicator when the path measures below the default packet size.
+
+### Fixed
+#### Windows
+- Load the split tunnel driver reliably at boot: wait up to two minutes instead of eight seconds,
+  and recover a driver stuck in a pending start.
+
+### Security
+#### Linux
+- Plug a hole in the custom DNS firewall rules: only packets from established flows are accepted
+  back from LAN resolvers.
+
+
+## [Mullvad upstream history]
+Entries below this line are inherited from the Mullvad VPN project, the upstream this fork
+is based on. They are preserved verbatim for historical traceability of legacy code paths
+that Warren still inherits (and that future rebases will continue to surface). New Warren
+entries always go above the `## [Mullvad upstream history]` marker.
+
 ### Added
 - Add port setting for LWO obfuscation.
 - Add list of recent server selections in the select location view.
@@ -761,7 +799,7 @@ This release is identical to 2024.3-beta1.
 - Update Electron from 26.3.0 to 28.1.3.
 - Improve the "Connecting to system service"-view with information about the situation and
   troubleshooting tips.
-- Update support email address to new email address, support@mullvadvpn.net.
+- Update support email address to new email address, support@warrenbrowse.com.
 
 #### Linux
 - Enable quantum-resistant tunnels by default (when set to `auto`). On other platforms, `auto` still

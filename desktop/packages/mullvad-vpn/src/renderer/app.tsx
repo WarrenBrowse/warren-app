@@ -13,26 +13,29 @@ import {
 import { Url } from '../shared/constants';
 import {
   AccessMethodSetting,
-  AccountNumber,
   CustomProxy,
   DeviceEvent,
   DisconnectSource,
   IAccountData,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
-  IDeviceRemoval,
   IDnsOptions,
   ILocation,
+  IRelayListCity,
   IRelayListWithEndpointData,
   ISettings,
   liftConstraint,
   LogoutSource,
+  NatPmpSettings,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
   RelaySettings,
   TunnelState,
+  WarrenCustomExitSettings,
+  WarrenMultiHopSettings,
+  WarrenPubKey,
+  WarrenPubkeyMismatch,
 } from '../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../shared/gettext';
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
@@ -47,12 +50,16 @@ import { LogLevel } from '../shared/logging-types';
 import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
 import AppRouter from './components/AppRouter';
+import { BlockingUpdateGate } from './components/BlockingUpdateGate';
 import ErrorBoundary from './components/ErrorBoundary';
 import { KeyboardNavigation } from './components/keyboard-navigation';
 import Lang from './components/Lang';
 import MacOsScrollbarDetection from './components/MacOsScrollbarDetection';
 import { ModalContainer } from './components/Modal';
 import { AppContext } from './context';
+import { ForumAttachPrompt } from './features/forum-attach';
+import { ForumLoginPrompt } from './features/forum-login';
+import { WarrenPubKeyWarning } from './features/warren-pubkey-warning';
 import { Theme } from './lib/components';
 import { getNavigationBase } from './lib/functions/navigation-base';
 import History from './lib/history';
@@ -73,7 +80,7 @@ interface IPreferredLocaleDescriptor {
   code: string;
 }
 
-type LoginState = 'none' | 'logging in' | 'creating account' | 'too many devices';
+type LoginState = 'none' | 'logging in' | 'creating account';
 
 const SUPPORTED_LOCALE_LIST = [
   { name: 'Dansk', code: 'da' },
@@ -90,6 +97,7 @@ const SUPPORTED_LOCALE_LIST = [
   { name: 'Norsk', code: 'nb' },
   { name: 'Polski', code: 'pl' },
   { name: 'Português', code: 'pt' },
+  { name: 'Română', code: 'ro' },
   { name: 'Русский', code: 'ru' },
   { name: 'Svenska', code: 'sv' },
   { name: 'ภาษาไทย', code: 'th' },
@@ -158,12 +166,27 @@ export default class AppRenderer {
       this.handleDeviceEvent(deviceEvent);
     });
 
-    IpcRendererEventChannel.account.listenDevices((devices) => {
-      this.reduxActions.account.updateDevices(devices);
+    // Main-process purchase poll state (app-initiated checkout):
+    // mirrored into redux for the paywall views' "Checking..." labels.
+    IpcRendererEventChannel.account.listenPurchase((polling) => {
+      this.reduxActions.account.updatePurchaseInFlight(polling);
     });
 
-    IpcRendererEventChannel.accountHistory.listen((newAccountHistory?: AccountNumber) => {
-      this.setAccountHistory(newAccountHistory);
+    IpcRendererEventChannel.account.listenRenewal((state) => {
+      this.reduxActions.account.updateRenewalState(state);
+    });
+    void IpcRendererEventChannel.account
+      .getRenewalState()
+      .then((state) => this.reduxActions.account.updateRenewalState(state));
+
+    // The forum handle lands after a wallet sign-in on the forum, which can
+    // happen while this view is open.
+    IpcRendererEventChannel.forumLogin.listenHandle((handle) => {
+      this.reduxActions.account.updateForumHandle(handle);
+    });
+
+    IpcRendererEventChannel.accountHistory.listen((newPubKeyHistory?: WarrenPubKey) => {
+      this.setPubKeyHistory(newPubKeyHistory);
     });
 
     IpcRendererEventChannel.tunnel.listen((newState: TunnelState) => {
@@ -174,14 +197,33 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.listen((newSettings: ISettings) => {
       this.setSettings(newSettings);
       this.updateBlockedState(this.tunnelState);
+      // The selected relay may have changed; refresh the map marker so it
+      // tracks the new location even while disconnected.
+      this.updateLocation();
     });
 
     IpcRendererEventChannel.settings.listenApiAccessMethodSettingChange((setting) => {
       this.setCurrentApiAccessMethod(setting);
     });
 
+    // Warren live status push: dispatch every snapshot into the redux
+    // store so the connection-details panel and other consumers stay
+    // in sync without polling.
+    IpcRendererEventChannel.warrenStatus.listen((snapshot) => {
+      this.reduxActions.settings.updateWarrenStatus(snapshot);
+    });
+
+    // NAT-PMP refresh-loop status push. Same pattern: dispatch every
+    // snapshot so the port-forwarding view rerenders without polling.
+    IpcRendererEventChannel.natPmpStatus.listen((snapshot) => {
+      this.reduxActions.settings.updateNatPmpStatus(snapshot);
+    });
+
     IpcRendererEventChannel.relays.listen((relayListPair: IRelayListWithEndpointData) => {
       this.setRelayListPair(relayListPair);
+      // Relay list (with city coordinates) may have arrived after settings,
+      // so recompute the marker location now that centroids are available.
+      this.updateLocation();
     });
 
     IpcRendererEventChannel.daemon.listenTryStartEvent((status: DaemonStatus) => {
@@ -315,24 +357,36 @@ export default class AppRenderer {
       this.reduxActions.userInterface.setDaemonAllowed(initialState.daemonAllowed);
     }
 
+    // GUI settings must land in redux before the device-state replay so
+    // `handleDeviceEvent` can consult the persisted `backupPending` gate.
+    this.setGuiSettings(initialState.guiSettings);
+
     if (initialState.deviceState) {
       const deviceState = initialState.deviceState;
       this.handleDeviceEvent({ type: deviceState.type, deviceState } as DeviceEvent);
     }
     // Login state and account needs to be set before expiry.
     this.setAccountExpiry(initialState.accountData?.expiry);
+    this.reduxActions.account.updatePurchaseInFlight(initialState.purchaseInFlight);
+    this.reduxActions.account.updateForumHandle(initialState.forumHandle);
 
-    this.setAccountHistory(initialState.accountHistory);
+    this.setPubKeyHistory(initialState.accountHistory);
     this.setTunnelState(initialState.tunnelState);
     this.updateBlockedState(initialState.tunnelState);
 
     this.setRelayListPair(initialState.relayList);
     this.setCurrentVersion(initialState.currentVersion);
     this.setUpgradeVersion(initialState.upgradeVersion);
-    this.setGuiSettings(initialState.guiSettings);
     this.storeAutoStart(initialState.autoStart);
     this.setChangelog(initialState.changelog);
     this.setCurrentApiAccessMethod(initialState.currentApiAccessMethod);
+    if (initialState.warrenStatus) {
+      // Replay of the status the main process already holds. The push stream
+      // delivered it before this renderer existed, so without this a stable
+      // value (a published notice, the network descriptor) would never reach
+      // the store.
+      this.reduxActions.settings.updateWarrenStatus(initialState.warrenStatus);
+    }
     this.reduxActions.userInterface.setIsMacOs13OrNewer(initialState.isMacOs13OrNewer);
 
     if (initialState.macOsScrollbarVisibility !== undefined) {
@@ -356,6 +410,8 @@ export default class AppRenderer {
       );
     }
 
+    this.reduxActions.settings.setSplitTunnelingSupported(initialState.splitTunnelingSupported);
+
     this.updateLocation();
 
     if (initialState.navigationHistory) {
@@ -364,7 +420,20 @@ export default class AppRenderer {
       this.history = History.fromSavedHistory(initialState.navigationHistory);
     } else {
       const loginState = this.reduxStore.getState().account.status;
-      const navigationBase = getNavigationBase(this.connectedToDaemon, loginState);
+      // Pass `onboardingCompletedUnix` so the initial history points
+      // at `/main` for a user who has already gone through the wizard.
+      // Without it, `getNavigationBase` always treats the boot as a
+      // first launch and lands on `onboardingWelcome`. The subsequent
+      // `StateTriggeredNavigation` re-render computes `nextPath=/main`
+      // but skips the navigation because `prevPath === nextPath`
+      // (= no transition observed), so the user stays stuck on the
+      // welcome screen even though the redux store says otherwise.
+      const onboardingCompletedUnix = initialState.guiSettings.onboardingCompletedUnix;
+      const navigationBase = getNavigationBase(
+        this.connectedToDaemon,
+        loginState,
+        onboardingCompletedUnix,
+      );
       this.history = new History(navigationBase);
     }
 
@@ -387,8 +456,16 @@ export default class AppRenderer {
                       <ModalContainer>
                         <KeyboardNavigation>
                           <MotionConfig reducedMotion="user">
-                            <AppRouter />
+                            <BlockingUpdateGate>
+                              <AppRouter />
+                            </BlockingUpdateGate>
                           </MotionConfig>
+                          {/* Overlays inside KeyboardNavigation so their modal
+                              BackAction finds its BackActionContext (Escape closes;
+                              for the pubkey warning that is the safe "reject"). */}
+                          <WarrenPubKeyWarning />
+                          <ForumLoginPrompt />
+                          <ForumAttachPrompt />
                         </KeyboardNavigation>
                         {window.env.platform === 'darwin' && <MacOsScrollbarDetection />}
                       </ModalContainer>
@@ -403,10 +480,23 @@ export default class AppRenderer {
     );
   }
 
+  public getWarrenMnemonic = () => IpcRendererEventChannel.account.getWarrenMnemonic();
+  public setWarrenMnemonic = (mnemonic: string) =>
+    IpcRendererEventChannel.account.setWarrenMnemonic(mnemonic);
   public submitVoucher = (code: string) => IpcRendererEventChannel.account.submitVoucher(code);
+
+  // App-initiated purchase flow (warren-core doc 35). The main process
+  // owns the whole thing (wpid mint, browser open, auto-redeem poll,
+  // persistence across restarts): this renderer runs inside a menubar
+  // window that hides and gets background-throttled exactly while the
+  // user pays in the browser, so no crediting logic may live here.
+  public buyCredit = (): Promise<void> => IpcRendererEventChannel.account.buyCredit();
+
+  public disableRenewal = (): Promise<void> => IpcRendererEventChannel.account.disableRenewal();
+  public checkPendingPurchases = (): Promise<void> =>
+    IpcRendererEventChannel.account.checkPendingPurchases();
+
   public updateAccountData = () => IpcRendererEventChannel.account.updateData();
-  public removeDevice = (device: IDeviceRemoval) =>
-    IpcRendererEventChannel.account.removeDevice(device);
   public connectTunnel = () => IpcRendererEventChannel.tunnel.connect();
   public disconnectTunnel = (source: DisconnectSource) =>
     IpcRendererEventChannel.tunnel.disconnect(source);
@@ -415,7 +505,6 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.setRelaySettings(relaySettings);
   public setDnsOptions = (dnsOptions: IDnsOptions) =>
     IpcRendererEventChannel.settings.setDnsOptions(dnsOptions);
-  public clearAccountHistory = () => IpcRendererEventChannel.accountHistory.clear();
   public setAutoConnect = (value: boolean) =>
     IpcRendererEventChannel.guiSettings.setAutoConnect(value);
   public setEnableSystemNotifications = (value: boolean) =>
@@ -444,9 +533,6 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.setEnableDaita(value);
   public setDaitaDirectOnly = (value: boolean) =>
     IpcRendererEventChannel.settings.setDaitaDirectOnly(value);
-  public collectProblemReport = (toRedact: string | undefined) =>
-    IpcRendererEventChannel.problemReport.collectLogs(toRedact);
-  public viewLog = (path: string) => IpcRendererEventChannel.problemReport.viewLog(path);
   public quit = (source: DisconnectSource) => IpcRendererEventChannel.app.quit(source);
   public openUrl = (url: Url) => IpcRendererEventChannel.app.openUrl(url);
   public getPathBaseName = (path: string) => IpcRendererEventChannel.app.getPathBaseName(path);
@@ -478,6 +564,17 @@ export default class AppRenderer {
   public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
+  // Onboarding wizard: persists the completion timestamp via
+  // the main-process GUI settings file. Pass `undefined` to clear it
+  // (replay flow). The renderer side is kept in sync through the
+  // existing `guiSettings.''` notifyRenderer broadcast.
+  public setOnboardingCompletedUnix = (ts: number | undefined): void =>
+    IpcRendererEventChannel.guiSettings.setOnboardingCompletedUnix(ts);
+  // Persists the backup gate across GUI restarts (see the field doc in
+  // gui-settings-state.ts). The renderer redux store is kept in sync via
+  // the `guiSettings.''` notifyRenderer broadcast.
+  public setBackupPending = (backupPending: boolean): void =>
+    IpcRendererEventChannel.guiSettings.setBackupPending(backupPending);
   public daemonPrepareRestart = (shutdown: boolean): void => {
     IpcRendererEventChannel.daemon.prepareRestart(shutdown);
   };
@@ -489,6 +586,8 @@ export default class AppRenderer {
   public tryStartDaemon = () => {
     if (window.env.platform === 'win32') IpcRendererEventChannel.daemon.tryStart();
   };
+
+  public unblockNetwork = (): Promise<boolean> => IpcRendererEventChannel.daemon.unblockNetwork();
 
   public appUpgrade = () => {
     const reduxState = this.reduxStore.getState();
@@ -525,38 +624,6 @@ export default class AppRenderer {
     }
   };
 
-  public login = async (accountNumber: AccountNumber) => {
-    const actions = this.reduxActions;
-    actions.account.startLogin(accountNumber);
-
-    log.info('Logging in');
-
-    this.loginState = 'logging in';
-
-    const response = await IpcRendererEventChannel.account.login(accountNumber);
-    if (response?.type === 'error') {
-      if (response.error === 'too-many-devices') {
-        try {
-          await this.fetchDevices(accountNumber);
-
-          actions.account.loginTooManyDevices();
-          this.loginState = 'too many devices';
-        } catch {
-          log.error('Failed to fetch device list');
-          actions.account.loginFailed('list-devices');
-        }
-      } else {
-        actions.account.loginFailed(response.error);
-      }
-    }
-  };
-
-  public cancelLogin = (): void => {
-    const reduxAccount = this.reduxActions.account;
-    reduxAccount.loggedOut();
-    this.loginState = 'none';
-  };
-
   public logout = async (source: LogoutSource) => {
     try {
       await IpcRendererEventChannel.account.logout(source);
@@ -571,9 +638,14 @@ export default class AppRenderer {
     await this.disconnectTunnel('gui-device-revoked');
   };
 
+  // Mints a fresh Warren identity in the daemon (generates a new BIP39
+  // mnemonic, hot-swaps the signer, and logs in). The daemon emits a
+  // `logged in` device event which - because `loginState` is
+  // `creating account` - transitions the GUI to the `backup-pending`
+  // state instead of completing the login, so the welcome screen can
+  // run its mandatory recovery-phrase backup step before proceeding.
   public createNewAccount = async () => {
     log.info('Creating account');
-
     const actions = this.reduxActions;
     actions.account.startCreateAccount();
     this.loginState = 'creating account';
@@ -581,32 +653,106 @@ export default class AppRenderer {
     try {
       await IpcRendererEventChannel.account.create();
     } catch (e) {
-      const error = e as Error;
-      actions.account.createAccountFailed(error);
+      this.loginState = 'none';
+      // The daemon may have already emitted `logged in` (-> redux
+      // backup-pending) before the `create()` promise rejected. Do not
+      // clobber that with a `failed` state, which would strand a freshly
+      // minted, un-backed-up identity behind an error screen.
+      const status = this.reduxStore.getState().account.status.type;
+      if (status !== 'backup-pending' && status !== 'ok') {
+        actions.account.createAccountFailed(e as Error);
+      }
     }
   };
 
-  public fetchDevices = async (accountNumber: AccountNumber): Promise<Array<IDevice>> => {
-    const devices = await IpcRendererEventChannel.account.listDevices(accountNumber);
-    this.reduxActions.account.updateDevices(devices);
-    return devices;
-  };
-
-  public openUrlWithAuth = async (url: Url): Promise<void> => {
-    let token = '';
-    try {
-      token = await IpcRendererEventChannel.account.getWwwAuthToken();
-    } catch (e) {
-      const error = e as Error;
-      log.error(`Failed to get the WWW auth token: ${error.message}`);
-    }
-    void this.openUrl(`${url}?token=${token}`);
+  // Called once the user confirms they backed up their recovery phrase:
+  // completes the new-account login state so navigation proceeds (to the
+  // buy-plan / expired screen for a fresh account).
+  public finishAccountBackup = (pubkey: WarrenPubKey) => {
+    this.setBackupPending(false);
+    this.reduxActions.account.accountCreated(pubkey, new Date().toISOString());
   };
 
   public setAllowLan = async (allowLan: boolean) => {
     const actions = this.reduxActions;
     await IpcRendererEventChannel.settings.setAllowLan(allowLan);
     actions.settings.updateAllowLan(allowLan);
+  };
+
+  // Persistent warren-api URL. Empty string → unset on the daemon
+  // side (= fallback to upstream Mullvad backend). Daemon restart is
+  // required to apply.
+  public setWarrenApiUrl = async (warrenApiUrl: string) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenApiUrl(warrenApiUrl);
+    actions.settings.updateWarrenApiUrl(warrenApiUrl === '' ? undefined : warrenApiUrl);
+  };
+
+  // Client-side bandwidth ceiling in bits per second (undefined =
+  // unlimited). Applies to a live tunnel without a reconnect.
+  public setWarrenMaxRateBps = async (warrenMaxRateBps?: number) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenMaxRateBps(warrenMaxRateBps);
+    actions.settings.updateWarrenMaxRateBps(warrenMaxRateBps);
+  };
+
+  // Warren multi-hop settings. Daemon restart is required
+  // for a settings change to take effect because the supervisor is
+  // wired once at boot from the env-var + settings-file path.
+  public setWarrenMultiHop = async (settings: WarrenMultiHopSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenMultiHop(settings);
+    actions.settings.updateWarrenMultiHop(settings);
+  };
+
+  // Advanced custom-exit override. The daemon reconnects on change, so
+  // no restart is required for it to take effect.
+  public setWarrenCustomExit = async (settings: WarrenCustomExitSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setWarrenCustomExit(settings);
+    actions.settings.updateWarrenCustomExit(settings);
+  };
+
+  // Trust the new pubkey for the given `exitIdHex`,
+  // replacing the pinned baseline. The daemon clears
+  // `WarrenStatus.pubkeyMismatchPending` on success so the modal
+  // unmounts automatically through the existing WarrenStatusUpdates
+  // stream.
+  public trustNewExitKey = async (input: { exitIdHex: string; newPubkeyHex: string }) => {
+    return IpcRendererEventChannel.settings.trustNewExitKey(input);
+  };
+
+  // Clear the entire TOFU pin table. Returns the number of entries
+  // that were cleared so the caller can confirm the operation in the
+  // UI ("Cleared N pinned keys").
+  public resetPinnedExitKeys = async () => {
+    return IpcRendererEventChannel.settings.resetPinnedExitKeys();
+  };
+
+  // Dismiss the pending pubkey mismatch without trusting the new key.
+  // Daemon clears `pubkeyMismatchPending` so the modal unmounts; the
+  // existing pin baseline survives untouched.
+  public dismissPubkeyMismatch = async () => {
+    return IpcRendererEventChannel.settings.dismissPubkeyMismatch();
+  };
+
+  // Forensic best-effort report posted to warren-api. The renderer
+  // forwards the pending mismatch payload (exit_id, old + new pubkey,
+  // forensic context) verbatim; the daemon stamps the timestamp and
+  // signs the request. Daemon clears `pubkeyMismatchPending`
+  // regardless of the network outcome (no retry surface).
+  public reportPubkeyMismatch = async (mismatch: WarrenPubkeyMismatch) => {
+    return IpcRendererEventChannel.settings.reportPubkeyMismatch(mismatch);
+  };
+
+  // Warren NAT-PMP port-forwarding settings. No daemon restart needed
+  // (the daemon pushes the new config live to the parameters
+  // generator and the next tunnel reconnect spawns / stops the
+  // refresh loop accordingly).
+  public setNatPmpSettings = async (settings: NatPmpSettings) => {
+    const actions = this.reduxActions;
+    await IpcRendererEventChannel.settings.setNatPmpSettings(settings);
+    actions.settings.updateNatPmpSettings(settings);
   };
 
   public setShowBetaReleases = async (showBetaReleases: boolean) => {
@@ -660,14 +806,6 @@ export default class AppRenderer {
   public showFullDiskAccessSettings = async () => {
     await IpcRendererEventChannel.app.showFullDiskAccessSettings();
   };
-
-  public async sendProblemReport(
-    email: string,
-    message: string,
-    savedReportId: string,
-  ): Promise<void> {
-    await IpcRendererEventChannel.problemReport.sendReport({ email, message, savedReportId });
-  }
 
   public getPreferredLocaleList(): IPreferredLocaleDescriptor[] {
     return [
@@ -799,8 +937,8 @@ export default class AppRenderer {
     this.reduxActions.appUpgrade.resetAppUpgrade();
   }
 
-  private setAccountHistory(accountHistory?: AccountNumber) {
-    this.reduxActions.account.updateAccountHistory(accountHistory);
+  private setPubKeyHistory(pubkeyHistory?: WarrenPubKey) {
+    this.reduxActions.account.updatePubKeyHistory(pubkeyHistory);
   }
 
   private setTunnelState(tunnelState: TunnelState) {
@@ -842,6 +980,11 @@ export default class AppRenderer {
     const reduxSettings = this.reduxActions.settings;
 
     reduxSettings.updateAllowLan(newSettings.allowLan);
+    reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
+    reduxSettings.updateWarrenMaxRateBps(newSettings.warrenMaxRateBps);
+    reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);
+    reduxSettings.updateWarrenCustomExit(newSettings.warrenCustomExit);
+    reduxSettings.updateNatPmpSettings(newSettings.warrenNatPmp);
     reduxSettings.updateEnableIpv6(newSettings.tunnelOptions.enableIpv6);
     reduxSettings.updateLockdownMode(newSettings.lockdownMode);
     reduxSettings.updateShowBetaReleases(newSettings.showBetaReleases);
@@ -893,28 +1036,49 @@ export default class AppRenderer {
 
     switch (deviceEvent.type) {
       case 'logged in': {
-        const accountNumber = deviceEvent.deviceState.accountAndDevice.accountNumber;
-        const device = deviceEvent.deviceState.accountAndDevice.device;
+        const pubkey = deviceEvent.deviceState.warrenIdentity.pubkey;
+
+        // If we are holding on the mandatory backup step for a freshly
+        // created account, ignore any re-emitted `logged in` event so it
+        // cannot bypass the backup gate (the daemon is already logged in;
+        // the user finalizes via `finishAccountBackup`).
+        if (this.reduxStore.getState().account.status.type === 'backup-pending') {
+          break;
+        }
 
         switch (this.loginState) {
           case 'none':
-            reduxAccount.loggedIn(accountNumber, device);
+            // A GUI restart between account creation and backup confirmation
+            // replays this event with `loginState` 'none'. The persisted
+            // backup gate ensures the un-backed-up identity still holds on
+            // the backup-pending state instead of landing on the main view.
+            if (this.reduxStore.getState().settings.guiSettings.backupPending) {
+              reduxAccount.accountAwaitingBackup(pubkey);
+            } else {
+              reduxAccount.loggedIn(pubkey);
+            }
             break;
           case 'logging in':
-            reduxAccount.loggedIn(accountNumber, device);
+            reduxAccount.loggedIn(pubkey);
             break;
           case 'creating account':
-            reduxAccount.accountCreated(accountNumber, device, new Date().toISOString());
+            // The daemon has minted + logged into the new identity, but
+            // hold on the login screen until the user backs up their
+            // recovery phrase (see `finishAccountBackup`).
+            this.setBackupPending(true);
+            reduxAccount.accountAwaitingBackup(pubkey);
             break;
         }
         break;
       }
       case 'logged out':
         this.loginScheduler.cancel();
+        this.setBackupPending(false);
         reduxAccount.loggedOut();
         break;
       case 'revoked': {
         this.loginScheduler.cancel();
+        this.setBackupPending(false);
         reduxAccount.deviceRevoked();
         break;
       }
@@ -998,6 +1162,12 @@ export default class AppRenderer {
       case 'disconnected':
         if (this.tunnelState.location) {
           this.setLocation(this.tunnelState.location);
+        } else {
+          // Warren has no GeoIP service to report the user's real location
+          // while disconnected (unlike upstream Mullvad), so fall back to the
+          // selected relay location. This lets the map show a marker at the
+          // chosen country immediately, without waiting for a connection.
+          this.setLocation(this.getLocationFromConstraints());
         }
         break;
       case 'disconnecting':
@@ -1031,6 +1201,12 @@ export default class AppRenderer {
       latitude: state.connection.latitude,
     };
 
+    // Prefer the relay list city centroid (populated by the daemon) over
+    // the stale redux coordinates so the map can place a marker at the
+    // selected location even before any tunnel state reports one.
+    const cityCoordinates = (city?: IRelayListCity) =>
+      city ? { latitude: city.latitude, longitude: city.longitude } : coordinates;
+
     const relaySettings = this.settings.relaySettings;
     if ('normal' in relaySettings) {
       const location = relaySettings.normal.location;
@@ -1059,17 +1235,20 @@ export default class AppRenderer {
             city: city?.name,
             hostname: constraint.hostname,
             entryHostname,
-            ...coordinates,
+            ...cityCoordinates(city),
           };
         } else if ('city' in constraint) {
           const country = relayLocations.find(({ code }) => constraint.country === code);
           const city = country?.cities.find(({ code }) => constraint.city === code);
 
-          return { country: country?.name, city: city?.name, ...coordinates };
+          return { country: country?.name, city: city?.name, ...cityCoordinates(city) };
         } else if ('country' in constraint) {
           const country = relayLocations.find(({ code }) => constraint.country === code);
+          // Warren currently maps one city (the country centroid) per
+          // country, so the first city's coordinates locate the country.
+          const firstCity = country?.cities[0];
 
-          return { country: country?.name, ...coordinates };
+          return { country: country?.name, ...cityCoordinates(firstCity) };
         }
       }
     }

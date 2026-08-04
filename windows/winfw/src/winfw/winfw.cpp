@@ -9,6 +9,7 @@
 #include "libwfp/filterengine.h"
 #include "libwfp/objectenumerator.h"
 #include <windows.h>
+#include <vector>
 #include <libcommon/error.h>
 #include <libcommon/string.h>
 #include <optional>
@@ -432,7 +433,8 @@ WinFw_ApplyPolicyConnected(
 	const wchar_t * const *tunnelDnsServers,
 	size_t numTunnelDnsServers,
 	const wchar_t * const *nonTunnelDnsServers,
-	size_t numNonTunnelDnsServers
+	size_t numNonTunnelDnsServers,
+	bool allowExternalDns
 )
 {
 	if (nullptr == g_fwContext)
@@ -542,7 +544,8 @@ WinFw_ApplyPolicyConnected(
 			relayClientWstrings,
 			tunnelInterfaceAlias,
 			convertedTunnelDnsServers,
-			convertedNonTunnelDnsServers
+			convertedNonTunnelDnsServers,
+			allowExternalDns
 		) ? WINFW_POLICY_STATUS_SUCCESS : WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}
 	catch (common::error::WindowsException &err)
@@ -622,6 +625,58 @@ WinFw_Reset()
 		}
 
 		return g_fwContext->reset()
+			? WINFW_POLICY_STATUS_SUCCESS
+			: WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (common::error::WindowsException &err)
+	{
+		return HandlePolicyException(err);
+	}
+	catch (std::exception &err)
+	{
+		if (nullptr != g_logSink)
+		{
+			g_logSink(MULLVAD_LOG_LEVEL_ERROR, err.what(), g_logSinkContext);
+		}
+
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (...)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+}
+
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_ResetAllGenerations(
+	const uint32_t *salts,
+	uint32_t saltCount
+)
+{
+	if (nullptr == salts || 0 == saltCount)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+
+	try
+	{
+		//
+		// Recovery runs against the engine directly, never through
+		// `g_fwContext`: the objects being removed belong to environments this
+		// build has no context for. A live context is torn down first so its
+		// own state cannot be left pointing at deleted objects.
+		//
+		if (nullptr != g_fwContext)
+		{
+			delete g_fwContext;
+			g_fwContext = nullptr;
+		}
+
+		const std::vector<uint32_t> saltList(salts, salts + saltCount);
+
+		return ObjectPurger::Execute(ObjectPurger::GetRemoveAllGenerationsFunctor(saltList))
 			? WINFW_POLICY_STATUS_SUCCESS
 			: WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}

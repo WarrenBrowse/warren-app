@@ -2,6 +2,7 @@ import {
   ApiAccessMethodSettings,
   IRelaySettingsNormal,
   ISettings,
+  NatPmpProto,
   ObfuscationType,
   Ownership,
 } from '../shared/daemon-rpc-types';
@@ -42,6 +43,7 @@ export function getDefaultSettings(): ISettings {
       },
       dns: {
         state: 'default',
+        allowExternalDns: false,
         defaultOptions: {
           blockAds: false,
           blockTrackers: false,
@@ -63,9 +65,6 @@ export function getDefaultSettings(): ISettings {
       shadowsocksSettings: {
         port: 'any',
       },
-      wireGuardPortSettings: {
-        port: 'any',
-      },
       lwoSettings: {
         port: 'any',
       },
@@ -74,6 +73,36 @@ export function getDefaultSettings(): ISettings {
     apiAccessMethods: getDefaultApiAccessMethods(),
     relayOverrides: [],
     recents: [],
+    // `undefined` = unset, fallback to Mullvad upstream backend.
+    warrenApiUrl: undefined,
+    warrenMaxRateBps: undefined,
+    // Default OFF per doctrine `warren_multihop_doctrine_v1`.
+    warrenMultiHop: {
+      enabled: false,
+      entryCountry: '',
+      exitCountry: '',
+      hpkeEpochRotationMs: 4 * 60 * 60 * 1000,
+    },
+    // Advanced custom-exit override OFF by default (roster selection).
+    warrenCustomExit: {
+      enabled: false,
+      endpoint: '',
+      pubkeyHex: '',
+      coverDomain: undefined,
+      label: '',
+      x25519MultihopPubkeyHex: '',
+      exitIdHex: '',
+    },
+    // NAT-PMP port-forwarding OFF by default. UDP / 1 h lifetime
+    // baseline; the user toggles ON from the port-forwarding view.
+    warrenNatPmp: {
+      enabled: false,
+      lifetimeSecs: 3600,
+      rules: [],
+      protocol: NatPmpProto.udp,
+      suggestedExternalPort: 0,
+      internalPort: 0,
+    },
   };
 }
 
@@ -89,7 +118,7 @@ export function getDefaultApiAccessMethods(): ApiAccessMethodSettings {
     },
     mullvadBridges: {
       id: '',
-      name: 'Mullvad Bridges',
+      name: 'Warren Bridges',
       enabled: false,
       type: 'bridges',
     },

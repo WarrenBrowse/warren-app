@@ -2,12 +2,12 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Crowdin-Project: mullvad-app\n"
+"X-Crowdin-Project: warren-app\n"
 "X-Crowdin-Project-ID: 350815\n"
 "X-Crowdin-Language: sv-SE\n"
 "X-Crowdin-File: messages.pot\n"
 "X-Crowdin-File-ID: 12\n"
-"Project-Id-Version: mullvad-app\n"
+"Project-Id-Version: warren-app\n"
 "Language-Team: Swedish\n"
 "Language: sv_SE\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
@@ -18,9 +18,9 @@ msgstr "%(amount)d till ..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)s har lagts till. Kontot är betalt till och med %(expiry)s."
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s-port"
 
@@ -255,7 +255,7 @@ msgstr "Lösenord"
 msgid "Port"
 msgstr "Port"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "Kvantresistens"
@@ -314,6 +314,9 @@ msgstr "Typ"
 msgid "Unblock"
 msgstr "Avblockera"
 
+msgid "Unknown"
+msgstr "Okänd"
+
 msgid "UNSECURED CONNECTION"
 msgstr "OSÄKER ANSLUTNING"
 
@@ -334,9 +337,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, visa laddad"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "%(wireguard)s-portinställningar"
@@ -415,9 +418,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "Glöm kontonumret %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "Gå till inställningar för anti-censur för att ändra %(wireGuard)s-port"
@@ -585,6 +588,39 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr "Betalat till"
 
+#. Shown while the saved card details are unknown.
+msgctxt "account-view"
+msgid "Active"
+msgstr "Aktiv"
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr "Automatisk förnyelse"
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
+msgstr "Senaste förnyelsen %(date)s"
+
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr "Publik nyckel (plånboksadress)"
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr "Förnyas varje månad, nästa gång omkring %(date)s"
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr "Stäng av"
+
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
@@ -602,8 +638,8 @@ msgstr "Observera att dessa metoder inte förbättrar prestandan och kan komma a
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Dessa metoder kan vara användbara i situationer där du blockeras från att nå Mullvad. När \"Automatiskt\" är valt försöker appen med alla metoder tills en fungerar."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "Dessa metoder kan vara användbara i situationer där du blockeras från att nå Warren. När \"Automatiskt\" är valt försöker appen med alla metoder tills en fungerar."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -683,8 +719,8 @@ msgid "Local SOCKS5 server"
 msgstr "Lokal SOCKS5-server"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "Hantera och lägg till anpassade metoder för att komma åt Mullvad API."
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "Hantera och lägg till anpassade metoder för att komma åt Warren API."
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -743,8 +779,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "Appen behöver information om fjärrservern där din lokala SOCKS5-server vidarebefordrar din trafik."
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "Appen måste kommunicera med en Mullvad API-server för att logga in dig, hämta serverlistor och andra viktiga åtgärder."
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "Appen måste kommunicera med en Warren API-server för att logga in dig, hämta serverlistor och andra viktiga åtgärder."
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -755,8 +791,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "TCP-porten där din lokala SOCKS5-server lyssnar."
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "Detta kan vara användbart om API:n är censurerad men Mullvads broservrar inte är det."
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "Detta kan vara användbart om API:n är censurerad men Warrens broservrar inte är det."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -775,16 +811,16 @@ msgid "Transport protocol"
 msgstr "Transportprotokoll"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "Med metoden \"Direkt\" kommunicerar appen med en Mullvad API-server direkt utan mellanliggande proxyservrar."
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "Med metoden \"Direkt\" kommunicerar appen med en Warren API-server direkt utan mellanliggande proxyservrar."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "Med metoden \"Krypterad DNS-proxy\" kommunicerar appen med vår Mullvad API via en proxyadress. Den gör det genom att hämta en adress från en DNS over HTTPS-server (DoH) och sedan använda den för att nå våra API-servrar."
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "Med metoden \"Krypterad DNS-proxy\" kommunicerar appen med vår Warren API via en proxyadress. Den gör det genom att hämta en adress från en DNS over HTTPS-server (DoH) och sedan använda den för att nå våra API-servrar."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "Med metoden \"Mullvad-broar\" kommunicerar appen med en Mullvad API-server via en Mullvad-broserver. Den gör det genom att skicka trafiken som obfuskeras av Shadowsocks."
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "Med metoden \"Warren-broar\" kommunicerar appen med en Warren API-server via en Warren-broserver. Den gör det genom att skicka trafiken som obfuskeras av Shadowsocks."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -997,6 +1033,46 @@ msgctxt "app-upgrade-view"
 msgid "You are using the latest version"
 msgstr "Du använder den senaste versionen"
 
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or report the problem on our community forum."
+msgstr "Det gick inte att öppna installationsprogrammet. Försök igen eller rapportera problemet på vårt forum."
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
+msgstr "Det gick inte att ladda ned. Kontrollera din anslutning/brandvägg och försök igen, eller rapportera problemet på vårt forum."
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
+msgstr "Installationsprogrammet avslutades oväntat. Försök igen eller rapportera problemet på vårt forum."
+
+#. Button text to report a problem on the community forum
+msgctxt "app-upgrade-view"
+msgid "Report a problem on the forum"
+msgstr "Rapportera ett problem på forumet"
+
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr "Den här versionen av Warren stöds inte längre. För att din anslutning ska fortsätta vara skyddad måste du uppdatera appen för att kunna använda den."
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
+msgstr "Ett okänt fel har inträffat. Försök igen eller rapportera problemet på vårt forum."
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr "Uppdatering krävs"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or report the problem on our community forum."
+msgstr "Det gick inte att verifiera. Försök igen eller rapportera problemet på vårt forum."
+
 msgctxt "auth-failure"
 msgid "Blocking internet: account is out of time"
 msgstr "Blockerar internet: kontots tidsgräns har uppnåtts"
@@ -1012,6 +1088,68 @@ msgstr "Det går inte att autentisera kontot. Skicka en problemrapport."
 msgctxt "auth-failure"
 msgid "You are logged in with an invalid account number. Please log out and try another one."
 msgstr "Du är inloggad med ett ogiltigt kontonummer. Logga ut och försök med ett annat."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blockerar internet: din åtkomst har stängts av på grund av ett brott mot användarvillkoren. Kontakta supporten om du tror att det är ett misstag."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
+msgstr "Blockerar internet: din åtkomst har stängts av på grund av missbruk av en vidarebefordrad port. Kontakta supporten om du tror att det är ett misstag."
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please report the problem on our community forum."
+msgstr "Det går inte att autentisera kontot. Rapportera problemet på vårt forum."
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr "Om Warren-betan"
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr "BETA"
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr "Gratis betanätverk, begränsad bandbredd"
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr "Gratis betanätverk, hastigheten begränsad till %(mbps)d Mbit/s"
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr "Den körs på ett separat nätverk med bandbredden begränsad till %(mbps)d Mbit/s."
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr "Den körs på ett separat nätverk med begränsad bandbredd."
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr "Dela din feedback på forumet"
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr "Detta är inte de slutgiltiga villkoren: nätverket med full hastighet är en separat, betald produkt."
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr "Den här appen använder Warrens gratis beta, som hjälper oss att testa Warren under verkliga förhållanden."
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
+msgstr "Warren-beta"
 
 #. Text displayed when there are no updates for this platform in the app version
 msgctxt "changelog-view"
@@ -1128,6 +1266,52 @@ msgstr "Du måste inaktivera \"Låsningsläge\" för att öppna internet och lä
 msgctxt "connect-view"
 msgid "You’re all set!"
 msgstr "Du är klar!"
+
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: not active on this server"
+msgstr "%(DAITA)s: inte aktivt på den här servern"
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
+msgstr "Det gick inte att uppdatera betaåtkomsten. Kontrollera din anslutning och försök igen."
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "Portvidarebefordran: blockerad"
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "Portvidarebefordran: porten upptagen"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr "Reducerad MTU"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr "Reducerad MTU (%(mtu)s)"
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
+msgstr "Uppdatera betaåtkomsten"
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
+msgstr "Den här appen använder den kostnadsfria Warren-betan: ingen betalning behövs. Uppdatera din betaåtkomst för att fortsätta."
 
 #. The hostname line displayed below the country on the main screen
 #. Available placeholders:
@@ -1308,8 +1492,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "Enheten tas bort från listan och loggas ut."
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Det här är namnet som tilldelas enheten. Varje enhet som är inloggad på ett Mullvad-konto får ett unikt namn som hjälper dig att identifiera den när du hanterar dina enheter i appen eller på webbplatsen."
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "Det här är namnet som tilldelas enheten. Varje enhet som är inloggad på ett Warren-konto får ett unikt namn som hjälper dig att identifiera den när du hanterar dina enheter i appen eller på webbplatsen."
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1333,8 +1517,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "Visa och hantera alla dina inloggade enheter. Du kan ha upp till fem enheter åt gången på ett konto. Varje enhet får ett namn när den loggas in så att du enklare kan skilja dem åt."
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "Upp till fem enheter kan vara inloggade på ett Mullvad-konto."
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "Upp till fem enheter kan vara inloggade på ett Warren-konto."
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1351,6 +1535,12 @@ msgctxt "error-boundary-view"
 msgid "Something went wrong. Please contact us at %(email)s"
 msgstr "Ett fel har inträffat. Kontakta oss på %(email)s"
 
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
+msgstr "Läs in appen på nytt"
+
 #. Title label in navigation bar
 msgctxt "filter-nav"
 msgid "Filter"
@@ -1361,8 +1551,8 @@ msgid "All providers"
 msgstr "Alla leverantörer"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "Endast Mullvad-ägd"
+msgid "Warren owned only"
+msgstr "Endast Warren-ägd"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1474,6 +1664,10 @@ msgstr "LADDAR NED UPPDATERING ... %(appUpgradeDownloadProgressValue)s %%"
 
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr "VIKTIGT"
+
+msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
 msgstr "Installera den senaste appversionen för att hålla dig uppdaterad."
 
@@ -1495,6 +1689,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr "NY VERSION INSTALLERAD"
 
 msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr "MEDDELANDE"
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr "Avsluta och starta om appen."
 
@@ -1504,6 +1702,10 @@ msgid "READY TO INSTALL UPDATE"
 msgstr "KLAR ATT INSTALLERA UPPDATERING"
 
 #. Accessibility label for the button to retry download of the installer.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
+msgstr "Läs hela meddelandet"
+
 msgctxt "in-app-notifications"
 msgid "Retry download of the installer"
 msgstr "Prova att ladda ned installationsprogrammet igen"
@@ -1517,6 +1719,10 @@ msgstr "Prova att installera igen"
 msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Skicka problemrapport"
+
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "SERVERUNDERHÅLL"
 
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
@@ -1533,9 +1739,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Det gick inte att starta installationsprogrammet."
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "Den valda %(wireGuard)s-porten stöds inte. <a>Ändra den i VPN-inställningarna.</a>"
@@ -1583,10 +1789,55 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr "DET GICK INTE ATT VERIFIERA"
 
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
+msgstr "AUTOMATISK FÖRNYELSE SNART"
+
+msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr "MIGRERING UPPSKJUTEN, PORTEN BEHÅLLS"
+
+msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "INGEN INTERNETANSLUTNING"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
+msgstr "Rapportera på forumet"
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr "SERVERN VIDAREBEFORDRAR INTE TRAFIK"
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr "Servern slutade vidarebefordra din trafik. Warren byter server eller återansluter automatiskt."
+
+msgctxt "in-app-notifications"
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr "Det här tar längre tid än vanligt. Warren fortsätter att försöka. Rapportera problemet på vårt forum om anslutningen inte upprättas."
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
+msgstr "PROBLEM MED ATT ANSLUTA?"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "Din enhet är offline. Warren återansluter automatiskt så snart nätverket är tillbaka."
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr "Din vidarebefordrade port är upptagen på alla alternativa servrar, så Warren behöll dig på den nuvarande. Räkna med ett kort avbrott medan den uppdateras."
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr "Din Warren-tid förnyas inom de närmaste dagarna. Du kan stänga av det när som helst i Kontoinställningar."
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "Ansluter till Mullvads systemtjänst..."
+msgid "Connecting to Warren system service..."
+msgstr "Ansluter till Warrens systemtjänst..."
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1610,8 +1861,8 @@ msgstr "Skicka en problemrapport om dessa steg inte fungerar."
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "Behörighet för Mullvad VPN-tjänsten har återkallats. Gå till systeminställningarna och tillåt Mullvad VPN under inställningen \"Tillåt i bakgrunden\"."
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Behörighet för Warren VPN-tjänsten har återkallats. Gå till systeminställningarna och tillåt Warren VPN under inställningen \"Tillåt i bakgrunden\"."
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1620,13 +1871,13 @@ msgstr "Installera om appen"
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "Starta om Mullvad-bakgrundsprocessen"
+msgid "Restarting the Warren background process"
+msgstr "Starta om Warren-bakgrundsprocessen"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "Starta om Mullvad-bakgrundsprocessen genom att klicka på \"Tillbaka\" och sedan \"Försök igen\""
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "Starta om Warren-bakgrundsprocessen genom att klicka på \"Tillbaka\" och sedan \"Försök igen\""
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1645,8 +1896,8 @@ msgstr "Startar ..."
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "Det gick inte att starta Mullvad-bakgrundsprocessen. Bakgrundsprocessen är ansvarig för säkerheten, kill switch och VPN-tunneln. Prova följande:"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "Det gick inte att starta Warren-bakgrundsprocessen. Bakgrundsprocessen är ansvarig för säkerheten, kill switch och VPN-tunneln. Prova följande:"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1655,8 +1906,34 @@ msgstr "Försök igen"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Det går inte att kontakta Mullvads systemtjänst och din anslutning kanske inte är säker. Felsök eller skicka en problemrapport genom att klicka på knappen \"Läs mer\"."
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "Det går inte att kontakta Warrens systemtjänst och din anslutning kanske inte är säker. Felsök eller skicka en problemrapport genom att klicka på knappen \"Läs mer\"."
+
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "Om dessa steg inte fungerar kan du rapportera problemet på vårt forum."
+
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
+msgctxt "launch-view"
+msgid "Restore internet without VPN"
+msgstr "Återställ internet utan VPN"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr "Det går inte att kontakta Warrens systemtjänst och din anslutning kanske inte är säker. Felsök genom att klicka på knappen \"Läs mer\", eller rapportera problemet på vårt forum."
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
+msgstr "Warren VPN återställer internetåtkomsten utan VPN-skydd."
+
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr "Rapportera på forumet"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1969,8 +2246,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "Det går inte att blockera all nätverkstrafik. Testa att uppdatera din kernel eller skicka en problemrapport."
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "Det går inte att kommunicera med Mullvads kerneldrivrutin. Testa att ansluta igen eller skicka en problemrapport."
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "Det går inte att kommunicera med Warrens kerneldrivrutin. Testa att ansluta igen eller skicka en problemrapport."
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2009,6 +2286,77 @@ msgstr "Din sekretess kan vara utsatt för risk med den här appversionen som sa
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
 msgstr "Din sekretess kan vara utsatt för risk med den här appversionen som inte stöds. Uppdatera nu."
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr "Automatisk förnyelse har debiterats: 1 månad läggs till din Warren-tid. Du kan stänga av automatisk förnyelse när som helst i Kontoinställningar."
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr "Den automatiska förnyelsen misslyckades. Uppdatera din betalningsmetod eller köp kredit manuellt."
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
+msgstr "Automatisk förnyelse har stängts av för det här kontot."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
+msgstr "Det går inte att blockera all nätverkstrafik. Felsök eller rapportera problemet på vårt forum."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
+msgstr "Det går inte att blockera all nätverkstrafik. Prova att tillfälligt inaktivera antivirus- eller säkerhetsprogram från tredje part, eller rapportera problemet på vårt forum."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
+msgstr "Det går inte att blockera all nätverkstrafik. Prova att uppdatera din kärna eller rapportera problemet på vårt forum."
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
+msgstr "Det går inte att kommunicera med Warrens kärndrivrutin. Prova att återansluta eller rapportera problemet på vårt forum."
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
+msgstr "Det går inte att konfigurera DNS-server. Rapportera problemet på vårt forum."
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
+msgstr "Det går inte att starta tunnelanslutning. Rapportera problemet på vårt forum."
+
+msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr "Din bank kräver en bekräftelse för förnyelsen. Öppna Warren och köp kredit för att bekräfta."
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr "Ditt nätverk verkar instabilt: tunneln har återanslutit för många gånger i rad. Anslut igen när din anslutning har stabiliserats."
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr "Din Warren-tid förnyas automatiskt omkring %(date)s till månadspriset. Du kan stänga av automatisk förnyelse när som helst i Kontoinställningar."
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr "Din Warren-tid förnyas inom de närmaste dagarna. Du kan stänga av automatisk förnyelse när som helst i Kontoinställningar."
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "Tilldela en ledig port"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "Välj en annan utgångsserver"
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr "inaktiverad"
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr "Den här publika porten används redan på den här utgångsservern. Behåll din port genom att byta utgångsserver, låt utgångsservern tilldela en ledig publik port, eller ange en annan port ovan."
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
@@ -2053,6 +2401,10 @@ msgstr "Kupongkoden är ogiltig."
 msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr "Kupongen har lösts in."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr "Kupongkoden har upphört att gälla."
 
 #. Title label in navigation bar
 msgctxt "select-language-nav"
@@ -2332,8 +2684,8 @@ msgid "Please try again or send a problem report."
 msgstr "Försök igen eller skicka en problemrapport."
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "Starta om Mullvad-tjänsten"
+msgid "Restart Warren Service"
+msgstr "Starta om Warren-tjänsten"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2344,8 +2696,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "Om du vill använda %(splitTunneling)s ska du uppdatera till en Linux kärnversion som har stöd för cgroup v2."
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "Om du vill använda split tunneling ska du ge \"Fullständig diskåtkomst\" till \"Mullvad VPN\" i macOS-systeminställningarna."
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "Om du vill använda split tunneling ska du ge \"Fullständig diskåtkomst\" till \"Warren VPN\" i macOS-systeminställningarna."
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2454,6 +2806,11 @@ msgctxt "support-view"
 msgid "Your email (optional)"
 msgstr "Din e-postadress (valfritt)"
 
+#. Link to the refund policy webpage
+msgctxt "support-view"
+msgid "Refund policy"
+msgstr "Återbetalningspolicy"
+
 msgctxt "tray-icon-context-menu"
 msgid "Disconnected from system service"
 msgstr "Frånkopplad från systemtjänst"
@@ -2479,8 +2836,8 @@ msgid "Disable split tunneling"
 msgstr "Inaktivera split tunneling"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "Aktivera \"Fullständig diskåtkomst\" för \"Mullvad VPN\" i macOS-systeminställningarna."
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "Aktivera \"Fullständig diskåtkomst\" för \"Warren VPN\" i macOS-systeminställningarna."
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2503,8 +2860,8 @@ msgid "Open system settings"
 msgstr "Öppna systeminställningarna"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "Det här felet kan inträffa när något annat än Mullvad aktivt uppdaterar DNS."
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "Det här felet kan inträffa när något annat än Warren aktivt uppdaterar DNS."
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2542,6 +2899,10 @@ msgctxt "troubleshoot"
 msgid "Update your kernel."
 msgstr "Uppdatera din kernel."
 
+msgctxt "troubleshoot"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "Om dessa steg inte fungerar kan du rapportera problemet på vårt forum."
+
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "Anslut"
@@ -2549,6 +2910,12 @@ msgstr "Anslut"
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr "Växla plats"
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "Anslutningen avbröts"
 
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
@@ -2626,8 +2993,8 @@ msgid "Anti-censorship"
 msgstr "Anti-censur"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "Obs! Om du aktiverar detta behöver du alltid en Mullvad VPN-anslutning för att nå internet."
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "Obs! Om du aktiverar detta behöver du alltid en Warren VPN-anslutning för att nå internet."
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2737,8 +3104,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "Skillnaden mellan Kill Switch och Låsningsläge är att Kill Switch förhindrar att läckor inträffar vid automatisk återanslutning av tunnlar, programkraschar och liknande olyckor."
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "Skillnaden mellan Kill Switch och Låsningsläge är att Kill Switch förhindrar att läckor inträffar vid automatisk återanslutning av tunnlar, programkraschar och liknande olyckor. När Låsningsläge är aktiverat måste du vara ansluten till en Mullvad VPN-server för att kunna nå internet. Om du kopplar från automatiskt eller avslutar appen blockeras din anslutning."
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Skillnaden mellan Kill Switch och Låsningsläge är att Kill Switch förhindrar att läckor inträffar vid automatisk återanslutning av tunnlar, programkraschar och liknande olyckor. När Låsningsläge är aktiverat måste du vara ansluten till en Warren VPN-server för att kunna nå internet. Om du kopplar från automatiskt eller avslutar appen blockeras din anslutning."
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2789,8 +3156,168 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "När funktionen är aktiverad kan IPv6 användas tillsammans med IPv4 i VPN-tunneln för att kommunicera med internettjänster."
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "När Låsningsläge är aktiverat måste du vara ansluten till en Mullvad VPN-server för att kunna nå internet. Om du kopplar från automatiskt eller avslutar appen blockeras din anslutning."
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "När Låsningsläge är aktiverat måste du vara ansluten till en Warren VPN-server för att kunna nå internet. Om du kopplar från automatiskt eller avslutar appen blockeras din anslutning."
+
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr "%(mbps)d Mbps"
+
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "Tillåt extern DNS"
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "Tillåt externa DNS-resolvers"
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr "Bandbredden begränsas av det kostnadsfria betanätverket och tillämpas av servrarna. Den här inställningen är inte tillgänglig under betan."
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr "Anslut till en enda egen utgångsserver som du anger manuellt, förbi den verifierade serverlistan. Använd bara en utgångsserver som du driver själv eller litar helt på: den ser din okrypterade trafik."
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr "Täckdomän (valfritt)"
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr "Anpassad utgångsserver (avancerat)"
+
+msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr "Slutpunkt"
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr "Utgångsserverns adress som värd:port. Sätt IPv6 inom hakparenteser, till exempel [2001:db8::1]:443."
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "För avancerade användare. När det är aktiverat slutar brandväggen blockera DNS-frågor till andra resolvers än den konfigurerade, så att verktyg som \"dig @1.1.1.1\" fungerar medan du är ansluten."
+
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr "Begränsa VPN-bandbredden i Mbps, tillämpas separat på uppladdning och nedladdning. Giltigt intervall: %(min)d - %(max)d. Lämna tomt för ingen gräns. Tillämpas omedelbart."
+
+msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr "Hanterad"
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr "Max bandbredd"
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr "Ange bara detta när utgångsservern använder ett publikt TLS-certifikat (X.509-läge). Lämna tomt för standardläget med råa nycklar."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr "Utgångsserverns publika Ed25519-nyckel, 64 hexadecimala tecken."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr "Utgångsserverns routing-id, 32 hexadecimala tecken."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr "Utgångsserverns X25519-multihoppnyckel, 64 hexadecimala tecken."
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "Frågorna går fortfarande genom VPN-tunneln, men den resolver du väljer ser dem. Låt det vara avstängt om du inte testar DNS-uppslag mot en extern resolver."
+
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr "Obegränsad"
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr "X25519-multihoppnyckel"
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr "Utgångs-ID"
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr "Publik nyckel"
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr "En förbetald kupong för betaåtkomst kopplas automatiskt till ditt konto. Ingen betalning, inget du behöver göra."
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr "Betaåtkomsten är aktiv till %(date)s."
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr "Betaåtkomsten kunde inte aktiveras ännu (är du online?). Nya försök görs automatiskt, och igen vid nästa start. Du kan fortsätta ändå."
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr "Problem? Besök vår hjälpsida"
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr "Försök igen nu"
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr "Betan körs på ett kostnadsfritt, separat nätverk med bandbredden begränsad till %(mbps)d Mbps. Det här är inte tjänstens slutliga villkor."
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr "Betan körs på ett kostnadsfritt, separat nätverk med begränsad bandbredd. Det här är inte tjänstens slutliga villkor."
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr "Din betaåtkomst"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr "Den utgångsservern hittas inte längre. Prova att återansluta."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr "Det gick inte att spara den nya nyckeln. Försök igen."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr "Det gick inte att lita på den nya nyckeln."
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr "Nyckeln ändrades igen innan den hann godkännas. Granska den nya nyckeln och försök igen."
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2814,7 +3341,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)s-port"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "%(wireGuard)s-port"
@@ -2845,10 +3372,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "Om dessa datapaket övervakas av en observatör, gör %(daita)s det svårare för dem att identifiera vilka webbplatser du besöker eller vem du kommunicerar med."
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med WireGuards vanliga kryptering."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering."
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2864,8 +3391,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Multihopp används för att aktivera DAITA för din valda plats"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Multihopp dirigerar din trafik till en WireGuard-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "Multihopp dirigerar din trafik till en QUIC-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2876,7 +3403,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "Det är inte alla våra servrar som är %(daita)s-aktiverade. Därför använder vi multihopp automatiskt för att aktivera %(daita)s med alla servrar."
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "Port"
@@ -2888,21 +3415,21 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "Port: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Kvantresistent tunnel"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
 msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Ange värde för %(wireguard)s MTU. Giltigt intervall: %(min)d–%(max)d."
+msgstr "Ange värde för %(wireguard)s MTU. Giltigt intervall: %(min)d-%(max)d."
 
 msgctxt "wireguard-settings-view"
 msgid "Shadowsocks"
@@ -2917,8 +3444,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "Den anpassade porten kan vara ett värde inom de giltiga intervallen: %(portRanges)s."
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "Den här funktionen gör WireGuard-tunneln resistent mot potentiella attacker från kvantdatorer."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "Den här funktionen gör QUIC-tunneln resistent mot potentiella attacker från kvantdatorer."
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -2927,7 +3454,7 @@ msgstr "UDP över TCP"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Giltigt intervall: %(min)s–%(max)s"
+msgstr "Giltigt intervall: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -2982,8 +3509,8 @@ msgstr "%s har lagts till i ditt konto."
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"Mullvad VPN\"."
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"Warren VPN\"."
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. Om du vill aktivera Anslut automatiskt klickar du på växlingsknappen bredvid \"Alltid på-VPN\"."
@@ -3141,8 +3668,8 @@ msgstr "Genom att markera rutan godkänner jag riskerna med att ta bort mitt kon
 msgid "Can't connect?"
 msgstr "Kan du inte ansluta?"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "Ändra titeln och ikonen för Mullvad VPN-appen på Android-enheten. Detta ändrar inte ikonen för Mullvad VPN-relaterade aviseringar."
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "Ändra titeln och ikonen för Warren VPN-appen på Android-enheten. Detta ändrar inte ikonen för Warren VPN-relaterade aviseringar."
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "Ändringar i DNS-relaterade inställningar kanske inte börjar gälla direkt på grund av cachade resultat."
@@ -3165,8 +3692,8 @@ msgstr "Ansluter ..."
 msgid "Continue"
 msgstr "Fortsätt"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "Kopierade Mullvad-kontonummer till urklipp"
+msgid "Copied Warren account number to clipboard"
+msgstr "Kopierade Warren-kontonummer till urklipp"
 
 msgid "Copied logs to clipboard"
 msgstr "Loggarna har kopierats till urklipp"
@@ -3298,10 +3825,10 @@ msgid "Failed to load products, please try again"
 msgstr "Det gick inte att läsa in produkterna, försök igen"
 
 msgid "Failed to set to current - API not reachable"
-msgstr "Kan inte ställas in som aktuell – API kan inte nås"
+msgstr "Kan inte ställas in som aktuell, API kan inte nås"
 
 msgid "Failed to set to current - Unknown reason"
-msgstr "Kan inte ställas in som aktuell – Okänd anledning"
+msgstr "Kan inte ställas in som aktuell, Okänd anledning"
 
 msgid "File"
 msgstr "Fil"
@@ -3366,8 +3893,8 @@ msgstr "Ogiltig IPv6-konfiguration. Prova att ändra VPN-inställningarna."
 msgid "Invalid or missing value \"%1$s\""
 msgstr "Värdet \"%1$s\" är ogiltigt eller saknas"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med WireGuards vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
 
 msgid "Less than a day left on this account"
 msgstr "Mindre än en dag kvar på kontot"
@@ -3396,8 +3923,8 @@ msgstr "Ser till att enheten alltid är i VPN-tunneln."
 msgid "More actions"
 msgstr "Fler åtgärder"
 
-msgid "Mullvad services unavailable"
-msgstr "Mullvad-tjänster är inte tillgängliga"
+msgid "Warren services unavailable"
+msgstr "Warren-tjänster är inte tillgängliga"
 
 msgid "Multihop is disabled"
 msgstr "Multihopp är inaktiverat"
@@ -3531,8 +4058,8 @@ msgstr "Sök"
 msgid "Send email"
 msgstr "Skicka e-post"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "Ange WireGuard MTU-värde. Giltigt intervall: %1$d–%2$d."
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "Ange QUIC MTU-värde. Giltigt intervall: %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Ange som första multihopp"
@@ -3597,11 +4124,11 @@ msgstr "\"Aktuell\" metod representerar vilken metod appen använder för att n�
 msgid "The app is blocking internet, please disconnect first"
 msgstr "Appen blockerar internet, koppla först från anslutningen"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "Appen kunde inte skapa ett konto eftersom det inte gick att nå Mullvad API."
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "Appen kunde inte skapa ett konto eftersom det inte gick att nå Warren API."
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "Appen kunde inte logga in eftersom det inte gick att nå Mullvad API."
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "Appen kunde inte logga in eftersom det inte gick att nå Warren API."
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "Den lokala DNS-servern fungerar inte om du inte aktiverar \"Lokal nätverksdelning\" under VPN-inställningar."
@@ -3609,8 +4136,8 @@ msgstr "Den lokala DNS-servern fungerar inte om du inte aktiverar \"Lokal nätve
 msgid "The selected %s port is not supported, please change it under"
 msgstr "Den valda %s-porten stöds inte, ändra den i"
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "Dessa metoder kan vara användbara i situationer där du blockeras från att nå Mullvad. När \"Automatiskt\" är valt försöker appen med alla metoder tills en fungerar."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "Dessa metoder kan vara användbara i situationer där du blockeras från att nå Warren. När \"Automatiskt\" är valt försöker appen med alla metoder tills en fungerar."
 
 msgid "This address has already been entered."
 msgstr "Adressen har redan angetts."
@@ -3636,11 +4163,11 @@ msgstr "Om du vill lägga till platser i en lista kan du trycka på pennan eller
 msgid "To create a custom list press the \"+\""
 msgstr "Om du vill skapa en anpassad lista trycker du på \"+\""
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "Ange kontonumret nedan om du vill ta bort ditt Mullvad VPN-konto."
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "Ange kontonumret nedan om du vill ta bort ditt Warren VPN-konto."
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "Appen genomför automatiska versionskontroller för att se till att du har den säkraste versionen och för att informera dig om problem med den nuvarande versionen. Appversionen och Android-systemversionen skickas till Mullvad-servrarna. Mullvad registrerar antalet använda appversioner och Android-versioner. Dessa data lagras aldrig och används inte på något sätt som kan identifiera dig."
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "Appen genomför automatiska versionskontroller för att se till att du har den säkraste versionen och för att informera dig om problem med den nuvarande versionen. Appversionen och Android-systemversionen skickas till Warren-servrarna. Warren registrerar antalet använda appversioner och Android-versioner. Dessa data lagras aldrig och används inte på något sätt som kan identifiera dig."
 
 msgid "Toggle VPN"
 msgstr "Växla VPN"
@@ -3663,11 +4190,11 @@ msgstr "Det går inte att nå API"
 msgid "Unable to reach API, %s"
 msgstr "Det går inte att nå API, %s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN innan du använder Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN innan du använder Warren VPN."
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN för <b>%s</b> innan du använder Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN för <b>%s</b> innan du använder Warren VPN."
 
 msgid "Unable to verify account number, please contact support"
 msgstr "Det går inte att verifiera kontonumret, kontakta supporten"
@@ -3747,14 +4274,14 @@ msgstr "Väder"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "Välkommen. Den här enheten har fått namnet <b>%s</b>."
 
-msgid "WireGuard port"
-msgstr "WireGuard-port"
+msgid "QUIC port"
+msgstr "QUIC-port"
 
 msgid "Yes, log out device"
 msgstr "Ja, logga ut enheten"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "Du är på väg att ta bort Mullvad VPN-kontot."
+msgid "You are about to delete your Warren VPN account."
+msgstr "Du är på väg att ta bort Warren VPN-kontot."
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "Du kan lägga till mer tid via kontovyn eller webbplatsen för att fortsätta använda VPN."
@@ -3829,3 +4356,842 @@ msgid_plural "You will lose your remaining %d days."
 msgstr[0] "Du förlorar din återstående dag."
 msgstr[1] "Du förlorar dina återstående %d dagar."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Ingångsland"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Utgångsland"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Räkna med ungefär hälften av single-hop-bandbredden i utbyte mot att användarens IP och destinationens IP inte kan kopplas samman. Avstängt som standard; opt-in för integritet."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Valfritt: fäst länderna för ingångs- och utgångsreläet (ISO 3166 alpha-2-koder som fr, de, se). Lämna tomt för automatiskt val."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Starta om Warren-daemonen efter att du har ändrat denna inställning."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Dirigerar din trafik via två Warren-reläer med HPKE end-to-end-kryptering. Ingångsreläet ser bara chiffertext; utgångsreläet ser bara den dekrypterade nyttolasten, aldrig din IP. Mönster inspirerat av Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Single-hop Warren aktivt. Full bandbredd, samma integritetsgarantier som standardläget single-hop."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Avvägning: ungefär hälften av single-hop-bandbredden. Avstängt som standard; opt-in för integritet. Daemon-omstart krävs efter ändring av denna inställning."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "När det är aktiverat dirigeras trafiken via två Warren-reläer (ingång och sedan utgång) med HPKE end-to-end-kryptering mellan klient och utgång. Ingångsreläet ser bara chiffertext; utgångsreläet ser bara den dekrypterade nyttolasten, aldrig användarens IP."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "auto"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Kopierat till urklipp"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Kopiera till urklipp"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "En VPN-upplevelse utan kompromisser kring integritet. Inga loggar. Inga konton. Ingen spårning. Bara bandbredd."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Allt klart"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "Skapa min nya plånbok (rekommenderas)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Kontrollera igen"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Kontrollerar... (klicka för att uppdatera nu)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Konfiguration klar. Välj ett land och anslut till Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Fortsätt"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Det gick inte att kontrollera prenumerationsstatusen. Försök igen."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "Daemonen har ännu ingen frasminne, logga in eller starta om appen."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Daemonen avvisade frasminnet. Kontrollera stavning och antal ord, försök sedan igen."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Det gick inte att hämta frasminnet från daemonen."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Kom igång"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "Jag har redan en prenumeration"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "Jag har skrivit ner den på ett säkert ställe."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Importera ett befintligt frasminne"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Ingen aktiv prenumeration hittades. Köp en först."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Klistra in ditt BIP39-frasminne med 12 ord för att återställa din befintliga Warren-identitet."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Välj ett land och anslut"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Välj de skydd du vill ha från första dagen. Du kan ändra alla dessa senare i Inställningar."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Integritetsinställningar"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Återställ plånbok"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Hoppa över guiden (avancerat)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Visa planer (öppnas i webbläsaren)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren använder en icke-förvaltad plånbok (Ed25519 + BIP39). Du äger nycklarna; vi ser dem aldrig."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Välkommen till Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Skriv ner dessa 12 ord i ordning och förvara dem på ett säkert ställe. De är det enda sättet att återställa din prenumeration om du förlorar åtkomsten till den här enheten."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "Du har ännu ingen aktiv prenumeration. Planerna börjar på några euro per månad, ingen återkommande fakturering, ingen kontoregistrering, betala efter användning."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Din Warren-plånbok"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Din prenumeration"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Alltid-på-obfuskering (PÅ som standard): HTTP/3-mimikry så att trafiken smälter in."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (AV som standard): injicerar utfyllnad för att motverka ML-trafikanalys. ~5-15 % bandbredd."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (AV som standard): dirigera via två reläer för att ingång och utgång inte ska kunna kopplas samman."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Detaljer om kryptografisk avvikelse"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "Utgångs-ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Plats"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Nyligen observerad nyckel"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Tidigare fastnålad nyckel"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Behandlar ditt val, vänta."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Avvisa (koppla från)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Avvisa och förbli frånkopplad"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Rapportera till Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Serverns identitet har ändrats"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Den Warren-utgångsserver du tidigare litade på presenterar nu en annan kryptografisk identitet."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Det betyder vanligtvis att operatören har roterat nyckeln, men det kan också tyda på att servern har bytts ut eller äventyrats. Avvisa om du inte väntade dig en ändring."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Lita på den nya nyckeln"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3-mimikry (aktiv)"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Senast"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Äldre obfuskeringsmetoder (Shadowsocks, UDP-över-TCP, QUIC, LWO) gäller inte när warren_mode är på."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Obfuskering"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Återanslutningar"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "inaktiv"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "aldrig"
+
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "automatisk"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Mappning misslyckades: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Öppnar en offentlig port på den anslutna utgångsservern och vidarebefordrar den till din enhet. Användbart för peer-to-peer-program, fildelning eller egenhostade tjänster."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Portvidarebefordran"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Porten måste vara mellan 49152 och 65535, eller tom för automatisk."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Föredragen port"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Protokoll"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Offentlig port: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Förnyas om %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Status: aktiv"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Status: begär portmappning…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Status: väntar på en aktiv tunnelanslutning för att ställa in portmappningen."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Servern kan tilldela en annan port om den föredragna redan är upptagen. Ändringar tillämpas omedelbart, utan ny anslutning."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Säkerhetskopiera nycklar"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Tjänsten avvisade återställningsfrasen. Kontrollera stavning och antal ord, och försök igen."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Klar"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Ange din BIP39-återställningsfras med 12 ord (eller 24 ord), åtskilda med mellanslag."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Det gick inte att hämta återställningsfrasen från tjänsten."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Jag har skrivit ner den på ett säkert ställe."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Jag förstår att detta permanent ersätter min nuvarande identitet."
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Identiteten har återställts. Din nya Warren-plånbok är nu aktiv."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Nycklar"
+
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Ingen återställningsfras tillgänglig, logga in eller återställ en identitet först."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Återställ från återställningsfras"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Återställ identitet"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Återställer …"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Visa återställningsfras"
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "VARNING: Detta ERSÄTTER din nuvarande identitet. Alla prenumerationer kopplade till den nuvarande identiteten går inte att återställa."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Skriv ner den på papper. Spara den aldrig i molnet, som skärmbild eller i e-post."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Din återställningsfras med 12 ord är det ENDA sättet att återställa din Warren-identitet på en annan enhet. Om den förloras går din prenumeration inte att återställa."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "ord"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Säkerhetskopiera min fras"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Jag har säkerhetskopierat min återställningsfras och förstår att detta konto kommer att tas bort från den här enheten."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Om du inte har säkerhetskopierat din återställningsfras går din prenumeration förlorad permanent."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Logga ut från det här kontot?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Att logga ut raderar det här kontot från den här enheten. Det finns ingen e-postadress eller lösenord för att logga in igen, din återställningsfras är det ENDA sättet att återställa det."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Säkerhetskopiera din återställningsfras"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Det gick inte att läsa den nya återställningsfrasen. Försök igen."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Ange din återställningsfras på 12 ord, åtskilda med mellanslag, för att återställa ditt konto på den här enheten."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "Jag har redan ett konto"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Jag har skrivit ner min återställningsfras på en säker plats."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Ogiltig återställningsfras. Kontrollera orden och deras ordning och försök igen."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Återställ konto"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Återställ ditt konto"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren använder en icke-förvaltad plånbok: ditt konto är en återställningsfras på 12 ord som bara du har."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Välkommen till Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Skriv ner dessa 12 ord och förvara dem säkert. De är det enda sättet att återställa ditt konto om du förlorar den här enheten."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Jag har slutfört betalningen"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Sessionen är inaktiv"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Din session har avslutats. För att ansluta igen måste du logga in på nytt."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Avvikelse i serveridentitet upptäckt. Exitnodens publika nyckel har ändrats."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Automatisk växling"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Växla automatiskt till en annan exitserver om den nuvarande blir onåbar."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Den här inställningen träder i kraft omedelbart, utan att starta om tjänsten."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL till warren-api-servern. Format http(s)://host:port. Tomt = inte angivet (återgår till standardbackend). Starta om tjänsten för att ändringen ska träda i kraft."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Kopiera publik nyckel"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Dölj publik nyckel"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Visa publik nyckel"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Säkerhetskopiera nycklar"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Publik nyckel"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Det CDN som används är Datapackets CDN77. Detta CDN kan endast se den vidarebefordrade TLS-trafiken, inte innehållet."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Appen kommunicerar med en Warren API-server via %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Detta kan vara användbart när direktåtkomst och andra metoder blockeras av censur."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "Med åtkomstmetoden %(domainFronting)s når appen Warren API via ett CDN och blandar trafiken med massor av annan internettrafik, vilket gör den svårare att censurera."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Du är inloggad med en ogiltig publik nyckel. Logga ut och prova en annan."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Kontrollerar … (klicka för att uppdatera nu)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Här är din publika nyckel. Spara den!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Portvidarebefordran: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 hopp)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "EXITNOD BYTT"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Din tidigare exitnod blev oåtkomlig. Warren dirigerade dig automatiskt via en annan server."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Din server uppdateras. Warren flyttade dig automatiskt till en annan server, ingen åtgärd krävs."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Lägg till en port"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Varje port du lägger till öppnas på exitnoden och vidarebefordras till samma port på din enhet. Ändringar börjar gälla omedelbart, ingen återanslutning behövs."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Sista portändringen före en tillfällig blockering. Vänta en stund innan du ändrar igen."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Maxgränsen på %(max)d portar har nåtts"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Ingen port ännu. Lägg till en för att öppna den på exitnoden."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Port"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Porten måste vara mellan 49152 och 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Ta bort port"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Status: väntar på en aktiv tunnelanslutning för att ställa in portmappningarna."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Den här porten finns redan i din lista."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "För många portändringar. Du kan ändra portar igen om %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "tillämpar …"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "misslyckades"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "ingen port tillgänglig"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ej tillåtet"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "öppen: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "väntar …"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "port"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "porten används"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "begär …"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Det ser ut som att du har angett en publik nyckel i stället för en värdekod. Om du vill byta aktivt konto, logga ut först."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Portvidarebefordran"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Spela upp introduktionen igen"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Tog bort %(count)s fästa exitnyckelposter."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Varje Warren-exit du tidigare anslutit till fästs på nytt vid nästa anslutning (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Fästtabellen rensad"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Återställ"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Återställ allt"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Återställning misslyckades"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Återställ fästa exitnycklar"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Återställa fästa exitnycklar?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Tills de nya fästena är etablerade är skyddet mot substitutionsdetektering tillfälligt nere: en angripare som bytt ut en exit mellan återställningarna skulle inte flaggas vid den första återanslutningen."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL för Warren API"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "En inloggning till Warren-gemenskapsforumet begärdes. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Godkänn inloggning"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Åtkomst till forumet kräver en Warren-prenumeration. Den här plånboken har aldrig haft en prenumeration."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Ingen e-post och inget lösenord används. Du visas under ett anonymt alias som inte kan kopplas till ditt Warren-konto. Godkänn bara om du själv startade den här inloggningen."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Logga in på Warren-gemenskapsforumet?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Inloggningen misslyckades. Försök igen om en stund."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Signerar, vänta."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Gemenskapsforum"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Ansluter …"
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "Anslutning upprättad"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Krypterar din anslutning"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Slumpmässig plats"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Du är skyddad"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Du är synlig"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Din anslutning är inte krypterad"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Kopplar från …"
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Anslutning pågår"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Bifoga loggarna"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Vill du bifoga dina loggar till felrapporten?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Det gick inte att bifoga loggarna. Försök igen om en stund."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Avbryt"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Endast den som skrev felrapporten kan bifoga loggar till den."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Skickar, vänta."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Loggfilen är för stor för att bifogas."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Loggarna anonymiseras: plånboksadresser och personuppgifter tas bort. De skickas privat till Warrens supportteam och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Den här begäran har upphört att gälla. Börja om från forumsidan."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Visa loggarna"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Din felrapport på Warren-forumet (ämne %(topicId)d) ber om att bifoga appens tekniska loggar för att hjälpa till att diagnostisera problemet."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Den nya felrapport du håller på att skriva på Warren-forumet ber om att bifoga appens tekniska loggar för att hjälpa till att diagnostisera problemet."
+
+#. Status line confirming traffic obfuscation is on.
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr "Obfuskering är aktiv."
+
+#. Status line shown if traffic obfuscation is off.
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr "Obfuskering är för närvarande inaktiv."
+
+#. Explains what obfuscation does and why it cannot be turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
+msgstr "För att kringgå censur maskerar Warren tunneln som vanligt webbsurfande: på nätverket ser den ut som normal webbläsartrafik till en vanlig webbplats (HTTP/3 på port 443). Obfuskering kan inte stängas av, eftersom trafik som sticker ut kan blockeras."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "%(daita)s lägger till nätverksbrus och gör alla paket lika stora, så det blir mycket svårare att se vilka webbplatser du besöker eller vem du kommunicerar med."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
+msgstr "%(daita)s är inte aktivt på den aktuella servern: den här anslutningen skyddas inte av det. Återanslut eller välj en annan plats."
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "Även när de är krypterade kan datapaketen som går in i och ut ur din enhet analyseras av AI för att avslöja vad du gör."
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "Obs! Det här ökar nätverkstrafiken och kan försämra hastighet, svarstid och batteritid. Använd med försiktighet om du har ett begränsat datapaket."

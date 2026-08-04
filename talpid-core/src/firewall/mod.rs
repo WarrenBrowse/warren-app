@@ -365,9 +365,125 @@ impl Firewall {
         self.inner.reset_policy()
     }
 
+    /// Recovery: remove blocking state left by ANY Warren product environment,
+    /// not just the one this build was compiled for.
+    ///
+    /// [`Self::reset_policy`] is scoped to this build's own firewall identity
+    /// (WFP object keys on Windows, the nftables table on Linux, the pf anchor
+    /// on macOS). A kill switch outlives the process that armed it, so a host
+    /// that changed environment, or that ran a build predating the current
+    /// identity scheme, can hold a block that the installed product cannot
+    /// see and therefore cannot lift. That machine has no way back online
+    /// without this sweep.
+    ///
+    /// Reserved for explicit user-invoked recovery. Running it routinely would
+    /// disarm a co-installed environment's kill switch while that environment
+    /// is relying on it.
+    pub fn reset_policy_all_generations(&mut self) -> Result<(), Error> {
+        log::info!("Resetting firewall policy for every product environment");
+        self.inner.reset_policy_all_generations()
+    }
+
     /// Sets whether the firewall should persist the blocking rules across a reboot.
     #[cfg(target_os = "windows")]
     pub fn persist(&mut self, persist: bool) {
         self.inner.persist(persist);
+    }
+}
+
+/// In-tunnel resolvers the connected policy must permit on port 53.
+///
+/// The configured resolvers, plus the tunnel gateway. The gateway is not part
+/// of the DNS configuration handed to the OS, so this does not change which
+/// resolver the system uses, and content blocking stays in force. It is added
+/// because the product itself queries the gateway: the egress liveness probe
+/// resolves a name against it to prove the exit still forwards. When a content
+/// blocker is on, the configured resolver is `100.64.0.x` instead of the
+/// gateway, so without this the probe is denied by our own DNS leak protection,
+/// reads as "exit not forwarding", and reconnects the tunnel every ~22 seconds
+/// forever. Custom resolvers have the same problem.
+///
+/// Safe because every backend scopes this permission to the tunnel interface
+/// AND the destination address, so it cannot authorise anything off-tunnel even
+/// on a LAN that happens to use the gateway's subnet. IPv4 only: the probe
+/// binds IPv4, so adding the v6 gateway would widen the rule with no consumer.
+#[cfg(not(target_os = "android"))]
+pub fn allowed_tunnel_dns(dns_config: &ResolvedDnsConfig) -> Vec<IpAddr> {
+    let gateway = IpAddr::V4(talpid_warren_tunnel::TUNNEL_GATEWAY_IP);
+    let mut servers = dns_config.tunnel_config().to_vec();
+    if !servers.contains(&gateway) {
+        servers.push(gateway);
+    }
+    servers
+}
+
+#[cfg(all(test, not(target_os = "android")))]
+mod allowed_tunnel_dns_tests {
+    use super::allowed_tunnel_dns;
+    use std::net::{IpAddr, Ipv4Addr};
+    use talpid_dns::{DnsConfig, ResolvedDnsConfig};
+
+    const GATEWAY: IpAddr = IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1));
+    /// What the daemon computes for ads+trackers+malware+adult (1|2|4|8).
+    const CONTENT_BLOCKER: IpAddr = IpAddr::V4(Ipv4Addr::new(100, 64, 0, 15));
+
+    /// Resolve like the tunnel state machine does, with the gateway as the
+    /// default in-tunnel resolver.
+    fn resolved(tunnel: &[IpAddr], non_tunnel: &[IpAddr]) -> ResolvedDnsConfig {
+        DnsConfig::from_addresses(tunnel, non_tunnel).resolve(
+            &[GATEWAY],
+            #[cfg(target_os = "macos")]
+            53,
+        )
+    }
+
+    /// The regression: with a content blocker on, the configured resolver is
+    /// not the gateway, and the egress probe queries the gateway. If the
+    /// policy omits it, the probe is denied, the exit is declared dead and the
+    /// tunnel reconnects in a loop.
+    #[test]
+    fn a_content_blocker_still_permits_the_probed_gateway() {
+        let config = resolved(&[CONTENT_BLOCKER], &[]);
+        let allowed = allowed_tunnel_dns(&config);
+
+        assert!(
+            allowed.contains(&GATEWAY),
+            "the egress probe's resolver must stay reachable: {allowed:?}"
+        );
+        assert!(
+            allowed.contains(&CONTENT_BLOCKER),
+            "the user's chosen resolver must stay reachable: {allowed:?}"
+        );
+    }
+
+    /// A custom resolver is the same failure, and the user's choice must not be
+    /// dropped in the process.
+    #[test]
+    fn a_custom_resolver_is_kept_alongside_the_gateway() {
+        let custom = IpAddr::V4(Ipv4Addr::new(9, 9, 9, 9));
+        let allowed = allowed_tunnel_dns(&resolved(&[custom], &[]));
+
+        assert_eq!(
+            allowed,
+            vec![custom, GATEWAY],
+            "custom resolvers must be preserved, with the gateway appended"
+        );
+    }
+
+    /// Without a content blocker the configured resolver already IS the
+    /// gateway, and a duplicate would install the same filter twice.
+    #[test]
+    fn the_gateway_is_never_listed_twice() {
+        let allowed = allowed_tunnel_dns(&resolved(&[GATEWAY], &[]));
+        assert_eq!(allowed, vec![GATEWAY]);
+    }
+
+    /// Non-tunnel resolvers are a separate rule with a separate scope; pulling
+    /// them in here would permit them on the tunnel interface too.
+    #[test]
+    fn non_tunnel_resolvers_are_not_pulled_in() {
+        let local = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1));
+        let allowed = allowed_tunnel_dns(&resolved(&[], &[local]));
+        assert!(!allowed.contains(&local), "leaked a non-tunnel resolver");
     }
 }

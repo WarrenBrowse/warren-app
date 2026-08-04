@@ -7,12 +7,12 @@
 //
 
 import Combine
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 import XCTest
 
-@testable import MullvadMockData
-@testable import MullvadREST
+@testable import WarrenMockData
+@testable import WarrenREST
 
 final class AppMessageHandlerTests: XCTestCase {
     // MARK: APIRequest

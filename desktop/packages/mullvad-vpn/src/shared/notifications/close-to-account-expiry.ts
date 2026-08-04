@@ -3,6 +3,7 @@ import { sprintf } from 'sprintf-js';
 import { messages } from '../../shared/gettext';
 import { closeToExpiry, formatRemainingTime } from '../account-expiry';
 import { urls } from '../constants';
+import { isBetaBuild } from '../constants/product-env';
 import {
   InAppNotification,
   InAppNotificationProvider,
@@ -42,14 +43,15 @@ export class CloseToAccountExpiryNotificationProvider
       message,
       category: SystemNotificationCategory.expiry,
       severity: SystemNotificationSeverityType.medium,
-      action: {
-        type: 'navigate-external',
-        link: {
-          text: messages.pgettext('notifications', 'Buy more'),
-          to: urls.purchase,
-          withAuth: true,
-        },
-      },
+      action: isBetaBuild
+        ? undefined
+        : {
+            type: 'navigate-external',
+            link: {
+              text: messages.pgettext('notifications', 'Buy more'),
+              to: urls.purchase,
+            },
+          },
     };
   }
 
@@ -68,13 +70,14 @@ export class CloseToAccountExpiryNotificationProvider
       indicator: 'warning',
       title: messages.pgettext('in-app-notifications', 'ACCOUNT CREDIT EXPIRES SOON'),
       subtitle,
-      action: {
-        type: 'navigate-external',
-        link: {
-          to: urls.purchase,
-          withAuth: true,
-        },
-      },
+      action: isBetaBuild
+        ? undefined
+        : {
+            type: 'navigate-external',
+            link: {
+              to: urls.purchase,
+            },
+          },
     };
   }
 }

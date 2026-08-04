@@ -1,1 +1,1 @@
-net.mullvad.mullvadvpn.detekt.extensions.CustomProvider
+com.warrenbrowse.vpn.detekt.extensions.CustomProvider

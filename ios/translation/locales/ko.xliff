@@ -1350,11 +1350,6 @@
         <target state="final">사용 중</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Include my account token for faster help with payment or account related issues" xml:space="preserve" approved="yes">
-        <source>Include my account token for faster help with payment or account related issues</source>
-        <target state="final">결제 또는 계정 관련 문제에 대해 더 빠른 도움을 받을 수 있도록 계정 토큰을 포함합니다</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Indonesia" xml:space="preserve" approved="yes">
         <source>Indonesia</source>
         <target state="final">인도네시아</target>
@@ -2142,11 +2137,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">대여만</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Report a problem" xml:space="preserve" approved="yes">
-        <source>Report a problem</source>
-        <target state="final">문제 보고</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Required" xml:space="preserve" approved="yes">
         <source>Required</source>
         <target state="final">필수</target>
@@ -2230,11 +2220,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="Send" xml:space="preserve" approved="yes">
         <source>Send</source>
         <target state="final">전송</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Send anyway" xml:space="preserve" approved="yes">
-        <source>Send anyway</source>
-        <target state="final">그래도 전송</target>
         <note/>
       </trans-unit>
       <trans-unit id="Sending..." xml:space="preserve" approved="yes">
@@ -2667,11 +2652,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">더 추가하려면 연결을 끊고 안전하지 않은 연결로 인터넷에 액세스해야 합니다.</target>
         <note/>
       </trans-unit>
-      <trans-unit id="To assist you better, please write in English or Swedish and include which country you are connecting from." xml:space="preserve" approved="yes">
-        <source>To assist you better, please write in English or Swedish and include which country you are connecting from.</source>
-        <target state="final">더 나은 지원을 위해 영어 또는 스웨덴어로 메시지를 작성하고 연결 국가를 포함하세요.</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view." xml:space="preserve" approved="yes">
         <source>To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view.</source>
         <target state="final">이를 우회하려면 '위치 선택' 보기에서 서버의 기본 주소를 재정의하는 새 IP 주소를 사용하여 지원 팀에서 제공한 파일이나 텍스트를 가져올 수 있습니다.</target>
@@ -2690,11 +2670,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="To enable this setting, add at least one server." xml:space="preserve" approved="yes">
         <source>To enable this setting, add at least one server.</source>
         <target state="final">이 설정을 활성화하려면 하나 이상의 서버를 추가하세요.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel." xml:space="preserve" approved="yes">
-        <source>To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel.</source>
-        <target state="final">보다 효과적인 문제 해결을 위해 앱의 로그 파일이 이 메시지에 첨부됩니다. 사용자 데이터는 암호화된 채널을 통해 전송되기 전에 익명 처리되므로 안전하고 비공개로 유지됩니다.</target>
         <note/>
       </trans-unit>
       <trans-unit id="To start using the app, you first need to add time to your account." xml:space="preserve" approved="yes">
@@ -2775,11 +2750,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="Unable to start tunnel connection after update. Please disconnect and reconnect." xml:space="preserve" approved="yes">
         <source>Unable to start tunnel connection after update. Please disconnect and reconnect.</source>
         <target state="final">업데이트 후 터널 연결을 시작할 수 없습니다. 연결을 해제한 후 다시 연결하세요.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Unable to start tunnel connection. Please send a problem report." xml:space="preserve" approved="yes">
-        <source>Unable to start tunnel connection. Please send a problem report.</source>
-        <target state="final">터널 연결을 시작할 수 없습니다. 문제 보고서를 보내주세요.</target>
         <note/>
       </trans-unit>
       <trans-unit id="Unchecked" xml:space="preserve" approved="yes">
@@ -2865,11 +2835,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily." xml:space="preserve" approved="yes">
         <source>View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily.</source>
         <target state="final">로그인된 모든 장치를 보고 관리하세요. 한 계정에서 최대 5대의 장치를 동시에 보유할 수 있습니다. 사용자가 쉽게 구분할 수 있도록 로그인 시 각 장치에 이름이 부여됩니다.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="View app logs" xml:space="preserve" approved="yes">
-        <source>View app logs</source>
-        <target state="final">앱 로그 보기</target>
         <note/>
       </trans-unit>
       <trans-unit id="Voucher code has already been used." xml:space="preserve" approved="yes">
@@ -2987,11 +2952,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">저장한 계정 번호가 이미 있습니다. 새 계정을 생성하면 저장된 계정 번호가 이 장치에서 삭제됩니다. 이 작업은 되돌릴 수 없습니다.</target>
         <note/>
       </trans-unit>
-      <trans-unit id="You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address." xml:space="preserve" approved="yes">
-        <source>You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address.</source>
-        <target state="final">연락처 없이 문제 보고서를 보내려고 합니다. 보고서에 대한 답변을 원하면 이메일 주소를 입력해야 합니다.</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="You are logged in with an invalid account number. Please log out and try another one." xml:space="preserve" approved="yes">
         <source>You are logged in with an invalid account number. Please log out and try another one.</source>
         <target state="final">잘못된 계정 번호로 로그인했습니다. 로그아웃한 후 다른 계정 번호로 시도하세요.</target>
@@ -3078,11 +3038,6 @@ We strongly believe in retaining as little data as possible because we want you 
       <trans-unit id="Your device is offline. Try connecting again when the device has access to Internet." xml:space="preserve" approved="yes">
         <source>Your device is offline. Try connecting again when the device has access to Internet.</source>
         <target state="final">장치가 오프라인 상태입니다. 장치에 인터넷이 연결되면 다시 시도하세요.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Your email (optional)" xml:space="preserve" approved="yes">
-        <source>Your email (optional)</source>
-        <target state="final">이메일(선택 사항)</target>
         <note/>
       </trans-unit>
       <trans-unit id="Your previous purchases have already been added to this account." xml:space="preserve" approved="yes">

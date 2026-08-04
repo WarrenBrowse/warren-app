@@ -7,8 +7,7 @@ use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
 #[cfg(target_os = "android")]
 use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
 use proxy::{ApiConnectionMode, ConnectionModeProvider};
-use std::{collections::BTreeMap, future::Future, io, net::SocketAddr, path::Path, sync::Arc};
-use talpid_types::ErrorExt;
+use std::{future::Future, io, net::SocketAddr, path::Path, sync::Arc};
 
 pub mod availability;
 use availability::ApiAvailability;
@@ -18,7 +17,6 @@ pub mod version;
 
 mod abortable_stream;
 pub mod access_mode;
-pub mod domain_fronting;
 mod https_client;
 pub mod proxy;
 mod tls_stream;
@@ -27,11 +25,14 @@ pub use crate::https_client::SocketBypassRequest;
 
 mod access;
 mod address_cache;
-pub mod device;
+mod device;
 mod relay_list;
+/// Auth wallet: Ed25519 signature on HTTP API requests.
+/// See `warren-core/docs/06-auth-wallet.md`.
+pub mod warren_auth;
 
 pub use address_cache::Error as AddressCacheError;
-pub use address_cache::{AddressCache, AddressCacheBacking, FileAddressCacheBacking};
+pub use address_cache::{AddressCache, AddressCacheBacking, FileAddressCacheBacking, is_dialable};
 
 pub use device::DevicesProxy;
 pub use hyper::StatusCode;
@@ -42,6 +43,19 @@ pub const VOUCHER_USED: &str = "VOUCHER_USED";
 
 /// Error code returned by the Mullvad API if the voucher code is invalid.
 pub const INVALID_VOUCHER: &str = "INVALID_VOUCHER";
+
+/// Warren: the voucher is past its deadline or was revoked by the admin.
+pub const VOUCHER_EXPIRED: &str = "VOUCHER_EXPIRED";
+
+/// Warren: the app-initiated purchase (wpid) has no queued voucher yet;
+/// the GUI keeps polling.
+pub const VOUCHER_NOT_READY: &str = "VOUCHER_NOT_READY";
+
+/// Warren: the account the daemon designated does not match the identity
+/// the SDK client signs with. Refusing is what keeps an identity desync
+/// from crediting a purchase to (or serving the balance of) a wallet the
+/// user does not own.
+pub const WARREN_IDENTITY_DESYNC: &str = "WARREN_IDENTITY_DESYNC";
 
 /// Error code returned by the Mullvad API if the account number is invalid.
 pub const INVALID_ACCOUNT: &str = "INVALID_ACCOUNT";
@@ -253,11 +267,34 @@ impl ApiEndpoint {
         self.host.as_deref().unwrap_or(API_HOST_DEFAULT)
     }
 
-    /// Read the [`Self::address`] value, falling back to
-    /// [`API_IP_DEFAULT`] as default value if it does not exist.
+    /// Read the [`Self::address`] value. Resolution order:
+    /// 1. an explicit override (`MULLVAD_API_ADDR`) if set;
+    /// 2. the pinned [`API_PINNED_IP`] if configured (no DNS query - the
+    ///    bootstrap-privacy path, `None` by default);
+    /// 3. otherwise resolve [`API_HOST_DEFAULT`] via system DNS, falling back
+    ///    to the [`API_IP_DEFAULT`] sentinel if that fails.
     pub fn address(&self) -> SocketAddr {
-        self.address
+        // Explicit override (MULLVAD_API_ADDR), then a pinned IP - both skip
+        // DNS. `API_PINNED_IP` is `None` by default, so this normally falls
+        // through to system DNS (unchanged behaviour).
+        if let Some(addr) = Self::pinned_or_explicit(self.address, API_PINNED_IP) {
+            return addr;
+        }
+        use std::net::ToSocketAddrs;
+        (API_HOST_DEFAULT, API_PORT_DEFAULT)
+            .to_socket_addrs()
+            .ok()
+            .and_then(|mut addrs| addrs.next())
             .unwrap_or(SocketAddr::new(API_IP_DEFAULT, API_PORT_DEFAULT))
+    }
+
+    /// Pure resolution-order helper (testable): an explicit override wins,
+    /// then the pinned IP; `None` means the caller must resolve via DNS.
+    fn pinned_or_explicit(
+        explicit: Option<SocketAddr>,
+        pinned: Option<std::net::IpAddr>,
+    ) -> Option<SocketAddr> {
+        explicit.or_else(|| pinned.map(|ip| SocketAddr::new(ip, API_PORT_DEFAULT)))
     }
 
     /// Try to read the value of an environment variable. Returns `None` if the
@@ -305,6 +342,60 @@ pub struct NullDnsResolver;
 impl DnsResolver for NullDnsResolver {
     async fn resolve(&self, _host: String) -> io::Result<Vec<SocketAddr>> {
         Ok(vec![])
+    }
+}
+
+/// Startup reachability-probe budget for a pinned API IP before falling back
+/// to DNS. Short: a live pinned IP answers a TCP SYN in well under this; the
+/// budget only bites on the rare dead-pin path.
+const PINNED_IP_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
+
+/// True if a TCP connection to `addr` completes within `dur`.
+async fn tcp_reachable(addr: SocketAddr, dur: std::time::Duration) -> bool {
+    matches!(
+        tokio::time::timeout(dur, tokio::net::TcpStream::connect(addr)).await,
+        Ok(Ok(_))
+    )
+}
+
+/// Bootstrap-privacy resilience for a pinned API IP (`API_PINNED_IP`).
+///
+/// When a pin is in effect, the cache was seeded from the pinned IP (or a
+/// stale on-disk cache). Probe that seed; if it is unreachable at startup,
+/// re-seed from DNS so a dead/rotated pin cannot brick the app. The privacy
+/// benefit (no DNS query) is given up only on this failure path. No-op when no
+/// pin is in effect (`API_PINNED_IP == None` or an explicit address override),
+/// so default behaviour is unchanged.
+async fn seed_pinned_or_dns_fallback<T: address_cache::AddressCacheBacking>(
+    endpoint: &ApiEndpoint,
+    cache: &address_cache::AddressCache<T>,
+) {
+    if endpoint.address.is_some() || API_PINNED_IP.is_none() {
+        return;
+    }
+    let seeded = cache.get_address().await;
+    if tcp_reachable(seeded, PINNED_IP_PROBE_TIMEOUT).await {
+        return;
+    }
+    match DefaultDnsResolver.resolve(endpoint.host().to_owned()).await {
+        Ok(addrs) if !addrs.is_empty() => {
+            let a = addrs[0];
+            let port = if a.port() == 0 {
+                API_PORT_DEFAULT
+            } else {
+                a.port()
+            };
+            let dns_addr = SocketAddr::new(a.ip(), port);
+            log::warn!(
+                "pinned API IP {seeded} unreachable at startup; falling back to DNS-resolved {dns_addr}"
+            );
+            if let Err(e) = cache.set_address(dns_addr).await {
+                log::error!("failed to apply DNS fallback API address: {e}");
+            }
+        }
+        _ => log::warn!(
+            "pinned API IP {seeded} unreachable and DNS fallback failed; keeping pinned address"
+        ),
     }
 }
 
@@ -382,27 +473,11 @@ impl Runtime {
             None
         };
 
-        let address_cache = match AddressCache::from_file(
-            &cache_file,
-            write_file.clone(),
-            endpoint.host().to_owned(),
-        )
-        .await
-        {
-            Ok(cache) => cache,
-            Err(error) => {
-                if cache_file.exists() {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg(
-                            "Failed to load cached API addresses. Falling back on bundled address"
-                        )
-                    );
-                }
-                AddressCache::new(endpoint, write_file)
-            }
-        };
-        let address_cache = Arc::new(address_cache);
+        let address_cache =
+            Arc::new(AddressCache::for_startup(&cache_file, write_file, endpoint).await);
+        // Bootstrap-privacy resilience: a dead/rotated pinned IP must not brick
+        // startup. No-op unless an API IP is pinned.
+        seed_pinned_or_dns_fallback(endpoint, &address_cache).await;
         let api_availability = ApiAvailability::default();
 
         Ok(Runtime {
@@ -461,6 +536,23 @@ impl<B: AddressCacheBacking> Runtime<B> {
         &self,
         connection_mode_provider: T,
     ) -> rest::MullvadRestHandle {
+        self.mullvad_rest_handle_with_warren_signer(connection_mode_provider, None)
+    }
+
+    /// Variant of [`Self::mullvad_rest_handle`] that attaches a
+    /// [`rest::WarrenAuthSigner`] on the `RequestFactory` when
+    /// `warren_signer` is `Some`. If `None`, behavior is identical
+    /// to [`Self::mullvad_rest_handle`] (= legacy Mullvad Bearer
+    /// mode).
+    ///
+    /// The caller (= mullvad-daemon) holds the `Arc<WarrenAuthSigner>`
+    /// derived from the BIP39 mnemonic stored locally (see crate
+    /// `warren-identity` on the warren-core side).
+    pub fn mullvad_rest_handle_with_warren_signer<T: ConnectionModeProvider + 'static>(
+        &self,
+        connection_mode_provider: T,
+        warren_signer: Option<Arc<warren_auth::WarrenAuthSigner>>,
+    ) -> rest::MullvadRestHandle {
         let service = self.new_request_service(
             connection_mode_provider,
             Arc::clone(&self.address_cache),
@@ -471,7 +563,23 @@ impl<B: AddressCacheBacking> Runtime<B> {
         );
         let hostname = self.endpoint.host().to_owned();
         let token_store = access::AccessTokenStore::new(service.clone(), hostname.clone());
-        let factory = rest::RequestFactory::new(hostname, Some(token_store));
+        // Invariant: the production factory MUST carry an
+        // AccessTokenStore so downstream `Request::account(...)` does
+        // not return `Error::NoAccessTokenStore`. Catches a future
+        // refactor that would inadvertently pass `None` here. The
+        // Warren-Remote dispatch in
+        // `mullvad-daemon/src/device/mod.rs` additionally bypasses
+        // this factory entirely (it routes through `WarrenApiClient`),
+        // but legacy Mullvad fallback paths still rely on this
+        // invariant.
+        let mut factory = rest::RequestFactory::new(hostname, Some(token_store));
+        debug_assert!(
+            factory.has_access_token_store(),
+            "invariant violated: MullvadRestHandle factory must carry a token store"
+        );
+        if let Some(signer) = warren_signer {
+            factory = factory.with_warren_signer(signer);
+        }
 
         rest::MullvadRestHandle::new(service, factory, self.availability_handle())
     }
@@ -531,8 +639,12 @@ impl AccountsProxy {
         let factory = self.handle.factory.clone();
 
         async move {
+            // `get_or_signed` injects the 4 `X-Warren-*` headers when
+            // a signer is configured (see
+            // `mullvad_rest_handle_with_warren_signer` on the daemon side).
+            // Otherwise, plain request identical to the legacy path.
             let request = factory
-                .get(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
+                .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .expected_status(&[StatusCode::OK])
                 .account(account)?;
             service.request(request).await
@@ -563,7 +675,7 @@ impl AccountsProxy {
 
         async move {
             let request = factory
-                .post(&format!("{ACCOUNTS_URL_PREFIX}/accounts"))?
+                .post_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts"))?
                 .expected_status(&[StatusCode::CREATED]);
             service.request(request).await
         }
@@ -585,7 +697,7 @@ impl AccountsProxy {
 
         async move {
             let request = factory
-                .post_json(&format!("{APP_URL_PREFIX}/submit-voucher"), &submission)?
+                .post_json_or_signed(&format!("{APP_URL_PREFIX}/submit-voucher"), &submission)?
                 .account(account)?
                 .expected_status(&[StatusCode::OK]);
             service.request(request).await?.deserialize().await
@@ -601,7 +713,7 @@ impl AccountsProxy {
 
         async move {
             let request = factory
-                .delete(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
+                .delete_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/accounts/me"))?
                 .account(account.clone())?
                 .header("Mullvad-Account-Number", &account)?
                 .expected_status(&[StatusCode::NO_CONTENT]);
@@ -717,50 +829,6 @@ impl AccountsProxy {
     }
 }
 
-pub struct ProblemReportProxy {
-    handle: rest::MullvadRestHandle,
-}
-
-impl ProblemReportProxy {
-    pub fn new(handle: rest::MullvadRestHandle) -> Self {
-        Self { handle }
-    }
-
-    pub fn problem_report(
-        &self,
-        email: &str,
-        message: &str,
-        log: &str,
-        metadata: &BTreeMap<String, String>,
-    ) -> impl Future<Output = Result<(), rest::Error>> + use<> {
-        #[derive(serde::Serialize)]
-        struct ProblemReport {
-            address: String,
-            message: String,
-            log: String,
-            metadata: BTreeMap<String, String>,
-        }
-
-        let report = ProblemReport {
-            address: email.to_owned(),
-            message: message.to_owned(),
-            log: log.to_owned(),
-            metadata: metadata.clone(),
-        };
-
-        let service = self.handle.service.clone();
-        let factory = self.handle.factory.clone();
-
-        async move {
-            let request = factory
-                .post_json(&format!("{APP_URL_PREFIX}/problem-report"), &report)?
-                .expected_status(&[StatusCode::NO_CONTENT]);
-            service.request(request).await?;
-            Ok(())
-        }
-    }
-}
-
 #[derive(Clone)]
 pub struct ApiProxy {
     handle: rest::MullvadRestHandle,
@@ -795,5 +863,49 @@ impl ApiProxy {
 
         let response = self.handle.service.request(request).await?;
         Ok(response.status().is_success())
+    }
+}
+
+#[cfg(test)]
+mod bootstrap_privacy_tests {
+    use super::ApiEndpoint;
+    use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+    #[test]
+    fn pinned_or_explicit_resolution_order() {
+        let pinned_ip = IpAddr::V4(Ipv4Addr::new(203, 0, 113, 9));
+        let explicit = SocketAddr::new(IpAddr::V4(Ipv4Addr::new(198, 51, 100, 1)), 8443);
+
+        // No override, no pin → None (caller resolves via DNS = shipped default).
+        assert_eq!(ApiEndpoint::pinned_or_explicit(None, None), None);
+
+        // Pinned only → <ip>:443.
+        assert_eq!(
+            ApiEndpoint::pinned_or_explicit(None, Some(pinned_ip)),
+            Some(SocketAddr::new(pinned_ip, 443))
+        );
+
+        // Explicit override always wins over the pin.
+        assert_eq!(
+            ApiEndpoint::pinned_or_explicit(Some(explicit), Some(pinned_ip)),
+            Some(explicit)
+        );
+        assert_eq!(
+            ApiEndpoint::pinned_or_explicit(Some(explicit), None),
+            Some(explicit)
+        );
+    }
+
+    #[tokio::test]
+    async fn tcp_reachable_distinguishes_open_and_closed() {
+        use std::time::Duration;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        // An open listener is reachable.
+        assert!(super::tcp_reachable(addr, Duration::from_secs(2)).await);
+        // Once closed, the port refuses (RST) → unreachable, drives the
+        // DNS-fallback path for a dead pinned IP.
+        drop(listener);
+        assert!(!super::tcp_reachable(addr, Duration::from_millis(800)).await);
     }
 }

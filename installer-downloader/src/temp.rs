@@ -51,7 +51,7 @@ impl DirectoryProvider for TempDirProvider {
 #[cfg(windows)]
 async fn admin_temp_dir() -> anyhow::Result<PathBuf> {
     /// Name of subdirectory in the temp directory
-    const CACHE_DIRNAME: &str = "mullvad-updates";
+    const CACHE_DIRNAME: &str = "warren-updates";
 
     let temp_dir = std::env::temp_dir().join(CACHE_DIRNAME);
 

@@ -80,6 +80,17 @@ pub struct TunnelMetadata {
     pub ipv4_gateway: Ipv4Addr,
     /// The IP to the IPv6 default gateway on the tunnel interface.
     pub ipv6_gateway: Option<Ipv6Addr>,
+    /// Whether the DAITA defense is actually running on this tunnel, as
+    /// negotiated with (or granted by) the server for this session. This is
+    /// the runtime truth the Connected state publishes, as opposed to the
+    /// requested setting: a user-facing "DAITA on" claim must come from here.
+    pub daita_active: bool,
+    /// Largest inner packet the tunnel can currently carry in one datagram,
+    /// set only when it is BELOW the TUN MTU (reduced-MTU underlay: train or
+    /// satellite backhaul, nested tunnel). `None` means the path fits the
+    /// default. Measured after DPLPMTUD settles, so the first `Up` always
+    /// carries `None`; a later metadata refresh publishes the verdict.
+    pub effective_mtu: Option<u16>,
 }
 
 impl TunnelMetadata {

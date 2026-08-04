@@ -1,7 +1,8 @@
 // Versioning system
 VERSIONING_SYSTEM = apple-generic
 
-// Marketing version, aka major.minor
+// Marketing version, calendar-based (YYYY.N). Independent of the desktop 1.x
+// tag: the signed update-metadata pipeline requires this calendar form.
 MARKETING_VERSION = 2026.3
 
 // Build number

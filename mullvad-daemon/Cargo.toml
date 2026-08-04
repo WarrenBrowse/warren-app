@@ -2,22 +2,23 @@
 name = "mullvad-daemon"
 edition.workspace = true
 rust-version.workspace = true
-description = "Mullvad VPN daemon. Runs and controls the VPN tunnels"
+description = "Warren VPN daemon. Runs and controls the VPN tunnels"
 repository.workspace = true
 license.workspace = true
 
 [package.metadata.winres]
-ProductName = "Mullvad VPN"
-CompanyName = "Mullvad VPN AB"
-LegalCopyright = "(c) 2026 Mullvad VPN AB"
-InternalName = "mullvad-daemon"
-OriginalFilename = "mullvad-daemon.exe"
+ProductName = "Warren VPN"
+CompanyName = "Warren contributors"
+LegalCopyright = "(c) 2026 Warren contributors"
+InternalName = "warren-daemon"
+OriginalFilename = "warren-daemon.exe"
 
 [package.metadata.deb]
-name = "mullvad-vpn-daemon"
-conflicts = ["mullvad-vpn"]
-maintainer = "Mullvad VPN <support@mullvadvpn.net>"
-copyright = "2026, Mullvad VPN AB <support@mullvadvpn.net>"
+name = "warren-vpn-daemon"
+extended-description = "Headless (no GUI) Warren VPN: the warren daemon and CLI for servers and SSH-only machines."
+conflicts = ["warren-vpn", "mullvad-vpn"]
+maintainer = "Warren contributors <hello@warrenbrowse.com>"
+copyright = "2026, Warren contributors <hello@warrenbrowse.com>"
 license-file = ["../LICENSE.md", "0"]
 section = "net"
 priority = "optional"
@@ -25,52 +26,58 @@ depends = "$auto"
 profile = "release"
 maintainer-scripts = "../dist-assets/linux/daemon/"
 assets = [
-  { source = "target/release/mullvad", dest = "usr/bin/", mode = "755" },
-  { source = "target/release/mullvad-daemon", dest = "usr/bin/", mode = "755" },
-  { source = "target/release/mullvad-exclude", dest = "usr/bin/", mode = "755" },
-  { source = "target/release/mullvad-setup", dest = "opt/Mullvad VPN/resources/", mode = "755" },
-  { source = "target/release/mullvad-problem-report", dest = "opt/Mullvad VPN/resources/", mode = "755" },
-  { source = "../dist-assets/linux/mullvad-daemon.service", dest = "usr/lib/systemd/system/", mode = "644" },
-  { source = "../dist-assets/linux/mullvad-early-boot-blocking.service", dest = "usr/lib/systemd/system/", mode = "644" },
-  { source = "../dist-assets/ca.crt", dest = "opt/Mullvad VPN/resources/", mode = "644" },
-  { source = "../build/relays.json", dest = "opt/Mullvad VPN/resources/", mode = "644" },
-  { source = "../build/shell-completions/mullvad.bash", dest = "usr/share/bash-completion/completions/mullvad", mode = "644" },
-  { source = "../build/shell-completions/_mullvad", dest = "usr/local/share/zsh/site-functions/_mullvad", mode = "644" },
-  { source = "../build/shell-completions/mullvad.fish", dest = "usr/share/fish/vendor_completions.d/mullvad.fish", mode = "644" },
-  { source = "../CHANGELOG.md", dest = "opt/Mullvad VPN/resources/", mode = "644" },
+  { source = "target/release/warren", dest = "usr/bin/", mode = "755" },
+  { source = "target/release/warren-daemon", dest = "usr/bin/", mode = "755" },
+  { source = "target/release/warren-exclude", dest = "usr/bin/", mode = "755" },
+  { source = "target/release/warren-setup", dest = "opt/Warren VPN/resources/", mode = "755" },
+  { source = "target/release/warren-problem-report", dest = "opt/Warren VPN/resources/", mode = "755" },
+  { source = "../dist-assets/linux/warren-daemon.service", dest = "usr/lib/systemd/system/", mode = "644" },
+  { source = "../dist-assets/linux/warren-early-boot-blocking.service", dest = "usr/lib/systemd/system/", mode = "644" },
+  { source = "../dist-assets/ca.crt", dest = "opt/Warren VPN/resources/", mode = "644" },
+  { source = "../build/relays.json", dest = "opt/Warren VPN/resources/", mode = "644" },
+  { source = "../build/shell-completions/warren.bash", dest = "usr/share/bash-completion/completions/warren", mode = "644" },
+  { source = "../build/shell-completions/_warren", dest = "usr/local/share/zsh/site-functions/_warren", mode = "644" },
+  { source = "../build/shell-completions/warren.fish", dest = "usr/share/fish/vendor_completions.d/warren.fish", mode = "644" },
+  { source = "../CHANGELOG.md", dest = "opt/Warren VPN/resources/", mode = "644" },
 ]
 
 [package.metadata.generate-rpm]
-name = "mullvad-vpn-daemon"
-vendor = "Mullvad VPN <support@mullvadvpn.net>"
-auto-req = "yes"
+name = "warren-vpn-daemon"
+summary = "Warren VPN daemon and CLI (headless, no GUI). Runs and controls the VPN tunnels."
+vendor = "Warren contributors <hello@warrenbrowse.com>"
+# Disabled: the headless packages are built on a Debian-based runner that lacks
+# rpm's find-requires, which makes auto-req = "yes" fail and drops the .rpm.
+auto-req = "no"
 pre_install_script = "../dist-assets/linux/daemon/preinst"
 pre_uninstall_script = "../dist-assets/linux/daemon/prerm"
 post_install_script = "../dist-assets/linux/daemon/postinst"
 post_uninstall_script = "../dist-assets/linux/daemon/postrm"
 post_trans_script = "../dist-assets/linux/post-transaction.sh"
 assets = [
-  { source = "target/release/mullvad", dest = "/usr/bin/", mode = "755" },
-  { source = "target/release/mullvad-daemon", dest = "/usr/bin/", mode = "755" },
-  { source = "target/release/mullvad-exclude", dest = "/usr/bin/", mode = "755" },
-  { source = "target/release/mullvad-setup", dest = "/opt/Mullvad VPN/resources/", mode = "755" },
-  { source = "target/release/mullvad-problem-report", dest = "/opt/Mullvad VPN/resources/", mode = "755" },
-  { source = "../dist-assets/linux/mullvad-daemon.service", dest = "/usr/lib/systemd/system/", mode = "644" },
-  { source = "../dist-assets/linux/mullvad-early-boot-blocking.service", dest = "/usr/lib/systemd/system/", mode = "644" },
-  { source = "../dist-assets/ca.crt", dest = "/opt/Mullvad VPN/resources/", mode = "644" },
-  { source = "../build/relays.json", dest = "/opt/Mullvad VPN/resources/", mode = "644" },
-  { source = "../build/shell-completions/mullvad.bash", dest = "/usr/share/bash-completion/completions/mullvad", mode = "644" },
-  { source = "../build/shell-completions/_mullvad", dest = "/usr/share/zsh/site-functions/_mullvad", mode = "644" },
-  { source = "../build/shell-completions/mullvad.fish", dest = "/usr/share/fish/vendor_completions.d/mullvad.fish", mode = "644" },
-  { source = "../CHANGELOG.md", dest = "/opt/Mullvad VPN/resources/", mode = "644" },
+  { source = "target/release/warren", dest = "/usr/bin/", mode = "755" },
+  { source = "target/release/warren-daemon", dest = "/usr/bin/", mode = "755" },
+  { source = "target/release/warren-exclude", dest = "/usr/bin/", mode = "755" },
+  { source = "target/release/warren-setup", dest = "/opt/Warren VPN/resources/", mode = "755" },
+  { source = "target/release/warren-problem-report", dest = "/opt/Warren VPN/resources/", mode = "755" },
+  { source = "../dist-assets/linux/warren-daemon.service", dest = "/usr/lib/systemd/system/", mode = "644" },
+  { source = "../dist-assets/linux/warren-early-boot-blocking.service", dest = "/usr/lib/systemd/system/", mode = "644" },
+  { source = "../dist-assets/ca.crt", dest = "/opt/Warren VPN/resources/", mode = "644" },
+  { source = "../build/relays.json", dest = "/opt/Warren VPN/resources/", mode = "644" },
+  { source = "../build/shell-completions/warren.bash", dest = "/usr/share/bash-completion/completions/warren", mode = "644" },
+  { source = "../build/shell-completions/_warren", dest = "/usr/share/zsh/site-functions/_warren", mode = "644" },
+  { source = "../build/shell-completions/warren.fish", dest = "/usr/share/fish/vendor_completions.d/warren.fish", mode = "644" },
+  { source = "../CHANGELOG.md", dest = "/opt/Warren VPN/resources/", mode = "644" },
 ]
 
 [package.metadata.generate-rpm.conflicts]
+warren-vpn = "*"
 mullvad-vpn = "*"
 
 [dependencies]
 anyhow = { workspace = true }
+base64 = "0.22.0"
 chrono = { workspace = true }
+iana-time-zone = "0.1"
 clap = { workspace = true }
 either = "1.11"
 futures = { workspace = true }
@@ -78,6 +85,7 @@ libc = "0.2"
 log = { workspace = true }
 log-panics = "2.0.0"
 mullvad-api = { path = "../mullvad-api" }
+mullvad-api-constants = { path = "../mullvad-api/mullvad-api-constants" }
 mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
 mullvad-fs = { path = "../mullvad-fs" }
 mullvad-leak-checker = { path = "../mullvad-leak-checker" }
@@ -88,6 +96,67 @@ mullvad-relay-selector = { path = "../mullvad-relay-selector" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
+warren-product-env = { path = "../warren-product-env" }
+# Warren fork - fetches `GET /v1/exits` at boot to bootstrap
+# `<cache_dir>/warren-relays.json` from warren-api. Public endpoint
+# (no client signature); the server-signed v2 response is verified at
+# load time by `DaemonWarrenRelaySelector`.
+reqwest = { workspace = true }
+# Warren fork - Phase 2 auth wallet: the BIP39 mnemonic stored in
+# `<settings_dir>/warren_mnemonic.txt` is derived into an Ed25519
+# SigningKey at daemon boot. `warren-identity` is the SDK (warren-sdk-rs), a
+# behaviorally-identical re-export of the same `warrenguard-identity`
+# engine primitives. `WARREN_API_URL` / `WARREN_SERVER_PUBKEY_HEX` are
+# Warren-product constants the app owns directly (`warren_product_config`);
+# the generic `unix_now` helper comes from the neutral engine crate
+# `warrenguard-config` below.
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
+# Phase 4.F: `warren_signer` now exposes a raw `SigningKey` used to
+# assemble `WarrenTunnelParameters`. Version pin aligned with
+# `mullvad-api/Cargo.toml`.
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
+# The BIP39 mnemonic that travels through `on_set_warren_mnemonic` is
+# wrapped in `Zeroizing<String>` so its heap buffer is wiped before
+# the allocator can reclaim and recycle the memory. Pair with the
+# `zeroize` feature pinned on `ed25519-dalek` in `mullvad-api`.
+zeroize = { version = "1", default-features = false, features = ["alloc"] }
+# In-RAM BIP39 generation for `warren_signer::bootstrap_fresh_mnemonic`,
+# bypassing `warren_identity::load_or_create_mnemonic`'s mandatory disk
+# write (= avoid transient plaintext file on platforms with OS-native
+# secret storage). `zeroize` feature so `bip39::Mnemonic` is wiped on
+# drop.
+bip39 = { version = "2", features = ["rand", "zeroize"] }
+# Warren exit selector (equivalent to `mullvad-relay-selector` for the
+# Warren backend). Does not depend on `talpid-warren-tunnel` API: it
+# just returns `(WarrenPubkey, WarrenExitAddr)`; the caller assembles
+# the full `WarrenTunnelParameters` downstream. Neutral home: the
+# `warren-discovery-core` crate in `warren-contract` (warren-core's
+# `warren-relay-selector` is a pure re-export of the same crate).
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
+# Multi-hop PKI verification (`verify_relay_descriptor`,
+# `verify_exit_descriptor`) consumed by the daemon-side multi-hop
+# config loader. Direct dep is preferred over a re-export through
+# `talpid-warren-tunnel`: the loader is a daemon concern that should
+# not pull verifier logic into the tunnel adapter crate.
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
+# Signed HTTP client for warren-api (consumed by
+# `WarrenRemoteAccountBackend` + `WarrenRemoteDeviceBackend` to replace
+# `mullvad_api::AccountsProxy/DevicesProxy` when
+# `warren_mode = true && warren_local_account = false`). The SDK's
+# `WarrenApiClient` (warren-sdk-rs) owns its `WarrenIdentity` instead of
+# sharing a hot-swappable key, so `warren_sdk_client::SharedWarrenApiClient`
+# rebuilds a fresh client per call from a shared, hot-swappable BIP39 seed
+# (see that module's doc for why the seed, not the daemon's already-derived
+# `SigningKey`, is the thing that has to be shared).
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
+# Encode/decode wg_pubkey 32 bytes <-> hex 64 chars in
+# `WarrenRemoteDeviceBackend::map_device_response`.
+hex = "0.4"
+# Builds `WarrenTunnelParameters` (selection + signing_key +
+# n_connections + features) on the daemon side. The tunnel binding is
+# invoked downstream via `TunnelMonitor::start_warren_tunnel`.
+talpid-warren-tunnel = { path = "../talpid-warren-tunnel" }
 regex = "1.0"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = ["std"] }
@@ -102,6 +171,7 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = [
   "fs",
   "io-util",
+  "net",
   "rt-multi-thread",
   "sync",
   "time"
@@ -110,10 +180,23 @@ tokio-stream = { version = "0.1", features = ["sync"] }
 tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["chrono"] }
 
+# Wire DTOs of the public `/v1` endpoints (the network-info fetcher
+# parses `NetworkInfoResponse`) and the product anchors
+# (`warren_contract::product`), the single source of truth the
+# `warren_product_config` drift gates assert against.
+warren-contract = { path = "../../warren-contract" }
+
 [dev-dependencies]
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 insta = { workspace = true, features = ["json"] }
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }
+# `WarrenRemoteAccountBackend`'s adapter mapping is tested against a mocked
+# HTTP peer (network boundary), not a real server: the SDK client <-> real
+# warren-core server wire-compat is proven in warren-core itself
+# (`warren-api/tests/sdk_client_wire_compat.rs`), so this repo carries no
+# dependency on warren-core.
+mockito = { workspace = true }
 
 [target.'cfg(any(unix, windows))'.dependencies]
 mullvad-update = { path = "../mullvad-update", features = ["client"] }
@@ -141,6 +224,13 @@ objc2-service-management = { version = "0.3.1", features = [
   "SMAppService",
   "objc2"
 ] }
+# Backs the macOS branch of `os_secret_storage`. Targets the
+# File-Based System Keychain (`/Library/Keychains/System.keychain`)
+# via the legacy `SecKeychain` API path, which works for non-bundled
+# daemons running as root without code-signing entitlements (the
+# modern `SecItemAdd` Data Protection Keychain path requires
+# `keychain-access-groups` entitlements we cannot ship in a daemon).
+security-framework = "3.7"
 talpid-macos = { path = "../talpid-macos" }
 
 [target.'cfg(unix)'.dependencies]
@@ -150,6 +240,15 @@ nix = { workspace = true, features = ["signal", "user"] }
 ctrlc = { workspace = true }
 dirs = { workspace = true }
 talpid-windows = { path = "../talpid-windows" }
+# Backs the Windows branch of `os_secret_storage` via DPAPI
+# (`CryptProtectData` / `CryptUnprotectData`) with
+# `CRYPTPROTECT_LOCAL_MACHINE`. The warren daemon runs as
+# `LocalSystem` so the machine-scope DPAPI master key is the right
+# fit. No Authenticode signing required to call DPAPI.
+windows = { workspace = true, features = [
+  "Win32_Security_Cryptography",
+  "Win32_Foundation",
+] }
 winapi = { version = "0.3", features = ["excpt", "winerror", "winnt"] }
 windows-service = "0.6.0"
 
@@ -181,9 +280,22 @@ api-override = ["mullvad-api/api-override"]
 cgroup2 = ["talpid-core/cgroup2"]
 # Use jemalloc as the global allocator. Only takes effect on Linux.
 default-allocator = ["dep:tikv-jemallocator"]
-multihop-pcap = ["talpid-core/multihop-pcap"]
 staggered-obfuscation = ["mullvad-relay-selector/staggered-obfuscation"]
-wireguard-go = ["talpid-core/wireguard-go"]
+# Enables macOS split tunneling. OFF by default: macOS ST relies on
+# Endpoint Security, which only works on a signed build (Developer ID +
+# endpoint-security entitlement) with Full Disk Access. Set this ONLY on
+# signed release builds; on unsigned builds ST half-initialises and
+# breaks connectivity, so the daemon refuses to enable it unless this is
+# set (see `macos_split_tunnel_supported`).
+macos-split-tunnel = []
+
+# Warren rebrand Level A: installed binary `warren-daemon` instead of
+# `mullvad-daemon`. The Cargo package name (`mullvad-daemon`) is kept
+# unchanged to ease upstream Mullvad rebases - only the binary name
+# produced in `target/release/` is rebranded.
+[[bin]]
+name = "warren-daemon"
+path = "src/main.rs"
 
 [lints]
 workspace = true

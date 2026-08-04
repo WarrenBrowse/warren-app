@@ -2,9 +2,9 @@ import { closeToExpiry, hasExpired } from '../shared/account-expiry';
 import {
   AccountDataError,
   AccountDataResponse,
-  AccountNumber,
   IAccountData,
   VoucherResponse,
+  WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import { dateByAddingComponent, DateComponent } from '../shared/date-helper';
 import log from '../shared/logging';
@@ -25,7 +25,7 @@ const ACCOUNT_DATA_EXPIRED_VALIDITY_SECONDS = 10_000;
 // An account data cache that helps to throttle RPC requests to get_account_data and retain the
 // cached value for 1 minute.
 export default class AccountDataCache {
-  private currentAccount?: AccountNumber;
+  private currentAccount?: WarrenPubKey;
   private validUntil?: Date;
   private performingFetch = false;
   private waitStrategy = new WaitStrategy();
@@ -33,15 +33,15 @@ export default class AccountDataCache {
   private watchers: IAccountFetchWatcher[] = [];
 
   constructor(
-    private fetchHandler: (number: AccountNumber) => Promise<AccountDataResponse>,
+    private fetchHandler: (number: WarrenPubKey) => Promise<AccountDataResponse>,
     private updateHandler: (data?: IAccountData) => void,
   ) {}
 
-  public fetch(accountNumber: AccountNumber, watcher?: IAccountFetchWatcher) {
-    // invalidate cache if account number has changed
-    if (accountNumber !== this.currentAccount) {
+  public fetch(pubkey: WarrenPubKey, watcher?: IAccountFetchWatcher) {
+    // invalidate cache if pubkey has changed
+    if (pubkey !== this.currentAccount) {
       this.invalidate();
-      this.currentAccount = accountNumber;
+      this.currentAccount = pubkey;
     }
 
     // Only fetch if value has expired
@@ -54,9 +54,9 @@ export default class AccountDataCache {
       // If a scheduled retry is cancelled the fetchAttempt shouldn't be increased.
       this.waitStrategy.decrease();
 
-      // Only fetch if there's no fetch for this account number in progress.
+      // Only fetch if there's no fetch for this pubkey in progress.
       if (!this.performingFetch) {
-        void this.performFetch(accountNumber);
+        void this.performFetch(pubkey);
       }
     } else if (watcher) {
       watcher.onFinish();
@@ -75,8 +75,8 @@ export default class AccountDataCache {
     });
   }
 
-  public handleVoucherResponse(accountNumber: AccountNumber, voucherResponse: VoucherResponse) {
-    if (accountNumber === this.currentAccount && voucherResponse.type === 'success') {
+  public handleVoucherResponse(pubkey: WarrenPubKey, voucherResponse: VoucherResponse) {
+    if (pubkey === this.currentAccount && voucherResponse.type === 'success') {
       this.setValue({ expiry: voucherResponse.newExpiry });
     }
   }
@@ -99,24 +99,24 @@ export default class AccountDataCache {
     }
   }
 
-  private async performFetch(accountNumber: AccountNumber) {
+  private async performFetch(pubkey: WarrenPubKey) {
     this.performingFetch = true;
     try {
-      // it's possible for invalidate() to be called or for a fetch for a different account number
-      // to start before this fetch completes, so checking if the current account number is the one
+      // it's possible for invalidate() to be called or for a fetch for a different pubkey
+      // to start before this fetch completes, so checking if the current pubkey is the one
       // used is necessary below.
-      const response = await this.fetchHandler(accountNumber);
+      const response = await this.fetchHandler(pubkey);
       if ('error' in response) {
-        if (this.currentAccount === accountNumber) {
-          this.handleFetchError(accountNumber, response.error);
+        if (this.currentAccount === pubkey) {
+          this.handleFetchError(pubkey, response.error);
         }
       } else {
-        if (this.currentAccount === accountNumber) {
+        if (this.currentAccount === pubkey) {
           this.setValue(response);
 
           const refetchDelay = this.calculateRefetchDelay(response.expiry);
           if (refetchDelay) {
-            this.scheduleFetch(accountNumber, refetchDelay);
+            this.scheduleFetch(pubkey, refetchDelay);
           }
 
           this.waitStrategy.reset();
@@ -140,25 +140,64 @@ export default class AccountDataCache {
     }
   }
 
-  private handleFetchError(accountNumber: AccountNumber, error: AccountDataError['error']) {
+  private handleFetchError(pubkey: WarrenPubKey, error: AccountDataError['error']) {
+    // Warren-specific: a 404 from warren-api (mapped here as
+    // 'no-subscription') is not a transient failure - it is a
+    // semantic "the current pubkey has no active subscription yet"
+    // state. Synthesize an epoch-past expiry so the renderer sees
+    // the account as expired (Redux `expiredState: 'expired'`),
+    // which makes `StateTriggeredNavigation` redirect the user to
+    // `ExpiredAccountErrorView` with the "buy plan" CTA. Without
+    // this redirect the user stays on the main view and a Connect
+    // click triggers a doomed handshake that locks down the
+    // firewall via the tunnel state machine's error branch.
+    //
+    // We still kick off the retry loop so the UI flips to "active"
+    // the moment the user purchases a plan. `setValue` resolves any
+    // pending watchers as `onFinish` (the data IS available - just
+    // expired) and sets a 10 s cache validity window for `fetch()`
+    // callers; the retry loop drives background polling beyond
+    // that.
+    if (error === 'no-subscription') {
+      this.setValue({ expiry: new Date(0).toISOString() });
+      this.scheduleRetry(pubkey, error);
+      return;
+    }
+
     this.notifyWatchers((w) => w.onError(error));
     if (error !== 'invalid-account') {
-      this.scheduleRetry(accountNumber);
+      this.scheduleRetry(pubkey, error);
     }
   }
 
-  private scheduleRetry(accountNumber: AccountNumber) {
+  private scheduleRetry(pubkey: WarrenPubKey, error: AccountDataError['error']) {
     this.waitStrategy.increase();
     const delay = this.waitStrategy.delay();
 
-    log.warn(`Failed to fetch account data. Retrying in ${delay} ms`);
+    // Both `'communication'` (gRPC Unknown - could be the 404
+    // pre-fix, transient network, or an undecoded API error) and
+    // `'no-subscription'` (gRPC NOT_FOUND - the explicit 404 path
+    // post-fix) are expected steady states for a freshly
+    // bootstrapped Warren identity until the user purchases a plan.
+    // The retry loop is essential (so the UI updates the moment a
+    // subscription is purchased) but logging at warn level for
+    // every retry floods the dev console. Demote to debug for both
+    // expected variants and keep warn for genuinely unusual failure
+    // modes (too-many-devices, list-devices).
+    if (error === 'communication') {
+      log.debug(`Account data fetch: retrying in ${delay} ms (no subscription yet?)`);
+    } else if (error === 'no-subscription') {
+      log.debug(`Account data fetch: 404 - no active subscription, retrying in ${delay} ms`);
+    } else {
+      log.warn(`Failed to fetch account data (${error}). Retrying in ${delay} ms`);
+    }
 
-    this.scheduleFetch(accountNumber, delay);
+    this.scheduleFetch(pubkey, delay);
   }
 
-  private scheduleFetch(accountNumber: AccountNumber, delay: number) {
+  private scheduleFetch(pubkey: WarrenPubKey, delay: number) {
     this.fetchRetryScheduler.schedule(() => {
-      void this.performFetch(accountNumber);
+      void this.performFetch(pubkey);
     }, delay);
   }
 

@@ -21,7 +21,13 @@ type Result<T> = std::result::Result<T, Error>;
 
 /// TODO(linus): This crate is not supposed to be Mullvad-aware. So at some point this should be
 /// replaced by allowing the anchor name to be configured from the public API of this crate.
-const ANCHOR_NAME: &str = "mullvad";
+///
+/// Scoped to the product environment: pf has one anchor namespace per machine
+/// and the teardown flushes the anchor BY NAME, so a beta daemon sharing
+/// prod's anchor would wipe prod's kill-switch rules. Production keeps the
+/// bare historical name, otherwise an upgrade would strand its existing rules
+/// under a name nothing cleans up any more.
+const ANCHOR_NAME: &str = warren_product_env::FIREWALL_ID;
 
 /// If NAT firewall rules should be applied to force Apple services through the tunnel.
 ///
@@ -419,9 +425,9 @@ impl Firewall {
             } => {
                 let mut rules = vec![];
 
-                for server in dns_config.tunnel_config() {
+                for server in super::allowed_tunnel_dns(dns_config) {
                     rules.append(
-                        &mut self.get_allow_tunnel_dns_rules_when_connected(tunnel, *server)?,
+                        &mut self.get_allow_tunnel_dns_rules_when_connected(tunnel, server)?,
                     );
                 }
                 for server in dns_config.non_tunnel_config() {
@@ -436,6 +442,18 @@ impl Firewall {
 
                 // Important to block DNS *before* we allow the tunnel and allow LAN. So DNS
                 // can't leak to the wrong IPs in the tunnel or on the LAN.
+                //
+                // The advanced `allow_external_dns` toggle lets queries reach ANY resolver,
+                // but they must still egress through the tunnel (so the exit, not the LAN,
+                // resolves them). It is NOT a license to leak DNS to a LAN resolver. Because
+                // the rules are `quick` (first match wins), we permit port 53 on the tunnel
+                // interface first, then still block port 53 everywhere else: tunnel DNS passes,
+                // LAN / physical DNS stays blocked even when `allow_lan` is also on. Without
+                // the trailing block, the later `allow_lan` rule would re-open port 53 to the
+                // LAN and defeat the toggle's own "reaches the exit through the tunnel" intent.
+                if dns_config.allow_external_dns() {
+                    rules.append(&mut self.get_allow_tunnel_dns_any_rules(&tunnel.interface)?);
+                }
                 rules.append(&mut self.get_block_dns_rules()?);
 
                 if *allow_lan {
@@ -637,6 +655,38 @@ impl Firewall {
             .build()?;
 
         Ok(vec![block_tcp_dns_rule, block_udp_dns_rule])
+    }
+
+    /// Allow DNS (port 53, TCP + UDP) out on the tunnel interface only.
+    /// Used by the `allow_external_dns` toggle so queries to arbitrary
+    /// resolvers reach the exit through the tunnel while a trailing
+    /// `get_block_dns_rules` keeps port 53 blocked on every other path
+    /// (LAN, physical). Both rule sets are `quick`; this one is installed
+    /// first so the tunnel match wins.
+    fn get_allow_tunnel_dns_any_rules(
+        &self,
+        tunnel_interface: &str,
+    ) -> Result<Vec<pfctl::FilterRule>> {
+        let allow_tcp_dns_rule = self
+            .create_rule_builder(FilterRuleAction::Pass)
+            .direction(pfctl::Direction::Out)
+            .quick(true)
+            .interface(tunnel_interface)
+            .proto(pfctl::Proto::Tcp)
+            .to(pfctl::Port::from(53))
+            .keep_state(pfctl::StatePolicy::Keep)
+            .tcp_flags(Self::get_tcp_flags())
+            .build()?;
+        let allow_udp_dns_rule = self
+            .create_rule_builder(FilterRuleAction::Pass)
+            .direction(pfctl::Direction::Out)
+            .quick(true)
+            .interface(tunnel_interface)
+            .proto(pfctl::Proto::Udp)
+            .to(pfctl::Port::from(53))
+            .keep_state(pfctl::StatePolicy::Keep)
+            .build()?;
+        Ok(vec![allow_tcp_dns_rule, allow_udp_dns_rule])
     }
 
     fn get_allow_tunnel_rules(
@@ -972,19 +1022,56 @@ impl Firewall {
         Ok(())
     }
 
+    /// Recovery: drop the pf anchor of EVERY product environment.
+    ///
+    /// [`Self::reset_policy`] only clears this build's anchor, so a block left
+    /// by another environment (or by an install that has since been replaced)
+    /// keeps dropping traffic with nothing left on the machine that knows how
+    /// to remove it.
+    pub fn reset_policy_all_generations(&mut self) -> Result<()> {
+        self.last_policy = None;
+        let mut first_error = None;
+
+        for env in warren_product_env::ALL {
+            // Sweep every environment before reporting: stopping at the first
+            // failure would leave the remaining anchors blocking.
+            if let Err(error) = self.remove_anchor_named(env.firewall_id()) {
+                first_error.get_or_insert(error);
+            }
+        }
+
+        let restored = self.restore_state();
+
+        match first_error {
+            Some(error) => Err(error),
+            None => restored,
+        }
+    }
+
     fn remove_anchor(&mut self) -> Result<()> {
+        self.remove_anchor_named(ANCHOR_NAME)
+    }
+
+    fn remove_anchor_named(&mut self, anchor: &str) -> Result<()> {
         self.pf
-            .try_remove_anchor(ANCHOR_NAME, pfctl::AnchorKind::Scrub)?;
+            .try_remove_anchor(anchor, pfctl::AnchorKind::Scrub)?;
         // Opportunistically remove Nat anchor.
         // This won't fail because `try_remove_anchor` promises to convert
         // `pfctl::Error::AnchorDoesNotExist` to an `Ok(())` value.
+        self.pf.try_remove_anchor(anchor, pfctl::AnchorKind::Nat)?;
         self.pf
-            .try_remove_anchor(ANCHOR_NAME, pfctl::AnchorKind::Nat)?;
+            .try_remove_anchor(anchor, pfctl::AnchorKind::Redirect)?;
         self.pf
-            .try_remove_anchor(ANCHOR_NAME, pfctl::AnchorKind::Redirect)?;
-        self.pf
-            .try_remove_anchor(ANCHOR_NAME, pfctl::AnchorKind::Filter)?;
+            .try_remove_anchor(anchor, pfctl::AnchorKind::Filter)?;
         Ok(())
+    }
+}
+
+impl Drop for Firewall {
+    fn drop(&mut self) {
+        if let Err(err) = self.reset_policy() {
+            log::error!("Failed to reset firewall policy on drop: {err}");
+        }
     }
 }
 

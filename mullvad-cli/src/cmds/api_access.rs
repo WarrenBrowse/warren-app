@@ -29,10 +29,10 @@ pub enum ApiAccess {
     /// Try to use a specific API access method (If the API is unreachable, reverts back to the
     /// previous access method)
     ///
-    /// Selecting "Direct" will connect to the Mullvad API without going through any proxy. This
+    /// Selecting "Direct" will connect to the Warren API without going through any proxy. This
     /// connection use https and is therefore encrypted.
     Use(SelectItem),
-    /// Try to reach the Mullvad API using a specific access method
+    /// Try to reach the Warren API using a specific access method
     Test(SelectItem),
 }
 
@@ -182,7 +182,7 @@ impl ApiAccess {
         Ok(())
     }
 
-    /// Test an access method to see if it successfully reaches the Mullvad API.
+    /// Test an access method to see if it successfully reaches the Warren API.
     async fn test(item: SelectItem) -> Result<()> {
         let mut rpc = MullvadProxyClient::new().await?;
         let access_method = Self::get_access_method(&mut rpc, &item).await?;
@@ -193,12 +193,12 @@ impl ApiAccess {
                 println!("Success!");
                 Ok(())
             }
-            Ok(false) | Err(_) => Err(anyhow!("Could not reach the Mullvad API.")),
+            Ok(false) | Err(_) => Err(anyhow!("Could not reach the Warren API.")),
         }
     }
 
     /// Try to use of a specific [`AccessMethodSetting`] for subsequent calls to
-    /// the Mullvad API.
+    /// the Warren API.
     ///
     /// First, a test will be performed to check that the new
     /// [`AccessMethodSetting`] is able to reach the API. If it can, the daemon
@@ -217,7 +217,7 @@ impl ApiAccess {
         rpc.test_api_access_method(new_access_method.get_id())
             .await
             .map_err(|_| {
-                anyhow!("Could not reach the Mullvad API using access method \"{}\". Rolling back to \"{}\"", new_access_method.get_name(), current_access_method.get_name())
+                anyhow!("Could not reach the Warren API using access method \"{}\". Rolling back to \"{}\"", new_access_method.get_name(), current_access_method.get_name())
             })?
 
             ;
@@ -258,7 +258,7 @@ pub enum AddCustomCommands {
         /// An easy to remember name for this custom proxy
         name: String,
         /// Disable the use of this custom access method. It has to be manually
-        /// enabled at a later stage to be used when accessing the Mullvad API.
+        /// enabled at a later stage to be used when accessing the Warren API.
         #[arg(default_value_t = false, short, long)]
         disabled: bool,
         #[clap(flatten)]
@@ -273,7 +273,7 @@ pub enum AddSocks5Commands {
         /// An easy to remember name for this custom proxy
         name: String,
         /// Disable the use of this custom access method. It has to be manually
-        /// enabled at a later stage to be used when accessing the Mullvad API.
+        /// enabled at a later stage to be used when accessing the Warren API.
         #[arg(default_value_t = false, short, long)]
         disabled: bool,
         #[clap(flatten)]
@@ -284,7 +284,7 @@ pub enum AddSocks5Commands {
         /// An easy to remember name for this custom proxy
         name: String,
         /// Disable the use of this custom access method. It has to be manually
-        /// enabled at a later stage to be used when accessing the Mullvad API.
+        /// enabled at a later stage to be used when accessing the Warren API.
         #[arg(default_value_t = false, short, long)]
         disabled: bool,
         #[clap(flatten)]
@@ -338,7 +338,7 @@ pub struct EditCustomCommands {
     /// Which API access method to edit
     #[clap(flatten)]
     item: SelectItem,
-    /// Name of the API access method in the Mullvad client \[All\]
+    /// Name of the API access method in the Warren client \[All\]
     #[arg(long)]
     name: Option<String>,
     /// Editing parameters
@@ -348,7 +348,7 @@ pub struct EditCustomCommands {
 
 #[derive(Args, Debug, Clone)]
 pub struct EditParams {
-    /// Name of the API access method in the Mullvad client \[All\]
+    /// Name of the API access method in the Warren client \[All\]
     #[arg(long)]
     name: Option<String>,
     #[clap(flatten)]

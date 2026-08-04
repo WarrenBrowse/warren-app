@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { Route, Switch } from 'react-router';
 
+import { isBetaBuild } from '../../shared/constants/product-env';
 import { RoutePath } from '../../shared/routes';
 import { useViewTransitions } from '../lib/transition-hooks';
 import {
@@ -24,13 +25,20 @@ import {
   EditApiAccessView,
   ExpiredAccountErrorView,
   FilterView,
+  KeysView,
   LaunchView,
   LoginView,
   LwoSettingsView,
   MainView,
-  ManageDevicesView,
   MultihopSettingsView,
-  ProblemReportView,
+  OnboardingBetaAccessView,
+  OnboardingDoneView,
+  OnboardingPreferencesView,
+  OnboardingSubscriptionView,
+  OnboardingWalletView,
+  OnboardingWelcomeView,
+  PortForwardingSettingsView,
+  RestoreMnemonicView,
   SelectLanguageView,
   SelectLocationView,
   SettingsImportView,
@@ -39,11 +47,10 @@ import {
   ShadowsocksSettingsView,
   SplitTunnelingView,
   SupportView,
-  TooManyDevicesView,
   UdpOverTcpSettingsView,
   UserInterfaceSettingsView,
   VpnSettingsView,
-  WireguardPortView,
+  WarrenMultiHopSettingsView,
 } from './views';
 
 export default function AppRouter() {
@@ -61,15 +68,20 @@ export default function AppRouter() {
         <Switch key={currentLocation.key} location={currentLocation}>
           <Route exact path={RoutePath.launch} component={LaunchView} />
           <Route exact path={RoutePath.login} component={LoginView} />
-          <Route exact path={RoutePath.tooManyDevices} component={TooManyDevicesView} />
           <Route exact path={RoutePath.deviceRevoked} component={DeviceRevokedView} />
           <Route exact path={RoutePath.main} component={MainView} />
           <Route exact path={RoutePath.expired} component={ExpiredAccountErrorView} />
-          <Route exact path={RoutePath.redeemVoucher} component={VoucherInput} />
+          {/* Beta builds carry no voucher-redemption entry point; the
+              routes are dropped so nothing can navigate there. */}
+          {isBetaBuild ? null : (
+            <Route exact path={RoutePath.redeemVoucher} component={VoucherInput} />
+          )}
           <Route exact path={RoutePath.voucherSuccess} component={VoucherVerificationSuccess} />
           <Route exact path={RoutePath.timeAdded} component={TimeAdded} />
           <Route exact path={RoutePath.setupFinished} component={SetupFinished} />
           <Route exact path={RoutePath.account} component={AccountView} />
+          <Route exact path={RoutePath.keys} component={KeysView} />
+          <Route exact path={RoutePath.restoreKeys} component={RestoreMnemonicView} />
           <Route exact path={RoutePath.settings} component={SettingsView} />
           <Route exact path={RoutePath.selectLanguage} component={SelectLanguageView} />
           <Route
@@ -78,6 +90,16 @@ export default function AppRouter() {
             component={UserInterfaceSettingsView}
           />
           <Route exact path={RoutePath.multihopSettings} component={MultihopSettingsView} />
+          <Route
+            exact
+            path={RoutePath.warrenMultiHopSettings}
+            component={WarrenMultiHopSettingsView}
+          />
+          <Route
+            exact
+            path={RoutePath.portForwardingSettings}
+            component={PortForwardingSettingsView}
+          />
           <Route exact path={RoutePath.vpnSettings} component={VpnSettingsView} />
           <Route exact path={RoutePath.daitaSettings} component={DaitaSettingsView} />
           <Route exact path={RoutePath.udpOverTcp} component={UdpOverTcpSettingsView} />
@@ -88,17 +110,30 @@ export default function AppRouter() {
           <Route exact path={RoutePath.settingsTextImport} component={SettingsTextImportView} />
           <Route exact path={RoutePath.editApiAccessMethods} component={EditApiAccessView} />
           <Route exact path={RoutePath.support} component={SupportView} />
-          <Route exact path={RoutePath.problemReport} component={ProblemReportView} />
           <Route exact path={RoutePath.debug} component={DebugView} />
           <Route exact path={RoutePath.selectLocation} component={SelectLocationView} />
           <Route exact path={RoutePath.filter} component={FilterView} />
           <Route exact path={RoutePath.appInfo} component={AppInfoView} />
           <Route exact path={RoutePath.changelog} component={ChangelogView} />
           <Route exact path={RoutePath.appUpgrade} component={AppUpgradeView} />
-          <Route exact path={RoutePath.manageDevices} component={ManageDevicesView} />
           <Route exact path={RoutePath.antiCensorship} component={AntiCensorshipView} />
-          <Route exact path={RoutePath.wireguardPort} component={WireguardPortView} />
           <Route exact path={RoutePath.lwo} component={LwoSettingsView} />
+          <Route exact path={RoutePath.onboardingWelcome} component={OnboardingWelcomeView} />
+          <Route exact path={RoutePath.onboardingWallet} component={OnboardingWalletView} />
+          {/* Beta builds replace the subscription step with the
+              auto-granted beta access step: nothing in a beta build may
+              lead to the checkout. Compile-time gate. */}
+          <Route
+            exact
+            path={RoutePath.onboardingSubscription}
+            component={isBetaBuild ? OnboardingBetaAccessView : OnboardingSubscriptionView}
+          />
+          <Route
+            exact
+            path={RoutePath.onboardingPreferences}
+            component={OnboardingPreferencesView}
+          />
+          <Route exact path={RoutePath.onboardingDone} component={OnboardingDoneView} />
         </Switch>
       </Focus>
     </>

@@ -1,9 +1,15 @@
 # Android release scripts
 
+> **Warren note.** These scripts are inherited from upstream Mullvad and still target Mullvad's
+> release infrastructure (`releases.mullvad.net`, `cdn.mullvad.net`). They are **not part of the
+> Warren release process**: Warren releases are built and published by the `release.yml` GitHub
+> workflow, with update metadata served from `api.warrenbrowse.com/updates`. Kept for reference
+> until an equivalent Warren tooling replaces them.
+
 Currently there are two release scripts that deal with different parts of the android release process.
 
 ## `github-release`
-Download and verifies a release from releases.mullvad.net and push it to gihub with a changelog.
+Download and verifies a release from the upstream release server and push it to github with a changelog.
 
 ### Prequisites
 This script requires `sequoia-pgp` and `GitHub CLI`.

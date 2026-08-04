@@ -1,0 +1,57 @@
+AntiFeatures:
+  NonFreeNet:
+    en-US: Depends on the Warren VPN service.
+Categories:
+  - Connectivity
+  - Internet
+  - Security
+  - System
+License: GPL-3.0-or-later
+WebSite: https://warrenbrowse.com
+SourceCode: https://github.com/WarrenBrowse/warren-app
+IssueTracker: https://github.com/WarrenBrowse/warren-app/issues
+Translation: https://github.com/WarrenBrowse/warren-app/blob/HEAD/CONTRIBUTING.md#localization--translations
+Changelog: https://github.com/WarrenBrowse/warren-app/blob/HEAD/android/CHANGELOG.md
+
+AutoName: Warren VPN
+
+RepoType: git
+Repo: https://github.com/WarrenBrowse/warren-app.git
+
+Builds:
+  - versionName: 'Reproducible'
+    versionCode: 1
+    commit: commit-hash
+    timeout: 10800
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y build-essential protobuf-compiler libprotobuf-dev
+    init: NDK_PATH="$$NDK$$" ../fdroid-build/init.sh
+    output: build/outputs/apk/ossProd/release/app-oss-prod-release-unsigned.apk
+    rm:
+      - desktop
+      - graphics
+      - ios
+      - windows
+      - building/sigstore
+      - android/lib/billing
+    prebuild:
+      - sed -i -e 's|Repositories.GradlePlugins|"https://plugins.gradle.org/m2/"|'
+        ../build.gradle.kts
+      - sed -i -e '/billing/d' ../settings.gradle.kts
+      - sed -i -e '/projects.lib.billing/d' build.gradle.kts
+      - sed -i '/\"desktop\//d' ../../Cargo.toml
+    build:
+      - NDK_PATH="$$NDK$$" source ../fdroid-build/env.sh
+      - echo $NDK_TOOLCHAIN_DIR "$$NDK$$"
+      # This is to increase stability of verification builds, not required for official fdroid builds
+      - export GRADLE_OPTS='-Dorg.gradle.jvmargs=-Xmx4096M -Dkotlin.daemon.jvm.options="-Xmx4096M"'
+      - gradle --console plain fdroidRelease
+    ndk: 27.3.13750724
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^android/[0-9]{4}\.[0-9]+$
+UpdateCheckData: dist-assets/android-version-code.txt|(\d+)|dist-assets/android-version-name.txt|(.+)
+CurrentVersion: 'Reproducible'
+CurrentVersionCode: 1

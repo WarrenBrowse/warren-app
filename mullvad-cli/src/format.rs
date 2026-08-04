@@ -298,7 +298,7 @@ fn format_endpoint(hostname: Option<&str>, endpoint: &Endpoint, verbose: bool) -
 
 fn print_error_state(error_state: &ErrorState) {
     if error_state.block_failure().is_some() {
-        eprintln!("Mullvad daemon failed to setup firewall rules!");
+        eprintln!("Warren daemon failed to setup firewall rules!");
         eprintln!("Daemon cannot block traffic from flowing, non-local traffic will leak");
     }
 
@@ -312,16 +312,16 @@ fn print_error_state(error_state: &ErrorState) {
         cause @ talpid_types::tunnel::ErrorStateCause::NeedFullDiskPermissions => {
             println!("Blocked: {cause}");
             println!();
-            println!(
-                r#"Enable "Full Disk Access" for "Mullvad VPN" in the macOS system settings:"#
-            );
+            println!(r#"Enable "Full Disk Access" for "Warren VPN" in the macOS system settings:"#);
             println!(
                 r#"open "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles""#
             );
             println!();
-            println!("Restart the Mullvad daemon for the change to take effect:");
-            println!("launchctl unload -w /Library/LaunchDaemons/net.mullvad.daemon.plist");
-            println!("launchctl load -w /Library/LaunchDaemons/net.mullvad.daemon.plist");
+            println!("Restart the Warren daemon for the change to take effect:");
+            println!(
+                "launchctl unload -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
+            );
+            println!("launchctl load -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist");
         }
         talpid_types::tunnel::ErrorStateCause::AuthFailed(Some(auth_failed)) => {
             println!(
@@ -337,12 +337,16 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
     const INVALID_ACCOUNT_MSG: &str = "You've logged in with an account number that is not valid. Please log out and try another one.";
     const EXPIRED_ACCOUNT_MSG: &str = "You have no more VPN time left on this account. Please log in on our website to buy more credit.";
     const TOO_MANY_CONNECTIONS_MSG: &str = "This account has too many simultaneous connections. Disconnect another device or try connecting again shortly.";
+    const BANNED_MSG: &str = "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.";
+    const BANNED_PF_MSG: &str = "Your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake.";
     const UNKNOWN_MSG: &str = "Unknown error.";
 
     match auth_failed {
         AuthFailed::InvalidAccount => INVALID_ACCOUNT_MSG,
         AuthFailed::ExpiredAccount => EXPIRED_ACCOUNT_MSG,
         AuthFailed::TooManyConnections => TOO_MANY_CONNECTIONS_MSG,
+        AuthFailed::Banned => BANNED_MSG,
+        AuthFailed::BannedPortForwarding => BANNED_PF_MSG,
         AuthFailed::Unknown => UNKNOWN_MSG,
     }
 }

@@ -101,6 +101,10 @@ pub enum ErrorStateCause {
     CreateTunnelDevice { os_error: Option<i32> },
     /// Failed to start connection to remote server.
     StartTunnelError,
+    /// The tunnel reconnected too many times in a short window (network is
+    /// flapping). The state machine stopped the uncancelable retry loop and
+    /// parked here so the user can act once the network settles.
+    WarrenTunnelFlapping,
     /// Tunnel parameter generation failure
     TunnelParameterError(ParameterGenerationError),
     /// This device is offline, no tunnels can be established.
@@ -117,6 +121,14 @@ pub enum ErrorStateCause {
     /// Missing permissions required by macOS split tunneling.
     #[cfg(target_os = "macos")]
     NeedFullDiskPermissions,
+    /// Warren TOFU pubkey mismatch: the exit's Ed25519 pubkey differed from the
+    /// pinned one. The user must explicitly trust the new key or reset all pins
+    /// via the management interface before another connect attempt.
+    WarrenPubkeyMismatch {
+        exit_id_hex: String,
+        pinned: String,
+        observed: String,
+    },
 }
 
 impl ErrorStateCause {
@@ -148,6 +160,17 @@ pub enum ParameterGenerationError {
     /// User has selected an IP version that is not available on the network
     #[error("The requested IP version ({family}) is not available")]
     IpVersionUnavailable { family: IpVersion },
+    /// Warren TOFU pubkey mismatch: the exit's observed Ed25519 pubkey diverges
+    /// from the pinned one. The user must explicitly trust the new key or reset
+    /// all pins via the gRPC management interface before reconnecting.
+    #[error(
+        "Warren exit pubkey mismatch (exit_id={exit_id_hex}, pinned={pinned}, observed={observed})"
+    )]
+    WarrenPubkeyMismatch {
+        exit_id_hex: String,
+        pinned: String,
+        observed: String,
+    },
 }
 
 /// Application that prevents setting the firewall policy.
@@ -236,6 +259,10 @@ impl fmt::Display for ErrorStateCause {
                 );
             }
             StartTunnelError => "Failed to start connection to remote server",
+            WarrenTunnelFlapping => {
+                "The network is unstable: the tunnel reconnected too many times in a row. \
+                 Reconnect once the network has settled"
+            }
             #[cfg(target_os = "windows")]
             CreateTunnelDevice {
                 os_error: Some(error),
@@ -258,8 +285,77 @@ impl fmt::Display for ErrorStateCause {
             OtherAlwaysOnApp { app_name: _ } => "Another app is set as always on",
             #[cfg(target_os = "android")]
             OtherLegacyAlwaysOnVpn => "Another legacy vpn profile is set as always on",
+            WarrenPubkeyMismatch {
+                exit_id_hex,
+                pinned,
+                observed,
+            } => {
+                return write!(
+                    f,
+                    "Warren exit pubkey mismatch: exit {exit_id_hex} \
+                     (pinned={pinned}, observed={observed}). \
+                     Trust the new key or reset pinned keys to reconnect."
+                );
+            }
         };
 
         write!(f, "{description}")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// M-8 regression: `WarrenPubkeyPinMismatch` must produce
+    /// `ParameterGenerationError::WarrenPubkeyMismatch`, not `NoMatchingRelay`.
+    /// This is tested via the `ParameterGenerationError` enum directly (the
+    /// daemon-side `From<tunnel::Error>` conversion is tested in the daemon crate).
+    #[test]
+    fn parameter_generation_error_warren_pubkey_mismatch_variant_exists() {
+        let err = ParameterGenerationError::WarrenPubkeyMismatch {
+            exit_id_hex: "deadbeef".to_string(),
+            pinned: "aa".to_string(),
+            observed: "bb".to_string(),
+        };
+        // Ensure the Display includes enough context for the user.
+        let msg = format!("{err}");
+        assert!(
+            msg.contains("deadbeef"),
+            "display should include exit_id_hex: {msg:?}"
+        );
+        assert!(
+            msg.contains("aa"),
+            "display should include pinned key: {msg:?}"
+        );
+        assert!(
+            msg.contains("bb"),
+            "display should include observed key: {msg:?}"
+        );
+    }
+
+    /// M-8: `ErrorStateCause::WarrenPubkeyMismatch` must be distinct from
+    /// `TunnelParameterError(NoMatchingRelay)`.
+    #[test]
+    fn error_state_cause_warren_pubkey_mismatch_is_distinct_from_no_matching_relay() {
+        let mismatch = ErrorStateCause::WarrenPubkeyMismatch {
+            exit_id_hex: "aaaa".to_string(),
+            pinned: "p1".to_string(),
+            observed: "p2".to_string(),
+        };
+        let no_relay =
+            ErrorStateCause::TunnelParameterError(ParameterGenerationError::NoMatchingRelay);
+        // They must not be equal (the discriminants must differ).
+        // PartialEq is not derived; compare via Display instead.
+        let mismatch_msg = format!("{mismatch}");
+        let no_relay_msg = format!("{no_relay}");
+        assert_ne!(
+            mismatch_msg, no_relay_msg,
+            "WarrenPubkeyMismatch and NoMatchingRelay must produce different messages"
+        );
+        assert!(
+            mismatch_msg.contains("pubkey"),
+            "mismatch message should mention 'pubkey': {mismatch_msg:?}"
+        );
     }
 }

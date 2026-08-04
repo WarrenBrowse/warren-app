@@ -1,0 +1,133 @@
+[package]
+name = "warren-ios"
+edition.workspace = true
+rust-version.workspace = true
+description = "Warren entry point for all FFI code on iOS"
+repository.workspace = true
+license.workspace = true
+
+[lib]
+bench = false
+crate-type = ["staticlib"]
+
+# Cross-platform Warren deps. The pure-rust `warren-identity` builds
+# cleanly on host + iOS targets, so it lives outside the
+# `cfg(target_os = "ios")` gate to keep host unit tests building. Same
+# pattern as `warren-jni` for Android.
+[dependencies]
+thiserror = { workspace = true }
+hex = "0.4"
+# `public_key` in the projected relay list is decoded as base64 `Data` by
+# the Swift Codable layer; cross-platform so host tests cover the
+# projection.
+base64 = "0.22"
+# Shared community-forum login logic (wire bytes + validation + outcome mapping),
+# single-sourced with Android (`warren-jni`). This crate only adds the iOS
+# seed-derived-identity signing entry on top.
+warren-forum = { path = "../warren-forum" }
+bip39 = { version = "2", features = ["rand"] }
+# Pinned (=2.2.0) to align with every other Warren crate that handles
+# signing keys. A silent minor bump of a crypto crate that produces
+# X-Warren-Sig headers must never be acceptable without an explicit
+# version bump + signature regression test. cf. AUDIT_COMPLET.md M-3.
+ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
+# Explicit dep for `Zeroizing<[u8;32]>` wrappers in wallet FFI (M-2).
+# The `zeroize` crate is already a transitive dep via ed25519-dalek; this
+# direct dep makes the version coupling explicit and prevents it from being
+# silently removed if ed25519-dalek changes its dep tree.
+zeroize = { workspace = true }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
+# Cross-platform (not iOS-target-gated) so the multi-hop circuit selection
+# and its host tests build off the iOS target; still behind `tunnel`.
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
+# Cross-platform so the exit-pubkey pin store (`warren_pin_store`) and the
+# multi-hop generation store (`warren_multihop_generation`), plus their
+# pure-logic host tests, build off the iOS target too. serde_json + tracing
+# were iOS-only before; they now also back the stores' JSON persistence and
+# their `tracing::warn!` diagnostics on the host test build.
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+tracing = "0.1"
+# Signed update-manifest verification for the forced-update gate
+# (`warren_version_ffi`). Default features only: the format/verifier code,
+# no reqwest/tokio client (the manifest fetch is done by URLSession on the
+# Swift side). Cross-platform so the verifier's host tests run in
+# `cargo test`.
+mullvad-update = { path = "../mullvad-update" }
+mullvad-version = { path = "../mullvad-version" }
+warren-product-env = { path = "../warren-product-env" }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+futures = { workspace = true }
+hyper = { version = "1.4.1", features = ["client", "http1"] }
+hyper-util = { workspace = true }
+libc = "0.2"
+log = { workspace = true }
+mockito = { workspace = true }
+# Mullvad API client retained transitionally for legacy account-number flows
+# in `src/api_client/`. To be replaced by the SDK's `warren-api` client.
+mullvad-api = { path = "../mullvad-api", default-features = false }
+mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
+mullvad-logging = { path = "../mullvad-logging" }
+mullvad-types = { path = "../mullvad-types" }
+shadowsocks = { workspace = true }
+talpid-future = { path = "../talpid-future" }
+# Note: talpid-platform-metadata lacks an iOS backend ; it only ships
+# macos/windows/android impls. Warren iOS uses
+# `UIDevice.systemVersion` / `UIDevice.model` directly via Swift, which
+# the Swift side passes to FFI as platform user-agent string.
+talpid-types = { path = "../talpid-types" }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tonic = { workspace = true }
+tower = { workspace = true }
+tracing-subscriber = { workspace = true }
+# Signed HTTP client for warren-api (`warren_account_ffi`), consumed with
+# the bundled reqwest transport. iOS-only: the module's only consumer is
+# `#[cfg(target_os = "ios")]`.
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
+
+# Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature,
+# enabled by the iOS Xcode build phase (build-rust-library.sh warren-ios
+# "api-override tunnel"). The client transport bridges the iOS packet flow via
+# `IosTun` (`NEPacketTunnelFlow.readPackets/writePackets`), so it no
+# longer depends on a tun-rs iOS backend.
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", optional = true, features = ["system-vpn", "pq-hpke"] }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core", optional = true }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita", optional = true }
+warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump", optional = true }
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
+# Direct dep on `warrenguard-wire` for `WarrenExitAddr` + `WarrenPubkey`
+# types passed to `MultiHopClient::connect`. Optional so
+# the no-tunnel build path stays minimal.
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }
+# Multi-hop supervisor + pump support (the iOS data plane rides the
+# multi-hop wire protocol; see `warren_multihop_directory`). `Backoff`
+# is a `SupervisorConfig` field.
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff", optional = true }
+# Cover-defense knob resolution (`idle_cover_enabled`): the ADR-0006 idle-cover
+# decision for the multi-hop data plane reads from the same single source of
+# truth the desktop daemon uses.
+warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config", optional = true }
+
+[target.'cfg(target_os = "macos")'.build-dependencies]
+cbindgen = { version = "0.28.0", default-features = false }
+
+# Host-only: `tokio` is an iOS-target dependency above, so the migration
+# watchdog's path-change channel (`warren_tunnel_ffi`) would otherwise be
+# untestable off the device. As a dev-dependency it reaches the `cfg(test)`
+# build on every host without adding anything to the shipped staticlib.
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+
+[features]
+default = []
+# Allow the API server to be used
+api-override = ["mullvad-api/api-override"]
+# Pull in the Quinn tunnel stack. The iOS `PacketDevice` bridge (`IosTun`)
+# has landed, so the iOS Xcode build phase enables this feature. It stays
+# off the crate default so a no-tunnel host build path remains minimal.
+tunnel = ["dep:warrenguard-transport", "dep:warrenguard-transport-core", "dep:warrenguard-daita", "dep:warrenguard-pump", "dep:warrenguard-multihop", "dep:warrenguard-natpmp-client", "dep:warrenguard-wire", "dep:warrenguard-backoff", "dep:warrenguard-config"]
+
+[lints]
+workspace = true

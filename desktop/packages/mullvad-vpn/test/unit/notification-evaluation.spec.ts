@@ -120,6 +120,7 @@ describe('System notifications', () => {
           protocol: 'udp',
           quantumResistant: false,
           daita: false,
+          tunnelType: 'wireguard',
         },
       },
     };
@@ -154,6 +155,7 @@ describe('System notifications', () => {
           protocol: 'udp',
           quantumResistant: false,
           daita: false,
+          tunnelType: 'wireguard',
         },
       },
     };

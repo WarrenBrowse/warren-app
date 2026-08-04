@@ -254,7 +254,7 @@ fn filter_include_in_country(
     }
 
     let Constraint::Only(resolved) = location_constraint else {
-        // No location constraint — relay is not specifically targeted.
+        // No location constraint - relay is not specifically targeted.
         return Verdict::reject(Reason::IncludeInCountry);
     };
 

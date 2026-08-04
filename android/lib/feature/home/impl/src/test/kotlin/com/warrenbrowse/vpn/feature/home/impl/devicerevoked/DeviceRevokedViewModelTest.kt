@@ -1,0 +1,98 @@
+package com.warrenbrowse.vpn.feature.home.impl.devicerevoked
+
+import app.cash.turbine.test
+import arrow.core.right
+import io.mockk.MockKAnnotations
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
+import io.mockk.every
+import io.mockk.impl.annotations.MockK
+import io.mockk.mockk
+import io.mockk.unmockkAll
+import kotlin.test.assertEquals
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.test.runTest
+import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
+import com.warrenbrowse.vpn.lib.model.DisconnectReason
+import com.warrenbrowse.vpn.lib.model.TunnelState
+import com.warrenbrowse.vpn.lib.repository.AccountRepository
+import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
+
+@ExperimentalCoroutinesApi
+@ExtendWith(TestCoroutineRule::class)
+class DeviceRevokedViewModelTest {
+
+    @MockK private lateinit var mockedAccountRepository: AccountRepository
+
+    @MockK private lateinit var mockConnectionProxy: ConnectionProxy
+
+    private lateinit var viewModel: DeviceRevokedViewModel
+
+    private val tunnelStateFlow = MutableSharedFlow<TunnelState>()
+
+    @BeforeEach
+    fun setup() {
+        MockKAnnotations.init(this)
+        every { mockConnectionProxy.tunnelState } returns tunnelStateFlow
+        viewModel =
+            DeviceRevokedViewModel(
+                accountRepository = mockedAccountRepository,
+                connectionProxy = mockConnectionProxy,
+            )
+    }
+
+    @AfterEach
+    fun teardown() {
+        unmockkAll()
+    }
+
+    @Test
+    fun `when tunnel state is secured uiState should be SECURED`() = runTest {
+        // Arrange
+        val tunnelState: TunnelState = mockk()
+        every { tunnelState.isSecured() } returns true
+
+        // Act, Assert
+        viewModel.uiState.test {
+            assertEquals(DeviceRevokedUiState.UNKNOWN, awaitItem())
+            tunnelStateFlow.emit(tunnelState)
+            assertEquals(DeviceRevokedUiState.SECURED, awaitItem())
+        }
+    }
+
+    @Test
+    fun `onGoToLoginClicked should invoke logout on AccountRepository`() {
+        // Arrange
+        coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
+        coEvery { mockedAccountRepository.logout() } returns Unit.right()
+
+        // Act
+        viewModel.onGoToLoginClicked()
+
+        // Assert
+        coVerify { mockedAccountRepository.logout() }
+    }
+
+    @Test
+    fun `onGoToLoginClicked should invoke disconnect before logout when connected`() {
+        // Arrange
+        val mockDisconnectReason = DisconnectReason.USER_INITIATED_GO_TO_LOGIN
+        coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
+        coEvery { mockedAccountRepository.logout() } returns Unit.right()
+
+        // Act
+        viewModel.onGoToLoginClicked()
+
+        // Assert
+        coVerifyOrder {
+            mockConnectionProxy.disconnect(mockDisconnectReason)
+            mockedAccountRepository.logout()
+        }
+    }
+}

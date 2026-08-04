@@ -5,19 +5,19 @@
     <key>method</key>
     <string>app-store</string>
     <key>teamID</key>
-    <string>CKG9MXH72F</string>
+    <string>XXXXXXXXXX</string>
     <key>signingStyle</key>
     <string>manual</string>
     <key>uploadSymbols</key>
     <true/>
     <key>signingCertificate</key>
-    <string>Apple Distribution: Mullvad VPN AB</string>
+    <string>Apple Distribution: Warren Browse</string>
     <key>provisioningProfiles</key>
     <dict>
-      <key>net.mullvad.MullvadVPN</key>
-      <string>Mullvad VPN Release</string>
-      <key>net.mullvad.MullvadVPN.PacketTunnel</key>
-      <string>Packet Tunnel Release</string>
+      <key>com.warrenbrowse.vpn.ios</key>
+      <string>Warren VPN Release</string>
+      <key>com.warrenbrowse.vpn.ios.PacketTunnel</key>
+      <string>Warren Packet Tunnel Release</string>
     </dict>
 </dict>
 </plist>

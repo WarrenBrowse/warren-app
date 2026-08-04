@@ -1,0 +1,82 @@
+---
+# Warren: the Android app's push/PR gate.
+#
+# The whole android/ tree had NO automatic gate: every inherited
+# `android-*.yml` workflow is dispatch-only in this fork, and
+# `warren-checks.yml` is paths-filtered to the daemon/desktop tree. An
+# Android-only change therefore triggered nothing at all, which is how a
+# blocking network call on the UI thread reached main unnoticed.
+#
+# Scope is deliberately the JVM unit tests: they are the fast, hermetic
+# signal (~5 min, no emulator, no device). The instrumented and e2e suites
+# need a device runner and stay on the dispatch-only workflows.
+#
+# `:test:arch` is excluded on purpose: it enforces inherited Mullvad naming
+# conventions (every test name carrying "ensure"/"should") that this fork
+# never adopted, so it fails on 205 of the 330 existing test names. Gating on
+# it today would paint main red for reasons unrelated to any change under
+# review. Adopting or dropping those conventions is its own cleanup; until
+# then a green gate that runs the real tests beats a red one nobody can act
+# on. Same reasoning for `detekt`, which currently reports 174 pre-existing
+# findings.
+
+name: Android checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - warren-base
+    paths: &android_paths
+      - "android/**"
+      - "warren-jni/**"
+      - ".github/workflows/android-checks.yml"
+  pull_request:
+    branches:
+      - main
+      - warren-base
+    paths: *android_paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  android-unit-tests:
+    name: Android unit tests (JVM)
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 45
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      # Checks out the pinned sibling engines (warrenguard, warren-sdk-rs,
+      # warren-contract) that the Rust workspace consumes by path.
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Add Android Rust targets
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi \
+            i686-linux-android x86_64-linux-android
+
+      - name: Unit tests
+        run: |
+          android/gradlew -p android --no-daemon --stacktrace \
+            testAllUnitTests -x :test:arch:testDebugUnitTest

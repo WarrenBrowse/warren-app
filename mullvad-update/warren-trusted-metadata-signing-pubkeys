@@ -1,0 +1,21 @@
+# Warren update-channel Ed25519 metadata signing public keys.
+#
+# Each non-comment, non-empty line is a single 64-character hex-encoded
+# Ed25519 verifying key. Comments start with `#`. Trailing whitespace is
+# stripped per `parse_keys` in `src/defaults.rs`.
+#
+# This key can ship an installer to every user, so it is the highest-
+# privilege key in the system. It is dedicated to app updates and was
+# generated/kept OFFLINE. Do NOT reuse the relay/admin signing key
+# (online, and its lineage was burned once:
+# `admin/admin-signing.key.BURNED-committed-do-not-use`).
+#
+# The matching Ed25519 secret is stored OFFLINE by poka and as the CI
+# secret `WARREN_UPDATE_SIGNING_KEY` (used by `release.yml` to sign every
+# published `*.json` manifest). A `warren-vpn` daemon shipped with this
+# trust file accepts manifests signed by the key below and rejects all
+# others (fail-closed).
+#
+# Key rotation: add the new pubkey on its own line (both are then trusted
+# during the overlap), ship a release, then drop the retired line.
+0f684bb245acd5a684c467ccc9b92bb5daa2252ef12e89a68583b806ea2560a0

@@ -1,0 +1,50 @@
+#!/bin/sh
+### BEGIN INIT INFO
+# Provides:          warren-early-boot-blocking@WARREN_SUFFIX@
+# Required-Start:    $local_fs
+# Required-Stop:
+# X-Start-Before:    networking
+# Default-Start:     S
+# Default-Stop:
+# Short-Description: Warren early boot network blocker
+# Description:       Blocks all traffic before any network configuration is
+#                    applied. Counterpart of
+#                    dist-assets/linux/warren-early-boot-blocking.service.
+### END INIT INFO
+
+# Default-Start S puts this in rcS.d, the sysvinit stage that runs before the
+# multi-user runlevel the daemon itself starts in, and X-Start-Before pins it
+# ahead of `networking`. That is the sysvinit expression of the unit's
+# DefaultDependencies=no plus Before=basic.target: no traffic may reach a
+# network the daemon has not seen yet.
+
+set -u
+
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DAEMON=/usr/bin/warren-daemon@WARREN_SUFFIX@
+
+[ -x "$DAEMON" ] || exit 0
+
+case "${1:-}" in
+    start)
+        printf '%s' "Blocking network traffic until Warren VPN starts: "
+        if "$DAEMON" -v --initialize-early-boot-firewall; then
+            echo "done."
+        else
+            # Never fail the boot: rcS aborting here would leave the machine
+            # without a login prompt, which is worse than an unblocked boot the
+            # daemon closes moments later.
+            echo "failed."
+        fi
+        ;;
+    stop | restart | force-reload | status)
+        # One-shot by construction (the systemd unit is Type=oneshot): there is
+        # nothing running to stop, restart or report on.
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|restart|force-reload|status}" >&2
+        exit 2
+        ;;
+esac
+
+exit 0

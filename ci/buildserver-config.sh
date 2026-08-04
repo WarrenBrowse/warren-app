@@ -2,6 +2,9 @@
 #
 # Buildserver configuration. Runtime values are defined here instead of
 # the scripts where they are used.
+# Inherited from upstream Mullvad's build servers and NOT used by the Warren
+# release process (release.yml + api.warrenbrowse.com/updates); the upload
+# targets below are Mullvad infrastructure.
 
 # Servers to upload build artifacts to.
 export PRODUCTION_UPLOAD_SERVERS=("cdn.mullvad.net")

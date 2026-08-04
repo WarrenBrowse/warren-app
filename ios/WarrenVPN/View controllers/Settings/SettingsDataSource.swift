@@ -1,0 +1,319 @@
+//
+//  SettingsDataSource.swift
+//  MullvadVPN
+//
+//  Created by pronebird on 19/10/2021.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import WarrenSettings
+import UIKit
+
+final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource.Section, SettingsDataSource.Item>,
+    UITableViewDelegate
+{
+    enum CellReuseIdentifier: String, CaseIterable {
+        case basic
+        case changelog
+
+        var reusableViewClass: AnyClass {
+            SettingsCell.self
+        }
+
+        var cellStyle: UITableViewCell.CellStyle {
+            switch self {
+            case .basic: .default
+            case .changelog: .subtitle
+            }
+        }
+    }
+
+    private enum HeaderFooterReuseIdentifier: String, CaseIterable, HeaderFooterIdentifierProtocol {
+        case primary
+        case spacer
+
+        var headerFooterClass: AnyClass {
+            switch self {
+            case .primary:
+                UITableViewHeaderFooterView.self
+            case .spacer:
+                EmptyTableViewHeaderFooterView.self
+            }
+        }
+    }
+
+    enum Section: String {
+        case vpnSettings
+        case apiAccess
+        case version
+        case misc
+        case general
+    }
+
+    enum Item: String {
+        case vpnSettings
+        case changelog
+        case faq
+        case apiAccess
+        case daita
+        case multihop
+        case language
+        case notificationSettings
+        case includeAllNetworks
+        case warrenWalletBackup
+        case warrenWalletErase
+        case warrenWalletIdentity
+        case warrenTunnelStatistics
+        case warrenDiagnosticInfo
+        case warrenAbout
+        case warrenPortForwarding
+        // Developer tooling; only ever appended to the snapshot in DEBUG
+        // builds, so release users never see it.
+        case debugOptions
+
+        var accessibilityIdentifier: AccessibilityIdentifier {
+            switch self {
+            case .vpnSettings:
+                .vpnSettingsCell
+            case .changelog:
+                .versionCell
+            case .faq:
+                .faqCell
+            case .apiAccess:
+                .apiAccessCell
+            case .daita:
+                .daitaCell
+            case .multihop:
+                .multihopCell
+            case .language:
+                .languageCell
+            case .notificationSettings:
+                .notificationSettingsCell
+            case .includeAllNetworks:
+                .includeAllNetworksCell
+            case .warrenWalletBackup:
+                .warrenWalletBackupCell
+            case .warrenWalletErase:
+                .warrenWalletEraseCell
+            case .warrenWalletIdentity:
+                .warrenWalletIdentityCell
+            case .warrenTunnelStatistics:
+                .warrenTunnelStatisticsCell
+            case .warrenDiagnosticInfo:
+                .warrenDiagnosticInfoCell
+            case .warrenAbout:
+                .warrenAboutCell
+            case .warrenPortForwarding:
+                .warrenPortForwardingCell
+            case .debugOptions:
+                .debugOptionsCell
+            }
+        }
+
+        var reuseIdentifier: CellReuseIdentifier {
+            switch self {
+            case .changelog: .changelog
+            default: .basic
+            }
+        }
+    }
+
+    private let interactor: SettingsInteractor
+    private var storedAccountData: StoredAccountData?
+    private let settingsCellFactory: SettingsCellFactory
+    private weak var tableView: UITableView?
+
+    weak var delegate: SettingsDataSourceDelegate?
+
+    init(tableView: UITableView, interactor: SettingsInteractor, breadcrumbs: Set<Breadcrumb>) {
+        self.tableView = tableView
+        self.interactor = interactor
+
+        let settingsCellFactory = SettingsCellFactory(
+            tableView: tableView,
+            interactor: interactor,
+            breadcrumbs: breadcrumbs
+        )
+        self.settingsCellFactory = settingsCellFactory
+
+        super.init(tableView: tableView) { _, indexPath, itemIdentifier in
+            settingsCellFactory.makeCell(for: itemIdentifier, indexPath: indexPath)
+        }
+
+        tableView.tableHeaderView = UIView(
+            frame: CGRect(
+                origin: .zero,
+                size: CGSize(width: 0, height: UIMetrics.TableView.emptyHeaderHeight)
+            ))
+        tableView.delegate = self
+
+        registerClasses()
+        updateDataSnapshot()
+
+        interactor.didUpdateSettings = { [weak self] in
+            self?.updateDataSnapshot()
+        }
+        storedAccountData = interactor.deviceState.accountData
+    }
+
+    func reload() {
+        settingsCellFactory.viewModel = SettingsViewModel(from: interactor.tunnelSettings)
+
+        var snapshot = snapshot()
+        snapshot.reconfigureItems(snapshot.itemIdentifiers)
+        apply(snapshot, animatingDifferences: false)
+    }
+
+    func reloadBreadcrumbs(_ breadcrumbs: Set<Breadcrumb>) {
+        settingsCellFactory.breadcrumbs = breadcrumbs
+        reload()
+    }
+
+    // MARK: - UITableViewDelegate
+
+    func tableView(_ tableView: UITableView, shouldHighlightRowAt indexPath: IndexPath) -> Bool {
+        true
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: false)
+        guard let item = itemIdentifier(for: indexPath) else { return }
+        delegate?.didSelectItem(item: item)
+    }
+
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        tableView.dequeueReusableHeaderFooterView(
+            withIdentifier: HeaderFooterReuseIdentifier.spacer.rawValue
+        )
+    }
+
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
+        guard let section = sectionIdentifier(for: section) else { return 0 }
+
+        return switch section {
+        case .vpnSettings:
+            0
+        default:
+            UIMetrics.TableView.sectionSpacing
+        }
+    }
+
+    func tableView(_ tableView: UITableView, viewForFooterInSection section: Int) -> UIView? {
+        guard let section = sectionIdentifier(for: section) else {
+            return nil
+        }
+
+        var footerView = tableView.dequeueReusableHeaderFooterView(
+            withIdentifier: HeaderFooterReuseIdentifier.primary.rawValue
+        )
+
+        var contentConfiguration = ListCellContentConfiguration(
+            textProperties:
+                ListCellContentConfiguration.TextProperties(
+                    font: .warrenTiny,
+                    color: .TableSection.footerTextColor
+                ),
+            directionalLayoutMargins: NSDirectionalEdgeInsets(UIMetrics.SettingsRowView.footerLayoutMargins)
+        )
+
+        switch section {
+        case .vpnSettings:
+            contentConfiguration.text = NSLocalizedString(
+                "Forces all apps on the device to use the VPN tunnel, preventing data leaks",
+                comment: ""
+            )
+            footerView?.contentConfiguration = contentConfiguration
+        case .misc:
+            contentConfiguration.text = NSLocalizedString(
+                "Changing language will disconnect you from the VPN and restart the app",
+                comment: ""
+            )
+            footerView?.contentConfiguration = contentConfiguration
+        default:
+            footerView = nil
+        }
+
+        return footerView
+    }
+
+    func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
+        guard let section = sectionIdentifier(for: section) else { return 0 }
+
+        return switch section {
+        case .vpnSettings, .misc:
+            UITableView.automaticDimension
+        default:
+            0
+        }
+    }
+
+    // MARK: - Private
+
+    private func registerClasses() {
+        HeaderFooterReuseIdentifier.allCases.forEach { reuseIdentifier in
+            tableView?.register(
+                reuseIdentifier.headerFooterClass,
+                forHeaderFooterViewReuseIdentifier: reuseIdentifier.rawValue
+            )
+        }
+    }
+
+    private func updateDataSnapshot() {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, Item>()
+        snapshot.appendSections([.vpnSettings])
+        let isLoggedIn = interactor.deviceState.isLoggedIn
+        if isLoggedIn {
+            snapshot.appendItems(
+                [
+                    .daita,
+                    .multihop,
+                    .vpnSettings,
+                ], toSection: .vpnSettings)
+        }
+
+        snapshot.appendItems([.includeAllNetworks], toSection: .vpnSettings)
+        if isLoggedIn {
+            // Warren-specific tunnel features that depend on an active
+            // wallet session. Statistics row stays visible even when
+            // disconnected (shows a zero snapshot). Port forwarding hosts
+            // the NAT-PMP toggle + live mapping status; the toggle is
+            // reachable while disconnected so users can arm it before
+            // connecting.
+            snapshot.appendItems(
+                [.warrenPortForwarding, .warrenTunnelStatistics],
+                toSection: .vpnSettings
+            )
+        }
+
+        snapshot.appendSections([.apiAccess])
+        snapshot.appendItems([.apiAccess], toSection: .apiAccess)
+
+        snapshot.appendSections([.general])
+        var generalItems: [Item] = [.notificationSettings, .changelog]
+        // Surface the wallet backup CTA only when a wallet has been
+        // provisioned ; otherwise the row is misleading.
+        if WarrenWalletKeychain.exists() {
+            // Order : safe info → safe action → destructive action.
+            // Identity (info) → Backup phrase (safe action) → Erase
+            // (destructive). Mirrors the order users would naturally
+            // discover these features.
+            generalItems.insert(.warrenWalletIdentity, at: 0)
+            generalItems.insert(.warrenWalletBackup, at: 1)
+            generalItems.insert(.warrenWalletErase, at: 2)
+        }
+        snapshot.appendItems(generalItems, toSection: .general)
+
+        snapshot.appendSections([.misc])
+        // About Warren + Diagnostic info sit in misc - all are user-facing
+        // support / legal tools.
+        snapshot.appendItems(
+            [.warrenDiagnosticInfo, .warrenAbout, .faq, .language],
+            toSection: .misc
+        )
+        #if DEBUG
+            snapshot.appendItems([.debugOptions], toSection: .misc)
+        #endif
+
+        apply(snapshot)
+    }
+}

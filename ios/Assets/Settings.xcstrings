@@ -1,0 +1,6074 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Connect to the VPN to request a port.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصل بشبكة VPN لطلب منفذ."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opret forbindelse til VPN for at anmode om en port."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verbinden Sie sich mit dem VPN, um einen Port anzufordern."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connect to the VPN to request a port."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conéctese a la VPN para solicitar un puerto."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای درخواست پورت به VPN متصل شوید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yhdistä VPN:ään pyytääksesi porttia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connectez-vous au VPN pour demander un port."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connettiti alla VPN per richiedere una porta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポートをリクエストするには、VPNに接続してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트를 요청하려면 VPN에 연결하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port တစ်ခုတောင်းဆိုရန် VPN သို့ ချိတ်ဆက်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koble til VPN for å be om en port."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maak verbinding met de VPN om een poort aan te vragen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połącz się z VPN, aby poprosić o port."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligue-se à VPN para pedir uma porta."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectează-te la VPN pentru a solicita un port."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подключитесь к VPN, чтобы запросить порт."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anslut till VPN för att begära en port."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เชื่อมต่อ VPN เพื่อขอพอร์ต"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir bağlantı noktası istemek için VPN'e bağlanın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підключіться до VPN, щоб запитати порт."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接 VPN 以请求端口。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線 VPN 以要求連接埠。"
+          }
+        }
+      }
+    },
+    "Country": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدولة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Land"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Land"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Country"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "País"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کشور"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pays"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paese"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "国"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "국가"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "နိုင်ငံ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Land"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Land"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kraj"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "País"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Țară"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страна"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Land"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ประเทศ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ülke"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Країна"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "国家/地区"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "國家/地區"
+          }
+        }
+      }
+    },
+    "DAITA": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA"
+          }
+        }
+      }
+    },
+    "DAITA is experimental and may degrade throughput on high-bandwidth links.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ميزة DAITA تجريبية وقد تخفض معدل النقل على الوصلات عالية السرعة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA er eksperimentel og kan forringe gennemstrømningen på forbindelser med høj båndbredde."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA ist experimentell und kann den Durchsatz auf Verbindungen mit hoher Bandbreite verringern."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA is experimental and may degrade throughput on high-bandwidth links."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA es experimental y puede degradar el rendimiento en enlaces de gran ancho de banda."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA آزمایشی است و ممکن است روی پیوندهای پرپهنای‌باند، توان عبوری را کاهش دهد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA on kokeellinen ja voi heikentää suoritustehoa suuren kaistanleveyden yhteyksissä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA est expérimental et peut réduire le débit sur les liaisons à haute vitesse."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA è sperimentale e può ridurre la velocità di trasmissione sui collegamenti ad alta banda."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITAは実験的な機能であり、高帯域幅のリンクではスループットが低下することがあります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA는 실험적인 기능이며 고대역폭 링크에서 처리량을 저하시킬 수 있습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA သည် စမ်းသပ်ဆဲဖြစ်ပြီး ဘန်းဝစ်ဒ်မြင့်သော လင့်ခ်များတွင် ဆက်သွယ်နှုန်းကို လျော့ကျစေနိုင်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA er eksperimentell og kan forringe gjennomstrømningen på forbindelser med høy båndbredde."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA is experimenteel en kan de doorvoer op verbindingen met hoge bandbreedte verminderen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA jest funkcją eksperymentalną i może obniżać przepustowość na łączach o dużej przepustowości."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O DAITA é experimental e pode degradar o débito em ligações de grande largura de banda."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA este experimental și poate reduce debitul pe conexiunile cu lățime de bandă mare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA, это экспериментальная функция, которая может снижать пропускную способность на высокоскоростных каналах."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA är experimentellt och kan försämra genomströmningen på anslutningar med hög bandbredd."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA อยู่ในขั้นทดลองและอาจลดทรูพุตบนลิงก์ที่มีแบนด์วิดท์สูง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA deneyseldir ve yüksek bant genişlikli bağlantılarda veri akış hızını düşürebilir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA, це експериментальна функція, яка може знижувати пропускну здатність на високошвидкісних каналах."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA 为实验性功能，可能会降低高带宽链路上的吞吐量。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA 為實驗性功能，可能會降低高頻寬連結上的吞吐量。"
+          }
+        }
+      }
+    },
+    "Defense Against AI-Guided Traffic Analysis. Emits constant-rate cover traffic to make your VPN sessions indistinguishable to network observers. Adds ~10% bandwidth overhead.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دفاع ضد تحليل حركة البيانات الموجَّه بالذكاء الاصطناعي. يبث حركة تغطية بمعدل ثابت لجعل جلسات VPN لديك غير قابلة للتمييز أمام مراقبي الشبكة. يضيف نحو 10% من استهلاك النطاق الترددي."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forsvar mod AI-styret trafikanalyse. Udsender dækningstrafik med konstant hastighed for at gøre dine VPN-sessioner uigenkendelige for netværksobservatører. Tilføjer ~10 % båndbredde-overhead."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schutz vor KI-gesteuerter Traffic-Analyse. Sendet Tarn-Traffic mit konstanter Rate, damit Ihre VPN-Sitzungen für Netzwerkbeobachter nicht erkennbar sind. Fügt ~10 % Bandbreiten-Overhead hinzu."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defense Against AI-Guided Traffic Analysis. Emits constant-rate cover traffic to make your VPN sessions indistinguishable to network observers. Adds ~10% bandwidth overhead."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defensa contra el análisis de tráfico guiado por IA. Emite tráfico de cobertura a velocidad constante para que sus sesiones VPN sean indistinguibles para los observadores de la red. Añade ~10 % de sobrecarga de ancho de banda."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دفاع در برابر تحلیل ترافیک با هدایت هوش مصنوعی. با ارسال ترافیک پوششی با نرخ ثابت، جلسات VPN شما را برای ناظران شبکه غیرقابل‌تشخیص می‌کند. حدود ۱۰٪ سربار پهنای باند اضافه می‌کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suoja tekoälyohjattua liikenneanalyysiä vastaan. Lähettää tasaista peiteliikennettä, jotta VPN-istuntosi ovat erottamattomia verkon tarkkailijoille. Lisää ~10 %:n kaistanleveyden lisäkuorman."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Défense contre l'analyse de trafic guidée par IA. Émet un trafic de couverture à débit constant pour rendre vos sessions VPN indissociables pour un observateur réseau. Ajoute ~10 % de surcharge."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Difesa contro l'analisi del traffico guidata dall'IA. Emette traffico di copertura a velocità costante per rendere le tue sessioni VPN indistinguibili agli osservatori della rete. Aggiunge ~10% di overhead di banda."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI主導のトラフィック分析に対する防御です。一定レートのカバートラフィックを送出し、VPNセッションをネットワーク観測者から見分けがつかなくします。帯域幅オーバーヘッドは約10%増加します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI 기반 트래픽 분석에 대한 방어입니다. 일정한 속도의 위장 트래픽을 보내 네트워크 관찰자가 VPN 세션을 구별할 수 없게 만듭니다. 대역폭 오버헤드가 약 10% 추가됩니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AI ဦးဆောင်သော ထရက်ဖစ်ခွဲခြမ်းစိတ်ဖြာမှုကို ကာကွယ်ခြင်း။ သင့် VPN စက်ရှင်များကို ကွန်ရက်စောင့်ကြည့်သူများ ခွဲခြားမရစေရန် နှုန်းတည်ငြိမ်သော ဖုံးကွယ်ထရက်ဖစ်ကို ထုတ်လွှတ်သည်။ ဘန်းဝစ်ဒ် ~10% ပိုသုံးသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forsvar mot KI-styrt trafikkanalyse. Sender dekketrafikk med konstant hastighet for å gjøre VPN-øktene dine umulige å gjenkjenne for nettverksobservatører. Legger til ~10 % båndbredde-overhead."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verdediging tegen AI-gestuurde verkeersanalyse. Verzendt dekkingsverkeer met een constante snelheid om je VPN-sessies onherkenbaar te maken voor netwerkobservatoren. Voegt ~10% bandbreedte-overhead toe."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ochrona przed analizą ruchu sterowaną przez SI. Wysyła ruch maskujący o stałej szybkości, aby Twoje sesje VPN były nieodróżnialne dla obserwatorów sieci. Dodaje ~10% narzutu przepustowości."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Defesa contra a análise de tráfego orientada por IA. Emite tráfego de cobertura a uma taxa constante para tornar as suas sessões VPN indistinguíveis para os observadores da rede. Adiciona ~10% de sobrecarga de largura de banda."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apărare împotriva analizei traficului ghidate de inteligența artificială. Emite trafic de acoperire la rată constantă pentru a face sesiunile VPN imposibil de distins pentru observatorii rețelei. Adaugă un consum suplimentar de bandă de aproximativ 10%."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Защита от анализа трафика с помощью ИИ. Создает маскирующий трафик с постоянной скоростью, чтобы наблюдатели сети не могли распознать ваши VPN-сеансы. Добавляет ~10% нагрузки на канал."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skydd mot AI-styrd trafikanalys. Skickar täcktrafik med konstant hastighet för att göra dina VPN-sessioner omöjliga att känna igen för nätverksobservatörer. Lägger till ~10 % bandbreddsbelastning."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การป้องกันการวิเคราะห์ทราฟฟิกที่ขับเคลื่อนด้วย AI ส่งทราฟฟิกอำพรางด้วยอัตราคงที่เพื่อให้เซสชัน VPN ของคุณแยกไม่ออกสำหรับผู้สังเกตการณ์เครือข่าย เพิ่มโอเวอร์เฮดแบนด์วิดท์ประมาณ 10%"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapay zeka güdümlü trafik analizine karşı savunma. VPN oturumlarınızı ağ gözlemcileri için ayırt edilemez kılmak amacıyla sabit hızda örtü trafiği gönderir. ~%10 bant genişliği ek yükü ekler."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Захист від аналізу трафіку за допомогою ШІ. Створює маскувальний трафік зі сталою швидкістю, щоб спостерігачі мережі не могли розпізнати ваші VPN-сеанси. Додає ~10% навантаження на канал."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "防御 AI 驱动的流量分析。以恒定速率发送掩护流量，使网络观察者无法区分您的 VPN 会话。会增加约 10% 的带宽开销。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "防禦 AI 驅動的流量分析。以固定速率傳送掩護流量，使網路觀察者無法區分您的 VPN 工作階段。會增加約 10% 的頻寬開銷。"
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تجاهل"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afvis"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descartar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رد کردن"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hylkää"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignora"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "닫기"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပယ်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvis"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluiten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odrzuć"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispensar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Închide"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisa"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрити"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
+          }
+        }
+      }
+    },
+    "Dropped %d pinned exit key entries.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم حذف %d من إدخالات مفاتيح الخروج المثبّتة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjernede %d fastgjorte udgangsnøgleposter."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d angeheftete Ausgangsschlüssel-Einträge entfernt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dropped %d pinned exit key entries."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se eliminaron %d entradas de claves de salida fijadas."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d ورودی کلید خروجی سنجاق‌شده حذف شد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poistettiin %d kiinnitettyä ulosmenoavainta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d entrées de clés de sortie épinglées supprimées."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eliminate %d voci di chiavi di uscita fissate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d件の固定されたエグジットキーのエントリーを削除しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키 항목 %d개를 삭제했습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီး %d ခုကို ဖယ်ရှားလိုက်ပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fjernet %d festede utgangsnøkkeloppføringer."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d vastgezette exit-sleutelvermeldingen verwijderd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usunięto %d przypiętych wpisów kluczy wyjściowych."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foram removidas %d entradas de chaves de saída fixadas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S-au eliminat %d intrări de chei de ieșire fixate."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Удалено закреплённых записей ключей выхода: %d."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tog bort %d fästa utgångsnyckelposter."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลบรายการคีย์ทางออกที่ปักหมุดไว้แล้ว %d รายการ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%d sabitlenmiş çıkış anahtarı kaydı kaldırıldı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видалено закріплених ключів вихідних серверів: %d."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已删除 %d 条已固定的出口密钥记录。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已捨棄 %d 個已固定的出口金鑰項目。"
+          }
+        }
+      }
+    },
+    "Enable DAITA": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفعيل DAITA"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivér DAITA"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA aktivieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable DAITA"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar DAITA"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعال‌سازی DAITA"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ota DAITA käyttöön"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer DAITA"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abilita DAITA"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITAを有効にする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA 활성화"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA ကို ဖွင့်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiver DAITA"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA inschakelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz DAITA"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar o DAITA"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează DAITA"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить DAITA"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivera DAITA"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดใช้งาน DAITA"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DAITA'yı etkinleştir"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увімкнути DAITA"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用 DAITA"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用 DAITA"
+          }
+        }
+      }
+    },
+    "Enable multi-hop": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفعيل Multihop"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivér multihop"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop aktivieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable multi-hop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar salto múltiple"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعال‌سازی Multihop"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ota multihop käyttöön"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer le multi-hop"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abilita multi-hop"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マルチホップを有効にする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멀티홉 활성화"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop ကို ဖွင့်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiver multihopp"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop inschakelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz routing wieloprzeskokowy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar multihop"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează Multihop"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить многократную маршрутизацию"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivera multihopp"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดใช้งานมัลติฮอป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çoklu geçişi etkinleştir"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увімкнути багатоперехідну маршрутизацію"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用多跳"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用多點跳躍"
+          }
+        }
+      }
+    },
+    "Enable port forwarding": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفعيل إعادة توجيه المنافذ"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivér portvideresendelse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portweiterleitung aktivieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enable port forwarding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar reenvío de puertos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فعال‌سازی هدایت درگاه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ota portin edelleenlähetys käyttöön"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activer la redirection de port"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abilita inoltro porte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート転送を有効にする"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 포워딩 활성화"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "port forwarding ကို ဖွင့်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiver portvideresending"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding inschakelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Włącz przekierowanie portów"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativar reencaminhamento de portas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activează redirecționarea porturilor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Включить переадресацию портов"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivera portvidarebefordran"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปิดใช้งานการส่งต่อพอร์ต"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı noktası yönlendirmeyi etkinleştir"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увімкнути переадресацію портів"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "启用端口转发"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "啟用連接埠轉送"
+          }
+        }
+      }
+    },
+    "Entry relay": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرحِّل الدخول"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indgangsrelæ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingangsrelais"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entry relay"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relé de entrada"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رلهٔ ورودی"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sisääntulorele"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relais d'entrée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relè di ingresso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入口リレー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "입구 릴레이"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ပေါက်ရီလေး"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inngangsrelé"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingangsrelais"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekaźnik wejściowy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relé de entrada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releu de intrare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Входной ретранслятор"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingångsrelä"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเลย์ทางเข้า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş aktarıcısı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вхідний ретранслятор"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入口中继"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "入口中繼"
+          }
+        }
+      }
+    },
+    "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use). Until the new pins are established, an exit substitution would not be flagged on the first reconnect.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل خادم خروج تابع لـ Warren اتصلت به سابقًا سيُعاد تثبيت مفتاحه عند الاتصال التالي (Trust On First Use). وإلى أن تُثبَّت المفاتيح الجديدة، لن يُنبَّه إلى استبدال خادم الخروج عند أول إعادة اتصال."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hver Warren-udgang, du tidligere har oprettet forbindelse til, vil blive fastgjort igen ved næste forbindelse (Trust On First Use). Indtil de nye fastgørelser er etableret, vil en udskiftning af udgang ikke blive markeret ved den første genoprettelse af forbindelsen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jeder Warren-Ausgang, mit dem du zuvor verbunden warst, wird bei der nächsten Verbindung erneut angeheftet (Trust On First Use). Bis die neuen Anheftungen eingerichtet sind, würde ein Austausch des Ausgangs bei der ersten erneuten Verbindung nicht gemeldet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use). Until the new pins are established, an exit substitution would not be flagged on the first reconnect."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada salida de Warren a la que te conectaste anteriormente se volverá a fijar en la próxima conexión (Trust On First Use). Hasta que se establezcan las nuevas fijaciones, una sustitución de salida no se marcaría en la primera reconexión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هر خروجی Warren که قبلاً به آن متصل شده‌اید، در اتصال بعدی دوباره سنجاق می‌شود (Trust On First Use). تا زمانی که سنجاق‌های جدید برقرار نشده‌اند، جایگزینی خروجی در نخستین اتصال دوباره علامت‌گذاری نخواهد شد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jokainen aiemmin käyttämäsi Warren-ulosmenopalvelin kiinnitetään uudelleen seuraavalla yhteydellä (Trust On First Use). Ennen kuin uudet kiinnitykset on muodostettu, ulosmenopalvelimen vaihtoa ei merkitä ensimmäisellä uudelleenyhdistyksellä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chaque sortie Warren à laquelle vous vous êtes déjà connecté sera réépinglée lors de la prochaine connexion (confiance à la première utilisation). Tant que les nouveaux épinglages ne sont pas établis, une substitution de sortie ne serait pas signalée lors de la première reconnexion."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ogni uscita Warren a cui ti sei connesso in precedenza verrà nuovamente fissata alla connessione successiva (Trust On First Use). Finché le nuove chiavi fissate non saranno stabilite, una sostituzione dell'uscita non verrebbe segnalata alla prima riconnessione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前に接続したすべてのWarrenエグジットは、次回の接続時に再度固定されます（Trust On First Use）。新しい固定が確立されるまでは、最初の再接続でエグジットの差し替えが検出されません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전에 연결했던 모든 Warren 출구는 다음 연결 시 다시 고정됩니다(Trust On First Use). 새 고정이 설정되기 전까지는 첫 재연결 시 출구가 교체되어도 표시되지 않습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင်ယခင်က ချိတ်ဆက်ခဲ့သော Warren ထွက်ပေါက်တိုင်းကို နောက်ချိတ်ဆက်မှုတွင် ပြန်လည်ပင်ထားမည်ဖြစ်သည် (Trust On First Use)။ ပင်အသစ်များ မတည်ဆောက်ရသေးမီ၊ ပထမဆုံး ပြန်လည်ချိတ်ဆက်မှုတွင် ထွက်ပေါက်အစားထိုးမှုကို အချက်ပေးဖော်ပြမည် မဟုတ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hver Warren-utgang du tidligere har koblet til, blir festet på nytt ved neste tilkobling (Trust On First Use). Inntil de nye festene er etablert, vil en bytting av utgang ikke bli flagget ved den første gjentilkoblingen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elke Warren-exit waarmee je eerder verbinding hebt gemaakt, wordt bij de volgende verbinding opnieuw vastgezet (Trust On First Use). Totdat de nieuwe pins zijn vastgelegd, wordt een vervanging van een exit bij de eerste herverbinding niet gemarkeerd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Każdy serwer wyjściowy Warren, z którym wcześniej się łączyłeś, zostanie ponownie przypięty przy następnym połączeniu (Trust On First Use). Dopóki nowe przypięcia nie zostaną ustanowione, podmiana serwera wyjściowego nie zostanie zasygnalizowana przy pierwszym ponownym połączeniu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cada saída Warren à qual se ligou anteriormente será novamente fixada na próxima ligação (Trust On First Use). Até que as novas fixações sejam estabelecidas, uma substituição de saída não seria assinalada na primeira reconexão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fiecare ieșire Warren la care te-ai conectat anterior va fi fixată din nou la următoarea conexiune (Trust On First Use). Până la stabilirea noilor fixări, o substituire a ieșirii nu ar fi semnalată la prima reconectare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Каждый сервер выхода Warren, к которому вы ранее подключались, будет повторно закреплён при следующем подключении (Trust On First Use). Пока новые закрепления не установлены, подмена сервера выхода не будет обнаружена при первом повторном подключении."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varje Warren-utgång som du tidigare anslutit till kommer att fästas på nytt vid nästa anslutning (Trust On First Use). Tills de nya fästningarna är etablerade flaggas inte ett utgångsbyte vid den första återanslutningen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์ทางออก Warren ทุกแห่งที่คุณเคยเชื่อมต่อจะถูกปักหมุดใหม่ในการเชื่อมต่อครั้งถัดไป (Trust On First Use) จนกว่าการปักหมุดใหม่จะเสร็จสมบูรณ์ การแทนที่เซิร์ฟเวอร์ทางออกจะไม่ถูกแจ้งเตือนในการเชื่อมต่อใหม่ครั้งแรก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha önce bağlandığınız her Warren çıkışı, bir sonraki bağlantıda yeniden sabitlenir (Trust On First Use). Yeni sabitlemeler oluşana kadar, bir çıkış değişikliği ilk yeniden bağlanmada işaretlenmez."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Кожен вихідний сервер Warren, до якого ви раніше підключалися, буде закріплено заново під час наступного підключення (Trust On First Use). Поки нові закріплення не встановлено, підміну вихідного сервера не буде виявлено під час першого перепідключення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你之前连接过的每个 Warren 出口都将在下次连接时重新固定（Trust On First Use）。在建立新的固定之前，首次重新连接时不会标记出口被替换的情况。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你先前連接過的每個 Warren 出口都會在下次連線時重新固定（Trust On First Use）。在建立新的固定金鑰之前，首次重新連線時不會標記出口被替換的情況。"
+          }
+        }
+      }
+    },
+    "Exit relay": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرحِّل الخروج"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udgangsrelæ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgangsrelais"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit relay"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relé de salida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رلهٔ خروجی"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulostulorele"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relais de sortie"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relè di uscita"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口リレー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출구 릴레이"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထွက်ပေါက်ရီလေး"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utgangsrelé"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitgangsrelais"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekaźnik wyjściowy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relé de saída"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releu de ieșire"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выходной ретранслятор"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utgångsrelä"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเลย์ทางออก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkış aktarıcısı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний ретранслятор"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口中继"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口中繼"
+          }
+        }
+      }
+    },
+    "External port": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المنفذ الخارجي"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekstern port"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Externer Port"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "External port"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puerto externo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "درگاه بیرونی"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulkoinen portti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port externe"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta esterna"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外部ポート"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "외부 포트"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပြင်ပ port"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekstern port"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Externe poort"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port zewnętrzny"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta externa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port extern"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Внешний порт"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extern port"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พอร์ตภายนอก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harici bağlantı noktası"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зовнішній порт"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外部端口"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "外部連接埠"
+          }
+        }
+      }
+    },
+    "Forwarded port": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المنفذ المُعاد توجيهه"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videresendt port"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitergeleiteter Port"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forwarded port"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Puerto reenviado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "درگاه هدایت‌شده"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edelleenlähetetty portti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port redirigé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta inoltrata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "転送ポート"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포워딩된 포트"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "forward လုပ်ထားသော port"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videresendt port"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgestuurde poort"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekierowany port"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porta reencaminhada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port redirecționat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переадресованный порт"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vidarebefordrad port"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พอร์ตที่ส่งต่อ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yönlendirilen bağlantı noktası"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переадресований порт"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已转发端口"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已轉送連接埠"
+          }
+        }
+      }
+    },
+    "HTTP/3 mimicry active": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محاكاة HTTP/3 نشطة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-mimik aktiv"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-Nachahmung aktiv"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 mimicry active"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitación de HTTP/3 activa"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقلید HTTP/3 فعال است"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-jäljittely käytössä"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mimétisme HTTP/3 actif"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mimica HTTP/3 attiva"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3擬態が有効"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 모방 활성화됨"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 အတုယူခြင်း ဖွင့်ထားသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-etterligning aktiv"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-nabootsing actief"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naśladowanie HTTP/3 aktywne"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitação de HTTP/3 ativa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitarea HTTP/3 este activă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имитация HTTP/3 активна"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-imitation aktiv"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเลียนแบบ HTTP/3 ทำงานอยู่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 taklidi etkin"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Імітація HTTP/3 активна"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 模拟已激活"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 模擬已啟用"
+          }
+        }
+      }
+    },
+    "HTTP/3 mimicry is active. Traffic is indistinguishable from regular HTTPS.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محاكاة HTTP/3 نشطة. لا يمكن تمييز حركة البيانات عن حركة HTTPS العادية."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-mimik er aktiv. Trafik er umulig at skelne fra almindelig HTTPS."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-Nachahmung ist aktiv. Der Traffic ist von normalem HTTPS ununterscheidbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 mimicry is active. Traffic is indistinguishable from regular HTTPS."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La imitación de HTTP/3 está activa. El tráfico es indistinguible del HTTPS normal."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقلید HTTP/3 فعال است. ترافیک از HTTPS معمولی قابل تشخیص نیست."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-jäljittely on käytössä. Liikenne on erottamatonta tavallisesta HTTPS:stä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le mimétisme HTTP/3 est actif. Le trafic est indissociable d'un HTTPS normal."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La mimica HTTP/3 è attiva. Il traffico è indistinguibile dal normale HTTPS."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3擬態が有効です。トラフィックは通常のHTTPSと見分けがつきません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 모방이 활성화되어 있습니다. 트래픽을 일반 HTTPS와 구별할 수 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 အတုယူခြင်း ဖွင့်ထားသည်။ ထရက်ဖစ်ကို ပုံမှန် HTTPS နှင့် ခွဲခြားမရပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-etterligning er aktiv. Trafikk er umulig å skille fra vanlig HTTPS."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-nabootsing is actief. Het verkeer is niet te onderscheiden van gewoon HTTPS."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naśladowanie HTTP/3 jest aktywne. Ruch jest nieodróżnialny od zwykłego HTTPS."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A imitação de HTTP/3 está ativa. O tráfego é indistinguível do HTTPS normal."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imitarea HTTP/3 este activă. Traficul este imposibil de distins de traficul HTTPS obișnuit."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Имитация HTTP/3 активна. Трафик неотличим от обычного HTTPS."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3-imitation är aktiv. Trafiken är omöjlig att skilja från vanlig HTTPS."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเลียนแบบ HTTP/3 ทำงานอยู่ ทราฟฟิกแยกไม่ออกจาก HTTPS ทั่วไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 taklidi etkin. Trafik normal HTTPS'den ayırt edilemez."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Імітація HTTP/3 активна. Трафік невідрізнюваний від звичайного HTTPS."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 模拟已激活。流量与普通 HTTPS 无法区分。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HTTP/3 模擬已啟用。流量與普通 HTTPS 無法區分。"
+          }
+        }
+      }
+    },
+    "Multi-hop": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multi-hop"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salto múltiple"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multi-hop"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multi-hop"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マルチホップ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멀티홉"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihopp"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wielokrotny przeskok"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihop"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Многократный переход"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Multihopp"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มัลติฮอป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çoklu geçiş"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Багатоперехідний"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多跳"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "多點跳躍"
+          }
+        }
+      }
+    },
+    "Pin table cleared": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم مسح جدول التثبيت"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fastgørelsestabel ryddet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anheftungstabelle geleert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pin table cleared"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabla de fijaciones borrada"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جدول سنجاق پاک شد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiinnitystaulukko tyhjennetty"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Table d'épinglage effacée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabella delle chiavi fissate cancellata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定テーブルをクリアしました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정 테이블이 지워졌습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ဇယားကို ရှင်းလင်းပြီးပါပြီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Festetabell tømt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pintabel gewist"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabela przypięć wyczyszczona"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabela de fixações limpa"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tabelul de fixări a fost golit"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таблица закреплений очищена"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fästtabellen rensad"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ล้างตารางการปักหมุดแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitleme tablosu temizlendi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Таблицю закріплень очищено"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定列表已清空"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已清除固定金鑰表"
+          }
+        }
+      }
+    },
+    "Port forwarding": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة توجيه المنافذ"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portvideresendelse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portweiterleitung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reenvío de puertos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هدایت پورت"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portin edelleenlähetys"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redirection de port"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inoltro porte"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート転送"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 포워딩"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "port forwarding"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portvideresending"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekierowanie portów"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reencaminhamento de portas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redirecționarea porturilor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переадресация портов"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portvidarebefordran"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การส่งต่อพอร์ต"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı noktası yönlendirme"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переадресація портів"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "端口转发"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠轉送"
+          }
+        }
+      }
+    },
+    "Port request failed. Warren retries automatically; reconnect to force a new request.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فشل طلب المنفذ. يعيد Warren المحاولة تلقائيًا؛ أعد الاتصال لفرض طلب جديد."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portanmodningen mislykkedes. Warren prøver automatisk igen; genopret forbindelsen for at fremtvinge en ny anmodning."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portanfrage fehlgeschlagen. Warren versucht es automatisch erneut; verbinden Sie sich neu, um eine neue Anfrage zu erzwingen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port request failed. Warren retries automatically; reconnect to force a new request."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La solicitud de puerto falló. Warren reintenta automáticamente; reconéctese para forzar una nueva solicitud."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "درخواست پورت ناموفق بود. Warren به‌طور خودکار دوباره تلاش می‌کند؛ برای ارسال درخواست جدید دوباره متصل شوید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Porttipyyntö epäonnistui. Warren yrittää automaattisesti uudelleen; yhdistä uudelleen pakottaaksesi uuden pyynnön."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La demande de port a échoué. Warren réessaie automatiquement ; reconnectez-vous pour forcer une nouvelle demande."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiesta della porta non riuscita. Warren riprova automaticamente; riconnettiti per forzare una nuova richiesta."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポートのリクエストに失敗しました。Warrenは自動的に再試行します。新しいリクエストを強制するには再接続してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 요청에 실패했습니다. Warren이 자동으로 다시 시도합니다. 새 요청을 강제하려면 다시 연결하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port တောင်းဆိုမှု မအောင်မြင်ပါ။ Warren သည် အလိုအလျောက် ထပ်ကြိုးစားပါမည်။ တောင်းဆိုမှုအသစ် ချက်ချင်းလုပ်စေရန် ပြန်လည်ချိတ်ဆက်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portforespørselen mislyktes. Warren prøver automatisk på nytt; koble til på nytt for å fremtvinge en ny forespørsel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poortaanvraag mislukt. Warren probeert het automatisch opnieuw; maak opnieuw verbinding om een nieuwe aanvraag te forceren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Żądanie portu nie powiodło się. Warren automatycznie ponawia próby; połącz się ponownie, aby wymusić nowe żądanie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O pedido de porta falhou. O Warren tenta novamente de forma automática; volte a ligar-se para forçar um novo pedido."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicitarea portului a eșuat. Warren reîncearcă automat; reconectează-te pentru a forța o nouă solicitare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось запросить порт. Warren автоматически повторяет попытки; переподключитесь, чтобы принудительно отправить новый запрос."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Portbegäran misslyckades. Warren försöker igen automatiskt; återanslut för att tvinga fram en ny begäran."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การขอพอร์ตล้มเหลว Warren จะลองใหม่โดยอัตโนมัติ เชื่อมต่อใหม่เพื่อบังคับให้ส่งคำขอใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı noktası isteği başarısız oldu. Warren otomatik olarak yeniden dener; yeni bir isteği zorlamak için yeniden bağlanın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося запитати порт. Warren повторює спробу автоматично; перепідключіться, щоб примусово надіслати новий запит."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "端口请求失败。Warren 会自动重试；重新连接可强制发起新的请求。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠要求失敗。Warren 會自動重試；重新連線可強制發出新的要求。"
+          }
+        }
+      }
+    },
+    "Reconnected through %@. Your traffic stayed protected.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمت إعادة الاتصال عبر %@. بقيت حركة بياناتك محمية."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genoprettet forbindelse via %@. Din trafik forblev beskyttet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut verbunden über %@. Ihr Traffic blieb geschützt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnected through %@. Your traffic stayed protected."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconectado a través de %@. Su tráfico permaneció protegido."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال دوباره از طریق %@ برقرار شد. ترافیک شما همچنان محافظت‌شده ماند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yhdistetty uudelleen kohteen %@ kautta. Liikenteesi pysyi suojattuna."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconnecté via %@. Votre trafic est resté protégé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riconnesso tramite %@. Il tuo traffico è rimasto protetto."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 経由で再接続しました。トラフィックは保護されたままでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@을(를) 통해 다시 연결되었습니다. 트래픽은 계속 보호되었습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ မှတစ်ဆင့် ပြန်လည်ချိတ်ဆက်ပြီးပါပြီ။ သင့်ထရက်ဖစ်ကို ဆက်လက်ကာကွယ်ထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koblet til igjen via %@. Trafikken din forble beskyttet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opnieuw verbonden via %@. Je verkeer bleef beschermd."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połączono ponownie przez %@. Twój ruch pozostał chroniony."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Religado através de %@. O seu tráfego permaneceu protegido."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconectat prin %@. Traficul tău a rămas protejat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторное подключение через %@. Ваш трафик остался защищенным."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återansluten via %@. Din trafik förblev skyddad."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เชื่อมต่อใหม่ผ่าน %@ แล้ว ทราฟฟิกของคุณยังคงได้รับการปกป้อง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ üzerinden yeniden bağlanıldı. Trafiğiniz korunmaya devam etti."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повторно підключено через %@. Ваш трафік залишився захищеним."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已通过 %@ 重新连接。您的流量始终受到保护。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已透過 %@ 重新連線。您的流量始終受到保護。"
+          }
+        }
+      }
+    },
+    "Reject (disconnect)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رفض (قطع الاتصال)"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afvis (afbryd forbindelse)"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ablehnen (trennen)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reject (disconnect)"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rechazar (desconectar)"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رد کردن (قطع اتصال)"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hylkää (katkaise yhteys)"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refuser (déconnexion)"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rifiuta (disconnetti)"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒否（切断）"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "거부(연결 끊기)"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ငြင်းပယ်ပါ (ချိတ်ဆက်မှုဖြတ်ပါ)"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvis (koble fra)"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weigeren (verbinding verbreken)"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odrzuć (rozłącz)"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rejeitar (desligar)"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Respinge (deconectează)"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отклонить (отключиться)"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avvisa (koppla bort)"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปฏิเสธ (ตัดการเชื่อมต่อ)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reddet (bağlantıyı kes)"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відхилити (від'єднати)"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒绝（断开连接）"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "拒絕（中斷連線）"
+          }
+        }
+      }
+    },
+    "Renews in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتجدد خلال"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fornyes om"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlängerung in"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renews in"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se renueva en"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمدید در"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uusiutuu"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renouvellement dans"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si rinnova tra"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新まで"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "갱신까지"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သက်တမ်းတိုးရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fornyes om"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlengt over"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Odnowienie za"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renova em"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se reînnoiește în"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продление через"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Förnyas om"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ต่ออายุใน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenilenmeye kalan"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Поновлення через"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "续订倒计时"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "續訂倒數"
+          }
+        }
+      }
+    },
+    "Report to Warren": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إبلاغ Warren"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapportér til Warren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An Warren melden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Report to Warren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Informar a Warren"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "گزارش به Warren"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilmoita Warrenille"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signaler à Warren"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Segnala a Warren"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warrenに報告"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren에 신고"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren သို့ တိုင်ကြားပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapporter til Warren"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapporteren aan Warren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zgłoś do Warren"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comunicar à Warren"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportează către Warren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сообщить в Warren"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapportera till Warren"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายงานไปยัง Warren"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren'a bildir"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Повідомити Warren"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "向 Warren 报告"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "回報給 Warren"
+          }
+        }
+      }
+    },
+    "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يطلب منفذًا خارجيًا من مرحِّل خروج Warren عبر NAT-PMP لكي تتمكن تطبيقات الند للند (BitTorrent ومكالمات الفيديو والخدمات المستضافة ذاتيًا) من استقبال الاتصالات الواردة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmoder om en ekstern port fra Warren-udgangsrelæet via NAT-PMP, så peer-to-peer-apps (BitTorrent, videoopkald, selvhostede tjenester) kan modtage indgående forbindelser."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fordert über NAT-PMP einen externen Port vom Warren-Ausgangsrelais an, damit Peer-to-Peer-Apps (BitTorrent, Videoanrufe, selbst gehostete Dienste) eingehende Verbindungen empfangen können."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita un puerto externo al relé de salida de Warren mediante NAT-PMP para que las aplicaciones entre pares (BitTorrent, videollamadas, servicios autoalojados) puedan recibir conexiones entrantes."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "از طریق NAT-PMP یک درگاه بیرونی از رلهٔ خروجی Warren درخواست می‌کند تا برنامه‌های همتابه‌همتا (BitTorrent، تماس تصویری، سرویس‌های خودمیزبان) بتوانند اتصال‌های ورودی دریافت کنند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pyytää ulkoista porttia Warrenin ulostulorelelta NAT-PMP:n kautta, jotta vertaisverkkosovellukset (BitTorrent, videopuhelut, itse isännöidyt palvelut) voivat vastaanottaa saapuvia yhteyksiä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Demande au relais de sortie Warren un port externe via NAT-PMP, pour que les applications pair-à-pair (BitTorrent, appels vidéo, services auto-hébergés) puissent recevoir des connexions entrantes."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiede una porta esterna al relè di uscita Warren tramite NAT-PMP, così le app peer-to-peer (BitTorrent, videochiamate, servizi self-hosted) possono ricevere connessioni in entrata."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-PMP経由でWarrenの出口リレーに外部ポートを要求し、ピアツーピアアプリ（BitTorrent、ビデオ通話、セルフホスト型サービス）が着信接続を受け取れるようにします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "NAT-PMP를 통해 Warren 출구 릴레이에 외부 포트를 요청하여 P2P 앱(BitTorrent, 영상 통화, 자체 호스팅 서비스)이 수신 연결을 받을 수 있도록 합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "peer-to-peer အက်ပ်များ (BitTorrent၊ ဗီဒီယိုခေါ်ဆိုမှုများ၊ ကိုယ်တိုင်လက်ခံသည့်ဝန်ဆောင်မှုများ) သည် အဝင်ချိတ်ဆက်မှုများ လက်ခံနိုင်ရန် NAT-PMP မှတစ်ဆင့် Warren ထွက်ပေါက်ရီလေးထံ ပြင်ပ port တစ်ခုကို တောင်းဆိုသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ber om en ekstern port fra Warren-utgangsreléet via NAT-PMP, slik at node-til-node-apper (BitTorrent, videosamtaler, selvhostede tjenester) kan motta innkommende tilkoblinger."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vraagt via NAT-PMP een externe poort aan bij het Warren-uitgangsrelais, zodat peer-to-peer-apps (BitTorrent, videogesprekken, zelfgehoste services) inkomende verbindingen kunnen ontvangen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Żąda zewnętrznego portu od przekaźnika wyjściowego Warren przez NAT-PMP, aby aplikacje peer-to-peer (BitTorrent, połączenia wideo, usługi własne) mogły odbierać połączenia przychodzące."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicita uma porta externa ao relé de saída do Warren através de NAT-PMP, para que as aplicações ponto a ponto (BitTorrent, videochamadas, serviços autoalojados) possam receber ligações de entrada."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solicită un port extern de la releul de ieșire Warren prin NAT-PMP, astfel încât aplicațiile peer-to-peer (BitTorrent, apeluri video, servicii găzduite local) să poată primi conexiuni de intrare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрашивает внешний порт у выходного ретранслятора Warren через NAT-PMP, чтобы одноранговые приложения (BitTorrent, видеозвонки, самостоятельно размещенные сервисы) могли принимать входящие подключения."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begär en extern port från Warrens utgångsrelä via NAT-PMP så att peer-to-peer-appar (BitTorrent, videosamtal, egenvärdtjänster) kan ta emot inkommande anslutningar."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ขอพอร์ตภายนอกจากรีเลย์ทางออกของ Warren ผ่าน NAT-PMP เพื่อให้แอปแบบเพียร์ทูเพียร์ (BitTorrent วิดีโอคอล บริการที่โฮสต์เอง) สามารถรับการเชื่อมต่อขาเข้าได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşler arası uygulamaların (BitTorrent, görüntülü aramalar, kendi barındırılan hizmetler) gelen bağlantıları alabilmesi için NAT-PMP aracılığıyla Warren çıkış aktarıcısından harici bir bağlantı noktası ister."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запитує зовнішній порт у вихідного ретранслятора Warren через NAT-PMP, щоб однорангові застосунки (BitTorrent, відеодзвінки, самостійно розміщені сервіси) могли приймати вхідні підключення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通过 NAT-PMP 向 Warren 出口中继请求一个外部端口，以便点对点应用（BitTorrent、视频通话、自托管服务）可以接收传入连接。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "透過 NAT-PMP 向 Warren 出口中繼要求一個外部連接埠，以便點對點應用程式（BitTorrent、視訊通話、自架服務）可以接收傳入連線。"
+          }
+        }
+      }
+    },
+    "Reset all": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة تعيين الكل"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstil alt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset all"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer todo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی همه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollaa kaikki"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tout réinitialiser"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimposta tutto"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてリセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모두 재설정"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အားလုံးကို ပြန်လည်သတ်မှတ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestill alt"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles resetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetuj wszystko"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repor tudo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetează tot"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить всё"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställ alla"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตทั้งหมด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü sıfırla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути все"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部重置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "全部重設"
+          }
+        }
+      }
+    },
+    "Reset failed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فشلت إعادة التعيين"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstilling mislykkedes"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen fehlgeschlagen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset failed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error al restablecer"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی ناموفق بود"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollaus epäonnistui"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la réinitialisation"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimpostazione non riuscita"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "リセットに失敗しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "재설정 실패"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပြန်လည်သတ်မှတ်ခြင်း မအောင်မြင်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestilling mislyktes"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetten mislukt"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetowanie nie powiodło się"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A reposição falhou"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetarea a eșuat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось выполнить сброс"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställningen misslyckades"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตไม่สำเร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıfırlama başarısız oldu"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося скинути"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置失败"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重設失敗"
+          }
+        }
+      }
+    },
+    "Reset pinned exit keys": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة تعيين مفاتيح الخروج المثبَّتة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstil fastgjorte udgangsnøgler"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angeheftete Ausgangsschlüssel zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset pinned exit keys"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer claves de salida fijadas"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بازنشانی کلیدهای خروجی سنجاق‌شده"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollaa kiinnitetyt ulosmenoavaimet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réinitialiser les clés de sortie épinglées"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimposta le chiavi di uscita fissate"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定されたエグジットキーをリセット"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키 재설정"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီးများကို ပြန်လည်သတ်မှတ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestill festede utgangsnøkler"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vastgezette exit-sleutels resetten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetuj przypięte klucze wyjściowe"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repor chaves de saída fixadas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetează cheile de ieșire fixate"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить закреплённые ключи выхода"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställ fästa utgångsnycklar"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตคีย์ทางออกที่ปักหมุดไว้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş çıkış anahtarlarını sıfırla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути закріплені ключі вихідних серверів"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置已固定的出口密钥"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重設已固定的出口金鑰"
+          }
+        }
+      }
+    },
+    "Reset pinned exit keys?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة تعيين مفاتيح الخروج المثبَّتة؟"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nulstil fastgjorte udgangsnøgler?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angeheftete Ausgangsschlüssel zurücksetzen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset pinned exit keys?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Restablecer las claves de salida fijadas?"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلیدهای خروجی سنجاق‌شده بازنشانی شوند؟"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nollataanko kiinnitetyt ulosmenoavaimet?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réinitialiser les clés de sortie épinglées ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reimpostare le chiavi di uscita fissate?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定されたエグジットキーをリセットしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키를 재설정하시겠습니까?"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီးများကို ပြန်လည်သတ်မှတ်မလား။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilbakestille festede utgangsnøkler?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vastgezette exit-sleutels resetten?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zresetować przypięte klucze wyjściowe?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Repor as chaves de saída fixadas?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resetezi cheile de ieșire fixate?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сбросить закреплённые ключи выхода?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Återställa fästa utgångsnycklar?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเซ็ตคีย์ทางออกที่ปักหมุดไว้หรือไม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş çıkış anahtarları sıfırlansın mı?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Скинути закріплені ключі вихідних серверів?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重置已固定的出口密钥？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要重設已固定的出口金鑰嗎？"
+          }
+        }
+      }
+    },
+    "Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يمرر حركة البيانات عبر مرحِّل دخول قبل مرحِّل الخروج. يضيف زمن استجابة (نحو 30-50 مللي ثانية) واستهلاكًا إضافيًا للنطاق الترددي. معطّل افتراضيًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send trafik gennem et indgangsrelæ før udgangsrelæet. Tilføjer forsinkelse (~30-50 ms) og båndbredde-overhead. Slået fra som standard."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leitet den Traffic vor dem Ausgangsrelais durch ein Eingangsrelais. Fügt Latenz (~30-50 ms) und Bandbreiten-Overhead hinzu. Standardmäßig AUS."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Route traffic through an entry relay before the exit relay. Adds latency (~30-50 ms) and bandwidth overhead. OFF by default."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enruta el tráfico a través de un relé de entrada antes del relé de salida. Añade latencia (~30-50 ms) y sobrecarga de ancho de banda. Desactivado de forma predeterminada."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترافیک را پیش از رلهٔ خروجی از یک رلهٔ ورودی عبور می‌دهد. تأخیر (حدود ۳۰ تا ۵۰ میلی‌ثانیه) و سربار پهنای باند اضافه می‌کند. به‌طور پیش‌فرض خاموش است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohjaa liikenteen sisääntulorelen kautta ennen ulostulorelettä. Lisää viivettä (~30-50 ms) ja kaistanleveyden lisäkuormaa. Oletuksena pois päältä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achemine le trafic via un relais d'entrée avant le relais de sortie. Ajoute de la latence (~30-50 ms) et de la surcharge de bande passante. Désactivé par défaut."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instrada il traffico attraverso un relè di ingresso prima del relè di uscita. Aggiunge latenza (~30-50 ms) e overhead di banda. Disattivato per impostazione predefinita."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口リレーの前に入口リレーを通してトラフィックをルーティングします。遅延（約30-50 ms）と帯域幅オーバーヘッドが増えます。既定ではオフです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출구 릴레이 앞의 입구 릴레이를 통해 트래픽을 라우팅합니다. 지연(약 30-50 ms)과 대역폭 오버헤드가 추가됩니다. 기본값은 꺼짐입니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထွက်ပေါက်ရီလေးမတိုင်မီ ဝင်ပေါက်ရီလေးတစ်ခုမှတစ်ဆင့် ထရက်ဖစ်ကို လမ်းကြောင်းသတ်မှတ်သည်။ နှောင့်နှေးချိန် (~30-50 ms) နှင့် ဘန်းဝစ်ဒ်ပိုသုံးမှု ထပ်တိုးသည်။ ပုံသေအားဖြင့် ပိတ်ထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ruter trafikk gjennom et inngangsrelé før utgangsreléet. Legger til forsinkelse (~30-50 ms) og båndbredde-overhead. Av som standard."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Routeert verkeer via een ingangsrelais vóór het uitgangsrelais. Voegt latentie (~30-50 ms) en bandbreedte-overhead toe. Standaard UIT."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kieruje ruch przez przekaźnik wejściowy przed przekaźnikiem wyjściowym. Dodaje opóźnienie (~30-50 ms) i narzut przepustowości. Domyślnie wyłączone."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encaminha o tráfego através de um relé de entrada antes do relé de saída. Adiciona latência (~30-50 ms) e sobrecarga de largura de banda. Desativado por predefinição."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Direcționează traficul printr-un releu de intrare înainte de releul de ieșire. Adaugă latență (aproximativ 30-50 ms) și consum suplimentar de bandă. Dezactivat implicit."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Направляет трафик через входной ретранслятор перед выходным. Добавляет задержку (~30-50 мс) и нагрузку на канал. По умолчанию выключено."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dirigerar trafik genom ett ingångsrelä före utgångsreläet. Lägger till fördröjning (~30-50 ms) och bandbreddsbelastning. Av som standard."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำหนดเส้นทางทราฟฟิกผ่านรีเลย์ทางเข้าก่อนรีเลย์ทางออก เพิ่มความหน่วง (~30-50 มิลลิวินาที) และโอเวอร์เฮดแบนด์วิดท์ ปิดอยู่ตามค่าเริ่มต้น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trafiği çıkış aktarıcısından önce bir giriş aktarıcısından geçirir. Gecikme (~30-50 ms) ve bant genişliği ek yükü ekler. Varsayılan olarak KAPALI."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Спрямовує трафік через вхідний ретранслятор перед вихідним. Додає затримку (~30-50 мс) і навантаження на канал. За замовчуванням вимкнено."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在出口中继之前通过入口中继路由流量。会增加延迟（约 30-50 毫秒）和带宽开销。默认关闭。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在出口中繼之前透過入口中繼路由流量。會增加延遲（約 30-50 毫秒）和頻寬開銷。預設關閉。"
+          }
+        }
+      }
+    },
+    "Server identity changed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّرت هوية الخادم"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentitet ændret"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentität geändert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server identity changed"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La identidad del servidor ha cambiado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هویت سرور تغییر کرد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palvelimen identiteetti muuttui"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identité du serveur modifiée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'identità del server è cambiata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーの識別情報が変更されました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버 신원이 변경됨"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆာဗာ၏ အထောက်အထား ပြောင်းလဲသွားပါသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentitet endret"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentiteit gewijzigd"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tożsamość serwera uległa zmianie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A identidade do servidor mudou"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identitatea serverului s-a schimbat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Идентификатор сервера изменился"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveridentiteten har ändrats"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อัตลักษณ์ของเซิร์ฟเวอร์เปลี่ยนแปลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu kimliği değişti"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ідентичність сервера змінилася"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器身份已更改"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器身分已變更"
+          }
+        }
+      }
+    },
+    "Switched exit relay": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تبديل مرحِّل الخروج"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skiftede udgangsrelæ"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgangsrelais gewechselt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Switched exit relay"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relé de salida cambiado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رلهٔ خروجی تغییر کرد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulostulorele vaihdettu"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Changement de relais de sortie"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relè di uscita cambiato"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口リレーを切り替えました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출구 릴레이 전환됨"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထွက်ပေါက်ရီလေး ပြောင်းလိုက်ပါပြီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byttet utgangsrelé"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitgangsrelais gewisseld"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmieniono przekaźnik wyjściowy"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Relé de saída alterado"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releu de ieșire schimbat"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выходной ретранслятор изменен"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bytte utgångsrelä"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปลี่ยนรีเลย์ทางออกแล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkış aktarıcısı değiştirildi"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний ретранслятор змінено"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已切换出口中继"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已切換出口中繼"
+          }
+        }
+      }
+    },
+    "The Warren exit server you previously trusted now presents a different cryptographic identity.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خادم خروج Warren الذي كنت تثق به سابقًا يقدّم الآن هوية تشفيرية مختلفة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den Warren-udgangsserver, du tidligere stolede på, præsenterer nu en anden kryptografisk identitet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Warren-Ausgangsserver, dem du zuvor vertraut hast, weist nun eine andere kryptografische Identität auf."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The Warren exit server you previously trusted now presents a different cryptographic identity."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor de salida de Warren en el que confiabas anteriormente ahora presenta una identidad criptográfica diferente."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سرور خروجی Warren که پیش‌تر به آن اعتماد کرده بودید، اکنون هویت رمزنگاری متفاوتی ارائه می‌دهد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aiemmin luottamasi Warren-ulosmenopalvelin esittää nyt eri kryptografisen identiteetin."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur de sortie Warren auquel vous faisiez confiance présente désormais une identité cryptographique différente."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server di uscita Warren di cui ti fidavi in precedenza presenta ora un'identità crittografica diversa."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前に信頼したWarrenエグジットサーバーが、現在は異なる暗号学的識別情報を提示しています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전에 신뢰했던 Warren 출구 서버가 이제 다른 암호화 신원을 제시합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင်ယခင်က ယုံကြည်ခဲ့သော Warren ထွက်ပေါက်ဆာဗာသည် ယခု မတူညီသော cryptographic အထောက်အထားကို ပြသနေပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren-utgangsserveren du tidligere stolte på, presenterer nå en annen kryptografisk identitet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De Warren-exitserver die je eerder vertrouwde, presenteert nu een andere cryptografische identiteit."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer wyjściowy Warren, któremu wcześniej ufałeś, prezentuje teraz inną tożsamość kryptograficzną."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor de saída Warren em que confiou anteriormente apresenta agora uma identidade criptográfica diferente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverul de ieșire Warren în care aveai încredere anterior prezintă acum o identitate criptografică diferită."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер выхода Warren, которому вы ранее доверяли, теперь предъявляет другой криптографический идентификатор."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren-utgångsservern som du tidigare litade på presenterar nu en annan kryptografisk identitet."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์ทางออก Warren ที่คุณเคยเชื่อถือ ตอนนี้แสดงอัตลักษณ์ทางการเข้ารหัสที่แตกต่างออกไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha önce güvendiğiniz Warren çıkış sunucusu artık farklı bir kriptografik kimlik sunuyor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер виходу Warren, якому ви раніше довіряли, тепер представляє іншу криптографічну ідентичність."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你之前信任的 Warren 出口服务器现在呈现了不同的加密身份。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "你先前信任的 Warren 出口伺服器現在出示了不同的加密身分。"
+          }
+        }
+      }
+    },
+    "The exit relay determines your apparent location to websites.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يحدد مرحِّل الخروج موقعك الظاهر للمواقع الإلكترونية."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udgangsrelæet bestemmer din tilsyneladende placering over for websteder."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Ausgangsrelais bestimmt Ihren scheinbaren Standort gegenüber Websites."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The exit relay determines your apparent location to websites."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El relé de salida determina su ubicación aparente ante los sitios web."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رلهٔ خروجی مکان ظاهری شما را برای وب‌سایت‌ها تعیین می‌کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ulostulorele määrittää näennäisen sijaintisi verkkosivustoille."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le relais de sortie détermine votre emplacement apparent vis-à-vis des sites web."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il relè di uscita determina la tua posizione apparente per i siti web."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口リレーが、ウェブサイトに対するあなたの見かけ上の所在地を決定します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출구 릴레이가 웹사이트에 표시되는 사용자의 외관상 위치를 결정합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထွက်ပေါက်ရီလေးသည် ဝက်ဘ်ဆိုက်များအတွက် သင့်ဖော်ပြတည်နေရာကို သတ်မှတ်ပေးသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utgangsreléet bestemmer din tilsynelatende plassering overfor nettsteder."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het uitgangsrelais bepaalt je schijnbare locatie voor websites."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekaźnik wyjściowy określa Twoją pozorną lokalizację widzianą przez witryny."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O relé de saída determina a sua localização aparente perante os sites."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Releul de ieșire determină locația ta aparentă pentru site-urile web."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выходной ретранслятор определяет ваше видимое местоположение для веб-сайтов."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utgångsreläet bestämmer din synliga plats gentemot webbplatser."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รีเลย์ทางออกกำหนดตำแหน่งที่ปรากฏของคุณต่อเว็บไซต์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkış aktarıcısı, web sitelerine görünen konumunuzu belirler."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихідний ретранслятор визначає ваше видиме місцезнаходження для вебсайтів."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口中继决定您在网站面前显示的位置。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口中繼決定您在網站面前顯示的位置。"
+          }
+        }
+      }
+    },
+    "The pinned exit keys could not be cleared.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر مسح مفاتيح الخروج المثبّتة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De fastgjorte udgangsnøgler kunne ikke ryddes."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die angehefteten Ausgangsschlüssel konnten nicht gelöscht werden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The pinned exit keys could not be cleared."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron borrar las claves de salida fijadas."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پاک‌کردن کلیدهای خروجی سنجاق‌شده ممکن نشد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kiinnitettyjä ulosmenoavaimia ei voitu tyhjentää."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Les clés de sortie épinglées n'ont pas pu être effacées."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato possibile cancellare le chiavi di uscita fissate."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "固定されたエグジットキーをクリアできませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "고정된 출구 키를 지울 수 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပင်ထားသော ထွက်ပေါက်ကီးများကို ရှင်းလင်း၍ မရပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De festede utgangsnøklene kunne ikke tømmes."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De vastgezette exit-sleutels konden niet worden gewist."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wyczyścić przypiętych kluczy wyjściowych."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível limpar as chaves de saída fixadas."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheile de ieșire fixate nu au putut fi golite."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось очистить закреплённые ключи выхода."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De fästa utgångsnycklarna kunde inte rensas."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถล้างคีย์ทางออกที่ปักหมุดไว้ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenmiş çıkış anahtarları temizlenemedi."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося очистити закріплені ключі вихідних серверів."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法清除已固定的出口密钥。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法清除已固定的出口金鑰。"
+          }
+        }
+      }
+    },
+    "Trust new key": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوثوق بالمفتاح الجديد"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stol på ny nøgle"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neuem Schlüssel vertrauen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trust new key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar en la nueva clave"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعتماد به کلید جدید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luota uuteen avaimeen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faire confiance à la nouvelle clé"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fidati della nuova chiave"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しいキーを信頼する"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 키 신뢰"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကီးအသစ်ကို ယုံကြည်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stol på ny nøkkel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuwe sleutel vertrouwen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaufaj nowemu kluczowi"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Confiar na nova chave"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acordă încredere noii chei"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доверять новому ключу"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lita på den nya nyckeln"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เชื่อถือคีย์ใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni anahtara güven"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Довіряти новому ключу"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任新密钥"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "信任新金鑰"
+          }
+        }
+      }
+    },
+    "Tunnel statistics": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إحصائيات النفق"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelstatistik"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelstatistiken"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel statistics"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estadísticas del túnel"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آمار تونل"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelin tilastot"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiques du tunnel"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistiche del tunnel"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "トンネル統計"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "터널 통계"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnel စာရင်းအင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelstatistikk"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelstatistieken"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statystyki tunelu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estatísticas do túnel"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistici tunel"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статистика туннеля"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tunnelstatistik"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถิติอุโมงค์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tünel istatistikleri"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статистика тунелю"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道统计"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隧道統計"
+          }
+        }
+      }
+    },
+    "VPN reconnected through %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أعاد VPN الاتصال عبر %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN genoprettede forbindelse via %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN erneut verbunden über %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN reconnected through %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN reconectada a través de %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال VPN از طریق %@ دوباره برقرار شد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN yhdistetty uudelleen kohteen %@ kautta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN reconnecté via %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN riconnessa tramite %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 経由でVPNを再接続しました"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@을(를) 통해 VPN이 다시 연결됨"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ မှတစ်ဆင့် VPN ပြန်လည်ချိတ်ဆက်ပြီးပါပြီ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN koblet til igjen via %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN opnieuw verbonden via %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Połączono ponownie VPN przez %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN religada através de %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN reconectat prin %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN повторно подключен через %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN återanslöt via %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN เชื่อมต่อใหม่ผ่าน %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN %@ üzerinden yeniden bağlandı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN повторно підключено через %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN 已通过 %@ 重新连接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN 已透過 %@ 重新連線"
+          }
+        }
+      }
+    },
+    "Your VPN traffic is indistinguishable from regular HTTPS browsing.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن تمييز حركة بيانات VPN لديك عن تصفح HTTPS العادي."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din VPN-trafik er umulig at skelne fra almindelig HTTPS-browsing."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihr VPN-Traffic ist von normalem HTTPS-Browsing ununterscheidbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your VPN traffic is indistinguishable from regular HTTPS browsing."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su tráfico VPN es indistinguible de la navegación HTTPS normal."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ترافیک VPN شما از وب‌گردی معمولی HTTPS قابل تشخیص نیست."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN-liikenteesi on erottamatonta tavallisesta HTTPS-selailusta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre trafic VPN est indissociable d'un trafic HTTPS classique."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo traffico VPN è indistinguibile dalla normale navigazione HTTPS."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "あなたのVPNトラフィックは通常のHTTPS閲覧と見分けがつきません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN 트래픽을 일반 HTTPS 브라우징과 구별할 수 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့် VPN ထရက်ဖစ်ကို ပုံမှန် HTTPS ဖွင့်ကြည့်ခြင်းနှင့် ခွဲခြားမရပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN-trafikken din er umulig å skille fra vanlig HTTPS-surfing."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je VPN-verkeer is niet te onderscheiden van gewoon HTTPS-browsen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój ruch VPN jest nieodróżnialny od zwykłego przeglądania HTTPS."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu tráfego VPN é indistinguível da navegação HTTPS normal."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traficul tău VPN este imposibil de distins de navigarea HTTPS obișnuită."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш VPN-трафик неотличим от обычного HTTPS-просмотра."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din VPN-trafik är omöjlig att skilja från vanlig HTTPS-surfning."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทราฟฟิก VPN ของคุณแยกไม่ออกจากการท่องเว็บ HTTPS ทั่วไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN trafiğiniz normal HTTPS taramasından ayırt edilemez."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш VPN-трафік невідрізнюваний від звичайного перегляду через HTTPS."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 VPN 流量与普通 HTTPS 浏览无法区分。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 VPN 流量與普通 HTTPS 瀏覽無法區分。"
+          }
+        }
+      }
+    },
+    "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعني هذا عادةً أن المشغّل بدّل المفتاح، لكنه قد يشير أيضًا إلى استبدال الخادم أو اختراقه. ارفض إذا لم تكن تتوقع تغييرًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette betyder normalt, at operatøren har udskiftet nøglen, men det kan også indikere, at serveren er blevet udskiftet eller kompromitteret. Afvis, hvis du ikke forventede en ændring."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das bedeutet in der Regel, dass der Betreiber den Schlüssel gewechselt hat, kann aber auch darauf hindeuten, dass der Server ausgetauscht oder kompromittiert wurde. Lehne ab, wenn du keine Änderung erwartet hast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente esto significa que el operador rotó la clave, pero también puede indicar que el servidor ha sido reemplazado o comprometido. Recházalo si no esperabas un cambio."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این معمولاً یعنی گرداننده کلید را چرخانده است، اما می‌تواند نشانهٔ جایگزینی یا به خطر افتادن سرور هم باشد. اگر انتظار تغییر نداشتید، رد کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämä tarkoittaa yleensä, että operaattori on vaihtanut avaimen, mutta se voi myös viitata siihen, että palvelin on korvattu tai vaarannettu. Hylkää, jos et odottanut muutosta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela signifie généralement que l'opérateur a renouvelé la clé, mais cela peut aussi indiquer que le serveur a été remplacé ou compromis. Refusez si vous n'attendiez pas de changement."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di solito ciò significa che l'operatore ha ruotato la chiave, ma può anche indicare che il server è stato sostituito o compromesso. Rifiuta se non ti aspettavi un cambiamento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これは通常、運営者がキーをローテーションしたことを意味しますが、サーバーが差し替えられた、または侵害された可能性を示している場合もあります。変更を予期していなかった場合は拒否してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이는 보통 운영자가 키를 교체했음을 의미하지만, 서버가 교체되었거나 침해되었음을 나타낼 수도 있습니다. 변경을 예상하지 못했다면 거부하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအရာသည် များသောအားဖြင့် အော်ပရေတာက ကီးကို လှည့်လဲထားကြောင်း ဆိုလိုသော်လည်း၊ ဆာဗာကို အစားထိုးထားခြင်း သို့မဟုတ် ချိုးဖောက်ခံထားရခြင်းကိုလည်း ညွှန်ပြနိုင်ပါသည်။ ပြောင်းလဲမှုကို သင်မမျှော်လင့်ထားပါက ငြင်းပယ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette betyr vanligvis at operatøren har rotert nøkkelen, men det kan også tyde på at serveren er blitt erstattet eller kompromittert. Avvis hvis du ikke ventet en endring."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit betekent meestal dat de operator de sleutel heeft geroteerd, maar het kan ook aangeven dat de server is vervangen of gecompromitteerd. Weiger als je geen wijziging verwachtte."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwykle oznacza to, że operator zmienił klucz, ale może to również wskazywać, że serwer został podmieniony lub przejęty. Odmów, jeśli nie spodziewałeś się zmiany."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente, isto significa que o operador rodou a chave, mas também pode indicar que o servidor foi substituído ou comprometido. Recuse se não estava à espera de uma alteração."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De obicei, acest lucru înseamnă că operatorul a rotit cheia, dar poate indica și faptul că serverul a fost înlocuit sau compromis. Refuză dacă nu te așteptai la o schimbare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычно это означает, что оператор сменил ключ, но также может указывать на то, что сервер был заменён или скомпрометирован. Откажитесь, если вы не ожидали изменения."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detta betyder vanligtvis att operatören roterade nyckeln, men det kan också tyda på att servern har bytts ut eller komprometterats. Avvisa om du inte förväntade dig en ändring."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โดยทั่วไปหมายความว่าผู้ดูแลได้หมุนเวียนคีย์ แต่ก็อาจบ่งชี้ว่าเซิร์ฟเวอร์ถูกเปลี่ยนใหม่หรือถูกบุกรุกได้เช่นกัน ปฏิเสธหากคุณไม่ได้คาดหมายว่าจะมีการเปลี่ยนแปลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu genellikle operatörün anahtarı değiştirdiği anlamına gelir, ancak sunucunun değiştirilmiş ya da ele geçirilmiş olabileceğini de gösterebilir. Bir değişiklik beklemiyorduysanız reddedin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зазвичай це означає, що оператор змінив ключ, але це також може свідчити про заміну або компрометацію сервера. Відхиліть, якщо ви не очікували зміни."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这通常意味着运营方轮换了密钥，但也可能表明该服务器已被替换或已遭入侵。如果你并未预期会发生更改，请予以拒绝。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這通常表示營運者輪換了金鑰，但也可能代表伺服器已被替換或已遭入侵。如果你並未預期會有變更，請拒絕。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

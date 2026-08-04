@@ -1,9 +1,0 @@
-package net.mullvad.mullvadvpn.feature.location.impl.list
-
-import net.mullvad.mullvadvpn.lib.model.RelayListType
-import net.mullvad.mullvadvpn.lib.ui.component.relaylist.RelayListItem
-
-data class SelectLocationListUiState(
-    val relayListType: RelayListType,
-    val relayListItems: List<RelayListItem>,
-)

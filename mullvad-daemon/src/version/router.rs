@@ -3,14 +3,13 @@ use std::path::PathBuf;
 
 use futures::channel::{mpsc, oneshot};
 use futures::stream::StreamExt;
-use mullvad_api::{availability::ApiAvailability, rest::MullvadRestHandle};
 use mullvad_types::version::AppVersionInfo;
 #[cfg(not(target_os = "android"))]
 use mullvad_types::version::SuggestedUpgrade;
 #[cfg(in_app_upgrade)]
 use mullvad_update::app::{AppDownloader, AppDownloaderParameters, HttpAppDownloader};
 #[cfg(not(target_os = "android"))]
-use mullvad_update::version::{VersionInfo, rollout::Rollout};
+use mullvad_update::version::VersionInfo;
 use talpid_core::mpsc::Sender;
 #[cfg(in_app_upgrade)]
 use talpid_types::ErrorExt;
@@ -20,10 +19,7 @@ use crate::management_interface::AppUpgradeBroadcast;
 
 #[cfg(in_app_upgrade)]
 use super::downloader::ProgressUpdater;
-use super::{
-    Error,
-    check::{VersionCache, VersionUpdater},
-};
+use super::{Error, check::VersionCache};
 
 #[cfg(in_app_upgrade)]
 use super::downloader;
@@ -99,7 +95,9 @@ impl Downloader for DefaultDownloader {}
 
 /// Router of version updates and update requests.
 ///
-/// New available app version events are forwarded from the [`VersionUpdater`].
+/// New available app version events would be forwarded from a version updater
+/// task; on the Warren fork that updater is never spawned, so the router acts
+/// as a no-op responder for `GetLatestVersion`.
 /// If an update is in progress, these events are paused until the update is completed or canceled.
 /// This is done to prevent frontends from confusing which version is currently being installed,
 /// in case new version info is received while the update is in progress.
@@ -206,14 +204,20 @@ impl State {
     }
 }
 
+/// Spawn the version router task.
+///
+/// The router fetches signed version metadata from the Warren update channel
+/// (never `api.mullvad.net`): the installer URLs and signing keys are
+/// Warren's, configured in `mullvad-update`. The background poller that does
+/// the fetching is [`spawn_version_updater`](super::check::spawn_version_updater);
+/// the router multiplexes its results to `GetLatestVersion` requesters and the
+/// daemon.
 #[cfg_attr(not(in_app_upgrade), expect(unused_variables))]
 pub(crate) fn spawn_version_router(
-    api_handle: MullvadRestHandle,
-    availability_handle: ApiAvailability,
     cache_dir: PathBuf,
     version_event_sender: DaemonEventSender<AppVersionInfo>,
     beta_program: bool,
-    #[cfg(not(target_os = "android"))] rollout: Rollout,
+    rollout_threshold_seed: Option<u32>,
     app_upgrade_broadcast: AppUpgradeBroadcast,
 ) -> VersionRouterHandle {
     let (tx, rx) = mpsc::unbounded();
@@ -222,24 +226,21 @@ pub(crate) fn spawn_version_router(
         let (new_version_tx, new_version_rx) = mpsc::unbounded();
         let (refresh_version_check_tx, refresh_version_check_rx) = mpsc::unbounded();
 
-        #[cfg(in_app_upgrade)]
-        let _ = downloader::clear_download_dir().await.inspect_err(|err| {
-            log::error!(
-                "{}",
-                err.display_chain_with_msg("Failed to clean up download directory")
-            )
-        });
-
-        VersionUpdater::spawn(
-            api_handle,
-            availability_handle,
-            cache_dir.clone(),
+        // The poller verifies the metadata signature and anti-rollback counter
+        // before feeding `VersionCache` updates back here. On Android no update
+        // channel exists, so the channels stay empty and the router only
+        // responds to `GetLatestVersion` with "no version".
+        #[cfg(not(target_os = "android"))]
+        super::check::spawn_version_updater(
+            rollout_threshold_seed,
             new_version_tx,
             refresh_version_check_rx,
-            #[cfg(not(target_os = "android"))]
-            rollout,
-        )
-        .await;
+        );
+        #[cfg(target_os = "android")]
+        {
+            drop(new_version_tx);
+            drop(refresh_version_check_rx);
+        }
 
         VersionRouter {
             daemon_rx: rx,
@@ -645,6 +646,70 @@ fn recommended_version_upgrade(
     }
 }
 
+/// Verifies that the version router stays silent until the updater actually
+/// delivers metadata: with no `VersionCache` ever received (offline, or before
+/// the first successful fetch) the router must not emit a spurious version
+/// event to the daemon.
+#[cfg(all(test, not(in_app_upgrade)))]
+mod no_updater_tests {
+    use futures::channel::mpsc::unbounded;
+    use mullvad_types::version::AppVersionInfo;
+    use std::path::PathBuf;
+
+    use super::{Message, State, VersionRouter};
+
+    /// Regression: no version event should be sent to the daemon while the
+    /// `new_version_rx` channel is empty (the updater has not produced a
+    /// `VersionCache` yet, e.g. the client is offline).
+    ///
+    /// We construct a router whose `new_version_rx` is immediately closed
+    /// (sender dropped), standing in for "updater produced nothing", and verify
+    /// that the router never emits a version event.
+    #[tokio::test]
+    async fn router_does_not_emit_version_events() {
+        let (version_event_sender, mut version_event_receiver) = unbounded::<AppVersionInfo>();
+        let (daemon_tx, daemon_rx) = unbounded::<Message>();
+        let (refresh_version_check_tx, _refresh_version_check_rx) = unbounded::<()>();
+        // No updater feeds new_version: drop the sender immediately.
+        let (_new_version_tx, new_version_rx) = unbounded();
+        drop(_new_version_tx);
+
+        #[cfg(in_app_upgrade)]
+        let (app_upgrade_broadcast, _) = tokio::sync::broadcast::channel(10);
+
+        let router = VersionRouter {
+            daemon_rx,
+            state: State::NoVersion,
+            beta_program: false,
+            version_event_sender,
+            new_version_rx,
+            version_request_channels: vec![],
+            #[cfg(in_app_upgrade)]
+            app_upgrade_broadcast,
+            #[cfg(in_app_upgrade)]
+            cache_dir: PathBuf::new(),
+            refresh_version_check_tx,
+            _phantom: std::marker::PhantomData::<()>,
+        };
+
+        // Drop the daemon side so the daemon channel is closed. With no updater
+        // and no daemon messages, run()'s select! still has an always-enabled
+        // `wait_for_update` branch, so it idles rather than returning - bound it
+        // with a timeout. The router must stay SILENT for the whole window; the
+        // timeout firing (and dropping run(), closing the sender) is expected.
+        // A fixed unbounded `.next().await` here hangs under a loaded CI runner.
+        drop(daemon_tx);
+        let _ = tokio::time::timeout(std::time::Duration::from_millis(500), router.run()).await;
+
+        // No version event must have been emitted. try_next is non-blocking:
+        // Ok(Some(_)) means an event was queued (failure); Ok(None)/Err mean none.
+        assert!(
+            !matches!(version_event_receiver.try_next(), Ok(Some(_))),
+            "expected no version event before any metadata is received"
+        );
+    }
+}
+
 #[cfg(all(test, in_app_upgrade))]
 mod test {
     use std::time::SystemTime;
@@ -751,8 +816,9 @@ mod test {
     impl DownloadedInstaller for FailingAppVerifier {
         fn version(&self) -> &mullvad_version::Version {
             &mullvad_version::Version {
-                year: 2042,
-                incremental: 1337,
+                major: 2042,
+                minor: 1337,
+                patch: None,
                 pre_stable: None,
                 dev: None,
             }
@@ -822,7 +888,7 @@ mod test {
     /// Create a version cache with a stable version that is newer than the current version
     fn get_new_stable_version_cache() -> VersionCache {
         let mut version: mullvad_version::Version = mullvad_version::VERSION.parse().unwrap();
-        version.incremental += 1;
+        version.minor += 1;
         VersionCache {
             cache_version: version.clone(),
             current_version_supported: true,
@@ -853,7 +919,7 @@ mod test {
         };
         let mut beta = stable.clone();
         beta.version.pre_stable = Some(mullvad_version::PreStableType::Beta(1));
-        beta.version.incremental += 1;
+        beta.version.minor += 1;
         VersionCache {
             cache_version: stable.version.clone(),
             current_version_supported: true,
@@ -1102,11 +1168,7 @@ mod test {
         let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
         let upgrade_version = get_new_stable_version_cache();
         let mut upgrade_version_newer = upgrade_version.clone();
-        upgrade_version_newer
-            .version_info
-            .stable
-            .version
-            .incremental += 1;
+        upgrade_version_newer.version_info.stable.version.minor += 1;
 
         version_router.on_new_version(upgrade_version.clone());
 
@@ -1188,7 +1250,7 @@ mod test {
         );
 
         // Unless the version is different
-        version_cache_test.version_info.stable.version.incremental += 1;
+        version_cache_test.version_info.stable.version.minor += 1;
         version_router.on_new_version(version_cache_test.clone());
         assert!(
             matches!(version_router.state, State::HasVersion { .. }),
@@ -1216,7 +1278,7 @@ mod test {
         );
 
         // Unless the version is different
-        version_cache_test.version_info.stable.version.incremental += 1;
+        version_cache_test.version_info.stable.version.minor += 1;
         version_router.on_new_version(version_cache_test.clone());
         assert!(
             matches!(version_router.state, State::HasVersion { .. }),

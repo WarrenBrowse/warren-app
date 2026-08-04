@@ -56,7 +56,7 @@ impl DisconnectingState {
             }
             #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
-                shared_values.lockdown_mode = lockdown_mode;
+                shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
             }
             Some(TunnelCommand::Connectivity(connectivity)) => {

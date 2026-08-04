@@ -26,16 +26,28 @@ mod imp;
 
 pub use self::imp::Error;
 
+/// Repair DNS state left behind by an unclean daemon exit (crash, SIGKILL),
+/// without constructing a monitor. The daemon runs the same self-heals when
+/// it restarts; this entry point exists for the out-of-band rescue
+/// (`warren-setup reset-firewall`), which must restore name resolution too
+/// when the daemon cannot come back up at all.
+pub fn recover_after_crash() -> Result<(), Error> {
+    imp::recover_after_crash()
+}
+
 /// DNS configuration
 #[derive(Debug, Clone, PartialEq)]
 pub struct DnsConfig {
     config: InnerDnsConfig,
+    /// Whether to lift the firewall's DNS leak protection (allow queries to any resolver).
+    allow_external_dns: bool,
 }
 
 impl Default for DnsConfig {
     fn default() -> Self {
         Self {
             config: InnerDnsConfig::Default,
+            allow_external_dns: false,
         }
     }
 }
@@ -48,7 +60,15 @@ impl DnsConfig {
                 tunnel_config: tunnel_config.to_owned(),
                 non_tunnel_config: non_tunnel_config.to_owned(),
             },
+            allow_external_dns: false,
         }
+    }
+
+    /// Lift the firewall's DNS leak protection. When enabled, the firewall stops blocking DNS to
+    /// resolvers other than those in this config; queries still leave through the tunnel.
+    pub fn allow_external_dns(mut self, allow: bool) -> Self {
+        self.allow_external_dns = allow;
+        self
     }
 }
 
@@ -77,6 +97,7 @@ impl DnsConfig {
             InnerDnsConfig::Default => ResolvedDnsConfig {
                 tunnel_config: default_tun_config.to_owned(),
                 non_tunnel_config: vec![],
+                allow_external_dns: self.allow_external_dns,
                 #[cfg(target_os = "macos")]
                 port,
             },
@@ -86,6 +107,7 @@ impl DnsConfig {
             } => ResolvedDnsConfig {
                 tunnel_config: tunnel_config.to_owned(),
                 non_tunnel_config: non_tunnel_config.to_owned(),
+                allow_external_dns: self.allow_external_dns,
                 #[cfg(target_os = "macos")]
                 port,
             },
@@ -102,6 +124,8 @@ pub struct ResolvedDnsConfig {
     /// For the most part, the tunnel state machine will not handle any of this configuration
     /// on non-tunnel interface, only allow them in the firewall.
     non_tunnel_config: Vec<IpAddr>,
+    /// Whether the firewall should stop blocking DNS to resolvers other than the ones above.
+    allow_external_dns: bool,
     /// Port to use
     #[cfg(target_os = "macos")]
     port: u16,
@@ -144,6 +168,11 @@ impl ResolvedDnsConfig {
     /// on non-tunnel interface, only allow them in the firewall.
     pub fn non_tunnel_config(&self) -> &[IpAddr] {
         &self.non_tunnel_config
+    }
+
+    /// Whether the firewall should stop blocking DNS to resolvers other than those in this config.
+    pub fn allow_external_dns(&self) -> bool {
+        self.allow_external_dns
     }
 
     /// Consume `self` and return a vector of all addresses
@@ -222,5 +251,42 @@ trait DnsMonitorT: Sized {
 
     fn reset_before_interface_removal(&mut self) -> Result<(), Self::Error> {
         self.reset()
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::net::Ipv4Addr;
+
+    fn resolve(config: &DnsConfig, default_tun: &[IpAddr]) -> ResolvedDnsConfig {
+        config.resolve(
+            default_tun,
+            #[cfg(target_os = "macos")]
+            53,
+        )
+    }
+
+    const GATEWAY: [IpAddr; 1] = [IpAddr::V4(Ipv4Addr::new(10, 64, 0, 1))];
+
+    /// The DNS leak protection must stay enforced unless explicitly opted out of.
+    #[test]
+    fn allow_external_dns_defaults_to_false() {
+        assert!(!DnsConfig::default().allow_external_dns);
+        assert!(!resolve(&DnsConfig::default(), &GATEWAY).allow_external_dns());
+        assert!(!resolve(&DnsConfig::from_addresses(&[], &[]), &GATEWAY).allow_external_dns());
+    }
+
+    /// The opt-out flag must survive `resolve()` for both the gateway-default and override variants.
+    #[test]
+    fn resolve_threads_allow_external_dns() {
+        let default_variant = DnsConfig::default().allow_external_dns(true);
+        assert!(resolve(&default_variant, &GATEWAY).allow_external_dns());
+
+        let custom = [IpAddr::V4(Ipv4Addr::new(1, 1, 1, 1))];
+        let override_variant = DnsConfig::from_addresses(&custom, &[]).allow_external_dns(true);
+        let resolved = resolve(&override_variant, &GATEWAY);
+        assert!(resolved.allow_external_dns());
+        assert_eq!(resolved.tunnel_config(), custom.as_slice());
     }
 }

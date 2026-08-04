@@ -54,6 +54,23 @@ impl FeatureIndicators {
     pub fn active_features(&self) -> impl Iterator<Item = FeatureIndicator> {
         self.0.clone().into_iter()
     }
+
+    /// Overwrite `indicator`'s membership with its membership in `previous`.
+    ///
+    /// For indicators that carry per-session NEGOTIATED truth (e.g.
+    /// [`FeatureIndicator::DaitaUnavailable`]) a settings-only recompute mixes
+    /// the fresh settings with the endpoint of the still-running old session,
+    /// producing a verdict about a session that is already being torn down.
+    /// Callers recomputing outside a tunnel state transition carry the
+    /// previous membership over instead; only a transition holds fresh
+    /// endpoint truth for these.
+    pub fn carry_over_from(&mut self, previous: &Self, indicator: FeatureIndicator) {
+        if previous.0.contains(&indicator) {
+            self.0.insert(indicator);
+        } else {
+            self.0.remove(&indicator);
+        }
+    }
 }
 
 impl FromIterator<FeatureIndicator> for FeatureIndicators {
@@ -78,6 +95,9 @@ pub enum FeatureIndicator {
     LanSharing,
     DnsContentBlockers,
     CustomDns,
+    /// The advanced opt-out that lifts the firewall's DNS leak protection (allows queries to
+    /// arbitrary resolvers through the tunnel).
+    AllowExternalDns,
     ServerIpOverride,
     CustomMtu,
     /// Whether DAITA (without multihop) is in use.
@@ -87,6 +107,21 @@ pub enum FeatureIndicator {
     /// Whether DAITA (with multihop) is in use.
     /// Mutually exclusive with [FeatureIndicator::Daita] and [FeatureIndicator::Multihop].
     DaitaMultihop,
+
+    /// The user requested DAITA but the connected endpoint reports the defense
+    /// is NOT running (the server did not grant it for this session). Surfaced
+    /// as its own indicator so the app never renders an active DAITA pill over
+    /// an undefended tunnel.
+    /// Mutually exclusive with [FeatureIndicator::Daita] and
+    /// [FeatureIndicator::DaitaMultihop].
+    DaitaUnavailable,
+
+    /// The live tunnel cannot carry full-size inner packets in one datagram
+    /// (reduced-MTU underlay: train or satellite backhaul, nested tunnel).
+    /// The datapath adapts automatically (MSS clamp + PMTUD reflection);
+    /// this surfaces WHY throughput-sensitive traffic behaves differently.
+    /// Runtime truth from `TunnelEndpoint::effective_mtu`, like DAITA.
+    ReducedMtu,
 }
 
 impl FeatureIndicator {
@@ -104,10 +139,13 @@ impl FeatureIndicator {
             FeatureIndicator::LanSharing => "LAN Sharing",
             FeatureIndicator::DnsContentBlockers => "Dns Content Blocker",
             FeatureIndicator::CustomDns => "Custom Dns",
+            FeatureIndicator::AllowExternalDns => "Allow External Dns",
             FeatureIndicator::ServerIpOverride => "Server Ip Override",
             FeatureIndicator::CustomMtu => "Custom MTU",
             FeatureIndicator::Daita => "DAITA",
             FeatureIndicator::DaitaMultihop => "DAITA: Multihop",
+            FeatureIndicator::DaitaUnavailable => "DAITA: not active on this server",
+            FeatureIndicator::ReducedMtu => "Reduced MTU",
         }
     }
 }
@@ -145,6 +183,7 @@ pub fn compute_feature_indicators(
         .default_options
         .any_blockers_enabled();
     let custom_dns = settings.tunnel_options.dns_options.state == DnsState::Custom;
+    let allow_external_dns = settings.tunnel_options.dns_options.allow_external_dns;
 
     let quantum_resistant = endpoint.quantum_resistant;
 
@@ -186,11 +225,23 @@ pub fn compute_feature_indicators(
     #[cfg(daita)]
     let daita = endpoint.daita && !daita_multihop;
 
+    // The endpoint carries the NEGOTIATED truth (filled from the tunnel
+    // monitor once connected), while the setting is only the request: a
+    // requested-but-inactive defense must be surfaced, never silently
+    // rendered as protection.
+    #[cfg(daita)]
+    let daita_unavailable = settings.tunnel_options.wireguard.daita.enabled && !endpoint.daita;
+
+    // Runtime truth from the tunnel monitor: only present when the live
+    // path measured below the TUN MTU, so presence IS the verdict.
+    let reduced_mtu = endpoint.effective_mtu.is_some();
+
     let protocol_features = vec![
         (split_tunneling, FeatureIndicator::SplitTunneling),
         (lan_sharing, FeatureIndicator::LanSharing),
         (dns_content_blockers, FeatureIndicator::DnsContentBlockers),
         (custom_dns, FeatureIndicator::CustomDns),
+        (allow_external_dns, FeatureIndicator::AllowExternalDns),
         (server_ip_override, FeatureIndicator::ServerIpOverride),
         #[cfg(not(target_os = "android"))]
         (lockdown_mode, FeatureIndicator::LockdownMode),
@@ -205,6 +256,9 @@ pub fn compute_feature_indicators(
         #[cfg(daita)]
         (daita, FeatureIndicator::Daita),
         (daita_multihop, FeatureIndicator::DaitaMultihop),
+        #[cfg(daita)]
+        (daita_unavailable, FeatureIndicator::DaitaUnavailable),
+        (reduced_mtu, FeatureIndicator::ReducedMtu),
     ];
 
     // use the booleans to filter into a list of only the active features
@@ -237,6 +291,8 @@ mod tests {
             entry_endpoint: Default::default(),
             tunnel_interface: Default::default(),
             daita: Default::default(),
+            effective_mtu: Default::default(),
+            tunnel_type: Default::default(),
         };
 
         let mut expected_indicators: FeatureIndicators = [].into_iter().collect();
@@ -275,6 +331,15 @@ mod tests {
 
         expected_indicators.0.insert(FeatureIndicator::LanSharing);
 
+        assert_eq!(
+            compute_feature_indicators(&settings, &endpoint, false),
+            expected_indicators
+        );
+
+        settings.tunnel_options.dns_options.allow_external_dns = true;
+        expected_indicators
+            .0
+            .insert(FeatureIndicator::AllowExternalDns);
         assert_eq!(
             compute_feature_indicators(&settings, &endpoint, false),
             expected_indicators
@@ -425,10 +490,158 @@ mod tests {
             FeatureIndicator::LanSharing => {}
             FeatureIndicator::DnsContentBlockers => {}
             FeatureIndicator::CustomDns => {}
+            FeatureIndicator::AllowExternalDns => {}
             FeatureIndicator::ServerIpOverride => {}
             FeatureIndicator::CustomMtu => {}
             FeatureIndicator::Daita => {}
             FeatureIndicator::DaitaMultihop => {}
+            FeatureIndicator::DaitaUnavailable => {}
+            FeatureIndicator::ReducedMtu => {}
         }
+    }
+
+    #[cfg(daita)]
+    fn plain_endpoint(daita: bool) -> TunnelEndpoint {
+        TunnelEndpoint {
+            endpoint: Endpoint {
+                address: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8080),
+                protocol: TransportProtocol::Udp,
+            },
+            quantum_resistant: Default::default(),
+            obfuscation: Default::default(),
+            entry_endpoint: Default::default(),
+            tunnel_interface: Default::default(),
+            daita,
+            effective_mtu: Default::default(),
+            tunnel_type: Default::default(),
+        }
+    }
+
+    /// A settings-triggered recompute happens against the OLD session's
+    /// endpoint (the reconnect has not landed yet), so a recomputed
+    /// `DaitaUnavailable` must be discarded in favor of the previous
+    /// session-negotiated membership, in both directions.
+    #[test]
+    fn carry_over_replays_the_previous_membership_in_both_directions() {
+        let with: FeatureIndicators = [FeatureIndicator::DaitaUnavailable].into_iter().collect();
+        let without: FeatureIndicators = std::iter::empty().collect();
+
+        let mut recomputed = with.clone();
+        recomputed.carry_over_from(&without, FeatureIndicator::DaitaUnavailable);
+        assert!(
+            !recomputed
+                .active_features()
+                .any(|f| f == FeatureIndicator::DaitaUnavailable),
+            "a spuriously recomputed indicator must be dropped when the previous state lacked it"
+        );
+
+        let mut recomputed = without.clone();
+        recomputed.carry_over_from(&with, FeatureIndicator::DaitaUnavailable);
+        assert!(
+            recomputed
+                .active_features()
+                .any(|f| f == FeatureIndicator::DaitaUnavailable),
+            "a legitimately shown indicator must survive an unrelated settings recompute"
+        );
+    }
+
+    /// The endpoint's effective MTU is runtime truth from the tunnel
+    /// monitor: presence alone drives the indicator (the monitor only sets
+    /// it when the live path measured below the TUN MTU), so a settings
+    /// recompute keeps it without any carry-over special case.
+    #[test]
+    fn reduced_mtu_indicator_follows_the_endpoint_measurement() {
+        let settings = Settings::default();
+        let mut endpoint = TunnelEndpoint {
+            endpoint: Endpoint {
+                address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
+                protocol: TransportProtocol::Udp,
+            },
+            quantum_resistant: Default::default(),
+            obfuscation: Default::default(),
+            entry_endpoint: Default::default(),
+            tunnel_interface: Default::default(),
+            daita: Default::default(),
+            effective_mtu: None,
+            tunnel_type: Default::default(),
+        };
+        assert!(
+            !compute_feature_indicators(&settings, &endpoint, false)
+                .active_features()
+                .any(|f| f == FeatureIndicator::ReducedMtu),
+            "no measurement, no indicator"
+        );
+        endpoint.effective_mtu = Some(1184);
+        assert!(
+            compute_feature_indicators(&settings, &endpoint, false)
+                .active_features()
+                .any(|f| f == FeatureIndicator::ReducedMtu),
+            "a reduced-path measurement must surface the indicator"
+        );
+    }
+
+    /// The endpoint is the negotiated truth: when the user asked for DAITA but
+    /// the tunnel reports it is not running, the UI must show the dedicated
+    /// "unavailable" indicator, never the regular DAITA pill.
+    #[cfg(daita)]
+    #[test]
+    fn daita_unavailable_when_requested_but_endpoint_inactive() {
+        let mut settings = Settings::default();
+        settings.tunnel_options.wireguard.daita.enabled = true;
+
+        let indicators = compute_feature_indicators(&settings, &plain_endpoint(false), false);
+
+        assert!(
+            indicators
+                .active_features()
+                .any(|f| f == FeatureIndicator::DaitaUnavailable),
+            "requested-but-not-negotiated DAITA must surface as DaitaUnavailable"
+        );
+        assert!(
+            !indicators
+                .active_features()
+                .any(|f| matches!(f, FeatureIndicator::Daita | FeatureIndicator::DaitaMultihop)),
+            "an inactive defense must never render the active DAITA pill"
+        );
+    }
+
+    #[cfg(daita)]
+    #[test]
+    fn daita_active_endpoint_yields_daita_not_unavailable() {
+        let mut settings = Settings::default();
+        settings.tunnel_options.wireguard.daita.enabled = true;
+
+        let indicators = compute_feature_indicators(&settings, &plain_endpoint(true), false);
+
+        assert!(
+            indicators
+                .active_features()
+                .any(|f| f == FeatureIndicator::Daita),
+            "a negotiated defense must render the DAITA pill"
+        );
+        assert!(
+            !indicators
+                .active_features()
+                .any(|f| f == FeatureIndicator::DaitaUnavailable),
+            "a running defense must not be reported unavailable"
+        );
+    }
+
+    #[cfg(daita)]
+    #[test]
+    fn no_daita_indicators_when_not_requested() {
+        let settings = Settings::default();
+
+        let indicators = compute_feature_indicators(&settings, &plain_endpoint(false), false);
+
+        assert!(
+            !indicators.active_features().any(|f| matches!(
+                f,
+                FeatureIndicator::Daita
+                    | FeatureIndicator::DaitaMultihop
+                    | FeatureIndicator::DaitaUnavailable
+            )),
+            "an unrequested defense must render no DAITA indicator at all"
+        );
     }
 }

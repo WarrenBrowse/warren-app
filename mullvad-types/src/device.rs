@@ -1,58 +1,23 @@
-use crate::account::AccountNumber;
-use chrono::{DateTime, Utc};
+use crate::warren_identity::WarrenIdentity;
 use serde::{Deserialize, Serialize};
-use talpid_types::net::wireguard::PublicKey;
 
-/// UUID for a device.
-pub type DeviceId = String;
-
-/// Human-readable device identifier.
-pub type DeviceName = String;
-
-/// Contains data for a device returned by the API.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Device {
-    pub id: DeviceId,
-    pub name: DeviceName,
-    pub pubkey: PublicKey,
-    pub hijack_dns: bool,
-    pub created: DateTime<Utc>,
-}
-
-impl Device {
-    /// Return name with each word capitalized: "Happy Seagull" instead of "happy seagull"
-    pub fn pretty_name(&self) -> String {
-        self.name
-            .split_whitespace()
-            .map(|word| {
-                let mut chars = word.chars();
-                match chars.next() {
-                    None => String::new(),
-                    Some(c) => c.to_uppercase().chain(chars).collect(),
-                }
-            })
-            .collect::<Vec<String>>()
-            .join(" ")
-    }
-
-    pub fn eq_id(&self, other: &Device) -> bool {
-        self.id == other.id
-    }
-}
-
-/// Contains a device state.
+/// Contains the account login state.
+///
+/// The `LoggedIn` variant carries a [`WarrenIdentity`] (the Ed25519
+/// wallet pubkey). The gRPC proto carries the SS58 pubkey address in its
+/// `proto::AccountAndDevice` `account_number: String` field.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum DeviceState {
-    LoggedIn(AccountAndDevice),
+    LoggedIn(WarrenIdentity),
     LoggedOut,
     Revoked,
 }
 
 impl DeviceState {
-    /// Returns the active account and device if the device is currently logged in to a valid
-    /// account.
-    pub fn logged_in(self) -> Option<AccountAndDevice> {
+    /// Returns the active Warren identity (wallet pubkey) if the
+    /// daemon is currently logged in to a valid account.
+    pub fn logged_in(self) -> Option<WarrenIdentity> {
         match self {
             DeviceState::LoggedIn(client) => Some(client),
             _ => None,
@@ -64,49 +29,59 @@ impl DeviceState {
     }
 }
 
-/// A [Device] and its associated account number.
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct AccountAndDevice {
-    #[serde(alias = "account_token")]
-    pub account_number: AccountNumber,
-    pub device: Device,
-}
-
-impl AccountAndDevice {
-    pub fn new(account_number: AccountNumber, device: Device) -> Self {
-        Self {
-            account_number,
-            device,
-        }
-    }
-}
-
 /// Reason why a [DeviceEvent] was emitted.
 #[derive(Clone, Debug, Serialize)]
 pub enum DeviceEventCause {
-    /// Logged in on a new device.
+    /// Logged in on a new account.
     LoggedIn,
-    /// The device was removed due to user (or daemon) action.
+    /// The account was logged out due to user (or daemon) action.
     LoggedOut,
-    /// Device was removed because it was not found remotely.
+    /// The account was revoked because it was not found remotely.
     Revoked,
-    /// The device was updated, but not its key.
-    Updated,
-    /// The key was rotated.
-    RotatedKey,
 }
 
-/// Emitted when logging in or out of an account, or when the device changes.
+/// Emitted when logging in or out of an account.
 #[derive(Clone, Debug, Serialize)]
 pub struct DeviceEvent {
     pub cause: DeviceEventCause,
     pub new_state: DeviceState,
 }
 
-/// Emitted when a device is removed using the `RemoveDevice` RPC.
-/// This is not sent by a normal logout or when it is revoked remotely.
-#[derive(Clone, Debug, Serialize)]
-pub struct RemoveDeviceEvent {
-    pub account_number: AccountNumber,
-    pub new_devices: Vec<Device>,
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::warren_pubkey::WarrenPubKey;
+    use std::str::FromStr;
+
+    fn fixture_pubkey() -> WarrenPubKey {
+        // Warren SS58 address of the all-zero 32-byte pubkey (prefix 13295).
+        WarrenPubKey::from_str("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB")
+            .expect("fixture SS58 valid")
+    }
+
+    #[test]
+    fn logged_in_returns_warren_identity_with_pubkey() {
+        // `DeviceState::LoggedIn` carries a `WarrenIdentity`;
+        // `.logged_in()` therefore returns this identity. The test
+        // guarantees that the pubkey survives pattern matching.
+        let pk = fixture_pubkey();
+        let identity = WarrenIdentity::new(pk.clone());
+        let state = DeviceState::LoggedIn(identity);
+        let extracted = state.logged_in().expect("must be Some after LoggedIn");
+        assert_eq!(extracted.pubkey, pk);
+    }
+
+    #[test]
+    fn logged_in_returns_none_for_logged_out_or_revoked() {
+        assert!(DeviceState::LoggedOut.logged_in().is_none());
+        assert!(DeviceState::Revoked.logged_in().is_none());
+    }
+
+    #[test]
+    fn is_logged_in_matches_only_loggedin_variant() {
+        let identity = WarrenIdentity::new(fixture_pubkey());
+        assert!(DeviceState::LoggedIn(identity).is_logged_in());
+        assert!(!DeviceState::LoggedOut.is_logged_in());
+        assert!(!DeviceState::Revoked.is_logged_in());
+    }
 }

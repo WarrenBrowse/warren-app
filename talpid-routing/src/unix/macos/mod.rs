@@ -250,9 +250,9 @@ impl RouteManagerImpl {
                         }
 
                         Some(RouteManagerCommand::RefreshRoutes) => {
-                            if let Err(error) = self.refresh_routes().await {
-                                log::error!("Failed to refresh routes: {error}");
-                            }
+                            // `refresh_routes` already logs and arms the
+                            // default-route restore timer on failure.
+                            let _ = self.refresh_routes().await;
                         },
                         None => {
                             break;
@@ -356,11 +356,19 @@ impl RouteManagerImpl {
             self.add_route_with_record(message).await?;
         }
 
-        self.apply_tunnel_default_routes().await?;
+        // Same blackhole fail-safe as `refresh_routes`: the tunnel-default
+        // install can delete the unscoped default and then fail, so arm the
+        // restore timer before propagating rather than leaving the host
+        // with no default route.
+        if let Err(error) = self.apply_tunnel_default_routes().await {
+            self.check_default_routes_restored = Self::create_default_route_check_timer();
+            return Err(error);
+        }
 
         // Add routes that use the default interface
         if let Err(error) = self.apply_non_tunnel_routes().await {
             self.non_tunnel_routes.clear();
+            self.check_default_routes_restored = Self::create_default_route_check_timer();
             return Err(error);
         }
 
@@ -447,6 +455,31 @@ impl RouteManagerImpl {
                 .retain(|tx| tx.unbounded_send(event).is_ok());
         }
 
+        if let Err(error) = self.refresh_routes_inner().await {
+            // Fail-safe against a default-route blackhole. The replace
+            // dance in `apply_tunnel_default_routes` deletes the unscoped
+            // default before installing the tunnel default; if that
+            // install fails (typically because the egress interface
+            // vanished mid-refresh, e.g. ethernet -> Wi-Fi handover), the
+            // host would be left with NO default route and all traffic
+            // would blackhole until the next route event happened to
+            // succeed. Arm the restore timer so `try_restore_default_routes`
+            // re-adds the unscoped default over its bounded backoff. This
+            // is the same recovery the disconnect/cleanup path uses; we
+            // extend it to the refresh-failure path, which previously had
+            // none.
+            log::error!("Failed to refresh routes: {error}; arming default-route restore");
+            self.check_default_routes_restored = Self::create_default_route_check_timer();
+            return Err(error);
+        }
+
+        Ok(())
+    }
+
+    /// The fallible body of [`Self::refresh_routes`]. Any error here can
+    /// leave the routing table mid-mutation, so the caller arms the
+    /// default-route restore timer on `Err`.
+    async fn refresh_routes_inner(&mut self) -> Result<()> {
         if !self.unhandled_default_route_changes {
             self.ensure_default_tunnel_routes_exist().await?;
             return Ok(());
@@ -508,6 +541,25 @@ impl RouteManagerImpl {
         }
 
         for (family, tunnel_route) in self.tunnel_default_routes.clone().iter() {
+            // Do NOT tear down the physical default route to install a
+            // tunnel default whose interface does not currently exist. On a
+            // network change the tun is gone while the tunnel re-handshakes;
+            // applying a stale tunnel default here deletes the unscoped
+            // physical default, fails to add the (dead) tunnel route, and
+            // blackholes ALL traffic. Worse, it loops every refresh, so the
+            // relay re-dial itself loses its route ("Network is
+            // unreachable") and the tunnel can never come back, until the
+            // user manually disconnects. Skip until the tun is really up;
+            // the physical default then stays intact and the relay dial
+            // succeeds, so the tunnel reconnects quickly.
+            if !interface_exists(tunnel_route.interface_index()) {
+                log::debug!(
+                    "Skipping tunnel default route for {family:?}: tun interface {} not present yet",
+                    tunnel_route.interface_index()
+                );
+                continue;
+            }
+
             // Replace the default route with an ifscope route
             self.replace_with_scoped_route(family).await?;
 
@@ -706,7 +758,12 @@ impl RouteManagerImpl {
         }
 
         if let Err(error) = self.routing_table.add_route(&desired_default_route).await {
-            log::trace!("Failed to add unscoped default {family} route: {error}");
+            // Surfaced at warn (not trace): while this keeps failing the
+            // host has no default route. We re-`trigger` below so a fresh
+            // refresh re-arms the restore timer rather than giving up, but
+            // a persistent failure here is the residual blackhole risk and
+            // must be visible in logs.
+            log::warn!("Failed to add unscoped default {family} route: {error}");
         }
 
         self.update_trigger.trigger();
@@ -751,6 +808,23 @@ impl RouteManagerImpl {
     }
 }
 
+/// Whether a network interface with the given index currently exists.
+///
+/// Used to avoid tearing down the physical default route to install a
+/// tunnel default whose tun interface is gone (mid-reconnect on a network
+/// change). `index == 0` means "unspecified" and is treated as absent.
+fn interface_exists(index: u16) -> bool {
+    if index == 0 {
+        return false;
+    }
+    let mut name_buf = [0u8; libc::IF_NAMESIZE];
+    // SAFETY: `name_buf` is `IF_NAMESIZE` bytes, the size `if_indextoname`
+    // requires. It returns the buffer pointer on success, or NULL when no
+    // interface has that index.
+    let res = unsafe { libc::if_indextoname(u32::from(index), name_buf.as_mut_ptr().cast()) };
+    !res.is_null()
+}
+
 /// Construct a [RouteMessage] that refers to the `0.0.0.0/0` or `::/0` route with the
 /// RTF_GATEAWAY-flag set. Used to reference the default route created by macOS.
 fn default_route_msg(family: interface::Family) -> RouteMessage {
@@ -762,4 +836,28 @@ fn default_route_msg(family: interface::Family) -> RouteMessage {
 fn route_matches_interface(default_route: &RouteMessage, interface_route: &RouteMessage) -> bool {
     default_route.gateway_ip() == interface_route.gateway_ip()
         && default_route.interface_index() == interface_route.interface_index()
+}
+
+#[cfg(test)]
+mod interface_exists_tests {
+    use super::interface_exists;
+
+    #[test]
+    fn unspecified_index_is_absent() {
+        // Index 0 ("unspecified") must never be treated as a real tun, or
+        // the default-route replacement would run against no interface.
+        assert!(!interface_exists(0));
+    }
+
+    #[test]
+    fn loopback_is_present_and_bogus_index_is_absent() {
+        // lo0 always exists; resolve its real index rather than assuming 1.
+        let lo = nix::net::if_::if_nametoindex("lo0").expect("lo0 must exist");
+        assert!(
+            interface_exists(lo as u16),
+            "lo0 (index {lo}) must be present"
+        );
+        // An index far beyond any plausible interface count is absent.
+        assert!(!interface_exists(u16::MAX));
+    }
 }

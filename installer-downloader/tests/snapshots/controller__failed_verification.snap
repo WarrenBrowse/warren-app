@@ -14,7 +14,7 @@ beta_text_visible: false
 stable_text_visible: false
 error_message_visible: true
 error_message:
-  status_text: "Failed to verify download, please try downloading again or contact our support by sending an email to support@mullvadvpn.net with a description of what happened."
+  status_text: "Failed to verify download, please try downloading again or contact our support by sending an email to support@warrenbrowse.com with a description of what happened."
   cancel_button_text: Cancel
   retry_button_text: Try again
 quit: false
@@ -55,4 +55,4 @@ call_log:
   - hide_download_progress
   - hide_download_button
   - hide_cancel_button
-  - "show_error_message: Failed to verify download, please try downloading again or contact our support by sending an email to support@mullvadvpn.net with a description of what happened.. retry: Try again. cancel: Cancel"
+  - "show_error_message: Failed to verify download, please try downloading again or contact our support by sending an email to support@warrenbrowse.com with a description of what happened.. retry: Try again. cancel: Cancel"

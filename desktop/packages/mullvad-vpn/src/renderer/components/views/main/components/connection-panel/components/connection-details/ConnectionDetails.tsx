@@ -4,12 +4,15 @@ import styled from 'styled-components';
 import { strings } from '../../../../../../../../shared/constants';
 import {
   EndpointObfuscationType,
+  formatExitLocation,
+  isMultihopTunnelState,
+  isUnspecifiedSocketAddress,
   ITunnelEndpoint,
   parseSocketAddress,
   RelayProtocol,
   TunnelState,
 } from '../../../../../../../../shared/daemon-rpc-types';
-import { messages } from '../../../../../../../../shared/gettext';
+import { messages, relayLocations } from '../../../../../../../../shared/gettext';
 import { colors } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { tinyText } from '../../../../../../common-styles';
@@ -39,6 +42,11 @@ const StyledConnectionDetailsContainer = styled.div({
 const StyledIpTable = styled.div({
   display: 'grid',
   gridTemplateColumns: 'minmax(48px, min-content) auto',
+  // Keep a gap between the label column and the value column. Without it
+  // a label as wide as the column (e.g. the localized "Reconnects") leaves
+  // its value glued to it ("Reconnexions0"), unlike shorter labels which
+  // get incidental space from the shared min-content column width.
+  columnGap: '8px',
 });
 
 const StyledIpLabelContainer = styled.div({
@@ -74,9 +82,27 @@ export function ConnectionDetails() {
   }, [reduxConnection, tunnelState.state]);
 
   const entry = getEntryPoint(tunnelState);
+  const exit = getExitPoint(tunnelState);
 
   const showDetails = tunnelState.state === 'connected' || tunnelState.state === 'connecting';
   const hasEntry = showDetails && entry !== undefined;
+  const hasExit = showDetails && exit !== undefined;
+  // Multi-hop = the relay node and the exit node are DIFFERENT nodes
+  // (host/IP differs). A 1-hop circuit reuses the same node with
+  // different ports, so the port must be ignored - see
+  // `isMultihopTunnelState`.
+  const multihop = isMultihopTunnelState(tunnelState);
+  // When the egress IP is unavailable (redacted multi-hop exit: the client
+  // never learns the exit IP, and Warren does not run an am.i.mullvad-style
+  // conncheck), fall back to the exit geolocation the daemon does provide so
+  // the "Out" row is not left blank.
+  const exitLocationFallback =
+    showDetails && !hasExit && !connection.ipv4 && !connection.ipv6
+      ? formatExitLocation(
+          connection.country && relayLocations.gettext(connection.country),
+          connection.city && relayLocations.gettext(connection.city),
+        )
+      : undefined;
 
   return (
     <StyledConnectionDetailsContainer>
@@ -84,8 +110,13 @@ export function ConnectionDetails() {
         {messages.pgettext('connect-view', 'Connection details')}
       </StyledConnectionDetailsHeading>
       <StyledConnectionDetailsLabel data-testid="tunnel-protocol">
-        {showDetails && tunnelState.details !== undefined && strings.wireguard}
+        {showDetails && tunnelState.details !== undefined && strings.quic}
       </StyledConnectionDetailsLabel>
+      {multihop && (
+        <StyledConnectionDetailsLabel data-testid="multihop-indicator">
+          {messages.pgettext('connection-info', 'Multihop (2 hops)')}
+        </StyledConnectionDetailsLabel>
+      )}
       <StyledIpTable>
         <StyledConnectionDetailsTitle>
           {messages.pgettext('connection-info', 'In')}
@@ -97,6 +128,11 @@ export function ConnectionDetails() {
           {messages.pgettext('connection-info', 'Out')}
         </StyledConnectionDetailsTitle>
         <StyledIpLabelContainer>
+          {hasExit && (
+            <StyledConnectionDetailsLabel data-testid="out-endpoint">
+              {`${exit.ip}:${exit.port} ${exit.protocol.toUpperCase()}`}
+            </StyledConnectionDetailsLabel>
+          )}
           {connection.ipv4 && (
             <StyledConnectionDetailsLabel data-testid="out-ip">
               {connection.ipv4}
@@ -107,10 +143,78 @@ export function ConnectionDetails() {
               {connection.ipv6}
             </StyledConnectionDetailsLabel>
           )}
+          {exitLocationFallback && (
+            <StyledConnectionDetailsLabel data-testid="out-location">
+              {exitLocationFallback}
+            </StyledConnectionDetailsLabel>
+          )}
         </StyledIpLabelContainer>
       </StyledIpTable>
+      <WarrenStatusRows />
     </StyledConnectionDetailsContainer>
   );
+}
+
+// Warren status block: reconnect counter + age + obfuscation
+// indicator. Reads from `state.settings.warrenStatus` which is fed by
+// the daemon WarrenStatusUpdates push stream.
+function WarrenStatusRows() {
+  const warrenStatus = useSelector((state) => state.settings.warrenStatus);
+  const reconnectCount = warrenStatus?.reconnectCount ?? 0;
+  const lastReconnectAgeMs = warrenStatus?.lastReconnectAgeMs ?? null;
+  // Obfuscation default-on per /v1 doctrine; default to true if the
+  // status has not been pushed yet so the UI does not flash an
+  // alarming "OFF" state during boot.
+  const obfuscationActive = warrenStatus?.obfuscationActive ?? true;
+
+  return (
+    <StyledIpTable style={{ marginTop: '8px' }} data-anchor-id="warren-status-reconnect">
+      <StyledConnectionDetailsTitle>
+        {messages.pgettext('warren-status-view', 'Reconnects')}
+      </StyledConnectionDetailsTitle>
+      <StyledConnectionDetailsLabel data-testid="warren-reconnect-count">
+        {reconnectCount}
+      </StyledConnectionDetailsLabel>
+      {reconnectCount > 0 && (
+        <>
+          <StyledConnectionDetailsTitle>
+            {messages.pgettext('warren-status-view', 'Last')}
+          </StyledConnectionDetailsTitle>
+          <StyledConnectionDetailsLabel data-testid="warren-last-reconnect-age">
+            {lastReconnectAgeMs === null
+              ? messages.pgettext('warren-status-view', 'never')
+              : formatAge(lastReconnectAgeMs)}
+          </StyledConnectionDetailsLabel>
+        </>
+      )}
+      <StyledConnectionDetailsTitle>
+        {messages.pgettext('warren-status-view', 'Obfuscation')}
+      </StyledConnectionDetailsTitle>
+      <StyledConnectionDetailsLabel data-testid="warren-obfuscation-active">
+        {obfuscationActive
+          ? messages.pgettext('warren-status-view', 'HTTP/3 mimicry (active)')
+          : messages.pgettext('warren-status-view', 'inactive')}
+      </StyledConnectionDetailsLabel>
+    </StyledIpTable>
+  );
+}
+
+// Compact age formatter: under a minute = seconds, under an hour =
+// minutes:seconds, beyond = HhMM. Tuned for the connection-details
+// panel where vertical space is tight.
+function formatAge(ms: number): string {
+  const totalSec = Math.floor(ms / 1000);
+  if (totalSec < 60) {
+    return `${totalSec}s ago`;
+  }
+  if (totalSec < 3600) {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return `${m}m ${s}s ago`;
+  }
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  return `${h}h ${m}m ago`;
 }
 
 function getEntryPoint(tunnelState: TunnelState): Endpoint | undefined {
@@ -133,6 +237,34 @@ function getEntryPoint(tunnelState: TunnelState): Endpoint | undefined {
   } else {
     return inAddress;
   }
+}
+
+// The "Out" (Sortante) endpoint is the exit the user traffic leaves
+// through. The daemon publishes it as the main `endpoint.address`
+// (for multi-hop with a disclosed exit it is the exit descriptor's endpoint;
+// for single-hop the only hop). The relay/entry endpoint, when present, lives
+// in `entryEndpoint` instead. Mirrors the CLI's `<exit> via <entry>` line.
+//
+// In the standard multi-hop flow the client-facing directory redacts the exit
+// egress IP, so the daemon publishes an unspecified `0.0.0.0:0` placeholder as
+// the exit endpoint (the client never learns the exit IP). Rendering it
+// verbatim showed a bogus "Sortante 0.0.0.0:0 UDP" line; instead we drop the
+// endpoint address and let the geoip out IP (connection.ipv4/ipv6) and the
+// country/city label identify the exit.
+function getExitPoint(tunnelState: TunnelState): Endpoint | undefined {
+  if (
+    (tunnelState.state !== 'connected' && tunnelState.state !== 'connecting') ||
+    tunnelState.details === undefined
+  ) {
+    return undefined;
+  }
+
+  const endpoint = tunnelState.details.endpoint;
+  if (isUnspecifiedSocketAddress(endpoint.address)) {
+    return undefined;
+  }
+
+  return tunnelEndpointToRelayInAddress(endpoint);
 }
 
 function tunnelEndpointToRelayInAddress(tunnelEndpoint: ITunnelEndpoint): Endpoint {

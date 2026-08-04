@@ -6,16 +6,16 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-@testable import MullvadREST
-@testable import MullvadSettings
-@testable import MullvadTypes
+@testable import WarrenREST
+@testable import WarrenSettings
+@testable import WarrenTypes
 @testable import PacketTunnelCore
 
 struct ProtocolObfuscationStub: ProtocolObfuscation {
     var remotePort: UInt16 { 42 }
 
     func obfuscate(
-        _ endpoint: MullvadTypes.SelectedEndpoint,
+        _ endpoint: WarrenTypes.SelectedEndpoint,
         clientPublicKey: WireGuard.PublicKey
     ) -> ProtocolObfuscationResult {
         .init(endpoint: endpoint)

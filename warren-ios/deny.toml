@@ -1,0 +1,41 @@
+# This file is for an additional check to prevent GPL-3.0-or-later licensed crates
+# from being introduced into the iOS app's Rust dependency tree, due to
+# App Store restrictions.
+# It does not override the main deny.toml file and needs to be run separately.
+# See .github/workflows/rust-supply-chain.yml for the workflow that runs this check.
+
+[licenses]
+allow = [
+  "Apache-2.0",
+  "MIT",
+  "MPL-2.0",
+  "WTFPL",
+  "ISC",
+  "BSD-3-Clause",
+  "BSD-2-Clause",
+  "CC0-1.0",
+  "Unicode-DFS-2016",
+  "Unicode-3.0",
+  "CDLA-Permissive-2.0",
+]
+# Allow GPL3 licensed crates with permission to relicense like Mullvads own.
+exceptions = [
+  { crate = "domain-fronting", allow = ["GPL-3.0-or-later"] },
+  { crate = "intersection-derive", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-api", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-api-constants", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-encrypted-dns-proxy", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-fs", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-ios", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-logging", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-masque-proxy", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-types", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-update", allow = ["GPL-3.0-or-later"] },
+  { crate = "mullvad-version", allow = ["GPL-3.0-or-later"] },
+  { crate = "talpid-future", allow = ["GPL-3.0-or-later"] },
+  { crate = "talpid-routing", allow = ["GPL-3.0-or-later"] },
+  { crate = "talpid-time", allow = ["GPL-3.0-or-later"] },
+  { crate = "talpid-tunnel", allow = ["GPL-3.0-or-later"] },
+  { crate = "talpid-types", allow = ["GPL-3.0-or-later"] },
+  { crate = "talpid-windows", allow = ["GPL-3.0-or-later"] },
+]

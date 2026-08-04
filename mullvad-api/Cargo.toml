@@ -14,6 +14,28 @@ crate-type = ["rlib", "staticlib"]
 anyhow = { workspace = true }
 async-trait = "0.1"
 chrono = { workspace = true }
+# Warren fork - Phase 2 auth wallet: Ed25519 signature on HTTP API
+# requests (see `mullvad-api/src/warren_auth.rs` and
+# `warren-core/docs/06-auth-wallet.md`).
+#
+# `zeroize` is REQUIRED - `WarrenAuthSigner` holds the signing key
+# behind an `RwLock<SigningKey>` and swaps it in-place on mnemonic
+# import via `replace_signing_key`. Without `zeroize`, the previous
+# secret would linger in the heap allocator until eventually
+# overwritten, defeating the no-log / no-residual-secret posture.
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
+  "std",
+  "zeroize",
+] }
+# Direct (non-transitive) dependency on `zeroize` so we can name the
+# `ZeroizeOnDrop` trait in `warren_auth.rs` for the compile-time guard
+# that pins the `zeroize` feature of `ed25519-dalek`. Without this dep
+# the guard would silently break if `ed25519-dalek` ever stopped
+# re-exporting `zeroize` as a transitive dep.
+zeroize = "1"
+hex = "0.4"
+rand = { workspace = true }
+sha2 = { workspace = true }
 domain-fronting = "0.1"
 futures = { workspace = true }
 http = "1.1.0"
@@ -28,6 +50,15 @@ mullvad-encrypted-dns-proxy = { path = "../mullvad-encrypted-dns-proxy" }
 mullvad-fs = { path = "../mullvad-fs" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
+# Warren fork: consume the canonical HEADER_* + canonical_message wire
+# format from warren-identity (re-exported from its `signing` module)
+# rather than duplicating them locally - a silent divergence would
+# break every signed API request.
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# Warren fork: single-home the product User-Agent. The REST client sends
+# `warren_contract::product::USER_AGENT` rather than a local copy, so a UA
+# change is one edit and cannot silently fingerprint this client apart.
+warren-contract = { path = "../../warren-contract" }
 rustls-pki-types.workspace = true
 serde = { workspace = true }
 serde_json = { workspace = true }

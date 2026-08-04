@@ -8,7 +8,7 @@
 
 import Foundation
 
-@testable import MullvadTypes
+@testable import WarrenTypes
 @testable import PacketTunnelCore
 
 final class PostQuantumKeyExchangingUpdaterStub: PostQuantumKeyExchangingUpdaterProtocol {

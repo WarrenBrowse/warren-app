@@ -7,11 +7,11 @@
 //
 
 import Foundation
-import MullvadTypes
+import WarrenTypes
 import PacketTunnelCore
 import XCTest
 
-@testable import MullvadSettings
+@testable import WarrenSettings
 
 class TunnelSettingsManagerTests: XCTestCase {
     func testNotifyWhenSettingsLoaded() throws {

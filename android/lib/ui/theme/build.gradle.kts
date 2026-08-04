@@ -1,10 +1,10 @@
 plugins {
-    alias(libs.plugins.mullvad.android.library)
+    alias(libs.plugins.warren.android.library)
     alias(libs.plugins.compose)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.lib.ui.theme"
+    namespace = "com.warrenbrowse.vpn.lib.ui.theme"
 
     buildFeatures { compose = true }
 }

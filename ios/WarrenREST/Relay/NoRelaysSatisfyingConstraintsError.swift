@@ -1,0 +1,55 @@
+//
+//  NoRelaysSatisfyingConstraintsError.swift
+//  WarrenREST
+//
+//  Created by Mojgan on 2024-04-26.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Foundation
+
+public enum NoRelaysSatisfyingConstraintsReason: Sendable {
+    case filterConstraintNotMatching
+    case invalidPort
+    case invalidObfuscationPort
+    case entryEqualsExit
+    case multihopInvalidFlow
+    case noActiveRelaysFound
+    case noDaitaRelaysFound
+    case noObfuscatedRelaysFound
+    case relayConstraintNotMatching
+    case noIPv6RelayFound
+}
+
+public struct NoRelaysSatisfyingConstraintsError: LocalizedError, Sendable {
+    public let reason: NoRelaysSatisfyingConstraintsReason
+
+    public var errorDescription: String? {
+        switch reason {
+        case .filterConstraintNotMatching:
+            "Filter yields no matching relays"
+        case .invalidPort:
+            "Invalid port selected by RelaySelector"
+        case .invalidObfuscationPort:
+            "Invalid obfuscation port selected by RelaySelector"
+        case .entryEqualsExit:
+            "Entry and exit relays are the same"
+        case .multihopInvalidFlow:
+            "Invalid multihop decision flow"
+        case .noActiveRelaysFound:
+            "No active relays found"
+        case .noDaitaRelaysFound:
+            "No DAITA relays found"
+        case .noObfuscatedRelaysFound:
+            "No obfuscated relays found"
+        case .relayConstraintNotMatching:
+            "Invalid constraint created to pick a relay"
+        case .noIPv6RelayFound:
+            "No relay found that supports IPv6 and all the other constraints"
+        }
+    }
+
+    public init(_ reason: NoRelaysSatisfyingConstraintsReason) {
+        self.reason = reason
+    }
+}

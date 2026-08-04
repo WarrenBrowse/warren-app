@@ -1,0 +1,18 @@
+package com.warrenbrowse.vpn.lib.model
+
+sealed interface NotificationAction {
+
+    sealed interface Tunnel : NotificationAction {
+        data object Connect : Tunnel
+
+        data object Reconnect : Tunnel
+
+        data object Disconnect : Tunnel
+
+        data object Cancel : Tunnel
+
+        data object Dismiss : Tunnel
+
+        data object RequestVpnProfile : Tunnel
+    }
+}

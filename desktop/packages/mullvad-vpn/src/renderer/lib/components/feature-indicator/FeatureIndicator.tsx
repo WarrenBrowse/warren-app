@@ -6,7 +6,7 @@ import { FeatureIndicatorText } from './components';
 import { FeatureIndicatorProvider } from './FeatureIndicatorContext';
 
 export type FeatureIndicatorProps = {
-  variant?: 'primary' | 'transparent';
+  variant?: 'primary' | 'transparent' | 'error';
 } & React.ComponentPropsWithRef<'button'>;
 
 const styles = {
@@ -23,6 +23,15 @@ const styles = {
       borderColor: 'transparent',
       borderColorHover: 'transparent',
       borderColorPressed: 'transparent',
+    },
+    // Alerting chip: a port-forward (or other feature) in a blocked/error
+    // state surfaces in red so the user notices it on the main screen
+    // without opening settings.
+    error: {
+      backgroundColor: colors.redAlpha40,
+      borderColor: colors.red,
+      borderColorHover: colors.whiteAlpha80,
+      borderColorPressed: colors.white,
     },
   },
 };

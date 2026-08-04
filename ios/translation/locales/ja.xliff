@@ -1350,11 +1350,6 @@
         <target state="final">使用中</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Include my account token for faster help with payment or account related issues" xml:space="preserve" approved="yes">
-        <source>Include my account token for faster help with payment or account related issues</source>
-        <target state="final">お支払いやアカウント関連の問題を迅速に解決するために、私のアカウントトークンを含めます</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Indonesia" xml:space="preserve" approved="yes">
         <source>Indonesia</source>
         <target state="final">インドネシア</target>
@@ -2142,11 +2137,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">レンタルサーバーのみ</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Report a problem" xml:space="preserve" approved="yes">
-        <source>Report a problem</source>
-        <target state="final">問題を報告</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Required" xml:space="preserve" approved="yes">
         <source>Required</source>
         <target state="final">必須</target>
@@ -2230,11 +2220,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="Send" xml:space="preserve" approved="yes">
         <source>Send</source>
         <target state="final">送信</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Send anyway" xml:space="preserve" approved="yes">
-        <source>Send anyway</source>
-        <target state="final">とにかく送信する</target>
         <note/>
       </trans-unit>
       <trans-unit id="Sending..." xml:space="preserve" approved="yes">
@@ -2667,11 +2652,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">時間を追加するには、いったん接続を解除し、セキュリティ保護されていない接続でインターネットにアクセスする必要があります。</target>
         <note/>
       </trans-unit>
-      <trans-unit id="To assist you better, please write in English or Swedish and include which country you are connecting from." xml:space="preserve" approved="yes">
-        <source>To assist you better, please write in English or Swedish and include which country you are connecting from.</source>
-        <target state="final">最適なサポートを提供するため、英語またはスウェーデン語でご入力ください。また、接続元の国をお知らせください。</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view." xml:space="preserve" approved="yes">
         <source>To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view.</source>
         <target state="final">これを回避するには、「場所を選択」ビューでサポートチームが提供したサーバーのデフォルトアドレスをオーバーライドする新しいIPアドレスを含むファイルまたはテキストをインポートできます。</target>
@@ -2690,11 +2670,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="To enable this setting, add at least one server." xml:space="preserve" approved="yes">
         <source>To enable this setting, add at least one server.</source>
         <target state="final">この設定を有効にするには、サーバーを1つ以上追加してください。</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel." xml:space="preserve" approved="yes">
-        <source>To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel.</source>
-        <target state="final">さらに効率よく問題解決できるよう、お使いのアプリのログファイルがこのメッセージに添付されます。個人データは匿名化された後に暗号化されたチャネルで送信されるため、その安全は確保され、公開されることはありません。</target>
         <note/>
       </trans-unit>
       <trans-unit id="To start using the app, you first need to add time to your account." xml:space="preserve" approved="yes">
@@ -2775,11 +2750,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="Unable to start tunnel connection after update. Please disconnect and reconnect." xml:space="preserve" approved="yes">
         <source>Unable to start tunnel connection after update. Please disconnect and reconnect.</source>
         <target state="final">アップデート後、トンネル接続を開始できません。一度切断してから再接続してください。</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Unable to start tunnel connection. Please send a problem report." xml:space="preserve" approved="yes">
-        <source>Unable to start tunnel connection. Please send a problem report.</source>
-        <target state="final">トンネル接続を開始できません。問題の報告を送信してください。</target>
         <note/>
       </trans-unit>
       <trans-unit id="Unchecked" xml:space="preserve" approved="yes">
@@ -2865,11 +2835,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily." xml:space="preserve" approved="yes">
         <source>View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily.</source>
         <target state="final">ログイン中のすべてのデバイスを表示・管理します。1つのアカウントで最大5台のデバイスを同時に利用できます。各デバイスは識別しやすくするため、ログイン時に名前が付けられます。</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="View app logs" xml:space="preserve" approved="yes">
-        <source>View app logs</source>
-        <target state="final">アプリのログを表示</target>
         <note/>
       </trans-unit>
       <trans-unit id="Voucher code has already been used." xml:space="preserve" approved="yes">
@@ -2987,11 +2952,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">すでに保存済みのアカウント番号があります。新規アカウントを作成すると、保存済みのアカウント番号がこのデバイスから削除されます。この操作は取り消せません。</target>
         <note/>
       </trans-unit>
-      <trans-unit id="You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address." xml:space="preserve" approved="yes">
-        <source>You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address.</source>
-        <target state="final">お客様への返信先を入力せずに問題の報告を送信しようとしています。ご報告に対する返信が必要な場合は、返信先のメールアドレスを入力する必要があります。</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="You are logged in with an invalid account number. Please log out and try another one." xml:space="preserve" approved="yes">
         <source>You are logged in with an invalid account number. Please log out and try another one.</source>
         <target state="final">無効なアカウント番号でログインしています。いったんログアウトして、別のアカウント番号を試してください。</target>
@@ -3078,11 +3038,6 @@ We strongly believe in retaining as little data as possible because we want you 
       <trans-unit id="Your device is offline. Try connecting again when the device has access to Internet." xml:space="preserve" approved="yes">
         <source>Your device is offline. Try connecting again when the device has access to Internet.</source>
         <target state="final">ご利用のデバイスはオフラインです。インターネットに接続できる状態になったら再度お試しください。</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Your email (optional)" xml:space="preserve" approved="yes">
-        <source>Your email (optional)</source>
-        <target state="final">あなたのメールアドレス (任意)</target>
         <note/>
       </trans-unit>
       <trans-unit id="Your previous purchases have already been added to this account." xml:space="preserve" approved="yes">

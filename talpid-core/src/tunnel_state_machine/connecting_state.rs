@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, LazyLock, Mutex, PoisonError};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -10,16 +10,17 @@ use talpid_routing::RouteManagerHandle;
 use talpid_tunnel::tun_provider::TunProvider;
 use talpid_tunnel::{EventHook, TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::ErrorExt;
-use talpid_types::net::{
-    AllowedClients, AllowedEndpoint, AllowedTunnelTraffic, wireguard::TunnelParameters,
-};
+use talpid_types::net::{AllowedClients, AllowedEndpoint, AllowedTunnelTraffic};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
+use talpid_warren_tunnel::WarrenTunnelParameters;
+
+use super::backend_params::BackendParams;
 
 use super::connected_state::TunnelEventsReceiver;
 use super::{
     AfterDisconnect, ConnectedState, DisconnectingState, ErrorState, EventConsequence, EventResult,
-    SharedTunnelStateValues, TunnelCommand, TunnelCommandReceiver, TunnelState,
-    TunnelStateTransition,
+    SharedTunnelStateValues, SubscriptionStatus, TunnelCommand, TunnelCommandReceiver, TunnelState,
+    TunnelStateTransition, exit_refusal,
 };
 
 use crate::firewall::FirewallPolicy;
@@ -31,18 +32,126 @@ use talpid_dns::DnsConfig;
 
 pub(crate) type TunnelCloseEvent = Fuse<oneshot::Receiver<Option<ErrorStateCause>>>;
 
-#[cfg(target_os = "android")]
-const MAX_ATTEMPTS_WITH_SAME_TUN: u32 = 5;
 const MIN_TUNNEL_ALIVE_TIME: Duration = Duration::from_millis(1000);
 #[cfg(target_os = "windows")]
 const MAX_ATTEMPT_CREATE_TUN: u32 = 4;
+
+/// Number of leading connect attempts that retry at [`MIN_TUNNEL_ALIVE_TIME`]
+/// before the interval starts growing.
+const FAST_RETRY_ATTEMPTS: u32 = 4;
+
+/// Ceiling on the retry interval, and with it the worst-case wait between an
+/// exit admitting a wallet and the client noticing.
+///
+/// Measured on the beta fleet: at 15 s the schedule leaves a gap wide enough to
+/// straddle an exit's allowlist poll, and a wallet registered a second before
+/// connecting took 35.3 s to reach the internet in 2 runs out of 3. At 10 s the
+/// same three runs measured 1.11 / 4.13 / 11.19 s, for the same number of dials
+/// per minute.
+const MAX_RECONNECT_FLOOR: Duration = Duration::from_secs(10);
+
+/// Lower bound on how long a failed connect lap takes, which is what paces the
+/// reconnect loop.
+///
+/// The first [`FAST_RETRY_ATTEMPTS`] attempts keep the base floor: the common
+/// refusal (an exit whose allowlist poll has not yet picked up a fresh
+/// subscription) clears within a second or two, and a prompt retry is what
+/// keeps that case invisible. Past that the interval doubles up to
+/// [`MAX_RECONNECT_FLOOR`], because a failure that survived four laps will not
+/// clear any sooner for being asked ten more times and each dial costs the
+/// exit an admission check.
+///
+/// The base is [`MIN_TUNNEL_ALIVE_TIME`], upstream's guard against a tunnel
+/// that dies instantly spinning the loop, unless [`exit_refusal`] hands over
+/// its permission to dial sooner (a refusal the API confirmed will clear, and
+/// confirmed recently enough to still be reusing that answer, the one case
+/// where a faster dial cannot be spinning on a broken tunnel).
+fn reconnect_floor(retry_attempt: u32, pacing: exit_refusal::LapPacing) -> Duration {
+    let doublings = retry_attempt.saturating_sub(FAST_RETRY_ATTEMPTS - 1);
+    let factor = 1u32.checked_shl(doublings).unwrap_or(u32::MAX);
+    pacing
+        .floor(MIN_TUNNEL_ALIVE_TIME)
+        .saturating_mul(factor)
+        .min(MAX_RECONNECT_FLOOR)
+}
+
+/// Report how a failed connect lap ended to [`exit_refusal`], which is the one
+/// place that decides whether a refusal is worth waiting for. The lap itself
+/// never parks the state machine: it only records, and the next
+/// [`ConnectingState::enter_warren`] acts on it.
+fn note_failed_attempt(error: &tunnel_monitor::Error) {
+    exit_refusal::note_attempt(error.warren_session_rejection(), Instant::now());
+}
+
+/// Ask the account API whether the refusals seen so far can still clear, and
+/// return the state to park on when they cannot.
+///
+/// Blocking on the state-machine thread is deliberate: the answer decides
+/// whether this attempt happens at all, and it is bounded by
+/// [`exit_refusal::STATUS_TIMEOUT`]. It costs nothing on a connect that is not
+/// being refused, because [`exit_refusal`] only asks while a refusal run is
+/// open.
+fn refusal_block_reason(shared_values: &SharedTunnelStateValues) -> Option<ErrorStateCause> {
+    let runtime = shared_values.runtime.clone();
+    let provider = Arc::clone(&shared_values.subscription_status);
+    exit_refusal::block_reason_before_dialing(Instant::now(), move || {
+        let status = runtime.block_on(async {
+            tokio::time::timeout(exit_refusal::STATUS_TIMEOUT, provider.subscription_status())
+                .await
+                .unwrap_or(SubscriptionStatus::Unknown)
+        });
+        log::info!("The exit refused the session; the account API reports {status:?}");
+        status
+    })
+}
+
+/// Sliding-window flap detector for the reconnect loop.
+///
+/// `retry_attempt` cannot bound the loop: the Warren backend emits
+/// `TunnelEvent::Up` once routes install, before the data plane is
+/// confirmed, so a path that drops immediately still resets
+/// `retry_attempt`. A bad handover thus churns Connecting→(fake)
+/// Connected→Down forever. This wall-clock detector is independent of
+/// `retry_attempt`: more than [`FLAP_MAX`] laps within [`FLAP_WINDOW`]
+/// drop into a stable, cancelable `ErrorState` instead (fail-closed: the
+/// kill-switch still blocks, but the churn stops). Self-cleaning - a
+/// stable connection emits no close events, so the window ages out.
+static RECENT_RECONNECTS: LazyLock<Mutex<Vec<Instant>>> = LazyLock::new(|| Mutex::new(Vec::new()));
+
+/// Max reconnect laps tolerated within [`FLAP_WINDOW`] before the loop is
+/// broken to a stable blocked state. Six laps in 25 s (~one every 4 s) is
+/// pathological flapping, well clear of any legitimate reconnect cadence.
+pub(super) const FLAP_MAX: usize = 6;
+pub(super) const FLAP_WINDOW: Duration = Duration::from_secs(25);
+
+/// Record a reconnect lap and report whether the tunnel is flapping.
+/// Prunes timestamps older than [`FLAP_WINDOW`] first so the window
+/// slides and a stable connection naturally empties it. Shared by the
+/// Connecting and Connected reconnect paths (see [`RECENT_RECONNECTS`]).
+pub(super) fn note_reconnect_and_is_flapping(now: Instant) -> bool {
+    let mut laps = RECENT_RECONNECTS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner);
+    laps.retain(|t| now.duration_since(*t) < FLAP_WINDOW);
+    laps.push(now);
+    laps.len() > FLAP_MAX
+}
+
+/// Clear the flap window. Called once the loop is broken to a stable
+/// state so a later user-initiated reconnect starts from a clean slate.
+pub(super) fn reset_flap_detector() {
+    RECENT_RECONNECTS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .clear();
+}
 
 const INITIAL_ALLOWED_TUNNEL_TRAFFIC: AllowedTunnelTraffic = AllowedTunnelTraffic::None;
 
 /// The tunnel has been started, but it is not established/functional.
 pub struct ConnectingState {
     tunnel_events: TunnelEventsReceiver,
-    tunnel_parameters: TunnelParameters,
+    tunnel_parameters: BackendParams,
     tunnel_metadata: Option<TunnelMetadata>,
     allowed_tunnel_traffic: AllowedTunnelTraffic,
     tunnel_close_event: TunnelCloseEvent,
@@ -75,94 +184,189 @@ impl ConnectingState {
                 });
         }
 
-        let ip_availability = match shared_values.connectivity.availability() {
-            Some(ip_availability) => ip_availability,
-            // If we're offline, enter the offline state
-            None => {
-                // FIXME: Temporary: Nudge route manager to update the default interface
-                #[cfg(target_os = "macos")]
-                {
-                    log::debug!("Poking route manager to update default routes");
-                    let _ = shared_values.route_manager.refresh_routes();
-                }
-                return ErrorState::enter(shared_values, ErrorStateCause::IsOffline);
+        Self::enter_warren(shared_values, retry_attempt)
+    }
+
+    /// Warren (QUIC) connecting path.
+    ///
+    /// - No `ip_availability` check on the state machine side - the
+    ///   backend handles its own multi-path resolution (v4/v6) at
+    ///   handshake time.
+    /// - No Android `prepare_tun_config` - the Warren backend opens its
+    ///   own TUN via `args.tun_provider` on the `WarrenTunnelMonitor::start` side.
+    ///
+    /// The pre-handshake firewall is applied via
+    /// [`Self::set_firewall_policy`]:
+    /// [`BackendParams::get_next_hop_endpoints`] exposes the candidate
+    /// exit IPs (from `endpoint_addr.ip_addrs()`), which authorizes
+    /// outgoing traffic to the exit without regressing no-leak.
+    fn enter_warren(
+        shared_values: &mut SharedTunnelStateValues,
+        retry_attempt: u32,
+    ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
+        // Attempt zero is a fresh connect (the user pressed Connect, or a
+        // tunnel that was up came down), so whatever the previous run was
+        // refused for, the exit gets a full budget and a fresh question again.
+        if retry_attempt == 0 {
+            exit_refusal::forget_run();
+        } else if let Some(cause) = refusal_block_reason(shared_values) {
+            return ErrorState::enter(shared_values, cause);
+        }
+
+        let warren_params = match shared_values.runtime.block_on(
+            shared_values
+                .tunnel_parameters_generator
+                .generate_warren_tunnel_params(retry_attempt),
+        ) {
+            Ok(params) => params,
+            Err(err) => {
+                return ErrorState::enter(
+                    shared_values,
+                    ErrorStateCause::TunnelParameterError(err),
+                );
             }
         };
 
-        match shared_values.runtime.block_on(
-            shared_values
-                .tunnel_parameters_generator
-                .generate(retry_attempt, ip_availability),
+        // Pre-handshake firewall for the Warren tunnel: the
+        // `BackendParams::Warren` variant exposes the candidate exit IPs via
+        // `get_next_hop_endpoints()`, and the firewall authorizes them just like
+        // it does for WG peers (no no-leak regression).
+        let backend_info = super::backend_params::WarrenBackendInfo::from_params(&warren_params);
+        let backend_params = BackendParams::Warren(backend_info);
+        if let Err(error) = Self::set_firewall_policy(
+            shared_values,
+            &backend_params,
+            &None,
+            AllowedTunnelTraffic::None,
         ) {
-            Err(err) => {
-                ErrorState::enter(shared_values, ErrorStateCause::TunnelParameterError(err))
-            }
-            Ok(tunnel_parameters) => {
-                #[cfg(windows)]
-                if let Err(error) = shared_values.split_tunnel.set_tunnel_addresses(None) {
-                    log::error!(
+            return ErrorState::enter(
+                shared_values,
+                ErrorStateCause::SetFirewallPolicyError(error),
+            );
+        }
+
+        let connecting_state = Self::start_tunnel_warren(
+            shared_values.runtime.clone(),
+            warren_params,
+            &shared_values.log_dir,
+            &shared_values.resource_dir,
+            shared_values.tun_provider.clone(),
+            &shared_values.route_manager,
+            retry_attempt,
+        );
+
+        let transition_endpoint = connecting_state.tunnel_parameters.get_tunnel_endpoint();
+        (
+            Box::new(connecting_state),
+            TunnelStateTransition::Connecting(transition_endpoint),
+        )
+    }
+
+    /// Mirror of [`Self::start_tunnel`] for the Warren side: identical
+    /// structure (event channel, oneshot close, retry/sleep policy)
+    /// but invokes [`TunnelMonitor::start_warren_tunnel`] instead of
+    /// [`TunnelMonitor::start`].
+    fn start_tunnel_warren(
+        runtime: tokio::runtime::Handle,
+        parameters: WarrenTunnelParameters,
+        log_dir: &Option<PathBuf>,
+        resource_dir: &Path,
+        tun_provider: Arc<Mutex<TunProvider>>,
+        route_manager: &RouteManagerHandle,
+        retry_attempt: u32,
+    ) -> Self {
+        let (event_tx, event_rx) = mpsc::unbounded();
+        let event_hook = EventHook::new(event_tx);
+
+        let route_manager = route_manager.clone();
+        let log_dir = log_dir.clone();
+        let resource_dir = resource_dir.to_path_buf();
+
+        let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
+        let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
+
+        // Extract the lightweight display/firewall snapshot before
+        // moving the full parameters (including signing_key) into the
+        // blocking task. No secret material is cloned.
+        let stored_params = BackendParams::Warren(
+            super::backend_params::WarrenBackendInfo::from_params(&parameters),
+        );
+
+        tokio::task::spawn_blocking(move || {
+            let start = Instant::now();
+
+            let args = TunnelArgs {
+                runtime,
+                resource_dir: &resource_dir,
+                event_hook,
+                tunnel_close_rx,
+                tun_provider,
+                retry_attempt,
+                route_manager,
+            };
+
+            let block_reason = match TunnelMonitor::start_warren_tunnel(&parameters, &log_dir, args)
+            {
+                Ok(monitor) => {
+                    let reason = Self::wait_for_tunnel_monitor(monitor, retry_attempt);
+                    log::debug!(
+                        "Warren tunnel monitor exited with block reason: {:?}",
+                        reason
+                    );
+                    reason
+                }
+                Err(error) if should_retry(&error, retry_attempt) => {
+                    log::warn!(
                         "{}",
                         error.display_chain_with_msg(
-                            "Failed to reset addresses in split tunnel driver"
+                            "Retrying to connect after failing to start Warren tunnel"
                         )
                     );
-
-                    return ErrorState::enter(shared_values, ErrorStateCause::SplitTunnelError);
+                    note_failed_attempt(&error);
+                    None
                 }
-
-                if let Err(error) = Self::set_firewall_policy(
-                    shared_values,
-                    &tunnel_parameters,
-                    &None,
-                    AllowedTunnelTraffic::None,
-                ) {
-                    ErrorState::enter(
-                        shared_values,
-                        ErrorStateCause::SetFirewallPolicyError(error),
-                    )
-                } else {
-                    // HACK: On Android, DNS is part of creating the VPN interface, this call
-                    // ensures that the vpn_config is prepared with correct DNS servers in case they
-                    // previously set to something else, e.g. in the case of blocking. This call
-                    // should probably be part of start_tunnel call.
-                    #[cfg(target_os = "android")]
-                    {
-                        shared_values.prepare_tun_config(false);
-                        if retry_attempt > 0
-                            && retry_attempt.is_multiple_of(MAX_ATTEMPTS_WITH_SAME_TUN)
-                            && let Err(error) =
-                                shared_values.tun_provider.lock().unwrap().open_tun_forced()
-                        {
-                            log::error!(
-                                "{}",
-                                error.display_chain_with_msg("Failed to recreate tun device")
-                            );
-                        }
-                    }
-
-                    let connecting_state = Self::start_tunnel(
-                        shared_values.runtime.clone(),
-                        tunnel_parameters,
-                        &shared_values.log_dir,
-                        &shared_values.resource_dir,
-                        shared_values.tun_provider.clone(),
-                        &shared_values.route_manager,
-                        retry_attempt,
+                Err(error) => {
+                    log::error!(
+                        "{}",
+                        error.display_chain_with_msg("Failed to start Warren tunnel")
                     );
-
-                    let params = connecting_state.tunnel_parameters.clone();
-                    (
-                        Box::new(connecting_state),
-                        TunnelStateTransition::Connecting(params.get_tunnel_endpoint()),
-                    )
+                    Some(error.into())
                 }
+            };
+
+            // Pace the loop from here rather than from the state machine: this
+            // is the one place a failed lap is guaranteed to pass through, and
+            // padding the lap keeps the pacing invisible to every state that
+            // waits on the close event.
+            if block_reason.is_none()
+                && let Some(remaining_time) =
+                    reconnect_floor(retry_attempt, exit_refusal::lap_pacing(Instant::now()))
+                        .checked_sub(start.elapsed())
+            {
+                thread::sleep(remaining_time);
             }
+
+            if tunnel_close_event_tx.send(block_reason).is_err() {
+                log::warn!("Tunnel state machine stopped before receiving tunnel closed event");
+            }
+
+            log::trace!("Warren tunnel monitor thread exit");
+        });
+
+        ConnectingState {
+            tunnel_events: event_rx.fuse(),
+            tunnel_parameters: stored_params,
+            tunnel_metadata: None,
+            allowed_tunnel_traffic: INITIAL_ALLOWED_TUNNEL_TRAFFIC,
+            tunnel_close_event: tunnel_close_event_rx.fuse(),
+            tunnel_close_tx,
+            retry_attempt,
         }
     }
 
     fn set_firewall_policy(
         shared_values: &mut SharedTunnelStateValues,
-        params: &TunnelParameters,
+        params: &BackendParams,
         tunnel_metadata: &Option<TunnelMetadata>,
         allowed_tunnel_traffic: AllowedTunnelTraffic,
     ) -> Result<(), FirewallPolicyError> {
@@ -222,137 +426,27 @@ impl ConnectingState {
             })
     }
 
-    fn start_tunnel(
-        runtime: tokio::runtime::Handle,
-        parameters: TunnelParameters,
-        log_dir: &Option<PathBuf>,
-        resource_dir: &Path,
-        tun_provider: Arc<Mutex<TunProvider>>,
-        route_manager: &RouteManagerHandle,
-        retry_attempt: u32,
-    ) -> Self {
-        let (event_tx, event_rx) = mpsc::unbounded();
-        let event_hook = EventHook::new(event_tx);
-
-        let route_manager = route_manager.clone();
-        let log_dir = log_dir.clone();
-        let resource_dir = resource_dir.to_path_buf();
-
-        let (tunnel_close_tx, tunnel_close_rx) = oneshot::channel();
-        let (tunnel_close_event_tx, tunnel_close_event_rx) = oneshot::channel();
-
-        let tunnel_parameters = parameters.clone();
-
-        tokio::task::spawn_blocking(move || {
-            let start = Instant::now();
-
-            #[cfg(target_os = "windows")]
-            let runtime2 = runtime.clone();
-
-            let args = TunnelArgs {
-                runtime,
-                resource_dir: &resource_dir,
-                event_hook,
-                tunnel_close_rx,
-                tun_provider,
-                retry_attempt,
-                route_manager,
-            };
-
-            #[cfg(target_os = "windows")]
-            async fn maybe_dump_device_logs(log_dir: Option<&Path>, error: &tunnel_monitor::Error) {
-                if error.get_tunnel_device_error().is_some()
-                    && let Some(log_dir) = log_dir
-                {
-                    log::debug!("Logging device info");
-                    if let Err(err) = crate::logging::diag::windows::log_device_info(log_dir).await
-                    {
-                        log::error!("Failed to dump device logs: {err}");
-                    }
-                }
-            }
-
-            let block_reason = match TunnelMonitor::start(&tunnel_parameters, &log_dir, args) {
-                Ok(monitor) => {
-                    let reason = Self::wait_for_tunnel_monitor(monitor, retry_attempt);
-                    log::debug!("Tunnel monitor exited with block reason: {:?}", reason);
-                    reason
-                }
-                Err(error) if should_retry(&error, retry_attempt) => {
-                    log::warn!(
-                        "{}",
-                        error.display_chain_with_msg(
-                            "Retrying to connect after failing to start tunnel"
-                        )
-                    );
-                    #[cfg(target_os = "windows")]
-                    runtime2.block_on(async {
-                        maybe_dump_device_logs(log_dir.as_deref(), &error).await;
-                    });
-                    None
-                }
-                Err(error) => {
-                    log::error!("{}", error.display_chain_with_msg("Failed to start tunnel"));
-                    #[cfg(target_os = "windows")]
-                    runtime2.block_on(async {
-                        maybe_dump_device_logs(log_dir.as_deref(), &error).await;
-                    });
-                    Some(error.into())
-                }
-            };
-
-            if block_reason.is_none()
-                && let Some(remaining_time) = MIN_TUNNEL_ALIVE_TIME.checked_sub(start.elapsed())
-            {
-                thread::sleep(remaining_time);
-            }
-
-            if tunnel_close_event_tx.send(block_reason).is_err() {
-                log::warn!("Tunnel state machine stopped before receiving tunnel closed event");
-            }
-
-            log::trace!("Tunnel monitor thread exit");
-        });
-
-        ConnectingState {
-            tunnel_events: event_rx.fuse(),
-            tunnel_parameters: parameters,
-            tunnel_metadata: None,
-            allowed_tunnel_traffic: INITIAL_ALLOWED_TUNNEL_TRAFFIC,
-            tunnel_close_event: tunnel_close_event_rx.fuse(),
-            tunnel_close_tx,
-            retry_attempt,
-        }
-    }
-
     fn wait_for_tunnel_monitor(
         tunnel_monitor: TunnelMonitor,
         retry_attempt: u32,
     ) -> Option<ErrorStateCause> {
         match tunnel_monitor.wait() {
             Ok(_) => None,
-            Err(error) => match error {
-                tunnel_monitor::Error::TunnelMonitoring(talpid_wireguard::Error::TimeoutError) => {
-                    log::debug!("WireGuard tunnel timed out");
-                    None
-                }
-                error @ tunnel_monitor::Error::TunnelMonitoring(..)
-                    if !should_retry(&error, retry_attempt) =>
-                {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg("Tunnel has stopped unexpectedly")
-                    );
-                    Some(ErrorStateCause::StartTunnelError)
-                }
-                error => {
-                    log::warn!(
-                        "{}",
-                        error.display_chain_with_msg("Tunnel has stopped unexpectedly")
-                    );
-                    None
-                }
-            },
+            Err(error) if !should_retry(&error, retry_attempt) => {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("Tunnel has stopped unexpectedly")
+                );
+                Some(ErrorStateCause::StartTunnelError)
+            }
+            Err(error) => {
+                log::warn!(
+                    "{}",
+                    error.display_chain_with_msg("Tunnel has stopped unexpectedly")
+                );
+                note_failed_attempt(&error);
+                None
+            }
         }
     }
 
@@ -363,6 +457,11 @@ impl ConnectingState {
         if let Err(error) = shared_values.route_manager.clear_routes() {
             log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
         }
+
+        // Warren split routes are out-of-band from the `RouteManager`
+        // above, so `clear_routes()` cannot remove them. See
+        // `force_route_cleanup`.
+        talpid_warren_tunnel::force_route_cleanup();
         #[cfg(target_os = "linux")]
         if let Err(error) = shared_values
             .runtime
@@ -467,7 +566,7 @@ impl ConnectingState {
             }
             #[cfg(not(target_os = "android"))]
             Some(TunnelCommand::LockdownMode(lockdown_mode, complete_tx)) => {
-                shared_values.lockdown_mode = lockdown_mode;
+                shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
                 SameState(self)
             }
@@ -629,8 +728,52 @@ impl ConnectingState {
         use self::EventConsequence::*;
 
         if let Some(block_reason) = block_reason {
+            reset_flap_detector();
             Self::reset_routes(shared_values);
             return NewState(ErrorState::enter(shared_values, block_reason));
+        }
+
+        // Same offline precedence as ConnectedState: a close while the
+        // host is offline must read as `IsOffline` (auto-recovers on the
+        // online edge), never count toward the flap detector.
+        if shared_values.connectivity.is_offline() {
+            reset_flap_detector();
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(shared_values, ErrorStateCause::IsOffline));
+        }
+
+        // A refusal loop is not flapping. The detector exists for a data plane
+        // that churns Connecting -> (fake) Connected -> Down; a refused session
+        // never reaches Connected, its cadence is deliberate, and
+        // [`exit_refusal`] already decides when it stops. Counting it here
+        // would break the loop at the sixth lap on the exit's behalf, which is
+        // exactly the paying user this change exists to protect.
+        if exit_refusal::run_is_open() {
+            log::debug!(
+                "Tunnel closed on an exit refusal. Reconnecting, attempt {}.",
+                self.retry_attempt + 1
+            );
+            Self::reset_routes(shared_values);
+            return NewState(ConnectingState::enter(
+                shared_values,
+                self.retry_attempt + 1,
+            ));
+        }
+
+        // Bound the loop: sustained flapping drops to a stable, cancelable
+        // blocked state instead of churning. See [`RECENT_RECONNECTS`].
+        if note_reconnect_and_is_flapping(Instant::now()) {
+            log::error!(
+                "Warren tunnel is flapping (>{FLAP_MAX} reconnects within {FLAP_WINDOW:?}); \
+                 entering a stable blocked state instead of churning. \
+                 Disconnect to clear, then reconnect once the network is stable."
+            );
+            reset_flap_detector();
+            Self::reset_routes(shared_values);
+            return NewState(ErrorState::enter(
+                shared_values,
+                ErrorStateCause::WarrenTunnelFlapping,
+            ));
         }
 
         log::info!(
@@ -679,6 +822,146 @@ impl TunnelState for ConnectingState {
                 let block_reason = result.unwrap_or(None);
                 self.handle_tunnel_close_event(block_reason, shared_values)
             }
+            EventResult::OfflineGraceExpired => {
+                unreachable!("offline grace only exists in the connected state")
+            }
         }
+    }
+}
+
+#[cfg(test)]
+mod retry_policy_tests {
+    use std::time::Duration;
+
+    use super::exit_refusal::LapPacing;
+    use super::{
+        FAST_RETRY_ATTEMPTS, MAX_RECONNECT_FLOOR, MIN_TUNNEL_ALIVE_TIME, reconnect_floor,
+        tunnel_monitor,
+    };
+
+    fn refusal() -> tunnel_monitor::Error {
+        tunnel_monitor::Error::WarrenTunnelMonitoring(talpid_warren_tunnel::Error::SessionRejected(
+            "[EXPIRED_ACCOUNT] exit rejected the session".to_owned(),
+        ))
+    }
+
+    fn network_glitch() -> tunnel_monitor::Error {
+        tunnel_monitor::Error::WarrenTunnelMonitoring(
+            talpid_warren_tunnel::Error::BackendTransient("tun read timeout".to_owned()),
+        )
+    }
+
+    #[test]
+    fn the_first_laps_retry_at_the_floor_so_a_syncing_exit_stays_invisible() {
+        // The measured common case connects after 1 to 3 refusals: the exit
+        // was mid-poll and admits the wallet a second later. Slowing those
+        // laps down would turn an invisible hiccup into a visible outage.
+        for attempt in 0..FAST_RETRY_ATTEMPTS {
+            assert_eq!(
+                reconnect_floor(attempt, LapPacing::ANTI_SPIN),
+                MIN_TUNNEL_ALIVE_TIME,
+                "attempt {attempt} must still retry promptly"
+            );
+        }
+    }
+
+    #[test]
+    fn only_a_confirmed_transient_refusal_dials_at_the_shorter_floor() {
+        // The narrowness is the whole safety argument: every other failure
+        // keeps upstream's anti-spin second, so a tunnel that dies instantly
+        // can never be made to spin twice as fast by this.
+        for attempt in 0..FAST_RETRY_ATTEMPTS {
+            assert_eq!(
+                reconnect_floor(attempt, LapPacing::CONFIRMED_TRANSIENT),
+                Duration::from_millis(500),
+                "a refusal the API confirmed must halve the wait at attempt {attempt}"
+            );
+            assert_eq!(
+                reconnect_floor(attempt, LapPacing::ANTI_SPIN),
+                MIN_TUNNEL_ALIVE_TIME,
+                "everything else keeps the anti-spin floor at attempt {attempt}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_shorter_floor_still_grows_and_is_still_capped() {
+        // Halving the floor must not remove the bound a stuck refusal needs.
+        assert_eq!(
+            reconnect_floor(4, LapPacing::CONFIRMED_TRANSIENT),
+            Duration::from_secs(1)
+        );
+        assert_eq!(
+            reconnect_floor(7, LapPacing::CONFIRMED_TRANSIENT),
+            Duration::from_secs(8)
+        );
+        assert_eq!(
+            reconnect_floor(u32::MAX, LapPacing::CONFIRMED_TRANSIENT),
+            MAX_RECONNECT_FLOOR
+        );
+    }
+
+    #[test]
+    fn one_refusal_cycle_still_costs_the_exit_ten_dials_not_twenty() {
+        // The trade poka approved, computed rather than asserted: the shorter
+        // floor buys back up to a second of lateness for one extra dial per
+        // 30 s. The first lap has no verdict yet, so it always pays the full
+        // anti-spin floor.
+        let mut elapsed = Duration::ZERO;
+        let mut dials = 1;
+        for attempt in 0.. {
+            let pacing = if attempt == 0 {
+                LapPacing::ANTI_SPIN
+            } else {
+                LapPacing::CONFIRMED_TRANSIENT
+            };
+            elapsed += reconnect_floor(attempt, pacing);
+            if elapsed >= Duration::from_secs(30) {
+                break;
+            }
+            dials += 1;
+        }
+        assert_eq!(
+            dials, 10,
+            "a refusal that never clears must stay near ten dials per 30 s"
+        );
+    }
+
+    #[test]
+    fn the_interval_grows_and_is_capped_so_a_stuck_refusal_stops_hammering() {
+        assert_eq!(
+            reconnect_floor(4, LapPacing::ANTI_SPIN),
+            Duration::from_secs(2)
+        );
+        assert_eq!(
+            reconnect_floor(5, LapPacing::ANTI_SPIN),
+            Duration::from_secs(4)
+        );
+        assert_eq!(
+            reconnect_floor(6, LapPacing::ANTI_SPIN),
+            Duration::from_secs(8)
+        );
+        assert_eq!(
+            reconnect_floor(7, LapPacing::ANTI_SPIN),
+            MAX_RECONNECT_FLOOR,
+            "the interval must be capped, not doubled forever"
+        );
+        assert_eq!(
+            reconnect_floor(u32::MAX, LapPacing::ANTI_SPIN),
+            MAX_RECONNECT_FLOOR,
+            "a very long run must not overflow into a tiny (or infinite) interval"
+        );
+    }
+
+    #[test]
+    fn only_an_exit_refusal_feeds_the_refusal_run() {
+        // What the connecting state contributes to the decision: which failed
+        // laps count as refusals. Anything else must close the run, or a
+        // network glitch would be judged as an account verdict.
+        assert_eq!(
+            refusal().warren_session_rejection(),
+            Some("[EXPIRED_ACCOUNT] exit rejected the session")
+        );
+        assert_eq!(network_glitch().warren_session_rejection(), None);
     }
 }

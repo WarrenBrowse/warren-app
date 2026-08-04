@@ -9,7 +9,7 @@
 
 import XCTest
 
-@testable import MullvadMockData
+@testable import WarrenMockData
 @testable import PacketTunnelCore
 
 final class EventChannelTests: XCTestCase {

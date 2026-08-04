@@ -6,6 +6,10 @@ description = "Runs programs outside the Mullvad VPN tunnel on Linux"
 repository.workspace = true
 license.workspace = true
 
+[[bin]]
+name = "warren-exclude"
+path = "src/main.rs"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 nix = { workspace = true, features = ["process", "user"] }
 talpid-cgroup = { path = "../talpid-cgroup" }

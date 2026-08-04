@@ -1,0 +1,26 @@
+//
+//  SettingsViewModel.swift
+//  MullvadVPN
+//
+//  Created by Jon Petersson on 2024-10-03.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import WarrenSettings
+
+struct SettingsViewModel {
+    private(set) var daitaSettings: DAITASettings
+    private(set) var multihopState: MultihopState
+    private(set) var includeAllNetworksState: InclueAllNetworksState
+
+    var currentLanguage: String {
+        let currentLanguage = ApplicationLanguage.currentLanguage
+        return currentLanguage.displayName
+    }
+
+    init(from tunnelSettings: LatestTunnelSettings = LatestTunnelSettings()) {
+        daitaSettings = tunnelSettings.daita
+        multihopState = tunnelSettings.tunnelMultihopState
+        includeAllNetworksState = tunnelSettings.includeAllNetworks.includeAllNetworksState
+    }
+}

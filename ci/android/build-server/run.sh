@@ -2,9 +2,12 @@
 
 # # Setup instructions before this script will work
 #
+# Inherited from upstream Mullvad's build server (uploads to Mullvad's
+# releases.mullvad.net); NOT used by the Warren release process.
+#
 # * Follow the instructions in ../README.md
 # * Import and trust the GPG keys of everyone who the build server should trust code from
-# * Ensure that the machine running this script is allowed to upload to releases.mullvad.net.
+# * Ensure that the machine running this script is allowed to upload to the release server.
 
 set -eu
 shopt -s nullglob

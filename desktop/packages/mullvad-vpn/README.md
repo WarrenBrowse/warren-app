@@ -1,4 +1,4 @@
-# Mullvad VPN Electron app
+# Warren VPN Electron app
 
 This directory contains the files specific to the Electron app for the desktop platforms.
 
@@ -44,7 +44,7 @@ The build is configured in `standalone-tests.ts`
 The artifact can be run by either calling without arguments or with specific tests. A lot of the
 tests are depending on the daemon already being in a specific state and will fail if it's not.
 ```
-./mullvadvpn-app-e2e-tests-linux state-dependent/location.spec
+./app-e2e-tests-<version>-x86_64-unknown-linux-gnu state-dependent/location.spec
 ```
 
 

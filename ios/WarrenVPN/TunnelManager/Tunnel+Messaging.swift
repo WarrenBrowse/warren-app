@@ -1,0 +1,129 @@
+//
+//  Tunnel+Messaging.swift
+//  MullvadVPN
+//
+//  Created by pronebird on 16/09/2021.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Foundation
+import WarrenREST
+import WarrenTypes
+import Operations
+import PacketTunnelCore
+
+/// Shared operation queue used for IPC requests.
+private let operationQueue = AsyncOperationQueue()
+
+/// Shared queue used by IPC operations.
+private let dispatchQueue = DispatchQueue(label: "Tunnel.dispatchQueue")
+
+/// Timeout for proxy requests.
+private let proxyRequestTimeout = REST.defaultAPINetworkTimeout + 2
+
+extension TunnelProtocol {
+    /// Request packet tunnel process to reconnect the tunnel with the given relays.
+    func reconnectTunnel(
+        to nextRelays: NextRelays,
+        completionHandler: @escaping @Sendable (Result<ObservedState, Error>) -> Void
+    ) -> Cancellable {
+        let operation = SendTunnelProviderMessageOperation(
+            dispatchQueue: dispatchQueue,
+            backgroundTaskProvider: backgroundTaskProvider,
+            tunnel: self,
+            message: .reconnectTunnel(nextRelays),
+            decoderHandler: mapObservedState(data:),
+            completionHandler: completionHandler
+        )
+
+        operationQueue.addOperation(operation)
+
+        return operation
+    }
+
+    /// Request status from packet tunnel process.
+    func getTunnelStatus(
+        completionHandler: @escaping @Sendable (Result<ObservedState, Error>) -> Void
+    ) -> Cancellable {
+        let operation = SendTunnelProviderMessageOperation(
+            dispatchQueue: dispatchQueue,
+            backgroundTaskProvider: backgroundTaskProvider,
+            tunnel: self,
+            message: .getTunnelStatus,
+            decoderHandler: mapObservedState(data:),
+            completionHandler: completionHandler
+        )
+
+        operationQueue.addOperation(operation)
+        return operation
+    }
+
+    /// Send API request via packet tunnel process bypassing VPN.
+    func sendAPIRequest(
+        _ proxyRequest: ProxyAPIRequest,
+        completionHandler: @escaping @Sendable (Result<ProxyAPIResponse, Error>) -> Void
+    ) -> Cancellable {
+        let decoderHandler: (Data?) throws -> ProxyAPIResponse = { data in
+            if let data {
+                return try TunnelProviderReply<ProxyAPIResponse>(messageData: data).value
+            } else {
+                throw EmptyTunnelProviderResponseError()
+            }
+        }
+
+        let operation = SendTunnelProviderMessageOperation(
+            dispatchQueue: dispatchQueue,
+            backgroundTaskProvider: backgroundTaskProvider,
+            tunnel: self,
+            message: .sendAPIRequest(proxyRequest),
+            timeout: proxyRequestTimeout,
+            decoderHandler: decoderHandler,
+            completionHandler: completionHandler
+        )
+
+        operation.onCancel { [weak self] _ in
+            guard let self else { return }
+
+            let cancelOperation = SendTunnelProviderMessageOperation(
+                dispatchQueue: dispatchQueue,
+                backgroundTaskProvider: backgroundTaskProvider,
+                tunnel: self,
+                message: .cancelAPIRequest(proxyRequest.id),
+                decoderHandler: decoderHandler,
+                completionHandler: nil
+            )
+
+            operationQueue.addOperation(cancelOperation)
+        }
+
+        operationQueue.addOperation(operation)
+
+        return operation
+    }
+
+    func mapObservedState(data: Data?) throws -> ObservedState {
+        if let data {
+            return try TunnelProviderReply<ObservedState>(messageData: data).value
+        } else {
+            throw EmptyTunnelProviderResponseError()
+        }
+    }
+
+    /// Notify tunnel about private key rotation.
+    func notifyKeyRotation(
+        completionHandler: @escaping @Sendable (Result<Void, Error>) -> Void
+    ) -> Cancellable {
+        let operation = SendTunnelProviderMessageOperation(
+            dispatchQueue: dispatchQueue,
+            backgroundTaskProvider: backgroundTaskProvider,
+            tunnel: self,
+            message: .privateKeyRotation,
+            decoderHandler: { _ in () },
+            completionHandler: completionHandler
+        )
+
+        operationQueue.addOperation(operation)
+
+        return operation
+    }
+}

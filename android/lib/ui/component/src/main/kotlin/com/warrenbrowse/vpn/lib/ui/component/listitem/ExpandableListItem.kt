@@ -1,0 +1,120 @@
+package com.warrenbrowse.vpn.lib.ui.component.listitem
+
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
+import com.warrenbrowse.vpn.lib.ui.designsystem.Hierarchy
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenListItem
+import com.warrenbrowse.vpn.lib.ui.designsystem.Position
+import com.warrenbrowse.vpn.lib.ui.tag.EXPAND_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.util.applyIfNotNull
+
+@Preview
+@Composable
+private fun PreviewExpandedEnabledExpandableListItem() {
+    AppTheme {
+        ExpandableListItem(
+            title = "Expandable row title",
+            isExpanded = true,
+            isEnabled = true,
+            onCellClicked = {},
+            onInfoClicked = {},
+        )
+    }
+}
+
+@Composable
+fun ExpandableListItem(
+    modifier: Modifier = Modifier,
+    hierarchy: Hierarchy = Hierarchy.Parent,
+    position: Position = Position.Single,
+    title: String,
+    isExpanded: Boolean,
+    isEnabled: Boolean = true,
+    onCellClicked: (Boolean) -> Unit,
+    onInfoClicked: (() -> Unit)? = null,
+) {
+    ExpandableListItem(
+        modifier = modifier,
+        hierarchy = hierarchy,
+        position = position,
+        content = { Text(title) },
+        isExpanded = isExpanded,
+        isEnabled = isEnabled,
+        onCellClicked = onCellClicked,
+        onInfoClicked = onInfoClicked,
+    )
+}
+
+@Composable
+fun ExpandableListItem(
+    modifier: Modifier = Modifier,
+    hierarchy: Hierarchy = Hierarchy.Parent,
+    position: Position = Position.Single,
+    content: @Composable (BoxScope) -> Unit,
+    isExpanded: Boolean,
+    isEnabled: Boolean = true,
+    backgroundAlpha: Float = 1f,
+    onCellClicked: (Boolean) -> Unit,
+    onInfoClicked: (() -> Unit)? = null,
+) {
+    WarrenListItem(
+        modifier = modifier.applyIfNotNull(onInfoClicked) { focusProperties { canFocus = false } },
+        hierarchy = hierarchy,
+        position = position,
+        isEnabled = isEnabled,
+        onClick = { onCellClicked(!isExpanded) },
+        backgroundAlpha = backgroundAlpha,
+        content = content,
+        trailingContent = {
+            Row(modifier = modifier.fillMaxSize()) {
+                if (onInfoClicked != null) {
+                    Box(
+                        modifier =
+                            Modifier.width(ListItemComponentTokens.infoIconContainerWidth)
+                                .fillMaxHeight(),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        IconButton(onClick = onInfoClicked) {
+                            Icon(imageVector = Icons.Rounded.Info, contentDescription = null)
+                        }
+                    }
+                }
+                Box(
+                    modifier = Modifier.width(ChevronContainerWidth).fillMaxHeight(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    IconButton(
+                        modifier =
+                            Modifier.padding(end = ChevronIconPaddingEnd)
+                                .testTag(EXPAND_BUTTON_TEST_TAG),
+                        onClick = { onCellClicked(!isExpanded) },
+                    ) {
+                        ExpandChevron(isExpanded = isExpanded)
+                    }
+                }
+            }
+        },
+    )
+}
+
+private val ChevronContainerWidth = 60.dp
+private val ChevronIconPaddingEnd = 8.dp

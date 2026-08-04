@@ -56,6 +56,122 @@ service ManagementService {
   rpc SetEnableRecents(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   rpc SetUserspaceWireguard(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
 
+  // Persistent URL of the warren-api server (consumed by
+  // WarrenRemote{Account,Device}Backend). Format
+  // `http(s)://host:port` without a trailing slash. Empty string means
+  // unset (= None on the Settings side, falls back to Mullvad upstream).
+  // Overridable via the `WARREN_API_URL` env var. A daemon restart is
+  // required to apply the change.
+  rpc SetWarrenApiUrl(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  // Number of parallel QUIC connections for the Warren tunnel.
+  // 0 = reset to the compiled default (8). Valid range 1..=16,
+  // rejected otherwise. Applied on the next (re)connect; the daemon
+  // reconnects automatically when the tunnel is up. The env var
+  // `WARREN_N_CONNECTIONS` on the daemon takes priority over this
+  // setting.
+  rpc SetWarrenNConnections(google.protobuf.UInt32Value) returns (google.protobuf.Empty) {}
+  // User-imposed ceiling on the Warren tunnel's own bandwidth, in bits
+  // per second, enforced client-side on both directions independently.
+  // 0 = unset (unlimited). Applied to a live tunnel without a
+  // reconnect.
+  rpc SetWarrenMaxRateBps(google.protobuf.UInt64Value) returns (google.protobuf.Empty) {}
+  // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
+  // user back it up. Empty string if the identity has never been
+  // bootstrapped (= legacy Mullvad mode or first boot before
+  // warren_signer).
+  // **Sensitive**: the GUI caller must display it with a safety warning
+  // and explicit user confirmation. The returned string is a
+  // cryptographic secret, never logged by the daemon (no-log policy).
+  rpc GetWarrenMnemonic(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
+  // Replaces the user identity with the supplied BIP39 mnemonic.
+  // **Irreversible**: any subscription tied to the current identity is
+  // lost. The GUI caller must display a strong confirmation before
+  // calling. No restart is needed: the daemon hot-swaps the in-memory
+  // signer (reload_signer_from_disk) and triggers an auto-login so the
+  // new identity takes effect in the running process. The payload is
+  // BIP39-validated before being written to disk (= atomic rejection).
+  rpc SetWarrenMnemonic(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+
+  // Signs a community-forum login challenge (DiscourseConnect wallet SSO,
+  // warren-core doc 55). The GUI passes the `sid` from a
+  // `warren://forum-login?sid=..` deep link; the daemon signs the fixed
+  // canonical request `POST /v1/forum/login` with body `{"sid":"<sid>"}`
+  // using the Warren identity key and returns the four X-Warren-* header
+  // values. The GUI then POSTs them to the forum connect host. The key
+  // never leaves the daemon. Errors if no identity is bootstrapped or the
+  // sid is malformed.
+  rpc SignForumLogin(ForumLoginRequest) returns (ForumLoginSignature) {}
+
+  // Signs a community-forum attach-logs request (warren-core doc 55). The
+  // GUI passes the `sid` + `topic_id` from a
+  // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped
+  // redacted problem report; the daemon builds the canonical JSON body
+  // `{"sid":"<sid>","topic_id":<topic>,"log_gz_b64":"<base64>"}`, signs
+  // `POST /v1/forum/attach-logs` with the Warren identity key, and returns
+  // the four X-Warren-* header values plus that exact body. The GUI POSTs
+  // the body verbatim so the signed bytes and the sent bytes are identical.
+  // The key never leaves the daemon. Errors if no identity is bootstrapped,
+  // the sid is malformed, or the gzip is empty or exceeds 1 MiB.
+  rpc SignForumAttachLogs(ForumAttachLogsRequest) returns (ForumLoginSignature) {}
+
+  // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
+  // OFF by default per doctrine `warren_multihop_doctrine_v1` (full
+  // bandwidth single-hop, opt-in privacy). entry_country / exit_country
+  // are ISO 3166 alpha-2 codes ("fr", "de", ...); empty string means
+  // auto-pick.
+  rpc GetWarrenMultiHopSettings(google.protobuf.Empty) returns (WarrenMultiHopSettings) {}
+  rpc SetWarrenMultiHopSettings(WarrenMultiHopSettings) returns (google.protobuf.Empty) {}
+  // Advanced "custom exit" override (Settings.warren_custom_exit). When
+  // enabled with a valid endpoint+pubkey the daemon dials it directly,
+  // bypassing the signed registry, failover, multi-hop and the TOFU
+  // pin. Applied on the next (re)connect; the daemon reconnects
+  // automatically when the tunnel is up. The current value is read back
+  // through the Settings message (warren_custom_exit field).
+  rpc SetWarrenCustomExit(WarrenCustomExitSettings) returns (google.protobuf.Empty) {}
+  // Warren live tunnel status (reconnect_count + last_reconnect_age
+  // surface the M4.E.D auto-reconnect supervisor; obfuscation_active
+  // is always-true for /v1 per `warren_obfuscation_doctrine_v1`).
+  rpc GetWarrenStatus(google.protobuf.Empty) returns (WarrenStatus) {}
+  // Push stream emitting a new WarrenStatus whenever reconnect_count
+  // changes or the tunnel state machine transitions. The GUI consumes
+  // this for live UI updates without polling.
+  rpc WarrenStatusUpdates(google.protobuf.Empty) returns (stream WarrenStatus) {}
+
+  // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
+  // verify hook refuses connects when the served Ed25519 pubkey for
+  // a known `exit_id` differs from the locally pinned baseline; the
+  // following RPCs let the user resolve the mismatch from the UI
+  // modal without editing settings.json by hand.
+  //
+  // - TrustNewExitKey: replace the pinned key with the newly-observed
+  //   one and resume connecting. Use case: legitimate key rotation
+  //   announced by the operator.
+  // - ResetPinnedExitKeys: clear the entire pin table. Use case: the
+  //   user switches identity / device and wants a fresh TOFU baseline.
+  // - DismissPubkeyMismatch: keep the existing pin, clear the
+  //   pending-mismatch flag from WarrenStatus so the modal unmounts.
+  //   The daemon stays disconnected; reconnecting would re-trigger
+  //   the modal until the user picks Trust or Reset.
+  // - ReportPubkeyMismatch: best-effort POST to
+  //   `/v1/incidents/pubkey-mismatch`. No PII (cf. the field set).
+  //   The mismatch flag is cleared regardless of the network outcome.
+  rpc TrustNewExitKey(TrustNewExitKeyRequest) returns (TrustNewExitKeyResponse) {}
+  rpc ResetPinnedExitKeys(google.protobuf.Empty) returns (ResetPinnedExitKeysResponse) {}
+  rpc DismissPubkeyMismatch(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc ReportPubkeyMismatch(ReportPubkeyMismatchRequest) returns (google.protobuf.Empty) {}
+
+  // Warren NAT-PMP port-forwarding (RFC 6886). Warren's product
+  // differentiator since Mullvad / IVPN dropped port-forwarding in
+  // 2023. OFF by default; when ON the daemon spawns a refresh loop
+  // against the exit's NAT-PMP server (UDP/5351 of the tunnel
+  // gateway) and surfaces the granted public port to the UI through
+  // the NatPmpStatusUpdates stream.
+  rpc GetNatPmpSettings(google.protobuf.Empty) returns (NatPmpSettings) {}
+  rpc SetNatPmpSettings(NatPmpSettings) returns (google.protobuf.Empty) {}
+  // Push stream emitting a new NatPmpStatus on every refresh loop
+  // event (Mapped / Renewed / Failed / Cancelled).
+  rpc NatPmpStatusUpdates(google.protobuf.Empty) returns (stream NatPmpStatus) {}
+
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc LoginAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
@@ -241,6 +357,9 @@ message ErrorState {
     INVALID_IPV6_CONFIG = 14;
     SPLIT_TUNNEL_ERROR = 12;
     NEED_FULL_DISK_PERMISSIONS = 13;
+    // Warren: the tunnel reconnected too many times in a short window
+    // (network flapping); the retry loop was stopped and parked here.
+    WARREN_TUNNEL_FLAPPING = 15;
   }
 
   enum AuthFailedError {
@@ -248,6 +367,12 @@ message ErrorState {
     INVALID_ACCOUNT = 1;
     EXPIRED_ACCOUNT = 2;
     TOO_MANY_CONNECTIONS = 3;
+    // Warren: account explicitly revoked (banned) by the operator.
+    BANNED = 4;
+    // Warren: banned specifically for port-forwarding abuse (the exit sealed
+    // the port-forwarding reason code), so the app shows a forwarded-port
+    // suspension. Same fatal handling as BANNED.
+    BANNED_PORT_FORWARDING = 5;
   }
 
   enum GenerationError {
@@ -258,6 +383,17 @@ message ErrorState {
     CUSTOM_TUNNEL_HOST_RESOLUTION_ERROR = 4;
     NETWORK_IPV4_UNAVAILABLE = 5;
     NETWORK_IPV6_UNAVAILABLE = 6;
+    // Warren TOFU pubkey mismatch: the exit served a different Ed25519 pubkey
+    // than the one previously pinned. The UI should surface a warning modal
+    // rather than the generic "No matching server" message.
+    WARREN_PUBKEY_MISMATCH = 7;
+  }
+
+  // Detail message sent alongside WARREN_PUBKEY_MISMATCH.
+  message WarrenPubkeyMismatchDetail {
+    string exit_id_hex = 1;
+    string pinned = 2;
+    string observed = 3;
   }
 
   message FirewallPolicyError {
@@ -300,6 +436,8 @@ message ErrorState {
   InvalidDnsServersError invalid_dns_servers_error = 9;
   // Android only
   InvalidIpv6Config invalid_ipv6_config_error = 10;
+  // TUNNEL_PARAMETER_ERROR + WARREN_PUBKEY_MISMATCH: detail for the UI modal.
+  optional WarrenPubkeyMismatchDetail warren_pubkey_mismatch_detail = 11;
 }
 
 message TunnelState {
@@ -332,6 +470,12 @@ message TunnelStateRelayInfo {
   GeoIpLocation location = 2;
 }
 
+// Which tunneling technology backs a TunnelEndpoint.
+enum TunnelType {
+  WIREGUARD = 0;
+  WARREN = 1;
+}
+
 message TunnelEndpoint {
   string address = 1;
   TransportProtocol protocol = 2;
@@ -340,6 +484,11 @@ message TunnelEndpoint {
   Endpoint entry_endpoint = 5;
   TunnelMetadata tunnel_metadata = 6;
   bool daita = 7;
+  // The tunneling technology used for this endpoint (default = WIREGUARD for backward compat).
+  TunnelType tunnel_type = 8;
+  // Largest inner packet the live tunnel can carry in one datagram, set only
+  // when it measured below the TUN MTU (reduced-MTU underlay).
+  optional uint32 effective_mtu = 9;
 }
 
 message FeatureIndicators { repeated FeatureIndicator active_features = 1; }
@@ -361,6 +510,13 @@ enum FeatureIndicator {
   CUSTOM_MTU = 13;
   DAITA = 14;
   DAITA_MULTIHOP = 15;
+  ALLOW_EXTERNAL_DNS = 16;
+  // DAITA was requested but the connected endpoint reports the defense is not
+  // running on this session (the server did not grant it).
+  DAITA_UNAVAILABLE = 17;
+  // The live tunnel measured an inner-packet budget below the TUN MTU
+  // (reduced-MTU underlay); the datapath is adapting automatically.
+  REDUCED_MTU = 18;
 }
 
 message ObfuscationInfo {
@@ -542,6 +698,356 @@ message Settings {
   repeated RelayOverride relay_overrides = 12;
   optional Recents recents = 13;
   bool update_default_location = 14;
+  reserved 15; // was warren_mode (removed: Warren is the only mode)
+  reserved 16; // was warren_local_account (removed: always remote backend)
+  // Empty string = unset. Cf. SetWarrenApiUrl rpc.
+  string warren_api_url = 17;
+  // Warren two-relayed QUIC multi-hop settings. Cf.
+  // SetWarrenMultiHopSettings rpc. Absent = OFF (single-hop).
+  WarrenMultiHopSettings warren_multi_hop = 18;
+  // Warren NAT-PMP port-forwarding settings. Cf. SetNatPmpSettings
+  // rpc. Absent = OFF (no refresh loop spawned).
+  NatPmpSettings warren_nat_pmp = 19;
+  // 0 = unset (compiled default, 8). Cf. SetWarrenNConnections rpc.
+  uint32 warren_n_connections = 20;
+  // Advanced "custom exit" override. Cf. SetWarrenCustomExit rpc.
+  // Absent / enabled=false = normal roster selection.
+  WarrenCustomExitSettings warren_custom_exit = 21;
+  // 0 = unset (unlimited). Cf. SetWarrenMaxRateBps rpc.
+  uint64 warren_max_rate_bps = 22;
+}
+
+// Advanced "custom exit" override persisted in
+// Settings.warren_custom_exit. Default = enabled:false + empty fields
+// (normal roster selection). When enabled with a valid endpoint+pubkey
+// the daemon dials this single hand-entered exit directly, bypassing
+// the signed registry, failover, multi-hop and the TOFU pin (typing the
+// key out of band IS the pin).
+message WarrenCustomExitSettings {
+  bool enabled = 1;
+  // Exit UDP endpoint as host:port. IPv6 must be bracketed
+  // ([2001:db8::1]:443). Parsed to a SocketAddr daemon-side.
+  string endpoint = 2;
+  // Hex-encoded 32-byte Ed25519 server public key (64 hex chars).
+  string pubkey_hex = 3;
+  // Optional X.509 cover domain (SNI). Absent = RPK-via-SNI mode; set
+  // it only when the exit runs a matching public certificate.
+  optional string cover_domain = 4;
+  // Optional cosmetic UI label ("My home exit").
+  string label = 5;
+  // Hex-encoded 32-byte X25519 multi-hop HPKE recipient key (64 hex
+  // chars). Required now that a custom exit rides the 1-hop multi-hop
+  // datapath; the payload is sealed to this key.
+  string x25519_multihop_pubkey_hex = 6;
+  // Hex-encoded 16-byte exit routing id (32 hex chars) carried in the
+  // cleartext multi-hop header (relay id == exit id for a 1-hop circuit).
+  string exit_id_hex = 7;
+}
+
+// Warren multi-hop settings persisted in Settings.warren_multi_hop and
+// surfaced via GetWarrenMultiHopSettings rpc. Default = enabled:false,
+// empty countries, hpke_epoch_rotation = 4h (doctrine
+// `warren_multihop_doctrine_v1`).
+message WarrenMultiHopSettings {
+  bool enabled = 1;
+  // ISO 3166 alpha-2 country code. Empty string = auto-pick.
+  string entry_country = 2;
+  string exit_country = 3;
+  // HPKE epoch rotation interval. Default 4h, max 8h per doctrine.
+  google.protobuf.Duration hpke_epoch_rotation = 4;
+}
+
+// Community-forum wallet login (doc 55). `sid` is the opaque session id
+// from the `warren://forum-login?sid=..` deep link (32 lowercase hex);
+// the daemon validates its shape before signing.
+message ForumLoginRequest {
+  string sid = 1;
+}
+
+// The four X-Warren-* header values plus the request body the GUI must
+// POST to `https://<connect-host>/v1/forum/login`. None of these is a
+// long-lived secret: the signature is bound to the fixed path + body +
+// nonce + timestamp (60 s window, single-use server side).
+message ForumLoginSignature {
+  string pubkey_ss58 = 1;
+  string signature_hex = 2;
+  uint64 timestamp = 3;
+  string nonce_hex = 4;
+  string body = 5;
+}
+
+// Community-forum attach-logs (doc 55). `sid` is the opaque session id from
+// the `warren://attach-logs?sid=..` deep link (32 lowercase hex; the daemon
+// validates its shape before signing), `topic_id` the forum topic of the
+// user's bug report, and `log_gz` the gzipped redacted problem report
+// (non-empty, max 1 MiB).
+message ForumAttachLogsRequest {
+  string sid = 1;
+  uint64 topic_id = 2;
+  bytes log_gz = 3;
+}
+
+// Warren live tunnel status surface via GetWarrenStatus rpc and the
+// WarrenStatusUpdates stream. reconnect_count + last_reconnect_age
+// expose the M4.E.D auto-reconnect supervisor; obfuscation_active is
+// always-true for /v1 per `warren_obfuscation_doctrine_v1`.
+// M5.B.2: failover_count + last_failover_age expose the multi-exit
+// auto-failover (`assemble_failover_for_attempt`) so the UI can toast
+// the user when their exit is swapped after an outage.
+// Session H A.4: pubkey_mismatch_pending surfaces a TOFU verify-hook
+// refusal so the renderer can mount the `WarrenPubKeyWarning` modal.
+message WarrenStatus {
+  uint32 reconnect_count = 1;
+  google.protobuf.Duration last_reconnect_age = 2;
+  bool obfuscation_active = 3;
+  uint32 failover_count = 4;
+  google.protobuf.Duration last_failover_age = 5;
+  // Absent (= null on the wire) in the steady state; populated when
+  // the daemon-side verify hook refused a connect because the
+  // observed Ed25519 pubkey differs from the locally pinned baseline.
+  WarrenPubkeyMismatch pubkey_mismatch_pending = 6;
+  // ADR 36: true while the last drain-triggered exit switch (server
+  // maintenance) is inside its display window. The daemon re-emits a
+  // status update when the window expires, so the UI banner keyed on
+  // this flag self-dismisses.
+  bool maintenance_migration_active = 7;
+  // Doc 59 C5: number of maintenance migrations cancelled because a
+  // user-pinned forwarded port could not be reserved on any candidate
+  // exit. The client stays on the draining exit with its ports intact;
+  // the UI toasts "migration postponed, port kept" on each increment.
+  uint32 port_migration_cancellations = 8;
+  // True while the last port-conflict cancellation is inside its display
+  // window (same self-expiring discipline as maintenance_migration_active).
+  bool port_migration_cancellation_active = 9;
+  // True while the offline monitor reports the host offline, pushed on
+  // the edge itself (before any tunnel-side grace). Drives the
+  // immediate "no internet connection" banner in every tunnel state.
+  bool host_offline = 10;
+  // Doc 62 item 5: true while the in-tunnel egress liveness probe
+  // reports the exit not forwarding (drained / half-swapped exit that
+  // still ACKs QUIC keep-alives). Cleared on a successful probe or
+  // when the tunnel leaves Connected. Drives the "interrupted" phase
+  // with the exit-not-forwarding banner while Connected.
+  bool exit_egress_dead = 11;
+  // Latest public `GET /v1/network` environment descriptor fetched by
+  // the daemon (display data: the compiled product environment stays
+  // the authority on WHICH build this is). Absent until the first
+  // successful fetch or when the API predates the endpoint.
+  WarrenNetworkInfo network_info = 12;
+  // Broadcast notices published by the operator, already verified
+  // against the pinned server key and filtered for expiry and this
+  // app's version by the daemon. The UI displays them above every other
+  // banner. Empty in the steady state; the empty list is also how an
+  // erasure clears the banner.
+  repeated WarrenNotice notices = 13;
+}
+
+// One operator-published broadcast notice, ready to display. Carries no
+// expiry or version range: the daemon has already applied both, so the UI
+// shows exactly what it receives.
+message WarrenNotice {
+  string id = 1;
+  string message = 2;
+  WarrenNoticeLevel level = 3;
+}
+
+enum WarrenNoticeLevel {
+  WARREN_NOTICE_INFO = 0;
+  WARREN_NOTICE_WARNING = 1;
+  WARREN_NOTICE_ERROR = 2;
+}
+
+// Public environment descriptor served by `GET /v1/network` (see
+// warren-contract NetworkInfoResponse): labels the deployment (beta vs
+// production) so the UIs can adapt what they show without a rebuild.
+message WarrenNetworkInfo {
+  // Environment name reported by the API, e.g. "beta".
+  string environment = 1;
+  // True when the service is deliberately degraded (bandwidth-capped
+  // free beta). Enforcement lives on the exits; this is a label.
+  bool degraded = 2;
+  // Default per-subscriber bandwidth cap in bits per second. Absent =
+  // no cap.
+  optional uint64 default_rate_bps = 3;
+  // False when this environment must not expose payment flows.
+  bool payments_enabled = 4;
+}
+
+// Session H A.4: forensic payload surfaced alongside a TOFU pubkey
+// mismatch event. All fields are operator metadata (no PII): the
+// `exit_id` is public via the signed relay-list, the pubkeys are
+// public Ed25519 verifying keys, and country / city are the
+// forensic snapshot pinned at TOFU time.
+message WarrenPubkeyMismatch {
+  // 32-character lower-case hex of the 16-byte stable exit_id.
+  string exit_id_hex = 1;
+  // 64-character lower-case hex of the previously pinned Ed25519
+  // verifying key.
+  string pinned_pubkey_hex = 2;
+  // 64-character lower-case hex of the currently observed key.
+  string observed_pubkey_hex = 3;
+  // ISO 3166 alpha-2 country code captured at TOFU time. Empty
+  // string when the pin pre-dates the H.6 forensic enrichment.
+  string country_code = 4;
+  // City label captured at TOFU time. Empty string when the pin
+  // pre-dates the H.6 forensic enrichment.
+  string city = 5;
+}
+
+// Session H A.4: gRPC request for the TrustNewExitKey RPC. The
+// daemon replaces the pinned `pubkey_hex` for the given
+// `exit_id_hex` with the supplied `new_pubkey_hex`, bumping
+// `first_seen` to "now" so the audit trail records the explicit
+// user trust event. Returns one of the
+// `TrustNewExitKeyResponse.Result` enum values.
+message TrustNewExitKeyRequest {
+  string exit_id_hex = 1;
+  string new_pubkey_hex = 2;
+}
+
+message TrustNewExitKeyResponse {
+  enum Result {
+    OK = 0;
+    EXIT_NOT_FOUND = 1;
+    PUBKEY_MISMATCH = 2;
+    IO_ERROR = 3;
+  }
+  Result result = 1;
+  // Free-form error message when `result == IO_ERROR`. Empty for
+  // the other result variants.
+  string error_message = 2;
+}
+
+// Session H A.4: gRPC response for the ResetPinnedExitKeys RPC.
+// `reset_count` is the number of pin entries that were dropped.
+message ResetPinnedExitKeysResponse {
+  uint32 reset_count = 1;
+}
+
+// Session H A.4: gRPC request for the ReportPubkeyMismatch RPC.
+// The daemon stamps the request, signs it with the BIP39-derived
+// signing key, and posts to `/v1/incidents/pubkey-mismatch`
+// best-effort. No PII; the payload mirrors the modal forensic
+// fields.
+message ReportPubkeyMismatchRequest {
+  string exit_id_hex = 1;
+  string old_pubkey_hex = 2;
+  string new_pubkey_hex = 3;
+  string country_code = 4;
+  string city = 5;
+}
+
+// Warren NAT-PMP port-forwarding settings persisted on disk and pushed
+// to the daemon via SetNatPmpSettings. Default OFF. Lifetime is the
+// requested lifetime in seconds; the exit clamps it to its allocator
+// range (60..3600 s). Protocol picks UDP, TCP, or both at once on the
+// same external port (an atomic pair: if either leg fails, the rule
+// fails as a whole).
+message NatPmpSettings {
+  bool enabled = 1;
+  uint32 lifetime_secs = 2;
+  enum Proto {
+    UDP = 0;
+    TCP = 1;
+    BOTH = 2;
+  }
+  // One port-forward rule. A client may hold several at once, up to the
+  // exit-enforced per-client quota.
+  message Rule {
+    Proto protocol = 1;
+    // Suggested external port (0 = server picks from its pool).
+    uint32 suggested_external_port = 2;
+    // Internal port the user's application binds locally. 0 = unset.
+    uint32 internal_port = 3;
+  }
+  // Multi-port source of truth: one entry per rule the user wants
+  // active. New clients populate this and leave the legacy single-port
+  // fields below at their defaults.
+  repeated Rule rules = 6;
+  // --- Legacy single-port fields (deprecated) -------------------------
+  // Kept ONLY so a settings.json written by a pre-multi-port build still
+  // deserializes; superseded by `rules`. Read via effective_rules().
+  Proto protocol = 3;
+  uint32 suggested_external_port = 4;
+  uint32 internal_port = 5;
+}
+
+// NAT-PMP refresh-loop status surface used by GetNatPmpSettings (last
+// known state) and NatPmpStatusUpdates (live stream).
+message NatPmpStatus {
+  enum State {
+    DISABLED = 0;
+    REQUESTING = 1;
+    MAPPED = 2;
+    FAILED = 3;
+    // The exit rate-limited the last (re)mapping request (too many port
+    // changes in a row). Recoverable: the daemon retries automatically
+    // after `retry_after_secs`. The UI blocks the port control and shows
+    // a countdown.
+    RATE_LIMITED = 4;
+  }
+  State state = 1;
+  // Set when state == MAPPED. The public-facing port the user
+  // advertises to incoming peers.
+  optional uint32 external_port = 2;
+  // Set when state == MAPPED. The lifetime (seconds) the exit GRANTED
+  // for this mapping (after its [60,3600] clamp), captured at the last
+  // Mapped/Renewed event, NOT a live-decreasing "remaining" value. The
+  // UI derives the renewal countdown as granted/2 from the wall clock
+  // since that event.
+  optional uint32 lifetime_granted_secs = 3;
+  // Set when state == FAILED. Free-form error string (logs/diagnostics).
+  optional string error_message = 4;
+  // Stable, translatable failure category. Lets the renderer show a
+  // localised message keyed on this enum rather than surfacing the raw
+  // `error_message`. Set when state == FAILED.
+  enum ErrorReason {
+    // Unknown / uncategorised failure (timeout, I/O, protocol, ...).
+    UNKNOWN = 0;
+    // The exit refused the explicitly requested external port because
+    // it is already in use / reserved for another client (Warren's
+    // strict honour-or-error policy).
+    SUGGESTED_PORT_IN_USE = 1;
+    // Out of resources: pool exhausted, per-client quota, or rate limit.
+    OUT_OF_RESOURCES = 2;
+    // Port forwarding not authorised (disabled exit-side / source not
+    // allowed).
+    NOT_AUTHORIZED = 3;
+  }
+  optional ErrorReason error_reason = 5;
+  // Set when state == RATE_LIMITED. Seconds the user must wait before a
+  // rate-limit slot frees and a new port change is accepted. Drives the
+  // UI deban countdown.
+  optional uint32 retry_after_secs = 6;
+  // Set when state == MAPPED. Per-source rate-limit slots still
+  // available, as reported by the exit. The UI warns at <= 1 and blocks
+  // the port control at 0. Absent if the exit sent no budget trailer.
+  optional uint32 attempts_remaining = 7;
+  // Set when state == MAPPED. Seconds until the rate-limit budget grows
+  // by one (i.e. until the oldest in-window allocation expires). Drives
+  // the "wait before next change" countdown when attempts_remaining == 0.
+  optional uint32 window_reset_secs = 8;
+
+  // One NAT-PMP mapping, tagged with the rule it belongs to. Multi-port:
+  // the UI renders one row per Mapping. Carries the same per-rule state
+  // fields as the (legacy) top-level message above.
+  message Mapping {
+    // Rule identity: the internal port the user's app binds + protocol.
+    uint32 internal_port = 1;
+    NatPmpSettings.Proto protocol = 2;
+    State state = 3;
+    optional uint32 external_port = 4;
+    optional uint32 lifetime_granted_secs = 5;
+    optional string error_message = 6;
+    optional ErrorReason error_reason = 7;
+    optional uint32 retry_after_secs = 8;
+    optional uint32 attempts_remaining = 9;
+    optional uint32 window_reset_secs = 10;
+  }
+  // Multi-port: one entry per active rule. Empty == no active mappings
+  // (feature off or all rules removed). New clients read this; the
+  // top-level fields above are kept only for backward compatibility.
+  repeated Mapping mappings = 9;
 }
 
 message RelayOverride {
@@ -670,6 +1176,9 @@ message DnsOptions {
   DnsState state = 1;
   DefaultDnsOptions default_options = 2;
   CustomDnsOptions custom_options = 3;
+  // Advanced toggle: when true the firewall stops blocking DNS to resolvers other than the
+  // configured ones (lifts DNS leak protection). Queries still egress through the tunnel.
+  bool allow_external_dns = 4;
 }
 
 message PublicKey {

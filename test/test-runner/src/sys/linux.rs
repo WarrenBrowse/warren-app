@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use test_rpc::{meta::OsVersion, mullvad_daemon::Verbosity};
 
-const SYSTEMD_OVERRIDE_FILE: &str = "/etc/systemd/system/mullvad-daemon.service.d/override.conf";
+const SYSTEMD_OVERRIDE_FILE: &str = "/etc/systemd/system/warren-daemon.service.d/override.conf";
 
 pub async fn set_daemon_log_level(verbosity_level: Verbosity) -> Result<(), test_rpc::Error> {
     use tokio::io::AsyncWriteExt;
@@ -15,7 +15,7 @@ pub async fn set_daemon_log_level(verbosity_level: Verbosity) -> Result<(), test
     let systemd_service_file_content = format!(
         r#"[Service]
 ExecStart=
-ExecStart=/usr/bin/mullvad-daemon --disable-stdout-timestamps {verbosity}"#
+ExecStart=/usr/bin/warren-daemon --disable-stdout-timestamps {verbosity}"#
     );
 
     let override_path = std::path::Path::new(SYSTEMD_OVERRIDE_FILE);
@@ -47,7 +47,7 @@ ExecStart=/usr/bin/mullvad-daemon --disable-stdout-timestamps {verbosity}"#
     Ok(())
 }
 
-/// Restart the Mullvad VPN application.
+/// Restart the Warren VPN application.
 ///
 /// This function waits for the app to successfully start again.
 pub async fn restart_app() -> Result<(), test_rpc::Error> {
@@ -60,7 +60,7 @@ pub async fn restart_app() -> Result<(), test_rpc::Error> {
     Ok(())
 }
 
-/// Stop the Mullvad VPN application.
+/// Stop the Warren VPN application.
 ///
 /// This function waits for the app to successfully shut down.
 pub async fn stop_app() -> Result<(), test_rpc::Error> {
@@ -74,7 +74,7 @@ pub async fn stop_app() -> Result<(), test_rpc::Error> {
     Ok(())
 }
 
-/// Start the Mullvad VPN application.
+/// Start the Warren VPN application.
 ///
 /// This function waits for the app to successfully start again.
 pub async fn start_app() -> Result<(), test_rpc::Error> {

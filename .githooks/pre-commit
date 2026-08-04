@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# Warren local guard: block any commit that would fail the desktop lint gate.
+#
+# Why this exists: the desktop CI job runs `eslint . --max-warnings 0`, and the
+# eslint config enforces formatting through the `prettier/prettier` rule. A
+# single unformatted line (an over-long destructuring) once landed on main and
+# only surfaced when it broke a release run. This hook runs the exact same gate
+# on the staged desktop files locally, so a formatting/lint violation can never
+# reach main in the first place. It is fast (staged files only) and a no-op when
+# no desktop code is staged.
+#
+# Bypass with `git commit --no-verify` only if you truly know what you are doing.
+set -euo pipefail
+
+# Chain the machine-local pre-commit hook first (e.g. the shared identity guard).
+# core.hooksPath points here (.githooks), which otherwise shadows the local
+# .git/hooks/pre-commit so it would never run. Generic and per-machine: a no-op
+# when absent, and it keeps no identity hardcoded in this tracked file.
+_local_hook="$(git rev-parse --git-dir)/hooks/pre-commit"
+if [ -x "$_local_hook" ] && [ "$_local_hook" != "$0" ]; then
+  "$_local_hook" "$@" || exit $?
+fi
+
+repo_root=$(git rev-parse --show-toplevel)
+
+# Staged (added/copied/modified) lintable files under desktop/.
+staged=()
+while IFS= read -r f; do
+  [ -n "$f" ] && staged+=("$f")
+done < <(git diff --cached --name-only --diff-filter=ACM \
+  | grep -E '^desktop/.*\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
+[ ${#staged[@]} -eq 0 ] && exit 0
+
+eslint_bin="$repo_root/desktop/node_modules/.bin/eslint"
+if [ ! -x "$eslint_bin" ]; then
+  echo "warren pre-commit: desktop/node_modules missing; skipping lint guard." >&2
+  echo "  Run the desktop install once to enable it (it sets this up automatically)." >&2
+  exit 0
+fi
+
+# eslint flat configs are per workspace: the desktop root config ignores
+# packages/ (each package lints itself with its own plugins), so route
+# every staged file to the config that CI actually applies to it.
+root_rel=()
+pkg_rel=()
+for f in "${staged[@]}"; do
+  case "$f" in
+    desktop/packages/mullvad-vpn/*) pkg_rel+=("${f#desktop/packages/mullvad-vpn/}") ;;
+    desktop/packages/*) ;; # other packages have no lint gate in CI
+    *) root_rel+=("${f#desktop/}") ;;
+  esac
+done
+
+clean=0
+if [ ${#root_rel[@]} -gt 0 ]; then
+  (cd "$repo_root/desktop" && "$eslint_bin" --max-warnings 0 "${root_rel[@]}") || clean=1
+fi
+if [ ${#pkg_rel[@]} -gt 0 ]; then
+  (cd "$repo_root/desktop/packages/mullvad-vpn" \
+    && "$eslint_bin" --max-warnings 0 "${pkg_rel[@]}") || clean=1
+fi
+if [ $clean -eq 0 ]; then
+  exit 0
+fi
+
+# Not clean: auto-fix the working tree so the developer does not have to hunt
+# for the fix, then abort. We deliberately do NOT re-stage: aborting keeps the
+# commit honest (the developer reviews and re-stages), and avoids pulling any
+# unrelated unstaged hunks of the same file into the commit.
+echo "warren pre-commit: desktop lint failed. Attempting an auto-fix..." >&2
+"$eslint_bin" --fix "${rel[@]}" >/dev/null 2>&1 || true
+if "$eslint_bin" --max-warnings 0 "${rel[@]}" >/dev/null 2>&1; then
+  echo "  Auto-fixed formatting/lint in the working tree. Review, re-stage (git add), and commit again." >&2
+else
+  echo "  Some errors are not auto-fixable. Run 'npm run lint-fix' in desktop/ and fix the rest by hand." >&2
+fi
+exit 1

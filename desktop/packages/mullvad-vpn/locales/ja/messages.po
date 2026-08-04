@@ -2,12 +2,12 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Crowdin-Project: mullvad-app\n"
+"X-Crowdin-Project: warren-app\n"
 "X-Crowdin-Project-ID: 350815\n"
 "X-Crowdin-Language: ja\n"
 "X-Crowdin-File: messages.pot\n"
 "X-Crowdin-File-ID: 12\n"
-"Project-Id-Version: mullvad-app\n"
+"Project-Id-Version: warren-app\n"
 "Language-Team: Japanese\n"
 "Language: ja_JP\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
@@ -18,9 +18,9 @@ msgstr "その他%(amount)d件..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "%(duration)sが追加され、アカウントは%(expiry)sまでに支払われます。"
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)sポート"
 
@@ -249,7 +249,7 @@ msgstr "パスワード"
 msgid "Port"
 msgstr "ポート"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "耐量子"
@@ -308,6 +308,9 @@ msgstr "種類"
 msgid "Unblock"
 msgstr "ブロックを解除"
 
+msgid "Unknown"
+msgstr "不明"
+
 msgid "UNSECURED CONNECTION"
 msgstr "セキュリティ保護されていない接続"
 
@@ -328,9 +331,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s、ビューが読み込まれました"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "%(wireguard)sポートの設定"
@@ -409,9 +412,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "アカウント番号 %(accountNumber)s との連携を解除します"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "%(wireGuard)sポートを変更するには、検閲回避設定に移動してください"
@@ -579,6 +582,39 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr "次の日時まで支払い済み"
 
+#. Shown while the saved card details are unknown.
+msgctxt "account-view"
+msgid "Active"
+msgstr "有効"
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr "自動更新"
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
+msgstr "前回の更新: %(date)s"
+
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr "公開鍵（ウォレットアドレス）"
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr "毎月更新、次回は %(date)s 頃"
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr "オフにする"
+
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
@@ -596,8 +632,8 @@ msgstr "これらの方式はパフォーマンスを向上させるものでは
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "これらの方式は、Mullvadへの接続がブロックされている状況で役立つ可能性があります。「自動」を選択すると、アプリは有効な方法が見つかるまですべての方式を試します。"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "これらの方式は、Warrenへの接続がブロックされている状況で役立つ可能性があります。「自動」を選択すると、アプリは有効な方法が見つかるまですべての方式を試します。"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -677,8 +713,8 @@ msgid "Local SOCKS5 server"
 msgstr "ローカルSOCKS5サーバー"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "Mullvad APIへのカスタムのアクセス方法を管理・追加します。"
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "Warren APIへのカスタムのアクセス方法を管理・追加します。"
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -737,8 +773,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "アプリにリモートサーバーの詳細が必要です。これはローカルSOCKS5サーバーがトラフィックを転送する宛先です。"
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "アプリはユーザーのログイン、サーバーリストの取得、およびその他の重要な操作を行うためにMullvad APIサーバーと通信する必要があります。"
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "アプリはユーザーのログイン、サーバーリストの取得、およびその他の重要な操作を行うためにWarren APIサーバーと通信する必要があります。"
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -749,8 +785,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "ローカルSOCKS5サーバーがリッスンしているTCPポートです。"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "これは、APIが検閲されていてもMullvadのブリッジサーバーが検閲されていない場合に便利な場合があります。"
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "これは、APIが検閲されていてもWarrenのブリッジサーバーが検閲されていない場合に便利な場合があります。"
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -769,16 +805,16 @@ msgid "Transport protocol"
 msgstr "転送プロトコル"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "「ダイレクト」方法の場合、アプリは中間プロキシを使わずにMullvad APIサーバーと直接通信します。"
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "「ダイレクト」方法の場合、アプリは中間プロキシを使わずにWarren APIサーバーと直接通信します。"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "[暗号化DNSプロキシ] 方式を使用すると、アプリはプロキシアドレスを通じてMullvad APIと通信します。これはDNS over HTTPS (DoH) サーバーからアドレスを取得し、APIサーバーへのアクセスに利用することで行われます。"
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "[暗号化DNSプロキシ] 方式を使用すると、アプリはプロキシアドレスを通じてWarren APIと通信します。これはDNS over HTTPS (DoH) サーバーからアドレスを取得し、APIサーバーへのアクセスに利用することで行われます。"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "「Mullvadブリッジ」方法の場合、アプリはMullvadブリッジサーバーを経由してMullvad APIサーバーと通信します。この通信では、Shadowsocksによって難読化されたトラフィックが送信されます。"
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "「Warrenブリッジ」方法の場合、アプリはWarrenブリッジサーバーを経由してWarren APIサーバーと通信します。この通信では、Shadowsocksによって難読化されたトラフィックが送信されます。"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -991,6 +1027,46 @@ msgctxt "app-upgrade-view"
 msgid "You are using the latest version"
 msgstr "最新バージョンを使用しています"
 
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or report the problem on our community forum."
+msgstr "インストーラーを起動できませんでした。再試行するか、コミュニティフォーラムで問題を報告してください。"
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
+msgstr "ダウンロードに失敗しました。接続やファイアウォールを確認して再試行するか、コミュニティフォーラムで問題を報告してください。"
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
+msgstr "インストーラーが予期せず終了しました。再試行するか、コミュニティフォーラムで問題を報告してください。"
+
+#. Button text to report a problem on the community forum
+msgctxt "app-upgrade-view"
+msgid "Report a problem on the forum"
+msgstr "フォーラムで問題を報告"
+
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr "このバージョンの Warren はサポートが終了しました。接続を保護したまま使い続けるには、アプリを更新する必要があります。"
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
+msgstr "不明なエラーが発生しました。再試行するか、コミュニティフォーラムで問題を報告してください。"
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr "更新が必要です"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or report the problem on our community forum."
+msgstr "検証に失敗しました。再試行するか、コミュニティフォーラムで問題を報告してください。"
+
 msgctxt "auth-failure"
 msgid "Blocking internet: account is out of time"
 msgstr "インターネットのブロック：アカウントが時間切れです"
@@ -1006,6 +1082,68 @@ msgstr "アカウントを認証できません。問題の報告を送信して
 msgctxt "auth-failure"
 msgid "You are logged in with an invalid account number. Please log out and try another one."
 msgstr "無効なアカウント番号でログインしています。いったんログアウトして、別のアカウント番号を試してください。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "インターネットをブロック中: 利用ポリシー違反によりアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
+msgstr "インターネットをブロック中: 転送ポートの不正利用によりアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。"
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please report the problem on our community forum."
+msgstr "アカウントを認証できません。コミュニティフォーラムで問題を報告してください。"
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr "Warren ベータについて"
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr "BETA"
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr "無料のベータネットワーク、帯域制限あり"
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr "無料のベータネットワーク、速度は %(mbps)d Mbps に制限"
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr "帯域が %(mbps)d Mbps に制限された別のネットワークで動作します。"
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr "帯域が制限された別のネットワークで動作します。"
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr "フォーラムでご意見をお聞かせください"
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr "これは最終的なサービス条件ではありません。全速度のネットワークは別途有料の製品です。"
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr "このアプリは無料の Warren ベータを使用しており、実環境で Warren を検証するのに役立っています。"
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
+msgstr "Warren ベータ"
 
 #. Text displayed when there are no updates for this platform in the app version
 msgctxt "changelog-view"
@@ -1122,6 +1260,52 @@ msgstr "インターネットにアクセスして時間を追加するには \"
 msgctxt "connect-view"
 msgid "You’re all set!"
 msgstr "準備完了！"
+
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: not active on this server"
+msgstr "%(DAITA)s: このサーバーでは無効"
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
+msgstr "ベータアクセスを更新できませんでした。接続を確認して、もう一度お試しください。"
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "ポート転送: ブロックされました"
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "ポート転送: ポート使用中"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr "MTU 縮小"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr "MTU 縮小 (%(mtu)s)"
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
+msgstr "ベータアクセスを更新"
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
+msgstr "このアプリは無料の Warren ベータを使用しており、支払いは不要です。続けるにはベータアクセスを更新してください。"
 
 #. The hostname line displayed below the country on the main screen
 #. Available placeholders:
@@ -1302,8 +1486,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "リストからデバイスが削除され、ログアウトされます。"
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "これはデバイスに割り当てられる名前です。Mullvadアカウントにログインするデバイスごとに一意の名前が付けられるため、アプリまたはウェブサイトでデバイスを管理する際にデバイスを区別しやすくなります。"
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "これはデバイスに割り当てられる名前です。Warrenアカウントにログインするデバイスごとに一意の名前が付けられるため、アプリまたはウェブサイトでデバイスを管理する際にデバイスを区別しやすくなります。"
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1327,8 +1511,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "ログイン中のすべてのデバイスを表示・管理します。1つのアカウントで最大5台のデバイスを同時に利用できます。各デバイスは識別しやすくするため、ログイン時に名前が付けられます。"
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "1つのMullvadアカウントで最大5台のデバイスにログインできます。"
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "1つのWarrenアカウントで最大5台のデバイスにログインできます。"
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1345,6 +1529,12 @@ msgctxt "error-boundary-view"
 msgid "Something went wrong. Please contact us at %(email)s"
 msgstr "何か問題が生じたようです。 %(email)s までご連絡ください。"
 
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
+msgstr "アプリを再読み込み"
+
 #. Title label in navigation bar
 msgctxt "filter-nav"
 msgid "Filter"
@@ -1355,8 +1545,8 @@ msgid "All providers"
 msgstr "すべてのプロバイダ"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "Mullvad 所有サーバーのみ"
+msgid "Warren owned only"
+msgstr "Warren 所有サーバーのみ"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1468,6 +1658,10 @@ msgstr "更新をダウンロード中... %(appUpgradeDownloadProgressValue)s%%"
 
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr "重要"
+
+msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
 msgstr "アプリの最新バージョンをインストールして、最新の状態を維持してください。"
 
@@ -1489,6 +1683,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr "新バージョンがインストールされました"
 
 msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr "お知らせ"
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr "アプリをいったん終了して、再起動してください。"
 
@@ -1498,6 +1696,10 @@ msgid "READY TO INSTALL UPDATE"
 msgstr "更新をインストールできます"
 
 #. Accessibility label for the button to retry download of the installer.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
+msgstr "メッセージ全文を読む"
+
 msgctxt "in-app-notifications"
 msgid "Retry download of the installer"
 msgstr "インストーラーのダウンロードを再試行"
@@ -1511,6 +1713,10 @@ msgstr "インストールを再試行"
 msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "問題の報告を送信"
+
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "サーバーメンテナンス"
 
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
@@ -1527,9 +1733,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "インストーラーが正常に起動しませんでした。"
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "選択した%(wireGuard)sポートには対応していません。<a>VPN設定で変更</a>してください。"
@@ -1577,10 +1783,55 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr "検証に失敗しました"
 
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
+msgstr "まもなく自動更新"
+
+msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr "移行を延期、ポートを維持"
+
+msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "インターネット接続なし"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
+msgstr "フォーラムで報告"
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr "サーバーがトラフィックを転送していません"
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr "サーバーがトラフィックの転送を停止しました。Warren が自動的にサーバーを切り替えるか、再接続します。"
+
+msgctxt "in-app-notifications"
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr "通常より時間がかかっています。Warren は再試行を続けます。接続できない場合は、コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
+msgstr "接続に問題がありますか？"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "デバイスがオフラインです。ネットワークが復旧しだい、Warren が自動的に再接続します。"
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr "転送ポートがどの代替サーバーでも使用中のため、Warren は現在のサーバーを維持しました。更新中に短い中断が発生する場合があります。"
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr "Warren の利用時間が数日以内に更新されます。アカウント設定でいつでもオフにできます。"
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "Mullvad システムサービスに接続中..."
+msgid "Connecting to Warren system service..."
+msgstr "Warren システムサービスに接続中..."
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1604,8 +1855,8 @@ msgstr "これらの手順で解決できない場合は、問題の報告を送
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "Mullvad VPNサービスの許可が無効化されました。システム設定に移動して、「バックグラウンドでの実行を許可」設定でMullvad VPNを許可してください。"
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Warren VPNサービスの許可が無効化されました。システム設定に移動して、「バックグラウンドでの実行を許可」設定でWarren VPNを許可してください。"
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1614,13 +1865,13 @@ msgstr "アプリを再インストールする"
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "Mullvadのバックグラウンドプロセスを再起動する"
+msgid "Restarting the Warren background process"
+msgstr "Warrenのバックグラウンドプロセスを再起動する"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "[戻る] と [再試行] を続けてクリックし、Mullvadのバックグラウンドプロセスを再起動する"
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "[戻る] と [再試行] を続けてクリックし、Warrenのバックグラウンドプロセスを再起動する"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1639,8 +1890,8 @@ msgstr "起動中...."
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "Mullvadのバックグラウンドプロセスを起動できませんでした。バックグラウンドプロセスはセキュリティ、キルスイッチ、およびVPNトンネルを管理しています。以下をお試しください。"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "Warrenのバックグラウンドプロセスを起動できませんでした。バックグラウンドプロセスはセキュリティ、キルスイッチ、およびVPNトンネルを管理しています。以下をお試しください。"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1649,8 +1900,34 @@ msgstr "再試行"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Mullvadシステムサービスと通信できません。接続が安全でない可能性があります。トラブルシューティングするか、[詳細] ボタンをクリックして問題の報告を送信してください。"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "Warrenシステムサービスと通信できません。接続が安全でない可能性があります。トラブルシューティングするか、[詳細] ボタンをクリックして問題の報告を送信してください。"
+
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "これらの手順で解決しない場合は、コミュニティフォーラムで問題を報告してください。"
+
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
+msgctxt "launch-view"
+msgid "Restore internet without VPN"
+msgstr "VPN なしでインターネットを復旧"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr "Warren システムサービスに接続できません。通信が保護されていない可能性があります。「詳細」ボタンをクリックして対処するか、コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
+msgstr "Warren VPN は VPN 保護なしでインターネット接続を復旧します。"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr "フォーラムで報告"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1963,8 +2240,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "すべてのネットワークトラフィックをブロックできません。カーネルを更新するか、問題の報告を送信してください。"
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "Mullvadカーネルドライバーと通信できません。再接続を試すか、問題の報告を送信してください。"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "Warrenカーネルドライバーと通信できません。再接続を試すか、問題の報告を送信してください。"
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2003,6 +2280,77 @@ msgstr "このアプリバージョンはサポートされていないため、
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
 msgstr "このアプリバージョンはサポートされていないため、プライバシーが危険にさらされる可能性があります。今すぐアップデートしてください。"
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr "自動更新の支払いが完了しました。Warren の利用時間に 1 か月が追加されます。自動更新はアカウント設定でいつでもオフにできます。"
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr "自動更新に失敗しました。支払い方法を更新するか、手動でクレジットを購入してください。"
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
+msgstr "このアカウントの自動更新はオフになりました。"
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
+msgstr "すべてのネットワークトラフィックをブロックできません。問題に対処するか、コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
+msgstr "すべてのネットワークトラフィックをブロックできません。サードパーティのウイルス対策ソフトウェアやセキュリティソフトウェアを一時的に無効にするか、コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
+msgstr "すべてのネットワークトラフィックをブロックできません。カーネルを更新するか、コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
+msgstr "Warren カーネルドライバーと通信できません。再接続するか、コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
+msgstr "システムの DNS サーバーを設定できません。コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
+msgstr "トンネル接続を開始できません。コミュニティフォーラムで問題を報告してください。"
+
+msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr "更新には銀行の確認が必要です。Warren を開き、クレジットを購入して確認してください。"
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr "ネットワークが不安定なようです。トンネルの再接続が連続しすぎました。接続が安定してから再接続してください。"
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr "Warren の利用時間は %(date)s 頃に月額料金で自動更新されます。自動更新はアカウント設定でいつでもオフにできます。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr "Warren の利用時間が数日以内に更新されます。自動更新はアカウント設定でいつでもオフにできます。"
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "空きポートを割り当てる"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "別の出口サーバーを選ぶ"
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr "無効"
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr "この公開ポートはこの出口サーバーですでに使用されています。出口サーバーを切り替えてポートを維持するか、出口サーバーに空きの公開ポートを割り当てさせるか、上に別のポートを入力してください。"
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
@@ -2047,6 +2395,10 @@ msgstr "バウチャーコードが無効です。"
 msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr "バウチャーを正常に使用しました。"
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr "バウチャーコードの有効期限が切れています。"
 
 #. Title label in navigation bar
 msgctxt "select-language-nav"
@@ -2326,8 +2678,8 @@ msgid "Please try again or send a problem report."
 msgstr "再試行するか、問題の報告を送信してください。"
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "Mullvadサービスを再起動"
+msgid "Restart Warren Service"
+msgstr "Warrenサービスを再起動"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2338,8 +2690,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "%(splitTunneling)sを使用するには、cgroup v2をサポートしているLinuxカーネルバージョンに更新してください。"
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "スプリットトンネリングを使用するには、macOSのシステム設定で「Mullvad VPN」の「フルディスクアクセス」を有効にしてください。"
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "スプリットトンネリングを使用するには、macOSのシステム設定で「Warren VPN」の「フルディスクアクセス」を有効にしてください。"
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2448,6 +2800,11 @@ msgctxt "support-view"
 msgid "Your email (optional)"
 msgstr "あなたのメールアドレス (任意)"
 
+#. Link to the refund policy webpage
+msgctxt "support-view"
+msgid "Refund policy"
+msgstr "返金ポリシー"
+
 msgctxt "tray-icon-context-menu"
 msgid "Disconnected from system service"
 msgstr "システムサービスから接続が解除されました"
@@ -2473,8 +2830,8 @@ msgid "Disable split tunneling"
 msgstr "スプリットトンネリングを無効化"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "macOS のシステム設定で、\"Mullvad VPN\" の \"フルディスクアクセス\" を有効化してください。"
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "macOS のシステム設定で、\"Warren VPN\" の \"フルディスクアクセス\" を有効化してください。"
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2497,8 +2854,8 @@ msgid "Open system settings"
 msgstr "システム設定を開く"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "このエラーは、Mullvad以外の何かがDNSを積極的に更新している場合に起こることがあります。"
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "このエラーは、Warren以外の何かがDNSを積極的に更新している場合に起こることがあります。"
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2536,6 +2893,10 @@ msgctxt "troubleshoot"
 msgid "Update your kernel."
 msgstr "カーネルを更新します。"
 
+msgctxt "troubleshoot"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "これらの手順で解決しない場合は、コミュニティフォーラムで問題を報告してください。"
+
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "接続"
@@ -2543,6 +2904,12 @@ msgstr "接続"
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr "場所を切り替える"
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "接続が中断されました"
 
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
@@ -2620,8 +2987,8 @@ msgid "Anti-censorship"
 msgstr "検閲回避"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "注意: この設定を有効にすると、インターネットにアクセスするために常にMullvad VPNへの接続が必要になります。"
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "注意: この設定を有効にすると、インターネットにアクセスするために常にWarren VPNへの接続が必要になります。"
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2731,8 +3098,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "キルスイッチとロックダウンモードの違いは、キルスイッチではトンネルの自動再接続やソフトウェアのクラッシュなどが発生した場合に漏洩を防止できることです。"
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "キルスイッチとロックダウンモードの違いは、キルスイッチではトンネルの自動再接続やソフトウェアのクラッシュなどが発生した場合に漏洩を防止できるのに対し、ロックダウンモードが有効な場合はMullvad VPNサーバーに接続しなければインターネットにアクセスできないことです。手動で接続を解除するか、アプリを終了すると接続がブロックされます。"
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "キルスイッチとロックダウンモードの違いは、キルスイッチではトンネルの自動再接続やソフトウェアのクラッシュなどが発生した場合に漏洩を防止できるのに対し、ロックダウンモードが有効な場合はWarren VPNサーバーに接続しなければインターネットにアクセスできないことです。手動で接続を解除するか、アプリを終了すると接続がブロックされます。"
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2783,8 +3150,168 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "この機能が有効である場合、VPNトンネルにIPv6とIPv4を併用してインターネットサービスと通信できます。"
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "ロックダウンモードが有効な場合はMullvad VPNサーバーに接続しなければインターネットにアクセスできません。手動で接続を解除するか、アプリを終了すると接続がブロックされます。"
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "ロックダウンモードが有効な場合はWarren VPNサーバーに接続しなければインターネットにアクセスできません。手動で接続を解除するか、アプリを終了すると接続がブロックされます。"
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr "出口 ID"
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr "公開鍵"
+
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr "%(mbps)d Mbps"
+
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "外部 DNS を許可"
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "外部 DNS リゾルバーを許可"
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr "帯域は無料のベータネットワークによって制限され、サーバー側で適用されます。この設定はベータ期間中は使用できません。"
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr "検証済みのサーバー一覧を使わず、手動で入力したセルフホストの出口サーバー 1 台に接続します。自分で運用しているか、完全に信頼できる出口サーバーだけを使用してください。暗号化されていないトラフィックがその出口サーバーに見えます。"
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr "カバードメイン（任意）"
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr "カスタム出口サーバー（詳細設定）"
+
+msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr "エンドポイント"
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr "出口サーバーのアドレスを host:port 形式で指定します。IPv6 は角かっこで囲みます（例: [2001:db8::1]:443）。"
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "上級者向けの設定です。有効にすると、設定済み以外のリゾルバー宛ての DNS クエリをファイアウォールがブロックしなくなり、接続中でも「dig @1.1.1.1」のようなツールが使えます。"
+
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr "VPN の帯域を Mbps 単位で制限します。アップロードとダウンロードに個別に適用されます。有効範囲: %(min)d - %(max)d。制限しない場合は空にしてください。変更は直ちに適用されます。"
+
+msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr "自動管理"
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr "最大帯域"
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr "出口サーバーが公開 TLS 証明書を使用している場合（X.509 モード）にのみ設定します。既定の生鍵モードでは空のままにしてください。"
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr "出口サーバーの Ed25519 公開鍵（16 進数 64 文字）。"
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr "出口サーバーのルーティング ID（16 進数 32 文字）。"
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr "出口サーバーの X25519 マルチホップ鍵（16 進数 64 文字）。"
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "クエリは引き続き VPN トンネルを通りますが、選択したリゾルバーからは見えます。リモートの DNS 解決をテストする場合を除き、オフのままにしてください。"
+
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr "無制限"
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr "X25519 マルチホップ鍵"
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr "前払い済みのベータアクセス用バウチャーがアカウントに自動的に紐づけられます。支払いも操作も不要です。"
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr "ベータアクセスは %(date)s まで有効です。"
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr "ベータアクセスをまだ有効化できていません（オンラインですか？）。自動的に再試行し、次回の起動時にも再試行します。このまま続行できます。"
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr "うまくいきませんか？ヘルプページをご覧ください"
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr "今すぐ再試行"
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr "ベータは帯域が %(mbps)d Mbps に制限された無料の別ネットワークで動作します。これは最終的なサービス条件ではありません。"
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr "ベータは帯域が制限された無料の別ネットワークで動作します。これは最終的なサービス条件ではありません。"
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr "ベータアクセス"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr "その出口サーバーが見つからなくなりました。再接続してみてください。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr "新しい鍵を保存できませんでした。もう一度お試しください。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr "新しい鍵を信頼できませんでした。"
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr "鍵を信頼する前に再び変更されました。新しい鍵を確認して、もう一度お試しください。"
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2808,7 +3335,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "%(wireguard)sポート"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "%(wireGuard)sポート"
@@ -2839,10 +3366,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "%(daita)sはこのようなデータパケットが監視されている場合でも、訪問先ウェブサイトや通信相手を特定するのを極めて困難にします。"
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "量子安全アルゴリズムを使用して追加の鍵交換を実行し、その結果をWireGuardの通常の暗号化に組み込むことで、これを実現しています。"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "量子安全アルゴリズムを使用して追加の鍵交換を実行し、その結果をQUICの通常の暗号化に組み込むことで、これを実現しています。"
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2858,8 +3385,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "選択した場所でDAITAを有効にするためにマルチホップが使用されています"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "マルチホップはトラフィックをあるWireGuardサーバーにルーティングし、別サーバーに送出することで追跡を困難にします。これによって遅延が増加しますが、オンラインの匿名性は高まります。"
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "マルチホップはトラフィックをあるQUICサーバーにルーティングし、別サーバーに送出することで追跡を困難にします。これによって遅延が増加しますが、オンラインの匿名性は高まります。"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2870,7 +3397,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "すべてのサーバーが%(daita)sに対応しているわけではないため、どのサーバーでも%(daita)sが有効になるようにマルチホップを自動的に使用しています。"
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "ポート"
@@ -2882,16 +3409,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "ポート: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "耐量子トンネル"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -2911,8 +3438,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "カスタムポートは次の有効範囲内の任意の値に設定できます: %(portRanges)s。"
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "この機能は、WireGuardトンネルに量子コンピューターからの潜在的な攻撃に対する耐性を与えます。"
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "この機能は、QUICトンネルに量子コンピューターからの潜在的な攻撃に対する耐性を与えます。"
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -2976,8 +3503,8 @@ msgstr "ご利用のアカウントに %s が追加されました。"
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. 下の [VPN設定に移動] ボタンをクリックし、[Mullvad VPN] 名の横にある歯車をクリックします。"
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. 下の [VPN設定に移動] ボタンをクリックし、[Warren VPN] 名の横にある歯車をクリックします。"
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. 自動接続を有効にするには、[Always-on VPN] の横のトグルボタンをクリックします。"
@@ -3135,8 +3662,8 @@ msgstr "このボックスにチェックを入れることで、アカウント
 msgid "Can't connect?"
 msgstr "接続できませんか？"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "Androidデバイス上で、Mullvad VPNアプリのタイトルとアイコンを変更します。この変更は、Mullvad VPNに関連する通知のアイコンには適用されません。"
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "Androidデバイス上で、Warren VPNアプリのタイトルとアイコンを変更します。この変更は、Warren VPNに関連する通知のアイコンには適用されません。"
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "結果がキャッシュされているため、DNS関連の設定の変更はすぐには適用されない可能性があります。"
@@ -3159,8 +3686,8 @@ msgstr "接続中..."
 msgid "Continue"
 msgstr "続行"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "Mullvadアカウント番号をクリップボードにコピーしました"
+msgid "Copied Warren account number to clipboard"
+msgstr "Warrenアカウント番号をクリップボードにコピーしました"
 
 msgid "Copied logs to clipboard"
 msgstr "ログをクリップボードにコピーしました"
@@ -3360,8 +3887,8 @@ msgstr "IPv6の設定が無効です。VPNの設定を変更してください�
 msgid "Invalid or missing value \"%1$s\""
 msgstr "値「%1$s」は無効であるか、欠測しています"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "耐量子アルゴリズムで追加の鍵の交換を実行し、結果をWireGuardの通常の暗号化に混合させることで行われます。この追加ステップでは、新しいトンネルが確立されるたびに約500kiBのトラフィックが使用されます。"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "耐量子アルゴリズムで追加の鍵の交換を実行し、結果をQUICの通常の暗号化に混合させることで行われます。この追加ステップでは、新しいトンネルが確立されるたびに約500kiBのトラフィックが使用されます。"
 
 msgid "Less than a day left on this account"
 msgstr "このアカウントの残り時間は1日未満です"
@@ -3390,8 +3917,8 @@ msgstr "デバイスが必ずVPNトンネルを使用するようにします。
 msgid "More actions"
 msgstr "その他の操作"
 
-msgid "Mullvad services unavailable"
-msgstr "Mullvadサービスを使用できません"
+msgid "Warren services unavailable"
+msgstr "Warrenサービスを使用できません"
 
 msgid "Multihop is disabled"
 msgstr "マルチホップは無効です"
@@ -3525,8 +4052,8 @@ msgstr "検索"
 msgid "Send email"
 msgstr "メールを送信する"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "WireGuardのMTU値を設定します。有効範囲: %1$d ～ %2$d"
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "QUICのMTU値を設定します。有効範囲: %1$d ～ %2$d"
 
 msgid "Set as multihop entry"
 msgstr "マルチホップの入口に設定"
@@ -3591,11 +4118,11 @@ msgstr "\"現在の設定\" の方法は、アプリが API に到達するた�
 msgid "The app is blocking internet, please disconnect first"
 msgstr "アプリがインターネットをブロックしています。先に切断してください"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "アプリがMullvad APIに接続できず、アカウントを作成できませんでした。"
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "アプリがWarren APIに接続できず、アカウントを作成できませんでした。"
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "アプリがMullvad APIに接続できず、ログインできませんでした。"
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "アプリがWarren APIに接続できず、ログインできませんでした。"
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "VPN設定で [ローカルネットワーク共有] を有効にしない限り、ローカルDNSサーバーは機能しません。"
@@ -3603,8 +4130,8 @@ msgstr "VPN設定で [ローカルネットワーク共有] を有効にしな�
 msgid "The selected %s port is not supported, please change it under"
 msgstr "選択した%sポートには対応していません。"
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "これらの方式は、Mullvadへの接続がブロックされている状況で役立つ可能性があります。「自動」を選択すると、アプリは有効な方法が見つかるまですべての方式を試します。"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "これらの方式は、Warrenへの接続がブロックされている状況で役立つ可能性があります。「自動」を選択すると、アプリは有効な方法が見つかるまですべての方式を試します。"
 
 msgid "This address has already been entered."
 msgstr "このアドレスは入力済みです。"
@@ -3630,11 +4157,11 @@ msgstr "リストに場所を追加するには鉛筆アイコンをタップす
 msgid "To create a custom list press the \"+\""
 msgstr "カスタムリストを作成するには [+] を押してください"
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "Mullvad VPNアカウントを削除するには、以下にアカウント番号を入力してください。"
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "Warren VPNアカウントを削除するには、以下にアカウント番号を入力してください。"
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "このアプリは最も安全なバージョンを使用していることを確認し、実行中の現在のバージョンに関する問題を通知できるよう、バージョンチェックを自動的に実行します。このチェックによってアプリのバージョンとAndroidシステムのバージョンがMullvadサーバーに送信されます。Mullvadは使用されているアプリのバージョンとAndroidのバージョンの数字を記憶しています。このデータがユーザーを特定できる方法で保存されたり、使用されたりすることはありません。"
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "このアプリは最も安全なバージョンを使用していることを確認し、実行中の現在のバージョンに関する問題を通知できるよう、バージョンチェックを自動的に実行します。このチェックによってアプリのバージョンとAndroidシステムのバージョンがWarrenサーバーに送信されます。Warrenは使用されているアプリのバージョンとAndroidのバージョンの数字を記憶しています。このデータがユーザーを特定できる方法で保存されたり、使用されたりすることはありません。"
 
 msgid "Toggle VPN"
 msgstr "VPNの切り替え"
@@ -3657,11 +4184,11 @@ msgstr "APIに接続できません"
 msgid "Unable to reach API, %s"
 msgstr "APIに接続できません。%s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "トンネル接続を開始できません。Mullvad VPNを使用する前にAlways-on VPNを無効にしてください。"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "トンネル接続を開始できません。Warren VPNを使用する前にAlways-on VPNを無効にしてください。"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "トンネル接続を開始できません。Mullvad VPNを使用する前に<b>%s</b>のAlways-on VPNを無効にしてください。"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "トンネル接続を開始できません。Warren VPNを使用する前に<b>%s</b>のAlways-on VPNを無効にしてください。"
 
 msgid "Unable to verify account number, please contact support"
 msgstr "アカウント番号を確認できません。サポートまでお問い合わせください"
@@ -3741,14 +4268,14 @@ msgstr "天気"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "ようこそ。このデバイス名は<b>%s</b>です。"
 
-msgid "WireGuard port"
-msgstr "WireGuardポート"
+msgid "QUIC port"
+msgstr "QUICポート"
 
 msgid "Yes, log out device"
 msgstr "はい。デバイスをログアウトします"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "Mullvad VPNアカウントを削除しようとしています。"
+msgid "You are about to delete your Warren VPN account."
+msgstr "Warren VPNアカウントを削除しようとしています。"
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "アカウント画面かウェブサイトから時間を追加することで、VPNを引き続き使用できます。"
@@ -3815,3 +4342,829 @@ msgid "You will lose your remaining day."
 msgid_plural "You will lose your remaining %d days."
 msgstr[0] "残りの%d日分が失われます。"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "自動"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "マッピングに失敗しました: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "接続中の出口サーバーで公開ポートを開き、お使いのデバイスに転送します。ピアツーピアアプリ、ファイル共有、セルフホストサービスに便利です。"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "ポート転送"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "ポートは 49152～65535 の範囲で指定するか、自動の場合は空にしてください。"
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "優先ポート"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "プロトコル"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "公開ポート: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "%(countdown)s 後に更新"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "ステータス: 有効"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "ステータス: ポートマッピングを要求中…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "ステータス: ポートマッピングを設定するためにアクティブなトンネル接続を待機中。"
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "優先ポートがすでに使用されている場合、サーバーは別のポートを割り当てることがあります。変更は再接続なしで直ちに適用されます。"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "キーをバックアップ"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "デーモンがニーモニックを拒否しました。スペルと単語数を確認して、もう一度お試しください。"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "完了"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "12単語（または24単語）のBIP39ニーモニックをスペースで区切って入力してください。"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "デーモンからニーモニックを取得できませんでした。"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "安全な場所に書き留めました。"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "現在のIDが完全に置き換えられることを理解しています。"
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "IDを復元しました。新しいWarrenウォレットが有効になりました。"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "キー"
+
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "利用可能なニーモニックがありません。まずログインするか、IDを復元してください。"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "ニーモニックから復元"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "IDを復元"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "復元中…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "ニーモニックを表示"
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "警告：現在のIDが置き換えられます。現在のIDに紐づくサブスクリプションは復元できなくなります。"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "紙に書き留めてください。クラウド、スクリーンショット、メールには絶対に保存しないでください。"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "12単語のニーモニックは、別のデバイスでWarren IDを復元する唯一の手段です。紛失すると、サブスクリプションは復元できなくなります。"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "単語"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "クリップボードにコピーしました"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "クリップボードにコピー"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "プライバシーに一切妥協しないVPN体験。ログなし。アカウントなし。追跡なし。あるのは帯域だけ。"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "準備完了"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "再確認"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "確認中…（クリックで今すぐ更新）"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "設定が完了しました。国を選んでWarrenに接続してください。"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "続行"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "サブスクリプションの状態を確認できませんでした。もう一度お試しください。"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "新しいウォレットを作成（推奨）"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "デーモンにまだニーモニックがありません。ログインするか、アプリを再起動してください。"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "デーモンがニーモニックを拒否しました。スペルと単語数を確認して、もう一度お試しください。"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "デーモンからニーモニックを取得できませんでした。"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "はじめる"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "すでにサブスクリプションを持っている"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "安全な場所に書き留めました。"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "既存のニーモニックをインポート"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "有効なサブスクリプションが見つかりません。まずご購入ください。"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "既存のWarren IDを復元するには、12単語のBIP39ニーモニックを貼り付けてください。"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "国を選んで接続"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "最初から有効にしたい防御機能を選んでください。これらはすべて、後から設定で変更できます。"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "プライバシー設定"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "ウォレットを復元"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "ウィザードをスキップ（上級者向け）"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "プランを見る（ブラウザで開きます）"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warrenはノンカストディアル型ウォレット（Ed25519 + BIP39）を使用します。キーはお客様自身が保有し、当社が見ることは一切ありません。"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Warren VPNへようこそ"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "この12単語を順番どおりに書き留めて、安全な場所に保管してください。このデバイスにアクセスできなくなった場合、サブスクリプションを復元する唯一の手段となります。"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "まだ有効なサブスクリプションがありません。プランは月額数ユーロから。継続課金なし、アカウント作成なし、使った分だけのお支払いです。"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "あなたのWarrenウォレット"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "あなたのサブスクリプション"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• 常時難読化（デフォルトでオン）：HTTP/3を模倣し、通信を周囲に紛れ込ませます。"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2（デフォルトでオフ）：パディングを挿入し、機械学習によるトラフィック分析を無効化します。帯域コストは約5〜15%。"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• マルチホップ（デフォルトでオフ）：2つのリレーを経由し、入口と出口を関連付けられないようにします。"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "フレーズをバックアップ"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "リカバリーフレーズをバックアップしました。このアカウントがこのデバイスから削除されることを理解しています。"
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "リカバリーフレーズをバックアップしていない場合、サブスクリプションは完全に失われます。"
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "このアカウントからログアウトしますか？"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "ログアウトすると、このアカウントはこのデバイスから消去されます。再ログインするためのメールアドレスやパスワードはありません。リカバリーフレーズが復元する唯一の方法です。"
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "リカバリーフレーズをバックアップ"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "新しいリカバリーフレーズを読み取れませんでした。もう一度お試しください。"
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "このデバイスでアカウントを復元するには、12単語のリカバリーフレーズをスペースで区切って入力してください。"
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "すでにアカウントを持っています"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "リカバリーフレーズを安全な場所に書き留めました。"
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "無効なリカバリーフレーズです。単語とその順序を確認してから、もう一度お試しください。"
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "アカウントを復元"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "アカウントを復元する"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren は非カストディアル型ウォレットを使用します。アカウントは、あなただけが保有する12単語のリカバリーフレーズです。"
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Warren へようこそ"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "この12個の単語を書き留めて安全に保管してください。このデバイスを紛失した場合、アカウントを復元する唯一の方法です。"
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "支払いを完了しました"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "セッションが非アクティブです"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "セッションが終了しました。再接続するには、もう一度ログインする必要があります。"
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "サーバー identity の不一致が検出されました。出口ノードの公開鍵が変更されました。"
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "自動フェイルオーバー"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "現在の出口サーバーに到達できなくなった場合、自動的に別の出口サーバーに切り替えます。"
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "この設定はサービスを再起動せずに、すぐに反映されます。"
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "warren-api サーバーの URL。形式 http(s)://host:port。空 = 未設定（既定のバックエンドにフォールバック）。変更を反映するにはサービスを再起動してください。"
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "公開鍵をコピー"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "公開鍵を非表示"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "公開鍵を表示"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "鍵をバックアップ"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "公開鍵"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "使用される CDN は Datapacket の CDN77 です。CDN は中継される TLS トラフィックを観測できますが、その内容は確認できません。"
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "アプリは %(domainFronting)s を介して Warren API サーバーと通信します。"
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "これは、直接アクセスやその他の方法が検閲によってブロックされている場合に役立ちます。"
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "%(domainFronting)s アクセス方式では、アプリは CDN を介して Warren API に接続し、トラフィックを他の多数のインターネット通信に紛れ込ませることで、検閲をより困難にします。"
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "無効な公開鍵でログインしています。ログアウトして、別の公開鍵をお試しください。"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "確認中…（クリックして今すぐ更新）"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "こちらがあなたの公開鍵です。必ず保存してください。"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "ポート転送: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "マルチホップ（2 ホップ）"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "出口サーバーが切り替わりました"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "以前の出口サーバーに到達できなくなりました。Warren が自動的に別のサーバー経由で接続を切り替えました。"
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "サーバーは更新中です。Warren は自動的に別のサーバーへ切り替えました。操作は不要です。"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "＋ ポートを追加"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "追加した各ポートは出口サーバー上で開かれ、お使いのデバイスの同じポートに転送されます。変更は即座に適用され、再接続は不要です。"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "一時的なブロックがかかる前の、最後のポート変更です。再度変更する前に、しばらくお待ちください。"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "ポートの最大数 %(max)d に達しました"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "まだポートがありません。出口サーバーで開くには、ポートを追加してください。"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "ポート"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "ポートは 49152 から 65535 の範囲で指定してください。"
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "ポートを削除"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "ステータス: ポートマッピングを設定するため、アクティブなトンネル接続を待機しています。"
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "このポートはすでにリストに含まれています。"
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "ポートの変更が多すぎます。%(countdown)s 後に再度変更できます。"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "適用中…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "失敗"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "利用可能なポートがありません"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "許可されていません"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "開放中: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "保留中…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "ポート"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "ポート使用中"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "要求中…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "バウチャーコードの代わりに公開鍵を入力されたようです。アクティブなアカウントを変更したい場合は、まずログアウトしてください。"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "ポート転送"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "オンボーディングを再生"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "ピン留めされた出口サーバーの鍵エントリを %(count)s 件削除しました。"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "以前接続したすべての Warren 出口サーバーは、次回の接続時に再度ピン留めされます（Trust On First Use）。"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "ピン留めテーブルをクリアしました"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "リセット"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "すべてリセット"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "リセットに失敗しました"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "ピン留めされた出口サーバーの鍵をリセット"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "ピン留めされた出口サーバーの鍵をリセットしますか？"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "新しいピンが確立されるまでの間、すり替え検知の保護は一時的に無効になります。リセットの間に出口サーバーをすり替えた攻撃者がいた場合、最初の再接続時には検出されません。"
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "Warren API の URL"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "入口の国"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "出口の国"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "ユーザー IP と宛先 IP の関連付けを断つ代わりに、帯域幅はシングルホップのおよそ半分になるとお考えください。デフォルトでは無効です。プライバシーのために任意で有効化してください。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "マルチホップ"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "この設定を変更した後は、Warren サービスを再起動してください。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "HPKE のエンドツーエンド暗号化を使用して、トラフィックを 2 つの Warren リレー経由でルーティングします。入口リレーには暗号文しか見えず、出口には復号されたペイロードしか見えず、あなたの IP が見えることはありません。Apple Private Relay にヒントを得た方式です。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "トレードオフ: 帯域幅はシングルホップのおよそ半分になります。デフォルトでは無効です。プライバシーのために任意で有効化してください。この設定を変更した後はサービスの再起動が必要です。"
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren マルチホップ"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "有効にすると、トラフィックは 2 つの Warren リレー（入口、次に出口）を経由してルーティングされ、クライアントと出口の間で HPKE のエンドツーエンド暗号化が行われます。入口リレーには暗号文しか見えず、出口には復号されたペイロードしか見えず、ユーザー IP が見えることはありません。"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "自動"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "暗号的不一致の詳細"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "出口 ID"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "場所"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "新たに観測された鍵"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "以前ピン留めされた鍵"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "選択内容を処理しています。しばらくお待ちください。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "拒否（切断）"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "拒否して切断したままにする"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Warren に報告"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "サーバーの識別情報が変更されました"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "以前信頼していた Warren 出口サーバーが、現在は異なる暗号的な識別情報を提示しています。"
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "これは通常、運営者が鍵を更新したことを意味しますが、サーバーがすり替えられたか、侵害された可能性を示している場合もあります。変更を予期していなかった場合は拒否してください。"
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "新しい鍵を信頼"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "HTTP/3 模倣（有効）"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "最終"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "難読化"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "再接続回数"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "無効"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "なし"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren コミュニティフォーラムへのサインインが要求されました。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。"
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "サインインを承認"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "フォーラムを利用するには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。"
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "メールアドレスもパスワードも使用しません。あなたは Warren アカウントに紐付けられない匿名のハンドル名で表示されます。ご自身でこのサインインを開始した場合のみ承認してください。"
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Warren コミュニティフォーラムにサインインしますか？"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "サインインに失敗しました。しばらくしてからもう一度お試しください。"
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "署名しています。しばらくお待ちください。"
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "コミュニティフォーラム"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "接続しています..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "接続が確立されました"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "接続を暗号化しています"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "ランダムな場所"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "保護されています"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "あなたは見られています"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "接続が暗号化されていません"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "切断しています..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "接続中"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "ログを添付"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "バグ報告にログを添付しますか？"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "ログの添付に失敗しました。しばらくしてからもう一度お試しください。"
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "キャンセル"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "バグ報告にログを添付できるのは、その報告の作成者のみです。"
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "送信しています。しばらくお待ちください。"
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "ログファイルが大きすぎるため添付できません。"
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "ログは匿名化されています。ウォレットアドレスや個人情報は伏せられます。ログは Warren サポートスタッフに非公開で送信され、フォーラム上に公開されることはありません。承認する前に、送信される内容を正確に確認できます。"
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "このリクエストは有効期限が切れています。フォーラムのページからやり直してください。"
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "ログを表示"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren フォーラムのあなたのバグ報告（トピック %(topicId)d）で、問題の診断に役立てるためにアプリの技術ログの添付が求められています。"
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Warren フォーラムで作成中のあなたの新しいバグ報告で、問題の診断に役立てるためにアプリの技術ログの添付が求められています。"
+
+#. Status line confirming traffic obfuscation is on.
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr "難読化は有効です。"
+
+#. Status line shown if traffic obfuscation is off.
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr "難読化は現在無効です。"
+
+#. Explains what obfuscation does and why it cannot be turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
+msgstr "検閲を回避するため、Warren はトンネルを通常のウェブ閲覧に見せかけます。ネットワーク上では、一般的なウェブサイトへの通常のブラウザー通信(ポート 443 の HTTP/3)のように見えます。目立つ通信は遮断され得るため、難読化を無効にすることはできません。"
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "%(daita)s はネットワークノイズを追加し、すべてのパケットを同じサイズにするため、訪問先のウェブサイトや通信相手を特定することが格段に難しくなります。"
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
+msgstr "%(daita)s は現在のサーバーでは有効になっていません。この接続は %(daita)s で保護されていません。再接続するか、別の場所を選択してください。"
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "暗号化されていても、デバイスが送受信するデータパケットは AI によって分析され、アクティビティが判明する可能性があります。"
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "注意: この機能はネットワークトラフィックを増やし、速度、レイテンシ、バッテリー持ちを低下させる場合があります。データ量が限られたプランでは注意して使用してください。"

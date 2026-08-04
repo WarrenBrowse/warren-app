@@ -6,5 +6,8 @@ description = "Mullvad VPN API client constants"
 repository.workspace = true
 license.workspace = true
 
+[dependencies]
+warren-product-env = { path = "../../warren-product-env" }
+
 [lints]
 workspace = true

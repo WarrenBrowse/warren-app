@@ -1,0 +1,323 @@
+//
+//  AccessibilityIdentifier.swift
+//  MullvadVPN
+//
+//  Created by Jon Petersson on 2023-12-20.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import UIKit
+
+public enum AccessibilityIdentifier: Equatable {
+    // Buttons
+    case addAccessMethodButton
+    case accessMethodAddButton
+    case accessMethodTestButton
+    case accessMethodConfirmDeleteButton
+    case accountButton
+    case accessMethodUnreachableBackButton
+    case accessMethodUnreachableSaveButton
+    case agreeButton
+    case alertOkButton
+    case appLogsDoneButton
+    case appLogsShareButton
+    case applyButton
+    case cancelButton
+    case continueWithLoginButton
+    case collapseButton
+    case expandButton
+    case createAccountButton
+    case createAccountConfirmationButton
+    case createAccountCancelButton
+    case removeLastUsedAccountButton
+    case cancelRemoveLastUsedAccountButton
+    case deleteButton
+    case deviceCellRemoveButton
+    case disconnectButton
+    case reconnectButton
+    case revokedDeviceLoginButton
+    case dnsSettingsEditButton
+    case infoButton
+    case deviceManagementButton
+    case copyButton
+    case logOutDeviceConfirmButton
+    case logOutDeviceCancelButton
+    case logOutBackupConfirmationCheckbox
+    case loginBarButton
+    case loginTextFieldButton
+    case logoutButton
+    case purchaseButton
+    case webCheckoutButton
+    case backupKeysButton
+    case debugOptionsCell
+    case redeemVoucherButton
+    case restorePurchasesButton
+    case connectButton
+    case selectLocationButton
+    case shuffleLocationButton
+    case closeSearchButton
+    case closeSelectLocationButton
+    case settingsButton
+    // Wallet (BIP39) identity flow.
+    case walletCreateButton
+    case walletRestoreButton
+    case walletMnemonicConfirmButton
+    case walletMnemonicCopyButton
+    case walletMnemonicRestoreSubmitButton
+    case walletBackupAcknowledgeToggle
+    // Onboarding wizard (post-login, desktop parity).
+    case onboardingWelcomeNextButton
+    case onboardingWalletContinueButton
+    case onboardingWalletAcknowledgeToggle
+    case onboardingSubscriptionLaterCheck
+    case onboardingSubscriptionRedeemVoucher
+    case onboardingPreferencesContinueButton
+    case onboardingDoneFinishButton
+    case onboardingSkipButton
+    case relayStatusCollapseButton
+    case settingsDoneButton
+    case addNewCustomListButton
+    case editCustomListButton
+    case saveCreateCustomListButton
+    case confirmDeleteCustomListButton
+    case cancelDeleteCustomListButton
+    case customListLocationCheckmarkButton
+    case listCustomListDoneButton
+    case selectLocationFilterPill
+    case selectLocationEntryFilterButton
+    case selectLocationExitFilterButton
+    case relayFilterChipCloseButton
+    case openPortSelectorMenuButton
+    case cancelPurchaseListButton
+    case selectLocationToolbarMenu
+    case locationListItem(String)
+    case entryLocationButton
+    case exitLocationButton
+    case recentConnectionsToggleButton
+    case disableRecentConnectionsButton
+    case recentListItem(String)
+
+    // Cells
+    case deviceCell
+    case accessMethodDirectCell
+    case accessMethodBridgesCell
+    case accessMethodEncryptedDNSCell
+    case accessMethodDomainFrontingCell
+    case accessMethodProtocolSelectionCell
+    case vpnSettingsCell
+    case dnsSettingsAddServerCell
+    case dnsSettingsUseCustomDNSCell
+    case preferencesCell
+    case versionCell
+    case faqCell
+    case apiAccessCell
+    case relayFilterProviderCell
+    case wireGuardPortsCell
+    case wireGuardObfuscationCell
+    case udpOverTCPPortCell
+    case quantumResistantTunnelCell
+    case customListEditNameFieldCell
+    case customListEditAddOrEditLocationCell
+    case customListEditDeleteListCell
+    case locationFilterOwnershipHeaderCell
+    case locationFilterProvidersHeaderCell
+    case ownershipMullvadOwnedCell
+    case ownershipRentedCell
+    case ownershipAnyCell
+    case countryLocationCell
+    case cityLocationCell
+    case relayLocationCell
+    case customListLocationCell
+    case daitaConfirmAlertBackButton
+    case daitaConfirmAlertEnableButton
+    case includeAllNetworksNotificationsAlertEnableButton
+    case includeAllNetworksNotificationsAlertDismissButton
+    case includeAllNetworksNotificationsAlertSystemSettingsButton
+    case includeAllNetworksFeatureAlertEnableButton
+    case includeAllNetworksCell
+    case multihopCell
+    case daitaCell
+    case warrenWalletBackupCell
+    case warrenWalletEraseCell
+    case warrenWalletIdentityCell
+    case warrenTunnelStatisticsCell
+    case warrenDiagnosticInfoCell
+    case warrenAboutCell
+    case warrenPortForwardingCell
+    case daitaFilterPill
+    case obfuscationFilterPill
+    case ipv6FilterPill
+    case languageCell
+    case notificationSettingsCell
+    case selectedSingleOption
+
+    // Labels
+    case accountPageDeviceNameLabel
+    case socks5ServerCell
+    case socks5PortCell
+    case accountPagePaidUntilLabel
+    case addAccessMethodTestStatusReachableLabel
+    case addAccessMethodTestStatusTestingLabel
+    case addAccessMethodTestStatusUnreachableLabel
+    case headerDeviceNameLabel
+    case connectionStatusConnectedLabel
+    case connectionStatusConnectingLabel
+    case connectionStatusNotConnectedLabel
+    case welcomeAccountNumberLabel
+    case connectionPanelDetailLabel
+    case relayFilterChipLabel
+
+    // Views
+    case accessMethodProtocolPickerView
+    case accessMethodUnreachableAlert
+    case accountView
+    case addLocationsView
+    case addAccessMethodTableView
+    case apiAccessView
+    case apiAccessListView
+    case alertContainerView
+    case alertTitle
+    case appLogsView
+    case changeLogAlert
+    case deviceManagementView
+    case editAccessMethodView
+    case headerBarView
+    case loginView
+    case outOfTimeView
+    case termsOfServiceView
+    case selectLocationView
+    case selectLocationTableView
+    case settingsTableView
+    case vpnSettingsTableView
+    case connectionView
+    case revokedDeviceView
+    case welcomeView
+    case walletLoginView
+    case walletMnemonicDisplayView
+    case walletMnemonicInputView
+    case deleteAccountView
+    case settingsContainerView
+    case newCustomListView
+    case customListEditTableView
+    case listCustomListsView
+    case listCustomListsTableView
+    case editCustomListEditLocationsView
+    case editCustomListEditLocationsTableView
+    case relayFilterChipView
+    case dnsSettingsTableView
+    case multihopView
+    case daitaView
+    case notificationSettingsView
+    case notificationPromptView
+    case notificationPromptSkipButton
+    case notificationPromptEnableButton
+    case includeAllNetworksView
+
+    // Other UI elements
+    case accessMethodEnableSwitch
+    case accessMethodNameTextField
+    case logOutSpinnerAlertView
+    case connectionPanelInAddressRow
+    case connectionPanelOutAddressRow
+    case connectionPanelOutIpv6AddressRow
+    case connectionPanelServerLabel
+    case customSwitch
+    case customWireGuardPortTextField
+    case dnsContentBlockersHeaderView
+    case dnsSettingsEnterIPAddressTextField
+    case loginStatusIconAuthenticating
+    case loginStatusIconFailure
+    case loginStatusIconSuccess
+    case loginTextField
+    case selectLocationSearchTextField
+    case deleteAccountTextField
+    case socks5AuthenticationSwitch
+    case statusImageView
+    case deviceRemovalProgressView
+    case settingsInfoView
+    case actionBox
+
+    // DNS settings
+    case includeAllNetworks
+    case localNetworkSharing
+    case dnsSettings
+    case ipOverrides
+    case resetPinnedExitKeys
+    case wireGuardCustomPort
+    case wireGuardObfuscationAutomatic
+    case wireGuardObfuscationPort
+    case wireGuardObfuscationOff
+    case wireGuardObfuscationUdpOverTcp
+    case wireGuardObfuscationShadowsocks
+    case wireGuardObfuscationQuic
+    case wireGuardObfuscationLwo
+    case wireGuardObfuscationUdpOverTcpPort
+    case wireGuardObfuscationShadowsocksPort
+    case wireGuardObfuscationLwoPort
+    case wireGuardPort(UInt16?)
+    case udpOverTcpObfuscationSettings
+
+    // Custom DNS
+    case blockAll
+    case blockAdvertising
+    case blockTracking
+    case blockMalware
+    case blockGambling
+    case blockAdultContent
+    case blockSocialMedia
+    case useCustomDNS
+    case addDNSServer
+    case dnsServer
+    case dnsServerInfo
+    case allowExternalDns
+    case allowExternalDnsInfo
+
+    // DAITA
+    case daitaSwitch
+    case daitaPromptAlert
+
+    // IAN
+    case includeAllNetworksSwitch
+    case includeAllNetworksPromptAlert
+    case localNetworkSharingSwitch
+
+    // Quantum resistance
+    case quantumResistanceOff
+    case quantumResistanceOn
+
+    // IP version
+    case ipVersionCell
+    case ipVersionAutomatic
+    case ipVersionIPv4
+    case ipVersionIPv6
+
+    // Multihop
+    case multihopState(String)
+    case multihopMenuPicker
+
+    // WireGuard obfuscation settings
+    case wireGuardObfuscationUdpOverTcpTable
+    case wireGuardObfuscationShadowsocksTable
+    case wireGuardObfuscationLwoTable
+
+    // Error
+    case unknown
+
+    // Notification settings
+    case allNotificationSwitch
+    case accountNotificationSwitch
+    case connectionStatusNotificationSwitch
+}
+
+extension AccessibilityIdentifier {
+    public var asString: String {
+        "\(self)"
+    }
+}
+
+extension UIAccessibilityIdentification {
+    @MainActor
+    func setAccessibilityIdentifier(_ value: AccessibilityIdentifier?) {
+        accessibilityIdentifier = value.map(\.asString)
+    }
+}

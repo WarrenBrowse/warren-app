@@ -1350,11 +1350,6 @@
         <target state="final">En cours d'utilisation</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Include my account token for faster help with payment or account related issues" xml:space="preserve" approved="yes">
-        <source>Include my account token for faster help with payment or account related issues</source>
-        <target state="final">Inclure mon jeton de compte pour recevoir plus rapidement de l'aide avec les problèmes relatifs aux paiements ou à mon compte</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Indonesia" xml:space="preserve" approved="yes">
         <source>Indonesia</source>
         <target state="final">Indonésie</target>
@@ -2142,11 +2137,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
         <target state="final">Loués uniquement</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Report a problem" xml:space="preserve" approved="yes">
-        <source>Report a problem</source>
-        <target state="final">Signaler un problème</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Required" xml:space="preserve" approved="yes">
         <source>Required</source>
         <target state="final">Requis</target>
@@ -2230,11 +2220,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
       <trans-unit id="Send" xml:space="preserve" approved="yes">
         <source>Send</source>
         <target state="final">Envoyer</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Send anyway" xml:space="preserve" approved="yes">
-        <source>Send anyway</source>
-        <target state="final">Envoyer quand même</target>
         <note/>
       </trans-unit>
       <trans-unit id="Sending..." xml:space="preserve" approved="yes">
@@ -2667,11 +2652,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
         <target state="final">Pour en ajouter d'autres, vous devrez vous déconnecter et accéder à internet avec une connexion non sécurisée.</target>
         <note/>
       </trans-unit>
-      <trans-unit id="To assist you better, please write in English or Swedish and include which country you are connecting from." xml:space="preserve" approved="yes">
-        <source>To assist you better, please write in English or Swedish and include which country you are connecting from.</source>
-        <target state="final">Pour nous permettre de mieux vous assister, merci d'écrire en anglais ou en suédois et d'indiquer le pays à partir duquel vous vous connectez.</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view." xml:space="preserve" approved="yes">
         <source>To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view.</source>
         <target state="final">Pour contourner ce problème, vous pouvez importer un fichier ou du texte fourni par notre équipe d'assistance, avec de nouvelles adresses IP qui remplacent les adresses par défaut des serveurs dans la vue Sélectionner un emplacement.</target>
@@ -2690,11 +2670,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
       <trans-unit id="To enable this setting, add at least one server." xml:space="preserve" approved="yes">
         <source>To enable this setting, add at least one server.</source>
         <target state="final">Pour activer ce paramètre, ajoutez au moins un serveur.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel." xml:space="preserve" approved="yes">
-        <source>To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel.</source>
-        <target state="final">Pour mieux vous aider, le fichier journal de l'application est joint à ce message. Vos données restent privées et en sécurité dans la mesure où elles sont rendues anonymes avant d'être envoyées via un canal chiffré.</target>
         <note/>
       </trans-unit>
       <trans-unit id="To start using the app, you first need to add time to your account." xml:space="preserve" approved="yes">
@@ -2775,11 +2750,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
       <trans-unit id="Unable to start tunnel connection after update. Please disconnect and reconnect." xml:space="preserve" approved="yes">
         <source>Unable to start tunnel connection after update. Please disconnect and reconnect.</source>
         <target state="final">Impossible de démarrer la connexion par tunnel après la mise à jour. Veuillez vous déconnecter et vous reconnecter.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Unable to start tunnel connection. Please send a problem report." xml:space="preserve" approved="yes">
-        <source>Unable to start tunnel connection. Please send a problem report.</source>
-        <target state="final">Impossible de démarrer la connexion au tunnel. Veuillez envoyer un rapport de problème.</target>
         <note/>
       </trans-unit>
       <trans-unit id="Unchecked" xml:space="preserve" approved="yes">
@@ -2865,11 +2835,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
       <trans-unit id="View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily." xml:space="preserve" approved="yes">
         <source>View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily.</source>
         <target state="final">Affichez et gérez tous vos appareils connectés. Vous pouvez avoir jusqu'à 5 appareils sur un même compte. Chaque appareil reçoit un nom lorsqu'il est connecté, ce qui vous permet de le distinguer facilement.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="View app logs" xml:space="preserve" approved="yes">
-        <source>View app logs</source>
-        <target state="final">Afficher les journaux de l'application</target>
         <note/>
       </trans-unit>
       <trans-unit id="Voucher code has already been used." xml:space="preserve" approved="yes">
@@ -2987,11 +2952,6 @@ Voulez-vous vraiment supprimer le numéro de compte enregistré ?</target>
         <target state="final">Vous avez déjà un numéro de compte enregistré. Si vous créez un nouveau compte, le numéro de compte enregistré sera supprimé de cet appareil. Cette action est irréversible.</target>
         <note/>
       </trans-unit>
-      <trans-unit id="You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address." xml:space="preserve" approved="yes">
-        <source>You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address.</source>
-        <target state="final">Vous êtes sur le point d'envoyer un signalement de problème sans nous fournir un moyen de vous contacter. Si vous désirez une réponse à votre signalement, vous devez saisir une adresse e-mail.</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="You are logged in with an invalid account number. Please log out and try another one." xml:space="preserve" approved="yes">
         <source>You are logged in with an invalid account number. Please log out and try another one.</source>
         <target state="final">Vous vous êtes connecté(e) avec un numéro de compte non valide. Veuillez vous déconnecter et en essayer un autre.</target>
@@ -3078,11 +3038,6 @@ Nous croyons fermement en l'importance de conserver le moins de données possibl
       <trans-unit id="Your device is offline. Try connecting again when the device has access to Internet." xml:space="preserve" approved="yes">
         <source>Your device is offline. Try connecting again when the device has access to Internet.</source>
         <target state="final">Votre appareil est hors ligne. Essayez de vous reconnecter une fois que l'appareil aura accès à internet.</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Your email (optional)" xml:space="preserve" approved="yes">
-        <source>Your email (optional)</source>
-        <target state="final">Votre e-mail (facultatif)</target>
         <note/>
       </trans-unit>
       <trans-unit id="Your previous purchases have already been added to this account." xml:space="preserve" approved="yes">

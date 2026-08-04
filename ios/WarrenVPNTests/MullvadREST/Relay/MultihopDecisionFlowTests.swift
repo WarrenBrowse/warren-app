@@ -1,0 +1,244 @@
+//
+//  MultihopDecisionFlowTests.swift
+//  MullvadVPNTests
+//
+//  Created by Jon Petersson on 2024-06-14.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import WarrenMockData
+import XCTest
+@testable import WarrenVPN
+
+@testable import WarrenREST
+@testable import WarrenSettings
+@testable import WarrenTypes
+
+class MultihopDecisionFlowTests: XCTestCase {
+    let sampleRelays = ServerRelaysResponseStubs.sampleRelays
+    var obfuscation: RelayObfuscation!
+
+    override func setUp() async throws {
+        obfuscation = try RelayObfuscator(
+            relays: sampleRelays,
+            tunnelSettings: LatestTunnelSettings(),
+            connectionAttemptCount: 0,
+            obfuscationBypass: IdentityObfuscationProvider()
+        ).obfuscate()
+    }
+
+    func testOneToOneCanHandle() throws {
+        let oneToOne = OneToOne(next: nil, relayPicker: picker)
+
+        XCTAssertTrue(
+            oneToOne.canHandle(
+                entryCandidates: [seSto6],
+                exitCandidates: [seSto2]
+            ))
+
+        XCTAssertFalse(
+            oneToOne.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2]
+            ))
+
+        XCTAssertFalse(
+            oneToOne.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2, seSto6]
+            ))
+    }
+
+    func testOneToManyCanHandle() throws {
+        let oneToMany = OneToMany(next: nil, relayPicker: picker)
+
+        XCTAssertTrue(
+            oneToMany.canHandle(
+                entryCandidates: [seSto2],
+                exitCandidates: [seSto2, seSto6]
+            ))
+
+        XCTAssertFalse(
+            oneToMany.canHandle(
+                entryCandidates: [seSto6],
+                exitCandidates: [seSto2]
+            ))
+
+        XCTAssertFalse(
+            oneToMany.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2, seSto6]
+            ))
+    }
+
+    func testManyToOneCanHandle() throws {
+        let manyToOne = ManyToOne(next: nil, relayPicker: picker)
+
+        XCTAssertTrue(
+            manyToOne.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2]
+            ))
+
+        XCTAssertFalse(
+            manyToOne.canHandle(
+                entryCandidates: [seSto6],
+                exitCandidates: [seSto2]
+            ))
+
+        XCTAssertFalse(
+            manyToOne.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2, seSto6]
+            ))
+    }
+
+    func testManyToManyCanHandle() throws {
+        let manyToMany = ManyToMany(next: nil, relayPicker: picker)
+
+        XCTAssertTrue(
+            manyToMany.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2, seSto6]
+            ))
+
+        XCTAssertFalse(
+            manyToMany.canHandle(
+                entryCandidates: [seSto6],
+                exitCandidates: [seSto2]
+            ))
+
+        XCTAssertFalse(
+            manyToMany.canHandle(
+                entryCandidates: [seSto2, seSto6],
+                exitCandidates: [seSto2]
+            ))
+    }
+
+    func testOneToOnePick() throws {
+        let oneToOne = OneToOne(next: nil, relayPicker: picker)
+
+        let entryCandidates = [seSto2]
+        let exitCandidates = [seSto6]
+
+        let selectedRelays = try oneToOne.pick(
+            entryCandidates: entryCandidates,
+            exitCandidates: exitCandidates,
+            obfuscation: obfuscation,
+            selectNearbyLocation: false
+        )
+
+        XCTAssertEqual(selectedRelays.entry?.hostname, "se2-wireguard")
+        XCTAssertEqual(selectedRelays.exit.hostname, "se6-wireguard")
+    }
+
+    func testOneToManyPick() throws {
+        let oneToMany = OneToMany(next: nil, relayPicker: picker)
+
+        let entryCandidates = [seSto2]
+        let exitCandidates = [seSto2, seSto6]
+
+        let selectedRelaysWithoutSmartRouting = try oneToMany.pick(
+            entryCandidates: entryCandidates,
+            exitCandidates: exitCandidates,
+            obfuscation: obfuscation,
+            selectNearbyLocation: false
+        )
+
+        XCTAssertEqual(selectedRelaysWithoutSmartRouting.entry?.hostname, "se2-wireguard")
+        XCTAssertEqual(selectedRelaysWithoutSmartRouting.exit.hostname, "se6-wireguard")
+
+        let selectedRelaysWithSmartRouting = try XCTUnwrap(
+            oneToMany.pick(
+                entryCandidates: [seSto2],
+                exitCandidates: [seSto2, seSto6],
+                obfuscation: obfuscation,
+                selectNearbyLocation: true
+            ))
+        XCTAssertEqual(selectedRelaysWithSmartRouting.entry?.hostname, "se2-wireguard")
+        XCTAssertEqual(selectedRelaysWithSmartRouting.exit.hostname, "se6-wireguard")
+    }
+
+    func testManyToOnePick() throws {
+        let manyToOne = ManyToOne(next: nil, relayPicker: picker)
+
+        let entryCandidates = [seSto2, seSto6]
+        let exitCandidates = [seSto2]
+
+        let selectedRelays = try manyToOne.pick(
+            entryCandidates: entryCandidates,
+            exitCandidates: exitCandidates,
+            obfuscation: obfuscation,
+            selectNearbyLocation: false
+        )
+
+        XCTAssertEqual(selectedRelays.entry?.hostname, "se6-wireguard")
+        XCTAssertEqual(selectedRelays.exit.hostname, "se2-wireguard")
+    }
+
+    func testManyToManyPick() throws {
+        let manyToMany = ManyToMany(next: nil, relayPicker: picker)
+
+        let entryCandidates = [seSto2, seSto6]
+        let exitCandidates = [seSto2, seSto6]
+
+        let selectedRelays = try manyToMany.pick(
+            entryCandidates: entryCandidates,
+            exitCandidates: exitCandidates,
+            obfuscation: obfuscation,
+            selectNearbyLocation: false
+        )
+
+        if selectedRelays.exit.hostname == "se2-wireguard" {
+            XCTAssertEqual(selectedRelays.entry?.hostname, "se6-wireguard")
+        } else {
+            XCTAssertEqual(selectedRelays.entry?.hostname, "se2-wireguard")
+        }
+    }
+}
+
+extension MultihopDecisionFlowTests {
+    var picker: MultihopPicker {
+        var tunnelSettings = LatestTunnelSettings()
+        tunnelSettings.relayConstraints = RelayConstraints(
+            entryLocations: .only(UserSelectedRelays(locations: [.city("se", "sto")])),
+            exitLocations: .only(UserSelectedRelays(locations: [.city("se", "sto")]))
+        )
+
+        return MultihopPicker(
+            relays: sampleRelays,
+            tunnelSettings: tunnelSettings,
+            connectionAttemptCount: 0
+        )
+    }
+
+    var seSto2: RelayWithLocation<REST.ServerRelay> {
+        let relay = sampleRelays.wireguard.relays.first { $0.hostname == "se2-wireguard" }!
+        let serverLocation = sampleRelays.locations["se-sto"]!
+        let location = Location(
+            country: serverLocation.country,
+            countryCode: serverLocation.country,
+            city: serverLocation.city,
+            cityCode: "se-sto",
+            latitude: serverLocation.latitude,
+            longitude: serverLocation.longitude
+        )
+
+        return RelayWithLocation(relay: relay, serverLocation: location)
+    }
+
+    var seSto6: RelayWithLocation<REST.ServerRelay> {
+        let relay = sampleRelays.wireguard.relays.first { $0.hostname == "se6-wireguard" }!
+        let serverLocation = sampleRelays.locations["se-sto"]!
+        let location = Location(
+            country: serverLocation.country,
+            countryCode: serverLocation.country,
+            city: serverLocation.city,
+            cityCode: "se-sto",
+            latitude: serverLocation.latitude,
+            longitude: serverLocation.longitude
+        )
+
+        return RelayWithLocation(relay: relay, serverLocation: location)
+    }
+}

@@ -11,7 +11,6 @@ import { LaunchRouteObjectModel } from './launch';
 import { LoginRouteObjectModel } from './login';
 import { LwoSettingsRouteObjectModel } from './lwo-settings';
 import { MainRouteObjectModel } from './main';
-import { ManageDevicesRouteObjectModel } from './manage-devices';
 import { MultihopSettingsRouteObjectModel } from './multihop-settings';
 import { RedeemVoucherRouteObjectModel } from './redeem-voucher';
 import { SelectLanguageRouteObjectModel } from './select-language';
@@ -21,12 +20,10 @@ import { SetupFinishedRouteObjectModel } from './setup-finished';
 import { ShadowsocksSettingsRouteObjectModel } from './shadowsocks-settings';
 import { SplitTunnelingSettingsRouteObjectModel } from './split-tunneling-settings';
 import { TimeAddedRouteObjectModel } from './time-added';
-import { TooManyDevicesRouteObjectModel } from './too-many-devices';
 import { UdpOverTcpSettingsRouteObjectModel } from './udp-over-tcp-settings';
 import { UserInterfaceSettingsRouteObjectModel } from './user-interface-settings';
 import { VoucherSuccessRouteObjectModel } from './voucher-success';
 import { VpnSettingsRouteObjectModel } from './vpn-settings';
-import { WireGuardPortRouteObjectModel } from './wireguard-port';
 
 export class RoutesObjectModel {
   readonly main: MainRouteObjectModel;
@@ -38,7 +35,6 @@ export class RoutesObjectModel {
   readonly timeAdded: TimeAddedRouteObjectModel;
   readonly setupFinished: SetupFinishedRouteObjectModel;
   readonly deviceRevoked: DeviceRevokedRouteObjectModel;
-  readonly tooManyDevices: TooManyDevicesRouteObjectModel;
   readonly settings: SettingsRouteObjectModel;
   readonly userInterfaceSettings: UserInterfaceSettingsRouteObjectModel;
   readonly selectLanguage: SelectLanguageRouteObjectModel;
@@ -52,8 +48,6 @@ export class RoutesObjectModel {
   readonly splitTunnelingSettings: SplitTunnelingSettingsRouteObjectModel;
   readonly shadowsocksSettings: ShadowsocksSettingsRouteObjectModel;
   readonly account: AccountRouteObjectModel;
-  readonly manageDevices: ManageDevicesRouteObjectModel;
-  readonly wireguardPort: WireGuardPortRouteObjectModel;
   readonly lwoSettings: LwoSettingsRouteObjectModel;
 
   constructor(page: Page, utils: TestUtils) {
@@ -67,7 +61,6 @@ export class RoutesObjectModel {
     this.timeAdded = new TimeAddedRouteObjectModel(page, utils);
     this.setupFinished = new SetupFinishedRouteObjectModel(page, utils);
     this.deviceRevoked = new DeviceRevokedRouteObjectModel(utils);
-    this.tooManyDevices = new TooManyDevicesRouteObjectModel(page, utils);
     this.settings = new SettingsRouteObjectModel(page, utils);
     this.userInterfaceSettings = new UserInterfaceSettingsRouteObjectModel(page, utils);
     this.filter = new FilterRouteObjectModel(page, utils);
@@ -80,8 +73,6 @@ export class RoutesObjectModel {
     this.splitTunnelingSettings = new SplitTunnelingSettingsRouteObjectModel(page, utils);
     this.shadowsocksSettings = new ShadowsocksSettingsRouteObjectModel(page, utils);
     this.account = new AccountRouteObjectModel(page, utils);
-    this.manageDevices = new ManageDevicesRouteObjectModel(page, utils);
-    this.wireguardPort = new WireGuardPortRouteObjectModel(page, utils);
     this.lwoSettings = new LwoSettingsRouteObjectModel(page, utils);
   }
 }

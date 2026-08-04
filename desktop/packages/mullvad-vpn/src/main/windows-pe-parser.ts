@@ -190,9 +190,15 @@ export const LONG = {
 };
 export const ULONGLONG = {
   primitive: {
+    // 64-bit fields (e.g. IMAGE_OPTIONAL_HEADER64.ImageBase) are only ever
+    // sized for struct-offset math, never value-read. The `never`-returning
+    // reader is a deliberate sentinel the typing relies on (it lets a
+    // struct mixing this with number fields still unify on `.value()`). If
+    // you need the value, implement `buffer.readBigUInt64LE(0)` here AND
+    // confirm the `value()` generic still unifies across the struct.
     size: 8,
-    reader: (_buffer: Buffer) => {
-      throw new Error('Not implemented');
+    reader: (_buffer: Buffer): number => {
+      throw new Error('ULONGLONG.value() not implemented (field is size-only)');
     },
   },
 };
@@ -210,9 +216,16 @@ export const BYTE = {
 };
 export const UTF8_STRING = (length: number) => ({
   primitive: {
+    // Fixed-width UTF-8 field (e.g. IMAGE_SECTION_HEADER.Name). Only ever
+    // sized for struct-offset math, never value-read. The `never`-returning
+    // reader is a deliberate sentinel: returning a real `string` here breaks
+    // the `value()` generic, which cannot unify a string reader with the
+    // number readers of sibling fields in the same struct. If you need the
+    // value, decode `buffer.toString('utf8').replace(/\0+$/, '')` here AND
+    // rework the `value()` typing to allow heterogeneous struct fields.
     size: length,
-    reader: (_buffer: Buffer) => {
-      throw new Error('Not implemented');
+    reader: (_buffer: Buffer): number => {
+      throw new Error('UTF8_STRING.value() not implemented (field is size-only)');
     },
   },
 });

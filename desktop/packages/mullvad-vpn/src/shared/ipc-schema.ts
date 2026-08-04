@@ -6,8 +6,6 @@ import { ILinuxSplitTunnelingApplication, ISplitTunnelingApplication } from './a
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
-  AccountDataError,
-  AccountNumber,
   CustomListError,
   CustomProxy,
   DeviceEvent,
@@ -16,19 +14,27 @@ import {
   IAccountData,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
-  IDeviceRemoval,
   IDnsOptions,
   IRelayListWithEndpointData,
   ISettings,
   LogoutSource,
+  NatPmpSettings,
+  NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
   RelaySettings,
+  TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
+  WarrenCustomExitSettings,
+  WarrenMultiHopSettings,
+  WarrenPubKey,
+  WarrenPubkeyMismatch,
+  WarrenStatus,
 } from './daemon-rpc-types';
+import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
+import { ForumLoginResult, IForumLoginRequest } from './forum-login';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
 import {
@@ -39,6 +45,7 @@ import {
   IWindowShapeParameters,
 } from './ipc-types';
 import { LogLevel } from './logging-types';
+import { RenewalUiState } from './renewal';
 import { RoutePath } from './routes';
 
 interface ILogEntry {
@@ -64,7 +71,7 @@ export interface IAppStateSnapshot {
   isConnected: boolean;
   autoStart: boolean;
   accountData?: IAccountData;
-  accountHistory?: AccountNumber;
+  accountHistory?: WarrenPubKey;
   tunnelState: TunnelState;
   settings: ISettings;
   isPerformingPostUpgrade: boolean;
@@ -76,11 +83,31 @@ export interface IAppStateSnapshot {
   guiSettings: IGuiSettingsState;
   translations: ITranslations;
   splitTunnelingApplications?: ISplitTunnelingApplication[];
+  // Whether the daemon/platform supports split tunneling at all. Part of
+  // the initial snapshot so the renderer has a deterministic value at
+  // boot (the `notifyIsSupported` push alone races a window that opens
+  // after the daemon already bootstrapped).
+  splitTunnelingSupported: boolean;
   macOsScrollbarVisibility?: MacOsScrollbarVisibility;
   changelog: IChangelog;
   navigationHistory?: IHistoryObject;
   currentApiAccessMethod?: AccessMethodSetting;
   isMacOs13OrNewer: boolean;
+  purchaseInFlight: boolean;
+  // This wallet's community-forum handle, absent until the user has signed in
+  // to the forum once (the derivation is keyed server side, so the app cannot
+  // compute it).
+  forumHandle?: string;
+  // Latest Warren live status known to the main process. Part of the initial
+  // snapshot for the same reason as `splitTunnelingSupported`: the daemon's
+  // status stream delivers its current value once, at subscribe time, which
+  // happens during the main-process bootstrap and therefore BEFORE the
+  // renderer has registered its listener. Fields that keep changing while the
+  // app runs (failover count, host offline) self-heal on the next push; a
+  // rarely-changing one (a published notice, the network descriptor) would
+  // otherwise stay invisible until it next changed, which for a notice can be
+  // never.
+  warrenStatus?: WarrenStatus;
 }
 
 export type IpcSchema = typeof ipcSchema;
@@ -141,6 +168,32 @@ export const ipcSchema = {
     reset: notifyRenderer<void>(),
     setHistory: send<IHistoryObject>(),
   },
+  // Community-forum wallet login (doc 55). `request` is pushed when a
+  // `warren://forum-login` deep link arrives; the renderer shows a consent
+  // prompt and calls `approve` or `cancel`. Never a silent external login.
+  forumLogin: {
+    request: notifyRenderer<IForumLoginRequest>(),
+    // A deep link that cold-starts the app fires before the renderer exists;
+    // the prompt fetches the buffered request on mount instead.
+    getPending: invoke<void, IForumLoginRequest | undefined>(),
+    approve: invoke<IForumLoginRequest, ForumLoginResult>(),
+    cancel: invoke<IForumLoginRequest, void>(),
+    // The derived forum handle of this wallet, known only once the user has
+    // signed in to the forum at least once (the derivation is keyed server
+    // side). Pushed on change so the account view updates without a restart.
+    handle: notifyRenderer<string | undefined>(),
+    getHandle: invoke<void, string | undefined>(),
+  },
+  // Community-forum attach-logs (doc 55). `request` is pushed when a
+  // `warren://attach-logs` deep link arrives; the renderer shows a consent
+  // prompt (with a "view the logs" action backed by problemReport.viewLog)
+  // and calls `approve` or `cancel`. Logs are never sent silently.
+  forumAttach: {
+    request: notifyRenderer<IForumAttachRequest>(),
+    getPending: invoke<void, IForumAttachRequest | undefined>(),
+    approve: invoke<IForumAttachRequest, ForumAttachResult>(),
+    cancel: invoke<IForumAttachRequest, void>(),
+  },
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),
     daemonAllowed: notifyRenderer<boolean>(),
@@ -149,6 +202,7 @@ export const ipcSchema = {
     prepareRestart: send<boolean>(),
     tryStart: send<void>(),
     tryStartEvent: notifyRenderer<DaemonStatus>(),
+    unblockNetwork: invoke<void, boolean>(),
   },
   relays: {
     '': notifyRenderer<IRelayListWithEndpointData>(),
@@ -174,6 +228,13 @@ export const ipcSchema = {
     showLaunchDaemonSettings: invoke<void, void>(),
     showFullDiskAccessSettings: invoke<void, void>(),
     getPathBaseName: invoke<string, string>(),
+    // Clears the system clipboard, but only if it still holds the
+    // provided value (the just-copied mnemonic). Runs in the main
+    // process where Electron's `clipboard` module bypasses the
+    // renderer permission handler, which only grants
+    // `clipboard-sanitized-write` and so rejects a renderer-side
+    // `readText()`. Returns whether the clipboard was actually cleared.
+    clearMnemonicFromClipboard: invoke<string, boolean>(),
     upgrade: send<void>(),
     upgradeAbort: send<void>(),
     upgradeEvent: notifyRenderer<AppUpgradeEvent>(),
@@ -187,12 +248,41 @@ export const ipcSchema = {
     disconnect: invoke<DisconnectSource, void>(),
     reconnect: invoke<void, void>(),
   },
+  // Warren live status (auto-reconnect counter + age, obfuscation
+  // indicator). The main process subscribes to the daemon
+  // WarrenStatusUpdates push stream and forwards every snapshot via
+  // this channel; the renderer dispatches it into the redux store.
+  warrenStatus: {
+    '': notifyRenderer<WarrenStatus>(),
+  },
+  // NAT-PMP port-forwarding live status. Same pattern as
+  // `warrenStatus`: main subscribes to the daemon NatPmpStatusUpdates
+  // stream, forwards each snapshot via this channel, renderer
+  // dispatches into the redux store, and the port-forwarding settings
+  // view rerenders with the current port + countdown.
+  natPmpStatus: {
+    '': notifyRenderer<NatPmpStatus>(),
+  },
   settings: {
     '': notifyRenderer<ISettings>(),
     importFile: invoke<string, void>(),
     importText: invoke<string, void>(),
     apiAccessMethodSettingChange: notifyRenderer<AccessMethodSetting>(),
     setAllowLan: invoke<boolean, void>(),
+    // Persistent warren-api URL (empty string = unset). Daemon restart
+    // required to apply.
+    setWarrenApiUrl: invoke<string, void>(),
+    // Client-side bandwidth ceiling in bits per second (undefined =
+    // unlimited). Applies to a live tunnel without a reconnect.
+    setWarrenMaxRateBps: invoke<number | undefined, void>(),
+    // Warren multi-hop settings. Daemon restart required.
+    setWarrenMultiHop: invoke<WarrenMultiHopSettings, void>(),
+    // Advanced Warren "custom exit" override. The daemon reconnects on
+    // change (no restart needed).
+    setWarrenCustomExit: invoke<WarrenCustomExitSettings, void>(),
+    // Warren NAT-PMP port-forwarding settings. Daemon picks up the
+    // new value on the NEXT tunnel reconnect (no restart needed).
+    setNatPmpSettings: invoke<NatPmpSettings, void>(),
     setShowBetaReleases: invoke<boolean, void>(),
     setEnableIpv6: invoke<boolean, void>(),
     setLockdownMode: invoke<boolean, void>(),
@@ -211,6 +301,23 @@ export const ipcSchema = {
     setEnableDaita: invoke<boolean, void>(),
     setDaitaDirectOnly: invoke<boolean, void>(),
     setEnableRecents: invoke<boolean, void>(),
+    // Trust the new pubkey served for the
+    // `exitIdHex` so future connects to that exit accept it as the
+    // baseline. The daemon clears the pending mismatch from
+    // WarrenStatus on success.
+    trustNewExitKey: invoke<{ exitIdHex: string; newPubkeyHex: string }, TrustNewExitKeyOutcome>(),
+    // Clear the entire TOFU pin table. Used by Settings -> "Reset
+    // pinned exit keys" when the user wants a fresh baseline (e.g.
+    // after switching identity / device).
+    resetPinnedExitKeys: invoke<void, number>(),
+    // Dismiss the pending pubkey mismatch without trusting the new
+    // key. Daemon clears `pubkeyMismatchPending` on WarrenStatus so
+    // the modal unmounts; the existing pin is preserved.
+    dismissPubkeyMismatch: invoke<void, void>(),
+    // Post a forensic report about the mismatch to warren-api
+    // (best-effort, no PII). Daemon clears `pubkeyMismatchPending`
+    // regardless of the report outcome.
+    reportPubkeyMismatch: invoke<WarrenPubkeyMismatch, void>(),
   },
   guiSettings: {
     '': notifyRenderer<IGuiSettingsState>(),
@@ -221,31 +328,64 @@ export const ipcSchema = {
     setPreferredLocale: invoke<string, ITranslations>(),
     setUnpinnedWindow: send<boolean>(),
     setAnimateMap: send<boolean>(),
+    // Onboarding wizard: persist the completion timestamp.
+    // Passing `undefined` clears it so the wizard re-runs on the next
+    // boot (used by the Settings "Replay onboarding" entry).
+    setOnboardingCompletedUnix: send<number | undefined>(),
+    // Persisted backup gate. Set true when a fresh identity is minted
+    // and awaiting recovery-phrase backup, cleared once the backup is
+    // confirmed, so a GUI restart mid-backup can re-route to the
+    // backup-pending state instead of the main view.
+    setBackupPending: send<boolean>(),
   },
   account: {
     '': notifyRenderer<IAccountData | undefined>(),
     device: notifyRenderer<DeviceEvent>(),
-    devices: notifyRenderer<Array<IDevice>>(),
     create: invoke<void, string>(),
-    login: invoke<AccountNumber, AccountDataError | undefined>(),
     logout: invoke<LogoutSource, void>(),
-    getWwwAuthToken: invoke<void, string>(),
+    // Returns the BIP39 mnemonic (12 words) so the user can back it
+    // up. Empty string if the identity has never been bootstrapped.
+    // The renderer caller must display it with a safety warning and
+    // explicit user confirmation.
+    getWarrenMnemonic: invoke<void, string>(),
+    // Restores an identity from the provided BIP39 mnemonic. BIP39
+    // validation is performed daemon-side. Throws if invalid (=
+    // caller must catch + show error). The daemon hot-swaps the
+    // identity and logs in without requiring a restart.
+    setWarrenMnemonic: invoke<string, void>(),
     submitVoucher: invoke<string, VoucherResponse>(),
-    updateData: send<void>(),
-    listDevices: invoke<AccountNumber, Array<IDevice>>(),
-    removeDevice: invoke<IDeviceRemoval, void>(),
+    updateData: invoke<void, void>(),
+    // Starts an app-initiated purchase (doc 35): the main process
+    // mints the wpid, opens the checkout in the browser and owns the
+    // auto-redeem poll (the renderer is background-throttled while
+    // the user pays, so the poll cannot live there).
+    buyCredit: invoke<void, void>(),
+    // Forces an immediate redeem attempt of every pending purchase
+    // (bypasses the focus-check throttle). Wired to the manual
+    // "I've completed payment" buttons.
+    checkPendingPurchases: invoke<void, void>(),
+    // True while the main-process purchase poll is active; drives the
+    // "Checking..." labels in the paywall views.
+    purchase: notifyRenderer<boolean>(),
+    // Auto-renewal display state (warren-core doc 65): undefined when no mandate
+    // is held for the logged-in account.
+    renewal: notifyRenderer<RenewalUiState | undefined>(),
+    getRenewalState: invoke<void, RenewalUiState | undefined>(),
+    disableRenewal: invoke<void, void>(),
   },
   accountHistory: {
-    '': notifyRenderer<AccountNumber | undefined>(),
-    clear: invoke<void, void>(),
+    '': notifyRenderer<WarrenPubKey | undefined>(),
   },
   autoStart: {
     '': notifyRenderer<boolean>(),
     set: invoke<boolean, void>(),
   },
   problemReport: {
-    collectLogs: invoke<string | undefined, string>(),
-    sendReport: invoke<{ email: string; message: string; savedReportId: string }, void>(),
+    // Only log viewing remains renderer-facing: the forum attach-logs
+    // consent prompt opens the collected report for inspection. Collection
+    // happens in the main process (forum-attach deep link) and the old
+    // "send report" upload channel is gone, the forum is the support
+    // front door.
     viewLog: invoke<string, string>(),
   },
   logging: {

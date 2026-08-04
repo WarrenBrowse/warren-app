@@ -13,13 +13,13 @@ openssl req -new -newkey rsa:2048 \
     -outform pem -keyform pem \
     -keyout private_key_application.pem \
     -out cert_signing_request_application \
-    -subj "/C=SE/CN=Developer ID Application/O=Mullvad VPN AB/emailAddress=app@mullvad.net"
+    -subj "/C=SE/CN=Developer ID Application/O=Warren VPN/emailAddress=app@warrenbrowse.com"
 
 openssl req -new -newkey rsa:2048 \
     -outform pem -keyform pem \
     -keyout private_key_installer.pem \
     -out cert_signing_request_installer \
-    -subj "/C=SE/CN=Developer ID Installer/O=Mullvad VPN AB/emailAddress=app@mullvad.net"
+    -subj "/C=SE/CN=Developer ID Installer/O=Warren VPN/emailAddress=app@warrenbrowse.com"
 ```
 
 ## Upload Certificate Signing Requests (CSR) to Apple

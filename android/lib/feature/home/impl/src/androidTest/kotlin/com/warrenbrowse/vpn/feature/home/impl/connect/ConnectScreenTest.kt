@@ -1,0 +1,733 @@
+package com.warrenbrowse.vpn.feature.home.impl.connect
+
+import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
+import de.mannodermaus.junit5.compose.ComposeContext
+import io.mockk.MockKAnnotations
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.unmockkAll
+import io.mockk.verify
+import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
+import com.warrenbrowse.vpn.lib.model.ErrorState
+import com.warrenbrowse.vpn.lib.model.ErrorStateCause
+import com.warrenbrowse.vpn.lib.model.FeatureIndicator
+import com.warrenbrowse.vpn.lib.model.GeoIpLocation
+import com.warrenbrowse.vpn.lib.model.InAppNotification
+import com.warrenbrowse.vpn.lib.model.TransportProtocol
+import com.warrenbrowse.vpn.lib.model.TunnelEndpoint
+import com.warrenbrowse.vpn.lib.model.TunnelState
+import com.warrenbrowse.vpn.lib.model.VersionInfo
+import com.warrenbrowse.vpn.lib.ui.tag.CONNECT_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.CONNECT_CARD_HEADER_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_ACTION_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.SELECT_LOCATION_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.SHUFFLE_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_ACCOUNT_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.screen.test.createEdgeToEdgeComposeExtension
+import com.warrenbrowse.vpn.screen.test.setContentWithTheme
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.RegisterExtension
+
+@Suppress("LargeClass")
+class ConnectScreenTest {
+    @OptIn(ExperimentalTestApi::class)
+    @JvmField
+    @RegisterExtension
+    val composeExtension = createEdgeToEdgeComposeExtension()
+
+    @BeforeEach
+    fun setup() {
+        MockKAnnotations.init(this)
+    }
+
+    @AfterEach
+    fun teardown() {
+        unmockkAll()
+    }
+
+    @Suppress("LongParameterList")
+    private fun ComposeContext.initScreen(
+        state: ConnectUiState = ConnectUiState.INITIAL,
+        onDisconnectClick: () -> Unit = {},
+        onConnectClick: () -> Unit = {},
+        onCancelClick: () -> Unit = {},
+        onShuffleClick: () -> Unit = {},
+        onSwitchLocationClick: () -> Unit = {},
+        onOpenAppListing: () -> Unit = {},
+        onManageAccountClick: () -> Unit = {},
+        onSettingsClick: () -> Unit = {},
+        onAccountClick: () -> Unit = {},
+        onChangelogClick: () -> Unit = {},
+        onDismissChangelogClick: () -> Unit = {},
+        onNavigateToFeature: (FeatureIndicator) -> Unit = {},
+        onClickShowAndroid16UpgradeInfo: () -> Unit = {},
+        onClickDismissAndroid16UpgradeWarning: () -> Unit = {},
+    ) {
+        setContentWithTheme {
+            ConnectScreen(
+                state = state,
+                onDisconnectClick = onDisconnectClick,
+                onConnectClick = onConnectClick,
+                onCancelClick = onCancelClick,
+                onShuffleClick = onShuffleClick,
+                onSwitchLocationClick = onSwitchLocationClick,
+                onOpenAppListing = onOpenAppListing,
+                onManageAccountClick = onManageAccountClick,
+                onSettingsClick = onSettingsClick,
+                onAccountClick = onAccountClick,
+                onChangelogClick = onChangelogClick,
+                onDismissChangelogClick = onDismissChangelogClick,
+                onNavigateToFeature = onNavigateToFeature,
+                onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
+                onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
+            )
+        }
+    }
+
+    @Test
+    fun testDefaultState() {
+        composeExtension.use {
+            // Arrange
+            initScreen()
+
+            // Assert
+            onNodeWithText("You are visible").assertExists()
+            onNodeWithText("Connect").assertExists()
+        }
+    }
+
+    @Test
+    fun testConnectingState() {
+        composeExtension.use {
+            // Arrange
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
+                        inAppNotification = InAppNotification.TunnelStateBlocked,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("You are visible").assertExists()
+            onNodeWithText("Connection in progress").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Cancel").assertExists()
+            onNodeWithText("BLOCKING INTERNET").assertExists()
+        }
+    }
+
+    @Test
+    fun testConnectedState() {
+        composeExtension.use {
+            // Arrange
+            val mockTunnelEndpoint: TunnelEndpoint = mockk(relaxed = true)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("Connection established").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Disconnect").assertExists()
+        }
+    }
+
+    @Test
+    fun testDisconnectingState() {
+        composeExtension.use {
+            // Arrange
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Nothing),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("Disconnecting...").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            // Teardown in flight: desktop shows a disabled green Connect, not a
+            // red Disconnect.
+            onNodeWithText("Connect").assertExists()
+        }
+    }
+
+    @Test
+    fun testDisconnectedState() {
+        composeExtension.use {
+            // Arrange
+            val mockSelectedRelayTitle = "Home"
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = mockSelectedRelayTitle,
+                        tunnelState = TunnelState.Disconnected(),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("You are visible").assertExists()
+            onNodeWithText(mockSelectedRelayTitle).assertExists()
+            onNodeWithText("Connect").assertExists()
+        }
+    }
+
+    @Test
+    fun testErrorStateBlocked() {
+        composeExtension.use {
+            // Arrange
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState =
+                            TunnelState.Error(ErrorState(ErrorStateCause.StartTunnelError, true)),
+                        inAppNotification =
+                            InAppNotification.TunnelStateError(
+                                ErrorState(ErrorStateCause.StartTunnelError, true)
+                            ),
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("BLOCKED CONNECTION").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Disconnect").assertExists()
+            onNodeWithText("BLOCKING INTERNET").assertExists()
+        }
+    }
+
+    @Test
+    fun testErrorStateNotBlocked() {
+        composeExtension.use {
+            // Arrange
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState =
+                            TunnelState.Error(ErrorState(ErrorStateCause.StartTunnelError, false)),
+                        inAppNotification =
+                            InAppNotification.TunnelStateError(
+                                ErrorState(ErrorStateCause.StartTunnelError, false)
+                            ),
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("You are visible").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            // A non-blocking error offers a neutral Disconnect (turn the switch
+            // off), matching desktop, not a "Dismiss".
+            onNodeWithText("Disconnect").assertExists()
+            onNodeWithText(text = "Critical error (your attention is required)", ignoreCase = true)
+                .assertExists()
+        }
+    }
+
+    @Test
+    fun testReconnectingState() {
+        composeExtension.use {
+            // Arrange
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Reconnect),
+                        inAppNotification = InAppNotification.TunnelStateBlocked,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("You are visible").assertExists()
+            onNodeWithText("Connection in progress").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            // Reconnect teardown: disabled green Connect (desktop parity).
+            onNodeWithText("Connect").assertExists()
+            onNodeWithText("BLOCKING INTERNET").assertExists()
+        }
+    }
+
+    @Test
+    fun testDisconnectingBlockState() {
+        composeExtension.use {
+            // Arrange
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Disconnecting(ActionAfterDisconnect.Block),
+                        inAppNotification = InAppNotification.TunnelStateBlocked,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            // A kill-switch-held teardown reads as a transitional disconnect
+            // (desktop parity), not a distinct BLOCKED CONNECTION status.
+            onNodeWithText("Disconnecting...").assertExists()
+            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Connect").assertExists()
+            onNodeWithText("BLOCKING INTERNET").assertExists()
+        }
+    }
+
+    @Test
+    fun testClickSelectLocationButton() {
+        composeExtension.use {
+            // Arrange
+            val mockSelectedRelayItemTitle = "Home"
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = mockSelectedRelayItemTitle,
+                        tunnelState = TunnelState.Disconnected(),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    ),
+                onSwitchLocationClick = mockedClickHandler,
+            )
+
+            // Act
+            onNodeWithTag(SELECT_LOCATION_BUTTON_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun testOnDisconnectClick() {
+        composeExtension.use {
+            // Arrange
+            val mockTunnelEndpoint: TunnelEndpoint = mockk(relaxed = true)
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connected(mockTunnelEndpoint, null, emptyList()),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    ),
+                onDisconnectClick = mockedClickHandler,
+            )
+
+            // Act
+            onNodeWithTag(CONNECT_BUTTON_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun testOnShuffleClick() {
+        composeExtension.use {
+            // Arrange: the side button is always the shuffle now, in every state.
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Disconnected(),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    ),
+                onShuffleClick = mockedClickHandler,
+            )
+
+            // Act
+            onNodeWithTag(SHUFFLE_BUTTON_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun testOnConnectClick() {
+        composeExtension.use {
+            // Arrange
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Disconnected(),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    ),
+                onConnectClick = mockedClickHandler,
+            )
+
+            // Act
+            onNodeWithTag(CONNECT_BUTTON_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun testOnCancelClick() {
+        composeExtension.use {
+            // Arrange
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    ),
+                onCancelClick = mockedClickHandler,
+            )
+
+            // Act
+            onNodeWithTag(CONNECT_BUTTON_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun showConnectionDetails() {
+        composeExtension.use {
+            // Arrange
+            val mockLocation: GeoIpLocation = mockk(relaxed = true)
+            val mockTunnelEndpoint: TunnelEndpoint = mockk(relaxed = true)
+            val mockHostName = "Host-Name"
+            val inHost = "Host"
+            val inPort = 99
+            val inProtocol = TransportProtocol.Udp
+            every { mockLocation.hostname } returns mockHostName
+            every { mockLocation.entryHostname } returns null
+
+            // In
+            every { mockTunnelEndpoint.obfuscation } returns null
+            every { mockTunnelEndpoint.entryEndpoint } returns null
+            every { mockTunnelEndpoint.endpoint.address.address.hostAddress } returns inHost
+            every { mockTunnelEndpoint.endpoint.address.port } returns inPort
+            every { mockTunnelEndpoint.endpoint.protocol } returns inProtocol
+
+            // Out Ipv4
+            val outIpv4 = "ipv4address"
+            every { mockLocation.ipv4?.hostAddress } returns outIpv4
+
+            // Out Ipv6
+            val outIpv6 = "ipv6address"
+            every { mockLocation.ipv6?.hostAddress } returns outIpv6
+
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = mockLocation,
+                        selectedRelayItemTitle = null,
+                        tunnelState =
+                            TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Act
+            onNodeWithTag(CONNECT_CARD_HEADER_TEST_TAG).performClick()
+
+            // Assert
+            onNodeWithText(mockHostName).assertExists()
+            onNodeWithText("In").assertExists()
+            // Single-hop prints the same socket twice: In is what the client
+            // dials, Out is where the traffic leaves.
+            onAllNodesWithText("$inHost:$inPort UDP").assertCountEquals(2)
+
+            onNodeWithText("Out IPv4").assertExists()
+            onNodeWithText(outIpv4).assertExists()
+
+            onNodeWithText("Out IPv6").assertExists()
+            onNodeWithText(outIpv6).assertExists()
+        }
+    }
+
+    @Test
+    fun testUnsupportedVersionNotification() {
+        composeExtension.use {
+            // Arrange
+            val versionInfo = VersionInfo(currentVersion = "1.0", isSupported = false)
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
+                        inAppNotification = InAppNotification.UnsupportedVersion(versionInfo),
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Assert
+            onNodeWithText("UNSUPPORTED VERSION").assertExists()
+            onNodeWithText(
+                    "Your privacy might be at risk with this unsupported app version. Please update now."
+                )
+                .assertExists()
+        }
+    }
+
+    @Test
+    fun testOnUpdateVersionClick() {
+        composeExtension.use {
+            // Arrange
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            val versionInfo = VersionInfo(isSupported = false, currentVersion = "")
+            initScreen(
+                onOpenAppListing = mockedClickHandler,
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
+                        inAppNotification = InAppNotification.UnsupportedVersion(versionInfo),
+                        isPlayBuild = false,
+                    ),
+            )
+
+            // Act
+            onNodeWithTag(NOTIFICATION_BANNER_ACTION_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun testOnNewChangelogMessageClick() {
+        composeExtension.use {
+            // Arrange
+            val mockedClickHandler: () -> Unit = mockk(relaxed = true)
+            initScreen(
+                onChangelogClick = mockedClickHandler,
+                state =
+                    ConnectUiState(
+                        location = null,
+                        selectedRelayItemTitle = null,
+                        tunnelState = TunnelState.Connecting(null, null, emptyList()),
+                        inAppNotification = InAppNotification.NewVersionChangelog,
+                        isPlayBuild = false,
+                    ),
+            )
+
+            // Act
+            onNodeWithTag(NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG).performClick()
+
+            // Assert
+            verify { mockedClickHandler.invoke() }
+        }
+    }
+
+    @Test
+    fun testOpenAccountView() {
+        composeExtension.use {
+            // Arrange
+            val onAccountClickMockk: () -> Unit = mockk(relaxed = true)
+            initScreen(state = ConnectUiState.INITIAL, onAccountClick = onAccountClickMockk)
+
+            // Assert
+            onNodeWithTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG).performClick()
+
+            verify(exactly = 1) { onAccountClickMockk() }
+        }
+    }
+
+    @Test
+    fun showConnectionDetailsObfuscation() {
+        composeExtension.use {
+            // Arrange
+            val mockLocation: GeoIpLocation = mockk(relaxed = true)
+            val mockTunnelEndpoint: TunnelEndpoint = mockk(relaxed = true)
+            val mockHostName = "Host-Name"
+            val inHost = "1.1.1.1"
+            val inPort = 99
+            val inProtocol = TransportProtocol.Tcp
+            every { mockLocation.hostname } returns mockHostName
+            every { mockLocation.entryHostname } returns null
+
+            // In
+            every {
+                mockTunnelEndpoint.obfuscation?.endpoint?.address?.address?.hostAddress
+            } returns inHost
+            every { mockTunnelEndpoint.obfuscation?.endpoint?.address?.port } returns inPort
+            every { mockTunnelEndpoint.obfuscation?.endpoint?.protocol } returns inProtocol
+
+            // Out Ipv4
+            val outIpv4 = "ipv4address"
+            every { mockLocation.ipv4?.hostAddress } returns outIpv4
+
+            // Out Ipv6
+            val outIpv6 = "ipv6address"
+            every { mockLocation.ipv6?.hostAddress } returns outIpv6
+
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = mockLocation,
+                        selectedRelayItemTitle = null,
+                        tunnelState =
+                            TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Act
+            onNodeWithTag(CONNECT_CARD_HEADER_TEST_TAG).performClick()
+
+            // Assert
+            onNodeWithText(mockHostName).assertExists()
+            onNodeWithText("In").assertExists()
+            onNodeWithText("$inHost:$inPort TCP").assertExists()
+
+            onNodeWithText("Out IPv4").assertExists()
+            onNodeWithText(outIpv4).assertExists()
+
+            onNodeWithText("Out IPv6").assertExists()
+            onNodeWithText(outIpv6).assertExists()
+        }
+    }
+
+    @Test
+    fun showConnectionDetailsMultihop() {
+        composeExtension.use {
+            // Arrange
+            val mockLocation: GeoIpLocation = mockk(relaxed = true)
+            val mockTunnelEndpoint: TunnelEndpoint = mockk(relaxed = true)
+            val mockHostName = "Host-Name"
+            val inHost = "8.8.8.8"
+            val inPort = 55
+            val inProtocol = TransportProtocol.Udp
+            every { mockLocation.hostname } returns mockHostName
+            every { mockLocation.entryHostname } returns null
+
+            // In
+            every { mockTunnelEndpoint.obfuscation } returns null
+            every { mockTunnelEndpoint.entryEndpoint?.address?.address?.hostAddress } returns inHost
+            every { mockTunnelEndpoint.entryEndpoint?.address?.port } returns inPort
+            every { mockTunnelEndpoint.entryEndpoint?.protocol } returns inProtocol
+
+            // Out Ipv4
+            val outIpv4 = "ipv4address"
+            every { mockLocation.ipv4?.hostAddress } returns outIpv4
+
+            // Out Ipv6
+            val outIpv6 = "ipv6address"
+            every { mockLocation.ipv6?.hostAddress } returns outIpv6
+
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = mockLocation,
+                        selectedRelayItemTitle = null,
+                        tunnelState =
+                            TunnelState.Connected(mockTunnelEndpoint, mockLocation, emptyList()),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    )
+            )
+
+            // Act
+            onNodeWithTag(CONNECT_CARD_HEADER_TEST_TAG).performClick()
+
+            // Assert
+            onNodeWithText(mockHostName).assertExists()
+            onNodeWithText("In").assertExists()
+            onNodeWithText("$inHost:$inPort UDP").assertExists()
+
+            onNodeWithText("Out IPv4").assertExists()
+            onNodeWithText(outIpv4).assertExists()
+
+            onNodeWithText("Out IPv6").assertExists()
+            onNodeWithText(outIpv6).assertExists()
+        }
+    }
+
+    @Test
+    fun clickOnFeatureIndicator() {
+        composeExtension.use {
+            // Arrange
+            val mockLocation: GeoIpLocation = mockk(relaxed = true)
+            val mockTunnelEndpoint: TunnelEndpoint = mockk(relaxed = true)
+            val mockHostName = "Host-Name"
+            every { mockLocation.hostname } returns mockHostName
+            every { mockLocation.entryHostname } returns null
+
+            // In
+            every { mockTunnelEndpoint.obfuscation } returns null
+
+            val mockClickHandler = mockk<(FeatureIndicator) -> Unit>(relaxed = true)
+
+            initScreen(
+                state =
+                    ConnectUiState(
+                        location = mockLocation,
+                        selectedRelayItemTitle = null,
+                        tunnelState =
+                            TunnelState.Connected(
+                                mockTunnelEndpoint,
+                                mockLocation,
+                                listOf(FeatureIndicator.MULTIHOP),
+                            ),
+                        inAppNotification = null,
+                        isPlayBuild = false,
+                    ),
+                onNavigateToFeature = mockClickHandler,
+            )
+
+            // Act
+            onNodeWithText("Multihop").performClick()
+
+            // Assert
+            verify(exactly = 1) { mockClickHandler.invoke(FeatureIndicator.MULTIHOP) }
+        }
+    }
+}

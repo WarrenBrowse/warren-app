@@ -1,4 +1,4 @@
-This is a folder with gettext translations for Mullvad VPN app.
+This is a folder with gettext translations for the Warren VPN app.
 
 ## Prerequisites
 
@@ -108,8 +108,6 @@ this is to just run `./scripts/localization prepare` as described above.
 
 All user facing phrases and terms should be translated except for the following trademarks and
 names of technologies:
-* Mullvad VPN
-* WireGuard
-* OpenVPN
+* Warren VPN
 * Split Tunneling
-* System Transparency
+* DAITA

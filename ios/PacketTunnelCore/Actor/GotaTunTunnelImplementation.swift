@@ -6,8 +6,8 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadLogging
-import MullvadREST
+import WarrenLogging
+import WarrenREST
 @preconcurrency import NetworkExtension
 
 /// GotaTun tunnel implementation.

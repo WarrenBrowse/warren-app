@@ -3,7 +3,7 @@
     <style name="Theme.App.Starting" parent="Theme.SplashScreen">
         <item name="postSplashScreenTheme">@style/AppTheme</item>
         <item name="windowSplashScreenAnimationDuration">300</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/icon_android</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_warren_foreground</item>
         <item name="windowSplashScreenBackground">@color/darkBlue</item>
     </style>
 

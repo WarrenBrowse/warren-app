@@ -3,7 +3,7 @@
 1. Follow these steps to add support for a new language in the Xcode project:
 
    1. **Open the Project Settings**
-      In Xcode, select the project file (`MullvadVPN.xcodeproj`) in the Project Navigator, then select the **project** (not a target).
+      In Xcode, select the project file (`WarrenVPN.xcodeproj`) in the Project Navigator, then select the **project** (not a target).
 
    2. **Go to the Localizations Section**
       Under the **Info** tab, locate the **Localizations** section.
@@ -68,9 +68,6 @@ CROWDIN_API_KEY=$YOUR_CROWDIN_KEY ./scripts/ios-localization download
 
 All user-facing phrases and terms should be translated **except** for the following trademarks and technology names:
 
-* Mullvad VPN
-* WireGuard
-* OpenVPN
+* Warren VPN
 * Split Tunneling
-* System Transparency
 * DAITA

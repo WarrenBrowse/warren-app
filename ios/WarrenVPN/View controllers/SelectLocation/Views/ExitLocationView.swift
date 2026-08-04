@@ -1,0 +1,240 @@
+import SwiftUI
+
+struct ExitLocationView<ViewModel: SelectLocationViewModel>: View {
+    @ObservedObject var viewModel: ViewModel
+    @Binding var context: LocationContext
+    @State var newCustomListAlert: MullvadInputAlert?
+    @State var alert: MullvadAlert?
+    private let topAnchor = "topAnchor"
+    let onScrollVisibilityChange: (Bool) -> Void
+
+    var isShowingCustomListsSection: Bool {
+        viewModel.searchText.isEmpty
+            || (!viewModel.searchText.isEmpty
+                && !context.customLists.isEmpty)
+    }
+
+    var isShowingAllLocationsSection: Bool {
+        !context.locations.isEmpty
+    }
+
+    var isShowingRecentsSection: Bool {
+        viewModel.searchText.isEmpty && viewModel.isRecentsEnabled
+    }
+
+    var body: some View {
+        ScrollViewReader { scrollProxy in
+            // All items in the list are arranged in a flat hierarchy
+            List {
+                EmptyView()
+                    .frame(height: 0)
+                    .id(topAnchor)
+
+                Group {
+                    Color.clear
+                        .frame(height: 0)
+                        .onAppear {
+                            onScrollVisibilityChange(true)
+                        }
+                        .onDisappear {
+                            onScrollVisibilityChange(false)
+                        }
+                    if !context.filter.isEmpty {
+                        ActiveFilterView(
+                            activeFilter: context.filter,
+                            automaticLocationIsActive: context.isAutomaticLocation
+                        ) { filter in
+                            viewModel.onFilterTapped(filter)
+                        } onRemove: { filter in
+                            viewModel.onFilterRemoved(filter)
+                        }
+                        .padding(.bottom, 16)
+                    }
+                    Group {
+                        if viewModel.isRecentsEnabled {
+                            recentsSection(isShowingHeader: isShowingRecentsSection)
+                        }
+                        if isShowingCustomListsSection {
+                            customListSection(isShowingHeader: isShowingAllLocationsSection)
+                        }
+                        if isShowingAllLocationsSection {
+                            allLocationsSection(isShowingHeader: isShowingCustomListsSection)
+                        }
+                        if !isShowingCustomListsSection && !isShowingAllLocationsSection {
+                            Text("No result for \"\(viewModel.searchText)\", please try a different search term.")
+                                .font(.warrenMiniSemiBold)
+                                .foregroundStyle(Color.warrenTextPrimary.opacity(0.6))
+                                .padding(.vertical)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                }
+                .listRowSpacing(0)
+                .listRowInsets(.init())
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+                .buttonStyle(PlainButtonStyle())
+                .zIndex(3)  // prevent wrong overlapping during animations
+            }
+            .environment(\.defaultMinListRowHeight, 0)
+            .listStyle(.plain)
+            .coordinateSpace(.exitLocationScroll)
+            .onAppear {
+                if viewModel.isRecentsEnabled {
+                    scrollProxy.scrollTo(topAnchor, anchor: .center)
+                } else {
+                    scrollToCurrentSelection(scrollProxy)
+                }
+            }
+            .onChange(of: viewModel.isRecentsEnabled) {
+                if viewModel.isRecentsEnabled {
+                    scrollProxy.scrollTo(topAnchor, anchor: .center)
+                } else {
+                    scrollToCurrentSelection(scrollProxy)
+                }
+            }
+            .onChange(of: viewModel.searchText) { oldValue, newValue in
+                if !newValue.isEmpty {
+                    scrollProxy.scrollTo(topAnchor, anchor: .center)
+                } else if newValue.isEmpty {
+                    scrollToCurrentSelection(scrollProxy)
+                }
+            }
+        }
+        .warrenInputAlert(item: $newCustomListAlert)
+        .warrenAlert(item: $alert)
+    }
+
+    @ViewBuilder
+    func allLocationsSection(isShowingHeader: Bool) -> some View {
+        if isShowingHeader {
+            MullvadListSectionHeader(
+                title: "All locations",
+                subtitle: context.relaysAreFiltered
+                    ? ("Showing \(context.availableRelayCount) of \(context.totalRelayCount)") : nil
+            )
+            .accessibilityHint(
+                Text(
+                    "Locations can be selected directly or expanded. When a city or country is selected, all compatible servers in that location will be candidates for any given tunnel connection."
+                ))
+        }
+
+        LocationsListView(
+            locations: $context.locations,
+            multihopContext: viewModel.multihopContext,
+        ) { location in
+            context.selectLocation(location)
+        } contextMenu: { location in
+            locationContextMenu(location)
+        }
+    }
+
+    @ViewBuilder
+    func recentsSection(isShowingHeader: Bool) -> some View {
+        if isShowingHeader {
+            MullvadListSectionHeader(title: "Recents")
+            if !$context.recents.isEmpty {
+                RecentLocationsListView(
+                    locations: $context.recents,
+                    onSelectLocation: { location in
+                        context.selectLocation(location)
+                    },
+                    contextMenu: { location in
+                        recentLocationContextMenu(location)
+                    }
+                )
+
+                // RecentLocationsListView cannot be put in a container since the context menu
+                // will group the individual locations as well. Therefore adding padding in this
+                // convoluted way.
+                Spacer(minLength: 24)
+            } else {
+                MullvadListSectionFooter(title: "No recent selection history")
+                    .padding(.horizontal, context.recents.isEmpty ? 0 : 16)
+                    .padding(.top, context.recents.isEmpty ? 0 : 4)
+            }
+        }
+    }
+
+    @ViewBuilder
+    func customListSection(isShowingHeader: Bool) -> some View {
+        if isShowingHeader {
+            HStack(spacing: 0) {
+                MullvadListSectionHeader(title: "Custom lists")
+                Button {
+                    viewModel.showAddCustomListView(
+                        locations: context.customListAvailableLocations)
+                } label: {
+                    Image.warrenIconAdd
+                        .padding(.horizontal, 10)
+                }
+                .accessibilityLabel(Text("Create new custom list"))
+                .accessibilityIdentifier(.addNewCustomListButton)
+                if !context.customLists.isEmpty {
+                    Button {
+                        viewModel.showEditCustomListView(
+                            locations: context.customListAvailableLocations
+                        )
+                    } label: {
+                        Image.warrenIconEdit
+                            .padding(.horizontal, 10)
+                    }
+                    .accessibilityLabel(Text("Edit custom lists"))
+                    .accessibilityIdentifier(.editCustomListButton)
+                }
+            }
+        }
+        LocationsListView(
+            locations: $context.customLists,
+            multihopContext: viewModel.multihopContext,
+        ) { location in
+            context.selectLocation(location)
+        } contextMenu: { location in
+            customListContextMenu(location)
+        }
+
+        let text: LocalizedStringKey =
+            context.customLists.isEmpty
+            ? """
+            To create a custom list press the “+” or long press on a country, city, or server.
+            """
+            : """
+            To add locations to a list, press the pen or long press on a country, city, or server.
+            """
+        MullvadListSectionFooter(title: text)
+            .padding(.horizontal, context.customLists.isEmpty ? 0 : 16)
+            .padding(.top, context.customLists.isEmpty ? 0 : 4)
+            .accessibilityHidden(true)
+    }
+
+    private func scrollToCurrentSelection(_ scrollProxy: ScrollViewProxy) {
+        guard viewModel.searchText.isEmpty,
+            let selectedLocation = context.selectedLocation
+        else { return }
+        scrollProxy.scrollTo(selectedLocation.id, anchor: .center)
+    }
+}
+
+#Preview {
+    @Previewable @State var viewModel = MockSelectLocationViewModel()
+    ExitLocationView(
+        viewModel: viewModel,
+        context: $viewModel.exitContext,
+        newCustomListAlert: nil,
+        alert: nil,
+        onScrollVisibilityChange: { _ in }
+    )
+    .background(Color.warrenBackground)
+}
+
+#Preview("Empty lists") {
+    @Previewable @State var viewModel = MockSelectLocationViewModel()
+    ExitLocationView(
+        viewModel: viewModel,
+        context: $viewModel.entryContext,
+        newCustomListAlert: nil,
+        alert: nil,
+        onScrollVisibilityChange: { _ in }
+    )
+    .background(Color.warrenBackground)
+}

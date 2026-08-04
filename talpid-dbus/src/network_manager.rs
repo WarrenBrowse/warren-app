@@ -58,8 +58,47 @@ const MAXIMUM_SUPPORTED_MINOR_VERSION: u32 = 26;
 
 const NM_DEVICE_STATE_CHANGED: &str = "StateChanged";
 
+/// NetworkManager gained the `auto-route-ext-gw` property in 1.42. Older
+/// versions reject a connection carrying a property they do not know.
+const AUTO_ROUTE_EXT_GW_SINCE: (u32, u32) = (1, 42);
+
 pub type Result<T> = std::result::Result<T, Error>;
 type NetworkSettings<'a> = HashMap<String, HashMap<String, Variant<Box<dyn RefArg + 'a>>>>;
+
+/// What Warren lets NetworkManager do with the tunnel's IP configuration:
+/// as little as it can be told to do.
+///
+/// The engine owns routing (the split default, the per-exit host routes)
+/// and DNS. NetworkManager is only being told that a VPN exists, so that
+/// the desktop can say so. Anything it applied on top of a live tunnel
+/// would be a leak, not a cosmetic issue.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VpnIpPolicy {
+    pub never_default: bool,
+    pub ignore_auto_dns: bool,
+    pub ignore_auto_routes: bool,
+    /// `NMTernary` value for `auto-route-ext-gw`, left out entirely on a
+    /// NetworkManager too old to know the property. Such a version then
+    /// installs its own host route to the peer, which is the route the
+    /// engine installs anyway, so the fallback is harmless.
+    pub auto_route_ext_gw: Option<i32>,
+}
+
+pub fn vpn_ip_policy(nm_version: (u32, u32)) -> VpnIpPolicy {
+    VpnIpPolicy {
+        never_default: true,
+        ignore_auto_dns: true,
+        ignore_auto_routes: true,
+        auto_route_ext_gw: (nm_version >= AUTO_ROUTE_EXT_GW_SINCE).then_some(0),
+    }
+}
+
+/// A live NetworkManager VPN connection standing for the running tunnel.
+#[derive(Debug)]
+pub struct VpnIndicatorConnection {
+    config_path: dbus::Path<'static>,
+    connection_path: dbus::Path<'static>,
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -139,6 +178,114 @@ impl NetworkManager {
         }
 
         Ok(tunnel)
+    }
+
+    /// Tell NetworkManager that `tundev` is a VPN reaching `gateway`, so
+    /// the desktop's network indicator says a VPN is up.
+    ///
+    /// Purely declarative: the tunnel is already built, carries its own
+    /// addresses and is routed by the engine. The plugin named by
+    /// `service_type` answers NetworkManager with what the interface
+    /// actually holds, and retracts the connection if the interface goes
+    /// away.
+    pub fn publish_vpn_indicator(
+        &self,
+        service_type: &str,
+        id: &str,
+        tundev: &str,
+        gateway: IpAddr,
+    ) -> Result<VpnIndicatorConnection> {
+        let settings = self.vpn_indicator_settings(service_type, id, tundev, gateway)?;
+
+        let config_path: dbus::Path<'static> = match self.add_connection_2(&settings) {
+            Ok((path, _result)) => path,
+            Err(Error::Dbus(dbus_error)) if dbus_error.name() == Some(DBUS_UNKNOWN_METHOD) => {
+                self.add_connection_unsaved(&settings)?.0
+            }
+            Err(error) => return Err(error),
+        };
+
+        let activate: std::result::Result<(dbus::Path<'static>,), _> =
+            self.nm_manager().method_call(
+                NM_MANAGER,
+                "ActivateConnection",
+                (
+                    &config_path,
+                    &dbus::Path::new("/").unwrap(),
+                    &dbus::Path::new("/").unwrap(),
+                ),
+            );
+
+        match activate {
+            Ok((connection_path,)) => Ok(VpnIndicatorConnection {
+                config_path,
+                connection_path,
+            }),
+            Err(error) => {
+                // A profile left behind would sit in the user's connection
+                // list forever, describing a tunnel that never came up.
+                self.delete_connection_profile(&config_path);
+                Err(Error::Dbus(error))
+            }
+        }
+    }
+
+    /// Take the VPN connection back down. Called when the tunnel ends, and
+    /// best-effort: the plugin's own watchdog retracts the connection too,
+    /// so a failure here costs at most a few seconds of stale indicator.
+    pub fn withdraw_vpn_indicator(&self, indicator: VpnIndicatorConnection) -> Result<()> {
+        let result: std::result::Result<(), dbus::Error> = self.nm_manager().method_call(
+            NM_MANAGER,
+            "DeactivateConnection",
+            (&indicator.connection_path,),
+        );
+        // The profile is volatile, so NetworkManager drops it once it goes
+        // inactive; the explicit delete covers the version that does not.
+        self.delete_connection_profile(&indicator.config_path);
+        result.map_err(Error::Dbus)
+    }
+
+    fn delete_connection_profile(&self, config_path: &dbus::Path<'static>) {
+        let proxy = Proxy::new(NM_BUS, config_path, RPC_TIMEOUT, &*self.connection);
+        let deleted: std::result::Result<(), dbus::Error> =
+            proxy.method_call(NM_SETTINGS_CONNECTION_INTERFACE, "Delete", ());
+        if let Err(error) = deleted {
+            log::debug!("NetworkManager had already dropped the VPN profile: {error}");
+        }
+    }
+
+    fn vpn_indicator_settings(
+        &self,
+        service_type: &str,
+        id: &str,
+        tundev: &str,
+        gateway: IpAddr,
+    ) -> Result<DeviceConfig> {
+        let policy = vpn_ip_policy(self.version()?);
+
+        let mut connection = VariantMap::new();
+        connection.insert("id".to_string(), Variant(Box::new(id.to_string())));
+        connection.insert("type".to_string(), Variant(Box::new("vpn".to_string())));
+        // Only the daemon ever brings this up, alongside a tunnel it built.
+        connection.insert("autoconnect".to_string(), Variant(Box::new(false)));
+
+        let mut data = HashMap::new();
+        data.insert("tundev".to_string(), tundev.to_string());
+        data.insert("gateway".to_string(), gateway.to_string());
+
+        let mut vpn = VariantMap::new();
+        vpn.insert(
+            "service-type".to_string(),
+            Variant(Box::new(service_type.to_string())),
+        );
+        vpn.insert("data".to_string(), Variant(Box::new(data)));
+
+        let mut settings = DeviceConfig::new();
+        settings.insert("connection".to_string(), connection);
+        settings.insert("vpn".to_string(), vpn);
+        settings.insert("ipv4".to_string(), ip_settings(&policy));
+        settings.insert("ipv6".to_string(), ip_settings(&policy));
+        Ok(settings)
     }
 
     pub fn get_interface_name(&self, tunnel: &WireguardTunnel) -> Result<String> {
@@ -697,6 +844,31 @@ impl WireguardTunnel {
     }
 }
 
+/// The per-family IP settings carrying [`VpnIpPolicy`]. `auto` is the
+/// method a VPN connection must use: the plugin is what supplies the
+/// addresses, and every other knob here tells NetworkManager to keep its
+/// hands off what the plugin reports.
+fn ip_settings(policy: &VpnIpPolicy) -> VariantMap {
+    let mut settings = VariantMap::new();
+    settings.insert("method".to_string(), Variant(Box::new("auto".to_string())));
+    settings.insert(
+        "never-default".to_string(),
+        Variant(Box::new(policy.never_default)),
+    );
+    settings.insert(
+        "ignore-auto-dns".to_string(),
+        Variant(Box::new(policy.ignore_auto_dns)),
+    );
+    settings.insert(
+        "ignore-auto-routes".to_string(),
+        Variant(Box::new(policy.ignore_auto_routes)),
+    );
+    if let Some(ternary) = policy.auto_route_ext_gw {
+        settings.insert("auto-route-ext-gw".to_string(), Variant(Box::new(ternary)));
+    }
+    settings
+}
+
 pub fn device_is_ready(device_state: u32) -> bool {
     /// Any state above `NM_DEVICE_STATE_IP_CONFIG` is considered to be an OK state to change the
     /// DNS config. For the enums, see https://developer.gnome.org/NetworkManager/stable/nm-dbus-types.html#NMDeviceState
@@ -744,11 +916,105 @@ fn eq_file_content<P: AsRef<Path>>(a: &P, b: &P) -> bool {
 mod test {
     use super::*;
 
+    /// `NM_VPN_CONNECTION_STATE_ACTIVATED`, the only state the desktop
+    /// shows a VPN for.
+    const NM_VPN_CONNECTION_STATE_ACTIVATED: u32 = 5;
+
     #[test]
     fn test_valid_versions() {
         NetworkManager::ensure_nm_is_new_enough_for_wireguard(1, 16).unwrap();
         NetworkManager::ensure_nm_is_old_enough_for_dns(1, 26).unwrap();
         assert!(NetworkManager::ensure_nm_is_new_enough_for_wireguard(1, 14).is_err());
         assert!(NetworkManager::ensure_nm_is_old_enough_for_dns(1, 28).is_err());
+    }
+
+    /// Whatever the NetworkManager version, the indicator connection must
+    /// never be allowed to touch routing or DNS: the engine owns both, and
+    /// a default route or a resolver coming from NetworkManager on top of
+    /// the live tunnel is a leak.
+    #[test]
+    fn the_indicator_connection_never_takes_over_routing_or_dns() {
+        for version in [(1, 20), (1, 41), (1, 42), (1, 46), (2, 0)] {
+            let policy = vpn_ip_policy(version);
+            assert!(policy.never_default, "NM {version:?} would route traffic");
+            assert!(policy.ignore_auto_dns, "NM {version:?} would set DNS");
+            assert!(policy.ignore_auto_routes, "NM {version:?} would add routes");
+        }
+    }
+
+    /// `auto-route-ext-gw` landed in NetworkManager 1.42. Sending an
+    /// unknown property makes NetworkManager reject the whole connection,
+    /// so an older NetworkManager must not be offered it: it then adds its
+    /// own host route to the peer, which is what the engine installs
+    /// anyway.
+    #[test]
+    fn only_offers_auto_route_ext_gw_to_a_network_manager_that_knows_it() {
+        assert_eq!(vpn_ip_policy((1, 41)).auto_route_ext_gw, None);
+        assert_eq!(vpn_ip_policy((1, 42)).auto_route_ext_gw, Some(0));
+        assert_eq!(vpn_ip_policy((1, 46)).auto_route_ext_gw, Some(0));
+        assert_eq!(vpn_ip_policy((2, 0)).auto_route_ext_gw, Some(0));
+    }
+
+    /// The whole round trip against a real NetworkManager, which is the
+    /// only place the D-Bus payload is actually judged: a dictionary NM
+    /// dislikes fails here and nowhere else.
+    ///
+    /// Opt in, because it needs root, a running NetworkManager, the plugin
+    /// installed, and an existing interface to describe. It also touches
+    /// the machine's network state, so it must never run unattended:
+    ///
+    /// ```text
+    /// ip tuntap add mode tun name warrentest0
+    /// ip addr add 10.66.0.2/24 dev warrentest0 && ip link set warrentest0 up
+    /// WARREN_NM_TEST_IFACE=warrentest0 cargo test -p talpid-dbus -- --ignored
+    /// ```
+    #[test]
+    #[ignore = "needs root, NetworkManager, the installed plugin and a test interface"]
+    fn publishes_then_withdraws_a_vpn_connection_on_a_real_network_manager() {
+        let Ok(interface) = std::env::var("WARREN_NM_TEST_IFACE") else {
+            panic!("set WARREN_NM_TEST_IFACE to the interface to describe");
+        };
+        let manager = NetworkManager::new().expect("a system bus");
+        let service = std::env::var("WARREN_NM_TEST_SERVICE")
+            .unwrap_or_else(|_| "org.freedesktop.NetworkManager.warren".to_owned());
+
+        let indicator = manager
+            .publish_vpn_indicator(
+                &service,
+                "Warren VPN test",
+                &interface,
+                "203.0.113.7".parse().unwrap(),
+            )
+            .expect("NetworkManager accepted the VPN connection");
+
+        // Activation is asynchronous, so wait for the state rather than
+        // read it immediately and conclude from a value that is still
+        // settling.
+        let deadline = Instant::now() + Duration::from_secs(10);
+        let mut state = 0u32;
+        while Instant::now() < deadline {
+            state = Proxy::new(
+                NM_BUS,
+                &indicator.connection_path,
+                RPC_TIMEOUT,
+                &*manager.connection,
+            )
+            .get("org.freedesktop.NetworkManager.VPN.Connection", "VpnState")
+            .unwrap_or(0);
+            if state == NM_VPN_CONNECTION_STATE_ACTIVATED {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(200));
+        }
+        let published = state;
+
+        manager
+            .withdraw_vpn_indicator(indicator)
+            .expect("NetworkManager took the VPN connection down");
+
+        assert_eq!(
+            published, NM_VPN_CONNECTION_STATE_ACTIVATED,
+            "the desktop only shows a VPN for an activated connection"
+        );
     }
 }

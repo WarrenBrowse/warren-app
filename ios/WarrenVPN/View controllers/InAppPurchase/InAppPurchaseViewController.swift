@@ -1,0 +1,198 @@
+//
+//  InAppPurchaseViewController.swift
+//  WarrenVPN
+//
+//  Copyright © 2026 Warren Browse. All rights reserved.
+//
+
+import StoreKit
+import UIKit
+import WarrenLogging
+
+class InAppPurchaseViewController: UIViewController, StorePaymentObserver {
+    private let logger = Logger(label: "InAppPurchaseViewController")
+    private let storePaymentManager: StorePaymentManager
+    private let paymentAction: PaymentAction
+    private let errorPresenter: PaymentAlertPresenter
+
+    private let spinnerView = {
+        SpinnerActivityIndicatorView(style: .large)
+    }()
+
+    var didFinish: (() -> Void)?
+
+    init(
+        storePaymentManager: StorePaymentManager,
+        errorPresenter: PaymentAlertPresenter,
+        paymentAction: PaymentAction
+    ) {
+        self.storePaymentManager = storePaymentManager
+        self.errorPresenter = errorPresenter
+        self.paymentAction = paymentAction
+
+        super.init(nibName: nil, bundle: nil)
+
+        Task {
+            await storePaymentManager.addPaymentObserver(self)
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func viewDidLoad() {
+        modalPresentationStyle = .overFullScreen
+        modalTransitionStyle = .crossDissolve
+
+        view.backgroundColor = .black.withAlphaComponent(0.5)
+        view.addConstrainedSubviews([spinnerView]) {
+            spinnerView.centerXAnchor.constraint(equalTo: view.centerXAnchor)
+            spinnerView.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        }
+
+        Task {
+            await handlePaymentAction(paymentAction)
+        }
+    }
+
+    func handlePaymentAction(_ action: PaymentAction) async {
+        switch action {
+        case .purchase:
+            await startRestorationBeforePurchaseFlow()
+        case .restorePurchase:
+            spinnerView.startAnimating()
+
+            do {
+                let outcome = try await storePaymentManager.processOutstandingTransactions()
+                spinnerView.stopAnimating()
+                errorPresenter.showAlertForOutcome(outcome, context: .restoration) {
+                    self.didFinish?()
+                }
+            } catch {
+                spinnerView.stopAnimating()
+                errorPresenter.showAlertForError(.restorationError, context: .restoration) {
+                    self.didFinish?()
+                }
+            }
+        }
+    }
+
+    func startRestorationBeforePurchaseFlow() async {
+        logger.debug("Restoring purchases before starting payment flow")
+        spinnerView.startAnimating()
+
+        do {
+            let outcome = try await storePaymentManager.processOutstandingTransactions()
+            spinnerView.stopAnimating()
+
+            if case .timeAdded = outcome {
+                await withCheckedContinuation { continuation in
+                    errorPresenter.showAlertForOutcome(outcome, context: .restorationBeforePurchase) {
+                        continuation.resume()
+                    }
+                }
+            }
+
+            await startPaymentFlow()
+        } catch {
+            spinnerView.stopAnimating()
+
+            errorPresenter.showAlertForError(.restorationError, context: .purchase) {
+                self.didFinish?()
+            }
+        }
+    }
+
+    func startPaymentFlow() async {
+        logger.debug("Starting payment flow")
+        spinnerView.startAnimating()
+
+        var products: [Product]
+        do {
+            products = try await storePaymentManager.products()
+        } catch {
+            spinnerView.stopAnimating()
+            errorPresenter.showAlertForError(.productsUnavailable, context: .purchase) {
+                self.didFinish?()
+            }
+            return
+        }
+
+        spinnerView.stopAnimating()
+
+        // An empty product list must never strand the dimmed overlay on
+        // screen with no way out; surface the web-checkout fallback.
+        guard !products.isEmpty else {
+            errorPresenter.showAlertForError(.productsUnavailable, context: .purchase) {
+                self.didFinish?()
+            }
+            return
+        }
+
+        showPurchaseOptions(for: products)
+    }
+
+    func showPurchaseOptions(for products: [Product]) {
+        let localizedString = NSLocalizedString("Add time", comment: "")
+
+        let sheetController = UIAlertController(
+            title: localizedString,
+            message: nil,
+            preferredStyle: UIDevice.current.userInterfaceIdiom == .pad ? .alert : .actionSheet
+        )
+        sheetController.overrideUserInterfaceStyle = .dark
+        sheetController.view.tintColor = .AlertController.tintColor
+
+        products.sorted { $0.price < $1.price }.forEach { product in
+            guard let title = product.customLocalizedTitle else { return }
+
+            let action = UIAlertAction(
+                title: title, style: .default,
+                handler: { _ in
+                    sheetController.dismiss(
+                        animated: true,
+                        completion: {
+                            self.spinnerView.startAnimating()
+
+                            Task {
+                                await self.storePaymentManager.purchase(product: product)
+                            }
+                        }
+                    )
+                }
+            )
+
+            sheetController.addAction(action)
+        }
+
+        let cancelAction = UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel) { _ in
+            self.didFinish?()
+        }
+        cancelAction.accessibilityIdentifier = "action-sheet-cancel-button"
+
+        sheetController.addAction(cancelAction)
+
+        present(sheetController, animated: true)
+    }
+
+    @MainActor
+    func storePaymentManager(didReceiveEvent event: StorePaymentEvent) {
+        spinnerView.stopAnimating()
+
+        switch event {
+        case let .successfulPayment(outcome):
+            errorPresenter.showAlertForOutcome(outcome, context: .purchase) {
+                self.didFinish?()
+            }
+        case .pending, .userCancelled:
+            self.didFinish?()
+        case let .failed(error):
+            errorPresenter.showAlertForError(error, context: .purchase) {
+                self.didFinish?()
+            }
+        @unknown default:
+            self.didFinish?()
+        }
+    }
+}

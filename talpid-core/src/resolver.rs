@@ -21,26 +21,26 @@ use futures::{
 };
 
 use hickory_proto::{
-    ProtoErrorKind,
     op::LowerQuery,
     rr::{LowerName, RecordType},
 };
 use hickory_server::{
-    ServerFuture,
-    authority::{
-        EmptyLookup, LookupObject, MessageRequest, MessageResponse, MessageResponseBuilder,
+    Server as ServerFuture,
+    net::{
+        DnsError, NetError,
+        runtime::{Time, TokioRuntimeProvider},
     },
     proto::{
-        op::{Header, header::MessageType, op_code::OpCode},
-        rr::{Record, domain::Name, rdata, record_data::RData},
+        op::{Header, HeaderCounts, MessageType, Metadata, OpCode},
+        rr::{RData, Record, domain::Name, rdata},
     },
     resolver::{
-        ResolveError, ResolveErrorKind, TokioResolver,
-        config::{NameServerConfigGroup, ResolverConfig, ResolverOpts},
+        TokioResolver,
+        config::{NameServerConfig, ResolverConfig, ResolverOpts},
         lookup::Lookup,
-        name_server::TokioConnectionProvider,
     },
     server::{Request, RequestHandler, ResponseHandler, ResponseInfo},
+    zone_handler::{AuthLookup, MessageRequest, MessageResponse, MessageResponseBuilder},
 };
 use rand::random_range;
 use socket2::{Domain, Protocol, Socket, Type};
@@ -52,21 +52,46 @@ use tokio::{
     task::JoinHandle,
 };
 
+/// Decide whether the macOS local (filtering) DNS resolver should run,
+/// from the `TALPID_DISABLE_LOCAL_DNS_RESOLVER` environment value.
+///
+/// Warren defaults this **off**. The exit runs the authoritative DNS
+/// forwarder on the tunnel gateway (`10.66.0.1`), so the system resolver
+/// is pointed straight at it (cf. `connected_state::set_dns`). The
+/// upstream Mullvad local resolver cannot be reused as-is on the Warren
+/// tunnel: the macOS port-53 anti-leak redirect bounces the resolver's
+/// *own* upstream queries back to its loopback listener (`127.x`), and
+/// hickory then rejects every response ("ignoring response from
+/// 127.x:53 because it does not match name_server: 10.66.0.1:53"), so
+/// all name resolution fails and the tunnel looks like "connected but no
+/// internet" even though packet forwarding works.
+///
+/// - unset           => `false` (Warren default: no local resolver)
+/// - `"0"`           => `true`  (opt back in, e.g. future DNS content blocking)
+/// - any other value => `false` (explicitly disabled)
+#[must_use]
+fn local_dns_resolver_enabled(env_value: Option<&str>) -> bool {
+    matches!(env_value, Some("0"))
+}
+
 /// If a local DNS resolver should be used at all times.
 ///
 /// This setting does not affect the error or blocked state. In those states, we will want to use
 /// the local DNS resoler to work around Apple's captive portals check. Exactly how this is done is
 /// documented elsewhere.
 pub static LOCAL_DNS_RESOLVER: LazyLock<bool> = LazyLock::new(|| {
-    let disable_local_dns_resolver = std::env::var("TALPID_DISABLE_LOCAL_DNS_RESOLVER")
-        .map(|v| v != "0")
-        // Use the local DNS resolver by default.
-        .unwrap_or(false);
+    let enabled = local_dns_resolver_enabled(
+        std::env::var("TALPID_DISABLE_LOCAL_DNS_RESOLVER")
+            .ok()
+            .as_deref(),
+    );
 
-    if !disable_local_dns_resolver {
+    if enabled {
         log::debug!("Using local DNS resolver");
+    } else {
+        log::debug!("Local DNS resolver disabled (Warren: DNS handled by exit forwarder)");
     }
-    !disable_local_dns_resolver
+    enabled
 });
 
 /// Override the `filter_out_aaaa` flag, which prevents getaddrinfo from returning IPv6 addresses.
@@ -110,6 +135,28 @@ const TTL_SECONDS: u32 = 3;
 /// An IP address to be used in the DNS response to the captive domain query. The address itself
 /// belongs to the documentation range so should never be reachable.
 const RESOLVED_ADDR: Ipv4Addr = Ipv4Addr::new(198, 51, 100, 1);
+
+fn clear_name_server_configs(dns_servers: &[IpAddr], port: u16) -> Vec<NameServerConfig> {
+    dns_servers
+        .iter()
+        .copied()
+        .map(|addr| {
+            let mut config = NameServerConfig::udp_and_tcp(addr);
+            for connection in &mut config.connections {
+                connection.port = port;
+            }
+            config
+        })
+        .collect()
+}
+
+fn empty_response_info() -> ResponseInfo {
+    Header {
+        metadata: Metadata::new(0, MessageType::Response, OpCode::Query),
+        counts: HeaderCounts::default(),
+    }
+    .into()
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct LocalResolverConfig {
@@ -172,7 +219,7 @@ enum ResolverMessage {
         dns_query: LowerQuery,
 
         /// Channel for the query response
-        response_tx: oneshot::Sender<std::result::Result<Box<dyn LookupObject>, ResolveError>>,
+        response_tx: oneshot::Sender<std::result::Result<AuthLookup, NetError>>,
     },
 
     /// Gracefully stop resolver
@@ -213,7 +260,7 @@ impl Resolver {
     pub fn resolve(
         &self,
         query: LowerQuery,
-        tx: oneshot::Sender<std::result::Result<Box<dyn LookupObject>, ResolveError>>,
+        tx: oneshot::Sender<std::result::Result<AuthLookup, NetError>>,
     ) {
         match self {
             Resolver::Blocking => {
@@ -234,20 +281,17 @@ impl Resolver {
     }
 
     /// Resolution in blocked state will return spoofed records for captive portal domains.
-    fn resolve_blocked(
-        query: LowerQuery,
-    ) -> std::result::Result<Box<dyn LookupObject>, ResolveError> {
+    fn resolve_blocked(query: LowerQuery) -> std::result::Result<AuthLookup, NetError> {
         if !Self::is_captive_portal_domain(&query) {
-            return Ok(Box::new(EmptyLookup));
+            return Ok(AuthLookup::Empty);
         }
 
         let return_query = query.original().clone();
-        let mut return_record = Record::update0(
+        let return_record = Record::from_rdata(
             return_query.name().clone(),
             TTL_SECONDS,
-            return_query.query_type(),
+            RData::A(rdata::A(RESOLVED_ADDR)),
         );
-        return_record.set_data(RData::A(rdata::A(RESOLVED_ADDR)));
 
         log::debug!(
             "Spoofing query for captive portal domain: {}",
@@ -256,10 +300,10 @@ impl Resolver {
 
         let lookup = Lookup::new_with_deadline(
             return_query,
-            Arc::new([return_record]),
+            [return_record],
             Instant::now() + Duration::from_secs(3),
         );
-        Ok(Box::new(ForwardLookup(lookup)) as Box<_>)
+        Ok(AuthLookup::from(lookup))
     }
 
     /// Determines whether a DNS query is allowable. Currently, this implies that the query is
@@ -273,19 +317,19 @@ impl Resolver {
         resolver: TokioResolver,
         query: LowerQuery,
         filter_out_aaaa: bool,
-    ) -> std::result::Result<Box<dyn LookupObject>, ResolveError> {
+    ) -> std::result::Result<AuthLookup, NetError> {
         let return_query = query.original().clone();
 
         if filter_out_aaaa && query.query_type() == RecordType::AAAA {
             log::trace!("Giving empty response to AAAA query");
-            return Ok(Box::new(EmptyLookup) as Box<_>);
+            return Ok(AuthLookup::Empty);
         }
 
         let lookup = resolver
             .lookup(return_query.name().clone(), return_query.query_type())
             .await;
 
-        lookup.map(|lookup| Box::new(ForwardLookup(lookup)) as Box<_>)
+        lookup.map(AuthLookup::from)
     }
 }
 
@@ -592,16 +636,24 @@ impl LocalResolver {
 
     /// Turn into a forwarding resolver (forward DNS queries to `dns_servers`).
     fn forwarding(&mut self, dns_servers: Vec<IpAddr>, filter_out_aaaa: bool) {
-        let forward_server_config =
-            NameServerConfigGroup::from_ips_clear(&dns_servers, DNS_PORT, true);
-
+        let forward_server_config = clear_name_server_configs(&dns_servers, DNS_PORT);
         let forward_config = ResolverConfig::from_parts(None, vec![], forward_server_config);
         let resolver_opts = ResolverOpts::default();
 
-        let resolver =
-            TokioResolver::builder_with_config(forward_config, TokioConnectionProvider::default())
-                .with_options(resolver_opts)
-                .build();
+        let resolver = match TokioResolver::builder_with_config(
+            forward_config,
+            TokioRuntimeProvider::default(),
+        )
+        .with_options(resolver_opts)
+        .build()
+        {
+            Ok(resolver) => resolver,
+            Err(error) => {
+                log::error!("Failed to configure DNS forwarding resolver: {error}");
+                self.blocking();
+                return;
+            }
+        };
 
         self.inner_resolver = Resolver::Forwarding {
             resolver: Box::new(resolver),
@@ -690,17 +742,17 @@ struct ResolverImpl {
 impl ResolverImpl {
     fn build_response<'a>(
         message: &'a MessageRequest,
-        lookup: &'a dyn LookupObject,
+        lookup: &'a AuthLookup,
     ) -> LookupResponse<'a> {
-        let mut response_header = Header::new();
-        response_header.set_id(message.id());
-        response_header.set_op_code(OpCode::Query);
-        response_header.set_message_type(MessageType::Response);
-        response_header.set_authoritative(false);
+        let mut response_header = Metadata::response_from_request(&message.metadata);
+        response_header.op_code = OpCode::Query;
+        response_header.message_type = MessageType::Response;
+        response_header.authoritative = false;
 
+        let answers: Box<dyn Iterator<Item = &'a Record> + Send + 'a> = Box::new(lookup.iter());
         MessageResponseBuilder::from_message_request(message).build(
             response_header,
-            lookup.iter(),
+            answers,
             // forwarder responses only contain query answers, no ns,soa or additionals
             std::iter::empty(),
             std::iter::empty(),
@@ -713,7 +765,7 @@ impl ResolverImpl {
         if let Some(tx_ref) = self.tx.upgrade() {
             let mut tx = (*tx_ref).clone();
             // Flush all DNS queries
-            for query in message.queries() {
+            for query in message.queries.queries() {
                 let (response_tx, response_rx) = oneshot::channel();
                 let _ = tx
                     .send(ResolverMessage::Query {
@@ -725,20 +777,17 @@ impl ResolverImpl {
                 let lookup_result = response_rx.await;
                 let response_result = match lookup_result {
                     Ok(Ok(ref lookup)) => {
-                        let response = Self::build_response(message, lookup.as_ref());
+                        let response = Self::build_response(message, lookup);
                         response_handler.send_response(response).await
                     }
                     Err(_error) => return,
                     Ok(Err(resolve_err)) => {
-                        if let ResolveErrorKind::Proto(proto) = resolve_err.kind()
-                            && let ProtoErrorKind::NoRecordsFound { response_code, .. } =
-                                proto.kind()
-                        {
+                        if let NetError::Dns(DnsError::NoRecordsFound(no_records)) = &resolve_err {
                             let response = MessageResponseBuilder::from_message_request(message)
-                                .error_msg(message.header(), *response_code);
+                                .error_msg(&message.metadata, no_records.response_code);
                             response_handler.send_response(response).await
                         } else {
-                            let response = Self::build_response(message, &EmptyLookup);
+                            let response = Self::build_response(message, &AuthLookup::Empty);
                             response_handler.send_response(response).await
                         }
                     }
@@ -753,17 +802,17 @@ impl ResolverImpl {
 
 #[async_trait::async_trait]
 impl RequestHandler for ResolverImpl {
-    async fn handle_request<R: ResponseHandler>(
+    async fn handle_request<R: ResponseHandler, T: Time>(
         &self,
         request: &Request,
         response_handle: R,
     ) -> ResponseInfo {
         if !request.src().ip().is_loopback() {
             log::error!("Dropping a stray request from outside: {}", request.src());
-            return Header::new().into();
+            return empty_response_info();
         }
-        if let MessageType::Query = request.message_type() {
-            match request.op_code() {
+        if let MessageType::Query = request.metadata.message_type {
+            match request.metadata.op_code {
                 OpCode::Query => {
                     self.lookup(request, response_handle).await;
                 }
@@ -773,38 +822,53 @@ impl RequestHandler for ResolverImpl {
             };
         }
 
-        return Header::new().into();
-    }
-}
-
-struct ForwardLookup(Lookup);
-
-/// This trait has to be reimplemented for the Lookup so that it can be sent back to the
-/// RequestHandler implementation.
-impl LookupObject for ForwardLookup {
-    fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    fn iter<'a>(&'a self) -> Box<dyn Iterator<Item = &'a Record> + Send + 'a> {
-        Box::new(self.0.record_iter())
-    }
-
-    fn take_additionals(&mut self) -> Option<Box<dyn LookupObject>> {
-        None
+        empty_response_info()
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    use hickory_server::resolver::config::{NameServerConfigGroup, ResolverConfig};
     use std::{net::UdpSocket, sync::Mutex, thread};
     use typed_builder::TypedBuilder;
 
     /// Can't have multiple local resolvers running at the same time, as they will try to bind to
     /// the same address and port. The tests below use this lock to run sequentially.
     static LOCK: Mutex<()> = Mutex::new(());
+
+    /// Warren default: with the env unset, the macOS local filtering
+    /// resolver must stay OFF so the system resolver is pointed straight
+    /// at the exit forwarder (`10.66.0.1`). Leaving it ON (the upstream
+    /// Mullvad default) is exactly what produced the port-53 redirect
+    /// loop that broke all DNS resolution ("connected but no internet").
+    #[test]
+    fn local_dns_resolver_disabled_by_default() {
+        assert!(
+            !local_dns_resolver_enabled(None),
+            "Warren must NOT run the macOS local DNS resolver by default; \
+             the exit forwarder (10.66.0.1) is the authoritative resolver"
+        );
+    }
+
+    /// `TALPID_DISABLE_LOCAL_DNS_RESOLVER=0` is the documented opt-in to
+    /// bring the local resolver back (e.g. for future DNS content
+    /// blocking work / debugging).
+    #[test]
+    fn local_dns_resolver_opt_in_with_zero() {
+        assert!(
+            local_dns_resolver_enabled(Some("0")),
+            "explicit `=0` must re-enable the local resolver"
+        );
+    }
+
+    /// Any explicit non-`0` value keeps it disabled, matching the
+    /// `*_DISABLE_*` naming intent.
+    #[test]
+    fn local_dns_resolver_stays_disabled_for_other_values() {
+        assert!(!local_dns_resolver_enabled(Some("1")));
+        assert!(!local_dns_resolver_enabled(Some("")));
+        assert!(!local_dns_resolver_enabled(Some("true")));
+    }
 
     async fn start_resolver() -> ResolverHandle {
         // NOTE: We're disabling lo0 aliases
@@ -820,10 +884,11 @@ mod test {
         let resolver_config = ResolverConfig::from_parts(
             None,
             vec![],
-            NameServerConfigGroup::from_ips_clear(&[addr.ip()], addr.port(), true),
+            clear_name_server_configs(&[addr.ip()], addr.port()),
         );
-        TokioResolver::builder_with_config(resolver_config, TokioConnectionProvider::default())
+        TokioResolver::builder_with_config(resolver_config, TokioRuntimeProvider::default())
             .build()
+            .expect("test resolver config should be valid")
     }
 
     /// Test whether we can successfully bind the socket even if the address is already used to
@@ -894,7 +959,7 @@ mod test {
             for domain in &*ALLOWED_DOMAINS {
                 test_resolver.lookup(domain, RecordType::A).await?;
             }
-            Ok::<(), ResolveError>(())
+            Ok::<(), NetError>(())
         })
         .expect("Resolution of domains failed");
     }

@@ -24,6 +24,12 @@ pub enum Error {
     Tcpip(#[from] tcpip::Error),
 }
 
+/// Nothing to repair on Windows after an unclean daemon exit: DNS is
+/// configured on the tunnel adapter, which vanished with the daemon.
+pub(crate) fn recover_after_crash() -> Result<(), Error> {
+    Ok(())
+}
+
 pub struct DnsMonitor {
     inner: DnsMonitorHolder,
 }

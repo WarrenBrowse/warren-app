@@ -18,9 +18,44 @@ source scripts/utils/log
 RUSTC_VERSION=$(rustc --version)
 CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-"target"}
 
+# Compiled product environment (prod | staging | beta). ONE selector for the
+# whole pipeline: exported so the cargo builds (warren-product-env crate:
+# API host, update channel, install paths), the vite define (renderer/main
+# constants) and electron-builder (tasks/distribution.cjs: product name,
+# app id, artifact names) all agree. Default prod.
+#
+# The --prod/--beta/--staging flags are pulled out of the command line before
+# anything else: the selector has to be settled before the first build step,
+# and before the header that announces which environment is being built. The
+# env var stays the interface CI and the release workflow use.
+BUILD_ARGS=()
+for arg in "$@"; do
+    case $arg in
+        --prod)    WARREN_PRODUCT_ENV="prod";;
+        --beta)    WARREN_PRODUCT_ENV="beta";;
+        --staging) WARREN_PRODUCT_ENV="staging";;
+        *) BUILD_ARGS+=("$arg");;
+    esac
+done
+set -- ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"}
+
+WARREN_PRODUCT_ENV=${WARREN_PRODUCT_ENV:-"prod"}
+case $WARREN_PRODUCT_ENV in
+    prod|staging|beta) ;;
+    *)
+        log_error "WARREN_PRODUCT_ENV must be prod|staging|beta, got: $WARREN_PRODUCT_ENV"
+        exit 1
+        ;;
+esac
+export WARREN_PRODUCT_ENV
+
 echo "Computing build version..."
 PRODUCT_VERSION=$(cargo run -q --bin mullvad-version)
-log_header "Building Mullvad VPN $PRODUCT_VERSION"
+if [[ "$WARREN_PRODUCT_ENV" == "prod" ]]; then
+    log_header "Building Warren VPN $PRODUCT_VERSION"
+else
+    log_header "Building Warren VPN $PRODUCT_VERSION (product env: $WARREN_PRODUCT_ENV)"
+fi
 
 # If compiler optimization and artifact compression should be turned on or not
 OPTIMIZE="false"
@@ -33,8 +68,6 @@ NOTARIZE="false"
 UNIVERSAL="false"
 # If only the daemon should be built and packaged separately (.deb and .rpm).
 DAEMON_ONLY="false"
-# Use gotatun instead of wireguard-go.
-GOTATUN="true"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -48,7 +81,6 @@ while [[ "$#" -gt 0 ]]; do
             fi
             UNIVERSAL="true"
             ;;
-        --wireguard-go) GOTATUN="false";;
         --daemon-only) DAEMON_ONLY="true";;
         *)
             log_error "Unknown parameter: $1"
@@ -94,7 +126,7 @@ if [[ "$UNIVERSAL" == "true" ]]; then
     # When the --target flag is provided to cargo it always puts the build in the target/$ENV_TARGET
     # folder even when it matches you local machine, as opposed to just the target folder.
     # This causes the cached build not to get used when later running e.g.
-    # 'cargo run --bin mullvad --shell-completions'.
+    # 'cargo run --bin warren --shell-completions'.
     case $HOST in
         x86_64-apple-darwin) TARGETS=("" aarch64-apple-darwin);;
         aarch64-apple-darwin) TARGETS=("" x86_64-apple-darwin);;
@@ -130,6 +162,34 @@ function assert_clean_working_directory {
     fi
 }
 
+# Guard against the silent quinn de-patch that once shipped a build without the
+# Warren GSO/obfuscation patches. The app consumes the fork directly as the
+# `warren-quinn` git-dep via `[patch.crates-io]`; if the lock ever re-resolves
+# to upstream quinn the patch is silently dropped. Assert the lock still pins
+# the fork before an expensive release/signed build (the SDK/engine/contract
+# siblings are plain path-deps and need no pin here).
+function assert_quinn_fork_locked {
+    local lock_file="$SCRIPT_DIR/Cargo.lock"
+    if [[ ! -f "$lock_file" ]]; then
+        log_error "Missing $lock_file: cannot verify the quinn fork is locked."
+        exit 1
+    fi
+    if ! grep -q 'warren-quinn' "$lock_file"; then
+        log_error "Cargo.lock does not pin the warren-quinn fork: the"
+        log_error "[patch.crates-io] git-dep is not locked and the build would"
+        log_error "ship upstream quinn WITHOUT the Warren GSO/obfuscation patches."
+        log_error "Regenerate Cargo.lock with the quinn-fork present and commit it."
+        exit 1
+    fi
+    log_info "quinn fork verified: Cargo.lock pins warren-quinn"
+}
+
+if [[ "$OPTIMIZE" == "true" || "$SIGN" == "true" ]]; then
+    # Release/signed builds must embed the quinn fork. Verify before the
+    # expensive build, not only in CI.
+    assert_quinn_fork_locked
+fi
+
 if [[ "$SIGN" == "true" ]]; then
     # Refuse to build signed builds on dirty working directories. Prevents release builds
     # from being built from potentially modified code/assets.
@@ -140,11 +200,20 @@ if [[ "$SIGN" == "true" ]]; then
     # reproducibility and supply chain security)
     CARGO_ARGS+=(--locked)
 
+    # Accept Warren-prefixed env vars in parallel to upstream Mullvad CSC_*.
+    # When the Warren variant is set, it takes precedence. This lets CI release
+    # workflows use GitHub Secrets named WARREN_CSC_* (Warren-owned signing assets)
+    # without colliding with a developer's local upstream Mullvad signing setup.
+    : "${CSC_LINK:=${WARREN_CSC_LINK_MACOS:-${WARREN_CSC_LINK:-}}}"
+    : "${CSC_KEY_PASSWORD:=${WARREN_CSC_KEY_PASSWORD_MACOS:-${WARREN_CSC_KEY_PASSWORD:-}}}"
+    : "${CERT_HASH:=${WARREN_CERT_HASH:-}}"
+    export CSC_LINK CSC_KEY_PASSWORD CERT_HASH
+
     if [[ "$(uname -s)" == "Darwin" ]]; then
         log_info "Configuring environment for signing of binaries"
         if [[ -z ${CSC_LINK-} ]]; then
-            log_error "The variable CSC_LINK is not set. It needs to point to a file containing the"
-            log_error "private key used for signing of binaries."
+            log_error "Neither CSC_LINK nor WARREN_CSC_LINK_MACOS is set. One must point to a"
+            log_error "file containing the private key used for signing of binaries."
             exit 1
         fi
         if [[ -z ${CSC_KEY_PASSWORD-} ]]; then
@@ -155,9 +224,19 @@ if [[ "$SIGN" == "true" ]]; then
         # macOS: This needs to be set to 'true' to activate signing, even when CSC_LINK is set.
         export CSC_IDENTITY_AUTO_DISCOVERY=true
     elif [[ "$(uname -s)" == "MINGW"* ]]; then
-        if [[ -z ${CERT_HASH-} ]]; then
-            log_error "The variable CERT_HASH is not set. It needs to be set to the thumbprint of"
-            log_error "the signing certificate."
+        # Windows supports two signing backends, selected by
+        # WARREN_WIN_SIGN_BACKEND (consumed by the sign_win function):
+        #   - "trusted-signing": Azure Trusted Signing (cloud HSM). No local
+        #     certificate or thumbprint; auth comes from the AZURE_* env vars.
+        #   - "thumbprint" (default): legacy signtool -sha1 against a cert
+        #     already imported into the Windows cert store (CERT_HASH).
+        if [[ "${WARREN_WIN_SIGN_BACKEND:-thumbprint}" == "trusted-signing" ]]; then
+            : "${WARREN_TS_DLIB:?WARREN_TS_DLIB must point to Azure.CodeSigning.Dlib.dll}"
+            : "${WARREN_TS_METADATA:?WARREN_TS_METADATA must point to the Trusted Signing metadata JSON}"
+        elif [[ -z ${CERT_HASH-} ]]; then
+            log_error "Neither CERT_HASH nor WARREN_CERT_HASH is set. One must be set to the"
+            log_error "thumbprint of the signing certificate (or set"
+            log_error "WARREN_WIN_SIGN_BACKEND=trusted-signing to use Azure Trusted Signing)."
             exit 1
         fi
 
@@ -195,20 +274,58 @@ fi
 # Compile and build
 ################################################################################
 
-# Sign all binaries passed as arguments to this function
+# Sign all binaries passed as arguments to this function.
+#
+# The signing backend is selected by WARREN_WIN_SIGN_BACKEND:
+#   - "trusted-signing": Azure Trusted Signing (cloud HSM, no local .pfx or
+#     hardware token). signtool loads the Azure dlib (WARREN_TS_DLIB) and reads
+#     the account/profile from the metadata file (WARREN_TS_METADATA); Azure
+#     authentication is taken from the standard AZURE_* env vars by the SDK.
+#   - "thumbprint" (default): legacy signtool -sha1 against a certificate that
+#     is already present in the Windows cert store (CERT_HASH). Only valid for
+#     pre-June-2023 certs, internal/self-signed certs, or a self-hosted runner
+#     physically holding a hardware token. Public OV/EV certs issued today can
+#     no longer be exported as a .pfx, so new setups should use trusted-signing.
 function sign_win {
     local NUM_RETRIES=3
+    local backend="${WARREN_WIN_SIGN_BACKEND:-thumbprint}"
+    local -a sign_args
+
+    case "$backend" in
+        trusted-signing)
+            : "${WARREN_TS_DLIB:?WARREN_TS_DLIB must point to Azure.CodeSigning.Dlib.dll}"
+            : "${WARREN_TS_METADATA:?WARREN_TS_METADATA must point to the Trusted Signing metadata JSON}"
+            sign_args=(
+                -v -debug
+                -fd SHA256
+                -tr "${WARREN_TS_TIMESTAMP_URL:-http://timestamp.acs.microsoft.com}" -td SHA256
+                -d "Warren VPN"
+                -du "https://github.com/WarrenBrowse/warren-app"
+                -dlib "$WARREN_TS_DLIB"
+                -dmdf "$WARREN_TS_METADATA"
+            )
+            ;;
+        thumbprint)
+            : "${CERT_HASH:?The CERT_HASH environment variable must be set to the thumbprint of the signing key}"
+            sign_args=(
+                -tr http://timestamp.digicert.com -td sha256
+                -fd sha256 -d "Warren VPN"
+                -du "https://github.com/WarrenBrowse/warren-app"
+                -sha1 "$CERT_HASH"
+            )
+            ;;
+        *)
+            log_error "Unknown WARREN_WIN_SIGN_BACKEND='$backend' (expected 'trusted-signing' or 'thumbprint')"
+            return 1
+            ;;
+    esac
 
     for binary in "$@"; do
         # Try multiple times in case the timestamp server cannot
         # be contacted.
         for i in $(seq 0 ${NUM_RETRIES}); do
             log_info "Signing $binary..."
-            if signtool sign \
-                -tr http://timestamp.digicert.com -td sha256 \
-                -fd sha256 -d "Mullvad VPN" \
-                -du "https://github.com/mullvad/mullvadvpn-app#readme" \
-                -sha1 "$CERT_HASH" "$binary"
+            if signtool sign "${sign_args[@]}" "$binary"
             then
                 break
             fi
@@ -247,18 +364,18 @@ function build {
     fi
 
     local cargo_features=()
-    if [[ "$GOTATUN" == "false" ]]; then
-        cargo_features+=(--features wireguard-go)
-    fi
 
     local cargo_crates_to_build=(
-        -p mullvad-daemon --bin mullvad-daemon
-        -p mullvad-cli --bin mullvad
-        -p mullvad-setup --bin mullvad-setup
-        -p mullvad-problem-report --bin mullvad-problem-report
+        -p mullvad-daemon --bin warren-daemon
+        -p mullvad-cli --bin warren
+        -p mullvad-setup --bin warren-setup
+        -p mullvad-problem-report --bin warren-problem-report
     )
     if [[ ("$(uname -s)" == "Linux") ]]; then
-        cargo_crates_to_build+=(-p mullvad-exclude --bin mullvad-exclude)
+        cargo_crates_to_build+=(-p mullvad-exclude --bin warren-exclude)
+        # NetworkManager VPN service plugin: what makes the desktop's own
+        # network indicator show Warren as a VPN.
+        cargo_crates_to_build+=(-p warren-nm-vpn-service --bin warren-nm-vpn-service)
     fi
 
     if [[ ("$(uname -s)" == "Linux") ]]; then
@@ -272,7 +389,9 @@ function build {
         fi
     fi
 
-    cargo build "${cargo_target_arg[@]}" "${cargo_features[@]}" "${CARGO_ARGS[@]}" "${cargo_crates_to_build[@]}"
+    # bash 3.2 (macOS system bash) errors on "${empty[@]}" under `set -u`; guard the
+    # two arrays that are empty on a local, no-features build with the ${a[@]+"${a[@]}"} idiom.
+    cargo build ${cargo_target_arg[@]+"${cargo_target_arg[@]}"} ${cargo_features[@]+"${cargo_features[@]}"} "${CARGO_ARGS[@]}" "${cargo_crates_to_build[@]}"
 
     ################################################################################
     # Move binaries to correct locations in dist-assets
@@ -281,40 +400,46 @@ function build {
     # All the binaries produced by cargo that we want to include in the app
     if [[ ("$(uname -s)" == "Darwin") ]]; then
         BINARIES=(
-            mullvad-daemon
-            mullvad
-            mullvad-problem-report
-            mullvad-setup
+            warren-daemon
+            warren
+            warren-problem-report
+            warren-setup
         )
     elif [[ ("$(uname -s)" == "Linux") ]]; then
         BINARIES=(
-            mullvad-daemon
-            mullvad
-            mullvad-problem-report
-            mullvad-setup
-            mullvad-exclude
+            warren-daemon
+            warren
+            warren-problem-report
+            warren-setup
+            warren-exclude
+            warren-nm-vpn-service
         )
     elif [[ ("$(uname -s)" == "MINGW"*) ]]; then
         BINARIES=(
-            mullvad-daemon.exe
-            mullvad.exe
-            mullvad-problem-report.exe
-            mullvad-setup.exe
+            warren-daemon.exe
+            warren.exe
+            warren-problem-report.exe
+            warren-setup.exe
         )
-        if [[ "$GOTATUN" == "false" ]]; then
-            BINARIES+=(
-                libwg.dll
-                maybenot_ffi.dll
-            )
-            NPM_PACK_ARGS+=(--wggo)
-        fi
     fi
 
     if [[ -n $specified_target ]]; then
         local cargo_output_dir="$CARGO_TARGET_DIR/$specified_target/$RUST_BUILD_MODE"
-        # To make it easier to package multiple targets, the binaries are
-        # located in a directory with the name of the target triple.
-        local destination_dir="dist-assets/$specified_target"
+        # pack-windows.cjs keys the app-binary directory (DIST_SUBDIR) to the
+        # target arch, not the build host: x64 binaries live at dist-assets/
+        # (DIST_SUBDIR=''), arm64 under the triple subdir. On an x86_64 host the
+        # x64 build is the "local" empty-target build and already lands at
+        # dist-assets/; when cross-building x64 from an aarch64 host it is an
+        # explicit target, so it must land at dist-assets/ too, otherwise
+        # electron-builder cannot find dist-assets/warren.exe.
+        local destination_dir
+        if [[ "$specified_target" == "x86_64-pc-windows-msvc" ]]; then
+            destination_dir="dist-assets"
+        else
+            # To make it easier to package multiple targets, the binaries are
+            # located in a directory with the name of the target triple.
+            destination_dir="dist-assets/$specified_target"
+        fi
         mkdir -p "$destination_dir"
     else
         local cargo_output_dir="$CARGO_TARGET_DIR/$RUST_BUILD_MODE"
@@ -339,6 +464,19 @@ if [[ "$(uname -s)" == "MINGW"* ]]; then
         ./build-windows-modules.sh clean
     else
         echo "Will NOT clean intermediate files in ./windows/**/bin/ in dev builds"
+    fi
+
+    # The WFP object keys are derived from a preprocessor define that changes
+    # with the product environment, and the release job builds prod then beta
+    # in the SAME tree. MSBuild's up-to-date check is not something to bet the
+    # firewall isolation on: a stale winfw.dll would ship beta carrying
+    # production's WFP keys, silently undoing the isolation with no error
+    # anywhere. Force a clean whenever the environment changed.
+    warren_env_stamp="windows/.warren-product-env"
+    if [[ "$(cat "$warren_env_stamp" 2>/dev/null)" != "${WARREN_PRODUCT_ENV:-prod}" ]]; then
+        log_header "Product environment changed, cleaning C++ intermediates"
+        ./build-windows-modules.sh clean
+        printf '%s\n' "${WARREN_PRODUCT_ENV:-prod}" > "$warren_env_stamp"
     fi
 
     for t in "${TARGETS[@]:-"$HOST"}"; do
@@ -374,21 +512,62 @@ done
 # Package app.
 ################################################################################
 
-log_header "Preparing for packaging Mullvad VPN $PRODUCT_VERSION"
+log_header "Preparing for packaging Warren VPN $PRODUCT_VERSION"
 
 if [[ "$(uname -s)" == "Darwin" || "$(uname -s)" == "Linux" ]]; then
     mkdir -p "build/shell-completions"
     for sh in bash zsh fish; do
         log_info "Generating shell completion script for $sh..."
-        cargo run --bin mullvad "${CARGO_ARGS[@]}" -- shell-completions "$sh" \
+        cargo run --bin warren "${CARGO_ARGS[@]}" -- shell-completions "$sh" \
             "build/shell-completions/"
     done
 else
     mkdir -p "build"
 fi
 
-log_info "Updating relays.json..."
-cargo run -p mullvad-api --bin relay_list "${CARGO_ARGS[@]}" > build/relays.json
+log_info "Writing placeholder relays.json..."
+# Warren never uses this Mullvad-format relay list to set up the tunnel: at
+# runtime the daemon fetches the live Warren exit list from GET {api_url}/v1/exits
+# (see mullvad-daemon/src/warren_relays_fetch.rs) into warren-relays.json, and the
+# GUI relay selector is built from that. The upstream Mullvad relay subsystem
+# still parses this file at boot, so it must exist and be a valid relay list.
+# We therefore write an empty list rather than querying the legacy Mullvad
+# `/app/v1/relays` endpoint, which the Warren backend does not serve (404).
+cat > build/relays.json <<'RELAYS_JSON'
+{
+  "locations": {},
+  "wireguard": {
+    "port_ranges": [],
+    "ipv4_gateway": "10.64.0.1",
+    "ipv6_gateway": "fd00::1",
+    "shadowsocks_port_ranges": [],
+    "relays": []
+  },
+  "bridge": {
+    "shadowsocks": [],
+    "relays": []
+  }
+}
+RELAYS_JSON
+
+# Warren bootstrap exit list. The CI "fetch-warren-relays" action writes a
+# freshly fetched + signature-verified `dist-assets/warren-relays.json`
+# before this script runs; we stage it into `build/` so it is packaged as a
+# client resource (alongside relays.json) and loaded by the daemon at boot
+# via `warren_relay_list_updater::load_bootstrap`. If the action was skipped
+# (local build / offline CI), we write an inert placeholder so packaging
+# always finds the file: it fails the daemon's signature pin check at load
+# and is ignored, and the daemon populates the list via its startup fetch.
+log_info "Staging warren-relays.json bootstrap..."
+if [[ -f dist-assets/warren-relays.json ]]; then
+    cp dist-assets/warren-relays.json build/warren-relays.json
+    log_info "Using baked warren-relays.json bootstrap ($(wc -c < build/warren-relays.json | tr -d ' ') bytes)"
+else
+    cat > build/warren-relays.json <<'WARREN_RELAYS_JSON'
+{"version":4,"relays":[],"generation":0,"signed_at":0,"expires_at":0,"server_pubkey_hex":"","signature_hex":""}
+WARREN_RELAYS_JSON
+    log_info "No baked warren-relays.json; wrote inert placeholder (daemon fetches the list at runtime)"
+fi
 
 function build_daemon_packages {
     local pkg_success=0
@@ -414,8 +593,8 @@ function build_daemon_packages {
                 ;;
         esac
 
-        local deb_name="mullvad-vpn-daemon_${PRODUCT_VERSION}_${deb_arch}.deb"
-        local rpm_name="mullvad-vpn-daemon_${PRODUCT_VERSION}_${rpm_arch}.rpm"
+        local deb_name="warren-vpn-daemon_${PRODUCT_VERSION}_${deb_arch}.deb"
+        local rpm_name="warren-vpn-daemon_${PRODUCT_VERSION}_${rpm_arch}.rpm"
         local deb_file="dist/${deb_name}"
         local rpm_file="dist/${rpm_name}"
 
@@ -434,8 +613,11 @@ function build_daemon_packages {
 
         if cargo generate-rpm --help &> /dev/null ; then
             log_info "Packaging Fedora (*.rpm) package for ${arch}..."
+            # RPM versions forbid '-'; dev builds carry "-dev-<sha>". Map '-' to
+            # '~' (a valid RPM pre-release separator) so dev/rc builds package too.
+            local rpm_version="${PRODUCT_VERSION//-/\~}"
             if cargo generate-rpm "${pkg_args[@]}" \
-                     -s "version = \"${PRODUCT_VERSION}\"" \
+                     -s "version = \"${rpm_version}\"" \
                      -o "${rpm_file}" ; then
                 log_info "Packaged $rpm_file"
                 pkg_success=1
@@ -462,7 +644,7 @@ if [[ "$DAEMON_ONLY" == "false" ]]; then
 
     pushd packages/mullvad-vpn
 
-    log_header "Packing Mullvad VPN $PRODUCT_VERSION artifact(s)"
+    log_header "Packing Warren VPN $PRODUCT_VERSION artifact(s)"
 
     case "$(uname -s)" in
         Linux*)     npm run pack:linux -- "${NPM_PACK_ARGS[@]}";;
@@ -472,7 +654,7 @@ if [[ "$DAEMON_ONLY" == "false" ]]; then
     popd
     popd
 else
-    log_header "Packing Mullvad VPN daemon-only packages $PRODUCT_VERSION"
+    log_header "Packing Warren VPN daemon-only packages $PRODUCT_VERSION"
 
     build_daemon_packages
 fi
@@ -505,12 +687,22 @@ if [[ "$UNIVERSAL" == "true" && "$(uname -s)" == "MINGW"* ]]; then
         "${WIN_PACK_ARGS[@]}"
     if [[ "$SIGN" == "true" ]]; then
         assert_clean_working_directory
-        sign_win "dist/MullvadVPN-${PRODUCT_VERSION}.exe"
+        sign_win "dist/WarrenVPN-${PRODUCT_VERSION}.exe"
     fi
 fi
 
 # notarize installer on macOS
 if [[ "$NOTARIZE" == "true" && "$(uname -s)" == "Darwin" ]]; then
+    # Accept Warren-prefixed env vars in parallel to upstream Mullvad NOTARIZE_*.
+    : "${NOTARIZE_KEYCHAIN:=${WARREN_NOTARIZE_KEYCHAIN:-}}"
+    : "${NOTARIZE_KEYCHAIN_PROFILE:=${WARREN_NOTARIZE_KEYCHAIN_PROFILE:-}}"
+
+    if [[ -z ${NOTARIZE_KEYCHAIN-} || -z ${NOTARIZE_KEYCHAIN_PROFILE-} ]]; then
+        log_error "Neither NOTARIZE_KEYCHAIN/NOTARIZE_KEYCHAIN_PROFILE nor their WARREN_*"
+        log_error "equivalents are set. Apple notarytool needs both to authenticate."
+        exit 1
+    fi
+
     log_info "Notarizing pkg"
     xcrun notarytool submit dist/*"$PRODUCT_VERSION"*.pkg \
         --keychain "$NOTARIZE_KEYCHAIN" \

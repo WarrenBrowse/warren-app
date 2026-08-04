@@ -8,11 +8,11 @@ INSTALL_DIR=$2
 # correct install dir and once with an incorrect one. This guard prevents running the script when
 # called the second time. This can be reverted when the following issue has been fixed:
 # https://github.com/electron-userland/electron-builder/issues/8166
-if [[ $INSTALL_DIR == *"Mullvad VPN.app" ]]; then
+if [[ $INSTALL_DIR == *"Warren VPN.app" ]]; then
     exit 0
 fi
 
-LOG_DIR=/var/log/mullvad-vpn
+LOG_DIR=/var/log/warren-vpn
 
 mkdir -p $LOG_DIR
 exec > $LOG_DIR/postinstall.log 2>&1
@@ -21,23 +21,23 @@ echo "Running postinstall at $(date)"
 
 # Abort if the "localized" directory exists. This can happen if some other app bundle
 # is already occupying the intended target directory, causing macOS to install us in
-# /Applications/Mullvad VPN.localized instead. We abort in this case to avoid a potential
+# /Applications/Warren VPN.localized instead. We abort in this case to avoid a potential
 # LPE from admin user to root.
-if [[ -d "$INSTALL_DIR/Mullvad VPN.localized" ]]; then
-    echo "Found '$INSTALL_DIR/Mullvad VPN.localized' unexpectedly. Aborting."
-    rm -rf "$INSTALL_DIR/Mullvad VPN.localized" || echo "Failed to remove '$INSTALL_DIR/Mullvad VPN.localized'"
+if [[ -d "$INSTALL_DIR/Warren VPN.localized" ]]; then
+    echo "Found '$INSTALL_DIR/Warren VPN.localized' unexpectedly. Aborting."
+    rm -rf "$INSTALL_DIR/Warren VPN.localized" || echo "Failed to remove '$INSTALL_DIR/Warren VPN.localized'"
     exit 1
 fi
-# Check if Mullvad VPN.app is owned by root. If not, non-root users may potentially overwrite
+# Check if Warren VPN.app is owned by root. If not, non-root users may potentially overwrite
 # application bundle contents, replace binaries etc., opening up the possibility of an LPE.
-if [[ "$(stat -f %u "$INSTALL_DIR/Mullvad VPN.app")" -ne 0 ]]; then
-    echo "Unexpected owner for '$INSTALL_DIR/Mullvad VPN.app' (not root). Aborting"
+if [[ "$(stat -f %u "$INSTALL_DIR/Warren VPN.app")" -ne 0 ]]; then
+    echo "Unexpected owner for '$INSTALL_DIR/Warren VPN.app' (not root). Aborting"
     exit 1
 fi
 
 # NOTE: This path must be kept in sync with the path defined
 # in mullvad-daemon/src/macos_launch_daemon.rs and preinstall
-DAEMON_PLIST_PATH="/Library/LaunchDaemons/net.mullvad.daemon.plist"
+DAEMON_PLIST_PATH="/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
 
 DAEMON_PLIST=$(cat <<-EOM
 <?xml version="1.0" encoding="UTF-8"?>
@@ -45,11 +45,11 @@ DAEMON_PLIST=$(cat <<-EOM
 <plist version="1.0">
         <dict>
                 <key>Label</key>
-                <string>net.mullvad.daemon</string>
+                <string>com.warrenbrowse.vpn.daemon</string>
 
                 <key>ProgramArguments</key>
                 <array>
-                        <string>$INSTALL_DIR/Mullvad VPN.app/Contents/Resources/mullvad-daemon</string>
+                        <string>$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-daemon</string>
                         <string>-vv</string>
                 </array>
 
@@ -68,8 +68,29 @@ DAEMON_PLIST=$(cat <<-EOM
                         <integer>1024</integer>
                 </dict>
 
+                <!--
+                  Store the Warren identity (BIP39 mnemonic) in a
+                  root-owned 0600 file rather than the macOS System
+                  Keychain. The legacy SecKeychain ACL binds an item to
+                  the creating binary's code-signature hash; our builds
+                  are unsigned / ad-hoc (no stable Apple Developer ID),
+                  so the hash changes every release and the daemon hits
+                  errSecInteractionNotAllowed (-25308) when reading an
+                  item written by a previous build, losing the user's
+                  identity on every upgrade and breaking the tunnel. A
+                  0600 root file is binary-independent and appropriate
+                  for a root daemon. REMOVE this once the app ships with
+                  a stable Developer ID signature + keychain-access-groups
+                  entitlement (then the System Keychain works as designed).
+                -->
+                <key>EnvironmentVariables</key>
+                <dict>
+                        <key>WARREN_USE_PLAINTEXT_STORAGE</key>
+                        <string>1</string>
+                </dict>
+
                 <key>AssociatedBundleIdentifiers</key>
-                <string>net.mullvad.vpn</string>
+                <string>com.warrenbrowse.vpn</string>
 
                 <key>StandardErrorPath</key>
                 <string>$LOG_DIR/stderr.log</string>
@@ -92,7 +113,7 @@ cp "$LOG_DIR/daemon.log" "$LOG_DIR/old-install-daemon.log" \
 # For compatibility with versions older than 2022.5, kill the GUI after the
 # upgrade. We now do this in preinstall instead. This code can be removed when
 # we drop support for app versions older than 2022.5.
-pkill -x "Mullvad VPN" || true
+pkill -x "Warren VPN" || true
 sleep 1
 
 echo "$DAEMON_PLIST" > $DAEMON_PLIST_PATH
@@ -100,18 +121,18 @@ chmod 644 $DAEMON_PLIST_PATH
 launchctl load -w $DAEMON_PLIST_PATH
 
 mkdir -p /usr/local/bin
-ln -sf "$INSTALL_DIR/Mullvad VPN.app/Contents/Resources/mullvad" /usr/local/bin/mullvad
-ln -sf "$INSTALL_DIR/Mullvad VPN.app/Contents/Resources/mullvad-problem-report" /usr/local/bin/mullvad-problem-report
+ln -sf "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren" /usr/local/bin/warren
+ln -sf "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-problem-report" /usr/local/bin/warren-problem-report
 
 mkdir -p "$ZSH_COMPLETIONS_DIR"
-ln -sf "$INSTALL_DIR/Mullvad VPN.app/Contents/Resources/_mullvad" "$ZSH_COMPLETIONS_DIR/_mullvad"
+ln -sf "$INSTALL_DIR/Warren VPN.app/Contents/Resources/_warren" "$ZSH_COMPLETIONS_DIR/_warren"
 
 if [[ -d "$FISH_COMPLETIONS_DIR" ]]; then
-    ln -sf "$INSTALL_DIR/Mullvad VPN.app/Contents/Resources/mullvad.fish" "$FISH_COMPLETIONS_DIR/mullvad.fish"
+    ln -sf "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren.fish" "$FISH_COMPLETIONS_DIR/warren.fish"
 fi
 
 # Relaunch the GUI if it was running before the upgrade.
-GUI_RUNNING_MARKER="/var/run/mullvad-gui-was-running"
+GUI_RUNNING_MARKER="/var/run/warren-gui-was-running"
 if [[ -f "$GUI_RUNNING_MARKER" ]]; then
     rm -f "$GUI_RUNNING_MARKER"
 
@@ -120,7 +141,7 @@ if [[ -f "$GUI_RUNNING_MARKER" ]]; then
     if [[ -n "$CONSOLE_USER" && "$CONSOLE_USER" != "root" && "$CONSOLE_USER" != "loginwindow" ]]; then
         CONSOLE_UID=$(id -u "$CONSOLE_USER")
         launchctl asuser "$CONSOLE_UID" sudo -u "$CONSOLE_USER" \
-            open -a "$INSTALL_DIR/Mullvad VPN.app" \
+            open -a "$INSTALL_DIR/Warren VPN.app" \
             || echo "Failed to relaunch GUI as $CONSOLE_USER"
     else
         echo "No console user; skipping GUI relaunch"

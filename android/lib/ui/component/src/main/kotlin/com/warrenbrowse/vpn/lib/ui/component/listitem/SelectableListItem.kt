@@ -1,0 +1,171 @@
+package com.warrenbrowse.vpn.lib.ui.component.listitem
+
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import com.warrenbrowse.vpn.lib.ui.designsystem.Hierarchy
+import com.warrenbrowse.vpn.lib.ui.designsystem.ListItemClickArea
+import com.warrenbrowse.vpn.lib.ui.designsystem.ListItemDefaults
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenListItem
+import com.warrenbrowse.vpn.lib.ui.designsystem.Position
+import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+
+@Preview
+@Composable
+private fun PreviewSelectableListItem() {
+    AppTheme {
+        Column(
+            Modifier.background(MaterialTheme.colorScheme.surface),
+            verticalArrangement = Arrangement.spacedBy(Dimens.listItemDivider, Alignment.Bottom),
+        ) {
+            SelectableListItem(hierarchy = Hierarchy.Child1, title = "Selected", isSelected = true)
+            SelectableListItem(
+                hierarchy = Hierarchy.Child1,
+                title = "Not Selected",
+                isSelected = false,
+            )
+            SelectableListItem(
+                hierarchy = Hierarchy.Child1,
+                title = "Selected and disabled",
+                isSelected = true,
+                isEnabled = false,
+            )
+            SelectableListItem(
+                hierarchy = Hierarchy.Child1,
+                title = "Selected and disabled",
+                subtitle = "Selected and disabled",
+                isSelected = true,
+                isEnabled = false,
+            )
+        }
+    }
+}
+
+@Composable
+fun LeadingContentAnimatedVisibility(
+    modifier: Modifier = Modifier,
+    visible: Boolean,
+    content: @Composable (AnimatedVisibilityScope.() -> Unit),
+) {
+    AnimatedVisibility(
+        modifier = modifier,
+        visible = visible,
+        enter = fadeIn(tween(ANIMATION_DURATION)) + expandHorizontally(tween(ANIMATION_DURATION)),
+        exit = fadeOut(tween(ANIMATION_DURATION)) + shrinkHorizontally(tween(ANIMATION_DURATION)),
+        content = content,
+    )
+}
+
+@Composable
+fun SelectableListItem(
+    modifier: Modifier = Modifier,
+    hierarchy: Hierarchy = Hierarchy.Parent,
+    position: Position = Position.Single,
+    isSelected: Boolean,
+    isEnabled: Boolean = true,
+    iconContentDescription: String? = null,
+    mainClickArea: ListItemClickArea = ListItemClickArea.All,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    testTag: String? = null,
+    content: @Composable ((BoxScope.() -> Unit)),
+    trailingContent: @Composable ((BoxScope.() -> Unit))? = null,
+) {
+    WarrenListItem(
+        modifier = modifier,
+        hierarchy = hierarchy,
+        position = position,
+        isEnabled = isEnabled,
+        isSelected = isSelected,
+        testTag = testTag,
+        mainClickArea = mainClickArea,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        leadingContent = {
+            LeadingContentAnimatedVisibility(
+                modifier = Modifier.align(Alignment.Center),
+                visible = isSelected,
+            ) {
+                val defaultColors = ListItemDefaults.colors()
+                Icon(
+                    modifier = Modifier.padding(end = Dimens.smallPadding),
+                    imageVector = Icons.Rounded.Check,
+                    contentDescription = iconContentDescription,
+                    // Set the tint explicitly here because the animation looks better if the icon
+                    // does not change color to white while sliding out.
+                    tint =
+                        if (isEnabled) defaultColors.selectedHeadlineColor
+                        else defaultColors.disabledHeadlineColor,
+                )
+            }
+        },
+        content = content,
+        trailingContent = trailingContent,
+    )
+}
+
+@Composable
+fun SelectableListItem(
+    modifier: Modifier = Modifier,
+    hierarchy: Hierarchy = Hierarchy.Parent,
+    position: Position = Position.Single,
+    isSelected: Boolean,
+    isEnabled: Boolean = true,
+    title: String,
+    subtitle: String? = null,
+    iconContentDescription: String? = null,
+    mainClickArea: ListItemClickArea = ListItemClickArea.All,
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    testTag: String? = null,
+    trailingContent: @Composable ((BoxScope.() -> Unit))? = null,
+) {
+    SelectableListItem(
+        modifier = modifier,
+        hierarchy = hierarchy,
+        position = position,
+        isEnabled = isEnabled,
+        iconContentDescription = iconContentDescription,
+        isSelected = isSelected,
+        testTag = testTag,
+        mainClickArea = mainClickArea,
+        onClick = onClick,
+        onLongClick = onLongClick,
+        content = {
+            Column {
+                Text(title)
+                if (subtitle != null) {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelLarge,
+                        color =
+                            if (isEnabled) MaterialTheme.colorScheme.onSurfaceVariant
+                            else ListItemDefaults.colors().disabledHeadlineColor,
+                    )
+                }
+            }
+        },
+        trailingContent = trailingContent,
+    )
+}
+
+private const val ANIMATION_DURATION = 200

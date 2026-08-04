@@ -1,0 +1,46 @@
+#!/bin/sh
+# Respawns the Warren VPN daemon, mirroring the systemd unit's Restart=always,
+# RestartSec=1 and StartLimitIntervalSec=0.
+#
+# sysvinit supervises nothing, and giving up after a crash is not an option
+# here: the daemon exits fail-closed (the kernel firewall keeps blocking), so a
+# host left with no daemon is a host left offline with nothing able to unblock
+# it. Retrying forever is the same contract systemd, launchd and the Windows
+# SCM get.
+
+set -u
+
+DAEMON=/usr/bin/warren-daemon@WARREN_SUFFIX@
+WARREN_RESOURCE_DIR="@WARREN_PRODUCT_DIR@/resources/"
+export WARREN_RESOURCE_DIR
+
+running=1
+child=""
+
+forward_term() {
+    running=0
+    if [ -n "$child" ]; then
+        kill -TERM "$child" 2>/dev/null || true
+    fi
+}
+
+trap forward_term TERM INT
+
+while [ "$running" -eq 1 ]; do
+    "$DAEMON" -vv --disable-stdout-timestamps &
+    child=$!
+    wait "$child" 2>/dev/null
+    status=$?
+    if [ "$status" -gt 128 ]; then
+        # `wait` returned because our own trap ran, not because the daemon is
+        # gone. Wait again so the teardown (firewall revert, DNS restore)
+        # completes before this supervisor lets the init script return.
+        wait "$child" 2>/dev/null || true
+    fi
+    child=""
+    if [ "$running" -eq 1 ]; then
+        sleep 1
+    fi
+done
+
+exit 0

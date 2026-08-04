@@ -116,7 +116,7 @@ export class MacOsSplitTunnelingAppListRetriever implements ISplitTunnelingAppLi
       return (
         parsedFilePath.ext === '.app' &&
         !parsedFilePath.name.startsWith('.') &&
-        parsedFilePath.name !== 'Mullvad VPN'
+        parsedFilePath.name !== 'Warren VPN'
       );
     });
   }
@@ -139,7 +139,22 @@ export class MacOsSplitTunnelingAppListRetriever implements ISplitTunnelingAppLi
 
   private async readApplicationBundlePlist(applicationBundlePath: string): Promise<Plist> {
     const plistPath = path.join(applicationBundlePath, 'Contents', 'Info.plist');
-    return (await readPlist(plistPath)) ?? {};
+    // Some `.app` bundles on disk are broken (e.g. partially uninstalled,
+    // App Store apps without the executable, third-party tools with no
+    // Info.plist at all). Without this guard, a single such bundle in
+    // `/Applications` causes an `UnhandledPromiseRejectionWarning: ENOENT`
+    // every time the split-tunneling list is enumerated, polluting the
+    // logs and aborting the whole scan. Treat any read failure as
+    // "bundle has no usable plist" and skip it cleanly.
+    try {
+      return (await readPlist(plistPath)) ?? {};
+    } catch (err) {
+      const e = err as NodeJS.ErrnoException;
+      if (e.code !== 'ENOENT') {
+        log.debug(`Failed to read plist at ${plistPath}: ${e.message ?? err}`);
+      }
+      return {};
+    }
   }
 
   /**

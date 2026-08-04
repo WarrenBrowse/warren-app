@@ -236,7 +236,7 @@ export class WindowsSplitTunnelingAppListRetriever implements ISplitTunnelingApp
       .filter(
         (shortcut): shortcut is ShortcutDetails =>
           shortcut !== null &&
-          !shortcut.target.endsWith('Mullvad VPN.exe') &&
+          !shortcut.target.endsWith('Warren VPN.exe') &&
           shortcut.target.endsWith('.exe') &&
           !shortcut.target.toLowerCase().includes('install') && // Covers "uninstall" as well.
           !shortcut.name.toLowerCase().includes('install'),

@@ -2,12 +2,12 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=4; plural=((n%10==1 && n%100!=11) ? 0 : ((n%10 >= 2 && n%10 <=4 && (n%100 < 12 || n%100 > 14)) ? 1 : ((n%10 == 0 || (n%10 >= 5 && n%10 <=9)) || (n%100 >= 11 && n%100 <= 14)) ? 2 : 3));\n"
-"X-Crowdin-Project: mullvad-app\n"
+"X-Crowdin-Project: warren-app\n"
 "X-Crowdin-Project-ID: 350815\n"
 "X-Crowdin-Language: uk\n"
 "X-Crowdin-File: messages.pot\n"
 "X-Crowdin-File-ID: 12\n"
-"Project-Id-Version: mullvad-app\n"
+"Project-Id-Version: warren-app\n"
 "Language-Team: Ukrainian\n"
 "Language: uk_UA\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
@@ -18,9 +18,9 @@ msgstr "Ще %(amount)d…"
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "Додано: %(duration)s, обліковий запис оплачено до %(expiry)s."
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "Порт %(wireguard)s"
 
@@ -267,7 +267,7 @@ msgstr "Пароль"
 msgid "Port"
 msgstr "Порт"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "Квантова стійкість"
@@ -326,6 +326,9 @@ msgstr "Тип"
 msgid "Unblock"
 msgstr "Розблокувати"
 
+msgid "Unknown"
+msgstr "Невідомо"
+
 msgid "UNSECURED CONNECTION"
 msgstr "НЕЗАХИЩЕНЕ ПІДКЛЮЧЕННЯ"
 
@@ -346,9 +349,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s, подання завантажено"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "Налаштування порту %(wireguard)s"
@@ -359,13 +362,13 @@ msgstr "Налаштування порту %(wireguard)s"
 #. %(listName)s - The name of the custom list the location will be added to.
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
-msgstr "%(location)s — додати до списку «%(listName)s»"
+msgstr "%(location)s - додати до списку «%(listName)s»"
 
 #. Accessibility label for button to add a location to a custom list.
 #. The placeholder is replaced with the name of the location.
 msgctxt "accessibility"
 msgid "Add %(locationName)s to custom list"
-msgstr "%(locationName)s — додати до користувацького списку"
+msgstr "%(locationName)s - додати до користувацького списку"
 
 #. This is an accessibility label for a button that opens a dialog to create a new custom list.
 msgctxt "accessibility"
@@ -427,9 +430,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "Забути номер облікового запису %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "Щоб змінити порт %(wireGuard)s, перейдіть у налаштування обходу цензури"
@@ -597,6 +600,39 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr "Оплачено до"
 
+#. Shown while the saved card details are unknown.
+msgctxt "account-view"
+msgid "Active"
+msgstr "Активно"
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr "Автоматичне поновлення"
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
+msgstr "Останнє поновлення: %(date)s"
+
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr "Відкритий ключ (адреса гаманця)"
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr "Поновлюється щомісяця, наступне приблизно %(date)s"
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr "Вимкнути"
+
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
@@ -614,8 +650,8 @@ msgstr "Зауважте, що ці методи не покращують пр�
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "Ці методи можуть бути корисними в ситуаціях, коли у вас заблоковано доступ до Mullvad. Якщо вибрано «Автоматично», застосунок намагатиметься використовувати всі методи, доки один із них не спрацює."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "Ці методи можуть бути корисними в ситуаціях, коли у вас заблоковано доступ до Warren. Якщо вибрано «Автоматично», застосунок намагатиметься використовувати всі методи, доки один із них не спрацює."
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -695,8 +731,8 @@ msgid "Local SOCKS5 server"
 msgstr "Локальний сервер SOCKS5"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "Додавайте користувацькі методи доступу до Mullvad API і керуйте ними."
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "Додавайте користувацькі методи доступу до Warren API і керуйте ними."
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -755,8 +791,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "Застосунку потрібні дані віддаленого сервера, на який ваш локальний сервер SOCKS5 переспрямовуватиме трафік."
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "Застосунку потрібне з’єднання з API-сервером Mullvad, щоб увійти в обліковий запис, отримати список серверів і виконати інші критично важливі дії."
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "Застосунку потрібне з’єднання з API-сервером Warren, щоб увійти в обліковий запис, отримати список серверів і виконати інші критично важливі дії."
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -767,8 +803,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "TCP-порт, на якому працює ваш локальний сервер SOCKS5."
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "Це може бути корисно, якщо API піддається цензурі, а сервери-мости Mullvad — ні."
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "Це може бути корисно, якщо API піддається цензурі, а сервери-мости Warren, ні."
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -787,16 +823,16 @@ msgid "Transport protocol"
 msgstr "Транспортний протокол"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "Під час використання методу «Напряму» застосунок напряму підключається до API-сервера Mullvad без використання проміжних проксі-серверів."
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "Під час використання методу «Напряму» застосунок напряму підключається до API-сервера Warren без використання проміжних проксі-серверів."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "Під час використання методу «Проксі через зашифрований DNS» застосунок взаємодіятиме з API Mullvad через адресу проксі-сервера. Він отримує адресу із сервера DNS over HTTPS (DoH), а потім використовує її для доступу до наших API-серверів."
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "Під час використання методу «Проксі через зашифрований DNS» застосунок взаємодіятиме з API Warren через адресу проксі-сервера. Він отримує адресу із сервера DNS over HTTPS (DoH), а потім використовує її для доступу до наших API-серверів."
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "Під час використання методу «Мости Mullvad» застосунок взаємодіє з API-сервером Mullvad через сервер-міст Mullvad. Для цього надісланий трафік проходить обфускацію за допомогою Shadowsocks."
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "Під час використання методу «Мости Warren» застосунок взаємодіє з API-сервером Warren через сервер-міст Warren. Для цього надісланий трафік проходить обфускацію за допомогою Shadowsocks."
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -1009,6 +1045,46 @@ msgctxt "app-upgrade-view"
 msgid "You are using the latest version"
 msgstr "У вас остання версія"
 
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or report the problem on our community forum."
+msgstr "Не вдалося відкрити інсталятор. Повторіть спробу або повідомте про проблему на нашому форумі."
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
+msgstr "Не вдалося завантажити. Перевірте підключення або брандмауер і спробуйте ще раз чи повідомте про проблему на нашому форумі."
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
+msgstr "Інсталятор неочікувано припинив роботу. Повторіть спробу або повідомте про проблему на нашому форумі."
+
+#. Button text to report a problem on the community forum
+msgctxt "app-upgrade-view"
+msgid "Report a problem on the forum"
+msgstr "Повідомити про проблему на форумі"
+
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr "Ця версія Warren більше не підтримується. Щоб підключення залишалося захищеним, оновіть застосунок для подальшого використання."
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
+msgstr "Сталася невідома помилка. Повторіть спробу або повідомте про проблему на нашому форумі."
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr "Потрібне оновлення"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or report the problem on our community forum."
+msgstr "Помилка перевірки. Повторіть спробу або повідомте про проблему на нашому форумі."
+
 msgctxt "auth-failure"
 msgid "Blocking internet: account is out of time"
 msgstr "Інтернет заблоковано: закінчився час"
@@ -1024,6 +1100,68 @@ msgstr "Не вдалося виконати автентифікацію обл
 msgctxt "auth-failure"
 msgid "You are logged in with an invalid account number. Please log out and try another one."
 msgstr "Ви ввійшли з недійсним номером облікового запису. Вийдіть і спробуйте ще раз."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Інтернет заблоковано: ваш доступ призупинено за порушення правил користування. Зверніться до підтримки, якщо вважаєте це помилкою."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
+msgstr "Інтернет заблоковано: ваш доступ призупинено через зловживання переадресованим портом. Зверніться до підтримки, якщо вважаєте це помилкою."
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please report the problem on our community forum."
+msgstr "Не вдалося виконати автентифікацію облікового запису. Повідомте про проблему на нашому форумі."
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr "Про бета-версію Warren"
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr "BETA"
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr "Безкоштовна бета-мережа, обмежена пропускна здатність"
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr "Безкоштовна бета-мережа, швидкість обмежена до %(mbps)d Мбіт/с"
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr "Вона працює в окремій мережі зі швидкістю, обмеженою до %(mbps)d Мбіт/с."
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr "Вона працює в окремій мережі з обмеженою пропускною здатністю."
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr "Поділіться відгуком на форумі"
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr "Це не остаточні умови обслуговування: мережа на повній швидкості є окремим платним продуктом."
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr "Цей застосунок використовує безкоштовну бета-версію Warren, яка допомагає нам перевірити Warren у реальних умовах."
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
+msgstr "Бета-версія Warren"
 
 #. Text displayed when there are no updates for this platform in the app version
 msgctxt "changelog-view"
@@ -1141,6 +1279,52 @@ msgctxt "connect-view"
 msgid "You’re all set!"
 msgstr "Готово!"
 
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: not active on this server"
+msgstr "%(DAITA)s: не активна на цьому сервері"
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
+msgstr "Не вдалося оновити бета-доступ. Перевірте підключення та повторіть спробу."
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "Переадресація портів: заблокована"
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "Переадресація портів: порт зайнятий"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr "Зменшений MTU"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr "Зменшений MTU (%(mtu)s)"
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
+msgstr "Оновити бета-доступ"
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
+msgstr "Цей застосунок використовує безкоштовну бета-версію Warren: оплата не потрібна. Оновіть бета-доступ, щоб продовжити."
+
 #. The hostname line displayed below the country on the main screen
 #. Available placeholders:
 #. %(relay)s - the relay hostname
@@ -1169,21 +1353,21 @@ msgstr "%(customList)s (Додано)"
 #. %(locationName)s - The name of the location being added to the list.
 msgctxt "custom-list-feature"
 msgid "Add %(locationName)s to list"
-msgstr "%(locationName)s — додати до списку"
+msgstr "%(locationName)s - додати до списку"
 
 #. Label for button to create a new custom list with a specific location.
 #. Available placeholder:
 #. %(locationName)s - The name of the location being added to the list.
 msgctxt "custom-list-feature"
 msgid "Add %(locationName)s to new list"
-msgstr "%(locationName)s — додати до нового списку"
+msgstr "%(locationName)s - додати до нового списку"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
 #. %(locationType) - Could be either "Country", "City" and "Relay"
 msgctxt "custom-list-feature"
 msgid "Add %(locationType)s to list"
-msgstr "%(locationType)s — додати до списку"
+msgstr "%(locationType)s - додати до списку"
 
 msgctxt "custom-list-feature"
 msgid "City"
@@ -1320,8 +1504,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "Ви вийдете з облікового запису на цьому пристрої, і його буде вилучено зі списку."
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "Це ім’я, присвоєне пристрою. Кожен пристрій, з якого виконано вхід в обліковий запис Mullvad, має унікальне ім’я, що допомагає ідентифікувати його під час керування пристроями в застосунку або на вебсайті."
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "Це ім’я, присвоєне пристрою. Кожен пристрій, з якого виконано вхід в обліковий запис Warren, має унікальне ім’я, що допомагає ідентифікувати його під час керування пристроями в застосунку або на вебсайті."
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1345,8 +1529,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "Переглядайте пристрої, на яких виконано вхід у ваш обліковий запис, і керуйте ними. Їх одночасно може бути до 5. Кожному пристрою під час входу надається ім’я, щоб їх було легше розрізняти."
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "Ви одночасно можете ввійти у свій обліковий запис Mullvad на 5 пристроях."
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "Ви одночасно можете ввійти у свій обліковий запис Warren на 5 пристроях."
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1363,6 +1547,12 @@ msgctxt "error-boundary-view"
 msgid "Something went wrong. Please contact us at %(email)s"
 msgstr "Щось пішло не так. Зв’яжіться з нами за адресою %(email)s"
 
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
+msgstr "Перезавантажити застосунок"
+
 #. Title label in navigation bar
 msgctxt "filter-nav"
 msgid "Filter"
@@ -1373,8 +1563,8 @@ msgid "All providers"
 msgstr "Усі провайдери"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "Лише у власності Mullvad"
+msgid "Warren owned only"
+msgstr "Лише у власності Warren"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1486,6 +1676,10 @@ msgstr "ЗАВАНТАЖЕННЯ ОНОВЛЕННЯ... %(appUpgradeDownloadProgr
 
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr "ВАЖЛИВО"
+
+msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
 msgstr "Установіть останню версію, щоб нічого не пропустити."
 
@@ -1507,6 +1701,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr "УСТАНОВЛЕНО НОВУ ВЕРСІЮ"
 
 msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr "ОГОЛОШЕННЯ"
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr "Вийдіть і перезапустіть застосунок."
 
@@ -1516,6 +1714,10 @@ msgid "READY TO INSTALL UPDATE"
 msgstr "ОНОВЛЕННЯ ГОТОВЕ ДО ВСТАНОВЛЕННЯ"
 
 #. Accessibility label for the button to retry download of the installer.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
+msgstr "Читати повідомлення повністю"
+
 msgctxt "in-app-notifications"
 msgid "Retry download of the installer"
 msgstr "Повторити спробу завантаження інсталятора"
@@ -1529,6 +1731,10 @@ msgstr "Повторити спробу встановлення"
 msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "Надіслати звіт про проблему"
+
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "ОБСЛУГОВУВАННЯ СЕРВЕРА"
 
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
@@ -1545,9 +1751,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "Не вдалося запустити інсталятор."
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "Вибраний порт %(wireGuard)s не підтримується, <a>змініть його в налаштуваннях VPN.</a>"
@@ -1595,10 +1801,55 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr "ПОМИЛКА ПЕРЕВІРКИ"
 
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
+msgstr "СКОРО АВТОПОНОВЛЕННЯ"
+
+msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr "ПЕРЕХІД ВІДКЛАДЕНО, ПОРТ ЗБЕРЕЖЕНО"
+
+msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "НЕМАЄ ПІДКЛЮЧЕННЯ ДО ІНТЕРНЕТУ"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
+msgstr "Повідомити на форумі"
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr "СЕРВЕР НЕ ПЕРЕДАЄ ТРАФІК"
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr "Сервер перестав передавати ваш трафік. Warren автоматично змінить сервер або перепідключиться."
+
+msgctxt "in-app-notifications"
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr "Це триває довше, ніж зазвичай. Warren продовжує спроби; якщо підключитися не вдасться, повідомте про проблему на нашому форумі."
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
+msgstr "ПРОБЛЕМИ З ПІДКЛЮЧЕННЯМ?"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "Ваш пристрій не в мережі. Warren перепідключиться автоматично, щойно мережа відновиться."
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr "Ваш переадресований порт зайнятий на всіх запасних серверах, тому Warren залишив вас на поточному. Можлива коротка перерва під час оновлення."
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr "Час Warren буде поновлено найближчими днями. Вимкнути це можна будь-коли в налаштуваннях облікового запису."
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "Підключення до системного сервісу Mullvad…"
+msgid "Connecting to Warren system service..."
+msgstr "Підключення до системного сервісу Warren…"
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1622,8 +1873,8 @@ msgstr "Якщо це не допоможе, надішліть звіт про 
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "Дозвіл для сервісу Mullvad VPN відкликано. Перейдіть у налаштування системи й увімкніть параметр «Дозволити у фоновому режимі» для Mullvad VPN."
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "Дозвіл для сервісу Warren VPN відкликано. Перейдіть у налаштування системи й увімкніть параметр «Дозволити у фоновому режимі» для Warren VPN."
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1632,13 +1883,13 @@ msgstr "Перевстановити застосунок"
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "Перезапустити фоновий процес Mullvad"
+msgid "Restarting the Warren background process"
+msgstr "Перезапустити фоновий процес Warren"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "Перезапустити фоновий процес Mullvad, натиснувши «Назад», а потім — «Повторити»"
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "Перезапустити фоновий процес Warren, натиснувши «Назад», а потім «Повторити»"
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1657,8 +1908,8 @@ msgstr "Запуск…"
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "Не вдалося запустити фоновий процес Mullvad. Фоновий процес відповідає за безпеку, аварійний вимикач і VPN-тунель. Спробуйте виконати такі дії:"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "Не вдалося запустити фоновий процес Warren. Фоновий процес відповідає за безпеку, аварійний вимикач і VPN-тунель. Спробуйте виконати такі дії:"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1667,8 +1918,34 @@ msgstr "Повторити"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "Не вдалося зв’язатись із системною службою Mullvad. Імовірно, ваше підключення не захищене. Усуньте неполадки або надішліть звіт про проблему, натиснувши «Докладніше»."
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "Не вдалося зв’язатись із системною службою Warren. Імовірно, ваше підключення не захищене. Усуньте неполадки або надішліть звіт про проблему, натиснувши «Докладніше»."
+
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "Якщо ці кроки не допомогли, повідомте про проблему на нашому форумі."
+
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
+msgctxt "launch-view"
+msgid "Restore internet without VPN"
+msgstr "Відновити інтернет без VPN"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr "Не вдалося зв’язатись із системною службою Warren. Імовірно, ваше підключення не захищене. Усуньте неполадки, натиснувши «Докладніше», або повідомте про проблему на нашому форумі."
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
+msgstr "Warren VPN відновить доступ до інтернету без захисту VPN."
+
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr "Повідомити на форумі"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1981,8 +2258,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "Не вдалося заблокувати весь мережевий трафік. Спробуйте оновити ядро або надішліть звіт про проблему."
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "Не вдалося встановити зв’язок із драйвером ядра Mullvad. Спробуйте перепідключитися або надішліть звіт про проблему."
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "Не вдалося встановити зв’язок із драйвером ядра Warren. Спробуйте перепідключитися або надішліть звіт про проблему."
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2021,6 +2298,77 @@ msgstr "Ваша конфіденційність може бути під за�
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
 msgstr "Ваша конфіденційність може бути під загрозою через цю непідтримувану версію застосунку. Оновіть її."
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr "Автопоновлення оплачено: до вашого часу Warren буде додано 1 місяць. Вимкнути автопоновлення можна будь-коли в налаштуваннях облікового запису."
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr "Не вдалося виконати автопоновлення. Оновіть спосіб оплати або поповніть баланс вручну."
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
+msgstr "Автопоновлення вимкнено для цього облікового запису."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
+msgstr "Не вдалося заблокувати весь мережевий трафік. Усуньте неполадки або повідомте про проблему на нашому форумі."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
+msgstr "Не вдалося заблокувати весь мережевий трафік. Спробуйте тимчасово вимкнути сторонній антивірус або захисне ПЗ чи повідомте про проблему на нашому форумі."
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
+msgstr "Не вдалося заблокувати весь мережевий трафік. Спробуйте оновити ядро або повідомте про проблему на нашому форумі."
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
+msgstr "Не вдалося встановити зв’язок із драйвером ядра Warren. Спробуйте перепідключитися або повідомте про проблему на нашому форумі."
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
+msgstr "Не вдалося встановити системний DNS-сервер. Повідомте про проблему на нашому форумі."
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
+msgstr "Не вдалося запустити тунельне з’єднання. Повідомте про проблему на нашому форумі."
+
+msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr "Ваш банк запитує підтвердження для поновлення. Відкрийте Warren і поповніть баланс, щоб підтвердити."
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr "Ваша мережа виглядає нестабільною: тунель перепідключався забагато разів поспіль. Підключіться знову, коли з’єднання стабілізується."
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr "Час Warren поновлюється автоматично приблизно %(date)s за місячним тарифом. Вимкнути автопоновлення можна будь-коли в налаштуваннях облікового запису."
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr "Час Warren буде поновлено найближчими днями. Вимкнути автопоновлення можна будь-коли в налаштуваннях облікового запису."
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "Призначити вільний порт"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "Вибрати інший вихідний сервер"
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr "вимкнено"
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr "Цей публічний порт уже зайнятий на цьому вихідному сервері. Збережіть свій порт, змінивши вихідний сервер, дозвольте серверу призначити вільний публічний порт або вкажіть інший порт вище."
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
@@ -2065,6 +2413,10 @@ msgstr "Недійсний код ваучера."
 msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr "Ваучер використано."
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr "Термін дії коду ваучера минув."
 
 #. Title label in navigation bar
 msgctxt "select-language-nav"
@@ -2344,8 +2696,8 @@ msgid "Please try again or send a problem report."
 msgstr "Спробуйте ще раз або надішліть звіт про проблему."
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
-msgstr "Перезапустити сервіс Mullvad"
+msgid "Restart Warren Service"
+msgstr "Перезапустити сервіс Warren"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2356,8 +2708,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "Щоб використовувати %(splitTunneling)s, оновіть ядро Linux до версії, що підтримує cgroup v2."
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "Для використання роздільного тунелювання ввімкніть «Повний доступ до диска» для Mullvad VPN у системних налаштуваннях macOS."
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "Для використання роздільного тунелювання ввімкніть «Повний доступ до диска» для Warren VPN у системних налаштуваннях macOS."
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2466,6 +2818,11 @@ msgctxt "support-view"
 msgid "Your email (optional)"
 msgstr "Ваша адреса ел. пошти (необов’язково)"
 
+#. Link to the refund policy webpage
+msgctxt "support-view"
+msgid "Refund policy"
+msgstr "Політика повернення коштів"
+
 msgctxt "tray-icon-context-menu"
 msgid "Disconnected from system service"
 msgstr "Відключено від системної служби"
@@ -2491,8 +2848,8 @@ msgid "Disable split tunneling"
 msgstr "Вимкнути роздільне тунелювання"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "Увімкніть «Повний доступ до диска» для Mullvad VPN у системних налаштуваннях macOS."
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "Увімкніть «Повний доступ до диска» для Warren VPN у системних налаштуваннях macOS."
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2515,8 +2872,8 @@ msgid "Open system settings"
 msgstr "Відкрити налаштування системи"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "Ця помилка може статись, коли сторонній застосунок (не Mullvad) активно оновлює DNS."
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "Ця помилка може статись, коли сторонній застосунок (не Warren) активно оновлює DNS."
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2554,6 +2911,10 @@ msgctxt "troubleshoot"
 msgid "Update your kernel."
 msgstr "Оновіть ядро."
 
+msgctxt "troubleshoot"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "Якщо ці кроки не допомогли, повідомте про проблему на нашому форумі."
+
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "Підключити"
@@ -2561,6 +2922,12 @@ msgstr "Підключити"
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr "Змінити розташування"
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "З’єднання перервано"
 
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
@@ -2638,8 +3005,8 @@ msgid "Anti-censorship"
 msgstr "Обхід цензури"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "Увага: якщо ви активуєте цю опцію, доступ до Інтернету буде можливий лише через Mullvad VPN."
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "Увага: якщо ви активуєте цю опцію, доступ до Інтернету буде можливий лише через Warren VPN."
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2749,8 +3116,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "Різниця між аварійним вимикачем і режимом блокування полягає в тому, що аварійний вимикач запобігає витокам у разі автоматичного перепідключення тунелю, збоїв ПЗ й інших подібних ситуацій."
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "Різниця між аварійним вимикачем і режимом блокування полягає в тому, що аварійний вимикач запобігає витокам у разі автоматичного перепідключення тунелю, збоїв ПЗ й інших подібних ситуацій. Якщо у вас активовано режим блокування, ви маєте бути підключені до сервера Mullvad VPN, щоб отримати доступ до Інтернету. Ручне відключення або вихід із застосунку заблокує з’єднання."
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Різниця між аварійним вимикачем і режимом блокування полягає в тому, що аварійний вимикач запобігає витокам у разі автоматичного перепідключення тунелю, збоїв ПЗ й інших подібних ситуацій. Якщо у вас активовано режим блокування, ви маєте бути підключені до сервера Warren VPN, щоб отримати доступ до Інтернету. Ручне відключення або вихід із застосунку заблокує з’єднання."
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2768,7 +3135,7 @@ msgstr "Функція забезпечує доступ до інших при�
 #. explaining how the user can configure the setting.
 msgctxt "vpn-settings-view"
 msgid "This feature allows you to choose whether to use only IPv4, only IPv6, or allow the app to automatically decide the best option when connecting to a server."
-msgstr "Ця функція дає змогу вибирати протокол, який використовується, — лише IPv4, лише IPv6 — або дозволити застосунку автоматично визначати найкращий варіант під час підключення до сервера."
+msgstr "Ця функція дає змогу вибирати протокол, який використовується, лише IPv4, лише IPv6, або дозволити застосунку автоматично визначати найкращий варіант під час підключення до сервера."
 
 msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
@@ -2790,7 +3157,7 @@ msgstr "Налаштування VPN"
 
 msgctxt "vpn-settings-view"
 msgid "Warning: The malware blocker is not an anti-virus and should not be treated as such, this is just an extra layer of protection."
-msgstr "Увага: блокувальник шкідливого ПЗ не є антивірусом і не повинен сприйматися як такий — це лише додатковий рівень захисту."
+msgstr "Увага: блокувальник шкідливого ПЗ не є антивірусом і не повинен сприйматися як такий, це лише додатковий рівень захисту."
 
 msgctxt "vpn-settings-view"
 msgid "When this feature is enabled it stops the device from contacting certain domains or websites known for distributing ads, malware, trackers and more."
@@ -2801,8 +3168,168 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "Коли ця функція ввімкнена, IPv6 може використовуватися разом з IPv4 у VPN-тунелі для зв’язку з інтернет-сервісами."
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "Якщо у вас активовано режим блокування, ви маєте бути підключені до сервера Mullvad VPN, щоб отримати доступ до Інтернету. Ручне відключення або вихід із застосунку заблокує з’єднання."
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "Якщо у вас активовано режим блокування, ви маєте бути підключені до сервера Warren VPN, щоб отримати доступ до Інтернету. Ручне відключення або вихід із застосунку заблокує з’єднання."
+
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr "%(mbps)d Мбіт/с"
+
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "Дозволити зовнішній DNS"
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "Дозволити зовнішні DNS-сервери"
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr "Пропускна здатність обмежена безкоштовною бета-мережею та контролюється серверами. Це налаштування недоступне під час бета-тестування."
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr "Підключення до одного самостійно розміщеного вихідного сервера, який ви вказуєте вручну, в обхід перевіреного списку серверів. Використовуйте лише той сервер, яким керуєте самі або якому повністю довіряєте: він бачить ваш незашифрований трафік."
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr "Маскувальний домен (необов’язково)"
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr "Користувацький вихідний сервер (для досвідчених)"
+
+msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr "Кінцева точка"
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr "Адреса вихідного сервера у форматі host:port. IPv6 вказуйте у квадратних дужках, наприклад [2001:db8::1]:443."
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "Для досвідчених користувачів. Коли параметр увімкнено, брандмауер перестає блокувати DNS-запити до серверів, відмінних від налаштованого, тому такі команди, як «dig @1.1.1.1», працюють під час підключення."
+
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr "Обмеження пропускної здатності VPN у Мбіт/с, застосовується окремо до вивантаження та завантаження. Допустимий діапазон: %(min)d - %(max)d. Залиште поле порожнім, щоб зняти обмеження. Застосовується негайно."
+
+msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr "Керований"
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr "Макс. пропускна здатність"
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr "Вказуйте, лише якщо на вихідному сервері використовується публічний TLS-сертифікат (режим X.509). Залиште поле порожнім для стандартного режиму необробленого ключа."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr "Відкритий ключ Ed25519 вихідного сервера, 64 шістнадцяткові символи."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr "Ідентифікатор маршрутизації вихідного сервера, 32 шістнадцяткові символи."
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr "Багатоперехідний ключ X25519 вихідного сервера, 64 шістнадцяткові символи."
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "Запити й далі проходять через VPN-тунель, але вибраний вами DNS-сервер їх побачить. Залиште параметр вимкненим, якщо ви не тестуєте віддалене розв’язання DNS."
+
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr "Без обмежень"
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr "Багатоперехідний ключ X25519"
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr "ID виходу"
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr "Відкритий ключ"
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr "Передплачений ваучер бета-доступу прив’язується до вашого облікового запису автоматично. Оплата не потрібна, робити нічого не треба."
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr "Бета-доступ активний до %(date)s."
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr "Поки що не вдалося активувати бета-доступ (ви в мережі?). Спроби повторюються автоматично, а також під час наступного запуску. Ви все одно можете продовжити."
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr "Виникли труднощі? Відвідайте нашу сторінку довідки"
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr "Повторити зараз"
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr "Бета-версія працює в окремій безкоштовній мережі зі швидкістю, обмеженою до %(mbps)d Мбіт/с. Це не остаточні умови обслуговування."
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr "Бета-версія працює в окремій безкоштовній мережі з обмеженою пропускною здатністю. Це не остаточні умови обслуговування."
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr "Ваш бета-доступ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr "Цей вихідний сервер більше не знайдено. Спробуйте перепідключитися."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr "Не вдалося зберегти новий ключ. Повторіть спробу."
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr "Не вдалося встановити довіру до нового ключа."
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr "Ключ знову змінився, перш ніж до нього було встановлено довіру. Перевірте новий ключ і повторіть спробу."
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2826,7 +3353,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "Порт %(wireguard)s"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "Порт %(wireGuard)s"
@@ -2857,10 +3384,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "У разі моніторингу цих пакетів даних %(daita)s значно ускладнює визначення того, які вебсайти ви відвідуєте або з ким спілкуєтеся."
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму та інтеграції його результату в стандартне шифрування WireGuard."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму та інтеграції його результату в стандартне шифрування QUIC."
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2876,8 +3403,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Подвійний VPN використовується, щоб увімкнути DAITA для вибраного розташування"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Подвійний VPN спрямовує ваш трафік з одного сервера WireGuard на інший, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті."
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "Подвійний VPN спрямовує ваш трафік з одного сервера QUIC на інший, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2888,7 +3415,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "Не всі наші сервери підтримують %(daita)s. Тому ми автоматично використовуємо подвійний VPN, щоб функція %(daita)s працювала з будь-яким сервером."
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "Порт"
@@ -2900,21 +3427,21 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "Порт: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "Квантово-стійкий тунель"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
 msgid "Set %(wireguard)s MTU value. Valid range: %(min)d - %(max)d."
-msgstr "Установіть значення MTU для %(wireguard)s. Допустимий діапазон: %(min)d–%(max)d."
+msgstr "Установіть значення MTU для %(wireguard)s. Допустимий діапазон: %(min)d-%(max)d."
 
 msgctxt "wireguard-settings-view"
 msgid "Shadowsocks"
@@ -2929,8 +3456,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "Користувацький порт може мати будь-яке значення в межах дійсних діапазонів: %(portRanges)s."
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "Ця функція робить тунель WireGuard стійким до потенційних атак із використанням квантових комп’ютерів."
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "Ця функція робить тунель QUIC стійким до потенційних атак із використанням квантових комп’ютерів."
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -2939,7 +3466,7 @@ msgstr "UDP-over-TCP"
 #. Text describing the valid port range for a port selector.
 msgctxt "wireguard-settings-view"
 msgid "Valid range: %(min)s - %(max)s"
-msgstr "Допустимий діапазон: %(min)s–%(max)s"
+msgstr "Допустимий діапазон: %(min)s-%(max)s"
 
 #. Text describing the valid port ranges for a port selector.
 #. Available placeholders:
@@ -2994,8 +3521,8 @@ msgstr "На баланс облікового запису додано: %s."
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. Після натискання кнопки «До налаштувань VPN» нижче натисніть значок шестерні поруч із пунктом Mullvad VPN."
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. Після натискання кнопки «До налаштувань VPN» нижче натисніть значок шестерні поруч із пунктом Warren VPN."
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. Щоб увімкнути автопідключення, натисніть перемикач поруч із пунктом «Завжди увімкнений VPN»."
@@ -3153,8 +3680,8 @@ msgstr "Поставивши прапорець, я приймаю ризики 
 msgid "Can't connect?"
 msgstr "Не можете підключитися?"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "Змініть назву й значок застосунку Mullvad VPN на своєму пристрої Android. Це не вплине на значок сповіщень, пов’язаних із Mullvad VPN."
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "Змініть назву й значок застосунку Warren VPN на своєму пристрої Android. Це не вплине на значок сповіщень, пов’язаних із Warren VPN."
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "Зміни в налаштуваннях, пов’язаних із DNS, можуть не набрати чинності одразу через кешовані результати."
@@ -3177,8 +3704,8 @@ msgstr "Підключення..."
 msgid "Continue"
 msgstr "Продовжити"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "Номер облікового запису Mullvad скопійовано в буфер обміну"
+msgid "Copied Warren account number to clipboard"
+msgstr "Номер облікового запису Warren скопійовано в буфер обміну"
 
 msgid "Copied logs to clipboard"
 msgstr "Журнали скопійовано в буфер обміну"
@@ -3322,7 +3849,7 @@ msgid "For details, please see our %s."
 msgstr "Більше інформації тут: %s."
 
 msgid "For the VPN to connect automatically on device startup, the app must have VPN permissions. You can grant these by clicking “Connect” in the map view and selecting “OK” if prompted. Additionally, ensure the app is installed on the internal storage by checking the storage information in the app details in system settings."
-msgstr "Щоб VPN автоматично підключався під час запуску пристрою, застосунку потрібні дозволи на використання VPN. Щоб надати їх, натисніть «Підключити» на карті, а потім — «OK» (за потреби). Також переконайтеся, що застосунок установлено у внутрішній пам’яті пристрою — це можна побачити у відомостях про застосунок у налаштуваннях системи."
+msgstr "Щоб VPN автоматично підключався під час запуску пристрою, застосунку потрібні дозволи на використання VPN. Щоб надати їх, натисніть «Підключити» на карті, а потім «OK» (за потреби). Також переконайтеся, що застосунок установлено у внутрішній пам’яті пристрою, це можна побачити у відомостях про застосунок у налаштуваннях системи."
 
 msgid "Go to VPN settings"
 msgstr "До налаштувань VPN"
@@ -3378,8 +3905,8 @@ msgstr "Помилка конфігурації IPv6, спробуйте змі�
 msgid "Invalid or missing value \"%1$s\""
 msgstr "Недопустиме або відсутнє значення «%1$s»"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму й інтеграції його результату в стандартне шифрування WireGuard. Цей додатковий крок використовує приблизно 500 КіБ трафіку щоразу, коли створюється новий тунель."
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму й інтеграції його результату в стандартне шифрування QUIC. Цей додатковий крок використовує приблизно 500 КіБ трафіку щоразу, коли створюється новий тунель."
 
 msgid "Less than a day left on this account"
 msgstr "На балансі облікового запису залишилося менше ніж один день"
@@ -3408,8 +3935,8 @@ msgstr "Підтримує постійне підключення пристр�
 msgid "More actions"
 msgstr "Додаткові дії"
 
-msgid "Mullvad services unavailable"
-msgstr "Сервіси Mullvad недоступні"
+msgid "Warren services unavailable"
+msgstr "Сервіси Warren недоступні"
 
 msgid "Multihop is disabled"
 msgstr "Подвійний VPN вимкнено"
@@ -3543,8 +4070,8 @@ msgstr "Пошук"
 msgid "Send email"
 msgstr "Надіслати лист"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "Установіть значення MTU для WireGuard. Допустимий діапазон: %1$d–%2$d."
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "Установіть значення MTU для QUIC. Допустимий діапазон: %1$d-%2$d."
 
 msgid "Set as multihop entry"
 msgstr "Установити як вхід для подвійного VPN"
@@ -3604,16 +4131,16 @@ msgid "The Lockdown mode is called \"Block connections without VPN\" in the Andr
 msgstr "У системних налаштуваннях Android режим блокування називається «Блокувати з’єднання без VPN». Він допомагає мінімізувати витоки, хоча має деякі обмеження, про які ви можете прочитати"
 
 msgid "The \"Current\" method represent which method the app is using to reach the API."
-msgstr "«Поточний» метод — це метод, який застосунок використовує для доступу до API."
+msgstr "«Поточний» метод, це метод, який застосунок використовує для доступу до API."
 
 msgid "The app is blocking internet, please disconnect first"
 msgstr "Застосунок блокує Інтернет, спочатку відключіться"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "Застосунку не вдалося створити обліковий запис через відсутність доступу до API Mullvad."
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "Застосунку не вдалося створити обліковий запис через відсутність доступу до API Warren."
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "Не вдалося виконати вхід в застосунок через відсутність доступу до API Mullvad."
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "Не вдалося виконати вхід в застосунок через відсутність доступу до API Warren."
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "Локальний DNS-сервер не працюватиме, якщо в налаштуваннях VPN не ввімкнено «Обмін даними в локальній мережі»."
@@ -3621,8 +4148,8 @@ msgstr "Локальний DNS-сервер не працюватиме, якщ�
 msgid "The selected %s port is not supported, please change it under"
 msgstr "Вибраний порт %s не підтримується, змініть його в"
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "Ці методи можуть бути корисними в ситуаціях, коли у вас заблоковано доступ до Mullvad. Якщо вибрано «Автоматично», застосунок намагатиметься використовувати всі методи, доки один із них не спрацює."
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "Ці методи можуть бути корисними в ситуаціях, коли у вас заблоковано доступ до Warren. Якщо вибрано «Автоматично», застосунок намагатиметься використовувати всі методи, доки один із них не спрацює."
 
 msgid "This address has already been entered."
 msgstr "Цю адресу вже введено."
@@ -3648,11 +4175,11 @@ msgstr "Для додавання розташувань у список нат�
 msgid "To create a custom list press the \"+\""
 msgstr "Щоб створити користувацький список, натисніть «+»"
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "Щоб видалити свій обліковий запис Mullvad VPN, введіть номер облікового запису нижче."
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "Щоб видалити свій обліковий запис Warren VPN, введіть номер облікового запису нижче."
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "Щоб переконатися, що у вас установлена найбезпечніша версія, і повідомляти про будь-які проблеми з поточною версією, застосунок автоматично перевіряє версії. Для цього дані про версію застосунку та версію Android надсилаються на сервери Mullvad. Mullvad веде підрахунок кількості використаних версій застосунку та Android. Ці дані ніколи не зберігаються і не використовуються в спосіб, що дозволяє ідентифікувати вашу особу."
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "Щоб переконатися, що у вас установлена найбезпечніша версія, і повідомляти про будь-які проблеми з поточною версією, застосунок автоматично перевіряє версії. Для цього дані про версію застосунку та версію Android надсилаються на сервери Warren. Warren веде підрахунок кількості використаних версій застосунку та Android. Ці дані ніколи не зберігаються і не використовуються в спосіб, що дозволяє ідентифікувати вашу особу."
 
 msgid "Toggle VPN"
 msgstr "Вимк./увімк. VPN"
@@ -3675,11 +4202,11 @@ msgstr "Не вдалося підключитися до API"
 msgid "Unable to reach API, %s"
 msgstr "Не вдалося підключитися до API, %s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "Не вдалося запустити тунельне з’єднання. Вимкніть опцію «Завжди увімкнений VPN» перед використанням Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "Не вдалося запустити тунельне з’єднання. Вимкніть опцію «Завжди увімкнений VPN» перед використанням Warren VPN."
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "Не вдалося запустити тунельне з’єднання. Вимкніть опцію «Завжди увімкнений VPN» для <b>%s</b> перед використанням Mullvad VPN."
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "Не вдалося запустити тунельне з’єднання. Вимкніть опцію «Завжди увімкнений VPN» для <b>%s</b> перед використанням Warren VPN."
 
 msgid "Unable to verify account number, please contact support"
 msgstr "Не вдалося перевірити номер облікового запису, зверніться до служби підтримки"
@@ -3748,7 +4275,7 @@ msgid "We are still verifying your purchase, this might take some time. Your tim
 msgstr "Ми досі перевіряємо вашу покупку, це може зайняти певний час. Щойно перевірку буде успішно завершено, час буде додано."
 
 msgid "We were unable to start the payment process, please make sure you have the latest version of Google Play."
-msgstr "Нам не вдалося запустити процес оплати — переконайтесь, що у вас установлена остання версія Google Play."
+msgstr "Нам не вдалося запустити процес оплати, переконайтесь, що у вас установлена остання версія Google Play."
 
 msgid "We were unable to start the payment process, please try again later."
 msgstr "Нам не вдалося запустити процес оплати, повторіть спробу пізніше."
@@ -3759,14 +4286,14 @@ msgstr "Погода"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "Ласкаво просимо! Цей пристрій тепер називається <b>«%s»</b>."
 
-msgid "WireGuard port"
-msgstr "Порт WireGuard"
+msgid "QUIC port"
+msgstr "Порт QUIC"
 
 msgid "Yes, log out device"
 msgstr "Так, вийти з облікового запису на пристрої"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "Ви збираєтеся видалити обліковий запис Mullvad VPN."
+msgid "You are about to delete your Warren VPN account."
+msgstr "Ви збираєтеся видалити обліковий запис Warren VPN."
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "Щоб продовжити використовувати VPN, додайте час у розділі «Обліковий запис» або на вебсайті."
@@ -3857,3 +4384,842 @@ msgstr[1] "Ви втратите %d дні, що залишились."
 msgstr[2] "Ви втратите %d днів, що залишились."
 msgstr[3] "Ви втратите %d дня, що залишились."
 
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "Країна входу"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "Країна виходу"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "Очікуйте приблизно половину пропускної здатності одиночного переходу в обмін на неможливість пов'язати IP користувача з IP призначення. За замовчуванням вимкнено; вмикається опціонально для приватності."
+
+msgctxt "warren-multi-hop-view"
+msgid "Optional: pin the entry and exit relay countries (ISO 3166 alpha-2 codes such as fr, de, se). Leave empty for auto-pick."
+msgstr "Необов'язково: закріпіть країни вхідного та вихідного реле (коди ISO 3166 alpha-2, такі як fr, de, se). Залиште порожнім для автоматичного вибору."
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "Перезапустіть демон Warren після зміни цього параметра."
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "Маршрутизує ваш трафік через два реле Warren з використанням наскрізного шифрування HPKE. Вхідне реле бачить лише зашифрований текст; вихідне бачить лише розшифроване корисне навантаження, ніколи вашу IP. Схема натхненна Apple Private Relay."
+
+msgctxt "warren-multi-hop-view"
+msgid "Single-hop Warren active. Full bandwidth, identical privacy guarantees as the single-hop default mode."
+msgstr "Активний single-hop Warren. Повна пропускна здатність, ідентичні гарантії приватності, як у стандартному режимі single-hop."
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "Компроміс: приблизно половина пропускної здатності single-hop. За замовчуванням вимкнено; вмикається опціонально для приватності. Після зміни цього параметра потрібен перезапуск демона."
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "Warren multi-hop"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "Коли увімкнено, трафік маршрутизується через два реле Warren (вхід, потім вихід) з використанням наскрізного шифрування HPKE між клієнтом та виходом. Вхідне реле бачить лише зашифрований текст; вихідне бачить лише розшифроване корисне навантаження, ніколи IP користувача."
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "авто"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "Скопійовано в буфер обміну"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "Копіювати в буфер обміну"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "VPN без компромісів щодо приватності. Без логів. Без облікових записів. Без відстеження. Лише пропускна здатність."
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "Усе готово"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "Створити мій новий гаманець (рекомендовано)"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "Перевірити знову"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "Перевірка... (натисніть, щоб оновити зараз)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "Налаштування завершено. Виберіть країну та підключіться до Warren."
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "Продовжити"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "Не вдалося перевірити статус підписки. Спробуйте знову."
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "У демона ще немає мнемонічної фрази, увійдіть або перезапустіть застосунок."
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "Демон відхилив мнемонічну фразу. Перевірте орфографію та кількість слів і спробуйте знову."
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Не вдалося отримати мнемонічну фразу від демона."
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "Почати"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "У мене вже є підписка"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "Я записав її в надійному місці."
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "Імпортувати наявну мнемонічну фразу"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "Активну підписку не знайдено. Спочатку придбайте її."
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "Вставте свою 12-слівну мнемонічну фразу BIP39, щоб відновити наявну Warren-ідентичність."
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "Виберіть країну та підключіться"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "Виберіть захист, який потрібен вам з першого дня. Усі ці параметри можна змінити пізніше в Налаштуваннях."
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "Налаштування приватності"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "Відновити гаманець"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "Пропустити майстра (для досвідчених)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "Переглянути тарифи (відкриється у браузері)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren використовує некастодіальний гаманець (Ed25519 + BIP39). Ключі належать вам; ми ніколи їх не бачимо."
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "Ласкаво просимо до Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "Запишіть ці 12 слів по порядку та зберігайте їх у надійному місці. Це єдиний спосіб відновити вашу підписку, якщо ви втратите доступ до цього пристрою."
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "У вас ще немає активної підписки. Тарифи починаються від кількох євро на місяць, без повторюваних платежів, без створення облікового запису, оплата за використання."
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "Ваш гаманець Warren"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "Ваша підписка"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• Постійна обфускація (за замовчуванням УВІМКНЕНО): мімікрія під HTTP/3, щоб трафік зливався зі звичайним."
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (за замовчуванням ВИМКНЕНО): додає паддинг для протидії аналізу трафіку ML. ~5-15 % пропускної здатності."
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (за замовчуванням ВИМКНЕНО): маршрутизація через два реле для неможливості пов'язати вхід і вихід."
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "Подробиці криптографічної невідповідності"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "ID виходу"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "Розташування"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "Новий спостережений ключ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "Раніше закріплений ключ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "Обробка вашого вибору, зачекайте."
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "Відхилити (від'єднати)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "Відхилити та залишатись від'єднаним"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "Повідомити Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "Ідентичність сервера змінилася"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "Сервер виходу Warren, якому ви раніше довіряли, тепер представляє іншу криптографічну ідентичність."
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "Зазвичай це означає, що оператор ротував ключ, але може також вказувати на те, що сервер було замінено або скомпрометовано. Відхиліть, якщо не очікували змін."
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "Довіряти новому ключу"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "Мімікрія HTTP/3 (активна)"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "Остання"
+
+msgctxt "warren-status-view"
+msgid "Legacy obfuscation methods (Shadowsocks, UDP-over-TCP, QUIC, LWO) do not apply when warren_mode is on."
+msgstr "Застарілі методи обфускації (Shadowsocks, UDP-over-TCP, QUIC, LWO) не застосовуються, коли warren_mode увімкнено."
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "Обфускація"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "Перепідключення"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "неактивна"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "ніколи"
+
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "авто"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "Не вдалося зіставити: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "Відкриває публічний порт на підключеному вихідному сервері та перенаправляє його на ваш пристрій. Корисно для однорангових застосунків, обміну файлами або власних сервісів."
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "Переадресація портів"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "Порт має бути в діапазоні від 49152 до 65535 або порожнім для автоматичного вибору."
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "Бажаний порт"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "Протокол"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "Публічний порт: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "Оновлення через %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "Статус: активно"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "Статус: запит зіставлення порту…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "Статус: очікування активного тунельного з'єднання для налаштування переадресації порту."
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "Сервер може призначити інший порт, якщо бажаний вже зайнятий. Зміни застосовуються негайно, без повторного підключення."
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "Резервне копіювання ключів"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "Служба відхилила мнемонічну фразу. Перевірте правопис і кількість слів, потім спробуйте ще раз."
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "Готово"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "Введіть свою мнемонічну фразу BIP39 із 12 слів (або 24 слів), розділених пробілами."
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "Не вдалося отримати мнемонічну фразу від служби."
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "Я записав(-ла) її в надійному місці."
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "Я розумію, що це назавжди замінить мій поточний профіль."
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "Профіль відновлено. Ваш новий гаманець Warren тепер активний."
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "Ключі"
+
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "Мнемонічна фраза недоступна. Спершу увійдіть або відновіть профіль."
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "Відновити з мнемонічної фрази"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "Відновити профіль"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "Відновлення…"
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "Показати мнемонічну фразу"
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "УВАГА: Це ЗАМІНИТЬ ваш поточний профіль. Будь-яку підписку, прив’язану до поточного профілю, буде неможливо відновити."
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "Запишіть її на папері. Ніколи не зберігайте її в хмарі, на скриншоті чи в електронній пошті."
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "Ваша мнемонічна фраза з 12 слів, ЄДИНИЙ спосіб відновити ваш профіль Warren на іншому пристрої. Якщо її втратити, підписку буде неможливо відновити."
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "слів"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "Зберегти мою фразу"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "Я зберіг свою фразу відновлення й розумію, що цей обліковий запис буде видалено з цього пристрою."
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "Якщо ви не зберегли свою фразу відновлення, вашу підписку буде втрачено назавжди."
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "Вийти з цього облікового запису?"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "Під час виходу цей обліковий запис видаляється з цього пристрою. Немає ні електронної пошти, ні пароля для повторного входу, ваша фраза відновлення є ЄДИНИМ способом його відновити."
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "Збережіть свою фразу відновлення"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "Не вдалося прочитати нову фразу відновлення. Спробуйте ще раз."
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "Введіть свою фразу відновлення з 12 слів, розділених пробілами, щоб відновити обліковий запис на цьому пристрої."
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "У мене вже є обліковий запис"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "Я записав свою фразу відновлення в надійному місці."
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "Недійсна фраза відновлення. Перевірте слова та їхній порядок, потім спробуйте ще раз."
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "Відновити обліковий запис"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "Відновіть свій обліковий запис"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren використовує некастодіальний гаманець: ваш обліковий запис, це фраза відновлення з 12 слів, якою володієте лише ви."
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "Ласкаво просимо до Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "Запишіть ці 12 слів і зберігайте їх у надійному місці. Це єдиний спосіб відновити ваш обліковий запис, якщо ви втратите цей пристрій."
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "Я завершив оплату"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "Сеанс неактивний"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "Ваш сеанс завершено. Щоб під'єднатися знову, вам потрібно буде ввійти заново."
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "Виявлено невідповідність ідентичності сервера. Відкритий ключ вихідного вузла змінився."
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "Автоматичне перемикання"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "Автоматично перемикатися на інший вихідний сервер, якщо поточний стає недоступним."
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "Цей параметр набуває чинності негайно, без перезапуску служби."
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL-адреса сервера warren-api. Формат http(s)://host:port. Порожнє = не задано (повернення до типового бекенда). Перезапустіть службу, щоб зміна набула чинності."
+
+msgid "OK"
+msgstr "OK"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "Скопіювати відкритий ключ"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "Сховати відкритий ключ"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "Показати відкритий ключ"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "Резервне копіювання ключів"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "Відкритий ключ"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "Використовується мережа CDN77 від Datapacket. CDN бачить лише ретрансльований трафік TLS, але не його вміст."
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "Застосунок взаємодіє із сервером Warren API через %(domainFronting)s."
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "Це може бути корисним, коли прямий доступ та інші методи заблоковані цензурою."
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "За допомогою методу доступу %(domainFronting)s застосунок звертається до Warren API через CDN, змішуючи трафік із великою кількістю іншого інтернет-трафіку, що ускладнює цензуру."
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "Ви ввійшли з недійсним відкритим ключем. Будь ласка, вийдіть і спробуйте інший."
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "Перевірка… (натисніть, щоб оновити зараз)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "Ось ваш відкритий ключ. Збережіть його!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "Переадресація портів: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "Multihop (2 переходи)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "ВИХІДНИЙ СЕРВЕР ЗМІНЕНО"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "Ваш попередній вихідний сервер став недоступним. Warren автоматично перенаправив вас через альтернативний сервер."
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "Ваш сервер оновлюється. Warren автоматично переключив вас на інший сервер, жодних дій не потрібно."
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ Додати порт"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "Кожен доданий порт відкривається на вихідному сервері та переадресовується на той самий порт на вашому пристрої. Зміни застосовуються негайно, повторне підключення не потрібне."
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "Остання зміна порту перед тимчасовим блокуванням. Зачекайте трохи, перш ніж змінювати його знову."
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "Досягнуто максимуму у %(max)d портів"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "Поки що немає портів. Додайте порт, щоб відкрити його на вихідному сервері."
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "Порт"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "Порт має бути в діапазоні від 49152 до 65535."
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "Видалити порт"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "Статус: очікування активного підключення до тунелю для налаштування переадресації портів."
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "Цей порт уже є у вашому списку."
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "Забагато змін портів. Ви зможете змінити порти знову через %(countdown)s."
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "застосування…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "помилка"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "немає доступних портів"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "не дозволено"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "відкрито: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "очікування…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "порт"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "порт зайнятий"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "запит…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "Схоже, ви ввели відкритий ключ замість коду ваучера. Якщо ви хочете змінити активний обліковий запис, спершу вийдіть."
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "Переадресація портів"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "Повторити початкове налаштування"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "Видалено записів закріплених ключів вихідних серверів: %(count)s."
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "Кожен вихідний сервер Warren, до якого ви раніше підключалися, буде повторно закріплено під час наступного підключення (Trust On First Use)."
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "Таблицю закріплень очищено"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "Скинути"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "Скинути все"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "Не вдалося скинути"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "Скинути закріплені ключі вихідних серверів"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "Скинути закріплені ключі вихідних серверів?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "Доки не встановлено нові закріплення, захист від виявлення підміни ненадовго вимкнено: зловмисник, який підмінив вихідний сервер між скиданнями, не буде позначений під час першого повторного підключення."
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL-адреса Warren api"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "Multihop"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Запитано вхід на форум спільноти Warren. Застосунок підпише одноразовий запит ключем вашого гаманця, щоб підтвердити, що це ви."
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "Підтвердити вхід"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "Скасувати"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "Доступ до форуму потребує підписки Warren. З цього гаманця підписку ніколи не оформлювали."
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "Електронна пошта й пароль не використовуються. Ви відображаєтесь під анонімним іменем, яке не можна пов'язати з вашим обліковим записом Warren. Підтверджуйте вхід, лише якщо ви самі його розпочали."
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "Увійти на форум спільноти Warren?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "Не вдалося увійти. Повторіть спробу за мить."
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "Підписуємо, зачекайте."
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "Форум спільноти"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "Підключення..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "З'єднання встановлено"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "Шифрування вашого з'єднання"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "Випадкове місцезнаходження"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "Ви захищені"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "Вас видно"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "Ваше з'єднання не зашифроване"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "Відключення..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "Підключення триває"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "Долучити журнали"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "Долучити журнали до звіту про помилку?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "Не вдалося долучити журнали. Повторіть спробу за мить."
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "Скасувати"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "Долучати журнали до звіту про помилку може лише його автор."
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "Надсилання, зачекайте."
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "Файл журналу завеликий, щоб його долучити."
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Журнали анонімізуються: адреси гаманців і особисті дані вилучаються. Вони надходять приватно до служби підтримки Warren і ніколи не з'являються публічно на форумі. Перед підтвердженням ви можете точно побачити, що буде надіслано."
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "Цей запит застарів. Почніть знову зі сторінки форуму."
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "Переглянути журнали"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "Ваш звіт про помилку на форумі Warren (тема %(topicId)d) просить долучити технічні журнали застосунку, щоб допомогти діагностувати проблему."
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "Ваш новий звіт про помилку, який ви створюєте на форумі Warren, просить долучити технічні журнали застосунку, щоб допомогти діагностувати проблему."
+
+#. Status line confirming traffic obfuscation is on.
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr "Обфускація увімкнена."
+
+#. Status line shown if traffic obfuscation is off.
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr "Обфускація наразі неактивна."
+
+#. Explains what obfuscation does and why it cannot be turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
+msgstr "Щоб обійти цензуру, Warren маскує тунель під звичайний перегляд вебсторінок: у мережі він виглядає як звичайний трафік браузера до звичайного сайту (HTTP/3, порт 443). Обфускацію не можна вимкнути, адже трафік, який вирізняється, можна заблокувати."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "%(daita)s додає мережевий шум і робить усі пакети однакового розміру, тому набагато важче визначити, які сайти ви відвідуєте та з ким спілкуєтеся."
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
+msgstr "%(daita)s не активна на поточному сервері: це підключення нею не захищене. Перепідключіться або виберіть інше розташування."
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "Навіть у зашифрованому вигляді пакети даних, що надходять на ваш пристрій і виходять із нього, можуть бути проаналізовані ШІ, щоб розкрити вашу активність."
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "Примітка: це збільшує мережевий трафік і може погіршити швидкість, затримку та час роботи від батареї. Використовуйте обережно на тарифах з обмеженнями."

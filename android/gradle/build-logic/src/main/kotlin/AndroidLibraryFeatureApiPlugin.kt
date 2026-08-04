@@ -23,7 +23,7 @@ import utilities.libs
 class AndroidLibraryFeatureApiPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            apply(plugin = "mullvad.android-library")
+            apply(plugin = "warren.android-library")
             apply(plugin = "org.jetbrains.kotlin.plugin.parcelize")
 
             dependencies {

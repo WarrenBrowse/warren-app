@@ -216,7 +216,7 @@ fn write_backup(backup: &Config) -> Result<()> {
         .map_err(|e| Error::WriteResolvConf(RESOLV_CONF_BACKUP_PATH, e))
 }
 
-fn restore_from_backup() -> Result<()> {
+pub(super) fn restore_from_backup() -> Result<()> {
     match fs::read_to_string(RESOLV_CONF_BACKUP_PATH) {
         Ok(backup) => {
             log::info!("Restoring DNS state from backup");
@@ -233,5 +233,51 @@ fn restore_from_backup() -> Result<()> {
             Ok(())
         }
         Err(error) => Err(Error::ReadResolvConf(RESOLV_CONF_BACKUP_PATH, error)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::path::Path;
+
+    /// The crash rescue must put the host's own resolvers back: a machine
+    /// whose daemon cannot restart would otherwise keep resolving against a
+    /// dead in-tunnel address even after the firewall is reset.
+    #[test]
+    #[ignore = "rewrites /etc/resolv.conf; run in a throwaway container"]
+    fn restore_from_backup_reinstates_the_host_resolv_conf() {
+        fs::write(RESOLV_CONF_BACKUP_PATH, "nameserver 192.0.2.53\n").expect("write backup");
+        fs::write(RESOLV_CONF_PATH, "nameserver 10.64.0.1\n").expect("write tunnel dns");
+
+        restore_from_backup().expect("restore");
+
+        let restored = fs::read_to_string(RESOLV_CONF_PATH).expect("read restored");
+        assert!(
+            restored.contains("192.0.2.53"),
+            "resolv.conf must carry the pre-tunnel resolver again, got: {restored}"
+        );
+        assert!(
+            !restored.contains("10.64.0.1"),
+            "the dead in-tunnel resolver must be gone, got: {restored}"
+        );
+        assert!(
+            !Path::new(RESOLV_CONF_BACKUP_PATH).exists(),
+            "a consumed backup must be removed so a later run cannot replay it"
+        );
+    }
+
+    /// A machine that never had a tunnel up (no backup file) must be left
+    /// untouched: the rescue is idempotent and safe to run blindly.
+    #[test]
+    #[ignore = "rewrites /etc/resolv.conf; run in a throwaway container"]
+    fn restore_without_backup_leaves_resolv_conf_alone() {
+        let _ = fs::remove_file(RESOLV_CONF_BACKUP_PATH);
+        fs::write(RESOLV_CONF_PATH, "nameserver 192.0.2.1\n").expect("write resolv.conf");
+
+        restore_from_backup().expect("restore must be a no-op");
+
+        let untouched = fs::read_to_string(RESOLV_CONF_PATH).expect("read");
+        assert_eq!(untouched, "nameserver 192.0.2.1\n");
     }
 }

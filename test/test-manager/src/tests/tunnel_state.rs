@@ -356,6 +356,8 @@ pub async fn test_connected_state(
                     entry_endpoint: None,
                     tunnel_interface: _,
                     daita: _,
+                    effective_mtu: _,
+                    tunnel_type: _,
                 },
             ..
         } => {

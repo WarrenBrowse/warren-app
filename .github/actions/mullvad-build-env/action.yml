@@ -1,5 +1,5 @@
-name: "Mullvad build env"
-description: "Set up build environment for Mullvad"
+name: "Warren build env"
+description: "Set up build environment for Warren (fork of Mullvad)"
 inputs:
   rust-toolchain:
     description: "Rust toolchain (stable, beta, nightly, or version)"
@@ -20,9 +20,176 @@ inputs:
       will be cached as well.
     default: "false"
     required: false
+  warren-core-token:
+    description: >-
+      Deprecated alias for engine-token, kept for back-compat with any call-site
+      not yet migrated. Prefer engine-token. If both are set, engine-token wins.
+    default: ""
+    required: false
+  skip-warren-core:
+    description: >-
+      Set to 'true' to skip checking out the sibling repos (warrenguard,
+      warren-sdk-rs, warren-contract). Only safe for jobs that do not invoke
+      cargo (e.g., shellcheck, yamllint).
+    default: "false"
+    required: false
+  engine-token:
+    description: >-
+      Primary token: a PAT with read access to the WarrenBrowse org, used to
+      clone the sibling path-dep repos (warrenguard, warren-sdk-rs,
+      warren-contract). Configure as secrets.WARREN_CORE_RO_TOKEN in workflow
+      callers (the secret name is historical; the app no longer depends on
+      warren-core). Falls back to the deprecated warren-core-token input when
+      left empty (a composite-action input default cannot reference another
+      input, so the fallback is applied in the checkout steps).
+    default: ""
+    required: false
 runs:
   using: "composite"
   steps:
+    - name: Ensure rustup is on PATH
+      # The self-hosted Linux runner ships rustup preinstalled for the runner
+      # user (~/.cargo/bin) but does not export it to the job PATH, so the bare
+      # `rustup` calls below (override/component/target add) fail with exit 127.
+      # Prepend it here. Harmless where rustup is already on PATH (GitHub-hosted).
+      shell: bash
+      run: |
+        if [ -d "$HOME/.cargo/bin" ]; then
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        fi
+
+    - name: Stamp product version from the release tag
+      # The daemon and the Android app bake their version at COMPILE time from
+      # dist-assets/{desktop-product-version,android-version-name}.txt (see
+      # mullvad-version/build.rs + src/main.rs). On a tag build, force those files
+      # to the tag so the shipped binary reports its true version. Without this a
+      # forgotten manual bump ships a version-mismatched build with two failure
+      # modes that both break update detection: desktop gets a "-dev-<hash>"
+      # suffix (build.rs adds it when HEAD is not the file-derived tag) and a dev
+      # version disables the update notification entirely; Android reports the
+      # stale version, which then reads as a false "update available". Tag builds
+      # only; dev/PR/scheduled builds keep the committed value.
+      #
+      # Both release channels are stamped: the version is the tag with its
+      # channel prefix stripped (`v1.2.3` and `beta-v0.0.1` -> 1.2.3 / 0.0.1).
+      # A beta-blind match here would silently fall back to the committed file.
+      shell: bash
+      run: |
+        ref="${GITHUB_REF_NAME:-}"
+        v="${ref#beta-}"
+        v="${v#v}"
+        if [ "${GITHUB_REF_TYPE:-}" = "tag" ] && printf '%s' "$v" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+'; then
+          printf '%s\n' "$v" > dist-assets/desktop-product-version.txt
+          printf '%s\n' "$v" > dist-assets/android-version-name.txt
+          echo "Stamped product version '$v' from tag '$ref'"
+        else
+          echo "Not a release tag build (ref_type='${GITHUB_REF_TYPE:-}' ref='$ref'); keeping the committed version."
+        fi
+
+    - name: Read pinned warrenguard SHA
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      id: warrenguard-pin
+      shell: bash
+      run: echo "sha=$(cat .warrenguard-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warrenguard (sibling engine repo, path-dep target)
+      # The AGPL engine lives in its own repo; the app's tunnel crates path-dep
+      # ../warrenguard/crates/*. No quinn-fork setup here: the app builds the
+      # engine against the warren-quinn git-dep via the workspace
+      # [patch.crates-io], so warrenguard's own gitignored vendor/ is not needed.
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+        WARRENGUARD_SHA: ${{ steps.warrenguard-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warrenguard"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warrenguard.git" "$dest"
+        git -C "$dest" checkout --detach "$WARRENGUARD_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warrenguard.git"
+
+    - name: Read pinned warren-contract SHA
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      id: warren-contract-pin
+      shell: bash
+      run: echo "sha=$(cat .warren-contract-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warren-contract (sibling contract repo, path-dep target)
+      # The app path-deps ../warren-contract (the shared SS58 codec + X-Warren
+      # signing + HTTP /v1 DTOs) and ../warren-contract/warren-discovery. Same
+      # sibling clone pattern as warrenguard.
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+        WARREN_CONTRACT_SHA: ${{ steps.warren-contract-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-contract"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warren-contract.git" "$dest"
+        git -C "$dest" checkout --detach "$WARREN_CONTRACT_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-contract.git"
+
+    - name: Read pinned warren-sdk-rs SHA
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      id: warren-sdk-pin
+      shell: bash
+      run: echo "sha=$(cat .warren-sdk-version)" >> "$GITHUB_OUTPUT"
+
+    - name: Checkout warren-sdk-rs (sibling SDK repo, path-dep target)
+      # The app path-deps ../warren-sdk-rs/crates/{warren-api,warren-identity}
+      # (signed account client + identity). Same sibling clone pattern.
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+        WARREN_SDK_SHA: ${{ steps.warren-sdk-pin.outputs.sha }}
+      run: |
+        set -euo pipefail
+        dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-sdk-rs"
+        rm -rf "$dest"
+        git clone --filter=blob:none \
+          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warren-sdk-rs.git" "$dest"
+        git -C "$dest" checkout --detach "$WARREN_SDK_SHA"
+        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-sdk-rs.git"
+
+    - name: Warn if the sibling checkout was skipped
+      if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token == '' && inputs.warren-core-token == '' }}
+      shell: bash
+      run: |
+        echo "::warning::sibling repos were not checked out (no engine-token input)."
+        echo "::warning::cargo commands relying on path-deps to ../warrenguard, ../warren-sdk-rs or ../warren-contract will fail."
+        echo "::warning::Pass engine-token from the WARREN_CORE_RO_TOKEN secret in the calling workflow."
+
+    - name: Ensure rustup is available (self-heal rust-cache cache-bin deletion)
+      shell: bash
+      run: |
+        if command -v rustup >/dev/null 2>&1; then
+          echo "rustup present: $(rustup --version 2>/dev/null | head -1)"
+          exit 0
+        fi
+        # Swatinem/rust-cache's cache-bin deletes ~/.cargo/bin/rustup on the
+        # persistent self-hosted runners (see the Setup Rust cache step). cache-bin
+        # is false here, but a runner can already be missing rustup from an earlier
+        # run, which surfaces as "rustup: command not found" in the steps below.
+        # Reinstall it for this job only (no machine-PATH change); the toolchain
+        # itself comes from rust-toolchain.toml on first cargo/rustup use.
+        echo "::warning::rustup not found on this runner; reinstalling for the job"
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          curl -sSfL https://win.rustup.rs/x86_64 -o "$RUNNER_TEMP/rustup-init.exe"
+          "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --no-modify-path --profile minimal
+          printf '%s\\.cargo\\bin\n' "$USERPROFILE" >> "$GITHUB_PATH"
+        else
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
+            | sh -s -- -y --default-toolchain none --no-modify-path --profile minimal
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+        fi
+
     - name: Override Rust toolchain
       if: ${{ inputs.rust-toolchain != 'stable' }}
       shell: bash
@@ -33,11 +200,68 @@ runs:
       shell: bash
       run: rustup component add ${{ inputs.rustup-components }}
 
-    # Install 32-bit target for NSIS plugins
-    - name: Install Rust 32-bit x86 target
+    - name: Authorize cargo to fetch private WarrenBrowse git-deps over HTTPS
+      # CI authenticates to GitHub with an HTTPS token, not an SSH key, so cargo
+      # git fetches of private WarrenBrowse repos fail without a credential.
+      # Rewrite BOTH forms to https+token for cargo's git CLI (its built-in
+      # fetcher ignores url.insteadOf, hence CARGO_NET_GIT_FETCH_WITH_CLI):
+      #   - ssh://git@github.com/WarrenBrowse/  -> the warren-quinn fork
+      #     ([patch.crates-io] points quinn at it via an ssh:// git-dep).
+      #   - https://github.com/WarrenBrowse/    -> any https git-dep on a private
+      #     repo that is NOT redirected to a sibling path in the current cargo
+      #     workspace. Notably `warren_relays_verify`, built from the standalone
+      #     ../warren-contract/warren-discovery workspace by the exit-list bake
+      #     step, pulls `warrenguard-multihop` from git (the app's [patch] does
+      #     not apply there), so its clone of warrenguard.git needs the token.
+      #     Without this it fails "could not read Username for https://github.com"
+      #     on any runner whose ~/.cargo/git cache does not already hold the rev.
+      # Scoped to the WarrenBrowse org only; the bundled runner git is 2.30.x so
+      # GIT_CONFIG_* env is unavailable, `git config --global` is the portable form.
+      if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
+      shell: bash
+      env:
+        ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
+      run: |
+        # Idempotent across runs: ~/.gitconfig PERSISTS on a self-hosted runner,
+        # so a plain `git config` (overwrite) on a key a prior run already made
+        # multi-valued fails "cannot overwrite multiple values". Reset the key
+        # first (--unset-all, tolerate absent on the very first run), then --add
+        # both rewrites.
+        git config --global --unset-all url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf 2>/dev/null || true
+        git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
+        git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "https://github.com/WarrenBrowse/"
+        echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
+
+    - name: Assert Cargo.lock pins the quinn fork (prevents silent quinn-patch drop)
+      # GUARD: the app consumes the quinn fork as the `warren-quinn` git-dep via
+      # [patch.crates-io]. If the lock re-resolves to upstream quinn (cargo only
+      # enforces --locked on signed builds), the patch is silently dropped and
+      # the app ships WITHOUT the Warren GSO/obfuscation patches. Fail loudly.
+      if: ${{ inputs.engine-token != '' || inputs.warren-core-token != '' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        if ! grep -Eq 'warren-quinn' Cargo.lock; then
+          echo "::error::Cargo.lock does not pin the warren-quinn fork; the [patch.crates-io] git-dep is not locked. Regenerate Cargo.lock with the quinn-fork present (cargo update -p quinn -p quinn-proto -p quinn-udp) and commit it."
+          exit 1
+        fi
+        if ! cargo metadata --locked --format-version=1 >/dev/null; then
+          echo "::error::Cargo.lock is out of sync with the workspace; regenerate it (cargo update -w) with the quinn-fork present and commit it."
+          exit 1
+        fi
+        echo "coherence OK: Cargo.lock pins the Warren quinn fork."
+
+    # x86 for NSIS plugins; aarch64 for the --universal (x64+ARM64) Windows build
+    - name: Install Rust Windows targets
       if: runner.os == 'Windows'
       shell: bash
-      run: rustup target add i686-pc-windows-msvc
+      run: rustup target add i686-pc-windows-msvc aarch64-pc-windows-msvc
+
+    # Universal macOS builds (build.sh --universal) link both arch slices
+    - name: Install Rust x86_64 target (macOS universal builds)
+      if: runner.os == 'macOS'
+      shell: bash
+      run: rustup target add x86_64-apple-darwin
 
     - name: Set CARGO_TARGET_DIR env
       shell: bash
@@ -58,15 +282,12 @@ runs:
         cache-bin: false
 
     - name: Install Protoc
+      # Pinned at v3: upstream has not yet shipped a Node 24 build, so this is the
+      # one action that still triggers the "Node.js 20 is deprecated" warning. The
+      # runner forces it onto Node 24 anyway; bump when arduino ships a node24 tag.
       uses: arduino/setup-protoc@v3
       with:
         repo-token: ${{ inputs.protoc-token }}
-
-    - name: Checkout Wireguard-GO submodule
-      shell: bash
-      run: |
-        git config --global --add safe.directory '*'
-        git submodule update --init wireguard-go-rs/libwg/wireguard-go
 
     - name: Checkout Mullvad binaries submodule
       # macOS does not depend on any of our binaries.
@@ -120,15 +341,26 @@ runs:
       shell: bash
       run: |
         sudo apt-get update
-        sudo apt-get install libdbus-1-dev
+        # clang: the ring crate's C sources are compiled with CC=clang; without
+        # it the release build dies with "cc-rs: clang ... exit status: 127" and,
+        # because the packaging step swallowed the empty output, silently shipped
+        # no Linux installers. libdbus-1-dev: mullvad-daemon links against dbus.
+        # libarchive-tools: provides bsdtar, required by fpm to emit the Arch
+        # (pacman) package alongside the deb/rpm (electron-builder's pacman
+        # target). xz (already present via rpm) is the archive compressor.
+        sudo apt-get install -y libdbus-1-dev clang libarchive-tools
 
     - name: Install Go
       uses: actions/setup-go@v6
       with:
         go-version: 1.21.3
+        # No go.mod at the repo root (wireguard-go is built through build.sh with
+        # its own module), so setup-go's default dependency cache warns
+        # "Dependencies file is not found ... go.mod". Nothing to cache here.
+        cache: false
 
     - name: Setup node
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v5
       with:
         node-version-file: desktop/package.json
         cache: "npm"

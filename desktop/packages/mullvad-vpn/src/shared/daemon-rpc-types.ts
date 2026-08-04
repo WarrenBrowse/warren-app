@@ -3,6 +3,7 @@ import { IChangelog } from './ipc-types';
 export type DisconnectSource =
   | 'gui-disconnect-button'
   | 'gui-expired-account'
+  | 'gui-buy-credit'
   | 'gui-login-unblock'
   | 'gui-device-revoked'
   | 'gui-quit-button'
@@ -15,14 +16,41 @@ export interface IAccountData {
   expiry: string;
 }
 
+// `'no-subscription'` is Warren-specific: warren-api returns 404 on
+// `get_account_data` when the current Warren identity has no active
+// subscription yet (steady state for a freshly bootstrapped account
+// until the user purchases a plan). The daemon maps that 404 to gRPC
+// `Code::NotFound`, daemon-rpc.ts maps `NotFound` to this variant,
+// and the account-data cache treats it as an expired account so
+// `expiredState === 'expired'` in Redux and StateTriggeredNavigation
+// routes the user to the "buy plan" screen rather than the main view
+// (where a Connect click would otherwise trigger a doomed handshake).
 export type AccountDataError = {
   type: 'error';
-  error: 'invalid-account' | 'too-many-devices' | 'list-devices' | 'communication';
+  error:
+    | 'invalid-account'
+    | 'too-many-devices'
+    | 'list-devices'
+    | 'communication'
+    | 'no-subscription';
 };
 
 export type AccountDataResponse = ({ type: 'success' } & IAccountData) | AccountDataError;
 
 export type AccountNumber = string;
+
+/**
+ * Warren wallet identity, encoded as an SS58 address (Substrate
+ * address format, network prefix 13295). Such an address is 47-49
+ * chars and starts with `wb`, e.g.
+ * `wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB`. The underlying
+ * key is an Ed25519 public key; the daemon encodes it to SS58 before
+ * sending it to the renderer.
+ *
+ * Replaces the legacy Mullvad `AccountNumber` (10-16 digit) concept.
+ * Validation: {@link isWarrenPubKey}. Display: {@link formatWarrenPubKey}.
+ */
+export type WarrenPubKey = string;
 export type Ip = string;
 export interface ILocation {
   ipv4?: string;
@@ -61,6 +89,7 @@ export enum ErrorStateCause {
   isOffline,
   splitTunnelError,
   needFullDiskPermissions,
+  warrenTunnelFlapping,
 }
 
 export enum AuthFailedError {
@@ -68,6 +97,11 @@ export enum AuthFailedError {
   invalidAccount,
   expiredAccount,
   tooManyConnections,
+  // Warren: account explicitly revoked (banned) by the operator.
+  banned,
+  // Warren: banned specifically for port-forwarding abuse, so the app shows a
+  // forwarded-port suspension message. Same fatal handling as banned.
+  bannedPortForwarding,
 }
 
 export enum TunnelParameterError {
@@ -76,6 +110,7 @@ export enum TunnelParameterError {
   customTunnelHostResolutionError,
   ipv4Unavailable,
   ipv6Unavailable,
+  warrenPubkeyMismatch,
 }
 
 export type ErrorStateDetails =
@@ -86,7 +121,8 @@ export type ErrorStateDetails =
         | ErrorStateCause.startTunnelError
         | ErrorStateCause.isOffline
         | ErrorStateCause.splitTunnelError
-        | ErrorStateCause.needFullDiskPermissions;
+        | ErrorStateCause.needFullDiskPermissions
+        | ErrorStateCause.warrenTunnelFlapping;
       blockingError?: FirewallPolicyError;
     }
   | {
@@ -138,6 +174,8 @@ export enum Ownership {
   rented,
 }
 
+export type TunnelType = 'wireguard' | 'warren';
+
 export interface ITunnelEndpoint {
   address: string;
   protocol: RelayProtocol;
@@ -145,6 +183,8 @@ export interface ITunnelEndpoint {
   obfuscationEndpoint?: IObfuscationEndpoint;
   entryEndpoint?: IEndpoint;
   daita: boolean;
+  effectiveMtu?: number;
+  tunnelType: TunnelType;
 }
 
 export interface IEndpoint {
@@ -170,7 +210,6 @@ export type DaemonEvent =
   | { relayList: IRelayListWithEndpointData }
   | { appVersionInfo: IAppVersionInfo }
   | { device: DeviceEvent }
-  | { deviceRemoval: Array<IDevice> }
   | { accessMethodSetting: AccessMethodSetting };
 
 export type DaemonAppUpgradeEventStatusDownloadStarted = {
@@ -219,6 +258,13 @@ export interface ITunnelStateRelayInfo {
 
 // The order of the variants match the priority order and can be sorted on.
 export enum FeatureIndicator {
+  // A requested-but-not-running defense is a warning: it outranks every
+  // "feature on" pill so the user cannot miss it.
+  daitaUnavailable,
+  // Path-health warning: the live tunnel measured an inner-packet budget
+  // below the TUN MTU (reduced-MTU underlay); the datapath adapts
+  // automatically, this explains WHY throughput may differ.
+  reducedMtu,
   daita,
   daitaMultihop,
   quantumResistance,
@@ -229,10 +275,10 @@ export enum FeatureIndicator {
   shadowsocks,
   quic,
   lwo,
-  wireGuardPort,
   lanSharing,
   dnsContentBlockers,
   customDns,
+  allowExternalDns,
   serverIpOverride,
   customMtu,
 }
@@ -391,6 +437,10 @@ export interface ITunnelOptions {
 
 export interface IDnsOptions {
   state: 'custom' | 'default';
+  // Advanced opt-in that lifts the firewall's DNS leak protection: when true, queries to
+  // resolvers other than the configured ones (e.g. `dig @1.1.1.1`) are no longer blocked. The
+  // queries still travel through the tunnel. Intended for advanced users testing remote DNS.
+  allowExternalDns: boolean;
   customOptions: {
     addresses: string[];
   };
@@ -416,12 +466,11 @@ export interface IAppVersionInfo {
   suggestedIsBeta?: boolean;
 }
 
-export interface IAccountAndDevice {
-  accountNumber: AccountNumber;
-  device?: IDevice;
+export interface IWarrenIdentity {
+  pubkey: WarrenPubKey;
 }
 
-export type LoggedInDeviceState = { type: 'logged in'; accountAndDevice: IAccountAndDevice };
+export type LoggedInDeviceState = { type: 'logged in'; warrenIdentity: IWarrenIdentity };
 export type LoggedOutDeviceState = { type: 'logged out' | 'revoked' };
 
 export type DeviceState = LoggedInDeviceState | LoggedOutDeviceState;
@@ -429,17 +478,6 @@ export type DeviceState = LoggedInDeviceState | LoggedOutDeviceState;
 export type DeviceEvent =
   | { type: 'logged in' | 'updated' | 'rotated_key'; deviceState: LoggedInDeviceState }
   | { type: 'logged out' | 'revoked'; deviceState: LoggedOutDeviceState };
-
-export interface IDevice {
-  id: string;
-  name: string;
-  created: Date;
-}
-
-export interface IDeviceRemoval {
-  accountNumber: string;
-  deviceId: string;
-}
 
 export type CustomLists = Array<ICustomList>;
 
@@ -481,15 +519,305 @@ export interface ISettings {
   recents?: Recents;
   apiAccessMethods: ApiAccessMethodSettings;
   relayOverrides: Array<RelayOverride>;
+  // Persistent warren-api URL. `undefined` if unset (= fallback to
+  // upstream Mullvad). Daemon restart required.
+  warrenApiUrl?: string;
+  // Client-side bandwidth ceiling in bits per second (undefined =
+  // unlimited), enforced by the daemon on both tunnel directions.
+  warrenMaxRateBps?: number;
+  // Warren two-relayed QUIC multi-hop settings.
+  // Default = OFF per doctrine `warren_multihop_doctrine_v1`.
+  // Daemon restart required to apply.
+  warrenMultiHop: WarrenMultiHopSettings;
+  // Warren NAT-PMP port-forwarding settings. Default OFF. Pushed
+  // live via `setNatPmpSettings` (no daemon restart required: the
+  // next tunnel reconnect picks up the new config).
+  warrenNatPmp: NatPmpSettings;
+  // Advanced "custom exit" override. Default OFF. When enabled with a
+  // valid endpoint+pubkey the daemon dials it directly, bypassing the
+  // signed registry. Pushed live via `setWarrenCustomExit` (the daemon
+  // reconnects on the next change).
+  warrenCustomExit: WarrenCustomExitSettings;
+  // Note on DAITA v2: Warren reuses Mullvad upstream's
+  // existing `wireguard.daita.enabled` toggle rather than introducing
+  // a redundant `warrenDaita` field. The daemon-side adapter
+  // (talpid-warren-tunnel) reads that boolean and wires it into
+  // the multi-hop client's DAITA setup for the Quinn-based Warren tunnel
+  // + activates the exit-side `DaitaPool`. The wire path differs
+  // (Quinn datagrams + warren-protocol v3 vs WireGuard +
+  // maybenot-ffi) but the user surface stays a single switch.
+  //
+  // Note on multi-exit failover: the daemon performs failover
+  // unconditionally (no settings field). The renderer surfaces it via
+  // the live `WarrenStatus.failoverCount` banner; there is no toggle.
 }
+
+// Transport protocol enum mirrors the gRPC `NatPmpSettings.Proto`
+// shape. Default UDP. `both` maps TCP and UDP together on the same
+// external port, as an atomic pair (if either leg fails, the rule
+// fails as a whole).
+export enum NatPmpProto {
+  udp = 'udp',
+  tcp = 'tcp',
+  both = 'both',
+}
+
+// One NAT-PMP port-forward rule. Multi-port: a client may hold several
+// at once, up to the exit-enforced per-client quota
+// (`warren_config::NATPMP_QUOTA_PER_CLIENT_IP`, currently 5). The rule
+// identity used by the exit allocator is `(internalPort, protocol)`, so
+// every rule must carry a distinct internal port. The UI's "same port
+// on your device" model sets `internalPort === suggestedExternalPort`
+// (the single port number the user picks opens publicly and is what
+// their app binds locally).
+export interface NatPmpRule {
+  protocol: NatPmpProto;
+  // Suggested external (public) port (0 = server picks from its pool).
+  suggestedExternalPort: number;
+  // Internal port the user's application binds.
+  internalPort: number;
+}
+
+// Warren NAT-PMP port-forwarding settings. Persisted in
+// `Settings.warrenNatPmp` and surfaced via the port-forwarding
+// settings view (Warren differentiator since Mullvad / IVPN dropped
+// port-forwarding in 2023).
+export interface NatPmpSettings {
+  enabled: boolean;
+  // Requested lifetime in seconds. Exit clamps to [60, 3600] s, so
+  // values outside that range are silently capped server-side. UI
+  // exposes 1h / 6h / 24h presets that all collapse to 3600 s.
+  lifetimeSecs: number;
+  // Multi-port source of truth: one entry per port-forward rule. New
+  // writes populate this and leave the legacy fields below at 0.
+  rules: NatPmpRule[];
+  // --- Legacy single-port fields (deprecated) ---
+  // Kept for backward compatibility with a pre-multi-port daemon /
+  // settings.json; superseded by `rules`. See `effectiveNatPmpRules`.
+  protocol: NatPmpProto;
+  suggestedExternalPort: number;
+  internalPort: number;
+}
+
+// The effective list of rules: prefer `rules`, otherwise synthesize one
+// from the legacy single-port fields (upgrade path). Returns [] when
+// nothing is configured.
+export function effectiveNatPmpRules(settings: NatPmpSettings): NatPmpRule[] {
+  if (settings.rules.length > 0) {
+    return settings.rules;
+  }
+  if (settings.internalPort !== 0 || settings.suggestedExternalPort !== 0) {
+    return [
+      {
+        protocol: settings.protocol,
+        suggestedExternalPort: settings.suggestedExternalPort,
+        internalPort: settings.internalPort,
+      },
+    ];
+  }
+  return [];
+}
+
+// Stable, translatable category for a NAT-PMP mapping failure. Mirrors
+// the daemon's `NatPmpStatus.ErrorReason` proto enum so the UI can show
+// a localised message instead of the raw `errorMessage` string.
+export type NatPmpErrorReason =
+  | 'unknown'
+  // The exit refused the explicitly requested external port because it
+  // is already in use / reserved for another client (strict policy).
+  | 'suggested-port-in-use'
+  // Pool exhausted, per-client quota, or rate limit.
+  | 'out-of-resources'
+  // Port forwarding disabled exit-side, or source not allowed.
+  | 'not-authorized';
+
+// Lifecycle state of a single NAT-PMP mapping (one per rule).
+export type NatPmpMappingState =
+  | { state: 'requesting' }
+  | {
+      state: 'mapped';
+      externalPort: number;
+      lifetimeGrantedSecs: number;
+      // Per-source rate-limit slots still available, as reported by the
+      // exit (a SHARED per-client budget - the same value on every
+      // mapping). `undefined` when the exit sent no budget trailer. The
+      // UI warns at <= 1 and blocks the port controls at 0.
+      attemptsRemaining?: number;
+      // Seconds until the rate-limit budget grows by one. Drives the
+      // "wait before next change" countdown when attemptsRemaining === 0.
+      windowResetSecs: number;
+    }
+  // The exit rate-limited the last port change (too many in a row). The
+  // daemon retries automatically after `retryAfterSecs`; the UI blocks
+  // the port controls and shows a deban countdown until then.
+  | { state: 'rate-limited'; retryAfterSecs: number }
+  | { state: 'failed'; errorMessage: string; errorReason: NatPmpErrorReason }
+  // NAT-PMP is off for this mapping (daemon reported DISABLED). Distinct
+  // from 'requesting' so the UI does not spin a "requesting…" label
+  // forever on a mapping that will never come up.
+  | { state: 'disabled' };
+
+// One live mapping, tagged with the rule it belongs to (the UI matches
+// it to a rule by `internalPort` + `protocol`).
+export interface NatPmpMapping {
+  internalPort: number;
+  protocol: NatPmpProto;
+  status: NatPmpMappingState;
+}
+
+// Live NAT-PMP status. Pushed by the daemon via the `natPmpStatusUpdates`
+// IPC channel and read on demand via `getNatPmpSettings`. Multi-port: one
+// entry per active rule (empty == nothing mapped).
+export interface NatPmpStatus {
+  mappings: NatPmpMapping[];
+}
+
+// Advanced "custom exit" override persisted in
+// Settings.warren_custom_exit. When `enabled` with a valid
+// `endpoint`+`pubkeyHex` the daemon dials this single hand-entered exit
+// directly, bypassing the signed registry, failover, multi-hop and the
+// TOFU pin. `coverDomain` set = v6 X.509 mode (the exit must run a
+// matching public certificate); omitted = RPK-via-SNI.
+export interface WarrenCustomExitSettings {
+  enabled: boolean;
+  // Exit UDP endpoint as `host:port` (IPv6 bracketed).
+  endpoint: string;
+  // Hex-encoded 32-byte Ed25519 server public key (64 hex chars).
+  pubkeyHex: string;
+  // Optional X.509 cover domain (SNI). Undefined = RPK-via-SNI mode.
+  coverDomain?: string;
+  // Optional cosmetic UI label.
+  label: string;
+  // Hex-encoded 32-byte X25519 multi-hop HPKE recipient key (64 hex
+  // chars); the sealed payload is encrypted to this key.
+  x25519MultihopPubkeyHex: string;
+  // Hex-encoded 16-byte exit routing id (32 hex chars) carried in the
+  // cleartext multi-hop header (relay id == exit id for a 1-hop circuit).
+  exitIdHex: string;
+}
+
+// Warren multi-hop settings persisted in Settings.warren_multi_hop and
+// surfaced via the Warren multi-hop view. `entryCountry` and
+// `exitCountry` are ISO 3166 alpha-2 codes; empty string = auto-pick.
+export interface WarrenMultiHopSettings {
+  enabled: boolean;
+  entryCountry: string;
+  exitCountry: string;
+  // HPKE epoch rotation in milliseconds. Default 4h (14_400_000 ms)
+  // per `warren_multihop_doctrine_v1`.
+  hpkeEpochRotationMs: number;
+}
+
+// TOFU pubkey-pinning mismatch event surfaced to the UI.
+// When the daemon-side verify hook detects that the Ed25519 pubkey
+// served for a known `exit_id` differs from the locally pinned value,
+// it sets this field so the renderer can mount the
+// `WarrenPubKeyWarning` modal. `null` (the steady state) means no
+// mismatch is pending review.
+export interface WarrenPubkeyMismatch {
+  // 32-character lower-case hex (16 raw bytes) of the stable
+  // `exit_id` for which the pubkey changed.
+  exitIdHex: string;
+  // 64-character lower-case hex (32 raw bytes) of the previously
+  // pinned Ed25519 verifying key.
+  pinnedPubkeyHex: string;
+  // 64-character lower-case hex (32 raw bytes) of the currently
+  // observed key from the signed relay-list.
+  observedPubkeyHex: string;
+  // Forensic snapshot of the pin's location at first-seen time.
+  // Empty string when the pin pre-dates the country/city enrichment.
+  countryCode: string;
+  city: string;
+}
+
+// Live Warren tunnel status snapshot. Pushed by the daemon via the
+// `warrenStatusUpdates` IPC channel and read on demand via
+// `getWarrenStatus`.
+export interface WarrenStatus {
+  reconnectCount: number;
+  // Time since the last successful reconnect in milliseconds. `null`
+  // if no reconnect has been observed yet (fresh session, single-hop).
+  lastReconnectAgeMs: number | null;
+  obfuscationActive: boolean;
+  // Multi-exit failover: number of times the daemon picked an
+  // alternative exit after the previous one became unreachable. The
+  // renderer surfaces an increment as a toast "Switched to <country>".
+  failoverCount: number;
+  // Time since the last failover in milliseconds. `null` if no
+  // failover has been observed yet.
+  lastFailoverAgeMs: number | null;
+  // TOFU pubkey-pinning: `null` (steady state) when no
+  // mismatch is pending review, populated when the daemon-side
+  // verify hook refused a connect because the served Ed25519
+  // pubkey differs from the locally pinned value. The renderer
+  // mounts `WarrenPubKeyWarning` while this field is non-null and
+  // dismisses it after the user picks Trust / Reject / Report.
+  pubkeyMismatchPending: WarrenPubkeyMismatch | null;
+  // ADR 36: true while the daemon migrated off an exit that entered
+  // its maintenance window (drain advisory) and that window has not
+  // elapsed yet. The daemon pushes a fresh status when it does, so a
+  // banner keyed on this flag self-dismisses.
+  maintenanceMigrationActive: boolean;
+  // Docs 59 C5: number of maintenance migrations cancelled because a
+  // user-pinned forwarded port could not be reserved on any candidate
+  // server, and the matching self-expiring display-window flag. The
+  // client stays on the draining server with its ports intact.
+  portMigrationCancellations: number;
+  portMigrationCancellationActive: boolean;
+  // True while the daemon's offline monitor reports the host offline,
+  // pushed on the edge itself (before any tunnel-side grace). Drives
+  // the immediate "no internet connection" banner in every tunnel
+  // state.
+  hostOffline: boolean;
+  // Doc 62 item 5: true while the daemon's in-tunnel egress probe
+  // reports the exit not forwarding (drained / half-swapped exit that
+  // still answers QUIC keep-alives). Drives the "interrupted" phase
+  // with the exit-not-forwarding banner while Connected.
+  exitEgressDead: boolean;
+  // Public `GET /v1/network` descriptor fetched by the daemon.
+  // Display data only (the compiled product environment stays the
+  // authority on WHICH build this is): the beta banner reads the live
+  // bandwidth cap from it. `null` until the first successful fetch or
+  // when the API predates the endpoint.
+  networkInfo: WarrenNetworkInfo | null;
+  // Broadcast notices the operator published, verified against the
+  // pinned server key by the daemon and already filtered for expiry and
+  // this app's version. Displayed above every other banner. Empty in the
+  // steady state, and the empty list is also how an erasure clears the
+  // banner.
+  notices: WarrenNotice[];
+}
+
+// One operator-published broadcast notice, ready to display: the daemon
+// has already applied the expiry and the version range.
+export interface WarrenNotice {
+  id: string;
+  message: string;
+  level: 'info' | 'warning' | 'error';
+}
+
+// Public environment descriptor served by the API (`GET /v1/network`).
+export interface WarrenNetworkInfo {
+  environment: string;
+  degraded: boolean;
+  // Default per-subscriber bandwidth cap in bits per second.
+  defaultRateBps?: number;
+  paymentsEnabled: boolean;
+}
+
+// Outcome of the gRPC `TrustNewExitKey` RPC. The daemon either
+// updates the pinned key in the in-memory table (`ok`) or surfaces
+// the precise reason the operation failed so the UI can show a
+// matching error message.
+export type TrustNewExitKeyOutcome =
+  | { result: 'ok' }
+  | { result: 'exit-not-found' }
+  | { result: 'pubkey-mismatch' }
+  | { result: 'io-error'; errorMessage: string };
 
 export type SplitTunnelSettings = {
   enableExclusions: boolean;
   appsList: string[];
-};
-
-export type WireGuardPortObfuscationSettings = {
-  port: Constraint<number>;
 };
 
 export type LwoSettings = {
@@ -511,14 +839,12 @@ export enum ObfuscationType {
   shadowsocks,
   quic,
   lwo,
-  wireGuardPort,
 }
 
 export type ObfuscationSettings = {
   selectedObfuscation: ObfuscationType;
   udp2tcpSettings: Udp2TcpObfuscationSettings;
   shadowsocksSettings: ShadowsocksSettings;
-  wireGuardPortSettings: WireGuardPortObfuscationSettings;
   lwoSettings: LwoSettings;
 };
 
@@ -529,7 +855,7 @@ export interface ISocketAddress {
 
 export type VoucherResponse =
   | { type: 'success'; newExpiry: string; secondsAdded: number }
-  | { type: 'invalid' | 'already_used' | 'error' };
+  | { type: 'invalid' | 'already_used' | 'expired' | 'not_ready' | 'error' };
 
 export interface SocksAuth {
   username: string;
@@ -616,6 +942,86 @@ export function parseSocketAddress(socketAddrStr: string): ISocketAddress {
     port: Number(matches[2]),
   };
   return socketAddress;
+}
+
+// Format the exit geolocation ("Country, City") shown as the "Out" address
+// when the egress IP is unavailable. In multi-hop the daemon redacts the exit
+// egress IP, so the exit is identified by the geolocation the directory does
+// disclose. Returns `undefined` when there is no country to show, so the caller
+// renders no empty line. A city without a country is not a standalone label.
+export function formatExitLocation(country?: string, city?: string): string | undefined {
+  if (!country) {
+    return undefined;
+  }
+  return city ? `${country}, ${city}` : country;
+}
+
+// A redacted / unspecified socket address (`0.0.0.0:0` or `[::]:0`). The
+// Warren daemon publishes the multi-hop exit endpoint as this placeholder when
+// the client-facing directory redacts the exit egress IP (censorship
+// minimization: the client dials the entry relay and never learns the exit
+// IP). It is not a routable endpoint, so the GUI must not render it as an "Out"
+// address; the exit is identified by the geoip out IP and country/city instead.
+// Only the full host-AND-port-unset form counts: a non-zero port carries
+// routing intent and is treated as a real address.
+export function isUnspecifiedSocketAddress(socketAddrStr: string): boolean {
+  let host: string;
+  let port: number;
+  try {
+    ({ host, port } = parseSocketAddress(socketAddrStr));
+  } catch {
+    return false;
+  }
+  const normalizedHost = host.replace(/^\[|\]$/g, '').trim();
+  const unspecifiedHost = normalizedHost === '0.0.0.0' || normalizedHost === '::';
+  return unspecifiedHost && port === 0;
+}
+
+// Extract the host portion of a `host:port` socket-address string,
+// dropping the trailing `:port`. IPv6-safe: a bracketed address such as
+// `[2a01:...]:7001` keeps everything up to and including the closing `]`
+// (the colons inside the brackets are part of the address, not the port
+// separator). A bare IPv4 like `204.168.207.130:443` splits on the last
+// colon. Used to decide whether two endpoints sit on the same node.
+export function socketAddressHost(socketAddrStr: string): string {
+  const trimmed = socketAddrStr.trim();
+  if (trimmed.startsWith('[')) {
+    const closing = trimmed.indexOf(']');
+    if (closing !== -1) {
+      return trimmed.slice(0, closing + 1);
+    }
+    return trimmed;
+  }
+  const lastColon = trimmed.lastIndexOf(':');
+  if (lastColon === -1) {
+    return trimmed;
+  }
+  return trimmed.slice(0, lastColon);
+}
+
+// A Warren circuit is multi-hop (2 hops) only when the entry/relay node
+// and the exit node are DIFFERENT physical nodes, i.e. their host/IP
+// differs. A 1-hop circuit reuses the same node as both relay and exit
+// with different ports (entry `<ip>:7001`, exit `<ip>:443`), so the port
+// MUST be ignored - comparing the full `ip:port` would falsely flag a
+// 1-hop circuit as multi-hop. Hosts are compared case-insensitively.
+export function isMultihopTunnelEndpoint(endpoint: ITunnelEndpoint): boolean {
+  if (!endpoint.entryEndpoint) {
+    return false;
+  }
+  const entryHost = socketAddressHost(endpoint.entryEndpoint.address).toLowerCase();
+  const exitHost = socketAddressHost(endpoint.address).toLowerCase();
+  return entryHost !== exitHost;
+}
+
+export function isMultihopTunnelState(tunnelState: TunnelState): boolean {
+  if (
+    (tunnelState.state !== 'connected' && tunnelState.state !== 'connecting') ||
+    tunnelState.details === undefined
+  ) {
+    return false;
+  }
+  return isMultihopTunnelEndpoint(tunnelState.details.endpoint);
 }
 
 export function compareRelayLocationCount(lhs: RelayLocation, rhs: RelayLocation): boolean {

@@ -8,7 +8,9 @@ license.workspace = true
 
 [[bin]]
 name = "mullvad-version-metadata"
-required-features = ["sign"]
+# `sign` brings the key generation + clap CLI; `client` brings the tokio runtime
+# the bin's async main + fs I/O need. Both are required to build it.
+required-features = ["sign", "client"]
 
 [dependencies]
 anyhow = { workspace = true }
@@ -21,6 +23,7 @@ json-canon = "0.1"
 log = { workspace = true }
 mullvad-api-constants = { path = "../mullvad-api/mullvad-api-constants" }
 mullvad-version = { path = "../mullvad-version", features = ["serde"] }
+warren-product-env = { path = "../warren-product-env" }
 # If a consumer enable the `proptest` feature, then we expose proptest generators in the public API
 proptest = { workspace = true, optional = true }
 rand = { workspace = true }

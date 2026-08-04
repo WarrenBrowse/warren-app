@@ -9,6 +9,7 @@ license.workspace = true
 [dependencies]
 log = { workspace = true }
 thiserror = { workspace = true }
+warren-product-env = { path = "../warren-product-env" }
 
 [target.'cfg(windows)'.dependencies]
 once_cell = { workspace = true }

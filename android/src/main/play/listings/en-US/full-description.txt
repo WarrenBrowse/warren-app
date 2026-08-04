@@ -1,31 +1,29 @@
-Free the internet from data collection with Mullvad VPN – a service that helps keep your online activity, identity, and location private. Only €5/month.
+Free the internet from data collection with Warren VPN, a service that helps keep your online activity, identity, and location private. Plans start at a few euros per month, with no recurring billing and no account to create.
 
 <b>Get started</b>
 
 1. Install the app.
-2. Create an account.
-3. Add time to your account via our website or vouchers.
+2. Create a wallet. Warren generates a 12-word recovery phrase that is your only credential. Write it down and keep it offline.
+3. Add a subscription from our website or redeem a voucher.
 
-To make sure to block third-party cookies and other tracking technologies – use Mullvad VPN together with Mullvad Browser (free of charge).
-
-<b>ANONYMOUS ACCOUNTS – NO ACTIVITY LOGS</b>
-&#8226;&#8195;Creating an account requires no personal info - not even an email address.
+<b>NO ACCOUNTS, NO ACTIVITY LOGS</b>
+&#8226;&#8195;There is no account to create: no email, no phone number, no personal info. Your identity is a recovery phrase you alone control.
 &#8226;&#8195;We keep no activity logs.
-&#8226;&#8195;We offer the possibility to pay anonymously with cash or cryptocurrency.
-&#8226;&#8195;Bypass geographical restrictions with our global network of VPN servers.
-&#8226;&#8195;Our app uses WireGuard, a superior VPN protocol that connects fast and doesn’t drain your battery.
+&#8226;&#8195;Pay as you go: a subscription is tied to your wallet, not to who you are.
+&#8226;&#8195;Reach a global network of VPN servers.
+&#8226;&#8195;The app uses the Warren QUIC tunnel, which connects fast and is built for unstable mobile networks.
 
-<b>HOW DOES MULLVAD VPN WORK?</b>
-With Mullvad VPN, your traffic travels through an encrypted tunnel to one of our VPN servers and then onward to the website you are visiting. In this way, websites will only see our server’s identity instead of yours. Same goes for your ISP (internet service provider); they’ll see that you’re connected to Mullvad, but not your activity.
-It also means that all the third-party actors with technology integrated into the various websites you visit can’t sniff out your IP address and use it to track you from one site to another.
+<b>ALWAYS-ON OBFUSCATION</b>
+Warren tunnels are disguised as ordinary browser traffic (HTTP/3 mimicry over UDP 443). This makes Warren hard to detect or block on restrictive networks, and it cannot be turned off, so every Warren user looks the same on the wire.
 
-Using a trustworthy VPN is a great first step to reclaim your privacy online. In combination with Mullvad Browser you make sure to block third-party cookies and other tracking technologies.
+<b>HOW DOES WARREN VPN WORK?</b>
+With Warren VPN, your traffic travels through an encrypted tunnel to one of our servers and then onward to the website you are visiting. Websites see our server's address instead of yours. Your internet service provider sees only that you are connected to Warren, not what you do online.
+It also means the third-party trackers embedded in the websites you visit cannot read your real IP address and use it to follow you from one site to another.
 
 <b>FREE THE INTERNET FROM MASS SURVEILLANCE AND DATA COLLECTION</b>
-A free and open society is a society where people have the right to privacy. That’s why we fight for a free internet.
-Free from mass surveillance and censorship. Free from big data markets where your personal information is up for sale. Free from authorities mass monitoring every click you make. Free from an infrastructure mapping your whole life. Mullvad VPN and Mullvad Browser is our contribution to the fight.
+A free and open society is one where people have the right to privacy. That is why we fight for a free internet: free from mass surveillance and censorship, free from data markets where your personal information is for sale, free from authorities monitoring every click you make. Warren VPN is our contribution to that fight.
 
 <b>TELEMETRY AND CRASH REPORTS</b>
-The app collects a very minimal amount of telemetry, and it does not in any way tie it to an account number, IP or other identifiable information. Account numbers are used for authentication. App logs are never sent automatically but are rather explicitly sent by the user. App version checks are performed every 24 hours to tell the app if there are any upgrades available and if the currently running version is still supported.
+The app collects a very minimal amount of telemetry and never ties it to your wallet, IP address, or other identifiable information. App logs are never sent automatically: you send them explicitly if you choose to report a problem. App version checks run periodically to tell the app whether an upgrade is available and whether the running version is still supported.
 
-If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device.
+If the split tunneling feature is used, the app queries your system for the list of installed applications. This list is only read inside the split tunneling view and is never sent from the device.

@@ -1,18 +1,14 @@
 import React from 'react';
 
 import { messages } from '../../../../../../shared/gettext';
-import { RoutePath } from '../../../../../../shared/routes';
 import { DisableRecentsDialog } from '../../../../../features/locations/components';
 import { useRecents } from '../../../../../features/locations/hooks';
 import { Menu, type MenuProps } from '../../../../../lib/components/menu';
-import { useHistory } from '../../../../../lib/history';
 
 export type HeaderMenuProps = MenuProps;
 
 export function HeaderMenu({ onOpenChange, ...props }: HeaderMenuProps) {
-  const history = useHistory();
   const { hasRecents, setEnabledRecents } = useRecents();
-  const navigateToFilter = React.useCallback(() => history.push(RoutePath.filter), [history]);
 
   const [disableRecentsDialogOpen, setDisableRecentsDialogOpen] = React.useState(false);
 
@@ -28,16 +24,11 @@ export function HeaderMenu({ onOpenChange, ...props }: HeaderMenuProps) {
 
   return (
     <>
+      {/* No "Filters" entry: the upstream filter view (ownership/provider) has no
+          meaning on the Warren network, where every exit is a Warren node. The
+          view itself stays in the code in case filters come back one day. */}
       <Menu onOpenChange={onOpenChange} {...props}>
         <Menu.Popup>
-          <Menu.Option>
-            <Menu.Option.Trigger onClick={navigateToFilter}>
-              <Menu.Option.Item>
-                <Menu.Option.Item.Icon icon="filter" />
-                <Menu.Option.Item.Label>{messages.gettext('Filters')}</Menu.Option.Item.Label>
-              </Menu.Option.Item>
-            </Menu.Option.Trigger>
-          </Menu.Option>
           <Menu.Option>
             <Menu.Option.Trigger onClick={hasRecents ? openDisableRecentsDialog : enableRecents}>
               <Menu.Option.Item>

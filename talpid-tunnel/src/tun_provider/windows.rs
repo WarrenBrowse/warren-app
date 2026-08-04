@@ -58,8 +58,13 @@ impl WindowsTunProvider {
             // routes the highest possible priority.
             builder.config.metric(1);
 
-            /// Tunnel adapter name
-            const ADAPTER_NAME: &str = "Mullvad";
+            /// Tunnel adapter name. Distinctive (not "Mullvad") so a
+            /// co-resident Mullvad install can be told apart from Warren by
+            /// `InterfaceAlias` on Windows: the default-route-split cleanup
+            /// scopes `Remove-NetRoute` to this alias to avoid clobbering the
+            /// other VPN's routes. Keep in sync with
+            /// `warren_client::default_route_split_windows::WARREN_TUN_ALIAS`.
+            const ADAPTER_NAME: &str = "Warren";
             /// Tunnel adapter GUID.
             /// Reuse the same ID, if possible. This prevents Windows from thinking it's a
             /// "new network".

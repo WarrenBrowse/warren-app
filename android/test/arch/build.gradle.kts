@@ -1,10 +1,10 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.mullvad.unit.test)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.test.arch"
+    namespace = "com.warrenbrowse.vpn.test.arch"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()

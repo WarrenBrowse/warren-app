@@ -1,9 +1,13 @@
+mod backend_params;
 mod connected_state;
 mod connecting_state;
 mod disconnected_state;
 mod disconnecting_state;
 mod error_state;
+mod exit_refusal;
 mod tunnel_monitor;
+
+pub use exit_refusal::{SubscriptionStatus, SubscriptionStatusProvider};
 
 use self::{
     connected_state::ConnectedState,
@@ -49,7 +53,7 @@ use std::{
 #[cfg(target_os = "android")]
 use talpid_types::{ErrorExt, android::AndroidContext};
 use talpid_types::{
-    net::{AllowedEndpoint, Connectivity, IpAvailability, wireguard::TunnelParameters},
+    net::{AllowedEndpoint, Connectivity},
     tunnel::{ErrorStateCause, ParameterGenerationError, TunnelStateTransition},
 };
 
@@ -57,6 +61,74 @@ use talpid_types::{
 use crate::connectivity_listener::ConnectivityListener;
 
 const TUNNEL_STATE_MACHINE_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
+
+/// How long the link must stay up before an `online` connectivity edge is
+/// acted on. Absorbs the burst of offline/online edges a network change
+/// (e.g. Wi-Fi <-> ethernet) produces. See [`run_connectivity_debounce`].
+const CONNECTIVITY_ONLINE_SETTLE: Duration = Duration::from_millis(1000);
+
+/// Forward connectivity changes from the offline monitor to the tunnel
+/// state machine, debounced.
+///
+/// A network change does not produce one clean offline->online edge; it
+/// produces a burst of them as the OS tears interfaces down and brings
+/// them up. Reacting to every edge rebuilds the whole tunnel each time,
+/// which thrashes routes and blackholes traffic for tens of seconds.
+///
+/// Asymmetric on purpose:
+/// - OFFLINE is forwarded immediately, so the kill-switch engages at once
+///   (fail-closed is never delayed).
+/// - ONLINE is debounced: we wait for the link to stay up for
+///   `online_settle` before forwarding a single online edge, so a burst
+///   collapses into one rebuild. The firewall stays in its blocking state
+///   for the whole settle window, so debouncing the online edge never
+///   opens a leak.
+async fn run_connectivity_debounce(
+    mut offline_rx: mpsc::UnboundedReceiver<Connectivity>,
+    command_tx: std::sync::Weak<mpsc::UnboundedSender<TunnelCommand>>,
+    offline_state_tx: mpsc::UnboundedSender<Connectivity>,
+    online_settle: Duration,
+) {
+    let mut pending_online: Option<Connectivity> = None;
+    loop {
+        let settle = async {
+            if pending_online.is_some() {
+                tokio::time::sleep(online_settle).await;
+            } else {
+                std::future::pending::<()>().await;
+            }
+        };
+        tokio::select! {
+            biased;
+            maybe = offline_rx.next() => {
+                let connectivity: Connectivity = match maybe {
+                    Some(c) => c,
+                    None => break,
+                };
+                if connectivity.is_offline() {
+                    // Immediate, and cancel any pending online so a blip
+                    // that ends offline does not later trigger a spurious
+                    // rebuild.
+                    pending_online = None;
+                    let Some(tx) = command_tx.upgrade() else { break };
+                    let _ = tx.unbounded_send(TunnelCommand::Connectivity(connectivity));
+                    let _ = offline_state_tx.unbounded_send(connectivity);
+                } else {
+                    // Arm / re-arm the settle timer (the fresh `sleep` next
+                    // iteration restarts the window).
+                    pending_online = Some(connectivity);
+                }
+            }
+            () = settle => {
+                if let Some(connectivity) = pending_online.take() {
+                    let Some(tx) = command_tx.upgrade() else { break };
+                    let _ = tx.unbounded_send(TunnelCommand::Connectivity(connectivity));
+                    let _ = offline_state_tx.unbounded_send(connectivity);
+                }
+            }
+        }
+    }
+}
 
 /// Errors that can happen when setting up or using the state machine.
 #[derive(thiserror::Error, Debug)]
@@ -132,13 +204,16 @@ pub struct LinuxNetworkingIdentifiers {
 }
 
 /// Spawn the tunnel state machine thread, returning a channel for sending tunnel commands.
-#[cfg_attr(
-    any(target_os = "android", target_os = "windows", target_os = "linux"),
-    expect(clippy::too_many_arguments)
-)]
+// Every platform crosses clippy's threshold here: the state machine takes what
+// the daemon owns and it cannot construct (firewall inputs, the parameter
+// generator, the subscription oracle, the route manager), plus the
+// `#[cfg]`-gated extras (Windows: volume_update_rx; Linux: linux_ids; Android:
+// android_context + connectivity_listener).
+#[expect(clippy::too_many_arguments)]
 pub async fn spawn(
     initial_settings: InitialTunnelState,
     tunnel_parameters_generator: impl TunnelParametersGenerator,
+    subscription_status: Arc<dyn SubscriptionStatusProvider>,
     log_dir: Option<PathBuf>,
     resource_dir: PathBuf,
     state_change_listener: impl Sender<TunnelStateTransition> + Send + 'static,
@@ -170,6 +245,7 @@ pub async fn spawn(
         command_tx: weak_command_tx,
         offline_state_tx: offline_state_listener,
         tunnel_parameters_generator,
+        subscription_status,
         tun_provider,
         log_dir,
         resource_dir,
@@ -248,6 +324,11 @@ enum EventResult {
     Command(Option<TunnelCommand>),
     Event(Option<(TunnelEvent, oneshot::Sender<()>)>),
     Close(Result<Option<ErrorStateCause>, oneshot::Canceled>),
+    /// Produced only by `ConnectedState`: the offline-grace window
+    /// expired while the host was still offline, so the tunnel must
+    /// finally transition to the blocked state it would previously
+    /// have entered immediately on the offline edge.
+    OfflineGraceExpired,
 }
 
 /// If firewall should apply blocking rules in the disconnected state.
@@ -344,6 +425,7 @@ struct TunnelStateMachineInitArgs<G: TunnelParametersGenerator> {
     command_tx: std::sync::Weak<mpsc::UnboundedSender<TunnelCommand>>,
     offline_state_tx: mpsc::UnboundedSender<Connectivity>,
     tunnel_parameters_generator: G,
+    subscription_status: Arc<dyn SubscriptionStatusProvider>,
     tun_provider: TunProvider,
     log_dir: Option<PathBuf>,
     resource_dir: PathBuf,
@@ -394,7 +476,14 @@ impl TunnelStateMachine {
             linux_ids: args.linux_ids,
         };
 
-        let firewall = Firewall::from_args(fw_args).map_err(Error::InitFirewallError)?;
+        #[cfg_attr(not(target_os = "windows"), expect(unused_mut))]
+        let mut firewall = Firewall::from_args(fw_args).map_err(Error::InitFirewallError)?;
+        // Adopt the user's lockdown setting before any policy is applied, so a
+        // daemon that dies early (a crash, a failed upgrade, a kill during an
+        // install) tears down with the persistence its owner actually asked
+        // for. Every later change flows through `set_lockdown_mode`.
+        #[cfg(target_os = "windows")]
+        firewall.persist(args.settings.lockdown_mode.should_persist());
 
         let dns_monitor = DnsMonitor::new(
             #[cfg(target_os = "linux")]
@@ -404,19 +493,16 @@ impl TunnelStateMachine {
         )
         .map_err(Error::InitDnsMonitorError)?;
 
-        let (offline_tx, mut offline_rx) = mpsc::unbounded();
+        let (offline_tx, offline_rx) = mpsc::unbounded();
         let initial_offline_state_tx = args.offline_state_tx.clone();
         let command_tx = args.command_tx.clone();
-        tokio::spawn(async move {
-            while let Some(connectivity) = offline_rx.next().await {
-                if let Some(tx) = command_tx.upgrade() {
-                    let _ = tx.unbounded_send(TunnelCommand::Connectivity(connectivity));
-                } else {
-                    break;
-                }
-                let _ = args.offline_state_tx.unbounded_send(connectivity);
-            }
-        });
+        let offline_state_tx = args.offline_state_tx.clone();
+        tokio::spawn(run_connectivity_debounce(
+            offline_rx,
+            command_tx,
+            offline_state_tx,
+            CONNECTIVITY_ONLINE_SETTLE,
+        ));
         let offline_monitor = offline::spawn_monitor(
             offline_tx,
             #[cfg(not(target_os = "android"))]
@@ -474,6 +560,7 @@ impl TunnelStateMachine {
             dns_config: args.settings.dns_config,
             allowed_endpoint: args.settings.allowed_endpoint,
             tunnel_parameters_generator: Box::new(args.tunnel_parameters_generator),
+            subscription_status: args.subscription_status,
             tun_provider: Arc::new(Mutex::new(args.tun_provider)),
             log_dir: args.log_dir,
             resource_dir: args.resource_dir,
@@ -503,7 +590,42 @@ impl TunnelStateMachine {
         let runtime = self.shared_values.runtime.clone();
 
         while let Some(state) = self.current_state.take() {
-            match state.handle_event(&runtime, &mut self.commands, &mut self.shared_values) {
+            let consequence = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                state.handle_event(&runtime, &mut self.commands, &mut self.shared_values)
+            }));
+            let consequence = match consequence {
+                Ok(consequence) => consequence,
+                Err(_panic) => {
+                    // Without this, a panic inside `handle_event` unwinds out of
+                    // the detached `spawn_blocking` task that drives `run`: tokio
+                    // swallows it, the shutdown signal below never fires, and the
+                    // daemon is left wedged with the kill-switch firewall AND the
+                    // split-default `/1` routes still installed. The leaked split
+                    // blackholes the next connection attempt, and because the
+                    // process never exits, neither the supervisor restart nor the
+                    // startup self-heal recover it.
+                    //
+                    // Catch it and treat it exactly like a hard crash (SIGKILL):
+                    // drop any leaked split route, leave the kernel firewall
+                    // state untouched, and exit the process for the supervisor
+                    // (systemd / launchd / SCM) to restart. Falling through to
+                    // the graceful-shutdown block instead would RESET the
+                    // firewall, turning every panic while connected into a
+                    // silent leak; exiting keeps a blocking policy fail-closed.
+                    // Because the clean-shutdown path never runs, the
+                    // target-state cache survives, so the restarted daemon
+                    // comes back blocked and then reconnects on its own; stale
+                    // DNS is repaired by the startup self-heal, as after any
+                    // hard crash.
+                    log::error!(
+                        "Tunnel state machine panicked while handling an event; \
+                         exiting fail-closed for the supervisor to restart the daemon"
+                    );
+                    talpid_warren_tunnel::force_route_cleanup();
+                    std::process::exit(1);
+                }
+            };
+            match consequence {
                 NewState((state, transition)) => {
                     self.current_state = Some(state);
 
@@ -524,24 +646,88 @@ impl TunnelStateMachine {
 
         log::debug!("Tunnel state machine exited");
 
+        // Warren guarantee (all platforms): unless the user explicitly opted
+        // into a persistent kill switch, a stopped daemon must NEVER leave a
+        // blocking firewall behind. Mullvad upstream always keeps the lockdown
+        // block applied after the state machine exits, so stopping or
+        // uninstalling the daemon while blocked or failing-to-connect bricks
+        // connectivity with no recourse. Warren resets the firewall on graceful
+        // shutdown so that "daemon not running" implies "traffic allowed", on
+        // macOS (pf), Linux (nftables) and Windows (WFP) alike.
+        //
+        // EXCEPTION (lockdown / "Always require VPN"): when the user enabled a
+        // persistent kill switch, fail-closed is the whole point of the
+        // setting, so honor it across shutdown and keep the block in place
+        // rather than silently leaking. This matches DisconnectedState, which
+        // also keeps the block while lockdown is engaged. Uninstall does not
+        // brick: the package removal scripts reset the firewall out-of-band via
+        // `warren-setup reset-firewall` (see dist-assets before-remove.sh /
+        // uninstall_macos.sh). A hard crash (SIGKILL) and a caught panic (which
+        // exits above, deliberately fail-closed) never reach this path; the
+        // launchd/systemd/SCM restart resumes management.
+        //
+        // Plain `Display` (not `ErrorExt::display_chain_with_msg`): the
+        // `ErrorExt` trait is only imported under cfg(macos)/cfg(android)
+        // in this module, while this block runs on every non-Android
+        // platform (incl. Linux/Windows). Using Display keeps it
+        // cross-platform with no extra import.
+        #[cfg(not(target_os = "android"))]
+        {
+            let lockdown = self.shared_values.lockdown_mode;
+            if lockdown.bool() && lockdown.should_persist() {
+                log::info!(
+                    "Persistent lockdown is enabled; leaving the kill-switch firewall in place on shutdown"
+                );
+            } else if let Err(error) = self.shared_values.firewall.reset_policy() {
+                log::error!("Failed to reset firewall during shutdown: {error}");
+            }
+        }
+
         #[cfg(target_os = "macos")]
         runtime.block_on(self.shared_values.split_tunnel.shutdown());
+        // Warren guarantee (macOS DNS): restore the system DNS before stopping
+        // our local resolver below. While connecting or blocked, the system DNS
+        // points at our 127/8 filtering resolver; stopping that resolver without
+        // first restoring the system DNS leaves name resolution aimed at a dead
+        // address, so "daemon not running" would mean "no DNS". Worse, a
+        // co-installed Mullvad daemon then captures the dead 127/8 address as its
+        // pre-VPN DNS and re-applies it on its own disconnect. DisconnectedState
+        // already resets DNS, but doing it here too covers graceful-shutdown
+        // paths that finish without re-entering it. A hard crash (SIGKILL) never
+        // reaches this path; the startup self-heal in talpid-dns
+        // (remove_stale_loopback_dns) repairs that on the next launch.
+        #[cfg(target_os = "macos")]
+        if let Err(error) = self.shared_values.dns_monitor.reset() {
+            log::error!("Failed to reset DNS during shutdown: {error}");
+        }
         #[cfg(target_os = "macos")]
         runtime.block_on(self.shared_values.filtering_resolver.stop());
         runtime.block_on(self.shared_values.route_manager.stop());
     }
 }
 
-/// Trait for any type that can provide a stream of `TunnelParameters` to the `TunnelStateMachine`.
+/// Trait for any type that can provide tunnel parameters to the `TunnelStateMachine`.
 pub trait TunnelParametersGenerator: Send + 'static {
-    /// Given the number of consecutive failed retry attempts, it should yield a `TunnelParameters`
-    /// to establish a tunnel with.
-    /// If this returns `None` then the state machine goes into the `Error` state.
-    fn generate(
+    /// Produces [`talpid_warren_tunnel::WarrenTunnelParameters`] for
+    /// the given `retry_attempt` attempt. The Warren QUIC backend is the
+    /// only tunnel mode, so this is the single parameter-generation entry
+    /// point the state machine drives.
+    fn generate_warren_tunnel_params(
         &mut self,
         retry_attempt: u32,
-        ip_availability: IpAvailability,
-    ) -> Pin<Box<dyn Future<Output = Result<TunnelParameters, ParameterGenerationError>>>>;
+    ) -> Pin<
+        Box<
+            dyn Future<
+                Output = Result<
+                    talpid_warren_tunnel::WarrenTunnelParameters,
+                    ParameterGenerationError,
+                >,
+            >,
+        >,
+    > {
+        let _ = retry_attempt;
+        Box::pin(async move { Err(ParameterGenerationError::NoMatchingRelay) })
+    }
 }
 
 /// Values that are common to all tunnel states.
@@ -573,6 +759,10 @@ struct SharedTunnelStateValues {
     allowed_endpoint: AllowedEndpoint,
     /// The generator of new `TunnelParameter`s
     tunnel_parameters_generator: Box<dyn TunnelParametersGenerator>,
+    /// Answers whether the account has an active subscription, which is what
+    /// tells a self-healing exit refusal apart from a permanent one. See
+    /// [`exit_refusal`].
+    subscription_status: Arc<dyn SubscriptionStatusProvider>,
     /// The provider of tunnel devices.
     tun_provider: Arc<Mutex<TunProvider>>,
     /// Directory to store tunnel log file.
@@ -590,6 +780,24 @@ struct SharedTunnelStateValues {
 }
 
 impl SharedTunnelStateValues {
+    /// Updates the lockdown mode and keeps the firewall's reboot-persistence
+    /// in sync with it.
+    ///
+    /// On Windows the two must never drift: the persistence flag decides, at
+    /// process teardown, whether a still-blocking policy is rewritten as
+    /// boot-time filters that outlive the product. Those filters permit
+    /// nothing at all, DHCP included, so a machine that acquires them without
+    /// having opted into a persistent kill switch loses its address at the
+    /// next boot and cannot describe its own state. Routing every write
+    /// through here is what keeps "persistent block" tied to "user asked for
+    /// a persistent block".
+    #[cfg(not(target_os = "android"))]
+    pub fn set_lockdown_mode(&mut self, lockdown_mode: LockdownMode) {
+        self.lockdown_mode = lockdown_mode;
+        #[cfg(target_os = "windows")]
+        self.firewall.persist(lockdown_mode.should_persist());
+    }
+
     /// Return whether a split tunnel interface was added or removed
     #[cfg(target_os = "macos")]
     pub fn set_exclude_paths(&mut self, paths: Vec<OsString>) -> Result<bool, split_tunnel::Error> {
@@ -815,5 +1023,109 @@ impl TunnelStateMachineHandle {
     #[cfg(windows)]
     pub fn split_tunnel(&self) -> &split_tunnel::SplitTunnelHandle {
         &self.split_tunnel
+    }
+}
+
+#[cfg(test)]
+mod warren_trait_default_tests {
+    //! Validates that the trait default impl for
+    //! `generate_warren_tunnel_params` returns `NoMatchingRelay` (vs.
+    //! `unimplemented!()` or panic). Critical because upstream Mullvad
+    //! implementers know nothing about Warren; they
+    //! must degrade gracefully.
+    use talpid_types::tunnel::ParameterGenerationError;
+
+    use super::TunnelParametersGenerator;
+
+    /// Minimal implementer that does NOT override `generate_warren_tunnel_params`,
+    /// to exercise the trait's default body.
+    struct UpstreamOnlyGenerator;
+
+    impl TunnelParametersGenerator for UpstreamOnlyGenerator {}
+
+    #[tokio::test]
+    async fn default_generate_warren_returns_no_matching_relay() {
+        let mut generator = UpstreamOnlyGenerator;
+        let result = generator.generate_warren_tunnel_params(0).await;
+        assert!(
+            matches!(result, Err(ParameterGenerationError::NoMatchingRelay)),
+            "default impl must degrade to NoMatchingRelay (got {result:?})"
+        );
+    }
+}
+
+#[cfg(test)]
+mod connectivity_debounce_tests {
+    //! Locks the asymmetric connectivity debounce: an offline edge is
+    //! forwarded immediately (fail-closed), while a burst of online edges
+    //! collapses into a single forward after the link settles, so a
+    //! network change cannot thrash the tunnel into rebuilding repeatedly.
+    use super::*;
+    use std::sync::Arc;
+    use std::time::Duration;
+
+    fn drain(rx: &mut mpsc::UnboundedReceiver<TunnelCommand>) -> Vec<Connectivity> {
+        let mut out = vec![];
+        while let Ok(TunnelCommand::Connectivity(c)) = rx.try_recv() {
+            out.push(c);
+        }
+        out
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn offline_is_immediate_and_online_burst_collapses_to_one() {
+        let settle = Duration::from_millis(2500);
+        let (offline_tx, offline_rx) = mpsc::unbounded::<Connectivity>();
+        let (cmd_tx, mut cmd_rx) = mpsc::unbounded::<TunnelCommand>();
+        let cmd_tx = Arc::new(cmd_tx);
+        let weak = Arc::downgrade(&cmd_tx);
+        let (off_state_tx, _off_state_rx) = mpsc::unbounded::<Connectivity>();
+
+        let task = tokio::spawn(run_connectivity_debounce(
+            offline_rx,
+            weak,
+            off_state_tx,
+            settle,
+        ));
+
+        // Offline must be forwarded immediately, without waiting for the
+        // settle window (fail-closed is never delayed).
+        offline_tx.unbounded_send(Connectivity::Offline).unwrap();
+        tokio::task::yield_now().await;
+        assert_eq!(
+            drain(&mut cmd_rx),
+            vec![Connectivity::Offline],
+            "offline edge must be forwarded immediately"
+        );
+
+        // A burst of online edges arriving within the settle window must
+        // NOT each forward; only the last one, once the link settles.
+        for _ in 0..4 {
+            offline_tx
+                .unbounded_send(Connectivity::PresumeOnline)
+                .unwrap();
+            tokio::task::yield_now().await;
+            // Each new edge re-arms the window; well under `settle`.
+            tokio::time::advance(Duration::from_millis(400)).await;
+            tokio::task::yield_now().await;
+        }
+        assert!(
+            drain(&mut cmd_rx).is_empty(),
+            "online edges within the settle window must not forward yet"
+        );
+
+        // After the link is quiet for the settle window, exactly one
+        // online edge is forwarded.
+        tokio::time::advance(settle).await;
+        tokio::task::yield_now().await;
+        assert_eq!(
+            drain(&mut cmd_rx),
+            vec![Connectivity::PresumeOnline],
+            "a settled online burst must collapse to a single forward"
+        );
+
+        drop(cmd_tx);
+        drop(offline_tx);
+        let _ = task.await;
     }
 }

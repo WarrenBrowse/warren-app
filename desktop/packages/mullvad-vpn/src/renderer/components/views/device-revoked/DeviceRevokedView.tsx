@@ -50,12 +50,12 @@ export function DeviceRevokedView() {
                 <IconBadge state="negative" />
               </Flex>
               <StyledTitle data-testid="title">
-                {messages.pgettext('device-management', 'Device is inactive')}
+                {messages.pgettext('device-management', 'Session is inactive')}
               </StyledTitle>
               <StyledMessage>
                 {messages.pgettext(
                   'device-management',
-                  'You have removed this device. To connect again, you will need to log back in.',
+                  'Your session has ended. To connect again, you will need to log back in.',
                 )}
               </StyledMessage>
               <StyledMessage>

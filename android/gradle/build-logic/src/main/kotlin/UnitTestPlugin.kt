@@ -7,7 +7,7 @@ import utilities.libs
 class UnitTestPlugin : Plugin<Project> {
     override fun apply(target: Project) {
         with(target) {
-            apply(plugin = "mullvad.kotlin-toolchain")
+            apply(plugin = "warren.kotlin-toolchain")
             apply(plugin = "de.mannodermaus.android-junit5")
             dependencies {
                 "testImplementation"(project(":lib:common-test"))
@@ -25,9 +25,9 @@ class UnitTestPlugin : Plugin<Project> {
             tasks.register("testAllUnitTests") {
                 val testTask =
                     target.tasks.findByName("testDebugUnitTest")
-                        // Modules with flavors will not have normal test tasks so we test with
-                        // ossProdDebug
-                        ?: target.tasks.getByName("testOssProdDebugUnitTest")
+                        // Modules with flavors have no unflavored test task;
+                        // the prod flavor's debug unit tests cover them.
+                        ?: target.tasks.getByName("testProdDebugUnitTest")
                 // This is to make sure that all unit tests are always executed
                 testTask.outputs.upToDateWhen { false }
                 dependsOn(testTask)

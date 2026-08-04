@@ -88,6 +88,15 @@ pub(crate) struct RelayListUpdater {
     overrides: Vec<RelayOverride>,
     // The relay selector will only ever see the relay list with IP overrides applied.
     relay_selector: RelaySelector,
+    /// Warren fork: when `false`, the updater never hits the network to
+    /// download the upstream Mullvad relay list. On this fork Warren is the
+    /// only tunnel mode and the Mullvad list is never consumed (the tunnel
+    /// uses `warren-relays.json` via `DaemonWarrenRelaySelector`, the GUI
+    /// gets the Warren view). The download endpoint does not even exist on
+    /// warren-api, so every fetch would 404 - disabling it is
+    /// behaviour-preserving (the selector stays empty either way) and
+    /// removes the recurring 404 log noise. Overrides still apply locally.
+    downloads_enabled: bool,
 }
 
 impl RelayListUpdater {
@@ -98,6 +107,7 @@ impl RelayListUpdater {
         overrides: Vec<RelayOverride>,
         on_update: impl Fn(&RelayList) + Send + 'static,
         cached_relay_list: Option<CachedRelayList>,
+        downloads_enabled: bool,
     ) -> RelayListUpdaterHandle {
         let (tx, cmd_rx) = mpsc::channel(1);
         let api_availability = api_handle.availability.clone();
@@ -121,6 +131,7 @@ impl RelayListUpdater {
             api_availability,
             relay_list,
             bridge_list,
+            downloads_enabled,
         };
 
         tokio::spawn(updater.run(cmd_rx));
@@ -139,7 +150,7 @@ impl RelayListUpdater {
             futures::select! {
                 _check_update = next_check => {
                     log::trace!("Received `next_check` event");
-                    if download_future.is_terminated() && self.should_update() {
+                    if self.downloads_enabled && download_future.is_terminated() && self.should_update() {
                         download_future = Box::pin(Self::download_relay_list(self.api_availability.clone(), self.api_client.clone(), etag).fuse());
                         self.last_check = SystemTime::now();
                     }
@@ -157,9 +168,14 @@ impl RelayListUpdater {
                             return;
                     };
                     match event {
-                        Event::Update => {
+                        Event::Update if self.downloads_enabled => {
                             download_future = Box::pin(Self::download_relay_list(self.api_availability.clone(), self.api_client.clone(), etag).fuse());
                             self.last_check = SystemTime::now();
+                        },
+                        // Warren fork: downloads disabled - the Mullvad relay
+                        // list is never consumed (see `downloads_enabled`).
+                        Event::Update => {
+                            log::trace!("Mullvad relay-list download skipped (Warren fork: list unused)");
                         },
                         // Only update the relay list with new overrides if they are actually new.
                         Event::Override(overrides) if self.overrides != overrides => {

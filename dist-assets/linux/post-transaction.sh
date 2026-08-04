@@ -6,8 +6,12 @@ set -eu
 # Repeated enablement of the daemon service will result in the early-boot unit
 # being executed when the daemon is already running, which results in the
 # firewall rules being applied.
-if ! systemctl is-enabled mullvad-daemon; then
-    systemctl enable "/usr/lib/systemd/system/mullvad-daemon.service" || true
-    systemctl start mullvad-daemon.service || true
-    systemctl enable "/usr/lib/systemd/system/mullvad-early-boot-blocking.service" || true
+if ! systemctl is-enabled warren-daemon; then
+    systemctl enable "/usr/lib/systemd/system/warren-daemon.service" || true
+    systemctl start warren-daemon.service || true
+    systemctl enable "/usr/lib/systemd/system/warren-early-boot-blocking.service" || true
 fi
+
+# See after-install.sh: the system bus has to re-read its policy directory
+# before the NetworkManager VPN plugin can own its name.
+systemctl reload dbus || true

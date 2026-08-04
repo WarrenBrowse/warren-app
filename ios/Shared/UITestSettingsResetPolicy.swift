@@ -92,6 +92,7 @@ public enum UITestAppPreferencesKey: String, CaseIterable, Codable, Sendable {
     case isNotificationPermissionAsked
     case notificationSettings
     case includeAllNetworksConsent
+    case hasCompletedWarrenOnboarding
 }
 
 extension UITestResetPolicy {

@@ -13,6 +13,7 @@ const endpoint: ITunnelEndpoint = {
   protocol: 'tcp',
   quantumResistant: false,
   daita: false,
+  tunnelType: 'wireguard',
 };
 
 const mockDisconnectedLocation: ILocation = {

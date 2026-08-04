@@ -1,3 +1,3 @@
-plugins { alias(libs.plugins.mullvad.android.library.feature.api) }
+plugins { alias(libs.plugins.warren.android.library.feature.api) }
 
-android { namespace = "net.mullvad.mullvadvpn.feature.home.api" }
+android { namespace = "com.warrenbrowse.vpn.feature.home.api" }

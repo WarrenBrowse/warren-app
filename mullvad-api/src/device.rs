@@ -1,31 +1,28 @@
-use chrono::{DateTime, Utc};
-use http::StatusCode;
+//! Minimal device REST proxy retained solely for the iOS FFI
+//! (`warren-ios/src/api_client/device.rs`), which still drives the legacy
+//! account/device login on iOS pending its migration to the wallet-identity
+//! model used by the daemon, desktop, and Android clients.
+//!
+//! The daemon no longer manages Mullvad devices (the `Device` model and the
+//! WireGuard key machinery were removed when login collapsed to
+//! wallet-identity-only). This shim therefore exposes ONLY the raw request
+//! builders the FFI needs (`*_response` + `remove`); it deliberately omits the
+//! typed `Device`-returning helpers so none of the removed device machinery is
+//! reintroduced. It lives in this crate (not in `warren-ios`) because building
+//! a request requires `MullvadRestHandle::service`, which is `pub(crate)`.
+
+use hyper::StatusCode;
 use hyper::body::Incoming;
-use mullvad_types::{
-    account::AccountNumber,
-    device::{Device, DeviceId, DeviceName},
-};
+use mullvad_types::account::AccountNumber;
 use std::future::Future;
 use talpid_types::net::wireguard;
 
+use crate::ACCOUNTS_URL_PREFIX;
 use crate::rest;
-
-use super::ACCOUNTS_URL_PREFIX;
 
 #[derive(Clone)]
 pub struct DevicesProxy {
     handle: rest::MullvadRestHandle,
-}
-
-#[derive(serde::Deserialize)]
-struct DeviceResponse {
-    id: DeviceId,
-    name: DeviceName,
-    pubkey: wireguard::PublicKey,
-    ipv4_address: ipnetwork::Ipv4Network,
-    ipv6_address: ipnetwork::Ipv6Network,
-    hijack_dns: bool,
-    created: DateTime<Utc>,
 }
 
 impl DevicesProxy {
@@ -33,115 +30,17 @@ impl DevicesProxy {
         Self { handle }
     }
 
-    pub fn create(
-        &self,
-        account: AccountNumber,
-        pubkey: wireguard::PublicKey,
-    ) -> impl Future<
-        Output = Result<(Device, mullvad_types::wireguard::AssociatedAddresses), rest::Error>,
-    > + use<> {
-        let request = self.create_response(account, pubkey);
-
-        async move {
-            let DeviceResponse {
-                id,
-                name,
-                pubkey,
-                ipv4_address,
-                ipv6_address,
-                hijack_dns,
-                created,
-                ..
-            } = request.await?.deserialize().await?;
-
-            Ok((
-                Device {
-                    id,
-                    name,
-                    pubkey,
-                    hijack_dns,
-                    created,
-                },
-                mullvad_types::wireguard::AssociatedAddresses {
-                    ipv4_address,
-                    ipv6_address,
-                },
-            ))
-        }
-    }
-
-    pub fn get(
-        &self,
-        account: AccountNumber,
-        id: DeviceId,
-    ) -> impl Future<Output = Result<Device, rest::Error>> + use<> {
-        let request = self.get_response(account, id);
-        async move {
-            let data = request.await?.deserialize().await?;
-            Ok(data)
-        }
-    }
-
-    pub fn list(
-        &self,
-        account: AccountNumber,
-    ) -> impl Future<Output = Result<Vec<Device>, rest::Error>> + use<> {
-        let request = self.list_response(account);
-        async move {
-            let data = request.await?.deserialize().await?;
-            Ok(data)
-        }
-    }
-
-    pub fn remove(
-        &self,
-        account: AccountNumber,
-        id: DeviceId,
-    ) -> impl Future<Output = Result<(), rest::Error>> + use<> {
-        let service = self.handle.service.clone();
-        let factory = self.handle.factory.clone();
-        async move {
-            let request = factory
-                .delete(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
-                .expected_status(&[StatusCode::NO_CONTENT])
-                .account(account)?;
-            service.request(request).await?;
-            Ok(())
-        }
-    }
-
-    pub fn replace_wg_key(
-        &self,
-        account: AccountNumber,
-        id: DeviceId,
-        pubkey: wireguard::PublicKey,
-    ) -> impl Future<Output = Result<mullvad_types::wireguard::AssociatedAddresses, rest::Error>> + use<>
-    {
-        let request = self.replace_wg_key_response(account, id, pubkey);
-        async move {
-            let DeviceResponse {
-                ipv4_address,
-                ipv6_address,
-                ..
-            } = request.await?.deserialize().await?;
-            Ok(mullvad_types::wireguard::AssociatedAddresses {
-                ipv4_address,
-                ipv6_address,
-            })
-        }
-    }
-
     pub fn get_response(
         &self,
         account: AccountNumber,
-        id: DeviceId,
+        id: String,
     ) -> impl Future<Output = Result<rest::Response<Incoming>, rest::Error>> + use<> {
         let service = self.handle.service.clone();
         let factory = self.handle.factory.clone();
 
         async move {
             let request = factory
-                .get(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
+                .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
                 .expected_status(&[StatusCode::OK])
                 .account(account)?;
             service.request(request).await
@@ -157,17 +56,34 @@ impl DevicesProxy {
 
         async move {
             let request = factory
-                .get(&format!("{ACCOUNTS_URL_PREFIX}/devices"))?
+                .get_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices"))?
                 .expected_status(&[StatusCode::OK])
                 .account(account)?;
             service.request(request).await
         }
     }
 
+    pub fn remove(
+        &self,
+        account: AccountNumber,
+        id: String,
+    ) -> impl Future<Output = Result<(), rest::Error>> + use<> {
+        let service = self.handle.service.clone();
+        let factory = self.handle.factory.clone();
+        async move {
+            let request = factory
+                .delete_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices/{id}"))?
+                .expected_status(&[StatusCode::NO_CONTENT])
+                .account(account)?;
+            service.request(request).await?;
+            Ok(())
+        }
+    }
+
     pub fn replace_wg_key_response(
         &self,
         account: AccountNumber,
-        id: DeviceId,
+        id: String,
         pubkey: wireguard::PublicKey,
     ) -> impl Future<Output = Result<rest::Response<Incoming>, rest::Error>> + use<> {
         #[derive(serde::Serialize)]
@@ -181,7 +97,7 @@ impl DevicesProxy {
 
         async move {
             let request = factory
-                .put_json(
+                .put_json_or_signed(
                     &format!("{ACCOUNTS_URL_PREFIX}/devices/{id}/pubkey"),
                     &req_body,
                 )?
@@ -212,7 +128,7 @@ impl DevicesProxy {
 
         async move {
             let request = factory
-                .post_json(&format!("{ACCOUNTS_URL_PREFIX}/devices"), &submission)?
+                .post_json_or_signed(&format!("{ACCOUNTS_URL_PREFIX}/devices"), &submission)?
                 .account(account)?
                 .expected_status(&[StatusCode::CREATED]);
             service.request(request).await

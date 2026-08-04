@@ -373,6 +373,11 @@ export class ErrorState extends jspb.Message {
     getInvalidIpv6ConfigError(): ErrorState.InvalidIpv6Config | undefined;
     setInvalidIpv6ConfigError(value?: ErrorState.InvalidIpv6Config): ErrorState;
 
+    hasWarrenPubkeyMismatchDetail(): boolean;
+    clearWarrenPubkeyMismatchDetail(): void;
+    getWarrenPubkeyMismatchDetail(): ErrorState.WarrenPubkeyMismatchDetail | undefined;
+    setWarrenPubkeyMismatchDetail(value?: ErrorState.WarrenPubkeyMismatchDetail): ErrorState;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): ErrorState.AsObject;
     static toObject(includeInstance: boolean, msg: ErrorState): ErrorState.AsObject;
@@ -394,8 +399,35 @@ export namespace ErrorState {
         otherAlwaysOnAppError?: ErrorState.OtherAlwaysOnAppError.AsObject,
         invalidDnsServersError?: ErrorState.InvalidDnsServersError.AsObject,
         invalidIpv6ConfigError?: ErrorState.InvalidIpv6Config.AsObject,
+        warrenPubkeyMismatchDetail?: ErrorState.WarrenPubkeyMismatchDetail.AsObject,
     }
 
+
+    export class WarrenPubkeyMismatchDetail extends jspb.Message { 
+        getExitIdHex(): string;
+        setExitIdHex(value: string): WarrenPubkeyMismatchDetail;
+        getPinned(): string;
+        setPinned(value: string): WarrenPubkeyMismatchDetail;
+        getObserved(): string;
+        setObserved(value: string): WarrenPubkeyMismatchDetail;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): WarrenPubkeyMismatchDetail.AsObject;
+        static toObject(includeInstance: boolean, msg: WarrenPubkeyMismatchDetail): WarrenPubkeyMismatchDetail.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: WarrenPubkeyMismatchDetail, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): WarrenPubkeyMismatchDetail;
+        static deserializeBinaryFromReader(message: WarrenPubkeyMismatchDetail, reader: jspb.BinaryReader): WarrenPubkeyMismatchDetail;
+    }
+
+    export namespace WarrenPubkeyMismatchDetail {
+        export type AsObject = {
+            exitIdHex: string,
+            pinned: string,
+            observed: string,
+        }
+    }
 
     export class FirewallPolicyError extends jspb.Message { 
         getType(): ErrorState.FirewallPolicyError.ErrorType;
@@ -523,6 +555,7 @@ export namespace ErrorState {
     INVALID_IPV6_CONFIG = 14,
     SPLIT_TUNNEL_ERROR = 12,
     NEED_FULL_DISK_PERMISSIONS = 13,
+    WARREN_TUNNEL_FLAPPING = 15,
     }
 
     export enum AuthFailedError {
@@ -530,6 +563,8 @@ export namespace ErrorState {
     INVALID_ACCOUNT = 1,
     EXPIRED_ACCOUNT = 2,
     TOO_MANY_CONNECTIONS = 3,
+    BANNED = 4,
+    BANNED_PORT_FORWARDING = 5,
     }
 
     export enum GenerationError {
@@ -540,6 +575,7 @@ export namespace ErrorState {
     CUSTOM_TUNNEL_HOST_RESOLUTION_ERROR = 4,
     NETWORK_IPV4_UNAVAILABLE = 5,
     NETWORK_IPV6_UNAVAILABLE = 6,
+    WARREN_PUBKEY_MISMATCH = 7,
     }
 
 }
@@ -785,6 +821,13 @@ export class TunnelEndpoint extends jspb.Message {
     setTunnelMetadata(value?: TunnelMetadata): TunnelEndpoint;
     getDaita(): boolean;
     setDaita(value: boolean): TunnelEndpoint;
+    getTunnelType(): TunnelType;
+    setTunnelType(value: TunnelType): TunnelEndpoint;
+
+    hasEffectiveMtu(): boolean;
+    clearEffectiveMtu(): void;
+    getEffectiveMtu(): number | undefined;
+    setEffectiveMtu(value: number): TunnelEndpoint;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): TunnelEndpoint.AsObject;
@@ -805,6 +848,8 @@ export namespace TunnelEndpoint {
         entryEndpoint?: Endpoint.AsObject,
         tunnelMetadata?: TunnelMetadata.AsObject,
         daita: boolean,
+        tunnelType: TunnelType,
+        effectiveMtu?: number,
     }
 }
 
@@ -1776,6 +1821,27 @@ export class Settings extends jspb.Message {
     setRecents(value?: Recents): Settings;
     getUpdateDefaultLocation(): boolean;
     setUpdateDefaultLocation(value: boolean): Settings;
+    getWarrenApiUrl(): string;
+    setWarrenApiUrl(value: string): Settings;
+
+    hasWarrenMultiHop(): boolean;
+    clearWarrenMultiHop(): void;
+    getWarrenMultiHop(): WarrenMultiHopSettings | undefined;
+    setWarrenMultiHop(value?: WarrenMultiHopSettings): Settings;
+
+    hasWarrenNatPmp(): boolean;
+    clearWarrenNatPmp(): void;
+    getWarrenNatPmp(): NatPmpSettings | undefined;
+    setWarrenNatPmp(value?: NatPmpSettings): Settings;
+    getWarrenNConnections(): number;
+    setWarrenNConnections(value: number): Settings;
+
+    hasWarrenCustomExit(): boolean;
+    clearWarrenCustomExit(): void;
+    getWarrenCustomExit(): WarrenCustomExitSettings | undefined;
+    setWarrenCustomExit(value?: WarrenCustomExitSettings): Settings;
+    getWarrenMaxRateBps(): number;
+    setWarrenMaxRateBps(value: number): Settings;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
@@ -1802,7 +1868,657 @@ export namespace Settings {
         relayOverridesList: Array<RelayOverride.AsObject>,
         recents?: Recents.AsObject,
         updateDefaultLocation: boolean,
+        warrenApiUrl: string,
+        warrenMultiHop?: WarrenMultiHopSettings.AsObject,
+        warrenNatPmp?: NatPmpSettings.AsObject,
+        warrenNConnections: number,
+        warrenCustomExit?: WarrenCustomExitSettings.AsObject,
+        warrenMaxRateBps: number,
     }
+}
+
+export class WarrenCustomExitSettings extends jspb.Message { 
+    getEnabled(): boolean;
+    setEnabled(value: boolean): WarrenCustomExitSettings;
+    getEndpoint(): string;
+    setEndpoint(value: string): WarrenCustomExitSettings;
+    getPubkeyHex(): string;
+    setPubkeyHex(value: string): WarrenCustomExitSettings;
+
+    hasCoverDomain(): boolean;
+    clearCoverDomain(): void;
+    getCoverDomain(): string | undefined;
+    setCoverDomain(value: string): WarrenCustomExitSettings;
+    getLabel(): string;
+    setLabel(value: string): WarrenCustomExitSettings;
+    getX25519MultihopPubkeyHex(): string;
+    setX25519MultihopPubkeyHex(value: string): WarrenCustomExitSettings;
+    getExitIdHex(): string;
+    setExitIdHex(value: string): WarrenCustomExitSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenCustomExitSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenCustomExitSettings): WarrenCustomExitSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenCustomExitSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenCustomExitSettings;
+    static deserializeBinaryFromReader(message: WarrenCustomExitSettings, reader: jspb.BinaryReader): WarrenCustomExitSettings;
+}
+
+export namespace WarrenCustomExitSettings {
+    export type AsObject = {
+        enabled: boolean,
+        endpoint: string,
+        pubkeyHex: string,
+        coverDomain?: string,
+        label: string,
+        x25519MultihopPubkeyHex: string,
+        exitIdHex: string,
+    }
+}
+
+export class WarrenMultiHopSettings extends jspb.Message { 
+    getEnabled(): boolean;
+    setEnabled(value: boolean): WarrenMultiHopSettings;
+    getEntryCountry(): string;
+    setEntryCountry(value: string): WarrenMultiHopSettings;
+    getExitCountry(): string;
+    setExitCountry(value: string): WarrenMultiHopSettings;
+
+    hasHpkeEpochRotation(): boolean;
+    clearHpkeEpochRotation(): void;
+    getHpkeEpochRotation(): google_protobuf_duration_pb.Duration | undefined;
+    setHpkeEpochRotation(value?: google_protobuf_duration_pb.Duration): WarrenMultiHopSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenMultiHopSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenMultiHopSettings): WarrenMultiHopSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenMultiHopSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenMultiHopSettings;
+    static deserializeBinaryFromReader(message: WarrenMultiHopSettings, reader: jspb.BinaryReader): WarrenMultiHopSettings;
+}
+
+export namespace WarrenMultiHopSettings {
+    export type AsObject = {
+        enabled: boolean,
+        entryCountry: string,
+        exitCountry: string,
+        hpkeEpochRotation?: google_protobuf_duration_pb.Duration.AsObject,
+    }
+}
+
+export class ForumLoginRequest extends jspb.Message { 
+    getSid(): string;
+    setSid(value: string): ForumLoginRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumLoginRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumLoginRequest): ForumLoginRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumLoginRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumLoginRequest;
+    static deserializeBinaryFromReader(message: ForumLoginRequest, reader: jspb.BinaryReader): ForumLoginRequest;
+}
+
+export namespace ForumLoginRequest {
+    export type AsObject = {
+        sid: string,
+    }
+}
+
+export class ForumLoginSignature extends jspb.Message { 
+    getPubkeySs58(): string;
+    setPubkeySs58(value: string): ForumLoginSignature;
+    getSignatureHex(): string;
+    setSignatureHex(value: string): ForumLoginSignature;
+    getTimestamp(): number;
+    setTimestamp(value: number): ForumLoginSignature;
+    getNonceHex(): string;
+    setNonceHex(value: string): ForumLoginSignature;
+    getBody(): string;
+    setBody(value: string): ForumLoginSignature;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumLoginSignature.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumLoginSignature): ForumLoginSignature.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumLoginSignature, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumLoginSignature;
+    static deserializeBinaryFromReader(message: ForumLoginSignature, reader: jspb.BinaryReader): ForumLoginSignature;
+}
+
+export namespace ForumLoginSignature {
+    export type AsObject = {
+        pubkeySs58: string,
+        signatureHex: string,
+        timestamp: number,
+        nonceHex: string,
+        body: string,
+    }
+}
+
+export class ForumAttachLogsRequest extends jspb.Message { 
+    getSid(): string;
+    setSid(value: string): ForumAttachLogsRequest;
+    getTopicId(): number;
+    setTopicId(value: number): ForumAttachLogsRequest;
+    getLogGz(): Uint8Array | string;
+    getLogGz_asU8(): Uint8Array;
+    getLogGz_asB64(): string;
+    setLogGz(value: Uint8Array | string): ForumAttachLogsRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumAttachLogsRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumAttachLogsRequest): ForumAttachLogsRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumAttachLogsRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumAttachLogsRequest;
+    static deserializeBinaryFromReader(message: ForumAttachLogsRequest, reader: jspb.BinaryReader): ForumAttachLogsRequest;
+}
+
+export namespace ForumAttachLogsRequest {
+    export type AsObject = {
+        sid: string,
+        topicId: number,
+        logGz: Uint8Array | string,
+    }
+}
+
+export class WarrenStatus extends jspb.Message { 
+    getReconnectCount(): number;
+    setReconnectCount(value: number): WarrenStatus;
+
+    hasLastReconnectAge(): boolean;
+    clearLastReconnectAge(): void;
+    getLastReconnectAge(): google_protobuf_duration_pb.Duration | undefined;
+    setLastReconnectAge(value?: google_protobuf_duration_pb.Duration): WarrenStatus;
+    getObfuscationActive(): boolean;
+    setObfuscationActive(value: boolean): WarrenStatus;
+    getFailoverCount(): number;
+    setFailoverCount(value: number): WarrenStatus;
+
+    hasLastFailoverAge(): boolean;
+    clearLastFailoverAge(): void;
+    getLastFailoverAge(): google_protobuf_duration_pb.Duration | undefined;
+    setLastFailoverAge(value?: google_protobuf_duration_pb.Duration): WarrenStatus;
+
+    hasPubkeyMismatchPending(): boolean;
+    clearPubkeyMismatchPending(): void;
+    getPubkeyMismatchPending(): WarrenPubkeyMismatch | undefined;
+    setPubkeyMismatchPending(value?: WarrenPubkeyMismatch): WarrenStatus;
+    getMaintenanceMigrationActive(): boolean;
+    setMaintenanceMigrationActive(value: boolean): WarrenStatus;
+    getPortMigrationCancellations(): number;
+    setPortMigrationCancellations(value: number): WarrenStatus;
+    getPortMigrationCancellationActive(): boolean;
+    setPortMigrationCancellationActive(value: boolean): WarrenStatus;
+    getHostOffline(): boolean;
+    setHostOffline(value: boolean): WarrenStatus;
+    getExitEgressDead(): boolean;
+    setExitEgressDead(value: boolean): WarrenStatus;
+
+    hasNetworkInfo(): boolean;
+    clearNetworkInfo(): void;
+    getNetworkInfo(): WarrenNetworkInfo | undefined;
+    setNetworkInfo(value?: WarrenNetworkInfo): WarrenStatus;
+    clearNoticesList(): void;
+    getNoticesList(): Array<WarrenNotice>;
+    setNoticesList(value: Array<WarrenNotice>): WarrenStatus;
+    addNotices(value?: WarrenNotice, index?: number): WarrenNotice;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenStatus.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenStatus): WarrenStatus.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenStatus, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenStatus;
+    static deserializeBinaryFromReader(message: WarrenStatus, reader: jspb.BinaryReader): WarrenStatus;
+}
+
+export namespace WarrenStatus {
+    export type AsObject = {
+        reconnectCount: number,
+        lastReconnectAge?: google_protobuf_duration_pb.Duration.AsObject,
+        obfuscationActive: boolean,
+        failoverCount: number,
+        lastFailoverAge?: google_protobuf_duration_pb.Duration.AsObject,
+        pubkeyMismatchPending?: WarrenPubkeyMismatch.AsObject,
+        maintenanceMigrationActive: boolean,
+        portMigrationCancellations: number,
+        portMigrationCancellationActive: boolean,
+        hostOffline: boolean,
+        exitEgressDead: boolean,
+        networkInfo?: WarrenNetworkInfo.AsObject,
+        noticesList: Array<WarrenNotice.AsObject>,
+    }
+}
+
+export class WarrenNotice extends jspb.Message { 
+    getId(): string;
+    setId(value: string): WarrenNotice;
+    getMessage(): string;
+    setMessage(value: string): WarrenNotice;
+    getLevel(): WarrenNoticeLevel;
+    setLevel(value: WarrenNoticeLevel): WarrenNotice;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenNotice.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenNotice): WarrenNotice.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenNotice, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenNotice;
+    static deserializeBinaryFromReader(message: WarrenNotice, reader: jspb.BinaryReader): WarrenNotice;
+}
+
+export namespace WarrenNotice {
+    export type AsObject = {
+        id: string,
+        message: string,
+        level: WarrenNoticeLevel,
+    }
+}
+
+export class WarrenNetworkInfo extends jspb.Message { 
+    getEnvironment(): string;
+    setEnvironment(value: string): WarrenNetworkInfo;
+    getDegraded(): boolean;
+    setDegraded(value: boolean): WarrenNetworkInfo;
+
+    hasDefaultRateBps(): boolean;
+    clearDefaultRateBps(): void;
+    getDefaultRateBps(): number | undefined;
+    setDefaultRateBps(value: number): WarrenNetworkInfo;
+    getPaymentsEnabled(): boolean;
+    setPaymentsEnabled(value: boolean): WarrenNetworkInfo;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenNetworkInfo.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenNetworkInfo): WarrenNetworkInfo.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenNetworkInfo, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenNetworkInfo;
+    static deserializeBinaryFromReader(message: WarrenNetworkInfo, reader: jspb.BinaryReader): WarrenNetworkInfo;
+}
+
+export namespace WarrenNetworkInfo {
+    export type AsObject = {
+        environment: string,
+        degraded: boolean,
+        defaultRateBps?: number,
+        paymentsEnabled: boolean,
+    }
+}
+
+export class WarrenPubkeyMismatch extends jspb.Message { 
+    getExitIdHex(): string;
+    setExitIdHex(value: string): WarrenPubkeyMismatch;
+    getPinnedPubkeyHex(): string;
+    setPinnedPubkeyHex(value: string): WarrenPubkeyMismatch;
+    getObservedPubkeyHex(): string;
+    setObservedPubkeyHex(value: string): WarrenPubkeyMismatch;
+    getCountryCode(): string;
+    setCountryCode(value: string): WarrenPubkeyMismatch;
+    getCity(): string;
+    setCity(value: string): WarrenPubkeyMismatch;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenPubkeyMismatch.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenPubkeyMismatch): WarrenPubkeyMismatch.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenPubkeyMismatch, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenPubkeyMismatch;
+    static deserializeBinaryFromReader(message: WarrenPubkeyMismatch, reader: jspb.BinaryReader): WarrenPubkeyMismatch;
+}
+
+export namespace WarrenPubkeyMismatch {
+    export type AsObject = {
+        exitIdHex: string,
+        pinnedPubkeyHex: string,
+        observedPubkeyHex: string,
+        countryCode: string,
+        city: string,
+    }
+}
+
+export class TrustNewExitKeyRequest extends jspb.Message { 
+    getExitIdHex(): string;
+    setExitIdHex(value: string): TrustNewExitKeyRequest;
+    getNewPubkeyHex(): string;
+    setNewPubkeyHex(value: string): TrustNewExitKeyRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): TrustNewExitKeyRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: TrustNewExitKeyRequest): TrustNewExitKeyRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: TrustNewExitKeyRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): TrustNewExitKeyRequest;
+    static deserializeBinaryFromReader(message: TrustNewExitKeyRequest, reader: jspb.BinaryReader): TrustNewExitKeyRequest;
+}
+
+export namespace TrustNewExitKeyRequest {
+    export type AsObject = {
+        exitIdHex: string,
+        newPubkeyHex: string,
+    }
+}
+
+export class TrustNewExitKeyResponse extends jspb.Message { 
+    getResult(): TrustNewExitKeyResponse.Result;
+    setResult(value: TrustNewExitKeyResponse.Result): TrustNewExitKeyResponse;
+    getErrorMessage(): string;
+    setErrorMessage(value: string): TrustNewExitKeyResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): TrustNewExitKeyResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: TrustNewExitKeyResponse): TrustNewExitKeyResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: TrustNewExitKeyResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): TrustNewExitKeyResponse;
+    static deserializeBinaryFromReader(message: TrustNewExitKeyResponse, reader: jspb.BinaryReader): TrustNewExitKeyResponse;
+}
+
+export namespace TrustNewExitKeyResponse {
+    export type AsObject = {
+        result: TrustNewExitKeyResponse.Result,
+        errorMessage: string,
+    }
+
+    export enum Result {
+    OK = 0,
+    EXIT_NOT_FOUND = 1,
+    PUBKEY_MISMATCH = 2,
+    IO_ERROR = 3,
+    }
+
+}
+
+export class ResetPinnedExitKeysResponse extends jspb.Message { 
+    getResetCount(): number;
+    setResetCount(value: number): ResetPinnedExitKeysResponse;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ResetPinnedExitKeysResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: ResetPinnedExitKeysResponse): ResetPinnedExitKeysResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ResetPinnedExitKeysResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ResetPinnedExitKeysResponse;
+    static deserializeBinaryFromReader(message: ResetPinnedExitKeysResponse, reader: jspb.BinaryReader): ResetPinnedExitKeysResponse;
+}
+
+export namespace ResetPinnedExitKeysResponse {
+    export type AsObject = {
+        resetCount: number,
+    }
+}
+
+export class ReportPubkeyMismatchRequest extends jspb.Message { 
+    getExitIdHex(): string;
+    setExitIdHex(value: string): ReportPubkeyMismatchRequest;
+    getOldPubkeyHex(): string;
+    setOldPubkeyHex(value: string): ReportPubkeyMismatchRequest;
+    getNewPubkeyHex(): string;
+    setNewPubkeyHex(value: string): ReportPubkeyMismatchRequest;
+    getCountryCode(): string;
+    setCountryCode(value: string): ReportPubkeyMismatchRequest;
+    getCity(): string;
+    setCity(value: string): ReportPubkeyMismatchRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ReportPubkeyMismatchRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ReportPubkeyMismatchRequest): ReportPubkeyMismatchRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ReportPubkeyMismatchRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ReportPubkeyMismatchRequest;
+    static deserializeBinaryFromReader(message: ReportPubkeyMismatchRequest, reader: jspb.BinaryReader): ReportPubkeyMismatchRequest;
+}
+
+export namespace ReportPubkeyMismatchRequest {
+    export type AsObject = {
+        exitIdHex: string,
+        oldPubkeyHex: string,
+        newPubkeyHex: string,
+        countryCode: string,
+        city: string,
+    }
+}
+
+export class NatPmpSettings extends jspb.Message { 
+    getEnabled(): boolean;
+    setEnabled(value: boolean): NatPmpSettings;
+    getLifetimeSecs(): number;
+    setLifetimeSecs(value: number): NatPmpSettings;
+    clearRulesList(): void;
+    getRulesList(): Array<NatPmpSettings.Rule>;
+    setRulesList(value: Array<NatPmpSettings.Rule>): NatPmpSettings;
+    addRules(value?: NatPmpSettings.Rule, index?: number): NatPmpSettings.Rule;
+    getProtocol(): NatPmpSettings.Proto;
+    setProtocol(value: NatPmpSettings.Proto): NatPmpSettings;
+    getSuggestedExternalPort(): number;
+    setSuggestedExternalPort(value: number): NatPmpSettings;
+    getInternalPort(): number;
+    setInternalPort(value: number): NatPmpSettings;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): NatPmpSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: NatPmpSettings): NatPmpSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: NatPmpSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): NatPmpSettings;
+    static deserializeBinaryFromReader(message: NatPmpSettings, reader: jspb.BinaryReader): NatPmpSettings;
+}
+
+export namespace NatPmpSettings {
+    export type AsObject = {
+        enabled: boolean,
+        lifetimeSecs: number,
+        rulesList: Array<NatPmpSettings.Rule.AsObject>,
+        protocol: NatPmpSettings.Proto,
+        suggestedExternalPort: number,
+        internalPort: number,
+    }
+
+
+    export class Rule extends jspb.Message { 
+        getProtocol(): NatPmpSettings.Proto;
+        setProtocol(value: NatPmpSettings.Proto): Rule;
+        getSuggestedExternalPort(): number;
+        setSuggestedExternalPort(value: number): Rule;
+        getInternalPort(): number;
+        setInternalPort(value: number): Rule;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): Rule.AsObject;
+        static toObject(includeInstance: boolean, msg: Rule): Rule.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: Rule, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): Rule;
+        static deserializeBinaryFromReader(message: Rule, reader: jspb.BinaryReader): Rule;
+    }
+
+    export namespace Rule {
+        export type AsObject = {
+            protocol: NatPmpSettings.Proto,
+            suggestedExternalPort: number,
+            internalPort: number,
+        }
+    }
+
+
+    export enum Proto {
+    UDP = 0,
+    TCP = 1,
+    BOTH = 2,
+    }
+
+}
+
+export class NatPmpStatus extends jspb.Message { 
+    getState(): NatPmpStatus.State;
+    setState(value: NatPmpStatus.State): NatPmpStatus;
+
+    hasExternalPort(): boolean;
+    clearExternalPort(): void;
+    getExternalPort(): number | undefined;
+    setExternalPort(value: number): NatPmpStatus;
+
+    hasLifetimeGrantedSecs(): boolean;
+    clearLifetimeGrantedSecs(): void;
+    getLifetimeGrantedSecs(): number | undefined;
+    setLifetimeGrantedSecs(value: number): NatPmpStatus;
+
+    hasErrorMessage(): boolean;
+    clearErrorMessage(): void;
+    getErrorMessage(): string | undefined;
+    setErrorMessage(value: string): NatPmpStatus;
+
+    hasErrorReason(): boolean;
+    clearErrorReason(): void;
+    getErrorReason(): NatPmpStatus.ErrorReason | undefined;
+    setErrorReason(value: NatPmpStatus.ErrorReason): NatPmpStatus;
+
+    hasRetryAfterSecs(): boolean;
+    clearRetryAfterSecs(): void;
+    getRetryAfterSecs(): number | undefined;
+    setRetryAfterSecs(value: number): NatPmpStatus;
+
+    hasAttemptsRemaining(): boolean;
+    clearAttemptsRemaining(): void;
+    getAttemptsRemaining(): number | undefined;
+    setAttemptsRemaining(value: number): NatPmpStatus;
+
+    hasWindowResetSecs(): boolean;
+    clearWindowResetSecs(): void;
+    getWindowResetSecs(): number | undefined;
+    setWindowResetSecs(value: number): NatPmpStatus;
+    clearMappingsList(): void;
+    getMappingsList(): Array<NatPmpStatus.Mapping>;
+    setMappingsList(value: Array<NatPmpStatus.Mapping>): NatPmpStatus;
+    addMappings(value?: NatPmpStatus.Mapping, index?: number): NatPmpStatus.Mapping;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): NatPmpStatus.AsObject;
+    static toObject(includeInstance: boolean, msg: NatPmpStatus): NatPmpStatus.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: NatPmpStatus, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): NatPmpStatus;
+    static deserializeBinaryFromReader(message: NatPmpStatus, reader: jspb.BinaryReader): NatPmpStatus;
+}
+
+export namespace NatPmpStatus {
+    export type AsObject = {
+        state: NatPmpStatus.State,
+        externalPort?: number,
+        lifetimeGrantedSecs?: number,
+        errorMessage?: string,
+        errorReason?: NatPmpStatus.ErrorReason,
+        retryAfterSecs?: number,
+        attemptsRemaining?: number,
+        windowResetSecs?: number,
+        mappingsList: Array<NatPmpStatus.Mapping.AsObject>,
+    }
+
+
+    export class Mapping extends jspb.Message { 
+        getInternalPort(): number;
+        setInternalPort(value: number): Mapping;
+        getProtocol(): NatPmpSettings.Proto;
+        setProtocol(value: NatPmpSettings.Proto): Mapping;
+        getState(): NatPmpStatus.State;
+        setState(value: NatPmpStatus.State): Mapping;
+
+        hasExternalPort(): boolean;
+        clearExternalPort(): void;
+        getExternalPort(): number | undefined;
+        setExternalPort(value: number): Mapping;
+
+        hasLifetimeGrantedSecs(): boolean;
+        clearLifetimeGrantedSecs(): void;
+        getLifetimeGrantedSecs(): number | undefined;
+        setLifetimeGrantedSecs(value: number): Mapping;
+
+        hasErrorMessage(): boolean;
+        clearErrorMessage(): void;
+        getErrorMessage(): string | undefined;
+        setErrorMessage(value: string): Mapping;
+
+        hasErrorReason(): boolean;
+        clearErrorReason(): void;
+        getErrorReason(): NatPmpStatus.ErrorReason | undefined;
+        setErrorReason(value: NatPmpStatus.ErrorReason): Mapping;
+
+        hasRetryAfterSecs(): boolean;
+        clearRetryAfterSecs(): void;
+        getRetryAfterSecs(): number | undefined;
+        setRetryAfterSecs(value: number): Mapping;
+
+        hasAttemptsRemaining(): boolean;
+        clearAttemptsRemaining(): void;
+        getAttemptsRemaining(): number | undefined;
+        setAttemptsRemaining(value: number): Mapping;
+
+        hasWindowResetSecs(): boolean;
+        clearWindowResetSecs(): void;
+        getWindowResetSecs(): number | undefined;
+        setWindowResetSecs(value: number): Mapping;
+
+        serializeBinary(): Uint8Array;
+        toObject(includeInstance?: boolean): Mapping.AsObject;
+        static toObject(includeInstance: boolean, msg: Mapping): Mapping.AsObject;
+        static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+        static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+        static serializeBinaryToWriter(message: Mapping, writer: jspb.BinaryWriter): void;
+        static deserializeBinary(bytes: Uint8Array): Mapping;
+        static deserializeBinaryFromReader(message: Mapping, reader: jspb.BinaryReader): Mapping;
+    }
+
+    export namespace Mapping {
+        export type AsObject = {
+            internalPort: number,
+            protocol: NatPmpSettings.Proto,
+            state: NatPmpStatus.State,
+            externalPort?: number,
+            lifetimeGrantedSecs?: number,
+            errorMessage?: string,
+            errorReason?: NatPmpStatus.ErrorReason,
+            retryAfterSecs?: number,
+            attemptsRemaining?: number,
+            windowResetSecs?: number,
+        }
+    }
+
+
+    export enum State {
+    DISABLED = 0,
+    REQUESTING = 1,
+    MAPPED = 2,
+    FAILED = 3,
+    RATE_LIMITED = 4,
+    }
+
+    export enum ErrorReason {
+    UNKNOWN = 0,
+    SUGGESTED_PORT_IN_USE = 1,
+    OUT_OF_RESOURCES = 2,
+    NOT_AUTHORIZED = 3,
+    }
+
 }
 
 export class RelayOverride extends jspb.Message { 
@@ -2392,6 +3108,8 @@ export class DnsOptions extends jspb.Message {
     clearCustomOptions(): void;
     getCustomOptions(): CustomDnsOptions | undefined;
     setCustomOptions(value?: CustomDnsOptions): DnsOptions;
+    getAllowExternalDns(): boolean;
+    setAllowExternalDns(value: boolean): DnsOptions;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DnsOptions.AsObject;
@@ -2408,6 +3126,7 @@ export namespace DnsOptions {
         state: DnsOptions.DnsState,
         defaultOptions?: DefaultDnsOptions.AsObject,
         customOptions?: CustomDnsOptions.AsObject,
+        allowExternalDns: boolean,
     }
 
     export enum DnsState {
@@ -3455,6 +4174,11 @@ export enum AfterDisconnect {
     RECONNECT = 2,
 }
 
+export enum TunnelType {
+    WIREGUARD = 0,
+    WARREN = 1,
+}
+
 export enum FeatureIndicator {
     QUANTUM_RESISTANCE = 0,
     MULTIHOP = 1,
@@ -3472,12 +4196,21 @@ export enum FeatureIndicator {
     CUSTOM_MTU = 13,
     DAITA = 14,
     DAITA_MULTIHOP = 15,
+    ALLOW_EXTERNAL_DNS = 16,
+    DAITA_UNAVAILABLE = 17,
+    REDUCED_MTU = 18,
 }
 
 export enum Ownership {
     ANY = 0,
     MULLVAD_OWNED = 1,
     RENTED = 2,
+}
+
+export enum WarrenNoticeLevel {
+    WARREN_NOTICE_INFO = 0,
+    WARREN_NOTICE_WARNING = 1,
+    WARREN_NOTICE_ERROR = 2,
 }
 
 export enum IpVersion {

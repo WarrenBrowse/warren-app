@@ -70,6 +70,70 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllFunctor()
 }
 
 //static
+ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(const std::vector<uint32_t> &salts)
+{
+	//
+	// Both provider keys, rekeyed to every salt we are asked to sweep. The
+	// current build's own keys are always included: WarrenGuidForSalt maps our
+	// compiled salt back onto itself when the requested salt equals it.
+	//
+	std::unordered_set<GUID> providers;
+
+	for (const auto salt : salts)
+	{
+		providers.insert(WarrenGuidForSalt(MullvadGuids::Provider(), salt));
+		providers.insert(WarrenGuidForSalt(MullvadGuids::ProviderPersistent(), salt));
+	}
+
+	return [providers = std::move(providers)](wfp::FilterEngine &engine)
+	{
+		auto ours = [&providers](const auto &obj) -> bool
+		{
+			return nullptr != obj.providerKey
+				&& providers.end() != providers.find(*obj.providerKey);
+		};
+
+		std::unordered_set<GUID> filtersToRemove;
+		wfp::ObjectEnumerator::Filters(engine, [&](const auto &filter) -> bool
+		{
+			if (ours(filter))
+			{
+				filtersToRemove.insert(filter.filterKey);
+			}
+			return true;
+		});
+
+		std::unordered_set<GUID> sublayersToRemove;
+		wfp::ObjectEnumerator::Sublayers(engine, [&](const auto &sublayer) -> bool
+		{
+			if (ours(sublayer))
+			{
+				sublayersToRemove.insert(sublayer.subLayerKey);
+			}
+			return true;
+		});
+
+		//
+		// Filters reference sublayers, so they have to go first.
+		//
+		for (const auto &filter : filtersToRemove)
+		{
+			wfp::ObjectDeleter::DeleteFilter(engine, filter);
+		}
+
+		for (const auto &sublayer : sublayersToRemove)
+		{
+			wfp::ObjectDeleter::DeleteSublayer(engine, sublayer);
+		}
+
+		for (const auto &provider : providers)
+		{
+			wfp::ObjectDeleter::DeleteProvider(engine, provider);
+		}
+	};
+}
+
+//static
 ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveNonPersistentFunctor()
 {
 	return [](wfp::FilterEngine &engine)

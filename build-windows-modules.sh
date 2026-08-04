@@ -3,7 +3,9 @@
 set -eu
 
 function usage {
-    echo "usage: $0 [clean|build] [--max-concurrent-processes <n>] [solution...]"
+    echo "usage: $0 [clean|build] [--prod|--beta|--staging] [--max-concurrent-processes <n>] [solution...]"
+    echo "  --prod|--beta|--staging         Product environment the WFP object keys are salted for."
+    echo "                                  Defaults to WARREN_PRODUCT_ENV, then prod."
     echo "  --max-concurrent-processes <n>  Limit concurrent processes that msbuild can spawn to <n>. Defaults to number of processor cores."
     exit 1
 }
@@ -32,6 +34,9 @@ while [[ "$#" -gt 0 ]]; do
         build) ACTION="build";;
         winfw) SOLUTIONS+=(winfw);;
         nsis-plugins) SOLUTIONS+=(nsis-plugins);;
+        --prod) export WARREN_PRODUCT_ENV="prod";;
+        --beta) export WARREN_PRODUCT_ENV="beta";;
+        --staging) export WARREN_PRODUCT_ENV="staging";;
         --max-concurrent-processes)
             MAX_CPUS="$2"
             shift
@@ -73,6 +78,19 @@ function clean_solution {
     rm -r "${path:?}/bin/"* 2>/dev/null || true
 }
 
+# WFP object keys are machine-wide, so each product environment derives its own
+# set from this salt (see windows/winfw/src/winfw/mullvadguids.h). Production is
+# 0, which leaves its GUIDs bit for bit unchanged; anything else must be a fixed,
+# distinct constant. Verified collision-free across the three environments.
+warren_fw_guid_salt() {
+    case "${WARREN_PRODUCT_ENV:-prod}" in
+        prod)    echo "0x0" ;;
+        beta)    echo "0x5BE7A001" ;;
+        staging) echo "0x57A61009" ;;
+        *) echo "WARREN_PRODUCT_ENV must be prod, beta or staging, got '${WARREN_PRODUCT_ENV}'" >&2; exit 1 ;;
+    esac
+}
+
 function build_solution_config {
     local sln="$1"
     local config="$2"
@@ -90,6 +108,13 @@ function build_solution_config {
     # represents a multiplier expressed in percents. That is, /Zm400 equates to 4x the amount of memory VS is allowed
     # to reserve compared to the default value. This parameter may be subject to tweaking if the issue persists.
     # /Zm200 was not enough from our empirical testing, so /Zm400 was semi-arbitrarily chosen for now.
+    # The environment salt reaches the compiler through `CL`, which cl.exe
+    # prepends to every invocation. Two reasons for this shape: putting it in
+    # /p:AdditionalOptions would mean two space-separated switches, and quoting
+    # that through bash -> cmd.exe -> MSBuild loses the quotes (MSB1001); and
+    # the switch is spelled `-D`, not `/D`, because MSYS rewrites a leading
+    # slash into a Windows path (the value became C:\Program Files\Git\D...).
+    CL="-DWARREN_FW_GUID_SALT=$(warren_fw_guid_salt)ul" \
     cmd.exe "/c msbuild.exe $MAX_CPU_COUNT_ARG $(to_win_path "$sln") /p:Configuration=$config /p:Platform=$platform /p:AdditionalOptions=/Zm400"
     set +x
 }
@@ -153,6 +178,16 @@ function clean_all {
 function build {
     if [[ $BUILD_WINFW == "true" ]]; then
         build_solution "./windows/winfw" "winfw.sln"
+        # Nothing in the produced dll says which environment its object keys
+        # were salted for, so stamp it: a daemon paired with a winfw.dll from
+        # another environment arms its kill switch under object keys that
+        # environment's teardown never sweeps.
+        for mode in $CPP_BUILD_MODES; do
+            for target in $CPP_BUILD_TARGETS; do
+                printf '%s\n' "${WARREN_PRODUCT_ENV:-prod}" \
+                    > "$(get_solution_output_path "./windows/winfw" "$target" "$mode")/.warren-product-env"
+            done
+        done
     fi
 
     if [[ $BUILD_NSIS == "true" ]]; then

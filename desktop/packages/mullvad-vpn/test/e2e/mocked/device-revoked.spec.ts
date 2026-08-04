@@ -46,13 +46,8 @@ test.describe('Device revoked', () => {
         type: 'logged in',
         deviceState: {
           type: 'logged in',
-          accountAndDevice: {
-            accountNumber: '1234123412341234',
-            device: {
-              id: '1',
-              name: 'Test',
-              created: new Date(),
-            },
+          warrenIdentity: {
+            pubkey: '1234123412341234123412341234123412341234123412341234123412341234',
           },
         },
       });

@@ -98,3 +98,66 @@ for dpi_size in "mdpi-24" "hdpi-36" "xhdpi-48" "xxhdpi-72" "xxxhdpi-96"; do
 done
 
 rm "$white_mono_icon_path"
+
+# Beta flavor adaptive-icon foreground: the mark recoloured to the sand tone
+# and shrunk to clear the amber BETA badge, sitting on the brown background set
+# by the beta colours overlay (android/app/src/beta/res/values/colors.xml).
+# Derived from the prod foreground and the same badge asset the desktop icons
+# use, so the two platforms cannot drift apart.
+#
+# The badge lands inside the adaptive-icon safe zone (the inner 72dp of 108dp,
+# radius 144 of the 432px foreground): a launcher masks the icon to a circle
+# and anything outside that is cropped. Its offset matches the desktop layout,
+# where the mark is scaled to 86% and nudged up and left by 8/126 and 12/126 of
+# the disc radius.
+if ! command -v magick > /dev/null; then
+    echo >&2 "magick (imagemagick) is required to generate the beta launcher icon"
+    exit 1
+fi
+
+if ! command -v rsvg-convert > /dev/null; then
+    echo >&2 "rsvg-convert (librsvg) is required to generate the beta launcher icon"
+    exit 1
+fi
+
+if ! command -v python3 > /dev/null; then
+    echo >&2 "python3 is required to generate the beta launcher icon"
+    exit 1
+fi
+
+prod_foreground="../lib/ui/resource/src/main/res/drawable-nodpi/ic_warren_foreground.png"
+beta_foreground="../app/src/beta/res/drawable-nodpi/ic_warren_foreground.png"
+badge_svg="$(mktemp -t beta-badge).svg"
+badge_png="$(mktemp -t beta-badge).png"
+
+python3 ../../graphics/make-beta-icon.py \
+    --badge ../../graphics/beta-badge.svg \
+    --badge-only --size 432 --circle-radius 144 \
+    --output "$badge_svg"
+rsvg-convert -w 432 -h 432 -o "$badge_png" "$badge_svg"
+
+echo "$prod_foreground -> (sand + badge) $beta_foreground"
+mkdir -p "$(dirname "$beta_foreground")"
+magick -size 432x432 xc:none \
+    \( "$prod_foreground" -fill "#F5ECDA" -colorize 100 -resize 86% \) \
+    -gravity center -geometry -9-14 -composite \
+    "$badge_png" -gravity northwest -geometry +0+0 -composite \
+    "PNG32:$beta_foreground"
+
+# Themed icons (Android 13+) draw the monochrome layer alone, tinted by the
+# launcher, so the beta badge has to be a silhouette there: a filled disc with
+# the lettering knocked out of it.
+prod_mono="../lib/ui/resource/src/main/res/drawable-nodpi/ic_warren_mono.png"
+beta_mono="../app/src/beta/res/drawable-nodpi/ic_warren_mono.png"
+badge_mono_png="$(mktemp -t beta-badge-mono).png"
+
+magick "$badge_png" -fuzz 25% -transparent "#332818" -fill white -colorize 100 \
+    "PNG32:$badge_mono_png"
+
+echo "$prod_mono -> (badge knockout) $beta_mono"
+magick -size 432x432 xc:none \
+    \( "$prod_mono" -resize 86% \) -gravity center -geometry -9-14 -composite \
+    "$badge_mono_png" -gravity northwest -geometry +0+0 -composite \
+    "PNG32:$beta_mono"
+
+rm -f "$badge_svg" "$badge_png" "$badge_mono_png"

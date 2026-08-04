@@ -1,0 +1,30 @@
+//
+//  VPNSettingsDataSourceDelegate.swift
+//  MullvadVPN
+//
+//  Created by pronebird on 11/10/2021.
+//  Copyright © 2026 Mullvad VPN AB. All rights reserved.
+//
+
+import Foundation
+import WarrenSettings
+
+protocol DNSSettingsDataSourceDelegate: AnyObject {
+    func didChangeViewModel(_ viewModel: VPNSettingsViewModel)
+    // Separate from `didChangeViewModel`: the toggle lives outside
+    // `DNSSettings` in the schema (`TunnelSettingsV8.allowExternalDns`),
+    // so it carries its own update.
+    func didChangeAllowExternalDns(_ isEnabled: Bool)
+    func showInfo(for: VPNSettingsInfoButtonItem)
+}
+
+protocol VPNSettingsDataSourceDelegate: AnyObject {
+    func didUpdateTunnelSettings(_ update: TunnelSettingsUpdate)
+    func showInfo(for: VPNSettingsInfoButtonItem)
+    func showDetails(for: VPNSettingsDetailsButtonItem)
+    func showDNSSettings()
+    func showIPOverrides()
+    func showResetPinnedExitKeys()
+    func didSelectWireGuardPort(_ port: UInt16?)
+    func humanReadablePortRepresentation() -> String
+}

@@ -2,12 +2,12 @@ msgid ""
 msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Crowdin-Project: mullvad-app\n"
+"X-Crowdin-Project: warren-app\n"
 "X-Crowdin-Project-ID: 350815\n"
 "X-Crowdin-Language: th\n"
 "X-Crowdin-File: messages.pot\n"
 "X-Crowdin-File-ID: 12\n"
-"Project-Id-Version: mullvad-app\n"
+"Project-Id-Version: warren-app\n"
 "Language-Team: Thai\n"
 "Language: th_TH\n"
 "PO-Revision-Date: 2026-04-27 09:12\n"
@@ -18,9 +18,9 @@ msgstr "อีก %(amount)d..."
 msgid "%(duration)s was added, account paid until %(expiry)s."
 msgstr "มีการเพิ่ม %(duration)s แล้ว บัญชีได้ชำระเงินจนถึง %(expiry)s"
 
-#. The label for the WireGuard port option.
+#. The label for the QUIC port option.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgid "%(wireguard)s port"
 msgstr "พอร์ต %(wireguard)s"
 
@@ -249,7 +249,7 @@ msgstr "รหัสผ่าน"
 msgid "Port"
 msgstr "พอร์ต"
 
-#. This refers to the quantum resistance setting in the WireGuard settings view.
+#. This refers to the quantum resistance setting in the QUIC settings view.
 #. This is displayed when the feature is on.
 msgid "Quantum resistance"
 msgstr "การต่อต้านควอนตัม"
@@ -308,6 +308,9 @@ msgstr "ประเภท"
 msgid "Unblock"
 msgstr "ปลดบล็อก"
 
+msgid "Unknown"
+msgstr "ไม่ทราบ"
+
 msgid "UNSECURED CONNECTION"
 msgstr "การเชื่อมต่อที่ไม่ปลอดภัย"
 
@@ -328,9 +331,9 @@ msgctxt "accessibility"
 msgid "%(title)s, View loaded"
 msgstr "%(title)s โหลดมุมมองแล้ว"
 
-#. Text for screen readers to describe the WireGuard port settings navigation button.
+#. Text for screen readers to describe the QUIC port settings navigation button.
 #. Available placeholders:
-#. %(wireguard)s - will be replaced with WireGuard
+#. %(wireguard)s - will be replaced with QUIC
 msgctxt "accessibility"
 msgid "%(wireguard)s port settings"
 msgstr "การตั้งค่าพอร์ต %(wireguard)s"
@@ -409,9 +412,9 @@ msgid "Forget account number %(accountNumber)s"
 msgstr "ลืมหมายเลขบัญชี %(accountNumber)s"
 
 #. Accessibility label for link to VPN settings where
-#. the user can change WireGuard port.
+#. the user can change QUIC port.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "accessibility"
 msgid "Go to anti-censorship settings to change %(wireGuard)s port"
 msgstr "ไปที่การตั้งค่าป้องกันการเซ็นเซอร์เพื่อเปลี่ยนพอร์ต %(wireGuard)s"
@@ -579,6 +582,39 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr "ชำระเงินแล้วจนถึง"
 
+#. Shown while the saved card details are unknown.
+msgctxt "account-view"
+msgid "Active"
+msgstr "ใช้งานอยู่"
+
+#. Label of the auto-renewal block on the account view.
+msgctxt "account-view"
+msgid "Automatic renewal"
+msgstr "การต่ออายุอัตโนมัติ"
+
+#. Line showing the date of the last automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the charge date
+msgctxt "account-view"
+msgid "Last renewal on %(date)s"
+msgstr "ต่ออายุครั้งล่าสุดเมื่อ %(date)s"
+
+msgctxt "account-view"
+msgid "Public key (wallet address)"
+msgstr "กุญแจสาธารณะ (ที่อยู่กระเป๋าเงิน)"
+
+#. Permanent line showing the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "account-view"
+msgid "Renews monthly, next around %(date)s"
+msgstr "ต่ออายุทุกเดือน ครั้งถัดไปประมาณ %(date)s"
+
+#. Button that turns automatic renewal off.
+msgctxt "account-view"
+msgid "Turn off"
+msgstr "ปิด"
+
 #. Page title for anti censorship settings view
 msgctxt "anti-censorship-view"
 msgid "Anti-censorship"
@@ -596,8 +632,8 @@ msgstr "โปรดทราบว่าวิธีการเหล่าน
 
 #. First paragraph of description text in anti-censorship view
 msgctxt "anti-censorship-view"
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When \"Automatic\" is selected, the app will attempt all methods until one works."
-msgstr "วิธีการเหล่านี้อาจมีประโยชน์ในสถานการณ์ที่คุณถูกบล็อกไม่ให้เข้าถึง Mullvad เมื่อเลือก \"อัตโนมัติ\" แอปจะพยายามใช้ทุกวิธีจนกว่าจะมีวิธีใดวิธีหนึ่งที่ใช้งานได้"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When \"Automatic\" is selected, the app will attempt all methods until one works."
+msgstr "วิธีการเหล่านี้อาจมีประโยชน์ในสถานการณ์ที่คุณถูกบล็อกไม่ให้เข้าถึง Warren เมื่อเลือก \"อัตโนมัติ\" แอปจะพยายามใช้ทุกวิธีจนกว่าจะมีวิธีใดวิธีหนึ่งที่ใช้งานได้"
 
 msgctxt "api-access-methods-view"
 msgid "Add method"
@@ -677,8 +713,8 @@ msgid "Local SOCKS5 server"
 msgstr "เซิร์ฟเวอร์ SOCKS5 ภายใน"
 
 msgctxt "api-access-methods-view"
-msgid "Manage and add custom methods to access the Mullvad API."
-msgstr "จัดการและเพิ่มวิธีแบบกำหนดเอง เพื่อเข้าถึง Mullvad API"
+msgid "Manage and add custom methods to access the Warren API."
+msgstr "จัดการและเพิ่มวิธีแบบกำหนดเอง เพื่อเข้าถึง Warren API"
 
 msgctxt "api-access-methods-view"
 msgid "On some networks, where various types of censorship are being used, the API servers might not be directly reachable."
@@ -737,8 +773,8 @@ msgid "The app needs the remote server details, where your local SOCKS5 server w
 msgstr "แอปต้องการรายละเอียดเซิร์ฟเวอร์ทางไกล เพื่อให้ SOCKS5 ภายในของคุณส่งต่อการรับส่งข้อมูลของคุณ"
 
 msgctxt "api-access-methods-view"
-msgid "The app needs to communicate with a Mullvad API server to log you in, fetch server lists, and other critical operations."
-msgstr "แอปจำเป็นต้องสื่อสารกับเซิร์ฟเวอร์ Mullvad API เพื่อนำคุณเข้าสู่ระบบ ดึงข้อมูลรายการเซิร์ฟเวอร์ และการดำเนินการที่สำคัญอื่นๆ"
+msgid "The app needs to communicate with a Warren API server to log you in, fetch server lists, and other critical operations."
+msgstr "แอปจำเป็นต้องสื่อสารกับเซิร์ฟเวอร์ Warren API เพื่อนำคุณเข้าสู่ระบบ ดึงข้อมูลรายการเซิร์ฟเวอร์ และการดำเนินการที่สำคัญอื่นๆ"
 
 msgctxt "api-access-methods-view"
 msgid "The in use API access method will change."
@@ -749,8 +785,8 @@ msgid "The TCP port where your local SOCKS5 server is listening."
 msgstr "พอร์ต TCP ที่เซิร์ฟเวอร์ SOCKS5 ภายในของคุณกำลังฟังอยู่"
 
 msgctxt "api-access-methods-view"
-msgid "This can be useful if the API is censored but Mullvad’s bridge servers are not."
-msgstr "ตัวเลือกนี้อาจมีประโยชน์ในกรณีที่ API ถูกเซ็นเซอร์ แต่เซิร์ฟเวอร์ Bridge ของ Mullvad ไม่ถูกเซ็นเซอร์"
+msgid "This can be useful if the API is censored but Warren’s bridge servers are not."
+msgstr "ตัวเลือกนี้อาจมีประโยชน์ในกรณีที่ API ถูกเซ็นเซอร์ แต่เซิร์ฟเวอร์ Bridge ของ Warren ไม่ถูกเซ็นเซอร์"
 
 msgctxt "api-access-methods-view"
 msgid "This can be useful when you are not affected by censorship."
@@ -769,16 +805,16 @@ msgid "Transport protocol"
 msgstr "โพรโทคอลการส่งข้อมูล"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Direct” method, the app communicates with a Mullvad API server directly without any intermediate proxies."
-msgstr "การใช้วิธีการ \"โดยตรง\" จะทำให้แอปสื่อสารกับเซิร์ฟเวอร์ Mullvad API โดยตรง โดยไม่ต้องใช้พร็อกซี่ตัวกลาง"
+msgid "With the “Direct” method, the app communicates with a Warren API server directly without any intermediate proxies."
+msgstr "การใช้วิธีการ \"โดยตรง\" จะทำให้แอปสื่อสารกับเซิร์ฟเวอร์ Warren API โดยตรง โดยไม่ต้องใช้พร็อกซี่ตัวกลาง"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Mullvad API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
-msgstr "การใช้วิธี \"พร็อกซี DNS ที่เข้ารหัส\" จะช่วยให้แอปสื่อสารกับ Mullvad API ของเราผ่านที่อยู่พร็อกซี ซึ่งทำได้โดยดึงที่อยู่จากเซิร์ฟเวอร์ DNS ผ่าน HTTPS (DoH) แล้วจึงใช้ที่อยู่ดังกล่าวเพื่อเข้าถึงเซิร์ฟเวอร์ API ของเรา"
+msgid "With the “Encrypted DNS proxy” method, the app will communicate with our Warren API through a proxy address. It does this by retrieving an address from a DNS over HTTPS (DoH) server and then using that to reach our API servers."
+msgstr "การใช้วิธี \"พร็อกซี DNS ที่เข้ารหัส\" จะช่วยให้แอปสื่อสารกับ Warren API ของเราผ่านที่อยู่พร็อกซี ซึ่งทำได้โดยดึงที่อยู่จากเซิร์ฟเวอร์ DNS ผ่าน HTTPS (DoH) แล้วจึงใช้ที่อยู่ดังกล่าวเพื่อเข้าถึงเซิร์ฟเวอร์ API ของเรา"
 
 msgctxt "api-access-methods-view"
-msgid "With the “Mullvad bridges” method, the app communicates with a Mullvad API server via a Mullvad bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
-msgstr "การใช้วิธี \"Mullvad bridges\" จะทำให้แอปสื่อสารกับเซิร์ฟเวอร์ Mullvad API ผ่านเซิร์ฟเวอร์ Mullvad bridge โดยการรับส่งข้อมูลที่ Shadowsocks ทำให้ข้อมูลยุ่งเหยิง"
+msgid "With the “Warren bridges” method, the app communicates with a Warren API server via a Warren bridge server. It does this by sending the traffic obfuscated by Shadowsocks."
+msgstr "การใช้วิธี \"Warren bridges\" จะทำให้แอปสื่อสารกับเซิร์ฟเวอร์ Warren API ผ่านเซิร์ฟเวอร์ Warren bridge โดยการรับส่งข้อมูลที่ Shadowsocks ทำให้ข้อมูลยุ่งเหยิง"
 
 #. Title of the app info view.
 msgctxt "app-info-view"
@@ -991,6 +1027,46 @@ msgctxt "app-upgrade-view"
 msgid "You are using the latest version"
 msgstr "คุณกำลังใช้เวอร์ชันล่าสุด"
 
+#. Label displayed when an error occurred due to the installer failing to start
+#. and the suggested resolution is to download the update again.
+msgctxt "app-upgrade-view"
+msgid "Could not open installer, please try again or report the problem on our community forum."
+msgstr "ไม่สามารถเปิดโปรแกรมติดตั้งได้ โปรดลองอีกครั้งหรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+#. Label displayed when an error occurred due to the download failing
+msgctxt "app-upgrade-view"
+msgid "Download failed, please check your connection/firewall and try again, or report the problem on our community forum."
+msgstr "การดาวน์โหลดล้มเหลว โปรดตรวจสอบการเชื่อมต่อ/ไฟร์วอลล์ของคุณและลองอีกครั้ง หรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+#. Label displayed when an error occurred within the installer
+msgctxt "app-upgrade-view"
+msgid "Installer quit unexpectedly, please try again or report the problem on our community forum."
+msgstr "โปรแกรมติดตั้งหยุดทำงานอย่างไม่คาดคิด โปรดลองอีกครั้งหรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+#. Button text to report a problem on the community forum
+msgctxt "app-upgrade-view"
+msgid "Report a problem on the forum"
+msgstr "รายงานปัญหาในฟอรัม"
+
+msgctxt "app-upgrade-view"
+msgid "This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it."
+msgstr "Warren เวอร์ชันนี้ไม่ได้รับการสนับสนุนอีกต่อไป เพื่อให้การเชื่อมต่อของคุณยังได้รับการปกป้อง คุณต้องอัปเดตแอปจึงจะใช้งานต่อได้"
+
+#. Label displayed when an unknown error occurred
+msgctxt "app-upgrade-view"
+msgid "Unknown error occurred. Please try again or report the problem on our community forum."
+msgstr "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ โปรดลองอีกครั้งหรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+#. Title of the screen that forces the user to update.
+msgctxt "app-upgrade-view"
+msgid "Update required"
+msgstr "ต้องอัปเดต"
+
+#. Label displayed when an error occurred due to the installer failed verification
+msgctxt "app-upgrade-view"
+msgid "Verification failed, please try again or report the problem on our community forum."
+msgstr "การตรวจสอบล้มเหลว โปรดลองอีกครั้งหรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
 msgctxt "auth-failure"
 msgid "Blocking internet: account is out of time"
 msgstr "บล็อกอินเทอร์เน็ต: บัญชีหมดเวลา"
@@ -1006,6 +1082,68 @@ msgstr "ไม่สามารถตรวจสอบความถูกต
 msgctxt "auth-failure"
 msgid "You are logged in with an invalid account number. Please log out and try another one."
 msgstr "คุณกำลังเข้าสู่ระบบโดยใช้หมายเลขบัญชีที่ไม่ถูกต้อง โปรดออกจากระบบแล้วลองใช้บัญชีอื่น"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "กำลังบล็อกอินเทอร์เน็ต: การเข้าถึงของคุณถูกระงับเนื่องจากละเมิดนโยบายการใช้งาน หากคุณคิดว่านี่เป็นความผิดพลาด โปรดติดต่อฝ่ายสนับสนุน"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
+msgstr "กำลังบล็อกอินเทอร์เน็ต: การเข้าถึงของคุณถูกระงับเนื่องจากมีการใช้พอร์ตที่ส่งต่อในทางที่ผิด หากคุณคิดว่านี่เป็นความผิดพลาด โปรดติดต่อฝ่ายสนับสนุน"
+
+msgctxt "auth-failure"
+msgid "Unable to authenticate account. Please report the problem on our community forum."
+msgstr "ไม่สามารถตรวจสอบความถูกต้องของบัญชีได้ โปรดรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+#. Accessibility label of the beta badge button.
+msgctxt "beta-badge"
+msgid "About the Warren beta"
+msgstr "เกี่ยวกับ Warren รุ่นเบต้า"
+
+#. Label of the beta badge shown in beta builds.
+msgctxt "beta-badge"
+msgid "BETA"
+msgstr "BETA"
+
+msgctxt "beta-badge"
+msgid "Free beta network, limited bandwidth"
+msgstr "เครือข่ายเบต้าฟรี แบนด์วิดท์จำกัด"
+
+#. Short beta banner line. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "Free beta network, speed capped at %(mbps)d Mbps"
+msgstr "เครือข่ายเบต้าฟรี ความเร็วจำกัดที่ %(mbps)d Mbps"
+
+#. Beta info dialog sentence. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "beta-badge"
+msgid "It runs on a separate network with bandwidth capped at %(mbps)d Mbps."
+msgstr "ทำงานบนเครือข่ายแยกต่างหากที่จำกัดแบนด์วิดท์ไว้ที่ %(mbps)d Mbps"
+
+msgctxt "beta-badge"
+msgid "It runs on a separate network with limited bandwidth."
+msgstr "ทำงานบนเครือข่ายแยกต่างหากที่มีแบนด์วิดท์จำกัด"
+
+#. Link to the community forum in the beta info dialog.
+msgctxt "beta-badge"
+msgid "Share your feedback on the forum"
+msgstr "แบ่งปันความคิดเห็นของคุณในฟอรัม"
+
+#. Paragraph of the beta info dialog clarifying that the beta terms are temporary.
+msgctxt "beta-badge"
+msgid "These are not the final service conditions: the full-speed network is a separate, paid product."
+msgstr "นี่ไม่ใช่เงื่อนไขบริการขั้นสุดท้าย เครือข่ายความเร็วเต็มเป็นผลิตภัณฑ์แบบเสียเงินแยกต่างหาก"
+
+#. First paragraph of the beta info dialog.
+msgctxt "beta-badge"
+msgid "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+msgstr "แอปนี้ใช้ Warren รุ่นเบต้าแบบฟรี ซึ่งช่วยให้เราตรวจสอบ Warren ในสภาพการใช้งานจริง"
+
+#. Title of the beta info dialog.
+msgctxt "beta-badge"
+msgid "Warren beta"
+msgstr "Warren รุ่นเบต้า"
 
 #. Text displayed when there are no updates for this platform in the app version
 msgctxt "changelog-view"
@@ -1122,6 +1260,52 @@ msgstr "คุณจำเป็นต้องปิดใช้งาน \"โ
 msgctxt "connect-view"
 msgid "You’re all set!"
 msgstr "คุณพร้อมแล้ว!"
+
+#. This is used as a feature indicator (warning) shown when the user enabled
+#. DAITA but the current server did not grant the defense, so it is NOT
+#. protecting this connection.
+#. Available placeholders:
+#. %(DAITA)s - Is a non-translatable feature "DAITA"
+msgctxt "connect-view"
+msgid "%(DAITA)s: not active on this server"
+msgstr "%(DAITA)s: ไม่ได้ทำงานบนเซิร์ฟเวอร์นี้"
+
+msgctxt "connect-view"
+msgid "Could not refresh the beta access. Check your connection and try again."
+msgstr "ไม่สามารถรีเฟรชสิทธิ์เข้าใช้งานเบต้าได้ ตรวจสอบการเชื่อมต่อของคุณแล้วลองอีกครั้ง"
+
+#. could not be established.
+msgctxt "connect-view"
+msgid "Port forwarding: blocked"
+msgstr "การส่งต่อพอร์ต: ถูกบล็อก"
+
+#. public port is already taken on the connected exit.
+msgctxt "connect-view"
+msgid "Port forwarding: port in use"
+msgstr "การส่งต่อพอร์ต: พอร์ตถูกใช้งานอยู่"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+msgctxt "connect-view"
+msgid "Reduced MTU"
+msgstr "MTU ลดลง"
+
+#. Feature indicator (warning) shown when the network path cannot carry
+#. full-size packets; the tunnel adapts automatically.
+#. Available placeholders:
+#. %(mtu)s - the measured usable packet size in bytes
+msgctxt "connect-view"
+msgid "Reduced MTU (%(mtu)s)"
+msgstr "MTU ลดลง (%(mtu)s)"
+
+#. Button label that re-activates the free beta access.
+msgctxt "connect-view"
+msgid "Refresh beta access"
+msgstr "รีเฟรชสิทธิ์เข้าใช้งานเบต้า"
+
+msgctxt "connect-view"
+msgid "This app uses the free Warren beta: no payment needed. Refresh your beta access to continue."
+msgstr "แอปนี้ใช้ Warren เบต้าแบบฟรี ไม่ต้องชำระเงิน รีเฟรชสิทธิ์เข้าใช้งานเบต้าของคุณเพื่อดำเนินการต่อ"
 
 #. The hostname line displayed below the country on the main screen
 #. Available placeholders:
@@ -1302,8 +1486,8 @@ msgid "The device will be removed from the list and logged out."
 msgstr "อุปกรณ์จะถูกลบออกจากรายการและออกจากระบบ"
 
 msgctxt "device-management"
-msgid "This is the name assigned to the device. Each device logged in on a Mullvad account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
-msgstr "นี่เป็นชื่อที่มอบหมายให้กับอุปกรณ์ อุปกรณ์แต่ละเครื่องที่ลงชื่อเข้าใช้บนบัญชี Mullvad จะได้รับชื่อเฉพาะ ที่จะช่วยคุณระบุอุปกรณ์ ในขณะที่คุณจัดการอุปกรณ์ของคุณในแอปหรือบนเว็บไซต์"
+msgid "This is the name assigned to the device. Each device logged in on a Warren account gets a unique name that helps you identify it when you manage your devices in the app or on the website."
+msgstr "นี่เป็นชื่อที่มอบหมายให้กับอุปกรณ์ อุปกรณ์แต่ละเครื่องที่ลงชื่อเข้าใช้บนบัญชี Warren จะได้รับชื่อเฉพาะ ที่จะช่วยคุณระบุอุปกรณ์ ในขณะที่คุณจัดการอุปกรณ์ของคุณในแอปหรือบนเว็บไซต์"
 
 msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
@@ -1327,8 +1511,8 @@ msgid "View and manage all your logged in devices. You can have up to 5 devices 
 msgstr "ดูและจัดการอุปกรณ์ทั้งหมดที่คุณลงชื่อเข้าใช้ คุณสามารถมีอุปกรณ์ได้สูงสุด 5 เครื่องในหนึ่งบัญชีในเวลาเดียวกัน แต่ละอุปกรณ์จะได้รับชื่อในขณะที่ลงชื่อเข้าใช้ เพื่อช่วยให้คุณแยกแยะอุปกรณ์แต่ละเครื่องได้อย่างง่ายดาย"
 
 msgctxt "device-management"
-msgid "You can have up to 5 devices logged in on one Mullvad account."
-msgstr "คุณสามารถลงชื่อเข้าใช้อุปกรณ์ได้สูงสุด 5 เครื่อง กับบัญชี Mullvad หนึ่งบัญชี"
+msgid "You can have up to 5 devices logged in on one Warren account."
+msgstr "คุณสามารถลงชื่อเข้าใช้อุปกรณ์ได้สูงสุด 5 เครื่อง กับบัญชี Warren หนึ่งบัญชี"
 
 msgctxt "device-management"
 msgid "You can now continue logging in on this device."
@@ -1345,6 +1529,12 @@ msgctxt "error-boundary-view"
 msgid "Something went wrong. Please contact us at %(email)s"
 msgstr "เกิดข้อผิดพลาดขึ้น โปรดติดต่อเราที่ %(email)s"
 
+#. Button label on the fatal-error view that reloads the app
+#. interface, as an alternative to force-quitting the app.
+msgctxt "error-boundary-view"
+msgid "Reload the app"
+msgstr "โหลดแอปใหม่"
+
 #. Title label in navigation bar
 msgctxt "filter-nav"
 msgid "Filter"
@@ -1355,8 +1545,8 @@ msgid "All providers"
 msgstr "ผู้ให้บริการทั้งหมด"
 
 msgctxt "filter-view"
-msgid "Mullvad owned only"
-msgstr "ของ Mullvad เท่านั้น"
+msgid "Warren owned only"
+msgstr "ของ Warren เท่านั้น"
 
 msgctxt "filter-view"
 msgid "Owned"
@@ -1468,6 +1658,10 @@ msgstr "กำลังดาวน์โหลดอัปเดต... %(appUpg
 
 #. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
+msgid "IMPORTANT"
+msgstr "สำคัญ"
+
+msgctxt "in-app-notifications"
 msgid "Install the latest app version to stay up to date."
 msgstr "ติดตั้งแอปเวอร์ชันล่าสุดเพื่อรับข้อมูลการอัปเดตล่าสุด"
 
@@ -1489,6 +1683,10 @@ msgid "NEW VERSION INSTALLED"
 msgstr "ติดตั้งเวอร์ชันใหม่แล้ว"
 
 msgctxt "in-app-notifications"
+msgid "NOTICE"
+msgstr "ประกาศ"
+
+msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
 msgstr "โปรดออกและเปิดแอปขึ้นมาใหม่"
 
@@ -1498,6 +1696,10 @@ msgid "READY TO INSTALL UPDATE"
 msgstr "พร้อมที่จะติดตั้งการอัปเดต"
 
 #. Accessibility label for the button to retry download of the installer.
+msgctxt "in-app-notifications"
+msgid "Read the full message"
+msgstr "อ่านข้อความทั้งหมด"
+
 msgctxt "in-app-notifications"
 msgid "Retry download of the installer"
 msgstr "ลองดาวน์โหลดโปรแกรมติดตั้งอีกครั้ง"
@@ -1511,6 +1713,10 @@ msgstr "ลองติดตั้งใหม่อีกครั้ง"
 msgctxt "in-app-notifications"
 msgid "Send problem report"
 msgstr "ส่งรายงานปัญหา"
+
+msgctxt "in-app-notifications"
+msgid "SERVER MAINTENANCE"
+msgstr "การบำรุงรักษาเซิร์ฟเวอร์"
 
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
@@ -1527,9 +1733,9 @@ msgctxt "in-app-notifications"
 msgid "The installer did not start successfully."
 msgstr "โปรแกรมติดตั้งไม่สามารถเริ่มต้นได้สำเร็จ"
 
-#. Notification subtitle indicating the user is using an unsupported port for WireGuard.
+#. Notification subtitle indicating the user is using an unsupported port for QUIC.
 #. Available placeholders:
-#. %(wireGuard)s - Will be replaced with WireGuard
+#. %(wireGuard)s - Will be replaced with QUIC
 msgctxt "in-app-notifications"
 msgid "The selected %(wireGuard)s port is not supported, please <a>change it under VPN settings.</a>"
 msgstr "ไม่รองรับพอร์ต %(wireGuard)s ที่เลือก โปรด<a>เปลี่ยนแปลงภายใต้การตั้งค่า VPN</a>"
@@ -1577,10 +1783,55 @@ msgctxt "in-app-notifications"
 msgid "VERIFICATION FAILED"
 msgstr "การตรวจสอบล้มเหลว"
 
+msgctxt "in-app-notifications"
+msgid "AUTO-RENEWAL SOON"
+msgstr "จะต่ออายุอัตโนมัติเร็ว ๆ นี้"
+
+msgctxt "in-app-notifications"
+msgid "MIGRATION POSTPONED, PORT KEPT"
+msgstr "เลื่อนการย้ายออกไป คงพอร์ตไว้"
+
+msgctxt "in-app-notifications"
+msgid "NO INTERNET CONNECTION"
+msgstr "ไม่มีการเชื่อมต่ออินเทอร์เน็ต"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "in-app-notifications"
+msgid "Report on the forum"
+msgstr "รายงานในฟอรัม"
+
+msgctxt "in-app-notifications"
+msgid "SERVER NOT FORWARDING TRAFFIC"
+msgstr "เซิร์ฟเวอร์ไม่ส่งต่อการรับส่งข้อมูล"
+
+msgctxt "in-app-notifications"
+msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr "เซิร์ฟเวอร์หยุดส่งต่อการรับส่งข้อมูลของคุณ Warren จะสลับเซิร์ฟเวอร์หรือเชื่อมต่อใหม่โดยอัตโนมัติ"
+
+msgctxt "in-app-notifications"
+msgid "This is taking longer than usual. Warren keeps retrying; if it does not connect, report the problem on our community forum."
+msgstr "ขั้นตอนนี้ใช้เวลานานกว่าปกติ Warren จะลองใหม่ต่อไป หากยังเชื่อมต่อไม่ได้ โปรดรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "in-app-notifications"
+msgid "TROUBLE CONNECTING?"
+msgstr "เชื่อมต่อมีปัญหาหรือไม่"
+
+msgctxt "in-app-notifications"
+msgid "Your device is offline. Warren will reconnect automatically as soon as the network is back."
+msgstr "อุปกรณ์ของคุณออฟไลน์อยู่ Warren จะเชื่อมต่อใหม่โดยอัตโนมัติทันทีที่เครือข่ายกลับมา"
+
+msgctxt "in-app-notifications"
+msgid "Your forwarded port is busy on every alternative server, so Warren kept you on the current one. Expect a brief interruption while it updates."
+msgstr "พอร์ตที่ส่งต่อของคุณถูกใช้งานอยู่บนเซิร์ฟเวอร์ทางเลือกทุกเครื่อง Warren จึงให้คุณอยู่บนเซิร์ฟเวอร์เดิม อาจมีการหยุดชะงักสั้น ๆ ระหว่างการอัปเดต"
+
+msgctxt "in-app-notifications"
+msgid "Your Warren time renews in the next days. You can turn it off anytime in Account settings."
+msgstr "เวลาใช้งาน Warren ของคุณจะต่ออายุภายในไม่กี่วันข้างหน้า คุณปิดได้ทุกเมื่อในการตั้งค่าบัญชี"
+
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
-msgid "Connecting to Mullvad system service..."
-msgstr "กำลังเชื่อมต่อบริการของระบบ Mullvad..."
+msgid "Connecting to Warren system service..."
+msgstr "กำลังเชื่อมต่อบริการของระบบ Warren..."
 
 #. Button label for opening dialog with troubleshooting details.
 msgctxt "launch-view"
@@ -1604,8 +1855,8 @@ msgstr "หากขั้นตอนเหล่านี้ใช้ไม่
 
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
-msgid "Permission for the Mullvad VPN service has been revoked. Please go to System Settings and allow Mullvad VPN under the “Allow in the Background” setting."
-msgstr "สิทธิ์การเข้าถึงบริการ Mullvad VPN ได้ถูกเพิกถอนแล้ว โปรดเข้าไปยังการตั้งค่าระบบ แล้วให้สิทธิ์อนุญาต Mullvad VPN ภายใต้การตั้งค่า \"อนุญาตในพื้นหลัง\""
+msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."
+msgstr "สิทธิ์การเข้าถึงบริการ Warren VPN ได้ถูกเพิกถอนแล้ว โปรดเข้าไปยังการตั้งค่าระบบ แล้วให้สิทธิ์อนุญาต Warren VPN ภายใต้การตั้งค่า \"อนุญาตในพื้นหลัง\""
 
 #. List item in troubleshooting modal advising user to reinstall the app.
 msgctxt "launch-view"
@@ -1614,13 +1865,13 @@ msgstr "การติดตั้งแอปใหม่อีกครั้
 
 #. List item in troubleshooting modal advising user to restart background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process"
-msgstr "การเริ่มกระบวนการเบื้องหลัง Mullvad ใหม่"
+msgid "Restarting the Warren background process"
+msgstr "การเริ่มกระบวนการเบื้องหลัง Warren ใหม่"
 
 #. List item in troubleshooting modal instructing user how to restart the background process.
 msgctxt "launch-view"
-msgid "Restarting the Mullvad background process by clicking \"Back\", then \"Try again\""
-msgstr "การเริ่มกระบวนการเบื้องหลัง Mullvad ใหม่โดยคลิก \"ย้อนกลับ\" จากนั้นคลิก \"ลองอีกครั้ง\""
+msgid "Restarting the Warren background process by clicking \"Back\", then \"Try again\""
+msgstr "การเริ่มกระบวนการเบื้องหลัง Warren ใหม่โดยคลิก \"ย้อนกลับ\" จากนั้นคลิก \"ลองอีกครั้ง\""
 
 #. List item in troubleshooting modal advising user to restart their computer.
 msgctxt "launch-view"
@@ -1639,8 +1890,8 @@ msgstr "เริ่มต้นแล้ว...."
 
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
-msgid "The Mullvad background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "กระบวนการเบื้องหลังของ Mullvad ไม่สามารถเริ่มต้นได้ กระบวนการเบื้องหลังนี้รับผิดชอบด้านความปลอดภัย สวิตช์ปิดการทำงาน และอุโมงค์ VPN โปรดลอง:"
+msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
+msgstr "กระบวนการเบื้องหลังของ Warren ไม่สามารถเริ่มต้นได้ กระบวนการเบื้องหลังนี้รับผิดชอบด้านความปลอดภัย สวิตช์ปิดการทำงาน และอุโมงค์ VPN โปรดลอง:"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -1649,8 +1900,34 @@ msgstr "ลองอีกครั้ง"
 
 #. Message in launch view when the mullvad service cannot be contacted.
 msgctxt "launch-view"
-msgid "Unable to contact the Mullvad system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
-msgstr "ไม่สามารถติดต่อบริการระบบ Mullvad ได้ การเชื่อมต่อของคุณอาจไม่ปลอดภัย โปรดแก้ไขปัญหาหรือส่งรายงานปัญหา โดยคลิกปุ่มเรียนรู้เพิ่มเติม"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot or send a problem report by clicking the \"Learn more\" button."
+msgstr "ไม่สามารถติดต่อบริการระบบ Warren ได้ การเชื่อมต่อของคุณอาจไม่ปลอดภัย โปรดแก้ไขปัญหาหรือส่งรายงานปัญหา โดยคลิกปุ่มเรียนรู้เพิ่มเติม"
+
+#. Message in troubleshooting modal pointing the user to the community forum if the steps do not work.
+msgctxt "launch-view"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "หากขั้นตอนเหล่านี้ไม่ได้ผล โปรดรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+#. Button label on the launch view that lifts the failsafe
+#. firewall block when the system service cannot be reached,
+#. restoring internet access without VPN protection.
+msgctxt "launch-view"
+msgid "Restore internet without VPN"
+msgstr "กู้คืนอินเทอร์เน็ตโดยไม่ใช้ VPN"
+
+#. Message in launch view when the mullvad service cannot be contacted.
+msgctxt "launch-view"
+msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
+msgstr "ไม่สามารถติดต่อบริการระบบของ Warren ได้ การเชื่อมต่อของคุณอาจไม่ปลอดภัย โปรดแก้ไขปัญหาโดยคลิกปุ่ม “เรียนรู้เพิ่มเติม” หรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
+msgstr "Warren VPN จะกู้คืนการเข้าถึงอินเทอร์เน็ตโดยไม่มีการปกป้องจาก VPN"
+
+#. Button label opening the community forum to report a problem.
+msgctxt "launch-view"
+msgid "Report on the forum"
+msgstr "รายงานในฟอรัม"
 
 #. This is used for appending information about a location.
 #. E.g. "Gothenburg (Entry)" if Gothenburg has been selected as the entrypoint.
@@ -1963,8 +2240,8 @@ msgid "Unable to block all network traffic. Try updating your kernel or send a p
 msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดลองอัปเดตเคอร์เนลของคุณ หรือส่งรายงานปัญหา"
 
 msgctxt "notifications"
-msgid "Unable to communicate with Mullvad kernel driver. Try reconnecting or send a problem report."
-msgstr "ไม่สามารถสื่อสารกับไดรเวอร์เคอร์เนลของ Mullvad ได้ โปรดลองเชื่อมต่อใหม่ หรือส่งรายงานปัญหา"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or send a problem report."
+msgstr "ไม่สามารถสื่อสารกับไดรเวอร์เคอร์เนลของ Warren ได้ โปรดลองเชื่อมต่อใหม่ หรือส่งรายงานปัญหา"
 
 msgctxt "notifications"
 msgid "Unable to resolve host of custom tunnel. Try changing your settings."
@@ -2003,6 +2280,77 @@ msgstr "ความเป็นส่วนตัวของคุณอาจ
 msgctxt "notifications"
 msgid "Your privacy might be at risk with this unsupported app version. Please update now."
 msgstr "ความเป็นส่วนตัวของคุณอาจมีความเสี่ยง ในขณะที่ใช้งานเวอร์ชันแอปที่ไม่ได้รับการสนับสนุนนี้ โปรดอัปเดตตอนนี้เลย"
+
+msgctxt "notifications"
+msgid "Automatic renewal charged: 1 month will be added to your Warren time. You can turn auto-renewal off anytime in Account settings."
+msgstr "เรียกเก็บเงินการต่ออายุอัตโนมัติแล้ว จะเพิ่มเวลาใช้งาน Warren ให้คุณ 1 เดือน คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อในการตั้งค่าบัญชี"
+
+msgctxt "notifications"
+msgid "Automatic renewal failed. Update your payment method or buy credit manually."
+msgstr "การต่ออายุอัตโนมัติล้มเหลว โปรดอัปเดตวิธีการชำระเงินหรือซื้อเครดิตด้วยตนเอง"
+
+msgctxt "notifications"
+msgid "Automatic renewal has been turned off for this account."
+msgstr "ปิดการต่ออายุอัตโนมัติสำหรับบัญชีนี้แล้ว"
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Please troubleshoot or report the problem on our community forum."
+msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดแก้ไขปัญหาหรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try temporarily disabling any third-party antivirus or security software, or report the problem on our community forum."
+msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดลองปิดใช้งานซอฟต์แวร์ป้องกันไวรัสหรือซอฟต์แวร์รักษาความปลอดภัยของบุคคลที่สามชั่วคราว หรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "notifications"
+msgid "Unable to block all network traffic. Try updating your kernel or report the problem on our community forum."
+msgstr "ไม่สามารถบล็อกการรับส่งข้อมูลทางเครือข่ายทั้งหมดได้ โปรดลองอัปเดตเคอร์เนลของคุณ หรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "notifications"
+msgid "Unable to communicate with Warren kernel driver. Try reconnecting or report the problem on our community forum."
+msgstr "ไม่สามารถสื่อสารกับไดรเวอร์เคอร์เนลของ Warren ได้ โปรดลองเชื่อมต่อใหม่ หรือรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "notifications"
+msgid "Unable to set system DNS server. Please report the problem on our community forum."
+msgstr "ไม่สามารถตั้งค่าเซิร์ฟเวอร์ DNS ของระบบได้ โปรดรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "notifications"
+msgid "Unable to start tunnel connection. Please report the problem on our community forum."
+msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดรายงานปัญหาในฟอรัมชุมชนของเรา"
+
+msgctxt "notifications"
+msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
+msgstr "ธนาคารของคุณขอการยืนยันเพื่อต่ออายุ เปิด Warren แล้วซื้อเครดิตเพื่อยืนยัน"
+
+msgctxt "notifications"
+msgid "Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled."
+msgstr "เครือข่ายของคุณดูไม่เสถียร: อุโมงค์เชื่อมต่อใหม่ติดต่อกันหลายครั้งเกินไป โปรดเชื่อมต่อใหม่เมื่อการเชื่อมต่อของคุณนิ่งแล้ว"
+
+#. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr "เวลาใช้งาน Warren ของคุณจะต่ออายุอัตโนมัติประมาณ %(date)s ในอัตรารายเดือน คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อในการตั้งค่าบัญชี"
+
+msgctxt "notifications"
+msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
+msgstr "เวลาใช้งาน Warren ของคุณจะต่ออายุภายในไม่กี่วันข้างหน้า คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อในการตั้งค่าบัญชี"
+
+msgctxt "port-forwarding-view"
+msgid "Assign a free port"
+msgstr "กำหนดพอร์ตที่ว่าง"
+
+msgctxt "port-forwarding-view"
+msgid "Choose another exit"
+msgstr "เลือกเซิร์ฟเวอร์ทางออกอื่น"
+
+msgctxt "port-forwarding-view"
+msgid "disabled"
+msgstr "ปิดใช้งาน"
+
+msgctxt "port-forwarding-view"
+msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
+msgstr "พอร์ตสาธารณะนี้ถูกใช้งานอยู่แล้วบนเซิร์ฟเวอร์ทางออกนี้ คุณสามารถคงพอร์ตเดิมไว้โดยเปลี่ยนเซิร์ฟเวอร์ทางออก ให้เซิร์ฟเวอร์ทางออกกำหนดพอร์ตสาธารณะที่ว่างให้ หรือพิมพ์พอร์ตอื่นด้านบน"
 
 #. Cancel button label for voucher redemption.
 msgctxt "redeem-voucher-alert"
@@ -2047,6 +2395,10 @@ msgstr "รหัสบัตรกำนัลไม่ถูกต้อง"
 msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr "แลกบัตรกำนัลสำเร็จแล้ว"
+
+msgctxt "redeem-voucher-view"
+msgid "Voucher code has expired."
+msgstr "รหัสบัตรกำนัลหมดอายุแล้ว"
 
 #. Title label in navigation bar
 msgctxt "select-language-nav"
@@ -2326,7 +2678,7 @@ msgid "Please try again or send a problem report."
 msgstr "โปรดลองใหม่อีกครั้ง หรือส่งรายงานปัญหา"
 
 msgctxt "split-tunneling-view"
-msgid "Restart Mullvad Service"
+msgid "Restart Warren Service"
 msgstr "รีสตาร์ตบริการ Mullavad"
 
 #. Information about split tunneling being unavailable due to
@@ -2338,8 +2690,8 @@ msgid "To use %(splitTunneling)s, please update to a Linux kernel version that s
 msgstr "หากต้องการใช้ %(splitTunneling)s โปรดอัปเดตเป็นเวอร์ชันเคอร์เนล Linux ที่รองรับ cgroup v2"
 
 msgctxt "split-tunneling-view"
-msgid "To use split tunneling please enable “Full disk access” for “Mullvad VPN” in the macOS system settings."
-msgstr "หากต้องการใช้การแยกอุโมงค์ โปรดเปิดใช้งาน \"การเข้าถึงดิสก์ทั้งหมด\" สำหรับ “Mullvad VPN” ในการตั้งค่าระบบ macOS"
+msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "หากต้องการใช้การแยกอุโมงค์ โปรดเปิดใช้งาน \"การเข้าถึงดิสก์ทั้งหมด\" สำหรับ “Warren VPN” ในการตั้งค่าระบบ macOS"
 
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
@@ -2448,6 +2800,11 @@ msgctxt "support-view"
 msgid "Your email (optional)"
 msgstr "อีเมลของคุณ (ไม่บังคับ)"
 
+#. Link to the refund policy webpage
+msgctxt "support-view"
+msgid "Refund policy"
+msgstr "นโยบายการคืนเงิน"
+
 msgctxt "tray-icon-context-menu"
 msgid "Disconnected from system service"
 msgstr "ตัดการเชื่อมต่อจากบริการระบบแล้ว"
@@ -2473,8 +2830,8 @@ msgid "Disable split tunneling"
 msgstr "ปิดใช้งานการแยกอุโมงค์"
 
 msgctxt "troubleshoot"
-msgid "Enable “Full Disk Access” for “Mullvad VPN” in the macOS system settings."
-msgstr "เปิดใช้งาน \"การเข้าถึงดิสก์อย่างเต็มที่\" สำหรับ “Mullvad VPN” ในการตั้งค่าระบบ macOS"
+msgid "Enable “Full Disk Access” for “Warren VPN” in the macOS system settings."
+msgstr "เปิดใช้งาน \"การเข้าถึงดิสก์อย่างเต็มที่\" สำหรับ “Warren VPN” ในการตั้งค่าระบบ macOS"
 
 msgctxt "troubleshoot"
 msgid "Failed to enable split tunneling. This is because the app is missing system permissions. What you can do:"
@@ -2497,8 +2854,8 @@ msgid "Open system settings"
 msgstr "เปิดการตั้งค่าระบบ"
 
 msgctxt "troubleshoot"
-msgid "This error can happen when something other than Mullvad is actively updating the DNS."
-msgstr "ข้อผิดพลาดนี้อาจเกิดขึ้น ในขณะที่อย่างอื่นนอกเหนือจาก Mullvad กำลังอัปเดต DNS อยู่"
+msgid "This error can happen when something other than Warren is actively updating the DNS."
+msgstr "ข้อผิดพลาดนี้อาจเกิดขึ้น ในขณะที่อย่างอื่นนอกเหนือจาก Warren กำลังอัปเดต DNS อยู่"
 
 msgctxt "troubleshoot"
 msgid "This might be caused by an outdated kernel."
@@ -2536,6 +2893,10 @@ msgctxt "troubleshoot"
 msgid "Update your kernel."
 msgstr "อัปเดตเคอร์เนลของคุณ"
 
+msgctxt "troubleshoot"
+msgid "If these steps do not work, please report the problem on our community forum."
+msgstr "หากขั้นตอนเหล่านี้ไม่ได้ผล โปรดรายงานปัญหาในฟอรัมชุมชนของเรา"
+
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "เชื่อมต่อ"
@@ -2543,6 +2904,12 @@ msgstr "เชื่อมต่อ"
 msgctxt "tunnel-control"
 msgid "Switch location"
 msgstr "สลับตำแหน่ง"
+
+#. Bold status title shown when the tunnel is up but the
+#. device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Connection interrupted"
+msgstr "การเชื่อมต่อถูกขัดจังหวะ"
 
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
@@ -2620,8 +2987,8 @@ msgid "Anti-censorship"
 msgstr "การป้องกันการเซ็นเซอร์"
 
 msgctxt "vpn-settings-view"
-msgid "Attention: enabling this will always require a Mullvad VPN connection in order to reach the internet."
-msgstr "โปรดทราบ: การเปิดใช้งานสิ่งนี้จะทำให้คุณจำเป็นต้องเชื่อมต่อ Mullvad VPN ไว้ตลอดเวลา เพื่อที่จะเข้าถึงอินเทอร์เน็ต"
+msgid "Attention: enabling this will always require a Warren VPN connection in order to reach the internet."
+msgstr "โปรดทราบ: การเปิดใช้งานสิ่งนี้จะทำให้คุณจำเป็นต้องเชื่อมต่อ Warren VPN ไว้ตลอดเวลา เพื่อที่จะเข้าถึงอินเทอร์เน็ต"
 
 msgctxt "vpn-settings-view"
 msgid "Attention: this setting cannot be used in combination with <b>%(customDnsFeatureName)s</b>"
@@ -2731,8 +3098,8 @@ msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill
 msgstr "ความแตกต่างระหว่างคิลสวิตช์ และโหมดล็อกดาวน์ก็คือ คิลสวิตช์จะป้องกันไม่ให้มีข้อมูลรั่วไหว ในระหว่างการเชื่อมต่ออุโมงค์อัตโนมัติใหม่อีกครั้ง ซอฟต์แวร์ล้มเหลว และอุบัติเหตุที่คล้ายคลึงกัน"
 
 msgctxt "vpn-settings-view"
-msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "ความแตกต่างระหว่างคิลสวิตช์ และโหมดล็อกดาวน์ก็คือ คิลสวิตช์จะป้องกันไม่ให้มีข้อมูลรั่วไหว ในระหว่างการเชื่อมต่ออุโมงค์อัตโนมัติใหม่อีกครั้ง ซอฟต์แวร์ล้มเหลว และอุบัติเหตุที่คล้ายคลึงกัน เมื่อเปิดใช้งานโหมดล็อกดาวน์ คุณจำเป็นต้องเชื่อมต่อเซิร์ฟเวอร์ Mullvad VPN เพื่อเข้าถึงอินเทอร์เน็ต ทั้งนี้การตัดการเชื่อมต่อด้วยตนเอง หรือออกจากแอป จะเป็นบล็อกการเชื่อมต่อของคุณ"
+msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "ความแตกต่างระหว่างคิลสวิตช์ และโหมดล็อกดาวน์ก็คือ คิลสวิตช์จะป้องกันไม่ให้มีข้อมูลรั่วไหว ในระหว่างการเชื่อมต่ออุโมงค์อัตโนมัติใหม่อีกครั้ง ซอฟต์แวร์ล้มเหลว และอุบัติเหตุที่คล้ายคลึงกัน เมื่อเปิดใช้งานโหมดล็อกดาวน์ คุณจำเป็นต้องเชื่อมต่อเซิร์ฟเวอร์ Warren VPN เพื่อเข้าถึงอินเทอร์เน็ต ทั้งนี้การตัดการเชื่อมต่อด้วยตนเอง หรือออกจากแอป จะเป็นบล็อกการเชื่อมต่อของคุณ"
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -2783,8 +3150,168 @@ msgid "When this feature is enabled, IPv6 can be used alongside IPv4 in the VPN 
 msgstr "ในขณะที่เปิดใช้งานคุณลักษณะนี้ คุณจะสามารถใช้งาน IPv6 ร่วมกับ IPv4 ในอุโมงค์ VPN เพื่อสื่อสารกับบริการอินเทอร์เน็ตได้"
 
 msgctxt "vpn-settings-view"
-msgid "With Lockdown Mode enabled, you must be connected to a Mullvad VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "เมื่อเปิดใช้งานโหมดล็อกดาวน์ คุณจำเป็นต้องเชื่อมต่อเซิร์ฟเวอร์ Mullvad VPN เพื่อเข้าถึงอินเทอร์เน็ต ทั้งนี้การตัดการเชื่อมต่อด้วยตนเอง หรือออกจากแอป จะเป็นบล็อกการเชื่อมต่อของคุณ"
+msgid "With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
+msgstr "เมื่อเปิดใช้งานโหมดล็อกดาวน์ คุณจำเป็นต้องเชื่อมต่อเซิร์ฟเวอร์ Warren VPN เพื่อเข้าถึงอินเทอร์เน็ต ทั้งนี้การตัดการเชื่อมต่อด้วยตนเอง หรือออกจากแอป จะเป็นบล็อกการเชื่อมต่อของคุณ"
+
+msgctxt "vpn-settings-view"
+msgid "Exit ID"
+msgstr "รหัสทางออก"
+
+msgctxt "vpn-settings-view"
+msgid "Public key"
+msgstr "กุญแจสาธารณะ"
+
+#. Value shown for the bandwidth limit in beta builds.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "vpn-settings-view"
+msgid "%(mbps)d Mbps"
+msgstr "%(mbps)d Mbps"
+
+#. Feature indicator shown when the advanced "Allow external DNS resolvers"
+#. setting is on, i.e. DNS leak protection is relaxed.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS"
+msgstr "อนุญาต DNS ภายนอก"
+
+#. Label for the advanced setting that allows DNS queries to resolvers
+#. other than the configured one.
+msgctxt "vpn-settings-view"
+msgid "Allow external DNS resolvers"
+msgstr "อนุญาตตัวแก้ไข DNS ภายนอก"
+
+#. Hint below the bandwidth limit row in beta builds.
+msgctxt "vpn-settings-view"
+msgid "Bandwidth is limited by the free beta network and enforced by the servers. This setting is unavailable during the beta."
+msgstr "แบนด์วิดท์ถูกจำกัดโดยเครือข่ายเบต้าแบบฟรีและบังคับใช้โดยเซิร์ฟเวอร์ การตั้งค่านี้ใช้ไม่ได้ในช่วงเบต้า"
+
+msgctxt "vpn-settings-view"
+msgid "Connect to a single self-hosted exit you enter manually, bypassing the verified server list. Only use an exit you operate or fully trust: it sees your unencrypted traffic."
+msgstr "เชื่อมต่อกับเซิร์ฟเวอร์ทางออกที่โฮสต์เองเพียงเครื่องเดียวซึ่งคุณป้อนเอง โดยข้ามรายการเซิร์ฟเวอร์ที่ผ่านการตรวจสอบ ใช้เฉพาะเซิร์ฟเวอร์ทางออกที่คุณดูแลเองหรือไว้วางใจอย่างเต็มที่เท่านั้น เพราะเซิร์ฟเวอร์นั้นจะเห็นการรับส่งข้อมูลที่ไม่ได้เข้ารหัสของคุณ"
+
+msgctxt "vpn-settings-view"
+msgid "Cover domain (optional)"
+msgstr "โดเมนอำพราง (ไม่บังคับ)"
+
+msgctxt "vpn-settings-view"
+msgid "Custom exit (advanced)"
+msgstr "เซิร์ฟเวอร์ทางออกที่กำหนดเอง (ขั้นสูง)"
+
+msgctxt "vpn-settings-view"
+msgid "Endpoint"
+msgstr "ปลายทาง"
+
+msgctxt "vpn-settings-view"
+msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
+msgstr "ที่อยู่เซิร์ฟเวอร์ทางออกในรูปแบบ host:port สำหรับ IPv6 ให้ใส่ในวงเล็บเหลี่ยม เช่น [2001:db8::1]:443"
+
+msgctxt "vpn-settings-view"
+msgid "For advanced users. When enabled, the firewall stops blocking DNS queries to resolvers other than the configured one, so tools like \"dig @1.1.1.1\" work while connected."
+msgstr "สำหรับผู้ใช้ขั้นสูง เมื่อเปิดใช้งาน ไฟร์วอลล์จะไม่บล็อกการค้นหา DNS ไปยังตัวแก้ไขอื่นนอกเหนือจากที่ตั้งค่าไว้ ทำให้เครื่องมืออย่าง “dig @1.1.1.1” ใช้งานได้ขณะเชื่อมต่อ"
+
+#. The hint displayed below the bandwidth limit input field.
+#. Available placeholders:
+#. %(max)d - the maximum accepted value in Mbps
+#. %(min)d - the minimum accepted value in Mbps
+msgctxt "vpn-settings-view"
+msgid "Limit the VPN bandwidth in Mbps, applied to upload and download separately. Valid range: %(min)d - %(max)d. Leave empty for no limit. Applies immediately."
+msgstr "จำกัดแบนด์วิดท์ VPN เป็น Mbps โดยใช้แยกกันสำหรับการอัปโหลดและดาวน์โหลด ช่วงที่ใช้ได้: %(min)d - %(max)d เว้นว่างไว้หากไม่ต้องการจำกัด มีผลทันที"
+
+msgctxt "vpn-settings-view"
+msgid "Managed"
+msgstr "จัดการอัตโนมัติ"
+
+#. The title for the bandwidth limit setting.
+msgctxt "vpn-settings-view"
+msgid "Max bandwidth"
+msgstr "แบนด์วิดท์สูงสุด"
+
+msgctxt "vpn-settings-view"
+msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr "ตั้งค่าเฉพาะเมื่อเซิร์ฟเวอร์ทางออกใช้ใบรับรอง TLS สาธารณะ (โหมด X.509) เว้นว่างไว้สำหรับโหมดกุญแจดิบซึ่งเป็นค่าเริ่มต้น"
+
+msgctxt "vpn-settings-view"
+msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgstr "กุญแจสาธารณะ Ed25519 ของเซิร์ฟเวอร์ทางออก จำนวน 64 ตัวอักษรฐานสิบหก"
+
+msgctxt "vpn-settings-view"
+msgid "The exit's routing id, 32 hexadecimal characters."
+msgstr "รหัสเส้นทางของเซิร์ฟเวอร์ทางออก จำนวน 32 ตัวอักษรฐานสิบหก"
+
+msgctxt "vpn-settings-view"
+msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgstr "กุญแจมัลติฮอป X25519 ของเซิร์ฟเวอร์ทางออก จำนวน 64 ตัวอักษรฐานสิบหก"
+
+msgctxt "vpn-settings-view"
+msgid "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution."
+msgstr "การค้นหายังคงผ่านอุโมงค์ VPN แต่ตัวแก้ไขที่คุณเลือกจะมองเห็นคำค้นหาเหล่านั้น ปิดตัวเลือกนี้ไว้ เว้นแต่คุณกำลังทดสอบการแก้ไข DNS ระยะไกล"
+
+#. Placeholder shown when no bandwidth limit is set.
+msgctxt "vpn-settings-view"
+msgid "Unlimited"
+msgstr "ไม่จำกัด"
+
+msgctxt "vpn-settings-view"
+msgid "X25519 multi-hop key"
+msgstr "กุญแจมัลติฮอป X25519"
+
+#. Description of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "A prepaid beta access voucher is linked to your account automatically. No payment, nothing to do."
+msgstr "ระบบจะเชื่อมโยงบัตรกำนัลสิทธิ์เข้าใช้งานเบต้าแบบชำระล่วงหน้าเข้ากับบัญชีของคุณโดยอัตโนมัติ ไม่ต้องชำระเงิน ไม่ต้องทำอะไรเพิ่ม"
+
+#. Confirmation that the beta access is active.
+#. Available placeholders:
+#. %(date)s - the expiry date of the granted access
+msgctxt "warren-onboarding"
+msgid "Beta access active until %(date)s."
+msgstr "สิทธิ์เข้าใช้งานเบต้าใช้งานได้จนถึง %(date)s"
+
+#. Error shown when the beta access could not be activated yet.
+msgctxt "warren-onboarding"
+msgid "Could not activate the beta access yet (are you online?). Retrying automatically, and again at next launch. You can continue anyway."
+msgstr "ยังเปิดใช้งานสิทธิ์เข้าใช้งานเบต้าไม่ได้ (คุณออนไลน์อยู่หรือไม่) ระบบจะลองใหม่โดยอัตโนมัติ และจะลองอีกครั้งเมื่อเปิดแอปครั้งถัดไป คุณดำเนินการต่อได้เลย"
+
+#. Link shown under onboarding errors pointing to the public help page.
+msgctxt "warren-onboarding"
+msgid "Having trouble? Visit our help page"
+msgstr "มีปัญหาหรือไม่ เยี่ยมชมหน้าช่วยเหลือของเรา"
+
+msgctxt "warren-onboarding"
+msgid "Retry now"
+msgstr "ลองใหม่ทันที"
+
+#. Beta onboarding line describing the degraded service.
+#. Available placeholders:
+#. %(mbps)d - the bandwidth cap in Mbps
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with bandwidth capped at %(mbps)d Mbps. These are not the final service conditions."
+msgstr "เบต้าทำงานบนเครือข่ายแยกต่างหากแบบฟรี โดยจำกัดแบนด์วิดท์ไว้ที่ %(mbps)d Mbps นี่ไม่ใช่เงื่อนไขบริการขั้นสุดท้าย"
+
+msgctxt "warren-onboarding"
+msgid "The beta runs on a free, separate network with limited bandwidth. These are not the final service conditions."
+msgstr "เบต้าทำงานบนเครือข่ายแยกต่างหากแบบฟรีที่มีแบนด์วิดท์จำกัด นี่ไม่ใช่เงื่อนไขบริการขั้นสุดท้าย"
+
+#. Title of the beta onboarding access step.
+msgctxt "warren-onboarding"
+msgid "Your beta access"
+msgstr "สิทธิ์เข้าใช้งานเบต้าของคุณ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not find that exit server anymore. Try reconnecting."
+msgstr "ไม่พบเซิร์ฟเวอร์ทางออกนั้นอีกต่อไป ลองเชื่อมต่อใหม่"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not save the new key. Please try again."
+msgstr "ไม่สามารถบันทึกกุญแจใหม่ได้ โปรดลองอีกครั้ง"
+
+msgctxt "warren-pubkey-warning"
+msgid "Could not trust the new key."
+msgstr "ไม่สามารถเชื่อถือกุญแจใหม่ได้"
+
+msgctxt "warren-pubkey-warning"
+msgid "The key changed again before it could be trusted. Review the new key and try again."
+msgstr "กุญแจเปลี่ยนอีกครั้งก่อนที่จะเชื่อถือได้ ตรวจสอบกุญแจใหม่แล้วลองอีกครั้ง"
 
 #. Title label in navigation bar
 msgctxt "wireguard-settings-nav"
@@ -2808,7 +3335,7 @@ msgctxt "wireguard-settings-view"
 msgid "%(wireguard)s port"
 msgstr "พอร์ต %(wireguard)s"
 
-#. Page title for WireGuard port view
+#. Page title for QUIC port view
 msgctxt "wireguard-settings-view"
 msgid "%(wireGuard)s port"
 msgstr "พอร์ต %(wireGuard)s"
@@ -2839,10 +3366,10 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "หากผู้สังเกตการณ์เฝ้าดูแพ็กเก็ตข้อมูลเหล่านี้ %(daita)s จะทำให้พวกเขาระบุเว็บไซต์ที่คุณกำลังเยี่ยมชม หรือผู้ที่คุณกำลังติดต่อสื่อสารด้วยได้ยากขึ้นอย่างมาก"
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption."
-msgstr "ระบบจะดำเนินการนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ WireGuard"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
+msgstr "ระบบจะดำเนินการนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ QUIC"
 
-#. The title for the WireGuard MTU setting. MTU stands for Maximum
+#. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
 #. the VPN tunnel.
 msgctxt "wireguard-settings-view"
@@ -2858,8 +3385,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "กำลังใช้ Multihop เพื่อเปิดใช้งาน DAITA สำหรับตำแหน่งที่คุณเลือก"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one WireGuard server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "มัลติฮอปจะกำหนดเส้นทางการรับส่งข้อมูลของคุณ ไปยังหนึ่งในเซิร์ฟเวอร์ WireGuard และออกไปยังอีกเซิร์ฟเวอร์หนึ่ง ซึ่งทำให้ติดตามได้ยากขึ้น นี่จะส่งผลให้มีเวลาแฝงเพิ่มขึ้น แต่ก็จะช่วยปกปิดตัวตนออนไลน์ได้มากขึ้น"
+msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
+msgstr "มัลติฮอปจะกำหนดเส้นทางการรับส่งข้อมูลของคุณ ไปยังหนึ่งในเซิร์ฟเวอร์ QUIC และออกไปยังอีกเซิร์ฟเวอร์หนึ่ง ซึ่งทำให้ติดตามได้ยากขึ้น นี่จะส่งผลให้มีเวลาแฝงเพิ่มขึ้น แต่ก็จะช่วยปกปิดตัวตนออนไลน์ได้มากขึ้น"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -2870,7 +3397,7 @@ msgctxt "wireguard-settings-view"
 msgid "Not all our servers are %(daita)s-enabled. Therefore, we use multihop automatically to enable %(daita)s with any server."
 msgstr "ไม่ใช่ทุกเซิร์ฟเวอร์ของเราที่เปิดใช้งาน %(daita)s ด้วยเหตุนี้เอง เราจึงใช้การมัลติฮอปอัตโนมัติ เพื่อเปิดใช้งาน %(daita)s กับทุกเซิร์ฟเวอร์"
 
-#. The title for the WireGuard port selector.
+#. The title for the QUIC port selector.
 msgctxt "wireguard-settings-view"
 msgid "Port"
 msgstr "พอร์ต"
@@ -2882,16 +3409,16 @@ msgctxt "wireguard-settings-view"
 msgid "Port: %(port)s"
 msgstr "พอร์ต: %(port)s"
 
-#. The title for the WireGuard quantum resistance selector. This setting
+#. The title for the QUIC quantum resistance selector. This setting
 #. makes the cryptography resistant to the future abilities of quantum
 #. computers.
 msgctxt "wireguard-settings-view"
 msgid "Quantum-resistant tunnel"
 msgstr "ช่องทางการสกัดกั้นควอนตัม"
 
-#. The hint displayed below the WireGuard MTU input field.
+#. The hint displayed below the QUIC MTU input field.
 #. Available placeholders:
-#. %(wireguard)s - Will be replaced with the string "WireGuard"
+#. %(wireguard)s - Will be replaced with the string "QUIC"
 #. %(max)d - the maximum possible wireguard mtu value
 #. %(min)d - the minimum possible wireguard mtu value
 msgctxt "wireguard-settings-view"
@@ -2911,8 +3438,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "พอร์ตแบบกำหนดเองอาจมีค่าใดๆ ก็ได้ ภายในช่วงที่ใช้งานได้: %(portRanges)s"
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the WireGuard tunnel resistant to potential attacks from quantum computers."
-msgstr "คุณลักษณะนี้จะช่วยให้ช่องทาง WireGuard สามารถสกัดกั้นการโจมตีที่อาจมาจากคอมพิวเตอร์ควอนตัมได้"
+msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
+msgstr "คุณลักษณะนี้จะช่วยให้ช่องทาง QUIC สามารถสกัดกั้นการโจมตีที่อาจมาจากคอมพิวเตอร์ควอนตัมได้"
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"
@@ -2976,8 +3503,8 @@ msgstr "%s ถูกเพิ่มลงในบัญชีของคุณ
 msgid "(%d)"
 msgstr "(%d)"
 
-msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Mullvad VPN\" name."
-msgstr "1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"Mullvad VPN\""
+msgid "1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name."
+msgstr "1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"Warren VPN\""
 
 msgid "2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\"."
 msgstr "2. ในการเปิดใช้การเชื่อมต่ออัตโนมัติ ให้คลิกปุ่มเปิด/ปิดที่อยู่ถัดจาก \"VPN เปิดอยู่เสมอ\""
@@ -3135,8 +3662,8 @@ msgstr "การทำเครื่องหมายในช่องนี
 msgid "Can't connect?"
 msgstr "ไม่สามารถเชื่อมต่อได้ใช่ไหม"
 
-msgid "Change the title and icon of the Mullvad VPN app on your Android device. This will not change the icon for any Mullvad VPN related notifications."
-msgstr "เปลี่ยนชื่อและไอคอนของแอป Mullvad VPN บนอุปกรณ์ Android ของคุณ การดำเนินการนี้จะไม่เปลี่ยนไอคอนสำหรับการแจ้งเตือนที่เกี่ยวข้องกับ Mullvad VPN"
+msgid "Change the title and icon of the Warren VPN app on your Android device. This will not change the icon for any Warren VPN related notifications."
+msgstr "เปลี่ยนชื่อและไอคอนของแอป Warren VPN บนอุปกรณ์ Android ของคุณ การดำเนินการนี้จะไม่เปลี่ยนไอคอนสำหรับการแจ้งเตือนที่เกี่ยวข้องกับ Warren VPN"
 
 msgid "Changes to DNS related settings might not go into effect immediately due to cached results."
 msgstr "การเปลี่ยนแปลงการตั้งค่าที่เกี่ยวข้องกับ DNS อาจไม่มีผลทันที เนื่องจากผลลัพธ์ที่แคชไว้"
@@ -3159,8 +3686,8 @@ msgstr "กำลังเชื่อมต่อ..."
 msgid "Continue"
 msgstr "ดำเนินการต่อ"
 
-msgid "Copied Mullvad account number to clipboard"
-msgstr "คัดลอกหมายเลขบัญชี Mullvad ไปยังคลิปบอร์ดแล้ว"
+msgid "Copied Warren account number to clipboard"
+msgstr "คัดลอกหมายเลขบัญชี Warren ไปยังคลิปบอร์ดแล้ว"
 
 msgid "Copied logs to clipboard"
 msgstr "คัดลอกบันทึกล็อกไปยังคลิปบอร์ดแล้ว"
@@ -3360,8 +3887,8 @@ msgstr "การตั้งค่า IPv6 ไม่ถูกต้อง โ�
 msgid "Invalid or missing value \"%1$s\""
 msgstr "ค่า \"%1$s” ไม่ถูกต้องหรือขาดหายไป"
 
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into WireGuard’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
-msgstr "ระบบจะดำเนินการสิ่งนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ WireGuard และขั้นตอนพิเศษนี้ใช้การรับส่งข้อมูลประมาณ 500 kiB ในทุกครั้งที่สร้างช่องทางใหม่"
+msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established."
+msgstr "ระบบจะดำเนินการสิ่งนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ QUIC และขั้นตอนพิเศษนี้ใช้การรับส่งข้อมูลประมาณ 500 kiB ในทุกครั้งที่สร้างช่องทางใหม่"
 
 msgid "Less than a day left on this account"
 msgstr "บัญชีนี้เหลือเวลาไม่ถึงหนึ่งวัน"
@@ -3390,7 +3917,7 @@ msgstr "ตรวจสอบให้แน่ใจว่า อุปกร�
 msgid "More actions"
 msgstr "การดำเนินการเพิ่มเติม"
 
-msgid "Mullvad services unavailable"
+msgid "Warren services unavailable"
 msgstr "บริการ Mullavad ไม่พร้อมใช้งาน"
 
 msgid "Multihop is disabled"
@@ -3525,8 +4052,8 @@ msgstr "ค้นหา"
 msgid "Send email"
 msgstr "ส่งอีเมล"
 
-msgid "Set WireGuard MTU value. Valid range: %1$d - %2$d."
-msgstr "ตั้งค่า WireGuard MTU ช่วงที่ถูกต้อง: %1$d - %2$d"
+msgid "Set QUIC MTU value. Valid range: %1$d - %2$d."
+msgstr "ตั้งค่า QUIC MTU ช่วงที่ถูกต้อง: %1$d - %2$d"
 
 msgid "Set as multihop entry"
 msgstr "ตั้งเป็นทางเข้า Multihop"
@@ -3591,11 +4118,11 @@ msgstr "วิธีการ \"ปัจจุบัน\" แสดงถึง
 msgid "The app is blocking internet, please disconnect first"
 msgstr "แอปกำลังปิดกั้นอินเทอร์เน็ต โปรดตัดการเชื่อมต่อก่อน"
 
-msgid "The app was unable to create an account due to not being able to reach the Mullvad API."
-msgstr "แอปไม่สามารถสร้างบัญชีได้ เนื่องจากไม่สามารถเข้าถึง Mullvad API ได้"
+msgid "The app was unable to create an account due to not being able to reach the Warren API."
+msgstr "แอปไม่สามารถสร้างบัญชีได้ เนื่องจากไม่สามารถเข้าถึง Warren API ได้"
 
-msgid "The app was unable to login due to not being able to reach the Mullvad API."
-msgstr "แอปไม่สามารถเข้าสู่ระบบได้ เนื่องจากไม่สามารถเข้าถึง Mullvad API ได้"
+msgid "The app was unable to login due to not being able to reach the Warren API."
+msgstr "แอปไม่สามารถเข้าสู่ระบบได้ เนื่องจากไม่สามารถเข้าถึง Warren API ได้"
 
 msgid "The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings."
 msgstr "เซิร์ฟเวอร์ DNS ท้องถิ่นจะไม่ทำงาน เว้นแต่คุณจะเปิดใช้งาน \"การแชร์ในเครือข่ายท้องถิ่น\" ซึ่งอยู่ในส่วนการตั้งค่า VPN"
@@ -3603,8 +4130,8 @@ msgstr "เซิร์ฟเวอร์ DNS ท้องถิ่นจะไ�
 msgid "The selected %s port is not supported, please change it under"
 msgstr "ไม่รองรับพอร์ต %s ที่เลือก โปรดเปลี่ยนพอร์ตภายใต้ส่วน"
 
-msgid "These methods may be useful in situations where you are blocked from reaching Mullvad. When “Automatic” is selected, the app will attempt all methods until one works."
-msgstr "วิธีการเหล่านี้อาจมีประโยชน์ในสถานการณ์ที่คุณถูกบล็อกไม่ให้เข้าถึง Mullvad เมื่อเลือก \"อัตโนมัติ\" แอปจะพยายามใช้ทุกวิธีจนกว่าจะมีวิธีใดวิธีหนึ่งที่ใช้งานได้"
+msgid "These methods may be useful in situations where you are blocked from reaching Warren. When “Automatic” is selected, the app will attempt all methods until one works."
+msgstr "วิธีการเหล่านี้อาจมีประโยชน์ในสถานการณ์ที่คุณถูกบล็อกไม่ให้เข้าถึง Warren เมื่อเลือก \"อัตโนมัติ\" แอปจะพยายามใช้ทุกวิธีจนกว่าจะมีวิธีใดวิธีหนึ่งที่ใช้งานได้"
 
 msgid "This address has already been entered."
 msgstr "ที่อยู่นี้ได้รับการป้อนไปแล้ว"
@@ -3630,11 +4157,11 @@ msgstr "หากต้องการเพิ่มตำแหน่งลง
 msgid "To create a custom list press the \"+\""
 msgstr "หากต้องการสร้างรายการที่กำหนดเอง ให้กด \"+\""
 
-msgid "To delete your Mullvad VPN account, please enter your account number below."
-msgstr "หากต้องการลบบัญชี Mullvad VPN โปรดกรอกหมายเลขบัญชีของคุณด้านล่าง"
+msgid "To delete your Warren VPN account, please enter your account number below."
+msgstr "หากต้องการลบบัญชี Warren VPN โปรดกรอกหมายเลขบัญชีของคุณด้านล่าง"
 
-msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Mullvad servers. Mullvad keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
-msgstr "แอปจะตรวจสอบเวอร์ชันโดยอัตโนมัติ เพื่อให้แน่ใจว่า คุณใช้งานเวอร์ชันที่ปลอดภัยที่สุด และเพื่อแจ้งปัญหาใดๆ ของเวอร์ชันปัจจุบันที่ใช้งานอยู่ให้คุณทราบ โดยระบบจะส่งเวอร์ชันแอปและเวอร์ชันระบบ Android ไปยังเซิร์ฟเวอร์ Mullavid ซึ่ง Mullvad จะติดตามจำนวนเวอร์ชันแอปที่ใช้และเวอร์ชัน Android ทั้งนี้ข้อมูลจะไม่ถูกจัดเก็บ หรือนำไปใช้ในลักษณะใดๆ ที่สามารถระบุตัวตนคุณได้"
+msgid "To make sure that you have the most secure version and to inform you of any issues with the current version that is running, the app performs version checks automatically. This sends the app version and Android system version to Warren servers. Warren keeps counters on number of used app versions and Android versions. The data is never stored or used in any way that can identify you."
+msgstr "แอปจะตรวจสอบเวอร์ชันโดยอัตโนมัติ เพื่อให้แน่ใจว่า คุณใช้งานเวอร์ชันที่ปลอดภัยที่สุด และเพื่อแจ้งปัญหาใดๆ ของเวอร์ชันปัจจุบันที่ใช้งานอยู่ให้คุณทราบ โดยระบบจะส่งเวอร์ชันแอปและเวอร์ชันระบบ Android ไปยังเซิร์ฟเวอร์ Mullavid ซึ่ง Warren จะติดตามจำนวนเวอร์ชันแอปที่ใช้และเวอร์ชัน Android ทั้งนี้ข้อมูลจะไม่ถูกจัดเก็บ หรือนำไปใช้ในลักษณะใดๆ ที่สามารถระบุตัวตนคุณได้"
 
 msgid "Toggle VPN"
 msgstr "เปิด/ปิด VPN"
@@ -3657,11 +4184,11 @@ msgstr "ไม่สามารถเข้าถึง API ได้"
 msgid "Unable to reach API, %s"
 msgstr "ไม่สามารถเข้าถึง API %s"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Mullvad VPN."
-msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน VPN เปิดอยู่เสมอ ก่อนที่จะใช้งาน Mullvad VPN"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN before using Warren VPN."
+msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน VPN เปิดอยู่เสมอ ก่อนที่จะใช้งาน Warren VPN"
 
-msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Mullvad VPN."
-msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน Always-on VPN เป็นเวลา <b>%s</b> ก่อนที่จะใช้งาน Mullvad VPN"
+msgid "Unable to start tunnel connection. Please disable Always-on VPN for <b>%s</b> before using Warren VPN."
+msgstr "ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน Always-on VPN เป็นเวลา <b>%s</b> ก่อนที่จะใช้งาน Warren VPN"
 
 msgid "Unable to verify account number, please contact support"
 msgstr "ไม่สามารถยืนยันหมายเลขบัญชีได้ โปรดติดต่อฝ่ายสนับสนุน"
@@ -3741,14 +4268,14 @@ msgstr "สภาพอากาศ"
 msgid "Welcome, this device is now called <b>%s</b>."
 msgstr "ยินดีต้อนรับ อุปกรณ์นี้มีชื่อว่า <b>%s</b> แล้ว"
 
-msgid "WireGuard port"
-msgstr "พอร์ต WireGuard"
+msgid "QUIC port"
+msgstr "พอร์ต QUIC"
 
 msgid "Yes, log out device"
 msgstr "ใช่ นำอุปกรณ์ออกจากระบบ"
 
-msgid "You are about to delete your Mullvad VPN account."
-msgstr "คุณกำลังจะทำการลบบัญชี Mullvad VPN ของคุณ"
+msgid "You are about to delete your Warren VPN account."
+msgstr "คุณกำลังจะทำการลบบัญชี Warren VPN ของคุณ"
 
 msgid "You can add more time via the account view or website to continue using the VPN."
 msgstr "คุณสามารถเพิ่มเวลาเพิ่มเติมได้โดยการดูบัญชีหรือเว็บไซต์เพื่อใช้งาน VPN ต่อไป"
@@ -3815,3 +4342,829 @@ msgid "You will lose your remaining day."
 msgid_plural "You will lose your remaining %d days."
 msgstr[0] "คุณจะสูญเสียจำนวนวันที่เหลืออีก %d วัน"
 
+
+msgctxt "port-forwarding-view"
+msgid "auto"
+msgstr "อัตโนมัติ"
+
+msgctxt "port-forwarding-view"
+msgid "Mapping failed: %(error)s"
+msgstr "การแมปล้มเหลว: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr "เปิดพอร์ตสาธารณะบนเซิร์ฟเวอร์ทางออกที่เชื่อมต่ออยู่และส่งต่อไปยังอุปกรณ์ของคุณ มีประโยชน์สำหรับแอปพลิเคชันแบบเพียร์ทูเพียร์ การแชร์ไฟล์ หรือบริการที่โฮสต์เอง"
+
+msgctxt "port-forwarding-view"
+msgid "Port forwarding"
+msgstr "การส่งต่อพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535, or empty for auto."
+msgstr "พอร์ตต้องอยู่ระหว่าง 49152 ถึง 65535 หรือเว้นว่างไว้สำหรับอัตโนมัติ"
+
+msgctxt "port-forwarding-view"
+msgid "Preferred port"
+msgstr "พอร์ตที่ต้องการ"
+
+msgctxt "port-forwarding-view"
+msgid "Protocol"
+msgstr "โปรโตคอล"
+
+msgctxt "port-forwarding-view"
+msgid "Public port: %(port)s"
+msgstr "พอร์ตสาธารณะ: %(port)s"
+
+msgctxt "port-forwarding-view"
+msgid "Renewing in %(countdown)s"
+msgstr "ต่ออายุใน %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "Status: active"
+msgstr "สถานะ: ใช้งานอยู่"
+
+msgctxt "port-forwarding-view"
+msgid "Status: requesting port mapping..."
+msgstr "สถานะ: กำลังขอการแมปพอร์ต…"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mapping."
+msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการแมปพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "The server may assign a different port if the preferred one is already taken. Changes apply immediately, no reconnection needed."
+msgstr "เซิร์ฟเวอร์อาจกำหนดพอร์ตอื่นหากพอร์ตที่ต้องการถูกใช้งานอยู่แล้ว การเปลี่ยนแปลงจะมีผลทันทีโดยไม่ต้องเชื่อมต่อใหม่"
+
+msgctxt "keys-view"
+msgid "Backup keys"
+msgstr "สำรองคีย์"
+
+msgctxt "keys-view"
+msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
+msgstr "บริการปฏิเสธวลีกู้คืน ตรวจสอบการสะกดและจำนวนคำ แล้วลองอีกครั้ง"
+
+msgctxt "keys-view"
+msgid "Done"
+msgstr "เสร็จสิ้น"
+
+msgctxt "keys-view"
+msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
+msgstr "ป้อนวลีกู้คืน BIP39 ขนาด 12 คำ (หรือ 24 คำ) โดยคั่นแต่ละคำด้วยช่องว่าง"
+
+msgctxt "keys-view"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "ไม่สามารถเรียกวลีกู้คืนจากบริการได้"
+
+msgctxt "keys-view"
+msgid "I have written it down in a safe place."
+msgstr "ฉันได้จดบันทึกไว้ในที่ปลอดภัยแล้ว"
+
+msgctxt "keys-view"
+msgid "I understand this will permanently replace my current identity."
+msgstr "ฉันเข้าใจว่าการกระทำนี้จะแทนที่ตัวตนปัจจุบันของฉันอย่างถาวร"
+
+msgctxt "keys-view"
+msgid "Identity restored. Your new Warren wallet is now active."
+msgstr "กู้คืนตัวตนแล้ว กระเป๋าเงิน Warren ใหม่ของคุณเปิดใช้งานแล้ว"
+
+msgctxt "keys-view"
+msgid "Keys"
+msgstr "คีย์"
+
+msgctxt "keys-view"
+msgid "No mnemonic available. Log in or restore an identity first."
+msgstr "ไม่มีวลีกู้คืน กรุณาเข้าสู่ระบบหรือกู้คืนตัวตนก่อน"
+
+msgctxt "keys-view"
+msgid "Restore from mnemonic"
+msgstr "กู้คืนจากวลีกู้คืน"
+
+msgctxt "keys-view"
+msgid "Restore identity"
+msgstr "กู้คืนตัวตน"
+
+msgctxt "keys-view"
+msgid "Restoring..."
+msgstr "กำลังกู้คืน..."
+
+msgctxt "keys-view"
+msgid "Reveal mnemonic"
+msgstr "แสดงวลีกู้คืน"
+
+msgctxt "keys-view"
+msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
+msgstr "คำเตือน: การกระทำนี้จะ แทนที่ ตัวตนปัจจุบันของคุณ การสมัครสมาชิกใดๆ ที่ผูกกับตัวตนปัจจุบันจะไม่สามารถกู้คืนได้"
+
+msgctxt "keys-view"
+msgid "Write it down on paper. Never store it in a cloud, screenshot, or email."
+msgstr "จดลงบนกระดาษ อย่าเก็บไว้ในคลาวด์ ภาพหน้าจอ หรืออีเมลเด็ดขาด"
+
+msgctxt "keys-view"
+msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
+msgstr "วลีกู้คืน 12 คำของคุณคือวิธี เดียว ที่จะกู้คืนตัวตน Warren บนอุปกรณ์อื่น หากสูญหาย จะไม่สามารถกู้คืนการสมัครสมาชิกของคุณได้"
+
+msgctxt "keys-view"
+msgid "words"
+msgstr "คำ"
+
+msgctxt "warren-mnemonic"
+msgid "Copied to clipboard"
+msgstr "คัดลอกไปยังคลิปบอร์ดแล้ว"
+
+msgctxt "warren-mnemonic"
+msgid "Copy to clipboard"
+msgstr "คัดลอกไปยังคลิปบอร์ด"
+
+msgctxt "warren-onboarding"
+msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
+msgstr "ประสบการณ์ VPN ที่ไม่ประนีประนอมเรื่องความเป็นส่วนตัว ไม่มีการเก็บประวัติ ไม่ต้องมีบัญชี ไม่มีการติดตาม มีแค่แบนด์วิดท์"
+
+msgctxt "warren-onboarding"
+msgid "All set"
+msgstr "พร้อมแล้ว"
+
+msgctxt "warren-onboarding"
+msgid "Check again"
+msgstr "ตรวจสอบอีกครั้ง"
+
+msgctxt "warren-onboarding"
+msgid "Checking... (click to refresh now)"
+msgstr "กำลังตรวจสอบ... (คลิกเพื่อรีเฟรชทันที)"
+
+msgctxt "warren-onboarding"
+msgid "Configuration complete. Pick a country and connect to Warren."
+msgstr "ตั้งค่าเสร็จสมบูรณ์ เลือกประเทศแล้วเชื่อมต่อกับ Warren"
+
+msgctxt "warren-onboarding"
+msgid "Continue"
+msgstr "ดำเนินการต่อ"
+
+msgctxt "warren-onboarding"
+msgid "Could not check subscription status. Please try again."
+msgstr "ไม่สามารถตรวจสอบสถานะการสมัครสมาชิกได้ กรุณาลองอีกครั้ง"
+
+msgctxt "warren-onboarding"
+msgid "Create my new wallet (recommended)"
+msgstr "สร้างกระเป๋าเงินใหม่ของฉัน (แนะนำ)"
+
+msgctxt "warren-onboarding"
+msgid "Daemon has no mnemonic yet - log in or restart the app."
+msgstr "บริการยังไม่มีวลีกู้คืน กรุณาเข้าสู่ระบบหรือรีสตาร์ตแอป"
+
+msgctxt "warren-onboarding"
+msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
+msgstr "บริการปฏิเสธวลีกู้คืน ตรวจสอบการสะกดและจำนวนคำ แล้วลองอีกครั้ง"
+
+msgctxt "warren-onboarding"
+msgid "Failed to retrieve mnemonic from daemon."
+msgstr "ไม่สามารถเรียกวลีกู้คืนจากบริการได้"
+
+msgctxt "warren-onboarding"
+msgid "Get started"
+msgstr "เริ่มต้นใช้งาน"
+
+msgctxt "warren-onboarding"
+msgid "I already have a subscription"
+msgstr "ฉันมีการสมัครสมาชิกอยู่แล้ว"
+
+msgctxt "warren-onboarding"
+msgid "I have written it down in a safe place."
+msgstr "ฉันได้จดบันทึกไว้ในที่ปลอดภัยแล้ว"
+
+msgctxt "warren-onboarding"
+msgid "Import an existing mnemonic"
+msgstr "นำเข้าวลีกู้คืนที่มีอยู่"
+
+msgctxt "warren-onboarding"
+msgid "No active subscription found. Please purchase one first."
+msgstr "ไม่พบการสมัครสมาชิกที่ใช้งานอยู่ กรุณาซื้อก่อน"
+
+msgctxt "warren-onboarding"
+msgid "Paste your 12-word BIP39 mnemonic to restore your existing Warren identity."
+msgstr "วางวลีกู้คืน BIP39 ขนาด 12 คำของคุณ เพื่อกู้คืนตัวตน Warren ที่มีอยู่"
+
+msgctxt "warren-onboarding"
+msgid "Pick a country and connect"
+msgstr "เลือกประเทศแล้วเชื่อมต่อ"
+
+msgctxt "warren-onboarding"
+msgid "Pick the defenses you want from day one. You can change all of these later from Settings."
+msgstr "เลือกระบบป้องกันที่คุณต้องการตั้งแต่วันแรก คุณสามารถเปลี่ยนทั้งหมดนี้ได้ภายหลังจากการตั้งค่า"
+
+msgctxt "warren-onboarding"
+msgid "Privacy preferences"
+msgstr "การตั้งค่าความเป็นส่วนตัว"
+
+msgctxt "warren-onboarding"
+msgid "Restore wallet"
+msgstr "กู้คืนกระเป๋าเงิน"
+
+msgctxt "warren-onboarding"
+msgid "Skip wizard (advanced)"
+msgstr "ข้ามตัวช่วยตั้งค่า (ขั้นสูง)"
+
+msgctxt "warren-onboarding"
+msgid "View plans (opens in your browser)"
+msgstr "ดูแพ็กเกจ (เปิดในเบราว์เซอร์ของคุณ)"
+
+msgctxt "warren-onboarding"
+msgid "Warren uses a non-custodial wallet (Ed25519 + BIP39). You own the keys; we never see them."
+msgstr "Warren ใช้กระเป๋าเงินแบบ non-custodial (Ed25519 + BIP39) คุณเป็นเจ้าของคีย์เอง เราไม่มีวันเห็นมัน"
+
+msgctxt "warren-onboarding"
+msgid "Welcome to Warren VPN"
+msgstr "ยินดีต้อนรับสู่ Warren VPN"
+
+msgctxt "warren-onboarding"
+msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
+msgstr "จด 12 คำนี้ตามลำดับและเก็บไว้ในที่ปลอดภัย นี่คือวิธีเดียวที่จะกู้คืนการสมัครสมาชิกของคุณ หากคุณสูญเสียการเข้าถึงอุปกรณ์นี้"
+
+msgctxt "warren-onboarding"
+msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgstr "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ แพ็กเกจเริ่มต้นเพียงไม่กี่ยูโรต่อเดือน ไม่มีการเรียกเก็บเงินอัตโนมัติ ไม่ต้องสร้างบัญชี จ่ายตามการใช้งาน"
+
+msgctxt "warren-onboarding"
+msgid "Your Warren wallet"
+msgstr "กระเป๋าเงิน Warren ของคุณ"
+
+msgctxt "warren-onboarding"
+msgid "Your subscription"
+msgstr "การสมัครสมาชิกของคุณ"
+
+msgctxt "warren-onboarding"
+msgid "• Always-on obfuscation (ON by default): HTTP/3 mimicry so the wire blends in."
+msgstr "• การพรางการรับส่งข้อมูลแบบเปิดตลอด (เปิดเป็นค่าเริ่มต้น): เลียนแบบ HTTP/3 เพื่อให้ทราฟฟิกกลมกลืนไปกับการใช้งานทั่วไป"
+
+msgctxt "warren-onboarding"
+msgid "• DAITA v2 (OFF by default): inject padding to defeat ML traffic analysis. ~5-15% bandwidth."
+msgstr "• DAITA v2 (ปิดเป็นค่าเริ่มต้น): เพิ่ม padding เพื่อต้านการวิเคราะห์ทราฟฟิกด้วย ML ใช้แบนด์วิดท์ประมาณ 5-15%"
+
+msgctxt "warren-onboarding"
+msgid "• Multi-hop (OFF by default): route through two relays for entry/exit unlinkability."
+msgstr "• Multi-hop (ปิดเป็นค่าเริ่มต้น): กำหนดเส้นทางผ่านรีเลย์สองจุด เพื่อไม่ให้เชื่อมโยงจุดเข้าและจุดออกเข้าด้วยกันได้"
+
+msgctxt "account-view"
+msgid "Back up my phrase"
+msgstr "สำรองวลีของฉัน"
+
+msgctxt "account-view"
+msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
+msgstr "ฉันได้สำรองวลีกู้คืนของฉันแล้ว และเข้าใจว่าบัญชีนี้จะถูกลบออกจากอุปกรณ์นี้"
+
+msgctxt "account-view"
+msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
+msgstr "หากคุณยังไม่ได้สำรองวลีกู้คืน การสมัครสมาชิกของคุณจะสูญหายอย่างถาวร"
+
+msgctxt "account-view"
+msgid "Log out of this account?"
+msgstr "ออกจากระบบบัญชีนี้หรือไม่"
+
+msgctxt "account-view"
+msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
+msgstr "การออกจากระบบจะลบบัญชีนี้ออกจากอุปกรณ์นี้ ไม่มีอีเมลหรือรหัสผ่านสำหรับเข้าสู่ระบบอีกครั้ง, วลีกู้คืนของคุณเป็นวิธีเดียวที่จะกู้คืนได้"
+
+msgctxt "login-view"
+msgid "Back up your recovery phrase"
+msgstr "สำรองวลีกู้คืนของคุณ"
+
+msgctxt "login-view"
+msgid "Could not read the new recovery phrase. Try again."
+msgstr "ไม่สามารถอ่านวลีกู้คืนใหม่ได้ โปรดลองอีกครั้ง"
+
+msgctxt "login-view"
+msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr "ป้อนวลีกู้คืน 12 คำของคุณ โดยคั่นด้วยช่องว่าง เพื่อกู้คืนบัญชีของคุณบนอุปกรณ์นี้"
+
+msgctxt "login-view"
+msgid "I already have an account"
+msgstr "ฉันมีบัญชีอยู่แล้ว"
+
+msgctxt "login-view"
+msgid "I have written down my recovery phrase in a safe place."
+msgstr "ฉันได้จดวลีกู้คืนของฉันไว้ในที่ปลอดภัยแล้ว"
+
+msgctxt "login-view"
+msgid "Invalid recovery phrase. Check the words and their order, then try again."
+msgstr "วลีกู้คืนไม่ถูกต้อง ตรวจสอบคำและลำดับของคำ แล้วลองอีกครั้ง"
+
+msgctxt "login-view"
+msgid "Restore account"
+msgstr "กู้คืนบัญชี"
+
+msgctxt "login-view"
+msgid "Restore your account"
+msgstr "กู้คืนบัญชีของคุณ"
+
+msgctxt "login-view"
+msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
+msgstr "Warren ใช้กระเป๋าเงินแบบไม่รับฝาก บัญชีของคุณคือวลีกู้คืน 12 คำที่มีเพียงคุณเท่านั้นที่ถือครอง"
+
+msgctxt "login-view"
+msgid "Welcome to Warren"
+msgstr "ยินดีต้อนรับสู่ Warren"
+
+msgctxt "login-view"
+msgid "Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device."
+msgstr "จดคำ 12 คำเหล่านี้และเก็บไว้ในที่ปลอดภัย คำเหล่านี้เป็นวิธีเดียวที่จะกู้คืนบัญชีของคุณหากคุณทำอุปกรณ์นี้หาย"
+
+msgctxt "connect-view"
+msgid "I've completed payment"
+msgstr "ฉันชำระเงินเสร็จแล้ว"
+
+msgctxt "device-management"
+msgid "Session is inactive"
+msgstr "เซสชันไม่ได้ใช้งาน"
+
+msgctxt "device-management"
+msgid "Your session has ended. To connect again, you will need to log back in."
+msgstr "เซสชันของคุณสิ้นสุดลงแล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่"
+
+msgctxt "notifications"
+msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgstr "ตรวจพบข้อมูลประจำตัวเซิร์ฟเวอร์ไม่ตรงกัน คีย์สาธารณะของโหนดทางออกมีการเปลี่ยนแปลง"
+
+msgctxt "vpn-settings-view"
+msgid "Automatic failover"
+msgstr "การสลับอัตโนมัติเมื่อเกิดข้อผิดพลาด"
+
+msgctxt "vpn-settings-view"
+msgid "Automatically switch to another exit server if the current one becomes unreachable."
+msgstr "สลับไปยังเซิร์ฟเวอร์ทางออกอื่นโดยอัตโนมัติหากเซิร์ฟเวอร์ปัจจุบันไม่สามารถเข้าถึงได้"
+
+msgctxt "vpn-settings-view"
+msgid "This setting takes effect immediately without a daemon restart."
+msgstr "การตั้งค่านี้มีผลทันทีโดยไม่ต้องรีสตาร์ทบริการ"
+
+msgctxt "vpn-settings-view"
+msgid "URL of the warren-api server. Format http(s)://host:port. Empty = unset (fallback to the default backend). Restart the daemon for the change to take effect."
+msgstr "URL ของเซิร์ฟเวอร์ warren-api รูปแบบ http(s)://host:port ว่าง = ไม่ได้ตั้งค่า (กลับไปใช้แบ็กเอนด์เริ่มต้น) รีสตาร์ทบริการเพื่อให้การเปลี่ยนแปลงมีผล"
+
+msgid "OK"
+msgstr "ตกลง"
+
+msgctxt "accessibility"
+msgid "Copy public key"
+msgstr "คัดลอกกุญแจสาธารณะ"
+
+msgctxt "accessibility"
+msgid "Hide public key"
+msgstr "ซ่อนกุญแจสาธารณะ"
+
+msgctxt "accessibility"
+msgid "Show public key"
+msgstr "แสดงกุญแจสาธารณะ"
+
+msgctxt "account-view"
+msgid "Backup keys"
+msgstr "สำรองกุญแจ"
+
+msgctxt "account-view"
+msgid "Public key"
+msgstr "กุญแจสาธารณะ"
+
+msgctxt "api-access-methods-view"
+msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
+msgstr "CDN ที่ใช้คือ CDN77 ของ Datapacket โดย CDN จะเห็นได้เพียงทราฟฟิก TLS ที่ส่งผ่านเท่านั้น ไม่เห็นเนื้อหา"
+
+msgctxt "api-access-methods-view"
+msgid "The app communicates with a Warren API server via %(domainFronting)s."
+msgstr "แอปสื่อสารกับเซิร์ฟเวอร์ warren-api ผ่าน %(domainFronting)s"
+
+msgctxt "api-access-methods-view"
+msgid "This can be useful when direct access and other methods are blocked by censorship."
+msgstr "วิธีนี้มีประโยชน์เมื่อการเข้าถึงโดยตรงและวิธีอื่น ๆ ถูกบล็อกด้วยการเซ็นเซอร์"
+
+msgctxt "api-access-methods-view"
+msgid "With the %(domainFronting)s access method, the app reaches the Warren API via a CDN, mixing the traffic with a lot of other internet traffic, making it more difficult to censor."
+msgstr "ด้วยวิธีการเข้าถึง %(domainFronting)s แอปจะเข้าถึง Warren API ผ่าน CDN ทำให้ทราฟฟิกผสมกับทราฟฟิกอินเทอร์เน็ตอื่น ๆ จำนวนมาก จึงเซ็นเซอร์ได้ยากขึ้น"
+
+msgctxt "auth-failure"
+msgid "You are logged in with an invalid public key. Please log out and try another one."
+msgstr "คุณเข้าสู่ระบบด้วยกุญแจสาธารณะที่ไม่ถูกต้อง โปรดออกจากระบบแล้วลองกุญแจอื่น"
+
+msgctxt "connect-view"
+msgid "Checking... (click to refresh now)"
+msgstr "กำลังตรวจสอบ... (คลิกเพื่อรีเฟรชเดี๋ยวนี้)"
+
+msgctxt "connect-view"
+msgid "Here’s your public key. Save it!"
+msgstr "นี่คือกุญแจสาธารณะของคุณ บันทึกเก็บไว้!"
+
+msgctxt "connect-view"
+msgid "Port forwarding: %(ports)s"
+msgstr "การส่งต่อพอร์ต: %(ports)s"
+
+msgctxt "connection-info"
+msgid "Multihop (2 hops)"
+msgstr "มัลติฮอป (2 ฮอป)"
+
+msgctxt "in-app-notifications"
+msgid "EXIT SWITCHED"
+msgstr "เปลี่ยนเซิร์ฟเวอร์ทางออกแล้ว"
+
+msgctxt "in-app-notifications"
+msgid "Your previous exit became unreachable. Warren routed you through an alternative server automatically."
+msgstr "เซิร์ฟเวอร์ทางออกก่อนหน้าของคุณเข้าถึงไม่ได้ Warren ได้กำหนดเส้นทางคุณผ่านเซิร์ฟเวอร์อื่นโดยอัตโนมัติ"
+
+msgctxt "in-app-notifications"
+msgid "Your server is being updated. Warren moved you to another server automatically, no action needed."
+msgstr "เซิร์ฟเวอร์ของคุณกำลังอัปเดต Warren ได้ย้ายคุณไปยังเซิร์ฟเวอร์อื่นโดยอัตโนมัติ ไม่ต้องดำเนินการใด ๆ"
+
+msgctxt "port-forwarding-view"
+msgid "+ Add a port"
+msgstr "+ เพิ่มพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
+msgstr "ทุกพอร์ตที่คุณเพิ่มจะถูกเปิดบนเซิร์ฟเวอร์ทางออกและส่งต่อไปยังพอร์ตเดียวกันบนอุปกรณ์ของคุณ การเปลี่ยนแปลงมีผลทันที ไม่ต้องเชื่อมต่อใหม่"
+
+msgctxt "port-forwarding-view"
+msgid "Last port change before a temporary block. Wait a moment before changing it again."
+msgstr "นี่คือการเปลี่ยนพอร์ตครั้งสุดท้ายก่อนการบล็อกชั่วคราว โปรดรอสักครู่ก่อนเปลี่ยนอีกครั้ง"
+
+msgctxt "port-forwarding-view"
+msgid "Maximum of %(max)d ports reached"
+msgstr "ถึงจำนวนพอร์ตสูงสุด %(max)d พอร์ตแล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "No port yet. Add one to open it on the exit."
+msgstr "ยังไม่มีพอร์ต เพิ่มพอร์ตเพื่อเปิดบนเซิร์ฟเวอร์ทางออก"
+
+msgctxt "port-forwarding-view"
+msgid "Port"
+msgstr "พอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Port must be between 49152 and 65535."
+msgstr "พอร์ตต้องอยู่ระหว่าง 49152 ถึง 65535"
+
+msgctxt "port-forwarding-view"
+msgid "Remove port"
+msgstr "ลบพอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการจับคู่พอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "This port is already in your list."
+msgstr "พอร์ตนี้อยู่ในรายการของคุณแล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr "เปลี่ยนพอร์ตบ่อยเกินไป คุณจะเปลี่ยนพอร์ตได้อีกครั้งใน %(countdown)s"
+
+msgctxt "port-forwarding-view"
+msgid "applying…"
+msgstr "กำลังนำไปใช้…"
+
+msgctxt "port-forwarding-view"
+msgid "failed"
+msgstr "ล้มเหลว"
+
+msgctxt "port-forwarding-view"
+msgid "no port available"
+msgstr "ไม่มีพอร์ตว่าง"
+
+msgctxt "port-forwarding-view"
+msgid "not allowed"
+msgstr "ไม่อนุญาต"
+
+msgctxt "port-forwarding-view"
+msgid "open: %(port)d"
+msgstr "เปิด: %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "pending…"
+msgstr "รอดำเนินการ…"
+
+msgctxt "port-forwarding-view"
+msgid "port"
+msgstr "พอร์ต"
+
+msgctxt "port-forwarding-view"
+msgid "port in use"
+msgstr "พอร์ตถูกใช้งานอยู่"
+
+msgctxt "port-forwarding-view"
+msgid "requesting…"
+msgstr "กำลังร้องขอ…"
+
+msgctxt "redeem-voucher-view"
+msgid "It looks like you’ve entered a public key instead of a voucher code. If you would like to change the active account, please log out first."
+msgstr "ดูเหมือนว่าคุณป้อนกุญแจสาธารณะแทนรหัสคูปอง หากต้องการเปลี่ยนบัญชีที่ใช้งานอยู่ โปรดออกจากระบบก่อน"
+
+msgctxt "settings-view"
+msgid "Port forwarding"
+msgstr "การส่งต่อพอร์ต"
+
+msgctxt "settings-view"
+msgid "Replay onboarding"
+msgstr "เล่นการแนะนำเริ่มต้นใหม่"
+
+msgctxt "vpn-settings-view"
+msgid "Dropped %(count)s pinned exit key entries."
+msgstr "ลบรายการกุญแจทางออกที่ปักหมุดไว้ %(count)s รายการแล้ว"
+
+msgctxt "vpn-settings-view"
+msgid "Every Warren exit you previously connected to will be re-pinned on the next connection (Trust On First Use)."
+msgstr "เซิร์ฟเวอร์ทางออก Warren ทุกตัวที่คุณเคยเชื่อมต่อมาก่อนจะถูกปักหมุดใหม่ในการเชื่อมต่อครั้งถัดไป (Trust On First Use)"
+
+msgctxt "vpn-settings-view"
+msgid "Pin table cleared"
+msgstr "ล้างตารางการปักหมุดแล้ว"
+
+msgctxt "vpn-settings-view"
+msgid "Reset"
+msgstr "รีเซ็ต"
+
+msgctxt "vpn-settings-view"
+msgid "Reset all"
+msgstr "รีเซ็ตทั้งหมด"
+
+msgctxt "vpn-settings-view"
+msgid "Reset failed"
+msgstr "รีเซ็ตล้มเหลว"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys"
+msgstr "รีเซ็ตกุญแจทางออกที่ปักหมุดไว้"
+
+msgctxt "vpn-settings-view"
+msgid "Reset pinned exit keys?"
+msgstr "รีเซ็ตกุญแจทางออกที่ปักหมุดไว้หรือไม่?"
+
+msgctxt "vpn-settings-view"
+msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
+msgstr "จนกว่าจะมีการปักหมุดใหม่ ระบบป้องกันการตรวจจับการสับเปลี่ยนจะหยุดทำงานชั่วครู่ ผู้โจมตีที่เปลี่ยนเซิร์ฟเวอร์ทางออกในช่วงระหว่างการรีเซ็ตจะไม่ถูกตรวจจับในการเชื่อมต่อใหม่ครั้งแรก"
+
+msgctxt "vpn-settings-view"
+msgid "Warren api URL"
+msgstr "URL ของ Warren API"
+
+msgctxt "warren-multi-hop-view"
+msgid "Entry country"
+msgstr "ประเทศทางเข้า"
+
+msgctxt "warren-multi-hop-view"
+msgid "Exit country"
+msgstr "ประเทศทางออก"
+
+msgctxt "warren-multi-hop-view"
+msgid "Expect roughly half the single-hop bandwidth in exchange for unlinkability between the user IP and the destination IP. Off by default; opt-in for privacy."
+msgstr "คาดว่าจะได้แบนด์วิดท์ราวครึ่งหนึ่งของแบบฮอปเดียว เพื่อแลกกับการที่ IP ของผู้ใช้และ IP ปลายทางไม่สามารถเชื่อมโยงกันได้ ปิดไว้โดยค่าเริ่มต้น เปิดใช้เองเพื่อความเป็นส่วนตัว"
+
+msgctxt "warren-multi-hop-view"
+msgid "Multihop"
+msgstr "มัลติฮอป"
+
+msgctxt "warren-multi-hop-view"
+msgid "Restart the Warren daemon after changing this setting."
+msgstr "รีสตาร์ตบริการ Warren หลังจากเปลี่ยนการตั้งค่านี้"
+
+msgctxt "warren-multi-hop-view"
+msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
+msgstr "กำหนดเส้นทางทราฟฟิกของคุณผ่านรีเลย์ Warren สองตัวโดยใช้การเข้ารหัสแบบ end-to-end ด้วย HPKE รีเลย์ทางเข้าเห็นเฉพาะข้อความที่เข้ารหัสไว้ ส่วนทางออกเห็นเฉพาะข้อมูลที่ถอดรหัสแล้ว ไม่เห็น IP ของคุณ รูปแบบนี้ได้แรงบันดาลใจจาก Apple Private Relay"
+
+msgctxt "warren-multi-hop-view"
+msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
+msgstr "ข้อแลกเปลี่ยน: แบนด์วิดท์ราวครึ่งหนึ่งของแบบฮอปเดียว ปิดไว้โดยค่าเริ่มต้น เปิดใช้เองเพื่อความเป็นส่วนตัว ต้องรีสตาร์ตบริการหลังจากเปลี่ยนการตั้งค่านี้"
+
+msgctxt "warren-multi-hop-view"
+msgid "Warren multi-hop"
+msgstr "มัลติฮอป Warren"
+
+msgctxt "warren-multi-hop-view"
+msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
+msgstr "เมื่อเปิดใช้งาน ทราฟฟิกจะถูกกำหนดเส้นทางผ่านรีเลย์ Warren สองตัว (ทางเข้าแล้วจึงทางออก) โดยใช้การเข้ารหัสแบบ end-to-end ด้วย HPKE ระหว่างไคลเอนต์และทางออก รีเลย์ทางเข้าเห็นเฉพาะข้อความที่เข้ารหัสไว้ ส่วนทางออกเห็นเฉพาะข้อมูลที่ถอดรหัสแล้ว ไม่เห็น IP ของผู้ใช้"
+
+msgctxt "warren-multi-hop-view"
+msgid "auto"
+msgstr "อัตโนมัติ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Cryptographic mismatch details"
+msgstr "รายละเอียดความไม่ตรงกันทางการเข้ารหัส"
+
+msgctxt "warren-pubkey-warning"
+msgid "Exit ID"
+msgstr "รหัสทางออก"
+
+msgctxt "warren-pubkey-warning"
+msgid "Location"
+msgstr "ตำแหน่งที่ตั้ง"
+
+msgctxt "warren-pubkey-warning"
+msgid "Newly observed key"
+msgstr "กุญแจที่พบใหม่"
+
+msgctxt "warren-pubkey-warning"
+msgid "Previously pinned key"
+msgstr "กุญแจที่ปักหมุดไว้ก่อนหน้า"
+
+msgctxt "warren-pubkey-warning"
+msgid "Processing your choice, please wait."
+msgstr "กำลังประมวลผลตัวเลือกของคุณ โปรดรอสักครู่"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject (disconnect)"
+msgstr "ปฏิเสธ (ตัดการเชื่อมต่อ)"
+
+msgctxt "warren-pubkey-warning"
+msgid "Reject and stay disconnected"
+msgstr "ปฏิเสธและคงสถานะตัดการเชื่อมต่อ"
+
+msgctxt "warren-pubkey-warning"
+msgid "Report to Warren"
+msgstr "รายงานไปยัง Warren"
+
+msgctxt "warren-pubkey-warning"
+msgid "Server identity changed"
+msgstr "อัตลักษณ์ของเซิร์ฟเวอร์เปลี่ยนไป"
+
+msgctxt "warren-pubkey-warning"
+msgid "The Warren exit server you previously trusted now presents a different cryptographic identity."
+msgstr "เซิร์ฟเวอร์ทางออก Warren ที่คุณเคยเชื่อถือ ตอนนี้แสดงอัตลักษณ์ทางการเข้ารหัสที่แตกต่างออกไป"
+
+msgctxt "warren-pubkey-warning"
+msgid "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+msgstr "โดยทั่วไปหมายความว่าผู้ดูแลได้หมุนเปลี่ยนกุญแจ แต่ก็อาจบ่งชี้ว่าเซิร์ฟเวอร์ถูกแทนที่หรือถูกเจาะระบบ ปฏิเสธหากคุณไม่ได้คาดหวังการเปลี่ยนแปลง"
+
+msgctxt "warren-pubkey-warning"
+msgid "Trust new key"
+msgstr "เชื่อถือกุญแจใหม่"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry (active)"
+msgstr "การเลียนแบบ HTTP/3 (กำลังทำงาน)"
+
+msgctxt "warren-status-view"
+msgid "Last"
+msgstr "ล่าสุด"
+
+msgctxt "warren-status-view"
+msgid "Obfuscation"
+msgstr "การพราง"
+
+msgctxt "warren-status-view"
+msgid "Reconnects"
+msgstr "การเชื่อมต่อใหม่"
+
+msgctxt "warren-status-view"
+msgid "inactive"
+msgstr "ไม่ทำงาน"
+
+msgctxt "warren-status-view"
+msgid "never"
+msgstr "ไม่เคย"
+
+msgctxt "forum-login"
+msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "มีการร้องขอเข้าสู่ระบบฟอรัมชุมชน Warren แอปของคุณจะลงนามคำท้าทายแบบใช้ครั้งเดียวด้วยคีย์กระเป๋าเงินของคุณเพื่อยืนยันว่าเป็นคุณ"
+
+msgctxt "forum-login"
+msgid "Approve sign-in"
+msgstr "อนุมัติการเข้าสู่ระบบ"
+
+msgctxt "forum-login"
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgctxt "forum-login"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
+msgstr "การเข้าถึงฟอรัมต้องมีการสมัครสมาชิก Warren กระเป๋าเงินนี้ไม่เคยสมัครสมาชิกมาก่อน"
+
+msgctxt "forum-login"
+msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+msgstr "ไม่มีการใช้อีเมลและรหัสผ่าน คุณจะปรากฏภายใต้ชื่อผู้ใช้นิรนามที่ไม่สามารถเชื่อมโยงกับบัญชี Warren ของคุณได้ อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการเข้าสู่ระบบนี้เท่านั้น"
+
+msgctxt "forum-login"
+msgid "Sign in to the Warren community forum?"
+msgstr "เข้าสู่ระบบฟอรัมชุมชน Warren หรือไม่?"
+
+msgctxt "forum-login"
+msgid "Sign-in failed. Please try again in a moment."
+msgstr "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+
+msgctxt "forum-login"
+msgid "Signing, please wait."
+msgstr "กำลังลงนาม โปรดรอสักครู่"
+
+msgctxt "support-view"
+msgid "Community forum"
+msgstr "ฟอรัมชุมชน"
+
+msgctxt "tunnel-control"
+msgid "Connecting..."
+msgstr "กำลังเชื่อมต่อ..."
+
+msgctxt "tunnel-control"
+msgid "Connection established"
+msgstr "เชื่อมต่อสำเร็จ"
+
+msgctxt "tunnel-control"
+msgid "Encrypting your connection"
+msgstr "กำลังเข้ารหัสการเชื่อมต่อของคุณ"
+
+msgctxt "tunnel-control"
+msgid "Random location"
+msgstr "ตำแหน่งแบบสุ่ม"
+
+msgctxt "tunnel-control"
+msgid "You are protected"
+msgstr "คุณได้รับการปกป้อง"
+
+msgctxt "tunnel-control"
+msgid "You are visible"
+msgstr "คุณถูกมองเห็นได้"
+
+msgctxt "tunnel-control"
+msgid "Your connection is not encrypted"
+msgstr "การเชื่อมต่อของคุณไม่ได้เข้ารหัส"
+
+msgctxt "tunnel-control"
+msgid "Disconnecting..."
+msgstr "กำลังยกเลิกการเชื่อมต่อ..."
+
+msgctxt "tunnel-control"
+msgid "Connection in progress"
+msgstr "กำลังเชื่อมต่อ"
+
+msgctxt "forum-attach"
+msgid "Attach the logs"
+msgstr "แนบบันทึก"
+
+msgctxt "forum-attach"
+msgid "Attach your logs to the bug report?"
+msgstr "แนบบันทึกของคุณไปกับรายงานข้อบกพร่องหรือไม่?"
+
+msgctxt "forum-attach"
+msgid "Attaching the logs failed. Please try again in a moment."
+msgstr "แนบบันทึกไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+
+msgctxt "forum-attach"
+msgid "Cancel"
+msgstr "ยกเลิก"
+
+msgctxt "forum-attach"
+msgid "Only the author of the bug report can attach logs to it."
+msgstr "เฉพาะผู้เขียนรายงานข้อบกพร่องเท่านั้นที่สามารถแนบบันทึกได้"
+
+msgctxt "forum-attach"
+msgid "Sending, please wait."
+msgstr "กำลังส่ง โปรดรอสักครู่"
+
+msgctxt "forum-attach"
+msgid "The log file is too large to attach."
+msgstr "ไฟล์บันทึกมีขนาดใหญ่เกินกว่าจะแนบได้"
+
+msgctxt "forum-attach"
+msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "บันทึกได้รับการปกปิดตัวตน: ที่อยู่กระเป๋าเงินและข้อมูลส่วนบุคคลถูกซ่อนไว้ ข้อมูลเหล่านี้จะถูกส่งเป็นการส่วนตัวไปยังทีมสนับสนุนของ Warren และจะไม่ปรากฏต่อสาธารณะบนฟอรัม คุณสามารถดูสิ่งที่จะถูกส่งได้อย่างชัดเจนก่อนอนุมัติ"
+
+msgctxt "forum-attach"
+msgid "This request has expired. Start again from the forum page."
+msgstr "คำขอนี้หมดอายุแล้ว โปรดเริ่มใหม่จากหน้าฟอรัม"
+
+msgctxt "forum-attach"
+msgid "View the logs"
+msgstr "ดูบันทึก"
+
+msgctxt "forum-attach"
+msgid "Your bug report on the Warren forum (topic %(topicId)d) asks to attach the app technical logs to help diagnose the problem."
+msgstr "รายงานข้อบกพร่องของคุณบนฟอรัม Warren (หัวข้อ %(topicId)d) ขอให้แนบบันทึกทางเทคนิคของแอปเพื่อช่วยวินิจฉัยปัญหา"
+
+msgctxt "forum-attach"
+msgid "Your new bug report being composed on the Warren forum asks to attach the app technical logs to help diagnose the problem."
+msgstr "รายงานข้อบกพร่องใหม่ที่คุณกำลังเขียนบนฟอรัม Warren ขอให้แนบบันทึกทางเทคนิคของแอปเพื่อช่วยวินิจฉัยปัญหา"
+
+#. Status line confirming traffic obfuscation is on.
+msgctxt "warren-status-view"
+msgid "Obfuscation is active."
+msgstr "การพรางเปิดใช้งานอยู่"
+
+#. Status line shown if traffic obfuscation is off.
+msgctxt "warren-status-view"
+msgid "Obfuscation is currently inactive."
+msgstr "การพรางปิดใช้งานอยู่ในขณะนี้"
+
+#. Explains what obfuscation does and why it cannot be turned off.
+msgctxt "warren-status-view"
+msgid "To evade censorship, Warren disguises the tunnel as ordinary web browsing: on the network it looks like standard browser traffic to a regular website (HTTP/3 on port 443). Obfuscation cannot be turned off, as traffic that stands out is traffic that can be blocked."
+msgstr "เพื่อหลบเลี่ยงการเซ็นเซอร์ Warren จะปลอมอุโมงค์ให้ดูเหมือนการท่องเว็บทั่วไป โดยบนเครือข่ายจะดูเหมือนการรับส่งข้อมูลปกติของเบราว์เซอร์ไปยังเว็บไซต์ทั่วไป (HTTP/3 บนพอร์ต 443) การพรางไม่สามารถปิดได้ เพราะการรับส่งข้อมูลที่โดดเด่นอาจถูกบล็อก"
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s adds network noise and makes all packets the same size, so it is much harder to tell which sites you visit or who you communicate with."
+msgstr "%(daita)s เพิ่มสัญญาณรบกวนเครือข่ายและทำให้แพ็กเก็ตทั้งหมดมีขนาดเท่ากัน จึงยากขึ้นมากที่จะบอกได้ว่าคุณเข้าชมเว็บไซต์ใดหรือติดต่อกับใคร"
+
+msgctxt "wireguard-settings-view"
+msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
+msgstr "%(daita)s ไม่ได้ทำงานบนเซิร์ฟเวอร์ปัจจุบัน การเชื่อมต่อนี้จึงไม่ได้รับการปกป้องจาก %(daita)s เชื่อมต่อใหม่หรือเลือกตำแหน่งอื่น"
+
+msgctxt "wireguard-settings-view"
+msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
+msgstr "แม้จะเข้ารหัสไว้แล้ว แพ็กเก็ตข้อมูลที่เข้าและออกจากอุปกรณ์ของคุณก็ยังถูก AI วิเคราะห์เพื่อเปิดเผยกิจกรรมของคุณได้"
+
+msgctxt "wireguard-settings-view"
+msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
+msgstr "หมายเหตุ: ฟีเจอร์นี้เพิ่มปริมาณการรับส่งข้อมูลบนเครือข่าย และอาจลดความเร็ว เพิ่มความหน่วง และลดอายุแบตเตอรี่ โปรดใช้อย่างระมัดระวังกับแพ็กเกจที่จำกัด"

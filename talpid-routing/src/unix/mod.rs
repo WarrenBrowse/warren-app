@@ -150,10 +150,13 @@ pub enum DefaultRouteEvent {
     RemovedV6,
 }
 
+/// A route-table change observed by the Linux `change_listener`.
 #[cfg(target_os = "linux")]
 #[derive(Debug, Clone)]
 pub enum CallbackMessage {
+    /// A route was added to the table.
     NewRoute(Route),
+    /// A route was removed from the table.
     DelRoute(Route),
 }
 

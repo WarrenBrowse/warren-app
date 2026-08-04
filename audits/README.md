@@ -1,11 +1,19 @@
 # Audits, pentests and external security reviews
 
-Independent audits help to discover potential security vulnerabilities and fix them, all resulting
-in an even better service. It also gives you the opportunity to judge whether or not we are
-technically competent enough to provide a service in which security is paramount.
+> **Scope note for Warren.** The reports listed below are **Mullvad VPN's** historical audits,
+> inherited with this fork. They cover the upstream Mullvad app and its **WireGuard** data plane.
+> Warren replaces that data plane with a custom **QUIC tunnel** (`talpid-warren-tunnel` + the
+> `warrenguard` engine) and adds a wallet-based account model, **none of which is covered by these
+> reports**. They are kept for the audited components Warren still ships (client UI, firewall/DNS
+> leak protection, routing) and for transparency, not as an audit of the Warren-specific stack.
 
-We perform these external security audits every two years. Here are all the audits we have
-performed on this app so far:
+Independent audits help to discover potential security vulnerabilities and fix them, all resulting
+in an even better service. The audits below were commissioned by Mullvad for the upstream app;
+Warren has not commissioned any of them and has not yet had its own stack audited (see the scope
+note above).
+
+These external security audits were performed on the upstream Mullvad app. Here are all the audits
+performed so far:
 
 * [2018-09-24 - Assured and Cure53](./2018-09-24-assured-cure53.md)
 * [2020-06-12 - Cure53](./2020-06-12-cure53.md)
@@ -14,7 +22,8 @@ performed on this app so far:
 
 ## Additional audits and certifications
 
-Apart from the biannual audits mentioned above, we've also conducted the following:
+Apart from the biannual audits mentioned above, Mullvad also conducted the following on the
+upstream app:
 
 * [2025-02-24 - NCC Group Mobile Application Security Assessment (MASA) of the Android app](./2025-02-24-nccgroup-android-masa.md)
 * [2025-03-20 - Audit of the installer downloader by Assured](./2025-03-20-assured-installer-downloader.md)

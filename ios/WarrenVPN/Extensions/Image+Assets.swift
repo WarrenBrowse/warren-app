@@ -1,0 +1,40 @@
+import SwiftUI
+
+extension Image {
+    static var warrenIconClose: some View {
+        Image("IconClose")
+            .resizable()
+            .frame(width: 25, height: 25)
+    }
+
+    static let warrenIconAlert = Image("IconAlert")
+    static let warrenIconSpinner = Image("IconSpinner")
+    static let warrenIconSuccess = Image("IconSuccess")
+    static let warrenIconFail = Image("IconFail")
+    static let warrenIconSearch = Image("IconSearch")
+    static let warrenIconCross = Image("IconCross")
+    static let warrenIconChevron = Image("IconChevron")
+    static let warrenIconAdd = Image("IconAdd")
+    static let warrenIconEdit = Image("IconEdit")
+    static let warrenIconTick = Image("IconTick")
+    static let warrenIconStateOnline = Image("IconStateOnline")
+    static let warrenIconStateOffline = Image("IconStateOffline")
+    static let warrenIconStateIssue = Image("IconStateIssue")
+    static let warrenIconInternet = Image("IconInternet")
+    static let warrenServer = Image("IconServer")
+    static let warrenSmartphone = Image("IconSmartphone")
+    static let warrenLocation = Image("IconLocation")
+    static let warrenIconError = Image("IconError")
+    static let warrenIconInfo = Image("IconInfo")
+    static let warrenIconDelete = Image("IconDelete")
+    static let warrenIconMultihopAlways = Image("IconMultihopAlways")
+    static let warrenIconMultihopNever = Image("IconMultihopNever")
+    static let warrenIconMultihopWhenNeeded = Image("IconMultihopWhenNeeded")
+    static let warrenIconEnableRecents = Image("IconEnableRecents")
+    static let warrenIconDisableRecents = Image("IconDisableRecents")
+    static let warrenIconFilter = Image("IconFilter")
+    static let warrenIconFilterDisabled = Image("IconFilterDisabled")
+    static let warrenIconFilterCutout = Image("IconFilterCutout")
+    static let warrenIconFilterCutoutDisabled = Image("IconFilterCutoutDisabled")
+    static let warrenIconReload = Image("IconReload")
+}

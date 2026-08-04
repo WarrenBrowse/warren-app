@@ -1,6 +1,8 @@
 ---
 name: iOS end-to-end API tests
 on:
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
 
 permissions:

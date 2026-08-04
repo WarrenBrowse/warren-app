@@ -1,34 +1,42 @@
-HOST_NAME[config=Debug] = mullvad.net
-HOST_NAME[config=Release] = mullvad.net
-HOST_NAME[config=MockRelease] = mullvad.net
-HOST_NAME[config=Staging] = stagemole.eu
+HOST_NAME[config=Debug] = warrenbrowse.com
+HOST_NAME[config=Release] = warrenbrowse.com
+HOST_NAME[config=MockRelease] = warrenbrowse.com
+HOST_NAME[config=Staging] = staging.warrenbrowse.com
 
 API_HOST_NAME[config=Debug] = api.$(HOST_NAME)
 API_HOST_NAME[config=Release] = api.$(HOST_NAME)
 API_HOST_NAME[config=MockRelease] = api.$(HOST_NAME)
 API_HOST_NAME[config=Staging] = api.$(HOST_NAME)
 
-ENCRYPTED_DNS_HOST_NAME[config=Debug] = frakta.eu
-ENCRYPTED_DNS_HOST_NAME[config=Release] = frakta.eu
-ENCRYPTED_DNS_HOST_NAME[config=MockRelease] = frakta.eu
-ENCRYPTED_DNS_HOST_NAME[config=Staging] = stagemole.frakta.eu
+ENCRYPTED_DNS_HOST_NAME[config=Debug] = dns.warrenbrowse.com
+ENCRYPTED_DNS_HOST_NAME[config=Release] = dns.warrenbrowse.com
+ENCRYPTED_DNS_HOST_NAME[config=MockRelease] = dns.warrenbrowse.com
+// Staging runs the API only: it has no encrypted-DNS host and no probe host
+// of its own, so both keep the production ones rather than naming hosts that
+// resolve to the marketing site through the wildcard record.
+ENCRYPTED_DNS_HOST_NAME[config=Staging] = dns.warrenbrowse.com
 
-API_ENDPOINT[config=Debug] = 45.83.223.196:443
-API_ENDPOINT[config=Release] = 45.83.223.196:443
-API_ENDPOINT[config=MockRelease] = 45.83.223.196:443
-API_ENDPOINT[config=Staging] = 185.217.116.132:443
+// Bootstrap seed the iOS address cache dials before it self-populates (its
+// resolver has no system-DNS fallback), so it must be a live IP of the
+// configured API host, not desktop's 0.0.0.0 no-pin sentinel.
+API_ENDPOINT[config=Debug] = 204.168.244.76:443
+API_ENDPOINT[config=Release] = 204.168.244.76:443
+API_ENDPOINT[config=MockRelease] = 204.168.244.76:443
+API_ENDPOINT[config=Staging] = 37.27.198.240:443
 
-AM_I_JSON_URL[config=Debug] = https:/${}/am.i.mullvad.net/json
-AM_I_JSON_URL[config=Release] = https:/${}/am.i.mullvad.net/json
-AM_I_JSON_URL[config=MockRelease] = https:/${}/am.i.mullvad.net/json
-AM_I_JSON_URL[config=Staging] = https:/${}/am.i.stagemole.eu/json
+AM_I_JSON_URL[config=Debug] = https:/${}/am.i.warrenbrowse.com/json
+AM_I_JSON_URL[config=Release] = https:/${}/am.i.warrenbrowse.com/json
+AM_I_JSON_URL[config=MockRelease] = https:/${}/am.i.warrenbrowse.com/json
+AM_I_JSON_URL[config=Staging] = https:/${}/am.i.warrenbrowse.com/json
 
-DOMAIN_FRONTING_FRONT[config=Debug] = www.phpmyadmin.net
-DOMAIN_FRONTING_FRONT[config=Release] = www.phpmyadmin.net
-DOMAIN_FRONTING_FRONT[config=MockRelease] = www.phpmyadmin.net
-DOMAIN_FRONTING_FRONT[config=Staging] = www.phpmyadmin.net
+// Warren runs no domain-fronting infrastructure yet; empty keeps the
+// access-method mechanism wired but inert (the Direct method stays default).
+DOMAIN_FRONTING_FRONT[config=Debug] =
+DOMAIN_FRONTING_FRONT[config=Release] =
+DOMAIN_FRONTING_FRONT[config=MockRelease] =
+DOMAIN_FRONTING_FRONT[config=Staging] =
 
-DOMAIN_FRONTING_PROXY_HOST[config=Debug] = 1105015943.rsc.cdn77.org
-DOMAIN_FRONTING_PROXY_HOST[config=Release] = 1105015943.rsc.cdn77.org
-DOMAIN_FRONTING_PROXY_HOST[config=MockRelease] = 1105015943.rsc.cdn77.org
-DOMAIN_FRONTING_PROXY_HOST[config=Staging] = 1105015943.rsc.cdn77.org
+DOMAIN_FRONTING_PROXY_HOST[config=Debug] =
+DOMAIN_FRONTING_PROXY_HOST[config=Release] =
+DOMAIN_FRONTING_PROXY_HOST[config=MockRelease] =
+DOMAIN_FRONTING_PROXY_HOST[config=Staging] =

@@ -8,5 +8,5 @@
                      tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.INTERNET" />
     <instrumentation android:name="androidx.test.runner.AndroidJUnitRunner"
-                     android:targetPackage="net.mullvad.mullvadvpn" />
+                     android:targetPackage="com.warrenbrowse.vpn" />
 </manifest>

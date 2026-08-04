@@ -1,0 +1,27 @@
+{
+  "configurations" : [
+    {
+      "id" : "3BCBAC52-59BD-45E8-BC9D-1AF65D1B15B7",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "selectedTests" : [
+        "WalletFlowTests\/testLoginChooserExposesCreateAndRestore()"
+      ],
+      "target" : {
+        "containerPath" : "container:WarrenVPN.xcodeproj",
+        "identifier" : "852969242B4D9C1F007EAD4C",
+        "name" : "WarrenVPNUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

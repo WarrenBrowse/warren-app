@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "1430"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58CE5E5F224146200008646E"
+               BuildableName = "WarrenVPN.app"
+               BlueprintName = "WarrenVPN"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58CE5E78224146470008646E"
+               BuildableName = "PacketTunnel.appex"
+               BlueprintName = "PacketTunnel"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "06799ABB28F98E1D00ACD94E"
+               BuildableName = "WarrenREST.framework"
+               BlueprintName = "WarrenREST"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58D223F2294C8FF00029F5F8"
+               BuildableName = "WarrenLogging.framework"
+               BlueprintName = "WarrenLogging"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "063F02722902B63F001FA09F"
+               BuildableName = "RelayCache.framework"
+               BlueprintName = "RelayCache"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58D223D4294C8E5E0029F5F8"
+               BuildableName = "WarrenTypes.framework"
+               BlueprintName = "WarrenTypes"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58D223A4294C8A480029F5F8"
+               BuildableName = "Operations.framework"
+               BlueprintName = "Operations"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58FBDA9722A519BC00EB69A3"
+               BuildableName = "WireGuardGoBridge"
+               BlueprintName = "WireGuardGoBridge"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "5898D28829017BD300EB5EBA"
+               BuildableName = "libTunnelProviderMessaging.a"
+               BlueprintName = "TunnelProviderMessaging"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "5898D29729017DAC00EB5EBA"
+               BuildableName = "libRelaySelector.a"
+               BlueprintName = "RelaySelector"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "A98F1B4D2C19C48D003C869E"
+               BuildableName = "MullvadPostQuantumTests.xctest"
+               BlueprintName = "MullvadPostQuantumTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <TestPlans>
+         <TestPlanReference
+            reference = "container:TestPlans/WarrenVPNApp.xctestplan"
+            default = "YES">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:TestPlans/WarrenVPNCI.xctestplan">
+         </TestPlanReference>
+      </TestPlans>
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58B0A29F238EE67E00BC001D"
+               BuildableName = "MullvadVPNTests.xctest"
+               BlueprintName = "MullvadVPNTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "589A455128E094B300565204"
+               BuildableName = "OperationsTests.xctest"
+               BlueprintName = "OperationsTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58FBFBE5291622580020E046"
+               BuildableName = "WarrenRESTTests.xctest"
+               BlueprintName = "WarrenRESTTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58D0C79223F1CE7000FE9BA7"
+               BuildableName = "MullvadVPNScreenshots.xctest"
+               BlueprintName = "MullvadVPNScreenshots"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58695A9C2A4ADA9100328DB3"
+               BuildableName = "TunnelObfuscationTests.xctest"
+               BlueprintName = "TunnelObfuscationTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58C7A43C2A863F450060C66F"
+               BuildableName = "PacketTunnelCoreTests.xctest"
+               BlueprintName = "PacketTunnelCoreTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58C7A43C2A863F450060C66F"
+               BuildableName = "PacketTunnelCoreTests.xctest"
+               BlueprintName = "PacketTunnelCoreTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58C7A43C2A863F450060C66F"
+               BuildableName = "PacketTunnelCoreTests.xctest"
+               BlueprintName = "PacketTunnelCoreTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "58C7A43C2A863F450060C66F"
+               BuildableName = "PacketTunnelCoreTests.xctest"
+               BlueprintName = "PacketTunnelCoreTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "7A88DCD62A8FABBE00D2FF0E"
+               BuildableName = "RoutingTests.xctest"
+               BlueprintName = "RoutingTests"
+               ReferencedContainer = "container:WarrenVPN.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "58CE5E5F224146200008646E"
+            BuildableName = "WarrenVPN.app"
+            BlueprintName = "WarrenVPN"
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "LIBDISPATCH_COOPERATIVE_POOL_STRICT"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+         <EnvironmentVariable
+            key = "RUST_BACKTRACE"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "58CE5E5F224146200008646E"
+            BuildableName = "WarrenVPN.app"
+            BlueprintName = "WarrenVPN"
+            ReferencedContainer = "container:WarrenVPN.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

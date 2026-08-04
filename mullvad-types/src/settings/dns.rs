@@ -16,6 +16,11 @@ pub struct DnsOptions {
     pub state: DnsState,
     pub default_options: DefaultDnsOptions,
     pub custom_options: CustomDnsOptions,
+    /// Advanced toggle that lifts the firewall's DNS leak protection: when enabled, queries to
+    /// arbitrary resolvers (e.g. `dig @1.1.1.1`) are no longer blocked. The queries still egress
+    /// through the tunnel, so the only privacy cost is that the chosen resolver sees them. Intended
+    /// for advanced users testing remote DNS resolution. Defaults to `false` (block enforced).
+    pub allow_external_dns: bool,
 }
 
 /// Default DNS config

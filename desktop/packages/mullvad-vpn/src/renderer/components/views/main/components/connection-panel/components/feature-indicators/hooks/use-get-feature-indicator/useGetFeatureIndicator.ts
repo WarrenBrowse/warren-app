@@ -5,10 +5,17 @@ import { strings } from '../../../../../../../../../../shared/constants';
 import { FeatureIndicator } from '../../../../../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../../../../../shared/gettext';
 import { RoutePath } from '../../../../../../../../../../shared/routes';
+import { reducedMtuIndicatorLabel } from '../../../../../../../../../features/reduced-mtu/reduced-mtu';
 import { TransitionType, useHistory } from '../../../../../../../../../lib/history';
+import { useSelector } from '../../../../../../../../../redux/store';
 
 export const useGetFeatureIndicator = () => {
   const history = useHistory();
+  const tunnelState = useSelector((state) => state.connection.status);
+  const effectiveMtu =
+    tunnelState.state === 'connected' || tunnelState.state === 'connecting'
+      ? tunnelState.details?.endpoint.effectiveMtu
+      : undefined;
 
   const gotoDaitaFeature = React.useCallback(() => {
     history.push(RoutePath.daitaSettings, {
@@ -47,6 +54,18 @@ export const useGetFeatureIndicator = () => {
         {
           type: 'scroll-to-anchor',
           id: 'custom-dns-settings',
+        },
+      ],
+    });
+  }, [history]);
+
+  const gotoAllowExternalDnsFeature = React.useCallback(() => {
+    history.push(RoutePath.vpnSettings, {
+      transition: TransitionType.show,
+      options: [
+        {
+          type: 'scroll-to-anchor',
+          id: 'allow-external-dns-setting',
         },
       ],
     });
@@ -140,6 +159,23 @@ export const useGetFeatureIndicator = () => {
   }, [history]);
 
   const featureMap: Record<FeatureIndicator, { label: string; onClick?: () => void }> = {
+    [FeatureIndicator.daitaUnavailable]: {
+      label: sprintf(
+        // TRANSLATORS: This is used as a feature indicator (warning) shown when the user enabled
+        // TRANSLATORS: DAITA but the current server did not grant the defense, so it is NOT
+        // TRANSLATORS: protecting this connection.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(DAITA)s - Is a non-translatable feature "DAITA"
+        messages.pgettext('connect-view', '%(DAITA)s: not active on this server'),
+        {
+          DAITA: strings.daita,
+        },
+      ),
+      onClick: gotoDaitaFeature,
+    },
+    [FeatureIndicator.reducedMtu]: {
+      label: reducedMtuIndicatorLabel(effectiveMtu),
+    },
     [FeatureIndicator.daita]: { label: strings.daita, onClick: gotoEnableDaitaFeature },
     [FeatureIndicator.daitaMultihop]: {
       label: sprintf(
@@ -170,10 +206,6 @@ export const useGetFeatureIndicator = () => {
       label: strings.lwo,
       onClick: gotoAntiCensorship,
     },
-    [FeatureIndicator.wireGuardPort]: {
-      label: sprintf(messages.gettext('%(wireguard)s port'), { wireguard: strings.wireguard }),
-      onClick: gotoAntiCensorship,
-    },
     [FeatureIndicator.multihop]: {
       label:
         // TRANSLATORS: This refers to the multihop setting in the VPN settings view. This is
@@ -187,6 +219,13 @@ export const useGetFeatureIndicator = () => {
         // TRANSLATORS: displayed when the feature is on.
         messages.gettext('Custom DNS'),
       onClick: gotoCustomDnsFeature,
+    },
+    [FeatureIndicator.allowExternalDns]: {
+      label:
+        // TRANSLATORS: Feature indicator shown when the advanced "Allow external DNS resolvers"
+        // TRANSLATORS: setting is on, i.e. DNS leak protection is relaxed.
+        messages.pgettext('vpn-settings-view', 'Allow external DNS'),
+      onClick: gotoAllowExternalDnsFeature,
     },
     [FeatureIndicator.customMtu]: {
       label: messages.pgettext('wireguard-settings-view', 'MTU'),

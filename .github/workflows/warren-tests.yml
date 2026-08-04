@@ -1,0 +1,157 @@
+---
+# Warren: reusable test suite (the single source of truth for "the Warren tests").
+#
+# Called by:
+#   - warren-checks.yml  -> fast feedback on push to main/warren-base + PRs
+#   - release.yml        -> preliminary gate that must pass BEFORE any build job
+#                           runs on a version tag (tests-before-builds).
+#
+# Kept as a reusable workflow (workflow_call) so the test scope is defined once
+# and can never drift between the push/PR gate and the release gate.
+
+name: Warren tests (reusable)
+
+on:
+  workflow_call:
+
+jobs:
+  daemon-warren-tests:
+    name: Daemon Warren crates (cargo test)
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    # Backstop so a wedged test/compile fails in minutes instead of sitting at
+    # the GitHub 6h max and blocking a fleet runner. A healthy native-arm64 run
+    # is ~3-4 min (the runner volume persists the cargo target cache), so 45 is
+    # a generous ceiling.
+    timeout-minutes: 45
+    env:
+      # Cap build parallelism so several fleet jobs can share the 16-core Colima
+      # VM without thrashing (multiple macstudio-arm64 runners live on it).
+      # Native arm64 has none of the x86-Rosetta jobserver-deadlock failure modes
+      # the old runner needed retry guards for, so this is purely neighbourliness.
+      CARGO_BUILD_JOBS: "6"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          # This job runs `cargo fmt --check` in addition to clippy, so the
+          # toolchain needs the rustfmt component (the action installs only
+          # clippy by default).
+          rustup-components: clippy rustfmt
+
+      - name: cargo fmt --check (Warren scope)
+        # Gate fmt in addition to clippy/test to avoid style drifts
+        # on the fork branch (= consistent with the warren-core ci.yml
+        # workflow which also gates fmt).
+        #
+        # Scope to THIS repo's own crates, not `--all`: cargo fmt --all also
+        # formats local path-based dependencies, which here are the pinned
+        # sibling repos (../warrenguard, ../warren-sdk-rs, ../warren-contract).
+        # Those are separate repos with their own fmt CI, and they are pinned at
+        # fixed SHAs that can carry fmt drift already fixed upstream but not at
+        # the pin, which would fail this gate on code that is not this fork's.
+        # Explicit -p list of the Warren-scoped crates (same set as the test and
+        # clippy steps below), so sibling path-deps are excluded. Same rationale
+        # as the clippy --no-deps step below.
+        run: |
+          cargo fmt \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli \
+            -p talpid-warren-tunnel -p talpid-core \
+            -p warren-jni -p warren-ios -p warren-forum \
+            -- --check
+
+      - name: install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
+      - name: cargo test Warren scope
+        # Targets the Warren-specific crates. We avoid --workspace so we do not
+        # run Android / iOS / Windows specific tests on Linux (already covered by
+        # upstream daemon.yml). Run via nextest with the `warren-ci` profile,
+        # whose slow-timeout TERMINATES a test that blocks > 60s and names it.
+        # cargo check warren-ios separately (cfg(target_os = "ios"), compile-only
+        # on Linux). Native arm64: no Rosetta crash/deadlock retry needed; the
+        # step timeout is the only backstop.
+        timeout-minutes: 30
+        run: |
+          cargo nextest run --locked --profile warren-ci \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli \
+            -p talpid-warren-tunnel -p talpid-core -p warren-jni
+          cargo check --locked -p warren-ios
+
+      - name: cargo clippy Warren scope
+        # --no-deps: lint only these Warren crates, not their entire upstream
+        # Mullvad dependency tree. Without it, clippy -D warnings also fails on
+        # unrelated upstream crates (e.g. mullvad-relay-selector doc-style nits)
+        # that are not part of the Warren surface and carry their own upstream CI.
+        timeout-minutes: 20
+        run: |
+          for crate in mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core warren-jni; do
+            cargo clippy --no-deps --locked -p "$crate" -- -D warnings
+          done
+
+  desktop-warren-typecheck:
+    name: Desktop Warren UI (type-check + lint)
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    # Backstop so a wedged npm/tsc/eslint can never sit on the shared runner
+    # until the GitHub 6h max. A healthy run is ~2 min.
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: desktop/packages/mullvad-vpn
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: desktop/package.json
+          cache: 'npm'
+          cache-dependency-path: desktop/package-lock.json
+
+      - name: Install dependencies (workspace root)
+        working-directory: desktop
+        run: npm ci
+
+      # mullvad-vpn imports types from the sibling workspace packages
+      # `windows-utils` and `nseventforwarder`, whose `.d.cts` are emitted
+      # by their own `build-typescript` (pure tsc, no native build) into
+      # `lib/`. Without this, `tsc --noEmit` fails with TS2307 (cannot find
+      # module) on those imports.
+      - name: Build workspace package types
+        working-directory: desktop
+        run: npm run build-typescript -w windows-utils -w nseventforwarder
+
+      - name: TypeScript type-check
+        run: npm run type-check
+
+      - name: ESLint (zero warnings)
+        run: npm run lint
+
+      - name: Verify messages.pot is up-to-date
+        # If TS code calls pgettext/gettext without an update-translations
+        # re-run being committed, this check breaks. Prevents
+        # divergence between pot and source.
+        shell: bash
+        run: |
+          npm run update-translations
+          if ! git diff --quiet -- locales/messages.pot; then
+            echo "::error::messages.pot is stale. Run npm run update-translations and commit."
+            git --no-pager diff -- locales/messages.pot | head -50
+            exit 1
+          fi
+
+      # The generator decides the installer URLs that go INSIDE the signed
+      # update manifests, so a mistake there ships under a signature and cannot
+      # be repaired by editing a served file. Gated on the release path because
+      # release.yml needs this suite green before it builds anything.
+      - name: Update-metadata generator unit tests
+        working-directory: .
+        shell: bash
+        run: python3 ci/test_build_version_metadata.py

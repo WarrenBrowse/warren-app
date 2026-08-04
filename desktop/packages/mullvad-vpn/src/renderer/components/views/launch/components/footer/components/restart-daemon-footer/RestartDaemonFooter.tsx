@@ -7,6 +7,7 @@ import { FlexColumn } from '../../../../../../../lib/components/flex-column';
 import { useBoolean } from '../../../../../../../lib/utility-hooks';
 import { useUserInterfaceDaemonStatus } from '../../../../../../../redux/hooks';
 import { TroubleshootingModal } from '../../../troubleshooting-modal';
+import { UnblockNetworkButton } from '../unblock-network-button';
 
 export function RestartDaemonFooter() {
   const { tryStartDaemon } = useAppContext();
@@ -36,6 +37,7 @@ export function RestartDaemonFooter() {
             }
           </Button.Text>
         </Button>
+        <UnblockNetworkButton />
       </FlexColumn>
       <TroubleshootingModal isOpen={dialogOpen} onClose={hideDialog} />
     </>

@@ -1350,11 +1350,6 @@
         <target state="final">ใช้งานอยู่</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Include my account token for faster help with payment or account related issues" xml:space="preserve" approved="yes">
-        <source>Include my account token for faster help with payment or account related issues</source>
-        <target state="final">รวมโทเค็นบัญชีของฉันเพื่อความช่วยเหลือที่รวดเร็วยิ่งขึ้นเกี่ยวกับการชำระเงินหรือปัญหาที่เกี่ยวข้องกับบัญชี</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Indonesia" xml:space="preserve" approved="yes">
         <source>Indonesia</source>
         <target state="final">อินโดนีเซีย</target>
@@ -2142,11 +2137,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">เช่าเท่านั้น</target>
         <note/>
       </trans-unit>
-      <trans-unit id="Report a problem" xml:space="preserve" approved="yes">
-        <source>Report a problem</source>
-        <target state="final">รายงานปัญหา</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="Required" xml:space="preserve" approved="yes">
         <source>Required</source>
         <target state="final">จำเป็น</target>
@@ -2230,11 +2220,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="Send" xml:space="preserve" approved="yes">
         <source>Send</source>
         <target state="final">ส่ง</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Send anyway" xml:space="preserve" approved="yes">
-        <source>Send anyway</source>
-        <target state="final">ส่งต่อไป</target>
         <note/>
       </trans-unit>
       <trans-unit id="Sending..." xml:space="preserve" approved="yes">
@@ -2667,11 +2652,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">ในการเพิ่ม คุณจำเป็นจะต้องตัดการเชื่อมต่อ และเข้าใช้อินเทอร์เน็ตผ่านการเชื่อมต่อที่ไม่ปลอดภัย</target>
         <note/>
       </trans-unit>
-      <trans-unit id="To assist you better, please write in English or Swedish and include which country you are connecting from." xml:space="preserve" approved="yes">
-        <source>To assist you better, please write in English or Swedish and include which country you are connecting from.</source>
-        <target state="final">โปรดเขียนเป็นภาษาอังกฤษหรือสวีเดน พร้อมระบุประเทศต้นทางที่คุณเชื่อมต่อ เพื่อให้รับความช่วยเหลือได้ดียิ่งขึ้น</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view." xml:space="preserve" approved="yes">
         <source>To circumvent this you can import a file or a text, provided by our support team, with new IP addresses that override the default addresses of the servers in the Select location view.</source>
         <target state="final">ในการหลีกเลี่ยงปัญหานี้ คุณสามารถนำเข้าไฟล์หรือข้อความที่ได้รับจากทีมสนับสนุนของเรา พร้อมด้วยที่อยู่ IP ใหม่ที่โอเวอร์ไรด์ที่อยู่เริ่มต้นของเซิร์ฟเวอร์ในมุมมองเลือกตำแหน่งที่ตั้ง</target>
@@ -2690,11 +2670,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="To enable this setting, add at least one server." xml:space="preserve" approved="yes">
         <source>To enable this setting, add at least one server.</source>
         <target state="final">หากต้องการเปิดใช้งานการตั้งค่านี้ ให้เพิ่มเซิร์ฟเวอร์อย่างน้อยหนึ่งเครื่อง</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel." xml:space="preserve" approved="yes">
-        <source>To help you more effectively, your app’s log file will be attached to this message. Your data will remain secure and private, as it is anonymised before being sent over an encrypted channel.</source>
-        <target state="final">ไฟล์บันทึกล็อกของแอปของคุณจะถูกแนบไปกับข้อความนี้ เพื่อที่เราจะช่วยเหลือคุณได้อย่างมีประสิทธิภาพมากขึ้น ข้อมูลของคุณจะยังคงมีความปลอดภัยและเป็นส่วนตัว เนื่องจากจะไม่มีการระบุตัวตนก่อนส่งข้อมูลผ่านช่องทางที่มีการเข้ารหัส</target>
         <note/>
       </trans-unit>
       <trans-unit id="To start using the app, you first need to add time to your account." xml:space="preserve" approved="yes">
@@ -2775,11 +2750,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="Unable to start tunnel connection after update. Please disconnect and reconnect." xml:space="preserve" approved="yes">
         <source>Unable to start tunnel connection after update. Please disconnect and reconnect.</source>
         <target state="final">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้หลังจากอัปเดต โปรดตัดการเชื่อมต่อและเชื่อมต่อใหม่</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Unable to start tunnel connection. Please send a problem report." xml:space="preserve" approved="yes">
-        <source>Unable to start tunnel connection. Please send a problem report.</source>
-        <target state="final">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดส่งรายงานปัญหา</target>
         <note/>
       </trans-unit>
       <trans-unit id="Unchecked" xml:space="preserve" approved="yes">
@@ -2865,11 +2835,6 @@ Do you want to remove the saved account number?</source>
       <trans-unit id="View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily." xml:space="preserve" approved="yes">
         <source>View and manage all your logged in devices. You can have up to 5 devices on one account at a time. Each device gets a name when logged in to help you tell them apart easily.</source>
         <target state="final">ดูและจัดการอุปกรณ์ทั้งหมดที่คุณลงชื่อเข้าใช้ คุณสามารถมีอุปกรณ์ได้สูงสุด 5 เครื่องในหนึ่งบัญชีในเวลาเดียวกัน แต่ละอุปกรณ์จะได้รับชื่อในขณะที่ลงชื่อเข้าใช้ เพื่อช่วยให้คุณแยกแยะอุปกรณ์แต่ละเครื่องได้อย่างง่ายดาย</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="View app logs" xml:space="preserve" approved="yes">
-        <source>View app logs</source>
-        <target state="final">ดูบันทึกของแอป</target>
         <note/>
       </trans-unit>
       <trans-unit id="Voucher code has already been used." xml:space="preserve" approved="yes">
@@ -2987,11 +2952,6 @@ Do you want to remove the saved account number?</source>
         <target state="final">คุณมีหมายเลขบัญชีที่บันทึกไว้แล้ว การสร้างบัญชีใหม่จะเป็นการลบหมายเลขบัญชีที่บันทึกไว้ออกจากอุปกรณ์นี้ การดำเนินการนี้ไม่สามารถย้อนกลับได้</target>
         <note/>
       </trans-unit>
-      <trans-unit id="You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address." xml:space="preserve" approved="yes">
-        <source>You are about to send the problem report without a way for us to get back to you. If you want an answer to your report you will have to enter an email address.</source>
-        <target state="final">คุณกำลังจะส่งรายงานปัญหา โดยไม่มีการระบุวิธีการติดต่อกลับให้กับเรา และคุณจำเป็นต้องป้อนที่อยู่อีเมลของคุณ หากคุณอยากให้เราตอบกลับการรายงานของคุณ</target>
-        <note/>
-      </trans-unit>
       <trans-unit id="You are logged in with an invalid account number. Please log out and try another one." xml:space="preserve" approved="yes">
         <source>You are logged in with an invalid account number. Please log out and try another one.</source>
         <target state="final">คุณกำลังเข้าสู่ระบบโดยใช้หมายเลขบัญชีที่ไม่ถูกต้อง โปรดออกจากระบบแล้วลองใช้บัญชีอื่น</target>
@@ -3078,11 +3038,6 @@ We strongly believe in retaining as little data as possible because we want you 
       <trans-unit id="Your device is offline. Try connecting again when the device has access to Internet." xml:space="preserve" approved="yes">
         <source>Your device is offline. Try connecting again when the device has access to Internet.</source>
         <target state="final">อุปกรณ์ของคุณออฟไลน์ ลองเชื่อมต่ออีกครั้งเมื่ออุปกรณ์เข้าถึงอินเทอร์เน็ตได้</target>
-        <note/>
-      </trans-unit>
-      <trans-unit id="Your email (optional)" xml:space="preserve" approved="yes">
-        <source>Your email (optional)</source>
-        <target state="final">อีเมลของคุณ (ไม่บังคับ)</target>
         <note/>
       </trans-unit>
       <trans-unit id="Your previous purchases have already been added to this account." xml:space="preserve" approved="yes">

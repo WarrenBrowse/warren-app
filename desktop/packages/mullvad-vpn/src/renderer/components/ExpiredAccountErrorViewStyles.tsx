@@ -1,11 +1,11 @@
 import styled from 'styled-components';
 
 import { colors } from '../lib/foundations';
-import AccountNumberLabel from './AccountNumberLabel';
 import { hugeText, tinyText } from './common-styles';
 import CustomScrollbars from './CustomScrollbars';
+import WarrenPubKeyLabel from './WarrenPubKeyLabel';
 
-export const StyledAccountNumberLabel = styled(AccountNumberLabel)({
+export const StyledWarrenPubKeyLabel = styled(WarrenPubKeyLabel)({
   fontFamily: 'Open Sans',
   lineHeight: '20px',
   fontSize: '20px',
@@ -27,11 +27,11 @@ export const StyledMessage = styled.span(tinyText, {
   color: colors.white,
 });
 
-export const StyledAccountNumberMessage = styled.span(tinyText, {
+export const StyledWarrenPubKeyMessage = styled.span(tinyText, {
   color: colors.white,
 });
 
-export const StyledAccountNumberContainer = styled.div({
+export const StyledWarrenPubKeyContainer = styled.div({
   display: 'flex',
   height: '50px',
   alignItems: 'center',

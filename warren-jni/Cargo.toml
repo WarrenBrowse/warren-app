@@ -1,0 +1,185 @@
+[package]
+name = "warren-jni"
+edition.workspace = true
+rust-version.workspace = true
+description = "JNI interface for Warren VPN Android client"
+repository.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+# Cross-platform deps. The pure-rust `wallet` module is unit-tested on the
+# host, so its transitive deps (`warren-identity`, `bip39`, `ed25519-dalek`)
+# must not be Android-only. `thiserror` is here for the same reason.
+[dependencies]
+thiserror = { workspace = true }
+hex = "0.4"
+# Shared community-forum login logic (wire bytes + validation + outcome mapping),
+# single-sourced with iOS (`warren-ios`). This crate only adds the Android
+# mnemonic -> signing-key derivation on top.
+warren-forum = { path = "../warren-forum" }
+# Explicit versions (rather than `{ workspace = true }`): warren-app's
+# workspace.dependencies does not pin bip39 / ed25519-dalek. Both are
+# pinned with `=` to the same exact versions that warren-core uses so
+# the resolved graph stays single-version AND no silent minor bump of
+# a crypto crate that produces signed requests can sneak through.
+# cf. AUDIT_COMPLET.md M-3.
+bip39 = { version = "2", features = ["rand"] }
+ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# Fix L-2: wrap the mnemonic string in Zeroizing<String> so it is wiped
+# from memory immediately after the signing key is derived.
+zeroize = { workspace = true }
+# Fix M-3: parking_lot::Mutex does not poison on panic, eliminating the
+# permanent ACTIVE_TUNNEL lock-up that std::sync::Mutex causes when a JNI
+# thread panics while holding the guard. Listed in [dependencies] (not
+# Android-only) so the behaviour can be exercised by host tests.
+parking_lot = "0.12.0"
+# Async runtime for the host-tested modules (token mint/refresh in
+# `token_provider`, the protected mint transport). Not Android-only so the
+# logic can be exercised by host tests.
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync", "time", "macros", "net"] }
+log = { workspace = true }
+# v7 anonymous session credentials (Privacy Pass, doc 64): the token
+# mint/refresh/stack core (`token_provider` module) is host-tested against a
+# mock transport, so warren-api (transport-agnostic core, no reqwest here) and
+# warrenguard-token (TOKEN_LEN in the stack-source signature) must not be
+# Android-only. The Android target section below adds the reqwest transport.
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
+warrenguard-token = { path = "../../warrenguard/crates/warrenguard-token" }
+# Compiled product environment (prod | staging | beta): the Gradle beta
+# flavor exports WARREN_PRODUCT_ENV=beta to the cargo build, which is the
+# only endpoint-switching mechanism release APKs honor.
+warren-product-env = { path = "../warren-product-env" }
+# VpnService-protected mint transport (`protected_transport` module): a small
+# HTTP/1.1-over-rustls client whose TCP socket this crate creates itself, so
+# `VpnService.protect` runs on the fd BEFORE connect (reqwest exposes no such
+# seam). Host-tested with an injected protector, hence not Android-only. All
+# already in the workspace tree via reqwest's rustls stack; tokio-rustls pins
+# ring so the NDK build never pulls aws-lc-rs.
+bytes = { workspace = true }
+http-body-util = "0.1"
+hyper = { version = "1", features = ["client", "http1"] }
+hyper-util = { workspace = true, features = ["tokio"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "logging", "tls12"] }
+webpki-roots = { workspace = true }
+
+[dev-dependencies]
+# Canonical product anchors for the `product` module's drift gate.
+warren-contract = { path = "../../warren-contract" }
+# Host tests of the tunnel bandwidth ceiling (`rate_limited_tun`): the
+# limiter and the FakeTun test device compile on any target.
+warrenguard-ratelimit = { path = "../../warrenguard/crates/warrenguard-ratelimit" }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
+# Host build of the supervised-session driver (`supervised_session`): the
+# engine supervisor, its pumps and the loopback exit the test drives them
+# against are all portable, so the Android datapath's control loop is
+# exercised for real off-device. Feature set matches the Android target
+# section so both builds resolve the same package instance.
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", features = ["system-vpn", "pq-hpke"] }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
+warrenguard-tls = { path = "../../warrenguard/crates/warrenguard-tls" }
+warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
+# Same git spec as warrenguard's own pin, so the loopback exit's endpoint is
+# the very `quinn` instance the engine dials with (a second copy would be a
+# different `ServerConfig` type).
+quinn = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn" }
+# Paused-time (`start_paused`) tests for the token-provider timers.
+tokio = { workspace = true, features = ["test-util"] }
+# Fake token issuer for the `token_provider` tests: real engine blind-RSA
+# signatures with only the HTTP transport mocked (the system boundary),
+# mirroring warren-api's own `tokens_mint` test suite. `rand010` matches the
+# rand 0.10 generation warrenguard-token is built on.
+data-encoding = "2"
+rand010 = { package = "rand", version = "0.10" }
+serde_json = { workspace = true }
+# Process-death roundtrip tests for the persisted v7 token bundle.
+tempfile = "3"
+
+# Android-only deps: the JNI surface + log + Tokio runtime for the (still
+# stubbed) tunnel lifecycle exports.
+[target.'cfg(target_os = "android")'.dependencies]
+jnix = { version = "0.5.1", features = ["derive"] }
+log-panics = "2"
+# `android_logger` bridges the `log` crate to the Android logcat subsystem
+# so `log::info!` from any of our deps shows up under `adb logcat -s
+# WarrenJni:V` without per-call ceremony.
+android_logger = "0.15"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { workspace = true }
+
+# Warren auth wallet + relay selector + HTTP API client - these crates build
+# cleanly for `target_os = "android"` today.
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
+# Wire DTOs of the public `/v1` endpoints (the network-info fetch parses
+# `NetworkInfoResponse`).
+warren-contract = { path = "../../warren-contract" }
+# Signed HTTP client for warren-api, consumed with the bundled reqwest
+# transport. Every call site here is stateless (mnemonic passed in fresh
+# from Kotlin), so a plain owned `WarrenIdentity` per call is enough - no
+# hot-swap wrapper needed (contrast `mullvad-daemon::warren_sdk_client`).
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
+
+# Signed app-update manifest fetch + ed25519 verification, reused as-is from the
+# desktop path so the mobile version check applies the exact same verified rule
+# (Android-only: it pulls reqwest; the host build only compiles the stub).
+mullvad-update = { path = "../mullvad-update", features = ["client"] }
+mullvad-version = { path = "../mullvad-version" }
+
+# Platform metadata still useful for ApiEndpoint user-agent strings; kept from upstream.
+talpid-platform-metadata = { path = "../talpid-platform-metadata" }
+talpid-types = { path = "../talpid-types" }
+
+# Quinn tunnel + multi-hop + NAT-PMP are wired behind the `tunnel` feature.
+# The client transport ships an `AndroidTun` PacketDevice impl (cf.
+# `warrenguard/crates/warrenguard-transport/src/android_tun.rs`).
+# `system-vpn` selects the engine's supervised pump driver
+# (`supervised_pump`), the same one the desktop and iOS datapaths run; the TUN
+# it drives here is the VpnService fd, so the privileged route-split half of
+# that feature is never reached on Android.
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", optional = true, features = ["system-vpn"] }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core", optional = true }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita", optional = true }
+# Redial schedule of the session supervisor.
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff", optional = true }
+warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump", optional = true }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire", optional = true }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop", optional = true }
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client", optional = true }
+# Token buckets for the client-side bandwidth ceiling enforced on the
+# tunnel packet device (config `max_rate_bps`).
+warrenguard-ratelimit = { path = "../../warrenguard/crates/warrenguard-ratelimit", optional = true }
+# Aliased rand 0.9 (matching `warrenguard-transport`'s `rand_v9`) so the DAITA
+# pool pick's `Rng + RngCore` trait bounds line up; used only to seed a local
+# DaitaState for the multi-hop DAITA pump.
+rand_v9 = { package = "rand", version = "0.9", optional = true }
+
+[features]
+default = ["tunnel"]
+# Allow the API endpoint URL to be overridden at runtime (dev/staging).
+api-override = []
+# Pull in the Quinn tunnel stack. Enabled by default: ships
+# `warrenguard_transport::AndroidTun` (wraps the VpnService TUN fd).
+tunnel = [
+  "dep:warrenguard-transport",
+  "dep:warrenguard-transport-core",
+  "dep:warrenguard-daita",
+  "dep:warrenguard-backoff",
+  "dep:warrenguard-pump",
+  "dep:warrenguard-wire",
+  "dep:warrenguard-multihop",
+  "dep:warrenguard-natpmp-client",
+  "dep:warrenguard-ratelimit",
+  "dep:rand_v9",
+  "pq-hpke",
+]
+# Post-quantum X-Wing multihop seal (default on Android via `tunnel`). Selects
+# the engine's PQ connect preset at the dial site; classical X25519 fallback
+# stays when the exit advertises no signed ML-KEM key (`require_pq=false`).
+pq-hpke = ["warrenguard-transport/pq-hpke"]
+
+[lints]
+workspace = true

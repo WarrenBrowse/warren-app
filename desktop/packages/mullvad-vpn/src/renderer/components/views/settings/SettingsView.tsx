@@ -3,6 +3,7 @@ import { usePop } from '../../../history/hooks';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { AppNavigationHeader } from '../../';
+import { BetaBadge } from '../../beta-badge';
 import { BackAction } from '../../keyboard-navigation';
 import { SettingsNavigationScrollbars } from '../../Layout';
 import { NavigationContainer } from '../../NavigationContainer';
@@ -11,13 +12,23 @@ import {
   AppInfoListItem,
   DaitaListItem,
   DebugListItem,
-  MultihopListItem,
+  PortForwardingListItem,
   QuitButton,
+  ReplayOnboardingListItem,
   SplitTunnelingListItem,
   SupportListItem,
   UserInterfaceSettingsListItem,
   VpnSettingsListItem,
+  WarrenMultiHopListItem,
 } from './components';
+// Upstream `MultihopListItem` is intentionally **not** rendered:
+// it surfaces the WireGuard multi-hop constraint, which is dead
+// weight for Warren (Warren tunnels run over QUIC, not
+// WireGuard). `WarrenMultiHopListItem` is the only multi-hop entry
+// users see - its label is rendered as plain "Multihop" since the
+// Warren context is implicit (the host app *is* Warren VPN). The
+// upstream component is kept around in the `components` barrel so a
+// future rebase against Mullvad doesn't dirty-diff the import.
 import { useShowDebug, useShowSplitTunneling, useShowSubSettings } from './hooks';
 
 export function SettingsView() {
@@ -42,12 +53,14 @@ export function SettingsView() {
           <SettingsNavigationScrollbars fillContainer>
             <View.Content>
               <View.Container horizontalMargin="medium" gap="large" flexDirection="column">
+                <BetaBadge variant="row" />
                 <FlexColumn gap="medium">
                   {showSubSettings ? (
                     <>
                       <FlexColumn>
                         <DaitaListItem />
-                        <MultihopListItem />
+                        <WarrenMultiHopListItem />
+                        <PortForwardingListItem />
                         <VpnSettingsListItem />
                         <UserInterfaceSettingsListItem />
                       </FlexColumn>
@@ -63,6 +76,8 @@ export function SettingsView() {
                     <SupportListItem />
                     <AppInfoListItem />
                   </FlexColumn>
+
+                  <ReplayOnboardingListItem position="solo" />
 
                   {showDebug && <DebugListItem />}
                 </FlexColumn>

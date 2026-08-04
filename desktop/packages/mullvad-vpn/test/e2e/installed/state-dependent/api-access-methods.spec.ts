@@ -5,7 +5,7 @@ import { RoutePath } from '../../../../src/shared/routes';
 import { TestUtils } from '../../utils';
 import { startInstalledApp } from '../installed-utils';
 
-// This test expects the daemon to be logged in and only have "Direct" and "Mullvad Bridges"
+// This test expects the daemon to be logged in and only have "Direct" and "Warren Bridges"
 // access methods.
 // Env parameters:
 //   `SHADOWSOCKS_SERVER_IP`
@@ -14,7 +14,7 @@ import { startInstalledApp } from '../installed-utils';
 //   `SHADOWSOCKS_SERVER_PASSWORD`
 
 const DIRECT_NAME = 'Direct';
-const BRIDGES_NAME = 'Mullvad Bridges';
+const BRIDGES_NAME = 'Warren Bridges';
 const ENCRYPTED_DNS_PROXY_NAME = 'Encrypted DNS proxy';
 const DOMAIN_FRONTING_NAME = 'Domain fronting';
 const IN_USE_LABEL = 'In use';

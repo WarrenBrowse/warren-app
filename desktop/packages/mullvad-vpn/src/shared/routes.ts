@@ -1,7 +1,6 @@
 export enum RoutePath {
   launch = '/',
   login = '/login',
-  tooManyDevices = '/login/too-many-devices',
   deviceRevoked = '/login/device-revoked',
   main = '/main',
   redeemVoucher = '/main/voucher/redeem',
@@ -12,8 +11,14 @@ export enum RoutePath {
   settings = '/settings',
   selectLanguage = '/settings/language',
   account = '/account',
+  keys = '/account/keys',
+  restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',
   multihopSettings = '/settings/multihop',
+  warrenMultiHopSettings = '/settings/warren-multi-hop',
+  // Warren NAT-PMP port-forwarding (differentiator vs Mullvad
+  // / IVPN abandon 2023). View opens from the settings home view.
+  portForwardingSettings = '/settings/port-forwarding',
   vpnSettings = '/settings/vpn',
   daitaSettings = '/settings/daita',
   udpOverTcp = '/settings/advanced/wireguard/udp-over-tcp',
@@ -24,15 +29,22 @@ export enum RoutePath {
   settingsTextImport = '/settings/settings-import/text-import',
   editApiAccessMethods = '/settings/api-access-methods/edit/:id?',
   support = '/settings/support',
-  problemReport = '/settings/support/problem-report',
   debug = '/settings/debug',
   selectLocation = '/select-location',
   filter = '/select-location/filter',
   appInfo = '/settings/app-info',
   changelog = '/settings/changelog',
   appUpgrade = '/settings/app-upgrade',
-  manageDevices = '/settings/manage-devices',
   antiCensorship = '/settings/advanced/anti-censorship',
-  wireguardPort = '/settings/advanced/wireguard-port',
   lwo = '/settings/advanced/lwo',
+  // Onboarding wizard (first-launch welcome + wallet
+  // generate/import + subscription pointer + privacy preferences +
+  // done). Re-triggerable from Settings ("Replay onboarding"). Uses
+  // a route-based flow (vs modal overlay) so demo links and support
+  // can deep-link a user to a specific step.
+  onboardingWelcome = '/onboarding',
+  onboardingWallet = '/onboarding/wallet',
+  onboardingSubscription = '/onboarding/subscription',
+  onboardingPreferences = '/onboarding/preferences',
+  onboardingDone = '/onboarding/done',
 }

@@ -1,13 +1,12 @@
 import { closeToExpiry, hasExpired } from '../shared/account-expiry';
 import {
-  AccountDataError,
-  AccountNumber,
   DeviceEvent,
   DeviceState,
   IAccountData,
-  IDeviceRemoval,
   LogoutSource,
   TunnelState,
+  VoucherResponse,
+  WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import {
@@ -29,19 +28,23 @@ export interface LocaleProvider {
 
 export interface AccountDelegate {
   onDeviceEvent(): void;
+  // Fired whenever fresh account data (expiry included) lands: the
+  // renewal scheduler re-evaluates on it instead of waiting for its
+  // slow periodic recheck.
+  onAccountData?(): void;
 }
 
 export default class Account {
   private accountDataValue?: IAccountData = undefined;
-  private accountHistoryValue?: AccountNumber = undefined;
+  private accountHistoryValue?: WarrenPubKey = undefined;
   private expiryNotificationFrequencyScheduler = new Scheduler();
   private firstExpiryNotificationScheduler = new Scheduler();
 
   private hasExpired = false;
 
   private accountDataCache = new AccountDataCache(
-    (accountNumber) => {
-      return this.daemonRpc.getAccountData(accountNumber);
+    (pubkey) => {
+      return this.daemonRpc.getAccountData(pubkey);
     },
     (accountData) => {
       this.handleAccountData(accountData);
@@ -71,44 +74,46 @@ export default class Account {
 
   public registerIpcListeners() {
     IpcMainEventChannel.account.handleCreate(() => this.createNewAccount());
-    IpcMainEventChannel.account.handleLogin(
-      async (number: AccountNumber) => (await this.login(number)) ?? undefined,
-    );
     IpcMainEventChannel.account.handleLogout((source) => this.logout(source));
-    IpcMainEventChannel.account.handleGetWwwAuthToken(() => this.daemonRpc.getWwwAuthToken());
-    IpcMainEventChannel.account.handleSubmitVoucher(async (voucherCode: string) => {
-      const currentAccountNumber = this.getAccountNumber();
-      const response = await this.daemonRpc.submitVoucher(voucherCode);
-
-      if (currentAccountNumber) {
-        this.accountDataCache.handleVoucherResponse(currentAccountNumber, response);
-      }
-
-      return response;
-    });
+    IpcMainEventChannel.account.handleGetWarrenMnemonic(() => this.daemonRpc.getWarrenMnemonic());
+    IpcMainEventChannel.account.handleSetWarrenMnemonic((mnemonic: string) =>
+      this.daemonRpc.setWarrenMnemonic(mnemonic),
+    );
+    IpcMainEventChannel.account.handleSubmitVoucher((voucherCode: string) =>
+      this.submitVoucher(voucherCode),
+    );
     IpcMainEventChannel.account.handleUpdateData(() => this.updateAccountData());
-
-    IpcMainEventChannel.accountHistory.handleClear(async () => {
-      await this.daemonRpc.clearAccountHistory();
-      void this.updateAccountHistory();
-    });
-
-    IpcMainEventChannel.account.handleListDevices((accountNumber: AccountNumber) => {
-      return this.daemonRpc.listDevices(accountNumber);
-    });
-    IpcMainEventChannel.account.handleRemoveDevice((deviceRemoval: IDeviceRemoval) => {
-      return this.daemonRpc.removeDevice(deviceRemoval);
-    });
   }
+
+  // Shared by the IPC handler (manual voucher entry) and the
+  // main-process purchase poll (wpid auto-redeem): a successful
+  // redemption must update the cached expiry and notify the renderer
+  // no matter who submitted.
+  public submitVoucher = async (voucherCode: string): Promise<VoucherResponse> => {
+    const currentPubKey = this.getWarrenPubKey();
+    const response = await this.daemonRpc.submitVoucher(voucherCode);
+
+    if (currentPubKey) {
+      this.accountDataCache.handleVoucherResponse(currentPubKey, response);
+    }
+
+    return response;
+  };
 
   public isLoggedIn(): boolean {
     return this.deviceState?.type === 'logged in';
   }
 
-  public updateAccountData = () => {
-    if (this.daemonRpc.isConnected && this.isLoggedIn()) {
-      this.accountDataCache.fetch(this.getAccountNumber()!);
+  public updateAccountData = (): Promise<void> => {
+    if (!this.daemonRpc.isConnected || !this.isLoggedIn()) {
+      return Promise.resolve();
     }
+    return new Promise<void>((resolve, reject) => {
+      this.accountDataCache.fetch(this.getWarrenPubKey()!, {
+        onFinish: () => resolve(),
+        onError: (error) => reject(new Error(`Account data fetch failed: ${error}`)),
+      });
+    });
   };
 
   public detectStaleAccountExpiry(tunnelState: TunnelState) {
@@ -136,7 +141,7 @@ export default class Account {
 
     switch (deviceEvent.deviceState.type) {
       case 'logged in':
-        this.accountDataCache.fetch(deviceEvent.deviceState.accountAndDevice.accountNumber);
+        this.accountDataCache.fetch(deviceEvent.deviceState.warrenIdentity.pubkey);
         break;
       case 'logged out':
       case 'revoked':
@@ -145,7 +150,7 @@ export default class Account {
     }
   }
 
-  public setAccountHistory(accountHistory?: AccountNumber) {
+  public setAccountHistory(accountHistory?: WarrenPubKey) {
     this.accountHistoryValue = accountHistory;
 
     IpcMainEventChannel.accountHistory.notify?.(accountHistory);
@@ -171,15 +176,6 @@ export default class Account {
     }
   }
 
-  private async login(accountNumber: AccountNumber): Promise<AccountDataError | void> {
-    const error = await this.daemonRpc.loginAccount(accountNumber);
-
-    if (error) {
-      log.error(`Failed to login: ${error.error}`);
-      return error;
-    }
-  }
-
   private async logout(source: LogoutSource): Promise<void> {
     try {
       await this.daemonRpc.logoutAccount(source);
@@ -199,6 +195,7 @@ export default class Account {
     this.accountDataValue = accountData;
     this.hasExpired = this.accountData !== undefined && hasExpired(this.accountData?.expiry);
     IpcMainEventChannel.account.notify?.(this.accountData);
+    this.delegate.onAccountData?.();
     this.showNotifications();
   }
 
@@ -253,9 +250,9 @@ export default class Account {
     }
   }
 
-  private getAccountNumber(): AccountNumber | undefined {
+  private getWarrenPubKey(): WarrenPubKey | undefined {
     return this.deviceState?.type === 'logged in'
-      ? this.deviceState.accountAndDevice.accountNumber
+      ? this.deviceState.warrenIdentity.pubkey
       : undefined;
   }
 }

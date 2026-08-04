@@ -1,0 +1,285 @@
+---
+name: Refresh update metadata
+
+# Re-signs and re-publishes the signed version manifests for the CURRENT latest
+# release of each live channel, refreshing `metadata_expiry`, WITHOUT cutting a
+# new app release.
+#
+# Why this exists: every signed manifest carries a 6-month `metadata_expiry`
+# (ci/build-version-metadata.py --expiry-months). Once it passes, EVERY client on
+# EVERY platform rejects the manifest ("Version metadata has expired") and update
+# detection silently stops fleet-wide until something re-signs. Coupling re-signing
+# to releases is not enough (a quiet quarter would lapse). This scheduled job keeps
+# the manifests fresh on its own. It signs the SAME release content with a fresh
+# expiry (and a bumped metadata_version via the previous-manifest fetch), so the
+# anti-rollback floor only ever moves forward.
+#
+# Channel scoping (workspace rule shared/rules/50-release-channels.md): the job
+# runs once per channel and only for a channel that CURRENTLY SERVES manifests.
+# Refreshing is republishing, so a cron that ran unconditionally would resurrect
+# a retired channel (prod was retired on the update host on 2026-07-25 and
+# answers 404 by design) and hand its clients a channel nobody publishes to.
+# The probe is the client's own view of the channel, so nothing needs rewiring
+# when a channel opens or closes: publish a release and the refresh follows.
+#
+# Mirrors the `publish-update-metadata` job in release.yml but resolves the latest
+# published release instead of a pushed tag. The actual signing/metadata logic is
+# shared (ci/build-version-metadata.py + the mullvad-version-metadata signer).
+
+on:
+  schedule:
+    # 03:17 UTC on the 1st of every month. Well inside the 6-month expiry window,
+    # so a single missed run never lapses the manifests.
+    - cron: '17 3 1 * *'
+  # Self-heal: a FAILED release run may have died before (or in) its own
+  # publish-update-metadata job, leaving the served manifests stale while the
+  # GitHub release itself was published (the v1.4.1-v1.4.3 incident). Re-sign
+  # the latest published release from main on a fresh runner in that case.
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to re-sign (default: the channel's latest published release)"
+        required: false
+        type: string
+      channel:
+        description: "Channel to refresh (default: every channel currently serving manifests)"
+        required: false
+        type: choice
+        default: auto
+        options: [auto, prod, beta]
+
+permissions:
+  contents: read
+
+jobs:
+  refresh-update-metadata:
+    name: Re-sign + republish ${{ matrix.channel }} update metadata
+    # workflow_run only self-heals after a FAILED release; a green release
+    # already published its own metadata.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 15
+    strategy:
+      # One channel must never take the other down with it.
+      fail-fast: false
+      matrix:
+        channel: [prod, beta]
+    env:
+      WARREN_CHANNEL: ${{ matrix.channel }}
+      WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+      WARREN_UPDATES_SSH_KEY: ${{ secrets.WARREN_UPDATES_SSH_KEY }}
+      WARREN_UPDATES_SSH_HOST: ${{ secrets.WARREN_UPDATES_SSH_HOST }}
+      WARREN_UPDATES_SSH_USER: ${{ secrets.WARREN_UPDATES_SSH_USER }}
+      WARREN_UPDATES_SSH_PATH: ${{ secrets.WARREN_UPDATES_SSH_PATH }}
+      WARREN_UPDATE_METADATA_BASE: https://api.warrenbrowse.com/updates/desktop
+      WARREN_UPDATE_METADATA_BASE_BETA: https://api.beta.warrenbrowse.com/updates/desktop
+      WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
+      WARREN_UPDATE_MIN_VERSION_IOS: ${{ vars.WARREN_UPDATE_MIN_VERSION_IOS }}
+    steps:
+      - name: Skip if no signing key
+        if: env.WARREN_UPDATE_SIGNING_KEY == ''
+        run: echo "::warning::WARREN_UPDATE_SIGNING_KEY not set; cannot refresh update metadata."
+
+      - name: Resolve the channel and skip it when it serves nothing
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        env:
+          INPUT_CHANNEL: ${{ inputs.channel }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          case "$WARREN_CHANNEL" in
+            prod) base="$WARREN_UPDATE_METADATA_BASE";      prefix=WarrenVPN;      series='^v[0-9]' ;;
+            beta) base="$WARREN_UPDATE_METADATA_BASE_BETA"; prefix=WarrenVPN-Beta; series='^beta-v[0-9]' ;;
+          esac
+          live=true
+          # A dispatch that names one channel (directly, or through a tag of its
+          # series) leaves the other alone.
+          want="${INPUT_CHANNEL:-auto}"
+          if [ -n "${INPUT_TAG:-}" ]; then
+            case "$INPUT_TAG" in beta-v*) want=beta ;; *) want=prod ;; esac
+          fi
+          if [ "$want" != auto ] && [ "$want" != "$WARREN_CHANNEL" ]; then
+            echo "$WARREN_CHANNEL not requested by this run (channel=$want); skipping"
+            live=false
+          # Only a channel that currently serves manifests is refreshed: this is
+          # what keeps the cron from resurrecting a retired or never-published
+          # channel, whose clients would then follow a dead pointer.
+          elif ! curl -fsS -o /dev/null --max-time 30 "$base/macos.json"; then
+            echo "::notice::$base/macos.json is not served; $WARREN_CHANNEL is retired or unpublished, skipping"
+            live=false
+          fi
+          {
+            echo "WARREN_CHANNEL_LIVE=$live"
+            echo "WARREN_METADATA_BASE=$base"
+            echo "WARREN_ARTIFACT_PREFIX=$prefix"
+            echo "WARREN_TAG_SERIES=$series"
+          } >> "$GITHUB_ENV"
+
+      - name: Checkout repository
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up build env (Rust + siblings)
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      # The Rosetta runner does not ship the gh CLI; install it for the job the
+      # same way release.yml does, otherwise resolving the latest release and
+      # downloading its installers fails with "gh: command not found".
+      - name: Ensure gh CLI
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        run: |
+          if command -v gh >/dev/null 2>&1; then echo "gh present: $(gh --version | head -1)"; exit 0; fi
+          ver=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+                  | sed -nE 's/.*"tag_name": *"v?([0-9.]+)".*/\1/p' | head -1)
+          [ -n "$ver" ] || ver=2.62.0
+          curl -fsSL "https://github.com/cli/cli/releases/download/v${ver}/gh_${ver}_linux_amd64.tar.gz" -o /tmp/gh.tgz
+          tar -xzf /tmp/gh.tgz -C /tmp
+          echo "/tmp/gh_${ver}_linux_amd64/bin" >> "$GITHUB_PATH"
+          echo "installed gh ${ver}"
+
+      - name: Resolve the release tag to re-sign
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        id: tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          if [ -n "${INPUT_TAG:-}" ]; then
+            tag="$INPUT_TAG"
+          else
+            # Highest published tag OF THIS CHANNEL's series, version-sorted:
+            # the two series are independent, and `latest` on GitHub ignores the
+            # beta pre-releases entirely.
+            tag="$(gh release list --limit 100 --json tagName,isDraft \
+                     --jq '.[] | select(.isDraft | not) | .tagName' \
+                   | grep -E "$WARREN_TAG_SERIES" | sort -V | tail -1)"
+          fi
+          [ -n "$tag" ] || { echo "::error::no published $WARREN_CHANNEL release to re-sign"; exit 1; }
+          version="${tag#beta-}"
+          version="${version#v}"
+          {
+            echo "tag=$tag"
+            echo "version=$version"
+          } >> "$GITHUB_OUTPUT"
+          echo "Re-signing $WARREN_CHANNEL metadata for $tag (version $version)"
+
+      - name: Download installers from the release
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ steps.tag.outputs.tag }}
+        run: |
+          mkdir -p release-files
+          # Both channels' assets may sit in one legacy release; the generator
+          # picks its own by the version-anchored artifact prefix.
+          gh release download "$TAG_NAME" --dir release-files --pattern 'WarrenVPN-*' --pattern 'SHA256SUMS'
+          ls -lh release-files
+
+      - name: Build the metadata signer
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        run: cargo build --release -p mullvad-update --bin mullvad-version-metadata --features sign,client
+
+      - name: Generate unsigned metadata (fresh expiry)
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        env:
+          TAG_NAME: ${{ steps.tag.outputs.tag }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          # No forced-update floor on the beta channel (a permanent free beta is
+          # never forced onto a version by the prod policy).
+          if [ "$WARREN_CHANNEL" != prod ]; then
+            WARREN_UPDATE_MIN_VERSION=""
+            WARREN_UPDATE_MIN_VERSION_IOS=""
+          fi
+          python3 ci/build-version-metadata.py \
+            --tag "$TAG_NAME" \
+            --version "$VERSION" \
+            --release-dir release-files \
+            --repo "$GITHUB_REPOSITORY" \
+            --changelog CHANGELOG.md \
+            --metadata-base-url "$WARREN_METADATA_BASE" \
+            --asset-base-url "$WARREN_METADATA_BASE" \
+            --artifact-prefix "$WARREN_ARTIFACT_PREFIX" \
+            --channel "$WARREN_CHANNEL" \
+            --out-dir unsigned \
+            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            ${WARREN_UPDATE_MIN_VERSION:+--min-version "$WARREN_UPDATE_MIN_VERSION"} \
+            ${WARREN_UPDATE_MIN_VERSION_IOS:+--ios-min-version "$WARREN_UPDATE_MIN_VERSION_IOS"}
+
+      - name: Sign metadata
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        run: |
+          mkdir -p signed
+          signer=target/release/mullvad-version-metadata
+          # iOS ships on the prod channel only.
+          platforms="macos windows linux android"
+          if [ "$WARREN_CHANNEL" = prod ]; then
+            platforms="$platforms ios"
+          fi
+          for platform in $platforms; do
+            [ -f "unsigned/${platform}.json" ] || continue
+            "$signer" sign --file "unsigned/${platform}.json" --secret "$WARREN_UPDATE_SIGNING_KEY" \
+              > "signed/${platform}.json"
+          done
+          # Website manifest: not part of the signed app-update contract
+          # (integrity comes from TLS on the update host), shipped alongside.
+          cp unsigned/downloads.json signed/downloads.json
+          ls -lh signed
+
+      - name: Preflight ssh client
+        if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          command -v scp >/dev/null || {
+            echo "::error::scp missing on this runner: bake openssh-client into the runner image"
+            exit 1
+          }
+
+      - name: Upload installers + metadata to the update host
+        if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY != ''
+        env:
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          key="$RUNNER_TEMP/updates_ssh_key"
+          install -m 600 /dev/null "$key"
+          printf '%s\n' "$WARREN_UPDATES_SSH_KEY" > "$key"
+          # Beta manifests live in the beta/ subdirectory of the same upload
+          # path; the beta API vhost serves that dir as /updates/desktop.
+          dest="${WARREN_UPDATES_SSH_PATH}"
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            dest="${WARREN_UPDATES_SSH_PATH}/beta"
+          fi
+          ssh="ssh -i $key -o StrictHostKeyChecking=accept-new"
+          target="${WARREN_UPDATES_SSH_USER}@${WARREN_UPDATES_SSH_HOST}"
+          # The installers ship BESIDE the manifests, because the manifests now
+          # point at this host: the repo is private, so a GitHub release asset
+          # answers 404 without a token and no user could download anything.
+          # Version-anchored glob, so a prod run never sweeps up the beta
+          # artifacts sharing the same release.
+          scp -i "$key" -o StrictHostKeyChecking=accept-new \
+            release-files/"${WARREN_ARTIFACT_PREFIX}-${VERSION}"-* \
+            release-files/SHA256SUMS \
+            "${target}:${dest}/"
+          # Manifests last: until they land, the previous version stays served
+          # and coherent with the files already on the host.
+          scp -i "$key" -o StrictHostKeyChecking=accept-new \
+            signed/*.json \
+            "${target}:${dest}/"
+          # Bound the disk: only the version the manifests offer for download
+          # needs its installers mirrored. Older entries keep their historical
+          # URLs and clients only ever fetch the newest. Scoped to installer
+          # names so no manifest can be caught by it.
+          $ssh "$target" "cd '$dest' && ls -1 \
+            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz)\$' \
+            | grep -v -F '${WARREN_ARTIFACT_PREFIX}-${VERSION}-' \
+            | xargs -r rm -f --"
+          $ssh "$target" "ls -lh '$dest'"
+          rm -f "$key"
+
+      - name: Warn when upload is skipped
+        if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY == ''
+        run: echo "::warning::Signed metadata built but WARREN_UPDATES_SSH_* not set; not uploaded."

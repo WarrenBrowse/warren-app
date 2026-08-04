@@ -29,17 +29,23 @@ mod inner {
         }
     }
 
-    /// Takes a version without a patch number and adds the patch (set to zero).
+    /// Ensures the version string carries a semver patch component.
     ///
-    /// Converts `x.y[-z]` into `x.y.0[-z]` to make the version semver compatible.
+    /// Two-component versions (`x.y[-z]`) become `x.y.0[-z]`; versions that
+    /// already carry a patch (`x.y.z[-w]`, e.g. `1.0.0`) are returned unchanged.
     fn to_semver(version: &str) -> String {
         let mut parts = version.splitn(2, '-');
 
-        let version = parts.next().expect("Year component");
+        let core = parts.next().expect("version core component");
         let remainder = parts.next().map(|s| format!("-{s}")).unwrap_or_default();
         assert_eq!(parts.next(), None);
 
-        format!("{version}.0{remainder}")
+        // `core` is either `major.minor` or `major.minor.patch`.
+        if core.matches('.').count() >= 2 {
+            format!("{core}{remainder}")
+        } else {
+            format!("{core}.0{remainder}")
+        }
     }
 
     /// Takes a version in the normal Mullvad VPN app version format and returns the Android
@@ -78,26 +84,33 @@ mod inner {
             }
         };
 
-        let year_last_two_digits = version.year % 100;
+        // Note: the semver patch component is not encoded in the Android
+        // versionCode (the YYVVXZZZ layout has no room for it). Monotonicity
+        // across releases must come from the major/minor components.
+        let major_last_two_digits = version.major % 100;
 
         format!(
             "{}{:0>2}{}{:0>3}",
-            year_last_two_digits, version.incremental, build_type, build_number,
+            major_last_two_digits, version.minor, build_type, build_number,
         )
     }
 
     fn to_windows_h_format(version_str: &str) -> String {
-        let version = version_str.parse().unwrap();
+        let version: Version = version_str.parse().unwrap();
 
         let Version {
-            year, incremental, ..
+            major,
+            minor,
+            patch,
+            ..
         } = version;
 
         format!(
-            "#define MAJOR_VERSION {year}
-    #define MINOR_VERSION {incremental}
-    #define PATCH_VERSION 0
-    #define PRODUCT_VERSION \"{version_str}\""
+            "#define MAJOR_VERSION {major}
+    #define MINOR_VERSION {minor}
+    #define PATCH_VERSION {}
+    #define PRODUCT_VERSION \"{version_str}\"",
+            patch.unwrap_or(0)
         )
     }
 
@@ -133,6 +146,32 @@ mod inner {
     #define PATCH_VERSION 0
     #define PRODUCT_VERSION \"2025.4-beta2-dev-abcdef\"";
             assert_eq!(expected_version_h, version_h);
+        }
+
+        #[test]
+        fn test_windows_version_h_semver() {
+            let version_h = to_windows_h_format("1.2.3");
+            let expected_version_h = "#define MAJOR_VERSION 1
+    #define MINOR_VERSION 2
+    #define PATCH_VERSION 3
+    #define PRODUCT_VERSION \"1.2.3\"";
+            assert_eq!(expected_version_h, version_h);
+        }
+
+        #[test]
+        fn test_semver_passthrough() {
+            // Two-component versions get a `.0` patch appended.
+            assert_eq!("2025.4.0", to_semver("2025.4"));
+            assert_eq!("2025.4.0-beta2", to_semver("2025.4-beta2"));
+            // Versions that already carry a patch are returned unchanged.
+            assert_eq!("1.0.0", to_semver("1.0.0"));
+            assert_eq!("1.2.3-beta1", to_semver("1.2.3-beta1"));
+        }
+
+        #[test]
+        fn test_version_code_semver() {
+            // 1.0.0 stable: major%100=1, minor=0, stable build type 9, build 000.
+            assert_eq!("1009000", to_android_version_code("1.0.0"));
         }
     }
 }

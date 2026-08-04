@@ -27,7 +27,7 @@ fi
 
 # The Xcode project name without file extension
 # The folder with all sources is expected to hold the same name
-PROJECT_NAME="MullvadVPN"
+PROJECT_NAME="WarrenVPN"
 
 # Xcode project directory
 XCODE_PROJECT_DIR="$SCRIPT_DIR/$PROJECT_NAME.xcodeproj"

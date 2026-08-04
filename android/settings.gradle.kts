@@ -23,73 +23,60 @@ includeBuild("gradle/build-logic")
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
-rootProject.name = "MullvadVPN"
+rootProject.name = "WarrenVPN"
 
 include(":app")
 
 include(
-    ":lib:billing",
+    // lib:billing deleted (Mullvad Play Store VPN billing
+    // dead on Warren - BIP39 wallet replaces VPN subscriptions).
     ":lib:common",
     ":lib:common-compose",
     ":lib:common-test",
-    ":lib:grpc",
+    // lib:grpc deleted (Mullvad daemon gRPC bridge dead).
     ":lib:endpoint",
-    ":lib:feature:account:impl",
-    ":lib:feature:account:api",
-    ":lib:feature:addtime:impl",
-    ":lib:feature:addtime:api",
-    ":lib:feature:anticensorship:impl",
-    ":lib:feature:anticensorship:api",
-    ":lib:feature:apiaccess:impl",
-    ":lib:feature:apiaccess:api",
-    ":lib:feature:appicon:impl",
-    ":lib:feature:appicon:api",
+    // account / addtime modules removed (Mullvad-account
+    // identity model ; Warren uses BIP39 wallet via the login/wallet
+    // module instead).
+    // anticensorship module deleted.
+    // apiaccess module deleted.
+    // feature.appicon module deleted (Mullvad obfuscation dead).
     ":lib:feature:appinfo:impl",
     ":lib:feature:appinfo:api",
     ":lib:feature:applisting:impl",
     ":lib:feature:applisting:api",
-    ":lib:feature:appearance:impl",
-    ":lib:feature:appearance:api",
     ":lib:feature:autoconnect:impl",
     ":lib:feature:autoconnect:api",
-    ":lib:feature:customlist:impl",
-    ":lib:feature:customlist:api",
-    ":lib:feature:daita:impl",
-    ":lib:feature:daita:api",
-    ":lib:feature:deleteaccount:impl",
-    ":lib:feature:deleteaccount:api",
-    ":lib:feature:filter:impl",
-    ":lib:feature:filter:api",
+    // customlist + filter + location modules deleted
+    // (Mullvad relay-list picker, replaced by WarrenLocationPicker).
+    // daita module deleted (DAITA via WarrenTunnelSettings).
+    // deleteaccount module removed (no Mullvad account on Warren).
     ":lib:feature:home:impl",
     ":lib:feature:home:api",
     ":lib:feature:language:impl",
     ":lib:feature:language:api",
-    ":lib:feature:location:impl",
-    ":lib:feature:location:api",
     ":lib:feature:login:impl",
     ":lib:feature:login:api",
-    ":lib:feature:managedevices:impl",
-    ":lib:feature:managedevices:api",
-    ":lib:feature:multihop:impl",
-    ":lib:feature:multihop:api",
+    // managedevices module removed (Mullvad multi-device
+    // accounting model ; Warren manages devices via the wallet).
+    // multihop module deleted (multi-hop via WarrenTunnelSettings).
     ":lib:feature:notification:impl",
     ":lib:feature:notification:api",
-    ":lib:feature:problemreport:impl",
-    ":lib:feature:problemreport:api",
-    ":lib:feature:redeemvoucher:impl",
-    ":lib:feature:redeemvoucher:api",
-    ":lib:feature:serveripoverride:impl",
-    ":lib:feature:serveripoverride:api",
+    // redeemvoucher module removed (Mullvad voucher
+    // subscription model ; Warren billing model is different).
+    // serveripoverride module deleted (Warren exit fleet
+    // is sovereign ; no per-relay IP overrides).
     ":lib:feature:settings:impl",
     ":lib:feature:settings:api",
     ":lib:feature:splittunneling:impl",
     ":lib:feature:splittunneling:api",
-    ":lib:feature:vpnsettings:impl",
-    ":lib:feature:vpnsettings:api",
+    // feature.vpnsettings module deleted (Mullvad daemon
+    // MTU/DNS/QuantumResistant/etc. settings sync dead on Warren).
     ":lib:map",
     ":lib:model",
     ":lib:navigation",
-    ":lib:payment",
+    // lib:payment deleted (Mullvad PaymentProvider abstraction
+    // is dead alongside lib:billing on Warren).
     ":lib:push-notification",
     ":lib:repository",
     ":lib:screen-test",
@@ -110,7 +97,9 @@ include(
     ":test:arch",
     ":test:common",
     ":test:e2e",
-    ":test:mockapi",
+    // ":test:mockapi" - dropped: simulates the Mullvad API for tests Warren
+    //   no longer runs. Warren-API-backed tests land alongside the
+    //   warren-api-client integration.
     ":test:detekt",
     ":test:baselineprofile",
 )

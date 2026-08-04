@@ -1,378 +1,432 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "Disable “%@” or disconnect before updating in order not to lose network connectivity." : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deaktiver \"%@\" eller afbryd forbindelsen før opdatering for ikke at miste netværksforbindelsen."
+  "sourceLanguage": "en",
+  "strings": {
+    "Disable “%@” or disconnect before updating in order not to lose network connectivity.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عطّل «%@» أو اقطع الاتصال قبل التحديث كي لا تفقد الاتصال بالشبكة."
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deaktivieren Sie „%@“ oder trennen Sie die Verbindung vor dem Update, um die Netzwerkverbindung nicht zu verlieren."
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktiver \"%@\" eller afbryd forbindelsen før opdatering for ikke at miste netværksforbindelsen."
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deshabilite «%@» o desconéctelo antes de actualizar para no perder conectividad de red."
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktivieren Sie „%@“ oder trennen Sie die Verbindung vor dem Update, um die Netzwerkverbindung nicht zu verlieren."
           }
         },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Poista \"%@\" käytöstä tai katkaise sen yhteys ennen päivittämistä, jotta et menetä verkkoyhteyttä."
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deshabilite «%@» o desconéctelo antes de actualizar para no perder conectividad de red."
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Désactivez « %@ » ou déconnectez-vous avant d'effectuer la mise à jour pour éviter de perdre la connectivité au réseau."
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای اینکه اتصال شبکه را از دست ندهید، پیش از به‌روزرسانی «%@» را غیرفعال کنید یا اتصال را قطع کنید."
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disabilita “%@” o disconnettiti prima dell’aggiornamento per non perdere la connettività di rete."
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poista \"%@\" käytöstä tai katkaise sen yhteys ennen päivittämistä, jotta et menetä verkkoyhteyttä."
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ネットワーク接続を失わないようにするには、更新前に「%@」を無効にするか、切断してください。"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Désactivez « %@ » ou déconnectez-vous avant d'effectuer la mise à jour pour éviter de perdre la connectivité au réseau."
           }
         },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "네트워크 연결 해제를 방지하려면 업데이트 전에 \"%@\" 기능을 비활성화하거나 연결을 해제하세요."
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disabilita “%@” o disconnettiti prima dell’aggiornamento per non perdere la connettività di rete."
           }
         },
-        "my" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ကွန်ရက် ချိတ်ဆက်မှု မဆုံးရှုံးစေရန် အပ်ဒိတ်မလုပ်မီ “%@” ကို ပိတ်ပါ သို့မဟုတ် ချိတ်ဆက်မှု ဖြုတ်ပါ။"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ネットワーク接続を失わないようにするには、更新前に「%@」を無効にするか、切断してください。"
           }
         },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deaktiver «%@» eller koble fra før du oppdaterer for å sikre at du ikke mister nettverksforbindelsen."
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "네트워크 연결 해제를 방지하려면 업데이트 전에 \"%@\" 기능을 비활성화하거나 연결을 해제하세요."
           }
         },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schakel \"%@\" uit of verbreek de verbinding voordat u bijwerkt om de netwerkconnectiviteit niet te verliezen."
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကွန်ရက် ချိတ်ဆက်မှု မဆုံးရှုံးစေရန် အပ်ဒိတ်မလုပ်မီ “%@” ကို ပိတ်ပါ သို့မဟုတ် ချိတ်ဆက်မှု ဖြုတ်ပါ။"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wyłącz „%@” lub rozłącz się przed aktualizacją, aby nie utracić łączności z siecią."
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deaktiver «%@» eller koble fra før du oppdaterer for å sikre at du ikke mister nettverksforbindelsen."
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desative “%@” ou desligue antes de atualizar para não perder a ligação de rede."
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schakel \"%@\" uit of verbreek de verbinding voordat u bijwerkt om de netwerkconnectiviteit niet te verliezen."
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отключите «%@» или разорвите соединение перед обновлением, чтобы не потерять сетевое подключение."
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wyłącz „%@” lub rozłącz się przed aktualizacją, aby nie utracić łączności z siecią."
           }
         },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inaktivera \"%@\" eller koppla från innan du uppdaterar så att inte nätverksanslutningen bryts."
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desative “%@” ou desligue antes de atualizar para não perder a ligação de rede."
           }
         },
-        "th" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ปิดใช้งาน “%@” หรือตัดการเชื่อมต่อก่อนอัปเดต เพื่อป้องกันไม่ให้สูญเสียการเชื่อมต่อเครือข่าย"
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dezactivează „%@” sau deconectează-te înainte de actualizare pentru a nu pierde conectivitatea la rețea."
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ağ bağlantısını kaybetmemek için \"%@\" özelliğini devre dışı bırakın veya bağlantıyı kesin."
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключите «%@» или разорвите соединение перед обновлением, чтобы не потерять сетевое подключение."
           }
         },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Вимкніть функцію «%@» або відключіться перед оновленням, щоб не втратити підключення до мережі."
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inaktivera \"%@\" eller koppla från innan du uppdaterar så att inte nätverksanslutningen bryts."
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新前停用“%@”或断开连接，以免网络连接断开。"
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิดใช้งาน “%@” หรือตัดการเชื่อมต่อก่อนอัปเดต เพื่อป้องกันไม่ให้สูญเสียการเชื่อมต่อเครือข่าย"
           }
         },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新前，請停用「%@」或中斷連線，以避免網路連線中斷。"
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ağ bağlantısını kaybetmemek için \"%@\" özelliğini devre dışı bırakın veya bağlantıyı kesin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вимкніть функцію «%@» або відключіться перед оновленням, щоб не втратити підключення до мережі."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新前停用“%@”或断开连接，以免网络连接断开。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新前，請停用「%@」或中斷連線，以避免網路連線中斷。"
           }
         }
       }
     },
-    "Force all apps" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tving alle apps"
+    "Force all apps": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلزام جميع التطبيقات"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle Apps zwingen"
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tving alle apps"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forzar todas las aplicaciones"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Apps zwingen"
           }
         },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pakota kaikki sovellukset"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forzar todas las aplicaciones"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forcer toutes les applications"
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اجبار همهٔ برنامه‌ها"
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forza tutte le app"
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pakota kaikki sovellukset"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "すべてのアプリに強制適用"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forcer toutes les applications"
           }
         },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "모든 앱에 강제 적용"
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forza tutte le app"
           }
         },
-        "my" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "အက်ပ်အားလုံး၌ မဖြစ်မနေ လုပ်ဆောင်ရန်"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "すべてのアプリに強制適用"
           }
         },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tving alle apper"
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "모든 앱에 강제 적용"
           }
         },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle apps forceren"
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အက်ပ်အားလုံး၌ မဖြစ်မနေ လုပ်ဆောင်ရန်"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wymuszaj na wszystkich aplikacjach"
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tving alle apper"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Forçar todas as aplicações"
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle apps forceren"
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Принудительно для всех приложений"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wymuszaj na wszystkich aplikacjach"
           }
         },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tvinga alla appar"
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forçar todas as aplicações"
           }
         },
-        "th" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "บังคับทุกแอป"
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forțează toate aplicațiile"
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tüm uygulamaları IAN tünelini kullanmaya zorla"
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Принудительно для всех приложений"
           }
         },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Примусово для всіх застосунків"
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tvinga alla appar"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "强制所有 App"
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "บังคับทุกแอป"
           }
         },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "強制所有應用程式"
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm uygulamaları IAN tünelini kullanmaya zorla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Примусово для всіх застосунків"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "强制所有 App"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "強制所有應用程式"
           }
         }
       }
     },
-    "Update available" : {
-      "localizations" : {
-        "da" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Opdatering tilgængelig"
+    "Update available": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتوفَّر تحديث جديد"
           }
         },
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update verfügbar"
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opdatering tilgængelig"
           }
         },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Actualización disponible"
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update verfügbar"
           }
         },
-        "fi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Päivitys saatavilla"
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualización disponible"
           }
         },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mise à jour disponible"
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "به‌روزرسانی موجود است"
           }
         },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aggiornamento disponibile"
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Päivitys saatavilla"
           }
         },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "更新があります"
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mise à jour disponible"
           }
         },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "업데이트 가능"
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aggiornamento disponibile"
           }
         },
-        "my" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "အပ်ဒိတ် ရရှိနိုင်ပါပြီ"
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新があります"
           }
         },
-        "nb" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En oppdatering er tilgjengelig"
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "업데이트 가능"
           }
         },
-        "nl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Update beschikbaar"
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အပ်ဒိတ် ရရှိနိုင်ပါပြီ"
           }
         },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dostępna jest aktualizacja"
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En oppdatering er tilgjengelig"
           }
         },
-        "pt" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Atualização disponível"
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update beschikbaar"
           }
         },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Есть обновление"
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostępna jest aktualizacja"
           }
         },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Uppdatering tillgänglig"
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atualização disponível"
           }
         },
-        "th" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "มีการอัปเดตให้ใช้งาน"
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizare disponibilă"
           }
         },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Güncelleme mevcut"
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Есть обновление"
           }
         },
-        "uk" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Доступне оновлення"
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uppdatering tillgänglig"
           }
         },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "有可用的更新"
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีการอัปเดตให้ใช้งาน"
           }
         },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "已推出更新"
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncelleme mevcut"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступне оновлення"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有可用的更新"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已推出更新"
           }
         }
       }
     }
   },
-  "version" : "1.1"
+  "version": "1.1"
 }

@@ -11,8 +11,6 @@ import settingsActions, { SettingsAction } from './settings/actions';
 import settingsReducer, { ISettingsReduxState } from './settings/reducers';
 import { SettingsImportAction } from './settings-import/actions';
 import settingsImportReducer, { SettingsImportReduxState } from './settings-import/reducers';
-import supportActions, { SupportAction } from './support/actions';
-import supportReducer, { ISupportReduxState } from './support/reducers';
 import userInterfaceActions, { UserInterfaceAction } from './userinterface/actions';
 import userInterfaceReducer, { IUserInterfaceReduxState } from './userinterface/reducers';
 import versionActions, { VersionAction } from './version/actions';
@@ -23,7 +21,6 @@ export interface IReduxState {
   appUpgrade: AppUpgradeReduxState;
   connection: IConnectionReduxState;
   settings: ISettingsReduxState;
-  support: ISupportReduxState;
   version: IVersionReduxState;
   userInterface: IUserInterfaceReduxState;
   settingsImport: SettingsImportReduxState;
@@ -34,7 +31,6 @@ export type ReduxAction =
   | AccountAction
   | ConnectionAction
   | SettingsAction
-  | SupportAction
   | VersionAction
   | UserInterfaceAction
   | SettingsImportAction;
@@ -47,7 +43,6 @@ export default function configureStore() {
     appUpgrade: appUpgradeReducer,
     connection: connectionReducer,
     settings: settingsReducer,
-    support: supportReducer,
     version: versionReducer,
     userInterface: userInterfaceReducer,
     settingsImport: settingsImportReducer,
@@ -64,7 +59,6 @@ function composeEnhancers(): StoreEnhancer {
     ...appUpgradeActions,
     ...connectionActions,
     ...settingsActions,
-    ...supportActions,
     ...versionActions,
     ...userInterfaceActions,
   };

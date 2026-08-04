@@ -3,7 +3,6 @@ package utilities
 object BuildTypes {
     const val DEBUG = "debug"
     const val RELEASE = "release"
-    const val LEAK_CANARY = "leakCanary"
 
     const val NON_MINIFIED = "nonMinified"
 
@@ -15,17 +14,21 @@ object SigningConfigs {
 }
 
 object FlavorDimensions {
-    const val BILLING = "billing"
     const val INFRASTRUCTURE = "infrastructure"
 }
 
 object Flavors {
-    const val OSS = "oss"
-    const val PLAY = "play"
-
     const val PROD = "prod"
-    const val DEVMOLE = "devmole"
-    const val STAGEMOLE = "stagemole"
+
+    // Separate installable beta product: own applicationId suffix, own
+    // launcher label, and a Rust datapath compiled with
+    // WARREN_PRODUCT_ENV=beta (beta API host + beta update channel).
+    const val BETA = "beta"
+
+    // Same separation against the staging backend, so the three products can
+    // sit on one device without sharing an applicationId, a launcher label or
+    // a deep-link scheme.
+    const val STAGING = "staging"
 }
 
 data class Variant(val buildType: String?, val productFlavors: Map<String, String>) {
@@ -36,7 +39,6 @@ data class Variant(val buildType: String?, val productFlavors: Map<String, Strin
 }
 
 data class VariantFilter(
-    val billingPredicate: (billing: String?) -> Boolean = { true },
     val infrastructurePredicate: (infrastructure: String?) -> Boolean = { true },
     val buildTypePredicate: (buildType: String?) -> Boolean = { true },
 )
@@ -45,21 +47,13 @@ fun Variant.matches(filter: VariantFilter): Boolean =
     with(filter) {
         val flavors = productFlavors.toMap()
         buildTypePredicate(buildType) &&
-            infrastructurePredicate(flavors[FlavorDimensions.INFRASTRUCTURE]) &&
-            billingPredicate(flavors[FlavorDimensions.BILLING])
+            infrastructurePredicate(flavors[FlavorDimensions.INFRASTRUCTURE])
     }
 
 fun Variant.matchesAny(vararg filters: VariantFilter): Boolean = filters.any { matches(it) }
 
-fun fullReleaseTasks(appVersion: AppVersion) =
+fun fullReleaseTasks(@Suppress("UNUSED_PARAMETER") appVersion: AppVersion) =
     buildList<String> {
-        add("createOssProdReleaseDistApk")
-        add("createPlayProdReleaseDistApk")
-        add("createPlayProdReleaseDistBundle")
-        if (appVersion.isAlpha || appVersion.isDev) {
-            add("createPlayDevmoleReleaseDistApk")
-            add("createPlayStagemoleReleaseDistApk")
-            add("createPlayDevmoleReleaseDistBundle")
-            add("createPlayStagemoleReleaseDistBundle")
-        }
+        add("createProdReleaseDistApk")
+        add("createProdReleaseDistBundle")
     }

@@ -1,0 +1,48 @@
+---
+# Warren: anti-refragmentation gate (doc 94, warren-core/docs/94-DEDUP-AUDIT).
+#
+# Fast (~seconds) grep-only guard that fails if a single-homed responsibility
+# regrows a twin definition in warren-app: a local product User-Agent (R-D4) or
+# a warren-core dependency (R-A6/48). No cargo build, so it runs on a cheap
+# GitHub-hosted runner rather than the self-hosted test fleet.
+#
+# Trigger mirrors warren-checks.yml: direct push to main / warren-base, PRs
+# targeting them, plus on-demand dispatch. Paths-filtered to the surfaces the
+# rules scan, and concurrency cancel-in-progress so rapid pushes supersede each
+# other.
+
+name: Anti-refragmentation gate
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - warren-base
+    paths: &anti_refrag_paths
+      - "**/*.rs"
+      - "**/Cargo.toml"
+      - "scripts/ci/anti-refrag.sh"
+      - ".github/workflows/anti-refrag.yml"
+  pull_request:
+    branches:
+      - main
+      - warren-base
+    paths: *anti_refrag_paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  anti-refrag:
+    name: Anti-refragmentation rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run anti-refragmentation gate
+        run: sh scripts/ci/anti-refrag.sh

@@ -1,6 +1,6 @@
 # Split tunneling
 
-Split tunneling allows excluding selected apps from the VPN tunnel. These apps will communicate with the network as if Mullvad VPN was disconnected or not even running.
+Split tunneling allows excluding selected apps from the VPN tunnel. These apps will communicate with the network as if Warren VPN was disconnected or not even running.
 
 ## Vocabulary
 
@@ -16,7 +16,7 @@ Split tunneling allows excluding selected apps from the VPN tunnel. These apps w
 ## DNS
 
 DNS is a bit problematic to exclude properly. Ideally DNS requests from excluded apps would
-always go outside the tunnel, because that's what they would have done if Mullvad was disconnected
+always go outside the tunnel, because that's what they would have done if Warren was disconnected
 or not running. But this is very hard/impossible to achieve on some platforms.
 One reason for this is that on some operating systems, programs call into a system service
 for name resolution. This system service will then perform the actual DNS lookup.

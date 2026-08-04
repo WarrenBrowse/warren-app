@@ -3,12 +3,11 @@ import { Empty } from 'google-protobuf/google/protobuf/empty_pb.js';
 import { BoolValue, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb.js';
 import * as grpcTypes from 'management-interface/management-interface/grpc-types';
 
+import { productAnchors } from '../shared/constants/product-env';
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
-  AccountDataError,
   AccountDataResponse,
-  AccountNumber,
   CustomListError,
   CustomProxy,
   DaemonAppUpgradeEvent,
@@ -17,19 +16,25 @@ import {
   DisconnectSource,
   IAppVersionInfo,
   ICustomList,
-  IDevice,
-  IDeviceRemoval,
   IDnsOptions,
   IRelayListWithEndpointData,
   ISettings,
   LogoutSource,
+  NatPmpSettings,
+  NatPmpStatus,
   NewAccessMethodSetting,
   NewCustomList,
   ObfuscationSettings,
   ObfuscationType,
   RelaySettings,
+  TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
+  WarrenCustomExitSettings,
+  WarrenMultiHopSettings,
+  WarrenPubKey,
+  WarrenPubkeyMismatch,
+  WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -37,22 +42,47 @@ import {
   convertFromAppUpgradeEvent,
   convertFromAppVersionInfo,
   convertFromDaemonEvent,
-  convertFromDevice,
   convertFromDeviceState,
+  convertFromNatPmpSettings,
+  convertFromNatPmpStatus,
   convertFromRelayList,
   convertFromSettings,
   convertFromTunnelState,
+  convertFromWarrenStatus,
   convertToApiAccessMethodSetting,
   convertToCustomList,
   convertToCustomProxy,
+  convertToNatPmpSettings,
   convertToNewApiAccessMethodSetting,
   convertToNewCustomList,
   convertToRelayConstraints,
+  convertToWarrenCustomExitSettings,
+  convertToWarrenMultiHopSettings,
   ensureExists,
 } from './grpc-type-convertions';
 
+// Must match `mullvad_paths::rpc_socket::get_default_rpc_socket_path` on the
+// Rust side. Without this alignment, Electron hits the legacy upstream Mullvad
+// path which can be squatted by a parallel official Mullvad VPN.app install.
+// Per product environment: a beta GUI talks to the beta daemon's socket,
+// never prod's.
 const DAEMON_RPC_PATH =
-  process.platform === 'win32' ? '//./pipe/Mullvad VPN' : '/var/run/mullvad-vpn';
+  process.platform === 'win32'
+    ? `//./pipe/${productAnchors.displayName}`
+    : `/var/run/${productAnchors.unixProductDir}`;
+
+/**
+ * The signed community-forum login material returned by the daemon: the
+ * four X-Warren-* header values plus the JSON body to POST to the forum
+ * connect host (doc 55). None of these is a long-lived secret.
+ */
+export interface ForumLoginSignature {
+  pubkeySs58: string;
+  signatureHex: string;
+  timestamp: number;
+  nonceHex: string;
+  body: string;
+}
 
 export class SubscriptionListener<T> {
   // Only meant to be used by DaemonRpc
@@ -81,7 +111,12 @@ export class DaemonRpc extends GrpcClient {
   private nextSubscriptionId = 0;
   private subscriptions: Map<
     number,
-    grpc.ClientReadableStream<grpcTypes.DaemonEvent | grpcTypes.AppUpgradeEvent>
+    grpc.ClientReadableStream<
+      | grpcTypes.DaemonEvent
+      | grpcTypes.AppUpgradeEvent
+      | grpcTypes.WarrenStatus
+      | grpcTypes.NatPmpStatus
+    >
   > = new Map();
 
   public constructor(connectionObserver?: ConnectionObserver) {
@@ -173,11 +208,45 @@ export class DaemonRpc extends GrpcClient {
     }
   }
 
-  public async getAccountData(accountNumber: AccountNumber): Promise<AccountDataResponse> {
+  // Subscribe to the daemon's WarrenStatusUpdates push stream. Each
+  // emitted snapshot is converted to the renderer-facing WarrenStatus
+  // shape before being forwarded to the listener.
+  public subscribeWarrenStatusListener(listener: SubscriptionListener<WarrenStatus>) {
+    const call = this.isConnected && this.client.warrenStatusUpdates(new Empty());
+    if (!call) {
+      throw noConnectionError;
+    }
+    const subscriptionId = this.subscriptionId();
+    listener.subscriptionId = subscriptionId;
+    this.subscriptions.set(subscriptionId, call);
+
+    call.on('data', (data: grpcTypes.WarrenStatus) => {
+      try {
+        listener.onEvent(convertFromWarrenStatus(data));
+      } catch (e) {
+        const error = e as Error;
+        listener.onError(error);
+      }
+    });
+
+    call.on('error', (error) => {
+      listener.onError(error);
+      this.removeSubscription(subscriptionId);
+    });
+  }
+
+  public unsubscribeWarrenStatusListener(listener: SubscriptionListener<WarrenStatus>) {
+    const id = listener.subscriptionId;
+    if (id !== undefined) {
+      this.removeSubscription(id);
+    }
+  }
+
+  public async getAccountData(pubkey: WarrenPubKey): Promise<AccountDataResponse> {
     try {
       const response = await this.callString<grpcTypes.AccountData>(
         this.client.getAccountData,
-        accountNumber,
+        pubkey,
       );
       const expiry = response.getExpiry()!.toDate().toISOString();
       return { type: 'success', expiry };
@@ -187,6 +256,13 @@ export class DaemonRpc extends GrpcClient {
         switch (error.code) {
           case grpc.status.UNAUTHENTICATED:
             return { type: 'error', error: 'invalid-account' };
+          // The daemon maps a 404 from warren-api (no active
+          // subscription for the current pubkey) to gRPC NOT_FOUND.
+          // The cache translates this into an expired-account
+          // Redux state so the UI redirects to the "buy plan"
+          // screen instead of letting the user click Connect.
+          case grpc.status.NOT_FOUND:
+            return { type: 'error', error: 'no-subscription' };
           default:
             return { type: 'error', error: 'communication' };
         }
@@ -195,9 +271,83 @@ export class DaemonRpc extends GrpcClient {
     }
   }
 
-  public async getWwwAuthToken(): Promise<string> {
-    const response = await this.callEmpty<StringValue>(this.client.getWwwAuthToken);
+  /**
+   * Returns the BIP39 mnemonic (12 words) so the user can back it up.
+   * Empty string if the identity has never been bootstrapped. The
+   * renderer caller must display it with a safety warning and explicit
+   * user confirmation.
+   */
+  public async getWarrenMnemonic(): Promise<string> {
+    const response = await this.callEmpty<StringValue>(this.client.getWarrenMnemonic);
     return response.getValue();
+  }
+
+  /**
+   * Replaces the identity with the provided BIP39 mnemonic. The daemon
+   * validates BIP39, writes atomically, then hot-swaps the in-memory
+   * `WarrenAuthSigner` and triggers an `account_manager.login(new_pubkey)`
+   * so the new identity is active without restarting the daemon. The
+   * GUI observes the resulting `deviceState: 'logged in'` change and
+   * proceeds normally. Throws `grpc.ServiceError`
+   * (status INVALID_ARGUMENT) if the BIP39 input is invalid.
+   */
+  public async setWarrenMnemonic(mnemonic: string): Promise<void> {
+    await this.callString<Empty>(this.client.setWarrenMnemonic, mnemonic);
+  }
+
+  /**
+   * Signs a community-forum login challenge (doc 55, DiscourseConnect
+   * wallet SSO). `sid` comes from a `warren://forum-login?sid=..` deep
+   * link. The daemon signs the fixed `POST /v1/forum/login` request with
+   * the Warren identity key and returns the four X-Warren-* header values
+   * plus the JSON body to POST. The signing key never leaves the daemon.
+   */
+  public async signForumLogin(sid: string): Promise<ForumLoginSignature> {
+    const request = new grpcTypes.ForumLoginRequest();
+    request.setSid(sid);
+    const response = await this.call<grpcTypes.ForumLoginRequest, grpcTypes.ForumLoginSignature>(
+      this.client.signForumLogin,
+      request,
+    );
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
+  }
+
+  /**
+   * Signs a community-forum attach-logs request (doc 55). `sid` and
+   * `topicId` come from a `warren://attach-logs?sid=..&topic=..` deep link
+   * and `logGz` is the gzipped redacted problem report. The daemon builds
+   * the canonical `POST /v1/forum/attach-logs` JSON body itself, signs it
+   * with the Warren identity key, and returns the four X-Warren-* header
+   * values plus that exact body, which must be POSTed verbatim so the
+   * signed bytes and the sent bytes are identical. The signing key never
+   * leaves the daemon.
+   */
+  public async signForumAttachLogs(
+    sid: string,
+    topicId: number,
+    logGz: Uint8Array,
+  ): Promise<ForumLoginSignature> {
+    const request = new grpcTypes.ForumAttachLogsRequest();
+    request.setSid(sid);
+    request.setTopicId(topicId);
+    request.setLogGz(logGz);
+    const response = await this.call<
+      grpcTypes.ForumAttachLogsRequest,
+      grpcTypes.ForumLoginSignature
+    >(this.client.signForumAttachLogs, request);
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
   }
 
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {
@@ -230,6 +380,12 @@ export class DaemonRpc extends GrpcClient {
             return { type: 'invalid' };
           case grpc.status.RESOURCE_EXHAUSTED:
             return { type: 'already_used' };
+          case grpc.status.FAILED_PRECONDITION:
+            return { type: 'expired' };
+          // Also emitted on daemon-transport failures: both mean
+          // "nothing definitive happened, retry later".
+          case grpc.status.UNAVAILABLE:
+            return { type: 'not_ready' };
         }
       }
       return { type: 'error' };
@@ -248,22 +404,6 @@ export class DaemonRpc extends GrpcClient {
   public async createNewAccount(): Promise<string> {
     const response = await this.callEmpty<StringValue>(this.client.createNewAccount);
     return response.getValue();
-  }
-
-  public async loginAccount(accountNumber: AccountNumber): Promise<AccountDataError | void> {
-    try {
-      await this.callString(this.client.loginAccount, accountNumber);
-    } catch (e) {
-      const error = e as grpc.ServiceError;
-      switch (error.code) {
-        case grpc.status.RESOURCE_EXHAUSTED:
-          return { type: 'error', error: 'too-many-devices' };
-        case grpc.status.UNAUTHENTICATED:
-          return { type: 'error', error: 'invalid-account' };
-        default:
-          return { type: 'error', error: 'communication' };
-      }
-    }
   }
 
   public async logoutAccount(source: LogoutSource): Promise<void> {
@@ -287,6 +427,159 @@ export class DaemonRpc extends GrpcClient {
 
   public async setAllowLan(allowLan: boolean): Promise<void> {
     await this.callBool(this.client.setAllowLan, allowLan);
+  }
+
+  // Persistent warren-api URL. Empty string → unset on the daemon
+  // side (= fallback to upstream Mullvad backend). Daemon restart is
+  // required to apply (see `resolve_warren_api_config` on the Rust
+  // side, which reads Settings at boot only).
+  public async setWarrenApiUrl(url: string): Promise<void> {
+    await this.callString(this.client.setWarrenApiUrl, url);
+  }
+
+  // Client-side bandwidth ceiling in bits per second. `undefined`
+  // maps to 0 on the wire = unset (unlimited). Applies to a live
+  // tunnel without a reconnect.
+  public async setWarrenMaxRateBps(bps?: number): Promise<void> {
+    await this.callNumber64(this.client.setWarrenMaxRateBps, bps ?? 0);
+  }
+
+  // Warren multi-hop settings. Restart daemon required to
+  // apply (the supervisor is wired once at boot from the env-var +
+  // settings-file path).
+  public async getWarrenMultiHopSettings(): Promise<WarrenMultiHopSettings> {
+    const response = await this.callEmpty<grpcTypes.WarrenMultiHopSettings>(
+      this.client.getWarrenMultiHopSettings,
+    );
+    const rotation = response.getHpkeEpochRotation();
+    return {
+      enabled: response.getEnabled(),
+      entryCountry: response.getEntryCountry(),
+      exitCountry: response.getExitCountry(),
+      hpkeEpochRotationMs: rotation
+        ? rotation.getSeconds() * 1000 + Math.floor(rotation.getNanos() / 1e6)
+        : 4 * 60 * 60 * 1000,
+    };
+  }
+
+  public async setWarrenMultiHopSettings(settings: WarrenMultiHopSettings): Promise<void> {
+    const proto = convertToWarrenMultiHopSettings(settings);
+    await this.call<grpcTypes.WarrenMultiHopSettings, Empty>(
+      this.client.setWarrenMultiHopSettings,
+      proto,
+    );
+  }
+
+  public async setWarrenCustomExit(settings: WarrenCustomExitSettings): Promise<void> {
+    const proto = convertToWarrenCustomExitSettings(settings);
+    await this.call<grpcTypes.WarrenCustomExitSettings, Empty>(
+      this.client.setWarrenCustomExit,
+      proto,
+    );
+  }
+
+  public async getWarrenStatus(): Promise<WarrenStatus> {
+    const response = await this.callEmpty<grpcTypes.WarrenStatus>(this.client.getWarrenStatus);
+    return convertFromWarrenStatus(response);
+  }
+
+  // Warren NAT-PMP port-forwarding. The setter pushes the value live
+  // to the daemon, which both persists it AND updates the running
+  // parameters generator so the next tunnel reconnect spawns (or
+  // stops) the refresh loop.
+  public async getNatPmpSettings(): Promise<NatPmpSettings> {
+    const response = await this.callEmpty<grpcTypes.NatPmpSettings>(this.client.getNatPmpSettings);
+    return convertFromNatPmpSettings(response);
+  }
+
+  public async setNatPmpSettings(settings: NatPmpSettings): Promise<void> {
+    const proto = convertToNatPmpSettings(settings);
+    await this.call<grpcTypes.NatPmpSettings, Empty>(this.client.setNatPmpSettings, proto);
+  }
+
+  // TOFU pubkey-pinning user actions. The daemon-side
+  // verify hook keeps the in-memory pin table; these RPCs let the
+  // user resolve a pending mismatch from the modal.
+  public async trustNewExitKey(input: {
+    exitIdHex: string;
+    newPubkeyHex: string;
+  }): Promise<TrustNewExitKeyOutcome> {
+    const req = new grpcTypes.TrustNewExitKeyRequest();
+    req.setExitIdHex(input.exitIdHex);
+    req.setNewPubkeyHex(input.newPubkeyHex);
+    const response = await this.call<
+      grpcTypes.TrustNewExitKeyRequest,
+      grpcTypes.TrustNewExitKeyResponse
+    >(this.client.trustNewExitKey, req);
+    switch (response.getResult()) {
+      case grpcTypes.TrustNewExitKeyResponse.Result.OK:
+        return { result: 'ok' };
+      case grpcTypes.TrustNewExitKeyResponse.Result.EXIT_NOT_FOUND:
+        return { result: 'exit-not-found' };
+      case grpcTypes.TrustNewExitKeyResponse.Result.PUBKEY_MISMATCH:
+        return { result: 'pubkey-mismatch' };
+      default:
+        return { result: 'io-error', errorMessage: response.getErrorMessage() };
+    }
+  }
+
+  public async resetPinnedExitKeys(): Promise<number> {
+    const response = await this.callEmpty<grpcTypes.ResetPinnedExitKeysResponse>(
+      this.client.resetPinnedExitKeys,
+    );
+    return response.getResetCount();
+  }
+
+  public async dismissPubkeyMismatch(): Promise<void> {
+    await this.callEmpty<Empty>(this.client.dismissPubkeyMismatch);
+  }
+
+  public async reportPubkeyMismatch(mismatch: WarrenPubkeyMismatch): Promise<void> {
+    const req = new grpcTypes.ReportPubkeyMismatchRequest();
+    req.setExitIdHex(mismatch.exitIdHex);
+    req.setOldPubkeyHex(mismatch.pinnedPubkeyHex);
+    req.setNewPubkeyHex(mismatch.observedPubkeyHex);
+    req.setCountryCode(mismatch.countryCode);
+    req.setCity(mismatch.city);
+    await this.call<grpcTypes.ReportPubkeyMismatchRequest, Empty>(
+      this.client.reportPubkeyMismatch,
+      req,
+    );
+  }
+
+  // Push stream subscription mirroring `subscribeWarrenStatusListener`.
+  // Forwards every refresh-loop event (Mapped / Renewed / Failed /
+  // Cancelled) as a renderer-facing `NatPmpStatus` so the
+  // port-forwarding view updates without polling.
+  public subscribeNatPmpStatusListener(listener: SubscriptionListener<NatPmpStatus>) {
+    const call = this.isConnected && this.client.natPmpStatusUpdates(new Empty());
+    if (!call) {
+      throw noConnectionError;
+    }
+    const subscriptionId = this.subscriptionId();
+    listener.subscriptionId = subscriptionId;
+    this.subscriptions.set(subscriptionId, call);
+
+    call.on('data', (data: grpcTypes.NatPmpStatus) => {
+      try {
+        listener.onEvent(convertFromNatPmpStatus(data));
+      } catch (e) {
+        const error = e as Error;
+        listener.onError(error);
+      }
+    });
+
+    call.on('error', (error) => {
+      listener.onError(error);
+      this.removeSubscription(subscriptionId);
+    });
+  }
+
+  public unsubscribeNatPmpStatusListener(listener: SubscriptionListener<NatPmpStatus>) {
+    const id = listener.subscriptionId;
+    if (id !== undefined) {
+      this.removeSubscription(id);
+    }
   }
 
   public async setShowBetaReleases(showBetaReleases: boolean): Promise<void> {
@@ -334,11 +627,6 @@ export class DaemonRpc extends GrpcClient {
           grpcTypes.ObfuscationSettings.SelectedObfuscation.LWO,
         );
         break;
-      case ObfuscationType.wireGuardPort:
-        grpcObfuscationSettings.setSelectedObfuscation(
-          grpcTypes.ObfuscationSettings.SelectedObfuscation.WIREGUARD_PORT,
-        );
-        break;
     }
 
     if (obfuscationSettings.udp2tcpSettings) {
@@ -355,14 +643,6 @@ export class DaemonRpc extends GrpcClient {
         shadowsocksSettings.setPort(obfuscationSettings.shadowsocksSettings.port.only);
       }
       grpcObfuscationSettings.setShadowsocks(shadowsocksSettings);
-    }
-
-    if (obfuscationSettings.wireGuardPortSettings) {
-      const wireGuardPortSettings = new grpcTypes.ObfuscationSettings.WireguardPort();
-      if (obfuscationSettings.wireGuardPortSettings.port !== 'any') {
-        wireGuardPortSettings.setPort(obfuscationSettings.wireGuardPortSettings.port.only);
-      }
-      grpcObfuscationSettings.setWireguardPort(wireGuardPortSettings);
     }
 
     if (obfuscationSettings.lwoSettings) {
@@ -426,13 +706,9 @@ export class DaemonRpc extends GrpcClient {
     return convertFromSettings(response)!;
   }
 
-  public async getAccountHistory(): Promise<AccountNumber | undefined> {
+  public async getAccountHistory(): Promise<WarrenPubKey | undefined> {
     const response = await this.callEmpty<grpcTypes.AccountHistory>(this.client.getAccountHistory);
     return response.getNumber()?.getValue();
-  }
-
-  public async clearAccountHistory(): Promise<void> {
-    await this.callEmpty(this.client.clearAccountHistory);
   }
 
   public async getCurrentVersion(): Promise<string> {
@@ -461,6 +737,8 @@ export class DaemonRpc extends GrpcClient {
     } else {
       dnsOptions.setState(grpcTypes.DnsOptions.DnsState.DEFAULT);
     }
+
+    dnsOptions.setAllowExternalDns(dns.allowExternalDns);
 
     await this.call<grpcTypes.DnsOptions, Empty>(this.client.setDnsOptions, dnsOptions);
   }
@@ -514,10 +792,6 @@ export class DaemonRpc extends GrpcClient {
     return convertFromDeviceState(response);
   }
 
-  public async updateDevice(): Promise<void> {
-    await this.callEmpty(this.client.updateDevice);
-  }
-
   public async prepareRestart(quit: boolean) {
     await this.callBool(this.client.prepareRestartV2, quit);
   }
@@ -528,27 +802,6 @@ export class DaemonRpc extends GrpcClient {
 
   public async setDaitaDirectOnly(value: boolean): Promise<void> {
     await this.callBool(this.client.setDaitaDirectOnly, value);
-  }
-
-  public async listDevices(accountNumber: AccountNumber): Promise<Array<IDevice>> {
-    try {
-      const response = await this.callString<grpcTypes.DeviceList>(
-        this.client.listDevices,
-        accountNumber,
-      );
-
-      return response.getDevicesList().map(convertFromDevice);
-    } catch {
-      throw new Error('Failed to list devices');
-    }
-  }
-
-  public async removeDevice(deviceRemoval: IDeviceRemoval): Promise<void> {
-    const grpcDeviceRemoval = new grpcTypes.DeviceRemoval();
-    grpcDeviceRemoval.setAccountNumber(deviceRemoval.accountNumber);
-    grpcDeviceRemoval.setDeviceId(deviceRemoval.deviceId);
-
-    await this.call<grpcTypes.DeviceRemoval, Empty>(this.client.removeDevice, grpcDeviceRemoval);
   }
 
   public async createCustomList(newCustomList: NewCustomList): Promise<void | CustomListError> {

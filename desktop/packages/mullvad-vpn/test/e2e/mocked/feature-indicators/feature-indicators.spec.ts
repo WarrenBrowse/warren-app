@@ -86,13 +86,6 @@ const featureIndicatorWithOption: FeatureIndicatorWithOptionTestOption[] = [
     option: { name: 'Method', type: 'listbox' },
   },
   {
-    testId: 'WireGuard Port',
-    featureIndicator: FeatureIndicator.wireGuardPort,
-    route: RoutePath.antiCensorship,
-    featureIndicatorLabel: 'WireGuard Port',
-    option: { name: 'Method', type: 'listbox' },
-  },
-  {
     testId: 'multihop',
     featureIndicator: FeatureIndicator.multihop,
     route: RoutePath.multihopSettings,
@@ -201,7 +194,7 @@ test.describe('Feature indicators', () => {
     await expectFeatureIndicators(['DAITA', 'Quantum Resistance']);
   });
 
-  test('Should show a subset of feature indicators when connected with many active features', async () => {
+  test('Should show all feature indicators when connected with many active features', async () => {
     await helpers.connectWithFeatures([
       FeatureIndicator.daita,
       FeatureIndicator.udp2tcp,
@@ -214,10 +207,10 @@ test.describe('Feature indicators', () => {
       FeatureIndicator.multihop,
     ]);
 
+    // The badges are a vertical always-expanded stack now: no ellipsis, every
+    // active feature is shown directly.
     const ellipsis = routes.main.selectors.moreFeatureIndicator();
-    await expect(ellipsis).toBeVisible();
-
-    await ellipsis.click();
+    await expect(ellipsis).not.toBeVisible();
 
     await expectFeatureIndicators([
       'DAITA',

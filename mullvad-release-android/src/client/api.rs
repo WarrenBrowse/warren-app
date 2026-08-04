@@ -5,8 +5,6 @@ use std::net::IpAddr;
 use super::defaults;
 use anyhow::Context;
 
-use mullvad_api_constants::*;
-
 use mullvad_api::version::android::AndroidReleases;
 
 /// Obtain version data using a GET request
@@ -25,7 +23,9 @@ impl HttpVersionInfoProvider {
     pub async fn get_releases() -> anyhow::Result<AndroidReleases> {
         let info_provider = HttpVersionInfoProvider {
             url: format!("{}{}", defaults::RELEASES_URL, "android.json"),
-            resolve: Some((API_HOST_DEFAULT, API_IP_DEFAULT)),
+            // Warren resolves the release host via DNS instead of pinning a
+            // hardcoded IP.
+            resolve: None,
         };
         info_provider.get_releases_inner().await
     }

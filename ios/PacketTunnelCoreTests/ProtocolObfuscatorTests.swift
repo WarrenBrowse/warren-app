@@ -9,9 +9,9 @@
 import Network
 import XCTest
 
-@testable import MullvadREST
-@testable import MullvadSettings
-@testable import MullvadTypes
+@testable import WarrenREST
+@testable import WarrenSettings
+@testable import WarrenTypes
 @testable import PacketTunnelCore
 
 final class ProtocolObfuscatorTests: XCTestCase {

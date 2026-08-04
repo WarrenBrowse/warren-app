@@ -8,34 +8,9 @@
 ---
 name: Desktop - End-to-end tests
 on:
-  schedule:
-    - cron: '0 0 * * *'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
   workflow_dispatch:
-    inputs:
-      oses:
-        description: "Space-delimited list of targets to run tests on, e.g. `debian13 ubuntu2404`. \
-          Available images:\n
-          `debian11 debian12 debian13 \
-          ubuntu2204 ubuntu2404 ubuntu2504 ubuntu2510 ubuntu2604 \
-          fedora41 fedora42 fedora43 fedora44 \
-          windows10 windows11 \
-          macos12 macos13 macos14 macos15 macos26`.\n
-          Default images:\n
-          `ubuntu2204 ubuntu2404 ubuntu2504 ubuntu2510 \
-          debian13 fedora42 fedora43 windows10 windows11 \
-          macos13 macos14 macos15 macos26`."
-        default: ''
-        required: false
-        type: string
-      tests:
-        description: "Tests to run (defaults to all if empty)"
-        default: ''
-        required: false
-        type: string
-      gotatun:
-        type: boolean
-        default: false
-        description: "Run tests with GotaTun 🦀"
 
 permissions: {}
 
@@ -354,7 +329,7 @@ jobs:
           # on working ¯\_(ツ)_/¯
           pushd dist
           original_file=$(find *.exe)
-          new_file=$(echo $original_file | perl -pe "s/^(MullvadVPN-.*?)(_x64|_arm64)?(\.exe)$/\1\3/p")
+          new_file=$(echo $original_file | perl -pe "s/^(WarrenVPN-.*?)(_x64|_arm64)?(\.exe)$/\1\3/p")
           mv "$original_file" "$new_file"
           popd
       - name: Build app (with GotaTun 🦀)
@@ -367,7 +342,7 @@ jobs:
           # on working ¯\_(ツ)_/¯
           pushd dist
           original_file=$(find *.exe)
-          new_file=$(echo $original_file | perl -pe "s/^(MullvadVPN-.*?)(_x64|_arm64)?(\.exe)$/\1\3/p")
+          new_file=$(echo $original_file | perl -pe "s/^(WarrenVPN-.*?)(_x64|_arm64)?(\.exe)$/\1\3/p")
           mv "$original_file" "$new_file"
           popd
       - name: Build test executable

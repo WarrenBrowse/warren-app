@@ -38,4 +38,32 @@ export interface IGuiSettingsState {
 
   // Tells the app whether or not to show the map in the main view.
   animateMap: boolean;
+
+  // Onboarding wizard: timestamp (Unix seconds) at which the
+  // wizard was last completed. `undefined` -> first launch, the
+  // wizard router intercepts the boot and shows the welcome step.
+  // `Some(ts)` -> wizard already gone through; the user can replay
+  // it from the Settings "Replay onboarding" CTA, which clears this
+  // field. The value lets future versions invalidate the existing
+  // completion (e.g., a new wallet model) without breaking the
+  // existing user base by simply bumping the cutoff in the renderer
+  // boot logic.
+  onboardingCompletedUnix?: number;
+
+  // True between minting a fresh Warren identity and the user confirming
+  // they backed up the recovery phrase. The in-session backup gate lives
+  // in renderer redux, but that is lost if the GUI restarts mid-backup,
+  // which would replay the daemon `logged in` state as a fully logged-in
+  // account and strand the user on the main view with an un-backed-up
+  // identity. Persisting the flag lets startup re-route to the
+  // backup-pending state. Cleared once the backup is confirmed.
+  backupPending?: boolean;
+
+  // App-initiated purchases (doc 35) awaiting their webhook voucher,
+  // as `${wpid}:${startedUnixMs}` entries. Persisted so a purchase
+  // paid after the app was closed is still redeemed on the next run
+  // (the server keeps the wpid mapping for 24h). Owned by the main
+  // process PurchaseFlow; the renderer never reads it. Optional so
+  // settings files written by older versions keep validating.
+  pendingPurchases?: Array<string>;
 }

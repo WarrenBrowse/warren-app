@@ -8,7 +8,7 @@ use nftnl::{
 };
 use std::{
     env,
-    ffi::CStr,
+    ffi::{CStr, CString},
     fs, io,
     net::{IpAddr, Ipv4Addr},
     sync::LazyLock,
@@ -53,6 +53,12 @@ pub enum Error {
     #[error("Failed to set firewall rules")]
     NetfilterTableNotSetError,
 
+    /// Our table is still present after a reset. The kill-switch block
+    /// rules would remain in place and keep traffic blocked after
+    /// disconnect.
+    #[error("Failed to remove firewall rules")]
+    NetfilterTableStillPresentError,
+
     /// Unable to translate network interface name into index.
     #[error("Unable to translate network interface name \"{0}\" into index")]
     LookupIfaceIndexError(String, #[source] crate::linux::IfaceIndexLookupError),
@@ -60,7 +66,18 @@ pub enum Error {
 
 /// TODO(linus): This crate is not supposed to be Mullvad-aware. So at some point this should be
 /// replaced by allowing the table name to be configured from the public API of this crate.
-const TABLE_NAME: &CStr = c"mullvad";
+///
+/// Scoped to the product environment: the table is one per machine and
+/// `remove_table` deletes it BY NAME, so a beta daemon sharing prod's name
+/// would tear down prod's kill-switch. Production keeps the bare historical
+/// name, otherwise an upgrade would strand its existing rules under a name
+/// nothing cleans up any more.
+fn table_name() -> &'static CStr {
+    static NAME: LazyLock<CString> = LazyLock::new(|| {
+        CString::new(warren_product_env::FIREWALL_ID).expect("a firewall id has no interior nul")
+    });
+    &NAME
+}
 const IN_CHAIN_NAME: &CStr = c"input";
 const OUT_CHAIN_NAME: &CStr = c"output";
 const FORWARD_CHAIN_NAME: &CStr = c"forward";
@@ -141,18 +158,18 @@ impl Firewall {
         })
     }
 
-    /// Apply a [`FirewallPolicy`] by setting up [`TABLE_NAME`] nftable.
+    /// Apply a [`FirewallPolicy`] by setting up [`table_name`] nftable.
     pub fn apply_policy(&mut self, policy: FirewallPolicy) -> Result<()> {
-        let table = Table::new(TABLE_NAME, ProtoFamily::Inet);
+        let table = Table::new(table_name(), ProtoFamily::Inet);
         let batch = PolicyBatch::new(&table).finalize(&policy, self)?;
         Self::send_and_process(&batch)?;
         Self::apply_kernel_config(&policy);
-        self.verify_tables(&[TABLE_NAME])
+        self.verify_tables(&[table_name()])
     }
 
-    /// Remove [`TABLE_NAME`] nftable.
+    /// Remove [`table_name`] nftable.
     pub fn reset_policy(&mut self) -> Result<()> {
-        let table = Table::new(TABLE_NAME, ProtoFamily::Inet);
+        let table = Table::new(table_name(), ProtoFamily::Inet);
         let mut batch = Batch::new();
 
         // Our batch will add and remove the table even though the goal is just to remove
@@ -166,7 +183,44 @@ impl Firewall {
         log::debug!("Removing table and chain from netfilter");
         Self::send_and_process(&batch)?;
 
-        Ok(())
+        // Confirm the table is actually gone. The apply path verifies the
+        // table is present after applying; teardown must symmetrically confirm
+        // removal, because a silently-failed delete leaves the default-drop
+        // chains in place and keeps the kill-switch blocking traffic after
+        // disconnect (the "no internet after disconnect" failure class).
+        self.verify_table_removed(table_name())
+    }
+
+    /// Recovery: remove the nftables table of EVERY product environment.
+    ///
+    /// [`Self::reset_policy`] only removes this build's table, so a block left
+    /// by another environment (or by an install that has since been replaced)
+    /// keeps dropping traffic with nothing left on the machine that knows how
+    /// to remove it.
+    pub fn reset_policy_all_generations(&mut self) -> Result<()> {
+        let mut first_error = None;
+
+        for env in warren_product_env::ALL {
+            let name = CString::new(env.firewall_id()).expect("a firewall id has no interior nul");
+            let table = Table::new(&name, ProtoFamily::Inet);
+            let mut batch = Batch::new();
+            batch.add(&table, nftnl::MsgType::Add);
+            batch.add(&table, nftnl::MsgType::Del);
+
+            log::debug!("Removing netfilter table {}", env.firewall_id());
+            // Sweep every environment before reporting: stopping at the first
+            // failure would leave the remaining tables blocking.
+            if let Err(error) = Self::send_and_process(&batch.finalize())
+                .and_then(|()| self.verify_table_removed(&name))
+            {
+                first_error.get_or_insert(error);
+            }
+        }
+
+        match first_error {
+            Some(error) => Err(error),
+            None => Ok(()),
+        }
     }
 
     fn apply_kernel_config(policy: &FirewallPolicy) {
@@ -224,7 +278,8 @@ impl Firewall {
         Ok(())
     }
 
-    fn verify_tables(&self, expected_tables: &[&CStr]) -> Result<()> {
+    /// Enumerate the netfilter tables currently present in the inet family.
+    fn fetch_table_set(&self) -> Result<std::collections::HashSet<CString>> {
         let socket = mnl::Socket::new(mnl::Bus::Netfilter).map_err(Error::NetlinkOpenError)?;
         let portid = socket.portid();
         let seq = 1;
@@ -247,6 +302,11 @@ impl Firewall {
             mnl::cb_run2(message, seq, portid, table::get_tables_cb, &mut table_set)
                 .map_err(Error::ProcessNetlinkError)?;
         }
+        Ok(table_set)
+    }
+
+    fn verify_tables(&self, expected_tables: &[&CStr]) -> Result<()> {
+        let table_set = self.fetch_table_set()?;
 
         for expected_table in expected_tables {
             if !table_set.contains(*expected_table) {
@@ -258,6 +318,27 @@ impl Firewall {
             }
         }
         Ok(())
+    }
+
+    fn verify_table_removed(&self, expected_table: &CStr) -> Result<()> {
+        let table_set = self.fetch_table_set()?;
+
+        if table_set.contains(expected_table) {
+            log::error!(
+                "'{}' netfilter table is still present after reset",
+                expected_table.to_string_lossy()
+            );
+            return Err(Error::NetfilterTableStillPresentError);
+        }
+        Ok(())
+    }
+}
+
+impl Drop for Firewall {
+    fn drop(&mut self) {
+        if let Err(err) = self.reset_policy() {
+            log::error!("Failed to reset firewall policy on drop: {err}");
+        }
     }
 }
 
@@ -400,19 +481,19 @@ impl<'a> PolicyBatch<'a> {
             tunnel, dns_config, ..
         } = policy
         {
-            for server in dns_config.tunnel_config() {
+            for server in super::allowed_tunnel_dns(dns_config) {
                 let allow_rule = allow_tunnel_dns_rule(
                     &self.mangle_chain,
                     &tunnel.interface,
                     TransportProtocol::Udp,
-                    *server,
+                    server,
                 )?;
                 self.batch.add(&allow_rule, nftnl::MsgType::Add);
                 let allow_rule = allow_tunnel_dns_rule(
                     &self.mangle_chain,
                     &tunnel.interface,
                     TransportProtocol::Tcp,
-                    *server,
+                    server,
                 )?;
                 self.batch.add(&allow_rule, nftnl::MsgType::Add);
             }
@@ -666,16 +747,16 @@ impl<'a> PolicyBatch<'a> {
                     self.add_allow_tunnel_endpoint_rules(endpoint, fwmark);
                 }
 
-                for server in dns_config.tunnel_config() {
+                for server in super::allowed_tunnel_dns(dns_config) {
                     self.add_allow_tunnel_dns_rule(
                         &tunnel.interface,
                         TransportProtocol::Udp,
-                        *server,
+                        server,
                     )?;
                     self.add_allow_tunnel_dns_rule(
                         &tunnel.interface,
                         TransportProtocol::Tcp,
-                        *server,
+                        server,
                     )?;
                 }
                 for server in dns_config.non_tunnel_config() {
@@ -693,7 +774,11 @@ impl<'a> PolicyBatch<'a> {
 
                 // Important to block DNS *before* we allow the tunnel and allow LAN. So DNS
                 // can't leak to the wrong IPs in the tunnel or on the LAN.
-                self.add_drop_dns_rule();
+                // The advanced `allow_external_dns` toggle deliberately skips this block so that
+                // queries to arbitrary resolvers reach the exit through the tunnel.
+                if !dns_config.allow_external_dns() {
+                    self.add_drop_dns_rule();
+                }
                 self.add_allow_tunnel_rules(&tunnel.interface)?;
                 if *allow_lan {
                     self.add_block_cve_2019_14899(tunnel);
@@ -748,18 +833,17 @@ impl<'a> PolicyBatch<'a> {
         check_endpoint(&mut in_rule, End::Src, &endpoint.endpoint);
 
         // Allow all incoming traffic from established connections to the endpoint
-        let allowed_states = nftnl::expr::ct::States::ESTABLISHED.bits();
-        // bitwise mask will bitwise-and the allowed_states and the ct state. It will then xor it
-        // will 0 (which changes nothing). This means it works as a bitwise-and which checks that
-        // the ESTABLISHED bit is set in the connection state.
-        in_rule.add_expr(&nft_expr!(ct state));
-        in_rule.add_expr(&nft_expr!(bitwise mask allowed_states, xor 0u32));
-        in_rule.add_expr(&nft_expr!(cmp != 0u32));
+        check_ct_established(&mut in_rule);
         add_verdict(&mut in_rule, &Verdict::Accept);
 
         self.batch.add(&in_rule, nftnl::MsgType::Add);
 
-        // Allow any traffic to the endpoint which is marked with fwmark
+        // Allow any traffic to the endpoint which is marked with fwmark.
+        // For upstream WireGuard: the userspace WG client runs in the
+        // `split_tunnel` cgroup, its packets leave `mangle_chain`
+        // marked -> this rule matches -> ACCEPT. WG-kernel has its own
+        // fwmark logic. See also `add_allow_tunnel_endpoint_root_rule`
+        // for the Warren case below.
         let mut out_rule = Rule::new(&self.out_chain);
         check_endpoint(&mut out_rule, End::Dst, &endpoint.endpoint);
         out_rule.add_expr(&nft_expr!(meta mark));
@@ -767,6 +851,36 @@ impl<'a> PolicyBatch<'a> {
         add_verdict(&mut out_rule, &Verdict::Accept);
 
         self.batch.add(&out_rule, nftnl::MsgType::Add);
+
+        // Warren case (fork F6 audit): the `mullvad-daemon` itself
+        // establishes the QUIC tunnel via `talpid-warren-tunnel::WarrenTunnelMonitor`.
+        // Its sockets emit from the daemon's **root cgroup** (not the
+        // `split_tunnel` cgroup reserved for split-tunneled processes). So
+        // its packets do not traverse `mangle_chain` which sets the fwmark
+        // -> the rule above with `meta mark == fwmark` never matches
+        // -> fall-through to the final `reject` -> `sendmsg` returns EPERM.
+        //
+        // Symmetrically to `add_allow_endpoint_rules` (= mullvad API
+        // accessible via root without fwmark), we add a rule here that
+        // accepts traffic to the peer endpoint when `skuid == 0` (=
+        // root). Security: equivalent to the existing API rule - a root
+        // userspace attacker could always disable nftables, so this
+        // rule does not widen the attack surface.
+        let mut out_rule_root = Rule::new(&self.out_chain);
+        check_endpoint(&mut out_rule_root, End::Dst, &endpoint.endpoint);
+        out_rule_root.add_expr(&nft_expr!(meta skuid));
+        out_rule_root.add_expr(&nft_expr!(cmp == super::ROOT_UID));
+        add_verdict(&mut out_rule_root, &Verdict::Accept);
+
+        self.batch.add(&out_rule_root, nftnl::MsgType::Add);
+
+        // Symmetric on the inbound side: ack/datagrams returning from the exit must
+        // be able to reach the daemon root. The in_chain rule above
+        // already accepts via `ct state established`, but that is only valid
+        // once the 1st pair (out, in) is established. The 1st pair itself
+        // is carried by the out_rule_root above plus the existing in_rule
+        // which does not check the mark (only established). So we do not
+        // need a new in_rule here.
 
         // Used for local custom bridge, allows some local socks5 proxy to send traffic to the
         // endpoint
@@ -787,10 +901,7 @@ impl<'a> PolicyBatch<'a> {
         let mut in_rule = Rule::new(&self.in_chain);
         // Allow incoming traffic from established connections to the endpoint
         check_endpoint(&mut in_rule, End::Src, &endpoint.endpoint);
-        let allowed_states = nftnl::expr::ct::States::ESTABLISHED.bits();
-        in_rule.add_expr(&nft_expr!(ct state));
-        in_rule.add_expr(&nft_expr!(bitwise mask allowed_states, xor 0u32));
-        in_rule.add_expr(&nft_expr!(cmp != 0u32));
+        check_ct_established(&mut in_rule);
         if !endpoint.clients.allow_all() {
             in_rule.add_expr(&nft_expr!(meta skuid));
             in_rule.add_expr(&nft_expr!(cmp == super::ROOT_UID));
@@ -857,6 +968,11 @@ impl<'a> PolicyBatch<'a> {
 
             allow_rule.add_expr(&addr);
             allow_rule.add_expr(&nft_expr!(cmp == host));
+
+            if let Direction::In = direction {
+                check_ct_established(&mut allow_rule);
+            }
+
             add_verdict(&mut allow_rule, &Verdict::Accept);
 
             self.batch.add(&allow_rule, nftnl::MsgType::Add);
@@ -920,10 +1036,7 @@ impl<'a> PolicyBatch<'a> {
         // connections.
         let mut interface_rule = Rule::new(&self.forward_chain);
         check_iface(&mut interface_rule, Direction::In, tunnel_interface)?;
-        interface_rule.add_expr(&nft_expr!(ct state));
-        let allowed_states = nftnl::expr::ct::States::ESTABLISHED.bits();
-        interface_rule.add_expr(&nft_expr!(bitwise mask allowed_states, xor 0u32));
-        interface_rule.add_expr(&nft_expr!(cmp != 0u32));
+        check_ct_established(&mut interface_rule);
         add_verdict(&mut interface_rule, &Verdict::Accept);
         self.batch.add(&interface_rule, nftnl::MsgType::Add);
 
@@ -1149,6 +1262,19 @@ fn l4proto(protocol: TransportProtocol) -> u8 {
         TransportProtocol::Udp => libc::IPPROTO_UDP as u8,
         TransportProtocol::Tcp => libc::IPPROTO_TCP as u8,
     }
+}
+
+/// Add `ct state established` requirement to `rule`.
+///
+/// This matches packets which are a part of an already established connection.
+fn check_ct_established(rule: &mut Rule<'_>) {
+    // bitwise mask will bitwise-and the allowed_states and the ct state. It will then xor it
+    // with 0 (which changes nothing). This means it works as a bitwise-and which checks that
+    // the ESTABLISHED bit is set in the connection state.
+    let established = nftnl::expr::ct::States::ESTABLISHED.bits();
+    rule.add_expr(&nft_expr!(ct state));
+    rule.add_expr(&nft_expr!(bitwise mask established, xor 0u32));
+    rule.add_expr(&nft_expr!(cmp != 0u32));
 }
 
 fn add_verdict(rule: &mut Rule<'_>, verdict: &expr::Verdict) {

@@ -1,7 +1,7 @@
-# Writing tests for [MullvadVPN App](https://github.com/mullvad/mullvadvpn-app/)
+# Writing tests for [Warren VPN App](https://github.com/WarrenBrowse/warren-app/)
 
-The `test-manager` crate is where end-to-end tests for the [MullvadVPN
-App](https://github.com/mullvad/mullvadvpn-app/) resides. The tests are located
+The `test-manager` crate is where end-to-end tests for the [Warren VPN
+App](https://github.com/WarrenBrowse/warren-app/) resides. The tests are located
 in different modules under `test-manager/src/tests/`.
 
 ## Getting started
@@ -19,7 +19,7 @@ pub async fn test(
 }
 ```
 
-The `test_function` macro allows you to write tests for the MullvadVPN App in a
+The `test_function` macro allows you to write tests for the Warren VPN App in a
 format which is very similiar to [standard Rust unit
 tests](https://doc.rust-lang.org/book/ch11-01-writing-tests.html). A more
 detailed writeup on how the `#[test_function]` macro works is given as a

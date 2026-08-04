@@ -53,6 +53,14 @@ export type InAppNotificationAction =
   | {
       type: 'run-function';
       button: Pick<ButtonProps, 'onClick' | 'aria-label'>;
+    }
+  | {
+      // The banner text is unbounded (an operator-authored notice), so it is
+      // clamped to a few lines and the full text moves to a scrollable modal.
+      // Carrying the content here rather than reusing the subtitle keeps the
+      // modal independent of how the subtitle happens to be rendered.
+      type: 'expand-text';
+      expand: { title: string; content: string };
     };
 
 export type InAppNotificationIndicatorType = 'success' | 'warning' | 'error';
@@ -69,6 +77,9 @@ export enum SystemNotificationCategory {
   expiry,
   newVersion,
   inconsistentVersion,
+  // Auto-renewal lifecycle (warren-core doc 65): its own category so device-event
+  // handling that clears `expiry` notifications leaves these alone.
+  renewal,
 }
 
 interface NotificationProvider {

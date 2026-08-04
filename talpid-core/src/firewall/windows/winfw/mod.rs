@@ -66,6 +66,30 @@ pub(super) fn reset() -> Result<(), FirewallPolicyError> {
     reset.into_result()
 }
 
+/// Reset the firewall for every product environment, not just this build's.
+///
+/// Recovery only. A blocking policy outlives the process that applied it and
+/// is keyed per environment, so a machine that changed environment can hold
+/// blocking objects the running build cannot see, and therefore cannot remove.
+/// This sweeps every known salt so recovery never depends on which build the
+/// user happens to have installed.
+pub(super) fn reset_all_generations() -> Result<(), FirewallPolicyError> {
+    let salts: Vec<u32> = warren_product_env::ALL
+        .iter()
+        .map(|env| env.guid_salt())
+        .collect();
+    // SAFETY: `salts` is a non-empty, properly aligned slice of `u32` that
+    // outlives the call, and WinFw_ResetAllGenerations only reads `saltCount`
+    // elements from it. Safe to call before init and after deinit.
+    let reset = unsafe {
+        WinFw_ResetAllGenerations(
+            salts.as_ptr(),
+            u32::try_from(salts.len()).expect("the environment table is tiny"),
+        )
+    };
+    reset.into_result()
+}
+
 /// Apply blocking firewall rules Sets the underlying active policy to Blocked. Exceptions
 /// permitted through the firewall is defined by `winfw_settings` and `allowed_endpoint`. See
 /// the BlockAll class for more information.
@@ -268,10 +292,8 @@ pub(super) fn apply_policy_connected(
         .collect();
     let relay_client_wstr_ptrs_len = relay_client_wstr_ptrs.len();
 
-    let tunnel_dns_servers: Vec<WideCString> = dns_config
-        .tunnel_config()
-        .iter()
-        .cloned()
+    let tunnel_dns_servers: Vec<WideCString> = crate::firewall::allowed_tunnel_dns(dns_config)
+        .into_iter()
         .map(widestring_ip)
         .collect();
     let tunnel_dns_servers: Vec<*const u16> =
@@ -306,6 +328,7 @@ pub(super) fn apply_policy_connected(
             tunnel_dns_servers.len(),
             non_tunnel_dns_servers.as_ptr(),
             non_tunnel_dns_servers.len(),
+            dns_config.allow_external_dns(),
         )
     };
 

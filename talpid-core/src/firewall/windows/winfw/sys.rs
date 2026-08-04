@@ -153,6 +153,7 @@ unsafe extern "system" {
         numTunnelDnsServers: usize,
         nonTunnelDnsServers: *const *const libc::wchar_t,
         numNonTunnelDnsServers: usize,
+        allowExternalDns: bool,
     ) -> WinFwPolicyStatus;
 
     #[link_name = "WinFw_ApplyPolicyBlocked"]
@@ -163,6 +164,13 @@ unsafe extern "system" {
 
     #[link_name = "WinFw_Reset"]
     pub fn WinFw_Reset() -> WinFwPolicyStatus;
+
+    /// Recovery sweep across every product environment's WFP object keys.
+    ///
+    /// `salts` must point to `salt_count` readable `u32` values; the callee
+    /// only reads them for the duration of the call.
+    #[link_name = "WinFw_ResetAllGenerations"]
+    pub fn WinFw_ResetAllGenerations(salts: *const u32, salt_count: u32) -> WinFwPolicyStatus;
 }
 
 pub type LogSink = extern "system" fn(level: log::Level, msg: *const c_char, context: *mut c_void);

@@ -6,7 +6,7 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadTypes
+import WarrenTypes
 
 public struct TunnelMonitorTimings: Sendable {
     /// Interval for periodic heartbeat ping issued when traffic is flowing.

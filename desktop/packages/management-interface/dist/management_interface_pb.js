@@ -84,10 +84,14 @@ goog.exportSymbol('proto.mullvad_daemon.management_interface.ErrorState.Generati
 goog.exportSymbol('proto.mullvad_daemon.management_interface.ErrorState.InvalidDnsServersError', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.ErrorState.InvalidIpv6Config', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.ErrorState.OtherAlwaysOnAppError', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.ExcludedProcess', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.ExcludedProcessList', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.FeatureIndicator', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.FeatureIndicators', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.ForumAttachLogsRequest', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.ForumLoginRequest', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.ForumLoginSignature', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.GeoIpLocation', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.GeographicLocationConstraint', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.IpVersion', null, global);
@@ -99,6 +103,13 @@ goog.exportSymbol('proto.mullvad_daemon.management_interface.LogFilter', null, g
 goog.exportSymbol('proto.mullvad_daemon.management_interface.LogMessage', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.MultihopRecent', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.MultiplexObfuscation', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpSettings', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpSettings.Proto', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpSettings.Rule', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpStatus', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.NatPmpStatus.State', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.NewAccessMethodSetting', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.NewCustomList', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.NormalRelaySettings', null, global);
@@ -133,6 +144,8 @@ goog.exportSymbol('proto.mullvad_daemon.management_interface.RelayOverride', nul
 goog.exportSymbol('proto.mullvad_daemon.management_interface.RelaySettings', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.RelaySettings.EndpointCase', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.RemoveDeviceEvent', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.Rollout', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.Seed', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.Settings', null, global);
@@ -147,6 +160,9 @@ goog.exportSymbol('proto.mullvad_daemon.management_interface.SplitTunnelSettings
 goog.exportSymbol('proto.mullvad_daemon.management_interface.SuggestedUpgrade', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TransportPort', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TransportProtocol', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelEndpoint', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelMetadata', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelOptions', null, global);
@@ -158,8 +174,16 @@ goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelState.Disconn
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelState.Error', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelState.StateCase', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelStateRelayInfo', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.TunnelType', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.UUID', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.VoucherSubmission', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenCustomExitSettings', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenMultiHopSettings', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenNetworkInfo', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenNotice', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenNoticeLevel', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch', null, global);
+goog.exportSymbol('proto.mullvad_daemon.management_interface.WarrenStatus', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.WireguardConfig', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.WireguardConfig.PeerConfig', null, global);
 goog.exportSymbol('proto.mullvad_daemon.management_interface.WireguardConfig.TunnelConfig', null, global);
@@ -458,6 +482,27 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.mullvad_daemon.management_interface.ErrorState.displayName = 'proto.mullvad_daemon.management_interface.ErrorState';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.displayName = 'proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -1361,6 +1406,363 @@ if (goog.DEBUG && !COMPILED) {
    * @override
    */
   proto.mullvad_daemon.management_interface.Settings.displayName = 'proto.mullvad_daemon.management_interface.Settings';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.WarrenCustomExitSettings, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.displayName = 'proto.mullvad_daemon.management_interface.WarrenCustomExitSettings';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.WarrenMultiHopSettings, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.displayName = 'proto.mullvad_daemon.management_interface.WarrenMultiHopSettings';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.ForumLoginRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.ForumLoginRequest.displayName = 'proto.mullvad_daemon.management_interface.ForumLoginRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.ForumLoginSignature, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.ForumLoginSignature.displayName = 'proto.mullvad_daemon.management_interface.ForumLoginSignature';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.ForumAttachLogsRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.displayName = 'proto.mullvad_daemon.management_interface.ForumAttachLogsRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.mullvad_daemon.management_interface.WarrenStatus.repeatedFields_, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.WarrenStatus, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.WarrenStatus.displayName = 'proto.mullvad_daemon.management_interface.WarrenStatus';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.WarrenNotice, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.WarrenNotice.displayName = 'proto.mullvad_daemon.management_interface.WarrenNotice';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.WarrenNetworkInfo, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.WarrenNetworkInfo.displayName = 'proto.mullvad_daemon.management_interface.WarrenNetworkInfo';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.displayName = 'proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.displayName = 'proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.displayName = 'proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.displayName = 'proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.displayName = 'proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.mullvad_daemon.management_interface.NatPmpSettings.repeatedFields_, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.NatPmpSettings, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.NatPmpSettings.displayName = 'proto.mullvad_daemon.management_interface.NatPmpSettings';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.NatPmpSettings.Rule, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.displayName = 'proto.mullvad_daemon.management_interface.NatPmpSettings.Rule';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.mullvad_daemon.management_interface.NatPmpStatus.repeatedFields_, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.NatPmpStatus, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.NatPmpStatus.displayName = 'proto.mullvad_daemon.management_interface.NatPmpStatus';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.displayName = 'proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping';
 }
 /**
  * Generated by JsPbCodeGenerator.
@@ -4608,7 +5010,8 @@ proto.mullvad_daemon.management_interface.ErrorState.toObject = function(include
     createTunnelError: jspb.Message.getFieldWithDefault(msg, 6, 0),
     otherAlwaysOnAppError: (f = msg.getOtherAlwaysOnAppError()) && proto.mullvad_daemon.management_interface.ErrorState.OtherAlwaysOnAppError.toObject(includeInstance, f),
     invalidDnsServersError: (f = msg.getInvalidDnsServersError()) && proto.mullvad_daemon.management_interface.ErrorState.InvalidDnsServersError.toObject(includeInstance, f),
-    invalidIpv6ConfigError: (f = msg.getInvalidIpv6ConfigError()) && proto.mullvad_daemon.management_interface.ErrorState.InvalidIpv6Config.toObject(includeInstance, f)
+    invalidIpv6ConfigError: (f = msg.getInvalidIpv6ConfigError()) && proto.mullvad_daemon.management_interface.ErrorState.InvalidIpv6Config.toObject(includeInstance, f),
+    warrenPubkeyMismatchDetail: (f = msg.getWarrenPubkeyMismatchDetail()) && proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.toObject(includeInstance, f)
   };
 
   if (includeInstance) {
@@ -4685,6 +5088,11 @@ proto.mullvad_daemon.management_interface.ErrorState.deserializeBinaryFromReader
       var value = new proto.mullvad_daemon.management_interface.ErrorState.InvalidIpv6Config;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.ErrorState.InvalidIpv6Config.deserializeBinaryFromReader);
       msg.setInvalidIpv6ConfigError(value);
+      break;
+    case 11:
+      var value = new proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.deserializeBinaryFromReader);
+      msg.setWarrenPubkeyMismatchDetail(value);
       break;
     default:
       reader.skipField();
@@ -4783,6 +5191,14 @@ proto.mullvad_daemon.management_interface.ErrorState.serializeBinaryToWriter = f
       proto.mullvad_daemon.management_interface.ErrorState.InvalidIpv6Config.serializeBinaryToWriter
     );
   }
+  f = message.getWarrenPubkeyMismatchDetail();
+  if (f != null) {
+    writer.writeMessage(
+      11,
+      f,
+      proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.serializeBinaryToWriter
+    );
+  }
 };
 
 
@@ -4804,7 +5220,8 @@ proto.mullvad_daemon.management_interface.ErrorState.Cause = {
   INVALID_DNS_SERVERS: 11,
   INVALID_IPV6_CONFIG: 14,
   SPLIT_TUNNEL_ERROR: 12,
-  NEED_FULL_DISK_PERMISSIONS: 13
+  NEED_FULL_DISK_PERMISSIONS: 13,
+  WARREN_TUNNEL_FLAPPING: 15
 };
 
 /**
@@ -4814,7 +5231,9 @@ proto.mullvad_daemon.management_interface.ErrorState.AuthFailedError = {
   UNKNOWN: 0,
   INVALID_ACCOUNT: 1,
   EXPIRED_ACCOUNT: 2,
-  TOO_MANY_CONNECTIONS: 3
+  TOO_MANY_CONNECTIONS: 3,
+  BANNED: 4,
+  BANNED_PORT_FORWARDING: 5
 };
 
 /**
@@ -4827,8 +5246,199 @@ proto.mullvad_daemon.management_interface.ErrorState.GenerationError = {
   NO_MATCHING_BRIDGE_RELAY: 3,
   CUSTOM_TUNNEL_HOST_RESOLUTION_ERROR: 4,
   NETWORK_IPV4_UNAVAILABLE: 5,
-  NETWORK_IPV6_UNAVAILABLE: 6
+  NETWORK_IPV6_UNAVAILABLE: 6,
+  WARREN_PUBKEY_MISMATCH: 7
 };
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    exitIdHex: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    pinned: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    observed: jspb.Message.getFieldWithDefault(msg, 3, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail;
+  return proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExitIdHex(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPinned(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setObserved(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getExitIdHex();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getPinned();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getObserved();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string exit_id_hex = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.getExitIdHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} returns this
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.setExitIdHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string pinned = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.getPinned = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} returns this
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.setPinned = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string observed = 3;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.getObserved = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} returns this
+ */
+proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail.prototype.setObserved = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
 
 
 
@@ -5858,6 +6468,43 @@ proto.mullvad_daemon.management_interface.ErrorState.prototype.clearInvalidIpv6C
  */
 proto.mullvad_daemon.management_interface.ErrorState.prototype.hasInvalidIpv6ConfigError = function() {
   return jspb.Message.getField(this, 10) != null;
+};
+
+
+/**
+ * optional WarrenPubkeyMismatchDetail warren_pubkey_mismatch_detail = 11;
+ * @return {?proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.prototype.getWarrenPubkeyMismatchDetail = function() {
+  return /** @type{?proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail} */ (
+    jspb.Message.getWrapperField(this, proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail, 11));
+};
+
+
+/**
+ * @param {?proto.mullvad_daemon.management_interface.ErrorState.WarrenPubkeyMismatchDetail|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState} returns this
+*/
+proto.mullvad_daemon.management_interface.ErrorState.prototype.setWarrenPubkeyMismatchDetail = function(value) {
+  return jspb.Message.setWrapperField(this, 11, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.ErrorState} returns this
+ */
+proto.mullvad_daemon.management_interface.ErrorState.prototype.clearWarrenPubkeyMismatchDetail = function() {
+  return this.setWarrenPubkeyMismatchDetail(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.ErrorState.prototype.hasWarrenPubkeyMismatchDetail = function() {
+  return jspb.Message.getField(this, 11) != null;
 };
 
 
@@ -7351,7 +7998,9 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.toObject = function(inc
     obfuscation: (f = msg.getObfuscation()) && proto.mullvad_daemon.management_interface.ObfuscationInfo.toObject(includeInstance, f),
     entryEndpoint: (f = msg.getEntryEndpoint()) && proto.mullvad_daemon.management_interface.Endpoint.toObject(includeInstance, f),
     tunnelMetadata: (f = msg.getTunnelMetadata()) && proto.mullvad_daemon.management_interface.TunnelMetadata.toObject(includeInstance, f),
-    daita: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
+    daita: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    tunnelType: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    effectiveMtu: jspb.Message.getFieldWithDefault(msg, 9, 0)
   };
 
   if (includeInstance) {
@@ -7418,6 +8067,14 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.deserializeBinaryFromRe
     case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setDaita(value);
+      break;
+    case 8:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.TunnelType} */ (reader.readEnum());
+      msg.setTunnelType(value);
+      break;
+    case 9:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setEffectiveMtu(value);
       break;
     default:
       reader.skipField();
@@ -7497,6 +8154,20 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.serializeBinaryToWriter
   if (f) {
     writer.writeBool(
       7,
+      f
+    );
+  }
+  f = message.getTunnelType();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      8,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 9));
+  if (f != null) {
+    writer.writeUint32(
+      9,
       f
     );
   }
@@ -7683,6 +8354,60 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getDaita = fu
  */
 proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setDaita = function(value) {
   return jspb.Message.setProto3BooleanField(this, 7, value);
+};
+
+
+/**
+ * optional TunnelType tunnel_type = 8;
+ * @return {!proto.mullvad_daemon.management_interface.TunnelType}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getTunnelType = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.TunnelType} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.TunnelType} value
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setTunnelType = function(value) {
+  return jspb.Message.setProto3EnumField(this, 8, value);
+};
+
+
+/**
+ * optional uint32 effective_mtu = 9;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getEffectiveMtu = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setEffectiveMtu = function(value) {
+  return jspb.Message.setField(this, 9, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearEffectiveMtu = function() {
+  return jspb.Message.setField(this, 9, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasEffectiveMtu = function() {
+  return jspb.Message.getField(this, 9) != null;
 };
 
 
@@ -14000,7 +14725,13 @@ proto.mullvad_daemon.management_interface.Settings.toObject = function(includeIn
     relayOverridesList: jspb.Message.toObjectList(msg.getRelayOverridesList(),
     proto.mullvad_daemon.management_interface.RelayOverride.toObject, includeInstance),
     recents: (f = msg.getRecents()) && proto.mullvad_daemon.management_interface.Recents.toObject(includeInstance, f),
-    updateDefaultLocation: jspb.Message.getBooleanFieldWithDefault(msg, 14, false)
+    updateDefaultLocation: jspb.Message.getBooleanFieldWithDefault(msg, 14, false),
+    warrenApiUrl: jspb.Message.getFieldWithDefault(msg, 17, ""),
+    warrenMultiHop: (f = msg.getWarrenMultiHop()) && proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.toObject(includeInstance, f),
+    warrenNatPmp: (f = msg.getWarrenNatPmp()) && proto.mullvad_daemon.management_interface.NatPmpSettings.toObject(includeInstance, f),
+    warrenNConnections: jspb.Message.getFieldWithDefault(msg, 20, 0),
+    warrenCustomExit: (f = msg.getWarrenCustomExit()) && proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.toObject(includeInstance, f),
+    warrenMaxRateBps: jspb.Message.getFieldWithDefault(msg, 22, 0)
   };
 
   if (includeInstance) {
@@ -14096,6 +14827,33 @@ proto.mullvad_daemon.management_interface.Settings.deserializeBinaryFromReader =
     case 14:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setUpdateDefaultLocation(value);
+      break;
+    case 17:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setWarrenApiUrl(value);
+      break;
+    case 18:
+      var value = new proto.mullvad_daemon.management_interface.WarrenMultiHopSettings;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.deserializeBinaryFromReader);
+      msg.setWarrenMultiHop(value);
+      break;
+    case 19:
+      var value = new proto.mullvad_daemon.management_interface.NatPmpSettings;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.NatPmpSettings.deserializeBinaryFromReader);
+      msg.setWarrenNatPmp(value);
+      break;
+    case 20:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setWarrenNConnections(value);
+      break;
+    case 21:
+      var value = new proto.mullvad_daemon.management_interface.WarrenCustomExitSettings;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.deserializeBinaryFromReader);
+      msg.setWarrenCustomExit(value);
+      break;
+    case 22:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setWarrenMaxRateBps(value);
       break;
     default:
       reader.skipField();
@@ -14222,6 +14980,51 @@ proto.mullvad_daemon.management_interface.Settings.serializeBinaryToWriter = fun
   if (f) {
     writer.writeBool(
       14,
+      f
+    );
+  }
+  f = message.getWarrenApiUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      17,
+      f
+    );
+  }
+  f = message.getWarrenMultiHop();
+  if (f != null) {
+    writer.writeMessage(
+      18,
+      f,
+      proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.serializeBinaryToWriter
+    );
+  }
+  f = message.getWarrenNatPmp();
+  if (f != null) {
+    writer.writeMessage(
+      19,
+      f,
+      proto.mullvad_daemon.management_interface.NatPmpSettings.serializeBinaryToWriter
+    );
+  }
+  f = message.getWarrenNConnections();
+  if (f !== 0) {
+    writer.writeUint32(
+      20,
+      f
+    );
+  }
+  f = message.getWarrenCustomExit();
+  if (f != null) {
+    writer.writeMessage(
+      21,
+      f,
+      proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.serializeBinaryToWriter
+    );
+  }
+  f = message.getWarrenMaxRateBps();
+  if (f !== 0) {
+    writer.writeUint64(
+      22,
       f
     );
   }
@@ -14612,6 +15415,4908 @@ proto.mullvad_daemon.management_interface.Settings.prototype.getUpdateDefaultLoc
  */
 proto.mullvad_daemon.management_interface.Settings.prototype.setUpdateDefaultLocation = function(value) {
   return jspb.Message.setProto3BooleanField(this, 14, value);
+};
+
+
+/**
+ * optional string warren_api_url = 17;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenApiUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 17, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenApiUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 17, value);
+};
+
+
+/**
+ * optional WarrenMultiHopSettings warren_multi_hop = 18;
+ * @return {?proto.mullvad_daemon.management_interface.WarrenMultiHopSettings}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenMultiHop = function() {
+  return /** @type{?proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} */ (
+    jspb.Message.getWrapperField(this, proto.mullvad_daemon.management_interface.WarrenMultiHopSettings, 18));
+};
+
+
+/**
+ * @param {?proto.mullvad_daemon.management_interface.WarrenMultiHopSettings|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+*/
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenMultiHop = function(value) {
+  return jspb.Message.setWrapperField(this, 18, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.clearWarrenMultiHop = function() {
+  return this.setWarrenMultiHop(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.hasWarrenMultiHop = function() {
+  return jspb.Message.getField(this, 18) != null;
+};
+
+
+/**
+ * optional NatPmpSettings warren_nat_pmp = 19;
+ * @return {?proto.mullvad_daemon.management_interface.NatPmpSettings}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenNatPmp = function() {
+  return /** @type{?proto.mullvad_daemon.management_interface.NatPmpSettings} */ (
+    jspb.Message.getWrapperField(this, proto.mullvad_daemon.management_interface.NatPmpSettings, 19));
+};
+
+
+/**
+ * @param {?proto.mullvad_daemon.management_interface.NatPmpSettings|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+*/
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenNatPmp = function(value) {
+  return jspb.Message.setWrapperField(this, 19, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.clearWarrenNatPmp = function() {
+  return this.setWarrenNatPmp(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.hasWarrenNatPmp = function() {
+  return jspb.Message.getField(this, 19) != null;
+};
+
+
+/**
+ * optional uint32 warren_n_connections = 20;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenNConnections = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 20, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenNConnections = function(value) {
+  return jspb.Message.setProto3IntField(this, 20, value);
+};
+
+
+/**
+ * optional WarrenCustomExitSettings warren_custom_exit = 21;
+ * @return {?proto.mullvad_daemon.management_interface.WarrenCustomExitSettings}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenCustomExit = function() {
+  return /** @type{?proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} */ (
+    jspb.Message.getWrapperField(this, proto.mullvad_daemon.management_interface.WarrenCustomExitSettings, 21));
+};
+
+
+/**
+ * @param {?proto.mullvad_daemon.management_interface.WarrenCustomExitSettings|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+*/
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenCustomExit = function(value) {
+  return jspb.Message.setWrapperField(this, 21, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.clearWarrenCustomExit = function() {
+  return this.setWarrenCustomExit(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.hasWarrenCustomExit = function() {
+  return jspb.Message.getField(this, 21) != null;
+};
+
+
+/**
+ * optional uint64 warren_max_rate_bps = 22;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.getWarrenMaxRateBps = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 22, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.Settings} returns this
+ */
+proto.mullvad_daemon.management_interface.Settings.prototype.setWarrenMaxRateBps = function(value) {
+  return jspb.Message.setProto3IntField(this, 22, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
+    endpoint: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    pubkeyHex: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    coverDomain: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    label: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    x25519MultihopPubkeyHex: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    exitIdHex: jspb.Message.getFieldWithDefault(msg, 7, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.WarrenCustomExitSettings;
+  return proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setEnabled(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEndpoint(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPubkeyHex(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCoverDomain(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setLabel(value);
+      break;
+    case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setX25519MultihopPubkeyHex(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExitIdHex(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getEnabled();
+  if (f) {
+    writer.writeBool(
+      1,
+      f
+    );
+  }
+  f = message.getEndpoint();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 4));
+  if (f != null) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = message.getLabel();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
+    );
+  }
+  f = message.getX25519MultihopPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
+  f = message.getExitIdHex();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bool enabled = 1;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getEnabled = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setEnabled = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 1, value);
+};
+
+
+/**
+ * optional string endpoint = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getEndpoint = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setEndpoint = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string pubkey_hex = 3;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string cover_domain = 4;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getCoverDomain = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setCoverDomain = function(value) {
+  return jspb.Message.setField(this, 4, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.clearCoverDomain = function() {
+  return jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.hasCoverDomain = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional string label = 5;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getLabel = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setLabel = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+/**
+ * optional string x25519_multihop_pubkey_hex = 6;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getX25519MultihopPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setX25519MultihopPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * optional string exit_id_hex = 7;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.getExitIdHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenCustomExitSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenCustomExitSettings.prototype.setExitIdHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
+    entryCountry: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    exitCountry: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    hpkeEpochRotation: (f = msg.getHpkeEpochRotation()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.WarrenMultiHopSettings;
+  return proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setEnabled(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEntryCountry(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExitCountry(value);
+      break;
+    case 4:
+      var value = new google_protobuf_duration_pb.Duration;
+      reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
+      msg.setHpkeEpochRotation(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getEnabled();
+  if (f) {
+    writer.writeBool(
+      1,
+      f
+    );
+  }
+  f = message.getEntryCountry();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getExitCountry();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getHpkeEpochRotation();
+  if (f != null) {
+    writer.writeMessage(
+      4,
+      f,
+      google_protobuf_duration_pb.Duration.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional bool enabled = 1;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.getEnabled = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.setEnabled = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 1, value);
+};
+
+
+/**
+ * optional string entry_country = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.getEntryCountry = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.setEntryCountry = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string exit_country = 3;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.getExitCountry = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.setExitCountry = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional google.protobuf.Duration hpke_epoch_rotation = 4;
+ * @return {?proto.google.protobuf.Duration}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.getHpkeEpochRotation = function() {
+  return /** @type{?proto.google.protobuf.Duration} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 4));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Duration|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.setHpkeEpochRotation = function(value) {
+  return jspb.Message.setWrapperField(this, 4, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenMultiHopSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.clearHpkeEpochRotation = function() {
+  return this.setHpkeEpochRotation(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenMultiHopSettings.prototype.hasHpkeEpochRotation = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.ForumLoginRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.ForumLoginRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    sid: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginRequest}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.ForumLoginRequest;
+  return proto.mullvad_daemon.management_interface.ForumLoginRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.ForumLoginRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginRequest}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSid(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.ForumLoginRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.ForumLoginRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getSid();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string sid = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.prototype.getSid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumLoginRequest.prototype.setSid = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.ForumLoginSignature.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.ForumLoginSignature} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    pubkeySs58: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    signatureHex: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    timestamp: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    nonceHex: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    body: jspb.Message.getFieldWithDefault(msg, 5, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.ForumLoginSignature;
+  return proto.mullvad_daemon.management_interface.ForumLoginSignature.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.ForumLoginSignature} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPubkeySs58(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSignatureHex(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setTimestamp(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setNonceHex(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setBody(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.ForumLoginSignature.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.ForumLoginSignature} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getPubkeySs58();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getSignatureHex();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getTimestamp();
+  if (f !== 0) {
+    writer.writeUint64(
+      3,
+      f
+    );
+  }
+  f = message.getNonceHex();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = message.getBody();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string pubkey_ss58 = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.getPubkeySs58 = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.setPubkeySs58 = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string signature_hex = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.getSignatureHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.setSignatureHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional uint64 timestamp = 3;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.getTimestamp = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.setTimestamp = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional string nonce_hex = 4;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.getNonceHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.setNonceHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional string body = 5;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.getBody = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumLoginSignature} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumLoginSignature.prototype.setBody = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    sid: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    topicId: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    logGz: msg.getLogGz_asB64()
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.ForumAttachLogsRequest;
+  return proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setSid(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setTopicId(value);
+      break;
+    case 3:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setLogGz(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getSid();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getTopicId();
+  if (f !== 0) {
+    writer.writeUint64(
+      2,
+      f
+    );
+  }
+  f = message.getLogGz_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string sid = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.getSid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.setSid = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional uint64 topic_id = 2;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.getTopicId = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.setTopicId = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional bytes log_gz = 3;
+ * @return {!(string|Uint8Array)}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.getLogGz = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * optional bytes log_gz = 3;
+ * This is a type-conversion wrapper around `getLogGz()`
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.getLogGz_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getLogGz()));
+};
+
+
+/**
+ * optional bytes log_gz = 3;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getLogGz()`
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.getLogGz_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getLogGz()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.mullvad_daemon.management_interface.ForumAttachLogsRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ForumAttachLogsRequest.prototype.setLogGz = function(value) {
+  return jspb.Message.setProto3BytesField(this, 3, value);
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.repeatedFields_ = [13];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.WarrenStatus.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.WarrenStatus} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    reconnectCount: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    lastReconnectAge: (f = msg.getLastReconnectAge()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
+    obfuscationActive: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+    failoverCount: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    lastFailoverAge: (f = msg.getLastFailoverAge()) && google_protobuf_duration_pb.Duration.toObject(includeInstance, f),
+    pubkeyMismatchPending: (f = msg.getPubkeyMismatchPending()) && proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject(includeInstance, f),
+    maintenanceMigrationActive: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    portMigrationCancellations: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    portMigrationCancellationActive: jspb.Message.getBooleanFieldWithDefault(msg, 9, false),
+    hostOffline: jspb.Message.getBooleanFieldWithDefault(msg, 10, false),
+    exitEgressDead: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
+    networkInfo: (f = msg.getNetworkInfo()) && proto.mullvad_daemon.management_interface.WarrenNetworkInfo.toObject(includeInstance, f),
+    noticesList: jspb.Message.toObjectList(msg.getNoticesList(),
+    proto.mullvad_daemon.management_interface.WarrenNotice.toObject, includeInstance)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.WarrenStatus;
+  return proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenStatus} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setReconnectCount(value);
+      break;
+    case 2:
+      var value = new google_protobuf_duration_pb.Duration;
+      reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
+      msg.setLastReconnectAge(value);
+      break;
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setObfuscationActive(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setFailoverCount(value);
+      break;
+    case 5:
+      var value = new google_protobuf_duration_pb.Duration;
+      reader.readMessage(value,google_protobuf_duration_pb.Duration.deserializeBinaryFromReader);
+      msg.setLastFailoverAge(value);
+      break;
+    case 6:
+      var value = new proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.deserializeBinaryFromReader);
+      msg.setPubkeyMismatchPending(value);
+      break;
+    case 7:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setMaintenanceMigrationActive(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setPortMigrationCancellations(value);
+      break;
+    case 9:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setPortMigrationCancellationActive(value);
+      break;
+    case 10:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setHostOffline(value);
+      break;
+    case 11:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setExitEgressDead(value);
+      break;
+    case 12:
+      var value = new proto.mullvad_daemon.management_interface.WarrenNetworkInfo;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenNetworkInfo.deserializeBinaryFromReader);
+      msg.setNetworkInfo(value);
+      break;
+    case 13:
+      var value = new proto.mullvad_daemon.management_interface.WarrenNotice;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenNotice.deserializeBinaryFromReader);
+      msg.addNotices(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenStatus} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getReconnectCount();
+  if (f !== 0) {
+    writer.writeUint32(
+      1,
+      f
+    );
+  }
+  f = message.getLastReconnectAge();
+  if (f != null) {
+    writer.writeMessage(
+      2,
+      f,
+      google_protobuf_duration_pb.Duration.serializeBinaryToWriter
+    );
+  }
+  f = message.getObfuscationActive();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
+  f = message.getFailoverCount();
+  if (f !== 0) {
+    writer.writeUint32(
+      4,
+      f
+    );
+  }
+  f = message.getLastFailoverAge();
+  if (f != null) {
+    writer.writeMessage(
+      5,
+      f,
+      google_protobuf_duration_pb.Duration.serializeBinaryToWriter
+    );
+  }
+  f = message.getPubkeyMismatchPending();
+  if (f != null) {
+    writer.writeMessage(
+      6,
+      f,
+      proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.serializeBinaryToWriter
+    );
+  }
+  f = message.getMaintenanceMigrationActive();
+  if (f) {
+    writer.writeBool(
+      7,
+      f
+    );
+  }
+  f = message.getPortMigrationCancellations();
+  if (f !== 0) {
+    writer.writeUint32(
+      8,
+      f
+    );
+  }
+  f = message.getPortMigrationCancellationActive();
+  if (f) {
+    writer.writeBool(
+      9,
+      f
+    );
+  }
+  f = message.getHostOffline();
+  if (f) {
+    writer.writeBool(
+      10,
+      f
+    );
+  }
+  f = message.getExitEgressDead();
+  if (f) {
+    writer.writeBool(
+      11,
+      f
+    );
+  }
+  f = message.getNetworkInfo();
+  if (f != null) {
+    writer.writeMessage(
+      12,
+      f,
+      proto.mullvad_daemon.management_interface.WarrenNetworkInfo.serializeBinaryToWriter
+    );
+  }
+  f = message.getNoticesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      13,
+      f,
+      proto.mullvad_daemon.management_interface.WarrenNotice.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional uint32 reconnect_count = 1;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getReconnectCount = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setReconnectCount = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional google.protobuf.Duration last_reconnect_age = 2;
+ * @return {?proto.google.protobuf.Duration}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getLastReconnectAge = function() {
+  return /** @type{?proto.google.protobuf.Duration} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 2));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Duration|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setLastReconnectAge = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearLastReconnectAge = function() {
+  return this.setLastReconnectAge(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasLastReconnectAge = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional bool obfuscation_active = 3;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getObfuscationActive = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setObfuscationActive = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * optional uint32 failover_count = 4;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getFailoverCount = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setFailoverCount = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional google.protobuf.Duration last_failover_age = 5;
+ * @return {?proto.google.protobuf.Duration}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getLastFailoverAge = function() {
+  return /** @type{?proto.google.protobuf.Duration} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_duration_pb.Duration, 5));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Duration|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setLastFailoverAge = function(value) {
+  return jspb.Message.setWrapperField(this, 5, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearLastFailoverAge = function() {
+  return this.setLastFailoverAge(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasLastFailoverAge = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional WarrenPubkeyMismatch pubkey_mismatch_pending = 6;
+ * @return {?proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getPubkeyMismatchPending = function() {
+  return /** @type{?proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} */ (
+    jspb.Message.getWrapperField(this, proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch, 6));
+};
+
+
+/**
+ * @param {?proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setPubkeyMismatchPending = function(value) {
+  return jspb.Message.setWrapperField(this, 6, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearPubkeyMismatchPending = function() {
+  return this.setPubkeyMismatchPending(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasPubkeyMismatchPending = function() {
+  return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional bool maintenance_migration_active = 7;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getMaintenanceMigrationActive = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setMaintenanceMigrationActive = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 7, value);
+};
+
+
+/**
+ * optional uint32 port_migration_cancellations = 8;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getPortMigrationCancellations = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setPortMigrationCancellations = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+/**
+ * optional bool port_migration_cancellation_active = 9;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getPortMigrationCancellationActive = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 9, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setPortMigrationCancellationActive = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 9, value);
+};
+
+
+/**
+ * optional bool host_offline = 10;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getHostOffline = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 10, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setHostOffline = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 10, value);
+};
+
+
+/**
+ * optional bool exit_egress_dead = 11;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getExitEgressDead = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setExitEgressDead = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 11, value);
+};
+
+
+/**
+ * optional WarrenNetworkInfo network_info = 12;
+ * @return {?proto.mullvad_daemon.management_interface.WarrenNetworkInfo}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getNetworkInfo = function() {
+  return /** @type{?proto.mullvad_daemon.management_interface.WarrenNetworkInfo} */ (
+    jspb.Message.getWrapperField(this, proto.mullvad_daemon.management_interface.WarrenNetworkInfo, 12));
+};
+
+
+/**
+ * @param {?proto.mullvad_daemon.management_interface.WarrenNetworkInfo|undefined} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setNetworkInfo = function(value) {
+  return jspb.Message.setWrapperField(this, 12, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearNetworkInfo = function() {
+  return this.setNetworkInfo(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasNetworkInfo = function() {
+  return jspb.Message.getField(this, 12) != null;
+};
+
+
+/**
+ * repeated WarrenNotice notices = 13;
+ * @return {!Array<!proto.mullvad_daemon.management_interface.WarrenNotice>}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getNoticesList = function() {
+  return /** @type{!Array<!proto.mullvad_daemon.management_interface.WarrenNotice>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.mullvad_daemon.management_interface.WarrenNotice, 13));
+};
+
+
+/**
+ * @param {!Array<!proto.mullvad_daemon.management_interface.WarrenNotice>} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setNoticesList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 13, value);
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNotice=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNotice}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.addNotices = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 13, opt_value, proto.mullvad_daemon.management_interface.WarrenNotice, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearNoticesList = function() {
+  return this.setNoticesList([]);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.WarrenNotice.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNotice} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    id: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    message: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    level: jspb.Message.getFieldWithDefault(msg, 3, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNotice}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.WarrenNotice;
+  return proto.mullvad_daemon.management_interface.WarrenNotice.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNotice} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNotice}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setId(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setMessage(value);
+      break;
+    case 3:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.WarrenNoticeLevel} */ (reader.readEnum());
+      msg.setLevel(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.WarrenNotice.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNotice} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getId();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getMessage();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getLevel();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string id = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.getId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNotice} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.setId = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string message = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.getMessage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNotice} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.setMessage = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional WarrenNoticeLevel level = 3;
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNoticeLevel}
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.getLevel = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.WarrenNoticeLevel} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNoticeLevel} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNotice} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNotice.prototype.setLevel = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.WarrenNetworkInfo.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    environment: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    degraded: jspb.Message.getBooleanFieldWithDefault(msg, 2, false),
+    defaultRateBps: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    paymentsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.WarrenNetworkInfo;
+  return proto.mullvad_daemon.management_interface.WarrenNetworkInfo.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setEnvironment(value);
+      break;
+    case 2:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setDegraded(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setDefaultRateBps(value);
+      break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setPaymentsEnabled(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.WarrenNetworkInfo.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getEnvironment();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getDegraded();
+  if (f) {
+    writer.writeBool(
+      2,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 3));
+  if (f != null) {
+    writer.writeUint64(
+      3,
+      f
+    );
+  }
+  f = message.getPaymentsEnabled();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string environment = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.getEnvironment = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.setEnvironment = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional bool degraded = 2;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.getDegraded = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 2, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.setDegraded = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 2, value);
+};
+
+
+/**
+ * optional uint64 default_rate_bps = 3;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.getDefaultRateBps = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.setDefaultRateBps = function(value) {
+  return jspb.Message.setField(this, 3, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.clearDefaultRateBps = function() {
+  return jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.hasDefaultRateBps = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional bool payments_enabled = 4;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.getPaymentsEnabled = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenNetworkInfo} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenNetworkInfo.prototype.setPaymentsEnabled = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 4, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    exitIdHex: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    pinnedPubkeyHex: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    observedPubkeyHex: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    countryCode: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    city: jspb.Message.getFieldWithDefault(msg, 5, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch;
+  return proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExitIdHex(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPinnedPubkeyHex(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setObservedPubkeyHex(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCountryCode(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCity(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getExitIdHex();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getPinnedPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getObservedPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getCountryCode();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = message.getCity();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string exit_id_hex = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.getExitIdHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.setExitIdHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string pinned_pubkey_hex = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.getPinnedPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.setPinnedPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string observed_pubkey_hex = 3;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.getObservedPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.setObservedPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string country_code = 4;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.getCountryCode = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.setCountryCode = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional string city = 5;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.getCity = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenPubkeyMismatch.prototype.setCity = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    exitIdHex: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    newPubkeyHex: jspb.Message.getFieldWithDefault(msg, 2, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest;
+  return proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExitIdHex(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setNewPubkeyHex(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getExitIdHex();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getNewPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string exit_id_hex = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.prototype.getExitIdHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.prototype.setExitIdHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string new_pubkey_hex = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.prototype.getNewPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyRequest.prototype.setNewPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    result: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    errorMessage: jspb.Message.getFieldWithDefault(msg, 2, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse;
+  return proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result} */ (reader.readEnum());
+      msg.setResult(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setErrorMessage(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getResult();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      1,
+      f
+    );
+  }
+  f = message.getErrorMessage();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result = {
+  OK: 0,
+  EXIT_NOT_FOUND: 1,
+  PUBKEY_MISMATCH: 2,
+  IO_ERROR: 3
+};
+
+/**
+ * optional Result result = 1;
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.prototype.getResult = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.Result} value
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse} returns this
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.prototype.setResult = function(value) {
+  return jspb.Message.setProto3EnumField(this, 1, value);
+};
+
+
+/**
+ * optional string error_message = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.prototype.getErrorMessage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse} returns this
+ */
+proto.mullvad_daemon.management_interface.TrustNewExitKeyResponse.prototype.setErrorMessage = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    resetCount: jspb.Message.getFieldWithDefault(msg, 1, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse}
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse;
+  return proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse}
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setResetCount(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getResetCount();
+  if (f !== 0) {
+    writer.writeUint32(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional uint32 reset_count = 1;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.prototype.getResetCount = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse} returns this
+ */
+proto.mullvad_daemon.management_interface.ResetPinnedExitKeysResponse.prototype.setResetCount = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    exitIdHex: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    oldPubkeyHex: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    newPubkeyHex: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    countryCode: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    city: jspb.Message.getFieldWithDefault(msg, 5, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest;
+  return proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setExitIdHex(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setOldPubkeyHex(value);
+      break;
+    case 3:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setNewPubkeyHex(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCountryCode(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setCity(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getExitIdHex();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getOldPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getNewPubkeyHex();
+  if (f.length > 0) {
+    writer.writeString(
+      3,
+      f
+    );
+  }
+  f = message.getCountryCode();
+  if (f.length > 0) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = message.getCity();
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string exit_id_hex = 1;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.getExitIdHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.setExitIdHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional string old_pubkey_hex = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.getOldPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.setOldPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional string new_pubkey_hex = 3;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.getNewPubkeyHex = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 3, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.setNewPubkeyHex = function(value) {
+  return jspb.Message.setProto3StringField(this, 3, value);
+};
+
+
+/**
+ * optional string country_code = 4;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.getCountryCode = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.setCountryCode = function(value) {
+  return jspb.Message.setProto3StringField(this, 4, value);
+};
+
+
+/**
+ * optional string city = 5;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.getCity = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest} returns this
+ */
+proto.mullvad_daemon.management_interface.ReportPubkeyMismatchRequest.prototype.setCity = function(value) {
+  return jspb.Message.setProto3StringField(this, 5, value);
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.repeatedFields_ = [6];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.NatPmpSettings.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    enabled: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
+    lifetimeSecs: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    rulesList: jspb.Message.toObjectList(msg.getRulesList(),
+    proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.toObject, includeInstance),
+    protocol: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    suggestedExternalPort: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    internalPort: jspb.Message.getFieldWithDefault(msg, 5, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.NatPmpSettings;
+  return proto.mullvad_daemon.management_interface.NatPmpSettings.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setEnabled(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setLifetimeSecs(value);
+      break;
+    case 6:
+      var value = new proto.mullvad_daemon.management_interface.NatPmpSettings.Rule;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.deserializeBinaryFromReader);
+      msg.addRules(value);
+      break;
+    case 3:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} */ (reader.readEnum());
+      msg.setProtocol(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setSuggestedExternalPort(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setInternalPort(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.NatPmpSettings.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getEnabled();
+  if (f) {
+    writer.writeBool(
+      1,
+      f
+    );
+  }
+  f = message.getLifetimeSecs();
+  if (f !== 0) {
+    writer.writeUint32(
+      2,
+      f
+    );
+  }
+  f = message.getRulesList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      6,
+      f,
+      proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.serializeBinaryToWriter
+    );
+  }
+  f = message.getProtocol();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
+  f = message.getSuggestedExternalPort();
+  if (f !== 0) {
+    writer.writeUint32(
+      4,
+      f
+    );
+  }
+  f = message.getInternalPort();
+  if (f !== 0) {
+    writer.writeUint32(
+      5,
+      f
+    );
+  }
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Proto = {
+  UDP: 0,
+  TCP: 1,
+  BOTH: 2
+};
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    protocol: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    suggestedExternalPort: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    internalPort: jspb.Message.getFieldWithDefault(msg, 3, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.NatPmpSettings.Rule;
+  return proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} */ (reader.readEnum());
+      msg.setProtocol(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setSuggestedExternalPort(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setInternalPort(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getProtocol();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      1,
+      f
+    );
+  }
+  f = message.getSuggestedExternalPort();
+  if (f !== 0) {
+    writer.writeUint32(
+      2,
+      f
+    );
+  }
+  f = message.getInternalPort();
+  if (f !== 0) {
+    writer.writeUint32(
+      3,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional Proto protocol = 1;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.getProtocol = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.setProtocol = function(value) {
+  return jspb.Message.setProto3EnumField(this, 1, value);
+};
+
+
+/**
+ * optional uint32 suggested_external_port = 2;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.getSuggestedExternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.setSuggestedExternalPort = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional uint32 internal_port = 3;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.getInternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.Rule.prototype.setInternalPort = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * optional bool enabled = 1;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.getEnabled = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.setEnabled = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 1, value);
+};
+
+
+/**
+ * optional uint32 lifetime_secs = 2;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.getLifetimeSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.setLifetimeSecs = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * repeated Rule rules = 6;
+ * @return {!Array<!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule>}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.getRulesList = function() {
+  return /** @type{!Array<!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.mullvad_daemon.management_interface.NatPmpSettings.Rule, 6));
+};
+
+
+/**
+ * @param {!Array<!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule>} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+*/
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.setRulesList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 6, value);
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Rule}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.addRules = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 6, opt_value, proto.mullvad_daemon.management_interface.NatPmpSettings.Rule, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.clearRulesList = function() {
+  return this.setRulesList([]);
+};
+
+
+/**
+ * optional Proto protocol = 3;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.getProtocol = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.setProtocol = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
+};
+
+
+/**
+ * optional uint32 suggested_external_port = 4;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.getSuggestedExternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.setSuggestedExternalPort = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * optional uint32 internal_port = 5;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.getInternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpSettings.prototype.setInternalPort = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.repeatedFields_ = [9];
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.NatPmpStatus.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    state: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    externalPort: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    lifetimeGrantedSecs: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    errorMessage: jspb.Message.getFieldWithDefault(msg, 4, ""),
+    errorReason: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    retryAfterSecs: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    attemptsRemaining: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    windowResetSecs: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    mappingsList: jspb.Message.toObjectList(msg.getMappingsList(),
+    proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.toObject, includeInstance)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.NatPmpStatus;
+  return proto.mullvad_daemon.management_interface.NatPmpStatus.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.State} */ (reader.readEnum());
+      msg.setState(value);
+      break;
+    case 2:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setExternalPort(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setLifetimeGrantedSecs(value);
+      break;
+    case 4:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setErrorMessage(value);
+      break;
+    case 5:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (reader.readEnum());
+      msg.setErrorReason(value);
+      break;
+    case 6:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setRetryAfterSecs(value);
+      break;
+    case 7:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setAttemptsRemaining(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setWindowResetSecs(value);
+      break;
+    case 9:
+      var value = new proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping;
+      reader.readMessage(value,proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.deserializeBinaryFromReader);
+      msg.addMappings(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.NatPmpStatus.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getState();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      1,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 2));
+  if (f != null) {
+    writer.writeUint32(
+      2,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 3));
+  if (f != null) {
+    writer.writeUint32(
+      3,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 4));
+  if (f != null) {
+    writer.writeString(
+      4,
+      f
+    );
+  }
+  f = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (jspb.Message.getField(message, 5));
+  if (f != null) {
+    writer.writeEnum(
+      5,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 6));
+  if (f != null) {
+    writer.writeUint32(
+      6,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 7));
+  if (f != null) {
+    writer.writeUint32(
+      7,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 8));
+  if (f != null) {
+    writer.writeUint32(
+      8,
+      f
+    );
+  }
+  f = message.getMappingsList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      9,
+      f,
+      proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.State = {
+  DISABLED: 0,
+  REQUESTING: 1,
+  MAPPED: 2,
+  FAILED: 3,
+  RATE_LIMITED: 4
+};
+
+/**
+ * @enum {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason = {
+  UNKNOWN: 0,
+  SUGGESTED_PORT_IN_USE: 1,
+  OUT_OF_RESOURCES: 2,
+  NOT_AUTHORIZED: 3
+};
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.toObject = function(opt_includeInstance) {
+  return proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    internalPort: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    protocol: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    state: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    externalPort: jspb.Message.getFieldWithDefault(msg, 4, 0),
+    lifetimeGrantedSecs: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    errorMessage: jspb.Message.getFieldWithDefault(msg, 6, ""),
+    errorReason: jspb.Message.getFieldWithDefault(msg, 7, 0),
+    retryAfterSecs: jspb.Message.getFieldWithDefault(msg, 8, 0),
+    attemptsRemaining: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    windowResetSecs: jspb.Message.getFieldWithDefault(msg, 10, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping;
+  return proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setInternalPort(value);
+      break;
+    case 2:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} */ (reader.readEnum());
+      msg.setProtocol(value);
+      break;
+    case 3:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.State} */ (reader.readEnum());
+      msg.setState(value);
+      break;
+    case 4:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setExternalPort(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setLifetimeGrantedSecs(value);
+      break;
+    case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setErrorMessage(value);
+      break;
+    case 7:
+      var value = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (reader.readEnum());
+      msg.setErrorReason(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setRetryAfterSecs(value);
+      break;
+    case 9:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setAttemptsRemaining(value);
+      break;
+    case 10:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setWindowResetSecs(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getInternalPort();
+  if (f !== 0) {
+    writer.writeUint32(
+      1,
+      f
+    );
+  }
+  f = message.getProtocol();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      2,
+      f
+    );
+  }
+  f = message.getState();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      3,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 4));
+  if (f != null) {
+    writer.writeUint32(
+      4,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 5));
+  if (f != null) {
+    writer.writeUint32(
+      5,
+      f
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 6));
+  if (f != null) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
+  f = /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (jspb.Message.getField(message, 7));
+  if (f != null) {
+    writer.writeEnum(
+      7,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 8));
+  if (f != null) {
+    writer.writeUint32(
+      8,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 9));
+  if (f != null) {
+    writer.writeUint32(
+      9,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 10));
+  if (f != null) {
+    writer.writeUint32(
+      10,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional uint32 internal_port = 1;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getInternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setInternalPort = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+/**
+ * optional NatPmpSettings.Proto protocol = 2;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getProtocol = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpSettings.Proto} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setProtocol = function(value) {
+  return jspb.Message.setProto3EnumField(this, 2, value);
+};
+
+
+/**
+ * optional State state = 3;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.State}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getState = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.State} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.State} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setState = function(value) {
+  return jspb.Message.setProto3EnumField(this, 3, value);
+};
+
+
+/**
+ * optional uint32 external_port = 4;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getExternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setExternalPort = function(value) {
+  return jspb.Message.setField(this, 4, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearExternalPort = function() {
+  return jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasExternalPort = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional uint32 lifetime_granted_secs = 5;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getLifetimeGrantedSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setLifetimeGrantedSecs = function(value) {
+  return jspb.Message.setField(this, 5, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearLifetimeGrantedSecs = function() {
+  return jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasLifetimeGrantedSecs = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional string error_message = 6;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getErrorMessage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setErrorMessage = function(value) {
+  return jspb.Message.setField(this, 6, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearErrorMessage = function() {
+  return jspb.Message.setField(this, 6, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasErrorMessage = function() {
+  return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional ErrorReason error_reason = 7;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getErrorReason = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setErrorReason = function(value) {
+  return jspb.Message.setField(this, 7, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearErrorReason = function() {
+  return jspb.Message.setField(this, 7, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasErrorReason = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional uint32 retry_after_secs = 8;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getRetryAfterSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setRetryAfterSecs = function(value) {
+  return jspb.Message.setField(this, 8, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearRetryAfterSecs = function() {
+  return jspb.Message.setField(this, 8, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasRetryAfterSecs = function() {
+  return jspb.Message.getField(this, 8) != null;
+};
+
+
+/**
+ * optional uint32 attempts_remaining = 9;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getAttemptsRemaining = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 9, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setAttemptsRemaining = function(value) {
+  return jspb.Message.setField(this, 9, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearAttemptsRemaining = function() {
+  return jspb.Message.setField(this, 9, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasAttemptsRemaining = function() {
+  return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional uint32 window_reset_secs = 10;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getWindowResetSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setWindowResetSecs = function(value) {
+  return jspb.Message.setField(this, 10, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearWindowResetSecs = function() {
+  return jspb.Message.setField(this, 10, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasWindowResetSecs = function() {
+  return jspb.Message.getField(this, 10) != null;
+};
+
+
+/**
+ * optional State state = 1;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.State}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getState = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.State} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.State} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setState = function(value) {
+  return jspb.Message.setProto3EnumField(this, 1, value);
+};
+
+
+/**
+ * optional uint32 external_port = 2;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getExternalPort = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setExternalPort = function(value) {
+  return jspb.Message.setField(this, 2, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearExternalPort = function() {
+  return jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasExternalPort = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+/**
+ * optional uint32 lifetime_granted_secs = 3;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getLifetimeGrantedSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setLifetimeGrantedSecs = function(value) {
+  return jspb.Message.setField(this, 3, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearLifetimeGrantedSecs = function() {
+  return jspb.Message.setField(this, 3, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasLifetimeGrantedSecs = function() {
+  return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional string error_message = 4;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getErrorMessage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 4, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setErrorMessage = function(value) {
+  return jspb.Message.setField(this, 4, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearErrorMessage = function() {
+  return jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasErrorMessage = function() {
+  return jspb.Message.getField(this, 4) != null;
+};
+
+
+/**
+ * optional ErrorReason error_reason = 5;
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getErrorReason = function() {
+  return /** @type {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setErrorReason = function(value) {
+  return jspb.Message.setField(this, 5, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearErrorReason = function() {
+  return jspb.Message.setField(this, 5, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasErrorReason = function() {
+  return jspb.Message.getField(this, 5) != null;
+};
+
+
+/**
+ * optional uint32 retry_after_secs = 6;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getRetryAfterSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setRetryAfterSecs = function(value) {
+  return jspb.Message.setField(this, 6, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearRetryAfterSecs = function() {
+  return jspb.Message.setField(this, 6, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasRetryAfterSecs = function() {
+  return jspb.Message.getField(this, 6) != null;
+};
+
+
+/**
+ * optional uint32 attempts_remaining = 7;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getAttemptsRemaining = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 7, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setAttemptsRemaining = function(value) {
+  return jspb.Message.setField(this, 7, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearAttemptsRemaining = function() {
+  return jspb.Message.setField(this, 7, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasAttemptsRemaining = function() {
+  return jspb.Message.getField(this, 7) != null;
+};
+
+
+/**
+ * optional uint32 window_reset_secs = 8;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getWindowResetSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setWindowResetSecs = function(value) {
+  return jspb.Message.setField(this, 8, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearWindowResetSecs = function() {
+  return jspb.Message.setField(this, 8, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasWindowResetSecs = function() {
+  return jspb.Message.getField(this, 8) != null;
+};
+
+
+/**
+ * repeated Mapping mappings = 9;
+ * @return {!Array<!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping>}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getMappingsList = function() {
+  return /** @type{!Array<!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping, 9));
+};
+
+
+/**
+ * @param {!Array<!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping>} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+*/
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setMappingsList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 9, value);
+};
+
+
+/**
+ * @param {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.addMappings = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 9, opt_value, proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearMappingsList = function() {
+  return this.setMappingsList([]);
 };
 
 
@@ -18766,7 +24471,8 @@ proto.mullvad_daemon.management_interface.DnsOptions.toObject = function(include
   var f, obj = {
     state: jspb.Message.getFieldWithDefault(msg, 1, 0),
     defaultOptions: (f = msg.getDefaultOptions()) && proto.mullvad_daemon.management_interface.DefaultDnsOptions.toObject(includeInstance, f),
-    customOptions: (f = msg.getCustomOptions()) && proto.mullvad_daemon.management_interface.CustomDnsOptions.toObject(includeInstance, f)
+    customOptions: (f = msg.getCustomOptions()) && proto.mullvad_daemon.management_interface.CustomDnsOptions.toObject(includeInstance, f),
+    allowExternalDns: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
   };
 
   if (includeInstance) {
@@ -18816,6 +24522,10 @@ proto.mullvad_daemon.management_interface.DnsOptions.deserializeBinaryFromReader
       var value = new proto.mullvad_daemon.management_interface.CustomDnsOptions;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.CustomDnsOptions.deserializeBinaryFromReader);
       msg.setCustomOptions(value);
+      break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setAllowExternalDns(value);
       break;
     default:
       reader.skipField();
@@ -18867,6 +24577,13 @@ proto.mullvad_daemon.management_interface.DnsOptions.serializeBinaryToWriter = f
       3,
       f,
       proto.mullvad_daemon.management_interface.CustomDnsOptions.serializeBinaryToWriter
+    );
+  }
+  f = message.getAllowExternalDns();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
     );
   }
 };
@@ -18969,6 +24686,24 @@ proto.mullvad_daemon.management_interface.DnsOptions.prototype.clearCustomOption
  */
 proto.mullvad_daemon.management_interface.DnsOptions.prototype.hasCustomOptions = function() {
   return jspb.Message.getField(this, 3) != null;
+};
+
+
+/**
+ * optional bool allow_external_dns = 4;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.DnsOptions.prototype.getAllowExternalDns = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.DnsOptions} returns this
+ */
+proto.mullvad_daemon.management_interface.DnsOptions.prototype.setAllowExternalDns = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 
@@ -26461,6 +32196,14 @@ proto.mullvad_daemon.management_interface.AfterDisconnect = {
 /**
  * @enum {number}
  */
+proto.mullvad_daemon.management_interface.TunnelType = {
+  WIREGUARD: 0,
+  WARREN: 1
+};
+
+/**
+ * @enum {number}
+ */
 proto.mullvad_daemon.management_interface.FeatureIndicator = {
   QUANTUM_RESISTANCE: 0,
   MULTIHOP: 1,
@@ -26477,7 +32220,10 @@ proto.mullvad_daemon.management_interface.FeatureIndicator = {
   SERVER_IP_OVERRIDE: 12,
   CUSTOM_MTU: 13,
   DAITA: 14,
-  DAITA_MULTIHOP: 15
+  DAITA_MULTIHOP: 15,
+  ALLOW_EXTERNAL_DNS: 16,
+  DAITA_UNAVAILABLE: 17,
+  REDUCED_MTU: 18
 };
 
 /**
@@ -26487,6 +32233,15 @@ proto.mullvad_daemon.management_interface.Ownership = {
   ANY: 0,
   MULLVAD_OWNED: 1,
   RENTED: 2
+};
+
+/**
+ * @enum {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenNoticeLevel = {
+  WARREN_NOTICE_INFO: 0,
+  WARREN_NOTICE_WARNING: 1,
+  WARREN_NOTICE_ERROR: 2
 };
 
 /**

@@ -20,7 +20,7 @@ mod dns;
 /// latest version that exists in `SettingsVersion`.
 /// This should be bumped when a new version is introduced along with a migration
 /// being added to `mullvad-daemon`.
-pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V15;
+pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V16;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Clone, Copy)]
 #[repr(u32)]
@@ -39,6 +39,7 @@ pub enum SettingsVersion {
     V13 = 13,
     V14 = 14,
     V15 = 15,
+    V16 = 16,
 }
 
 impl<'de> Deserialize<'de> for SettingsVersion {
@@ -61,6 +62,7 @@ impl<'de> Deserialize<'de> for SettingsVersion {
             v if v == SettingsVersion::V13 as u32 => Ok(SettingsVersion::V13),
             v if v == SettingsVersion::V14 as u32 => Ok(SettingsVersion::V14),
             v if v == SettingsVersion::V15 as u32 => Ok(SettingsVersion::V15),
+            v if v == SettingsVersion::V16 as u32 => Ok(SettingsVersion::V16),
             v => Err(serde::de::Error::custom(format!(
                 "{v} is not a valid SettingsVersion"
             ))),
@@ -118,6 +120,313 @@ pub struct Settings {
     /// This is an Option to make the Default implementation deterministic.
     #[cfg(not(target_os = "android"))]
     pub rollout_threshold_seed: Option<u32>,
+    /// URL of the warren-api server used by the
+    /// `WarrenRemote{Account,Device}Backend`.
+    ///
+    /// Expected format: `http(s)://host:port` without trailing slash, e.g.
+    /// `https://api.warrenbrowse.com` or `http://127.0.0.1:8080`.
+    ///
+    /// `None` = no warren-remote mode -> fallback to `RemoteAccountBackend`
+    /// (legacy upstream Mullvad path via `api.mullvad.net`). Can be
+    /// overridden via env var `WARREN_API_URL` (takes priority over Settings).
+    #[serde(default)]
+    pub warren_api_url: Option<String>,
+    /// Number of parallel QUIC connections for the Warren tunnel.
+    /// `None` resolves to the compiled default (8, cf. warren-core
+    /// `m3e-multi-conn-sweep`: the throughput curve plateaus at N=8).
+    /// Valid range 1..=16; out-of-range persisted values fall back to
+    /// the default at parameter-production time. Can be overridden via
+    /// env var `WARREN_N_CONNECTIONS` (takes priority over Settings).
+    #[serde(default)]
+    pub warren_n_connections: Option<u8>,
+    /// User-imposed ceiling on the Warren tunnel's own bandwidth, in
+    /// bits per second, enforced client-side on both directions
+    /// independently. `None` = unlimited (no per-packet overhead).
+    #[serde(default)]
+    pub warren_max_rate_bps: Option<u64>,
+    /// Warren two-relayed QUIC multi-hop settings.
+    /// Default = OFF per doctrine `warren_multihop_doctrine_v1`
+    /// (opt-in privacy, full bandwidth 1-hop). The env var
+    /// `WARREN_MULTI_HOP=1` overrides this for POC.
+    #[serde(default)]
+    pub warren_multi_hop: WarrenMultiHopSettings,
+    /// Warren NAT-PMP port-forwarding settings. Default OFF; the
+    /// daemon-side `NatPmpManager` only spawns a refresh loop when
+    /// `enabled = true`. Differentiator product surface (Mullvad and
+    /// IVPN dropped port-forwarding in 2023).
+    #[serde(default)]
+    pub warren_nat_pmp: WarrenNatPmpSettings,
+    /// Warren TOFU pinning of exit Ed25519 pubkeys. Populated on first
+    /// connect to a given exit. Subsequent connects with a divergent
+    /// pubkey for the same exit identity surface a mismatch event to
+    /// the UI and refuse the connection until the user acknowledges
+    /// the change ("Trust new key") or resets the pin table.
+    #[serde(default)]
+    pub warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys,
+    /// Advanced escape hatch: dial a single user-supplied exit directly,
+    /// bypassing the signed relay registry. Lets a power user point the
+    /// app at a self-hosted exit (e.g. a plain `warrenguard serve` node)
+    /// whose `(endpoint, pubkey)` it learned out of band. Default OFF and
+    /// not surfaced in the main UI; gated behind an advanced toggle.
+    ///
+    /// When `enabled` (and the fields validate) it short-circuits relay
+    /// selection in `produce_warren_tunnel_params`: no roster lookup, no
+    /// country/city query, no multi-hop, and the TOFU pin is skipped
+    /// because the user pinned the key explicitly by typing it.
+    #[serde(default)]
+    pub warren_custom_exit: WarrenCustomExitSettings,
+}
+
+/// Warren two-relayed QUIC multi-hop settings. Persisted in
+/// [`Settings::warren_multi_hop`] and surfaced via the
+/// `GetWarrenMultiHopSettings` gRPC rpc. The `entry_country` and
+/// `exit_country` are ISO 3166 alpha-2 codes; empty string means
+/// auto-pick from the relay list.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenMultiHopSettings {
+    /// Toggle ON/OFF. Default `false` per doctrine.
+    pub enabled: bool,
+    /// ISO 3166 alpha-2 entry country code. Empty = auto-pick.
+    pub entry_country: String,
+    /// ISO 3166 alpha-2 exit country code. Empty = auto-pick.
+    pub exit_country: String,
+    /// HPKE epoch rotation interval, capped to 8h by warren-core
+    /// doctrine. Default 4h matches `warren_multihop_doctrine_v1`.
+    pub hpke_epoch_rotation: std::time::Duration,
+}
+
+impl Default for WarrenMultiHopSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            entry_country: String::new(),
+            exit_country: String::new(),
+            hpke_epoch_rotation: std::time::Duration::from_secs(4 * 60 * 60),
+        }
+    }
+}
+
+/// Advanced "custom exit" escape hatch. Persisted in
+/// [`Settings::warren_custom_exit`] and surfaced via the
+/// `Get/SetWarrenCustomExit` gRPC rpcs.
+///
+/// Fields are stored as plain strings (not `warrenguard-wire` types) so
+/// `mullvad-types` stays decoupled from the engine crates; the daemon
+/// parses and validates them at the gRPC boundary, mirroring how
+/// `warren_n_connections` range-checks late. An invalid persisted value
+/// is treated as "not active" rather than rejected, so a hand-edited
+/// `settings.json` can never wedge the tunnel.
+///
+/// Default = OFF (`enabled = false`, empty fields), so a fresh install
+/// and every roster-driven connect are unaffected.
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub struct WarrenCustomExitSettings {
+    /// Master toggle. When `false` the other fields are ignored and the
+    /// app uses normal roster-based selection.
+    #[serde(default)]
+    pub enabled: bool,
+    /// Exit UDP endpoint as `host:port` (e.g. `203.0.113.5:443`). IPv6
+    /// must be bracketed (`[2001:db8::1]:443`). Parsed to a `SocketAddr`
+    /// daemon-side.
+    #[serde(default)]
+    pub endpoint: String,
+    /// Hex-encoded 32-byte Ed25519 server public key of the exit (64 hex
+    /// chars, the `keygen` output of a `warrenguard` node). Pins the exit
+    /// identity in-band; a wrong key cannot complete the handshake.
+    #[serde(default)]
+    pub pubkey_hex: String,
+    /// Hex-encoded 32-byte X25519 multi-hop HPKE recipient key (64 hex
+    /// chars) the exit prints as its `x25519 multihop pubkey`. The custom
+    /// exit now rides the 1-hop multi-hop datapath, whose payload is sealed
+    /// to this key. Older `settings.json` predating this field leave it
+    /// empty (`serde(default)`).
+    #[serde(default)]
+    pub x25519_multihop_pubkey_hex: String,
+    /// Hex-encoded 16-byte exit routing id (32 hex chars) the exit prints as
+    /// its `exit_id`. Carried in the cleartext multi-hop header so the node
+    /// routes the datagram to its own local termination (relay id == exit id
+    /// for a 1-hop circuit). Empty in older `settings.json`.
+    #[serde(default)]
+    pub exit_id_hex: String,
+    /// Optional X.509 cover domain (SNI). `Some` selects v6 X.509 mode
+    /// (the exit must run a matching public certificate); `None` keeps
+    /// the default RPK-via-SNI handshake. Must match the exit's mode.
+    #[serde(default)]
+    pub cover_domain: Option<String>,
+    /// Optional human label shown in the UI ("My home exit"). Cosmetic.
+    #[serde(default)]
+    pub label: String,
+}
+
+impl WarrenCustomExitSettings {
+    /// Whether this config should override roster selection: enabled and
+    /// every required field non-empty. The 1-hop multi-hop datapath needs
+    /// all four (endpoint + Ed25519 pin + X25519 HPKE key + exit id), so a
+    /// config missing any of them stays inactive rather than dialing a node
+    /// the multi-hop assembler cannot complete. Field *content* validity
+    /// (parseable endpoint, well-formed keys) is checked downstream; this is
+    /// the cheap gate read on the hot connect path.
+    #[must_use]
+    pub fn is_active(&self) -> bool {
+        self.enabled
+            && !self.endpoint.trim().is_empty()
+            && !self.pubkey_hex.trim().is_empty()
+            && !self.x25519_multihop_pubkey_hex.trim().is_empty()
+            && !self.exit_id_hex.trim().is_empty()
+    }
+}
+
+/// Warren TOFU pinning store for exit Ed25519 pubkeys. Persisted as
+/// part of [`Settings`].
+///
+/// Storage key is the exit identifier (`exit_id_hex` - currently the
+/// 32-byte Ed25519 pubkey hex per /v1 limitation; a future stable
+/// 128-bit `exit_id` field on the signed warren-core relay list would
+/// replace it).
+///
+/// Empty = no pins yet (all exits get pinned on first connect, TOFU
+/// pattern). Reset via the `ResetPinnedExitKeys` gRPC RPC.
+#[derive(Debug, Clone, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub struct WarrenPinnedExitPubkeys {
+    /// Ordered map for deterministic JSON serialisation. The key is a
+    /// lower-case hex string (currently the pubkey itself; switches to
+    /// the stable 128-bit `exit_id` once warren-core wires that field).
+    pub entries: std::collections::BTreeMap<String, WarrenPinnedExitPubkey>,
+}
+
+/// One entry in [`WarrenPinnedExitPubkeys`]. Stores the pubkey first
+/// seen for a given exit identifier plus the first/last observation
+/// timestamps for forensic context.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenPinnedExitPubkey {
+    /// Hex-encoded 32-byte Ed25519 verifying key the user's daemon
+    /// has trusted for this exit identity.
+    pub pubkey_hex: String,
+    /// Unix timestamp (seconds) when this pin was first established.
+    pub first_seen_unix: u64,
+    /// Unix timestamp (seconds) of the most recent successful match.
+    /// Bumped on every reconnect where the observed pubkey matches
+    /// `pubkey_hex`. Lets the UI surface staleness ("you last
+    /// connected to this exit X days ago").
+    pub last_seen_unix: u64,
+    /// Optional cached forensic context: ISO 3166 alpha-2 country
+    /// code + city as advertised by the relay list at the moment of
+    /// pinning. Carried so the UI can show "this used to be FR Paris"
+    /// even after the entry is removed from the active relay list.
+    /// Empty strings on first introduction if the daemon does not know
+    /// the location yet.
+    #[serde(default)]
+    pub country_code: String,
+    #[serde(default)]
+    pub city: String,
+}
+
+/// Transport protocol selector for NAT-PMP port-forwarding. Stored on
+/// disk as a string discriminant to keep the JSON settings forward-
+/// compatible. Single-proto variants match the RFC 6886 opcode mapping
+/// (UDP = 1, TCP = 2); `Both` maps the two protocols together on ONE
+/// external port, as an atomic pair (if either leg fails, the rule
+/// fails as a whole).
+#[derive(Debug, Clone, Copy, Eq, PartialEq, Default, Serialize, Deserialize)]
+pub enum WarrenNatPmpProto {
+    /// UDP mapping (RFC 6886 opcode 1).
+    #[default]
+    Udp,
+    /// TCP mapping (RFC 6886 opcode 2).
+    Tcp,
+    /// TCP + UDP together on the same external port.
+    Both,
+}
+
+/// One NAT-PMP port-forward rule. A client may hold several of these
+/// simultaneously, up to the exit-enforced per-client quota
+/// (`warren_config::NATPMP_QUOTA_PER_CLIENT_IP`).
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenNatPmpRule {
+    /// Transport protocol (UDP or TCP).
+    pub protocol: WarrenNatPmpProto,
+    /// Suggested external port (0 = server picks from its pool).
+    pub suggested_external_port: u16,
+    /// Internal port the user's application binds (0 = unset; the exit
+    /// then DNATs the granted external port to the same number on the
+    /// client - the "same port on your device" model).
+    pub internal_port: u16,
+}
+
+/// Warren NAT-PMP port-forwarding settings. Persisted in
+/// [`Settings::warren_nat_pmp`] and surfaced via the
+/// `GetNatPmpSettings` gRPC rpc. Default OFF; lifetime defaults to 1h
+/// (the exit-side allocator clamps to 60..3600 s).
+///
+/// Multi-port model: [`Self::rules`] is the source of truth. The legacy
+/// single-port fields (`protocol` / `suggested_external_port` /
+/// `internal_port`) are retained ONLY so a settings.json written by a
+/// pre-multi-port build still deserializes and its one forward is
+/// preserved on upgrade (see [`Self::effective_rules`]). New writes
+/// populate `rules` and leave the legacy fields at their defaults.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenNatPmpSettings {
+    /// Toggle ON/OFF. Default `false`.
+    pub enabled: bool,
+    /// Lifetime in seconds. Default 3600 (1 hour); the exit-side
+    /// allocator clamps to its [60, 3600] range so larger values are
+    /// silently capped server-side.
+    pub lifetime_secs: u32,
+    /// The set of port-forward rules the user wants active. Empty +
+    /// `enabled` falls back to a single rule synthesized from the legacy
+    /// fields (upgrade path). Capped client- and exit-side by the quota.
+    #[serde(default)]
+    pub rules: Vec<WarrenNatPmpRule>,
+    /// Legacy single-port protocol. Kept for backward-compatible
+    /// deserialization of old settings; superseded by `rules`.
+    #[serde(default)]
+    pub protocol: WarrenNatPmpProto,
+    /// Legacy single-port suggested external port (see `protocol`).
+    #[serde(default)]
+    pub suggested_external_port: u16,
+    /// Legacy single-port internal port (see `protocol`).
+    #[serde(default)]
+    pub internal_port: u16,
+}
+
+impl Default for WarrenNatPmpSettings {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            lifetime_secs: 3600,
+            rules: Vec::new(),
+            protocol: WarrenNatPmpProto::Udp,
+            suggested_external_port: 0,
+            internal_port: 0,
+        }
+    }
+}
+
+impl WarrenNatPmpSettings {
+    /// The effective list of port-forward rules to apply.
+    ///
+    /// New (multi-port) settings carry them in `rules`. A settings.json
+    /// from a pre-multi-port build has `rules` empty but the legacy
+    /// single-port fields set - we synthesize one rule from those so the
+    /// existing forward survives the upgrade. A fresh default (disabled,
+    /// no rules) yields an empty list.
+    #[must_use]
+    pub fn effective_rules(&self) -> Vec<WarrenNatPmpRule> {
+        if !self.rules.is_empty() {
+            return self.rules.clone();
+        }
+        // Legacy single-port fallback: only meaningful when something was
+        // actually configured (a non-zero internal/external port). A
+        // pristine default would otherwise synthesize a useless 0/0 rule.
+        if self.internal_port != 0 || self.suggested_external_port != 0 {
+            return vec![WarrenNatPmpRule {
+                protocol: self.protocol,
+                suggested_external_port: self.suggested_external_port,
+                internal_port: self.internal_port,
+            }];
+        }
+        Vec::new()
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
@@ -261,13 +570,13 @@ impl Default for Settings {
     fn default() -> Self {
         Settings {
             relay_settings: RelaySettings::Normal(RelayConstraints {
-                location: Constraint::Only(LocationConstraint::Location(
-                    GeographicLocationConstraint::Country("se".to_owned()),
-                )),
+                // Keep this `Any`: a specific country default has no match in
+                // Warren's exit inventory and renders as "Unknown" in the
+                // selector. `Any` ("Automatic") matches how Warren actually
+                // picks exits via the multi-hop directory.
+                location: Constraint::Any,
                 wireguard_constraints: WireguardConstraints {
-                    entry_location: Constraint::Only(LocationConstraint::Location(
-                        GeographicLocationConstraint::Country("se".to_owned()),
-                    )),
+                    entry_location: Constraint::Any,
                     ..Default::default()
                 },
                 ..Default::default()
@@ -294,6 +603,17 @@ impl Default for Settings {
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]
             rollout_threshold_seed: None,
+            // `None` here resolves to the compiled production default
+            // (`warren_remote_config::DEFAULT_WARREN_API_URL`) at boot,
+            // so the remote backend works without any manual `api-url
+            // set`.
+            warren_api_url: None,
+            warren_n_connections: None,
+            warren_max_rate_bps: None,
+            warren_multi_hop: WarrenMultiHopSettings::default(),
+            warren_nat_pmp: WarrenNatPmpSettings::default(),
+            warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys::default(),
+            warren_custom_exit: WarrenCustomExitSettings::default(),
         }
     }
 }
@@ -381,10 +701,221 @@ impl Default for TunnelOptions {
         TunnelOptions {
             wireguard: wireguard::TunnelOptions::default(),
             generic: GenericTunnelOptions {
-                // Enable IPv6 by default on Android and macOS
-                enable_ipv6: cfg!(target_os = "android") || cfg!(target_os = "macos"),
+                // Warren /v1 is IPv4-only: the exit allocates no IPv6
+                // tunnel address by default, so IPv6 must be BLOCKED by
+                // the firewall, not routed. Upstream Mullvad defaults
+                // this `true` on macOS/Android because WireGuard is
+                // dual-stack; on Warren that default leaks IPv6 traffic
+                // out the physical interface (apps reach IPv6
+                // destinations *outside* the tunnel while it looks
+                // "connected"). Default off until /v2 ships in-tunnel
+                // IPv6 end to end.
+                enable_ipv6: false,
             },
             dns_options: DnsOptions::default(),
         }
+    }
+}
+
+#[cfg(test)]
+mod warren_custom_exit_tests {
+    use super::*;
+
+    /// Default is OFF and inactive: a fresh install must keep using the
+    /// signed roster, never a half-configured custom exit.
+    #[test]
+    fn default_is_disabled_and_inactive() {
+        let custom = WarrenCustomExitSettings::default();
+        assert!(!custom.enabled);
+        assert!(!custom.is_active());
+    }
+
+    /// `is_active` requires the toggle AND every mandatory field. A
+    /// toggle flipped on with empty fields (e.g. user enabled then
+    /// cleared) must not divert the tunnel to a bogus exit. The X25519
+    /// HPKE key and exit id are mandatory too, because the 1-hop multi-hop
+    /// assembler cannot build a circuit without them.
+    #[test]
+    fn is_active_requires_toggle_and_required_fields() {
+        let base = WarrenCustomExitSettings {
+            enabled: true,
+            endpoint: "203.0.113.5:443".to_owned(),
+            pubkey_hex: "aa".repeat(32),
+            x25519_multihop_pubkey_hex: "bb".repeat(32),
+            exit_id_hex: "cc".repeat(16),
+            cover_domain: None,
+            label: String::new(),
+        };
+        assert!(base.is_active());
+
+        assert!(
+            !WarrenCustomExitSettings {
+                enabled: false,
+                ..base.clone()
+            }
+            .is_active()
+        );
+        assert!(
+            !WarrenCustomExitSettings {
+                endpoint: "   ".to_owned(),
+                ..base.clone()
+            }
+            .is_active()
+        );
+        assert!(
+            !WarrenCustomExitSettings {
+                pubkey_hex: String::new(),
+                ..base.clone()
+            }
+            .is_active()
+        );
+        assert!(
+            !WarrenCustomExitSettings {
+                x25519_multihop_pubkey_hex: String::new(),
+                ..base.clone()
+            }
+            .is_active()
+        );
+        assert!(
+            !WarrenCustomExitSettings {
+                exit_id_hex: "   ".to_owned(),
+                ..base
+            }
+            .is_active()
+        );
+    }
+
+    /// Forward-compat: a `settings.json` written by an older build (no
+    /// `warren_custom_exit` key) must deserialise to the disabled
+    /// default, never fail the whole Settings parse.
+    #[test]
+    fn absent_field_deserialises_to_default() {
+        let json = r#"{}"#;
+        let custom: WarrenCustomExitSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(custom, WarrenCustomExitSettings::default());
+    }
+
+    /// Round-trip keeps the optional cover-domain (X.509 mode marker) plus
+    /// the multi-hop key material intact, so a v6 X.509 custom exit survives
+    /// a daemon restart.
+    #[test]
+    fn round_trip_preserves_cover_domain() {
+        let custom = WarrenCustomExitSettings {
+            enabled: true,
+            endpoint: "[2001:db8::1]:443".to_owned(),
+            pubkey_hex: "bb".repeat(32),
+            x25519_multihop_pubkey_hex: "cc".repeat(32),
+            exit_id_hex: "dd".repeat(16),
+            cover_domain: Some("cdn.example.com".to_owned()),
+            label: "Home".to_owned(),
+        };
+        let json = serde_json::to_string(&custom).unwrap();
+        let back: WarrenCustomExitSettings = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, custom);
+    }
+}
+
+#[cfg(test)]
+mod warren_pinned_exit_pubkeys_tests {
+    use super::*;
+
+    /// Anti-regression: an empty pin table round-trips through the
+    /// settings JSON without leaking any field that would change the
+    /// shape from build to build. Settings drift between rebuilds is
+    /// a known cause of "user has to re-approve permissions" UX
+    /// regressions on macOS.
+    #[test]
+    fn empty_pin_table_round_trip_json() {
+        let pins = WarrenPinnedExitPubkeys::default();
+        let json = serde_json::to_string(&pins).unwrap();
+        assert_eq!(json, r#"{"entries":{}}"#);
+        let back: WarrenPinnedExitPubkeys = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, pins);
+    }
+
+    /// One pinned exit deserialises to the exact same `BTreeMap` it
+    /// was serialised from. Sentinel against a future field-shape
+    /// drift (e.g. someone renaming `pubkey_hex` to `pubkey`).
+    #[test]
+    fn one_pin_round_trip_json() {
+        let mut pins = WarrenPinnedExitPubkeys::default();
+        pins.entries.insert(
+            "abcd0123".repeat(8),
+            WarrenPinnedExitPubkey {
+                pubkey_hex: "ed25519aa".repeat(7) + "ed25519a",
+                first_seen_unix: 1747740000,
+                last_seen_unix: 1747740300,
+                country_code: "fr".into(),
+                city: "Paris".into(),
+            },
+        );
+        let json = serde_json::to_string(&pins).unwrap();
+        let back: WarrenPinnedExitPubkeys = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, pins);
+    }
+
+    /// `BTreeMap` preserves key order, which means the on-disk JSON is
+    /// deterministic regardless of insertion order. Important for diff-
+    /// based settings inspection by the operator (and for our own
+    /// regression suite, which would flake otherwise).
+    #[test]
+    fn pin_table_json_is_key_ordered() {
+        let mut pins = WarrenPinnedExitPubkeys::default();
+        pins.entries.insert(
+            "zzzz".into(),
+            WarrenPinnedExitPubkey {
+                pubkey_hex: "z".repeat(64),
+                first_seen_unix: 1,
+                last_seen_unix: 2,
+                country_code: String::new(),
+                city: String::new(),
+            },
+        );
+        pins.entries.insert(
+            "aaaa".into(),
+            WarrenPinnedExitPubkey {
+                pubkey_hex: "a".repeat(64),
+                first_seen_unix: 3,
+                last_seen_unix: 4,
+                country_code: String::new(),
+                city: String::new(),
+            },
+        );
+        let json = serde_json::to_string(&pins).unwrap();
+        let i_aaaa = json.find("\"aaaa\"").expect("aaaa key present");
+        let i_zzzz = json.find("\"zzzz\"").expect("zzzz key present");
+        assert!(
+            i_aaaa < i_zzzz,
+            "BTreeMap must serialise keys in lexicographic order, got: {json}"
+        );
+    }
+
+    /// The `Settings::default` initializer must produce an empty pin
+    /// table - never silently pre-populate with stale data that would
+    /// poison the TOFU contract on first boot.
+    #[test]
+    fn settings_default_has_empty_pin_table() {
+        let s = Settings::default();
+        assert!(s.warren_pinned_exit_pubkeys.entries.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod warren_settings_default_tests {
+    use super::*;
+
+    /// Warren /v1 carries IPv4 only. IPv6 must default OFF so the
+    /// firewall BLOCKS it instead of letting it leak out the physical
+    /// interface. Upstream Mullvad defaults this `true` on macOS/Android
+    /// (WireGuard is dual-stack); inheriting that default silently leaks
+    /// every IPv6 connection around the tunnel.
+    #[test]
+    fn default_blocks_ipv6_because_tunnel_is_ipv4_only() {
+        let opts = TunnelOptions::default();
+        assert!(
+            !opts.generic.enable_ipv6,
+            "Warren is IPv4-only in /v1; enable_ipv6 must default to false \
+             so IPv6 is blocked, not leaked outside the tunnel"
+        );
     }
 }

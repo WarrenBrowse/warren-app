@@ -1,6 +1,6 @@
-# How to contribute to the Mullvad VPN app
+# How to contribute to the Warren VPN app
 
-The Mullvad VPN app is open sourced for many reasons, but primarily we want to
+The Warren VPN app is open sourced for many reasons, but primarily we want to
 * allow users to verify that our app functions as we claim it does, giving them the option to build
   it from source without having to trust our released binaries
 * receive contributions from third parties.
@@ -10,21 +10,21 @@ The Mullvad VPN app is open sourced for many reasons, but primarily we want to
 
 If you find a bug in the app's code, please report it on GitHub in the issue tracker. Please send
 all other problems or questions (those not directly related to the app's development) to
-[support@mullvadvpn.net](mailto:support@mullvadvpn.net). This includes connection issues, questions
-regarding your account, and problems with the Mullvad VPN infrastructure or servers.
+[support@warrenbrowse.com](mailto:support@warrenbrowse.com). This includes connection issues, questions
+regarding your account, and problems with the Warren VPN infrastructure or servers.
 
 
 ## Submitting changes
 
-If you would like to contribute to the development of the Mullvad VPN app, please carefully read the
+If you would like to contribute to the development of the Warren VPN app, please carefully read the
 following sections first and then feel free to submit a pull request on GitHub.
 
-While we appreciate your interest in helping us to improve Mullvad VPN, please understand that
+While we appreciate your interest in helping us to improve Warren VPN, please understand that
 choosing which submitted changes to merge is fully at our discretion, based upon our development
 plans for the app. Before implementing new features, refactoring or making major changes, consider
-existing [discussions](https://github.com/mullvad/mullvadvpn-app/discussions) or creating a
-[new one](https://github.com/mullvad/mullvadvpn-app/discussions/new?category=feature-requests-ideas).
-If you are fixing a bug, feel free to comment on the relevant existing issue or create a [bug report](https://github.com/mullvad/mullvadvpn-app/issues/new/choose)
+existing [discussions](https://github.com/WarrenBrowse/warren-app/discussions) or creating a
+[new one](https://github.com/WarrenBrowse/warren-app/discussions/new).
+If you are fixing a bug, feel free to comment on the relevant existing issue or create a [bug report](https://github.com/WarrenBrowse/warren-app/issues/new)
 before you start.
 
 ### AI-assisted contributions
@@ -39,14 +39,10 @@ the only communication we receive from the author is clearly from a bot.
 
 ### Localization / translations
 
-The app is translated and proofread via a third party company. We can't take in user improvements
-to the translations directly, since we can't verify their correctness. All translations have to
-go via the translation company. As a result, if you want to improve an existing
-translation, please don't edit the PO files and submit to us. Instead fill in your suggested
-improvement in [this form], and the translation company will pick it up and process the
-suggestion after a while.
-
-[this form]: https://docs.google.com/forms/d/e/1FAIpQLSeEFRe0ojdl6QdHPp7Z9qIvdGTc1uSgbswQT6d-VRQ98GBO2w/viewform
+Warren translations are maintained directly in this repository (the upstream third-party
+translation pipeline is not used). If you want to improve an existing translation, open a pull
+request against the relevant PO / string resources, or report the issue on the
+[Warren forum](https://forum.warrenbrowse.com) if you prefer not to edit the files yourself.
 
 ### Copyright and ownership of contributed code and changes
 

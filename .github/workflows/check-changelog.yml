@@ -1,12 +1,9 @@
 ---
 name: Check changelog format
 on:
-  pull_request:
-    paths:
-      - .github/workflows/check-changelog.yml
-      - 'CHANGELOG.md'
-      - 'ios/CHANGELOG.md'
-      - 'android/CHANGELOG.md'
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 permissions: {}
 

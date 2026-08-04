@@ -21,7 +21,7 @@ use tests::{config::TEST_CONFIG, get_filtered_tests};
 use tokio::time::Instant;
 use vm::provision;
 
-/// Test manager for Mullvad VPN app
+/// Test manager for Warren VPN app
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {

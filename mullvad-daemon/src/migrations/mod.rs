@@ -44,13 +44,13 @@ use tokio::{
 };
 
 mod account_history;
-mod device;
 mod v1;
 mod v10;
 mod v11;
 mod v12;
 mod v13;
 mod v14;
+mod v15;
 mod v2;
 mod v3;
 mod v4;
@@ -115,10 +115,6 @@ impl MigrationComplete {
 
     pub fn is_complete(&self) -> bool {
         self.0.load(Ordering::Relaxed)
-    }
-
-    fn set_complete(&mut self) {
-        self.0.store(true, Ordering::Relaxed);
     }
 }
 
@@ -220,23 +216,9 @@ async fn migrate_settings(
     v12::migrate(settings)?;
     v13::migrate(settings)?;
     v14::migrate(settings)?;
+    v15::migrate(settings)?;
 
     Ok(migration_data)
-}
-
-pub(crate) fn migrate_device(
-    migration_data: MigrationData,
-    rest_handle: mullvad_api::rest::MullvadRestHandle,
-    daemon_tx: crate::DaemonEventSender,
-) -> MigrationComplete {
-    let migration_complete = MigrationComplete::new(false);
-    device::generate_device(
-        migration_data,
-        migration_complete.clone(),
-        rest_handle,
-        daemon_tx,
-    );
-    migration_complete
 }
 
 #[cfg(windows)]

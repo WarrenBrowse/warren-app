@@ -22,7 +22,6 @@ use mullvad_types::{
     settings::{DnsOptions, Settings},
     states::{TargetState, TunnelState},
     version,
-    wireguard::{RotationInterval, RotationIntervalError},
 };
 use std::collections::BTreeSet;
 use std::{
@@ -36,6 +35,11 @@ use tokio::time::timeout;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 
 const RPC_SERVER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(1);
+
+/// Trailing token a logout source must carry for the daemon to perform a
+/// destructive identity wipe (true sign-out). The desktop sends it only
+/// from the backup-confirmed "log out" button (see AccountView.tsx).
+const WIPE_IDENTITY_LOGOUT_TOKEN: &str = "gui-logout-button";
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -51,6 +55,14 @@ struct ManagementServiceImpl {
     subscriptions: Arc<Mutex<Vec<EventsListenerSender>>>,
     pub app_upgrade_broadcast: AppUpgradeBroadcast,
     log_reload_handle: crate::logging::LogHandle,
+    /// Direct handle on the live Warren status cache. Read by
+    /// `get_warren_status` and subscribed by `warren_status_updates`
+    /// without round-tripping through the daemon command channel
+    /// (the cache is `Arc`-backed and the values are pure RAM).
+    warren_status_cache: crate::warren_status::WarrenStatusCache,
+    /// Authorizes wallet/secret RPCs (mnemonic read/write, destructive
+    /// sign-out) against the calling process' Unix credentials.
+    wallet_access: Arc<crate::wallet_access::WalletAccessControl>,
 }
 
 pub type ServiceResult<T> = std::result::Result<Response<T>, Status>;
@@ -60,8 +72,184 @@ type EventsListenerSender = tokio::sync::mpsc::UnboundedSender<Result<types::Dae
 type AppUpgradeEventListenerReceiver =
     Box<dyn futures::Stream<Item = Result<types::AppUpgradeEvent, Status>> + Send + Unpin>;
 
+type WarrenStatusUpdatesReceiver =
+    Box<dyn futures::Stream<Item = Result<types::WarrenStatus, Status>> + Send + Unpin>;
+
+type NatPmpStatusUpdatesReceiver =
+    Box<dyn futures::Stream<Item = Result<types::NatPmpStatus, Status>> + Send + Unpin>;
+
+/// Map a `NatPmpFailureReason` to its proto enum discriminant.
+fn nat_pmp_error_reason_to_i32(reason: &talpid_warren_tunnel::NatPmpFailureReason) -> i32 {
+    use talpid_warren_tunnel::NatPmpFailureReason;
+    use types::nat_pmp_status::ErrorReason;
+    let r = match reason {
+        NatPmpFailureReason::SuggestedPortInUse => ErrorReason::SuggestedPortInUse,
+        NatPmpFailureReason::OutOfResources => ErrorReason::OutOfResources,
+        NatPmpFailureReason::NotAuthorized => ErrorReason::NotAuthorized,
+        NatPmpFailureReason::Other => ErrorReason::Unknown,
+    };
+    r as i32
+}
+
+/// Map one per-rule mapping snapshot into the proto `Mapping` message.
+fn nat_pmp_mapping_to_proto(
+    m: &crate::warren_status::NatPmpMappingSnapshot,
+) -> types::nat_pmp_status::Mapping {
+    use crate::warren_status::NatPmpStateSnapshot;
+    use talpid_warren_tunnel::NatPmpProto;
+    use types::nat_pmp_status::{Mapping, State};
+
+    let protocol = match m.protocol {
+        NatPmpProto::Udp => types::nat_pmp_settings::Proto::Udp as i32,
+        NatPmpProto::Tcp => types::nat_pmp_settings::Proto::Tcp as i32,
+        NatPmpProto::Both => types::nat_pmp_settings::Proto::Both as i32,
+    };
+    // Base "all-unset" message; each arm overrides the fields it sets.
+    let base = Mapping {
+        internal_port: u32::from(m.internal_port),
+        protocol,
+        state: State::Disabled as i32,
+        external_port: None,
+        lifetime_granted_secs: None,
+        error_message: None,
+        error_reason: None,
+        retry_after_secs: None,
+        attempts_remaining: None,
+        window_reset_secs: None,
+    };
+    match &m.state {
+        NatPmpStateSnapshot::Disabled => Mapping {
+            state: State::Disabled as i32,
+            ..base
+        },
+        NatPmpStateSnapshot::Requesting => Mapping {
+            state: State::Requesting as i32,
+            ..base
+        },
+        NatPmpStateSnapshot::Mapped {
+            external_port,
+            lifetime_secs,
+            attempts_remaining,
+            window_reset_secs,
+        } => Mapping {
+            state: State::Mapped as i32,
+            external_port: Some(u32::from(*external_port)),
+            lifetime_granted_secs: Some(*lifetime_secs),
+            attempts_remaining: attempts_remaining.map(u32::from),
+            window_reset_secs: Some(u32::from(*window_reset_secs)),
+            ..base
+        },
+        NatPmpStateSnapshot::RateLimited { retry_after_secs } => Mapping {
+            state: State::RateLimited as i32,
+            retry_after_secs: Some(u32::from(*retry_after_secs)),
+            ..base
+        },
+        NatPmpStateSnapshot::Failed { error, reason } => Mapping {
+            state: State::Failed as i32,
+            error_message: Some(error.clone()),
+            error_reason: Some(nat_pmp_error_reason_to_i32(reason)),
+            ..base
+        },
+    }
+}
+
+/// Maps the live per-rule NAT-PMP mappings into the proto status message
+/// emitted by `GetNatPmpSettings` and the `NatPmpStatusUpdates` stream.
+/// Populates `mappings` (multi-port). The legacy top-level fields mirror
+/// the first mapping for backward compatibility with older clients, or
+/// stay Disabled when there are no active mappings.
+fn nat_pmp_state_to_proto(
+    mappings: &[crate::warren_status::NatPmpMappingSnapshot],
+) -> types::NatPmpStatus {
+    use types::nat_pmp_status::State;
+
+    let proto_mappings: Vec<types::nat_pmp_status::Mapping> =
+        mappings.iter().map(nat_pmp_mapping_to_proto).collect();
+
+    let mut status = types::NatPmpStatus {
+        state: State::Disabled as i32,
+        external_port: None,
+        lifetime_granted_secs: None,
+        error_message: None,
+        error_reason: None,
+        retry_after_secs: None,
+        attempts_remaining: None,
+        window_reset_secs: None,
+        mappings: proto_mappings,
+    };
+    if let Some(first) = status.mappings.first() {
+        status.state = first.state;
+        status.external_port = first.external_port;
+        status.lifetime_granted_secs = first.lifetime_granted_secs;
+        status.error_message = first.error_message.clone();
+        status.error_reason = first.error_reason;
+        status.retry_after_secs = first.retry_after_secs;
+        status.attempts_remaining = first.attempts_remaining;
+        status.window_reset_secs = first.window_reset_secs;
+    }
+    status
+}
+
+/// Convert a `WarrenStatusSnapshot` snapshot into the gRPC proto.
+/// Centralised so the snapshot RPC and the stream RPC stay consistent.
+fn warren_status_snapshot_to_proto(
+    snap: crate::warren_status::WarrenStatusSnapshot,
+) -> types::WarrenStatus {
+    use crate::warren_notices_updater::NoticeLevel;
+
+    let duration_to_proto = |d: std::time::Duration| types::Duration {
+        seconds: d.as_secs() as i64,
+        nanos: d.subsec_nanos() as i32,
+    };
+    types::WarrenStatus {
+        reconnect_count: snap.reconnect_count,
+        last_reconnect_age: snap.last_reconnect_age.map(duration_to_proto),
+        obfuscation_active: snap.obfuscation_active,
+        failover_count: snap.failover_count,
+        last_failover_age: snap.last_failover_age.map(duration_to_proto),
+        // Surface the pending mismatch to the UI.
+        // `None` (steady state) -> proto field unset -> renderer
+        // sees `pubkeyMismatchPending: null`.
+        pubkey_mismatch_pending: snap.pubkey_mismatch_pending.map(|m| {
+            types::WarrenPubkeyMismatch {
+                exit_id_hex: m.exit_id_hex,
+                pinned_pubkey_hex: m.pinned_pubkey_hex,
+                observed_pubkey_hex: m.observed_pubkey_hex,
+                country_code: m.country_code,
+                city: m.city,
+            }
+        }),
+        maintenance_migration_active: snap.maintenance_migration_active,
+        port_migration_cancellations: snap.port_migration_cancellations,
+        port_migration_cancellation_active: snap.port_migration_cancellation_active,
+        host_offline: snap.host_offline,
+        exit_egress_dead: snap.exit_egress_dead,
+        network_info: snap.network_info.map(|info| types::WarrenNetworkInfo {
+            environment: info.environment,
+            degraded: info.degraded,
+            default_rate_bps: info.default_rate_bps,
+            payments_enabled: info.payments_enabled,
+        }),
+        notices: snap
+            .notices
+            .into_iter()
+            .map(|n| types::WarrenNotice {
+                id: n.id,
+                message: n.message,
+                level: i32::from(match n.level {
+                    NoticeLevel::Info => types::WarrenNoticeLevel::WarrenNoticeInfo,
+                    NoticeLevel::Warning => types::WarrenNoticeLevel::WarrenNoticeWarning,
+                    NoticeLevel::Error => types::WarrenNoticeLevel::WarrenNoticeError,
+                }),
+            })
+            .collect(),
+    }
+}
+
 const INVALID_VOUCHER_MESSAGE: &str = "This voucher code is invalid";
 const USED_VOUCHER_MESSAGE: &str = "This voucher code has already been used";
+const EXPIRED_VOUCHER_MESSAGE: &str = "This voucher code has expired";
+const NOT_READY_VOUCHER_MESSAGE: &str = "The purchase has no voucher queued yet";
 
 #[mullvad_management_interface::async_trait]
 impl ManagementService for ManagementServiceImpl {
@@ -69,6 +257,8 @@ impl ManagementService for ManagementServiceImpl {
     type EventsListenStream = EventsListenerReceiver;
     type AppUpgradeEventsListenStream = AppUpgradeEventListenerReceiver;
     type LogListenStream = UnboundedReceiverStream<Result<types::LogMessage, Status>>;
+    type WarrenStatusUpdatesStream = WarrenStatusUpdatesReceiver;
+    type NatPmpStatusUpdatesStream = NatPmpStatusUpdatesReceiver;
 
     // Control and get the tunnel state
     //
@@ -265,6 +455,409 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
+        let warren_api_url = request.into_inner();
+        // Warren no-log: URL may potentially contain a sensitive
+        // host (= private deployment). Log only the length.
+        log::debug!("set_warren_api_url(len={})", warren_api_url.len());
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenApiUrl(tx, warren_api_url))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    async fn set_warren_n_connections(&self, request: Request<u32>) -> ServiceResult<()> {
+        let raw = request.into_inner();
+        log::debug!("set_warren_n_connections({raw})");
+        // 0 = reset to the compiled default; anything else must sit in
+        // the valid range. Reject rather than clamp so a buggy client
+        // cannot silently change the wire profile.
+        let value = match raw {
+            0 => None,
+            n => Some(
+                u8::try_from(n)
+                    .ok()
+                    .filter(|n| crate::warren_tunnel_params::N_CONNECTIONS_RANGE.contains(n))
+                    .ok_or_else(|| {
+                        Status::invalid_argument(format!(
+                            "n_connections must be in {:?}",
+                            crate::warren_tunnel_params::N_CONNECTIONS_RANGE
+                        ))
+                    })?,
+            ),
+        };
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenNConnections(tx, value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    async fn set_warren_max_rate_bps(&self, request: Request<u64>) -> ServiceResult<()> {
+        let raw = request.into_inner();
+        log::debug!("set_warren_max_rate_bps({raw})");
+        // 0 = unset (unlimited). Any non-zero value is a valid cap; the
+        // UIs constrain the practical range.
+        let value = match raw {
+            0 => None,
+            bps => Some(bps),
+        };
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenMaxRateBps(tx, value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    /// Returns the user's BIP39 mnemonic. Empty string if
+    /// the identity has never been bootstrapped. **No-log policy**:
+    /// never log the content.
+    ///
+    /// The daemon side keeps the secret wrapped in `Zeroizing<String>`.
+    /// Once we hand it to `tonic` via `Response::new`, the bytes are
+    /// copied into the gRPC outbound buffer, which is out of our
+    /// control - but the daemon-side heap allocation is wiped as soon
+    /// as the `Zeroizing` wrapper goes out of scope here.
+    async fn get_warren_mnemonic(&self, request: Request<()>) -> ServiceResult<String> {
+        self.authorize_wallet_access(&request)?;
+        log::debug!("get_warren_mnemonic (content NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetWarrenMnemonic(tx))?;
+        let mnemonic = self.wait_for_result(rx).await?;
+        // Unwrap `Zeroizing<String>` only to send over gRPC. The clone
+        // into the response is unavoidable here (gRPC framework needs
+        // an owned `String`), but the original `Zeroizing` wrapper
+        // wipes its heap on drop at end of scope.
+        let payload = mnemonic.map(|z| (*z).clone()).unwrap_or_default();
+        Ok(Response::new(payload))
+    }
+
+    /// Replaces the BIP39 mnemonic (= restore identity). BIP39
+    /// validation + atomic write. The daemon hot-swaps the in-memory
+    /// signer and triggers an auto-login so no restart is needed.
+    /// **No-log policy**: only the byte length, never the content.
+    ///
+    /// The incoming `String` from `tonic` is wrapped in
+    /// `Zeroizing<String>` immediately so the secret heap buffer is
+    /// wiped after `on_set_warren_mnemonic` returns.
+    async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
+        self.authorize_wallet_access(&request)?;
+        let mnemonic = zeroize::Zeroizing::new(request.into_inner());
+        log::info!(
+            "set_warren_mnemonic request received (len={}, content NEVER logged)",
+            mnemonic.len()
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenMnemonic(tx, mnemonic))?;
+        let result = self.wait_for_result(rx).await?;
+        result.map(Response::new).map_err(|e| {
+            // Map io::ErrorKind::InvalidData → InvalidArgument (= BIP39 invalid).
+            // Other errors → Internal.
+            if e.kind() == std::io::ErrorKind::InvalidData {
+                Status::invalid_argument(e.to_string())
+            } else {
+                Status::internal(e.to_string())
+            }
+        })
+    }
+
+    /// Read the persisted Warren multi-hop settings from the daemon
+    /// settings. Default = enabled:false per
+    /// `warren_multihop_doctrine_v1` (opt-in privacy).
+    async fn get_warren_multi_hop_settings(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::WarrenMultiHopSettings> {
+        log::debug!("get_warren_multi_hop_settings");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        let settings = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::WarrenMultiHopSettings::from(
+            &settings.warren_multi_hop,
+        )))
+    }
+
+    /// Persist Warren multi-hop settings. Restart required to apply
+    /// (the multi-hop supervisor is wired at boot from the
+    /// env-var + settings-file path).
+    async fn set_warren_multi_hop_settings(
+        &self,
+        request: Request<types::WarrenMultiHopSettings>,
+    ) -> ServiceResult<()> {
+        let proto_value = request.into_inner();
+        log::debug!(
+            "set_warren_multi_hop_settings(enabled={}, entry={}, exit={})",
+            proto_value.enabled,
+            proto_value.entry_country,
+            proto_value.exit_country
+        );
+        let new_value = mullvad_types::settings::WarrenMultiHopSettings::try_from(proto_value)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenMultiHopSettings(tx, new_value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    /// Persist the advanced Warren "custom exit" override. Field-content
+    /// validation (parseable endpoint, well-formed pubkey) is deferred to
+    /// parameter-production time (`assemble_custom`), so this handler only
+    /// persists and propagates; the daemon reconnects when the tunnel is
+    /// up so the change takes effect.
+    async fn set_warren_custom_exit(
+        &self,
+        request: Request<types::WarrenCustomExitSettings>,
+    ) -> ServiceResult<()> {
+        let proto_value = request.into_inner();
+        log::debug!(
+            "set_warren_custom_exit(enabled={}, endpoint={:?}, cover_domain={:?})",
+            proto_value.enabled,
+            proto_value.endpoint,
+            proto_value.cover_domain
+        );
+        let new_value = mullvad_types::settings::WarrenCustomExitSettings::from(proto_value);
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetWarrenCustomExit(tx, new_value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    /// Signs a community-forum login challenge (doc 55, DiscourseConnect
+    /// wallet SSO). Validates the deep-link `sid` shape, then asks the
+    /// daemon to sign `POST /v1/forum/login` with the Warren identity key
+    /// and returns the header values + body for the GUI to POST.
+    /// **No-log policy**: never log the sid, pubkey, or signature.
+    async fn sign_forum_login(
+        &self,
+        request: Request<types::ForumLoginRequest>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        // Signs with the wallet identity key, so it is gated per-uid exactly
+        // like the mnemonic RPCs: the management socket is world-accessible,
+        // and without this a co-tenant local user could obtain a forum login
+        // signed under this account's wallet identity.
+        self.authorize_wallet_access(&request)?;
+        let sid = request.into_inner().sid;
+        validate_forum_sid(&sid)?;
+        log::debug!("sign_forum_login (sid/pubkey/sig NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SignForumLogin(tx, sid))?;
+        let signed = self.wait_for_result(rx).await?;
+        match signed {
+            Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            None => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+        }
+    }
+
+    /// Signs a community-forum attach-logs request (doc 55). Validates the
+    /// deep-link `sid` shape and the gzipped report size, then asks the
+    /// daemon to build and sign the canonical `POST /v1/forum/attach-logs`
+    /// body with the Warren identity key, returning the header values plus
+    /// the exact signed body for the GUI to POST verbatim.
+    /// **No-log policy**: never log the sid, pubkey, signature, or log
+    /// content.
+    async fn sign_forum_attach_logs(
+        &self,
+        request: Request<types::ForumAttachLogsRequest>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        // Same wallet-key gate as sign_forum_login: without it the
+        // world-accessible socket is a signing oracle for any local user.
+        self.authorize_wallet_access(&request)?;
+        let request = request.into_inner();
+        validate_forum_sid(&request.sid)?;
+        if request.log_gz.is_empty() {
+            return Err(Status::invalid_argument("log_gz must not be empty"));
+        }
+        // The connect provider caps the upload at 1 MiB; refusing here
+        // avoids signing a request the server is guaranteed to reject.
+        if request.log_gz.len() > 1024 * 1024 {
+            return Err(Status::invalid_argument("log_gz exceeds 1 MiB"));
+        }
+        log::debug!("sign_forum_attach_logs (sid/pubkey/sig NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SignForumAttachLogs(
+            tx,
+            request.sid,
+            request.topic_id,
+            request.log_gz,
+        ))?;
+        let signed = self.wait_for_result(rx).await?;
+        match signed {
+            Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            None => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+        }
+    }
+
+    /// Snapshot of the live Warren tunnel status read directly from
+    /// the daemon-shared cache.
+    async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {
+        log::debug!("get_warren_status");
+        let snapshot = self.warren_status_cache.snapshot();
+        Ok(Response::new(warren_status_snapshot_to_proto(snapshot)))
+    }
+
+    /// Push stream emitting a `WarrenStatus` whenever the underlying
+    /// cache mutates (reconnect recorded, obfuscation flipped). Uses
+    /// `tokio::sync::watch` so each subscriber gets an immediate
+    /// initial value and only the latest snapshot when it falls
+    /// behind, avoiding unbounded growth.
+    async fn warren_status_updates(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<Self::WarrenStatusUpdatesStream> {
+        log::debug!("warren_status_updates subscribe");
+        let rx = self.warren_status_cache.subscribe();
+        // The closure intentionally returns `Result<_, Status>` so the
+        // tonic stream contract is satisfied (errors become trailing
+        // gRPC status); the `Ok` branch is the steady state. Status is
+        // large but boxing each item would defeat the per-snapshot
+        // memcpy avoidance, so the lint is silenced locally.
+        #[expect(
+            clippy::result_large_err,
+            reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values, so the large Err branch is never instantiated."
+        )]
+        let stream = tokio_stream::wrappers::WatchStream::new(rx)
+            .map(|snap| Ok(warren_status_snapshot_to_proto(snap)));
+        Ok(Response::new(
+            Box::new(Box::pin(stream)) as Self::WarrenStatusUpdatesStream
+        ))
+    }
+
+    async fn get_nat_pmp_settings(&self, _: Request<()>) -> ServiceResult<types::NatPmpSettings> {
+        log::debug!("get_nat_pmp_settings");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        let settings = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::NatPmpSettings::from(
+            &settings.warren_nat_pmp,
+        )))
+    }
+
+    async fn set_nat_pmp_settings(
+        &self,
+        request: Request<types::NatPmpSettings>,
+    ) -> ServiceResult<()> {
+        let proto_value = request.into_inner();
+        log::debug!(
+            "set_nat_pmp_settings(enabled={} lifetime_secs={} protocol={} internal_port={})",
+            proto_value.enabled,
+            proto_value.lifetime_secs,
+            proto_value.protocol,
+            proto_value.internal_port,
+        );
+        let new_value = mullvad_types::settings::WarrenNatPmpSettings::try_from(proto_value)
+            .map_err(|e| Status::invalid_argument(e.to_string()))?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SetNatPmpSettings(tx, new_value))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
+    async fn nat_pmp_status_updates(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<Self::NatPmpStatusUpdatesStream> {
+        log::debug!("nat_pmp_status_updates subscribe");
+        let rx = self.warren_status_cache.subscribe();
+        #[expect(
+            clippy::result_large_err,
+            reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values."
+        )]
+        let stream = tokio_stream::wrappers::WatchStream::new(rx)
+            .map(|snap| Ok(nat_pmp_state_to_proto(&snap.nat_pmp_mappings)));
+        Ok(Response::new(
+            Box::new(Box::pin(stream)) as Self::NatPmpStatusUpdatesStream
+        ))
+    }
+
+    // TOFU pubkey-pinning user actions.
+    async fn trust_new_exit_key(
+        &self,
+        request: Request<types::TrustNewExitKeyRequest>,
+    ) -> ServiceResult<types::TrustNewExitKeyResponse> {
+        let body = request.into_inner();
+        log::debug!(
+            "trust_new_exit_key(exit_id={}, new_pubkey={})",
+            body.exit_id_hex,
+            body.new_pubkey_hex
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::TrustNewExitKey {
+            tx,
+            exit_id_hex: body.exit_id_hex,
+            new_pubkey_hex: body.new_pubkey_hex,
+        })?;
+        let outcome = self.wait_for_result(rx).await?;
+        let response = match outcome {
+            crate::tunnel::TrustNewExitKeyOutcome::Ok => types::TrustNewExitKeyResponse {
+                result: types::trust_new_exit_key_response::Result::Ok as i32,
+                error_message: String::new(),
+            },
+            crate::tunnel::TrustNewExitKeyOutcome::ExitNotFound => types::TrustNewExitKeyResponse {
+                result: types::trust_new_exit_key_response::Result::ExitNotFound as i32,
+                error_message: String::new(),
+            },
+        };
+        Ok(Response::new(response))
+    }
+
+    async fn reset_pinned_exit_keys(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::ResetPinnedExitKeysResponse> {
+        log::debug!("reset_pinned_exit_keys");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::ResetPinnedExitKeys(tx))?;
+        let reset_count = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::ResetPinnedExitKeysResponse {
+            reset_count,
+        }))
+    }
+
+    async fn dismiss_pubkey_mismatch(&self, _: Request<()>) -> ServiceResult<()> {
+        log::debug!("dismiss_pubkey_mismatch");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::DismissPubkeyMismatch(tx))?;
+        self.wait_for_result(rx).await?;
+        Ok(Response::new(()))
+    }
+
+    async fn report_pubkey_mismatch(
+        &self,
+        request: Request<types::ReportPubkeyMismatchRequest>,
+    ) -> ServiceResult<()> {
+        let body = request.into_inner();
+        log::debug!(
+            "report_pubkey_mismatch(exit_id={}, country={})",
+            body.exit_id_hex,
+            body.country_code
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::ReportPubkeyMismatch {
+            tx,
+            exit_id_hex: body.exit_id_hex,
+            old_pubkey_hex: body.old_pubkey_hex,
+            new_pubkey_hex: body.new_pubkey_hex,
+            country_code: body.country_code,
+            city: body.city,
+        })?;
+        self.wait_for_result(rx).await?;
+        Ok(Response::new(()))
+    }
+
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {
         let enabled = request.into_inner();
         log::debug!("set_show_beta_releases({})", enabled);
@@ -452,10 +1045,34 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn logout_account(&self, request: Request<String>) -> ServiceResult<()> {
+        // The wipe branch irreversibly erases the on-disk BIP39 identity,
+        // so it is a wallet/secret operation: authorize the caller before
+        // honoring it, otherwise any local process could destroy the seed.
+        self.authorize_wallet_access(&request)?;
         let source = request.into_inner();
         log::debug!("logout_account (source: {source})");
+        // Only an explicit, backup-confirmed user sign-out from the GUI
+        // erases the local BIP39 identity (true sign-out). Every other
+        // logout (a server-driven device-revoked event
+        // `gui-device-revoked`, a CLI logout, Android, etc.) must PRESERVE
+        // the mnemonic so the account stays recoverable on this device. The
+        // GUI gates the "log out" button behind a "I backed up my phrase"
+        // confirmation (see AccountView).
+        //
+        // Match the exact trailing token (the desktop prefixes the source
+        // with the client name, e.g. `"desktop gui-logout-button"`, see
+        // daemon-rpc.ts `logoutAccount`). Exact-token rather than
+        // `ends_with` so a near-miss label cannot accidentally trip the
+        // destructive path.
+        let wipe_identity = source
+            .split_whitespace()
+            .next_back()
+            .is_some_and(|token| token == WIPE_IDENTITY_LOGOUT_TOKEN);
+        if wipe_identity {
+            log::info!("logout_account: erasing local identity (authorized true sign-out)");
+        }
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx))?;
+        self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx, wipe_identity))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -495,10 +1112,27 @@ impl ManagementService for ManagementServiceImpl {
         result
             .map(|account_data| Response::new(types::AccountData::from(account_data)))
             .map_err(|error: RestError| {
-                log::error!(
-                    "Unable to get account data from API: {}",
-                    error.display_chain()
-                );
+                // A 404 from `warren-api` on `get_account_data` means
+                // "this pubkey has no active subscription yet" - an
+                // expected state for a newly bootstrapped Warren
+                // identity that has not purchased a plan. Demote the
+                // log to DEBUG so the daemon does not flood the
+                // operator with ERROR lines while the GUI polls
+                // `account-data-cache` in the background. Genuine
+                // API failures (5xx, network errors, malformed
+                // responses) still surface at ERROR.
+                if matches!(&error, RestError::ApiError(status, _) if *status == StatusCode::NOT_FOUND)
+                {
+                    log::debug!(
+                        "get_account_data: 404 (no subscription yet) - \
+                         GUI will keep polling until the user purchases a plan"
+                    );
+                } else {
+                    log::error!(
+                        "Unable to get account data from API: {}",
+                        error.display_chain()
+                    );
+                }
                 map_rest_error(&error)
             })
     }
@@ -571,80 +1205,40 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn list_devices(
         &self,
-        request: Request<AccountNumber>,
+        _request: Request<AccountNumber>,
     ) -> ServiceResult<types::DeviceList> {
         log::debug!("list_devices");
-        let (tx, rx) = oneshot::channel();
-        let token = request.into_inner();
-        self.send_command_to_daemon(DaemonCommand::ListDevices(tx, token))?;
-        let device = self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
-        Ok(Response::new(types::DeviceList::from(device)))
+        Ok(Response::new(types::DeviceList {
+            devices: Vec::new(),
+        }))
     }
 
-    async fn remove_device(&self, request: Request<types::DeviceRemoval>) -> ServiceResult<()> {
+    async fn remove_device(&self, _request: Request<types::DeviceRemoval>) -> ServiceResult<()> {
         log::debug!("remove_device");
-        let (tx, rx) = oneshot::channel();
-        let removal = request.into_inner();
-        self.send_command_to_daemon(DaemonCommand::RemoveDevice(
-            tx,
-            removal.account_number,
-            removal.device_id,
-        ))?;
-        self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
         Ok(Response::new(()))
     }
 
-    // WireGuard key management
-    //
-
     async fn set_wireguard_rotation_interval(
         &self,
-        request: Request<types::Duration>,
+        _request: Request<types::Duration>,
     ) -> ServiceResult<()> {
-        let interval: RotationInterval = Duration::try_from(request.into_inner())
-            .map_err(|_| Status::invalid_argument("unexpected negative rotation interval"))?
-            .try_into()
-            .map_err(|error: RotationIntervalError| {
-                Status::invalid_argument(error.display_chain())
-            })?;
-
-        log::debug!("set_wireguard_rotation_interval({:?})", interval);
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWireguardRotationInterval(
-            tx,
-            Some(interval),
-        ))?;
-        self.wait_for_result(rx).await??;
+        log::debug!("set_wireguard_rotation_interval");
         Ok(Response::new(()))
     }
 
     async fn reset_wireguard_rotation_interval(&self, _: Request<()>) -> ServiceResult<()> {
         log::debug!("reset_wireguard_rotation_interval");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWireguardRotationInterval(tx, None))?;
-        self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn rotate_wireguard_key(&self, _: Request<()>) -> ServiceResult<()> {
         log::debug!("rotate_wireguard_key");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::RotateWireguardKey(tx))?;
-        self.wait_for_result(rx)
-            .await?
-            .map(Response::new)
-            .map_err(map_daemon_error)
+        Ok(Response::new(()))
     }
 
     async fn get_wireguard_key(&self, _: Request<()>) -> ServiceResult<types::PublicKey> {
         log::debug!("get_wireguard_key");
-        let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetWireguardKey(tx))?;
-        let key = self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
-        match key {
-            Some(key) => Ok(Response::new(types::PublicKey::from(key))),
-            None => Err(Status::not_found("no WireGuard key was found")),
-        }
+        Err(Status::not_found("no WireGuard key"))
     }
 
     async fn set_wireguard_allowed_ips(
@@ -1341,6 +1935,23 @@ impl ManagementService for ManagementServiceImpl {
 
 #[expect(clippy::result_large_err)]
 impl ManagementServiceImpl {
+    /// Authorize a wallet/secret operation against the calling process'
+    /// Unix credentials, captured by the management interface from the
+    /// socket's `SO_PEERCRED`. Returns `PermissionDenied` if another local
+    /// user is trying to reach this account's secrets. `extensions` is the
+    /// incoming request's extension map.
+    fn authorize_wallet_access<T>(&self, request: &Request<T>) -> Result<(), Status> {
+        let peer = request
+            .extensions()
+            .get::<mullvad_management_interface::ManagementConnectInfo>()
+            .copied()
+            .flatten();
+        self.wallet_access.authorize(peer).map_err(|e| {
+            log::warn!("Refused wallet/secret RPC: {e}");
+            Status::permission_denied(e.to_string())
+        })
+    }
+
     /// Sends a command to the daemon and maps the error to an RPC error.
     fn send_command_to_daemon(&self, command: DaemonCommand) -> Result<(), Status> {
         self.daemon_tx
@@ -1373,6 +1984,7 @@ impl ManagementInterfaceServer {
         app_upgrade_broadcast: AppUpgradeBroadcast,
         log_reload_handle: crate::logging::LogHandle,
         relay_selector: mullvad_relay_selector::RelaySelector,
+        warren_status_cache: crate::warren_status::WarrenStatusCache,
     ) -> Result<ManagementInterfaceServer, Error> {
         let subscriptions = Arc::<Mutex<Vec<EventsListenerSender>>>::default();
 
@@ -1381,27 +1993,37 @@ impl ManagementInterfaceServer {
         // received and started processing the shutdown signal.
         let (server_abort_tx, server_abort_rx) = mpsc::channel(0);
 
+        let wallet_access = Arc::new(crate::wallet_access::WalletAccessControl::new());
+
         let management_service = ManagementServiceImpl {
             daemon_tx,
             subscriptions: subscriptions.clone(),
             app_upgrade_broadcast,
             log_reload_handle,
+            warren_status_cache,
+            wallet_access: wallet_access.clone(),
         };
 
         let relay_selector_service = RelaySelectorServiceImpl::new(relay_selector);
 
-        let rpc_server_join_handle = mullvad_management_interface::spawn_rpc_server(
-            management_service,
-            relay_selector_service,
-            async move {
-                StreamExt::into_future(server_abort_rx).await;
-            },
-            rpc_socket_path.clone(),
-        )
-        .map_err(Error::SetupError)?;
+        let (rpc_server_join_handle, socket_security) =
+            mullvad_management_interface::spawn_rpc_server(
+                management_service,
+                relay_selector_service,
+                async move {
+                    StreamExt::into_future(server_abort_rx).await;
+                },
+                rpc_socket_path.clone(),
+            )
+            .map_err(Error::SetupError)?;
+
+        // Tell the wallet guard which access-control mode the socket landed in
+        // so it can decide whether to rely on the kernel's group gate or fall
+        // back to per-uid trust-on-first-use.
+        wallet_access.set_socket_security(socket_security);
 
         log::info!(
-            "Management interface listening on {}",
+            "Management interface listening on {} (access control: {socket_security:?})",
             rpc_socket_path.display()
         );
 
@@ -1544,19 +2166,6 @@ impl ManagementInterfaceEventBroadcaster {
         })
     }
 
-    /// Notify that a device was revoked using `RemoveDevice`.
-    pub(crate) fn notify_remove_device_event(
-        &self,
-        remove_event: mullvad_types::device::RemoveDeviceEvent,
-    ) {
-        log::debug!("Broadcasting remove device event");
-        self.notify(types::DaemonEvent {
-            event: Some(daemon_event::Event::RemoveDevice(
-                types::RemoveDeviceEvent::from(remove_event),
-            )),
-        })
-    }
-
     /// Notify that the api access method changed.
     pub(crate) fn notify_new_access_method_event(
         &self,
@@ -1571,6 +2180,24 @@ impl ManagementInterfaceEventBroadcaster {
     }
 }
 
+/// A forum deep-link `sid` is attacker-influenced (it comes from a URL the
+/// OS handed us) and gets interpolated into a signed JSON body, so pin it
+/// to the exact session id shape: 32 lowercase hex.
+#[expect(clippy::result_large_err)]
+fn validate_forum_sid(sid: &str) -> Result<(), Status> {
+    let valid = sid.len() == 32
+        && sid
+            .bytes()
+            .all(|b| b.is_ascii_hexdigit() && !b.is_ascii_uppercase());
+    if valid {
+        Ok(())
+    } else {
+        Err(Status::invalid_argument(
+            "sid must be 32 lowercase hex chars",
+        ))
+    }
+}
+
 /// Converts [`crate::Error`] into a tonic status.
 fn map_daemon_error(error: crate::Error) -> Status {
     use crate::Error as DaemonError;
@@ -1582,10 +2209,6 @@ fn map_daemon_error(error: crate::Error) -> Status {
         DaemonError::LoginError(error) => map_device_error(&error),
         DaemonError::LogoutError(error) => map_device_error(&error),
         DaemonError::DeleteAccountError(error) => map_device_error(&error),
-        DaemonError::KeyRotationError(error) => map_device_error(&error),
-        DaemonError::ListDevicesError(error) => map_device_error(&error),
-        DaemonError::RemoveDeviceError(error) => map_device_error(&error),
-        DaemonError::UpdateDeviceError(error) => map_device_error(&error),
         DaemonError::VoucherSubmission(error) => map_device_error(&error),
         #[cfg(target_os = "android")]
         DaemonError::VerifyPlayPurchase(error) => map_device_error(&error),
@@ -1634,6 +2257,21 @@ fn map_rest_error(error: &RestError) -> Status {
         RestError::ApiError(status, message) if *status == StatusCode::BAD_REQUEST => {
             Status::new(Code::InvalidArgument, message)
         }
+        // A 404 on `get_account_data` means "this pubkey has no
+        // active subscription yet" - an expected steady state for a
+        // freshly bootstrapped Warren identity. The renderer
+        // translates `Code::NotFound` here into the
+        // `'no-subscription'` AccountDataError variant, which the
+        // account-data cache uses to mark the Redux account state
+        // as expired so the UI redirects to the "buy plan" screen
+        // instead of letting the user click the now-broken Connect
+        // button (which would otherwise trigger a doomed handshake
+        // and lock down the firewall - see the no-sub UX
+        // fix). Other 404-bearing REST surfaces (none today) would
+        // need their own renderer-side mapping.
+        RestError::ApiError(status, message) if *status == StatusCode::NOT_FOUND => {
+            Status::new(Code::NotFound, message)
+        }
         // FIXME: do not use Code for this
         RestError::ApiError(status, _) if *status == StatusCode::TOO_MANY_REQUESTS => Status::new(
             Code::ResourceExhausted,
@@ -1649,13 +2287,16 @@ fn map_rest_error(error: &RestError) -> Status {
 /// Converts an instance of [`crate::device::Error`] into a tonic status.
 fn map_device_error(error: &device::Error) -> Status {
     match error {
-        device::Error::MaxDevicesReached => Status::new(Code::ResourceExhausted, error.to_string()),
         device::Error::InvalidAccount => Status::new(Code::Unauthenticated, error.to_string()),
         device::Error::InvalidDevice | device::Error::NoDevice => {
             Status::new(Code::NotFound, error.to_string())
         }
         device::Error::InvalidVoucher => Status::new(Code::NotFound, INVALID_VOUCHER_MESSAGE),
         device::Error::UsedVoucher => Status::new(Code::ResourceExhausted, USED_VOUCHER_MESSAGE),
+        device::Error::VoucherExpired => {
+            Status::new(Code::FailedPrecondition, EXPIRED_VOUCHER_MESSAGE)
+        }
+        device::Error::VoucherNotReady => Status::new(Code::Unavailable, NOT_READY_VOUCHER_MESSAGE),
         device::Error::DeviceIoError(_error) => Status::new(Code::Unavailable, error.to_string()),
         device::Error::OtherRestError(error) => map_rest_error(error),
         _ => Status::new(Code::Unknown, error.to_string()),

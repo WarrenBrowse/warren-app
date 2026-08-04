@@ -8,7 +8,7 @@ mod delegate;
 mod ui;
 
 pub fn main() {
-    let app = App::new("net.mullvad.MullvadVPNLoader", AppImpl::default());
+    let app = App::new("com.warrenbrowse.vpn.loader", AppImpl::default());
 
     // Load "global" values and resources
     let environment = match Environment::load() {

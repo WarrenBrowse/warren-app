@@ -3,13 +3,13 @@ import utilities.FlavorDimensions
 import utilities.Flavors
 
 plugins {
-    alias(libs.plugins.mullvad.utilities)
+    alias(libs.plugins.warren.utilities)
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.parcelize)
 }
 
 android {
-    namespace = "net.mullvad.mullvadvpn.test.common"
+    namespace = "com.warrenbrowse.vpn.test.common"
     compileSdk = libs.versions.compile.sdk.major.get().toInt()
     compileSdkMinor = libs.versions.compile.sdk.minor.get().toInt()
     buildToolsVersion = libs.versions.build.tools.get()
@@ -35,17 +35,12 @@ android {
         }
     }
 
-    // We need to setup the dimensions and flavors in order for the baseline profile
-    // module to be able to to use :test:common.
-    flavorDimensions += FlavorDimensions.BILLING
+    // BILLING flavor dimension dropped (Mullvad OSS/PLAY split
+    // dead on Warren). Keep INFRASTRUCTURE.PROD for the baseline profile module.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
     productFlavors {
-        create(Flavors.OSS) { dimension = FlavorDimensions.BILLING }
-        create(Flavors.PLAY) { dimension = FlavorDimensions.BILLING }
         create(Flavors.PROD) { dimension = FlavorDimensions.INFRASTRUCTURE }
-        create(Flavors.DEVMOLE) { dimension = FlavorDimensions.INFRASTRUCTURE }
-        create(Flavors.STAGEMOLE) { dimension = FlavorDimensions.INFRASTRUCTURE }
     }
 }
 
@@ -58,7 +53,7 @@ androidComponents {
 dependencies {
     implementation(projects.lib.endpoint)
     implementation(projects.lib.ui.tag)
-    implementation(projects.lib.grpc)
+    // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.model)
 
     implementation(libs.arrow)

@@ -13,29 +13,45 @@ export interface IWindowShapeParameters {
   arrowPosition?: number;
 }
 
-export type SuppressOutdatedVersionOption = {
-  type: 'suppress-outdated-version-warning';
-};
-
 export type ScrollToAnchorId =
   | 'daita-enable-setting'
   | 'multihop-setting'
   | 'custom-dns-settings'
+  | 'allow-external-dns-setting'
   | 'allow-lan-setting'
   | 'lockdown-mode-setting'
   | 'dns-blocker-setting'
   | 'mtu-setting'
+  // Anchor for the client-side bandwidth ceiling input.
+  | 'max-rate-setting'
   | 'obfuscation-setting'
   | 'port-setting'
   | 'mss-fix-setting'
-  | 'quantum-resistant-setting';
+  | 'quantum-resistant-setting'
+  // Anchor for the warren-api URL input.
+  | 'warren-api-url-setting'
+  // Anchors for the Warren multi-hop view.
+  | 'warren-multi-hop-setting'
+  | 'warren-multi-hop-entry-country'
+  | 'warren-multi-hop-exit-country'
+  // Anchors for the Warren status display (reconnect_count + age,
+  // obfuscation indicator).
+  | 'warren-status-reconnect'
+  | 'warren-obfuscation-indicator'
+  // Anchor for the port-forwarding toggle row.
+  | 'port-forwarding-setting'
+  // Anchor for the port-forwarding advanced controls (protocol +
+  // preferred port). Used when an external link (e.g., a "Configure
+  // your port" CTA in a future onboarding step) wants to deep-link
+  // directly to the form rather than the toggle.
+  | 'port-forwarding-advanced';
 
 export type ScrollToAnchorOption = {
   type: 'scroll-to-anchor';
   id: ScrollToAnchorId;
 };
 
-export type LocationStateOptions = SuppressOutdatedVersionOption | ScrollToAnchorOption;
+export type LocationStateOptions = ScrollToAnchorOption;
 
 export type IChangelog = Array<string>;
 

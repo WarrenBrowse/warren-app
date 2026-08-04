@@ -1,0 +1,5 @@
+[VPN Connection]
+name=warren
+service=org.freedesktop.NetworkManager.warren
+program=/usr/lib/warren-vpn/warren-nm-vpn-service
+supports-multiple-connections=false

@@ -1,12 +1,12 @@
 # Build instructions
 
-This document aims to explain how to build the Mullvad Android app. It's strongly recommended and
+This document aims to explain how to build the Warren Android app. It's strongly recommended and
 primarily supported to build the app using the provided container, as it ensures the correct build
 environment.
 
 ## Build process
 
-The build process consist of two main steps. First building the native libraries (`mullvad-daemon`)
+The build process consist of two main steps. First building the native libraries (`warren-jni`)
 and then building the Android app/project which will bundle the previously built native libraries.
 Building the native libraries requires some specific toolchains and packages to be installed, so
 it's recommended to build using the provided build script and container image.
@@ -57,7 +57,7 @@ Run the following command to trigger a full debug build:
 ```
 3. Sign the release artifacts using apksigner with the following command:
 ```bash
-apksigner sign --ks app-keys.jks (MullvadVPN)(version)(.apk|.aab)
+apksigner sign --ks app-keys.jks (WarrenVPN)(version)(.apk|.aab)
 ```
 
 ## Build without the provided container
@@ -146,8 +146,29 @@ environment variables:
 ### Debug build
 Run the following command to build a debug build:
 ```bash
-./gradlew debug
+./gradlew assembleProdDebug
 ```
+
+### Beta and staging flavors (separate installable apps)
+The `beta` and `staging` infrastructure flavors build their own product:
+`com.warrenbrowse.vpn.beta` / `com.warrenbrowse.vpn.staging`, launcher labels
+"Warren VPN Beta" / "Warren VPN Staging", and a `libwarren_jni.so` compiled
+with the matching `WARREN_PRODUCT_ENV` (that environment's API host; the
+flavor drives the cargo build, and a per-variant guard refuses a mismatched
+`.so`). Build one flavor per Gradle invocation:
+```bash
+./gradlew assembleBetaDebug        # or assembleBetaRelease
+./gradlew assembleStagingDebug     # or assembleStagingRelease
+```
+`scripts/dev/launch-android.sh --beta|--staging|--prod` does the build,
+install and launch in one step, and passes the environment to Gradle
+explicitly.
+
+The `.so` files of every flavor land in one shared directory and cargo only
+rewrites the ABIs it was asked for, so switching flavor (or narrowing the ABI
+list with `-Pwarren.app.build.cargo.targets=arm64`) drops that directory
+first. An APK then either carries this environment's datapath for an ABI or
+carries none, never another environment's.
 
 ### Release build
 1. Configure a signing key by following [these instructions](#configure-signing-key).
@@ -157,7 +178,7 @@ Run the following command to build a debug build:
    ```
 3. Sign the release artifacts using apksigner with the following command:
    ```bash
-   apksigner sign --ks app-keys.jks (MullvadVPN)(version)(.apk|.aab)
+   apksigner sign --ks app-keys.jks (WarrenVPN)(version)(.apk|.aab)
    ```
 
 ## Build using nix devshell
@@ -231,34 +252,34 @@ In order to override them, add the properties in `<USER_GRADLE_HOME>/gradle.prop
 for more info of the prioritization of properties.
 
 ### Override version code and version name
-To avoid or override the rust based version generation, the `mullvad.app.config.override.versionCode` and
-`mullvad.app.config.override.versionName` properties can be set:
+To avoid or override the rust based version generation, the `warren.app.config.override.versionCode` and
+`warren.app.config.override.versionName` properties can be set:
 ```
-mullvad.app.config.override.versionCode=123
-mullvad.app.config.override.versionName=1.2.3
+warren.app.config.override.versionCode=123
+warren.app.config.override.versionName=1.2.3
 ```
 
 ### Disable version in-app notifications
 To disable in-app notifications related to the app version during development or testing,
-the `mullvad.app.config.inAppVersionNotifications.enable` property can be set:
+the `warren.app.config.inAppVersionNotifications.enable` property can be set:
 ```
-mullvad.app.config.inAppVersionNotifications.enable=false
+warren.app.config.inAppVersionNotifications.enable=false
 ```
 
 ### Run tests highly affected by rate limiting
 To avoid being rate limited we avoid running tests sending requests that are highly rate limited
 too often. If you want to run these tests you can override the
-`mullvad.test.e2e.config.runHighlyRateLimitedTests` gradle properties. The default value is `false`.
+`warren.test.e2e.config.runHighlyRateLimitedTests` gradle properties. The default value is `false`.
 
 ## Reproducible builds
 
 Reproducible builds are a way to verify that the app was built from the exact source code it claims to be built from. When a build is reproducible, compiling the same source code with the same tools will always produce bit-for-bit identical output.
 
-The Mullvad Android app is by default reproducible when built using our build container, as the container ensures a consistent build environment with fixed versions of all tools and dependencies.
+The Warren Android app is by default reproducible when built using our build container, as the container ensures a consistent build environment with fixed versions of all tools and dependencies.
 
 When building without the container on Linux systems, reproducibility depends on having the exact same versions of system tools (compilers, build tools, etc) installed. Small differences in tool versions or configurations can lead to different build outputs even when using the same source code.
 
-> **Make sure that any `gradle.properties` has not changed or been overridden it will affect the reproducibility of the build such as changing `mullvad.app.build.cargo.targets` and `mullvad.app.config.inAppVersionNotifications.enable`.**
+> **Make sure that any `gradle.properties` has not changed or been overridden it will affect the reproducibility of the build such as changing `warren.app.build.cargo.targets` and `warren.app.config.inAppVersionNotifications.enable`.**
 
 To maximize reproducibility when building without the container:
 
@@ -277,11 +298,11 @@ A simple way to check that a build is reproducible across environments is to bui
 
 ## Verifying that an official release is reproducible
 
-1. Obtain the release APK (`2025.2-beta1` or newer) from [GitHub releases](https://github.com/mullvad/mullvadvpn-app/releases)
+1. Obtain the release APK from [GitHub releases](https://github.com/WarrenBrowse/warren-app/releases)
 1. Checkout the release tag: `git checkout android/<version>`
 1. Build a release build using our [build instructions](#release-build)
-1. Delete the signatures from the two APKs by running `zip -d app-oss-prod-release.apk "META-INF/*"` and `zip -d MullvadVPN-<version>.apk "META-INF/*"`
-1. Compare the checksums of the two APKs: `sha256sum app-oss-prod-release.apk MullvadVPN-<version>.apk`. If the checksums are equal the build is reproducible.
+1. Delete the signatures from the two APKs by running `zip -d app-oss-prod-release.apk "META-INF/*"` and `zip -d WarrenVPN-<version>.apk "META-INF/*"`
+1. Compare the checksums of the two APKs: `sha256sum app-oss-prod-release.apk WarrenVPN-<version>.apk`. If the checksums are equal the build is reproducible.
 
 ### Troubleshooting reproducibility
 

@@ -5,6 +5,9 @@ mod access_method;
 pub mod account_history;
 mod android_dns;
 mod api;
+// Kept for upstream-rebase cleanliness but not spawned: the Warren backend has
+// no `app/v1/api-addrs` endpoint (see the fetcher call site in `start_daemon`).
+#[expect(dead_code)]
 mod api_address_updater;
 #[cfg(not(target_os = "android"))]
 mod cleanup;
@@ -19,6 +22,13 @@ pub mod logging;
 mod macos;
 pub mod management_interface;
 mod migrations;
+mod nm_vpn_indicator;
+/// OS-native secret storage abstraction (macOS System Keychain,
+/// Windows DPAPI, plaintext file fallback). Consumed by
+/// `warren_signer` to persist the BIP39 mnemonic outside of the
+/// settings directory whenever the OS provides a daemon-friendly
+/// backend.
+pub mod os_secret_storage;
 mod relay_list;
 mod relay_selector;
 #[cfg(not(target_os = "android"))]
@@ -29,12 +39,94 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
+/// Authorization for wallet/secret management RPCs against the calling
+/// process' Unix credentials (`SO_PEERCRED`).
+pub mod wallet_access;
+/// DNS for the daemon's own Warren fetchers: answers the API host from the
+/// address cache the firewall's allowed endpoint is built from, so a recovery
+/// fetch survives the blocking state that drops system DNS.
+mod warren_api_dns;
+/// The daemon's own `warren_api::HttpTransport`: the SDK's bundled reqwest
+/// transport cannot be told how to resolve, and these calls must reach the
+/// API through the address cache rather than through system DNS.
+mod warren_api_transport;
+/// Shared policy pieces of the periodic signed-artifact refreshers
+/// (fast retry, ETag conditional GET, atomic cache write).
+mod warren_artifact_refresh;
+/// App-side wrapper around the SDK's `warren_api::WarrenApiClient` that
+/// rebuilds its owned `WarrenIdentity` from a shared, hot-swappable BIP39
+/// seed on every call (see the module doc for why a raw shared
+/// `SigningKey` cannot be reused directly).
+mod warren_identity_manager;
+/// Test-only gate pinning the app's kill-switch fail-state posture table to
+/// the shared `warren_contract::killswitch` contract, so a security-facing
+/// posture change (or a drift from the shared matrix) cannot land silently.
+#[cfg(test)]
+mod warren_killswitch_conformance;
+/// Loader for `<settings_dir>/warren-multihop.json` that materializes
+/// a `MultiHopConfig` from signed descriptors minted
+/// out-of-band by ops (wapi admin-mint-*). PKI verified at load time
+/// against the `operational_pubkey` carried in the file.
+pub mod warren_multi_hop;
+/// Dynamic multi-hop directory client: fetch + verify the signed
+/// directory from warren-api, select a 2-distinct-node circuit, assemble
+/// a `MultiHopConfig`, and push it to the parameters generator. Replaces
+/// the manual `warren-multihop.json` as the production source.
+pub mod warren_multi_hop_directory;
+/// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
+/// (POC switch - no UI/CLI toggle for now).
+pub mod warren_multi_hop_mode;
+/// Background fetcher of the public `GET /v1/network` environment
+/// descriptor, cached into `warren_status` for both UIs.
+mod warren_network_info;
+mod warren_notices_updater;
+mod warren_port_entitlements;
+/// Warren PRODUCT/deployment constants (`WARREN_API_URL`,
+/// `WARREN_SERVER_PUBKEY_HEX`) the app owns directly instead of depending
+/// on warren-core's `warren-config` crate.
+mod warren_product_config;
+/// Conversion `RelaySettings` (Mullvad UI) -> `WarrenRelayQuery`
+/// (filtering on the warren-relay-selector side). Maps country/city, fallback
+/// `Any` for unsupported cases (custom lists, custom endpoint).
+pub mod warren_query_from_settings;
+/// Periodic + on-startup updater that refreshes the signed Warren exit
+/// list from `GET {warren_api_url}/v1/exits` (ETag conditional GET,
+/// signature-verified before caching, atomic cache write, hot-swap into
+/// the live selector). Mirrors the upstream `relay_list::RelayListUpdater`.
+pub mod warren_relay_list_updater;
+/// Mullvad-format `RelayList` view of a `WarrenRelayList`. Allows the
+/// Electron GUI to consume the Warren exits via its existing
+/// country/city selector.
+pub mod warren_relay_list_view;
+/// Daemon-side wrapper around
+/// `warren_discovery_core::WarrenRelaySelector`: loads the
+/// `WarrenRelayList` from `cache_dir`, selects the endpoint
+/// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
+pub mod warren_relay_selector;
+/// Phase #4 - resolution of `WarrenApiConfig` (warren-api URL + signing key)
+/// from Settings + env var. Testable pure function extracted from
+/// `Daemon::start`.
+mod warren_remote_config;
+mod warren_sdk_client;
+/// Loads or generates the user's BIP39 mnemonic from
+/// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
+/// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
+/// authenticated API requests.
+pub mod warren_signer;
+pub mod warren_stale_route_sweep;
+/// Live Warren tunnel status cache surfaced to the gRPC management
+/// interface (`GetWarrenStatus` rpc + `WarrenStatusUpdates` stream).
+pub mod warren_status;
+mod warren_token_provider;
+/// Assembles a complete `talpid_warren_tunnel::WarrenTunnelParameters`
+/// from the relay selector + signing_key + config-side constants.
+pub mod warren_tunnel_params;
 
 use crate::{
     relay_list::parsed_relays::parse_relays_from_file, target_state::PersistentTargetState,
 };
 use api::DaemonAccessMethodResolver;
-use device::{AccountEvent, PrivateAccountAndDevice, PrivateDeviceEvent};
+use device::{AccountEvent, PrivateDeviceEvent};
 use futures::{
     StreamExt,
     channel::{mpsc, oneshot},
@@ -60,7 +152,7 @@ use mullvad_types::{
     auth_failed::AuthFailed,
     constraints::Constraint,
     custom_list::CustomList,
-    device::{Device, DeviceEvent, DeviceEventCause, DeviceId, DeviceState, RemoveDeviceEvent},
+    device::{DeviceEvent, DeviceState},
     features::{FeatureIndicator, FeatureIndicators, compute_feature_indicators},
     location::{GeoIpLocation, LocationEventData},
     relay_constraints::{
@@ -70,7 +162,7 @@ use mullvad_types::{
     settings::{DnsOptions, Settings},
     states::{Secured, TargetState, TargetStateStrict, TunnelState},
     version::AppVersionInfo,
-    wireguard::{PublicKey, QuantumResistantState, RotationInterval},
+    wireguard::QuantumResistantState,
 };
 use mullvad_types::{
     relay_constraints::{
@@ -91,7 +183,7 @@ use std::{
     marker::PhantomData,
     path::PathBuf,
     pin::Pin,
-    sync::{Arc, Weak},
+    sync::{Arc, Mutex, Weak},
     time::Duration,
 };
 #[cfg(target_os = "android")]
@@ -117,14 +209,59 @@ use tokio::io;
 
 #[cfg(target_os = "windows")]
 pub mod service {
-    pub const SERVICE_NAME: &str = "MullvadVPN";
-    pub const SERVICE_DISPLAY_NAME: &str = "Mullvad VPN Service";
+    use warren_product_env::ProductEnv;
+
+    // Per-environment service names so a beta daemon can be installed as a
+    // Windows service next to the prod one without colliding on the SCM
+    // registration.
+    pub const SERVICE_NAME: &str = match warren_product_env::CURRENT {
+        ProductEnv::Prod => "WarrenVPN",
+        ProductEnv::Staging => "WarrenVPNStaging",
+        ProductEnv::Beta => "WarrenVPNBeta",
+    };
+    pub const SERVICE_DISPLAY_NAME: &str = match warren_product_env::CURRENT {
+        ProductEnv::Prod => "Warren VPN Service",
+        ProductEnv::Staging => "Warren VPN Staging Service",
+        ProductEnv::Beta => "Warren VPN Beta Service",
+    };
 }
 
-/// Delay between generating a new WireGuard key and reconnecting
-const WG_RECONNECT_DELAY: Duration = Duration::from_mins(4);
-
 pub type ResponseTx<T, E> = oneshot::Sender<Result<T, E>>;
+
+/// Whether macOS split tunneling is usable in THIS build.
+///
+/// macOS split tunneling relies on Endpoint Security, which requires a
+/// signed build carrying the `com.apple.developer.endpoint-security.client`
+/// entitlement plus Full Disk Access. Unsigned / ad-hoc builds cannot
+/// obtain an ES client, so enabling ST half-initialises (the TUN + BPF
+/// are created but ES is denied), which corrupts routing (the exit route
+/// loops into a tunnel -> no downlink -> "connects but no internet") and
+/// crashes the GUI on quit. The capability is therefore gated behind the
+/// `macos-split-tunnel` cargo feature, set ONLY on signed release builds.
+#[cfg(target_os = "macos")]
+#[must_use]
+pub(crate) const fn macos_split_tunnel_supported() -> bool {
+    cfg!(feature = "macos-split-tunnel")
+}
+
+/// Gate for the macOS split-tunnel **enable** path. `Ok` on every
+/// non-macOS desktop platform; on macOS, `Err`
+/// ([`Error::MacosSplitTunnelUnsupported`]) unless this is a signed
+/// build (feature `macos-split-tunnel`). Returning the error BEFORE any
+/// TUN/BPF/ES setup is what prevents the half-initialised broken state.
+#[cfg(target_os = "macos")]
+fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
+    if macos_split_tunnel_supported() {
+        Ok(())
+    } else {
+        Err(Error::MacosSplitTunnelUnsupported)
+    }
+}
+
+#[cfg(any(target_os = "windows", target_os = "android"))]
+fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
+    Ok(())
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -164,18 +301,6 @@ pub enum Error {
     #[error("Failed to delete account")]
     DeleteAccountError(#[source] device::Error),
 
-    #[error("Failed to rotate WireGuard key")]
-    KeyRotationError(#[source] device::Error),
-
-    #[error("Failed to list devices")]
-    ListDevicesError(#[source] device::Error),
-
-    #[error("Failed to remove device")]
-    RemoveDeviceError(#[source] device::Error),
-
-    #[error("Failed to update device")]
-    UpdateDeviceError(#[source] device::Error),
-
     #[error("Failed to submit voucher")]
     VoucherSubmission(#[source] device::Error),
 
@@ -187,8 +312,20 @@ pub enum Error {
     #[error("Split tunneling error")]
     SplitTunnelError(#[source] split_tunnel::Error),
 
+    #[cfg(target_os = "macos")]
+    #[error(
+        "Split tunneling is unavailable in this build: macOS split tunneling needs Endpoint \
+         Security, which requires a signed build (Developer ID + endpoint-security entitlement) \
+         and Full Disk Access. Enabling it on an unsigned build half-initialises and breaks \
+         connectivity. It will become available in signed releases."
+    )]
+    MacosSplitTunnelUnsupported,
+
     #[error("An account is already set")]
     AlreadyLoggedIn,
+
+    #[error("Failed to mint a new Warren identity")]
+    WarrenIdentityError(#[source] io::Error),
 
     #[error("No account number is set")]
     NoAccountNumber,
@@ -254,6 +391,48 @@ pub enum DaemonCommand {
     ),
     /// Request www auth token for an account
     GetWwwAuthToken(ResponseTx<String, Error>),
+    /// Returns the user's BIP39 mnemonic to allow user-side
+    /// backup via the Electron GUI. `None` if the
+    /// `warren_mnemonic.txt` file does not exist (= identity never
+    /// bootstrapped). See `warren_signer::get_warren_mnemonic`.
+    ///
+    /// Wrapped in `Zeroizing` so the secret heap buffer is wiped
+    /// before the allocator recycles it once the GUI has serialized
+    /// it onto the gRPC response.
+    GetWarrenMnemonic(oneshot::Sender<Option<zeroize::Zeroizing<String>>>),
+    /// Signs a community-forum login challenge (doc 55). Carries the
+    /// deep-link `sid`; replies with the four X-Warren-* header values +
+    /// the request body, or `None` if no identity is bootstrapped. The
+    /// signing key never leaves the daemon.
+    SignForumLogin(
+        oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        String,
+    ),
+    /// Signs a community-forum attach-logs request (doc 55). Carries the
+    /// deep-link `sid`, the forum topic id and the gzipped problem report;
+    /// replies with the four X-Warren-* header values + the request body,
+    /// or `None` if no identity is bootstrapped. The signing key never
+    /// leaves the daemon.
+    SignForumAttachLogs(
+        oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        String,
+        u64,
+        Vec<u8>,
+    ),
+    /// Replaces the BIP39 mnemonic (= restore identity). BIP39
+    /// validation + atomic write. The daemon hot-swaps the
+    /// in-memory `WarrenAuthSigner` and triggers `account_manager.login`
+    /// so no restart is needed. See `warren_signer::set_warren_mnemonic`
+    /// and `on_set_warren_mnemonic`.
+    ///
+    /// `Zeroizing<String>` ensures the mnemonic bytes are wiped from
+    /// the heap as soon as the command variant is dropped, in addition
+    /// to whatever `tonic`-internal buffers may have transiently held
+    /// the protobuf payload.
+    SetWarrenMnemonic(
+        oneshot::Sender<std::io::Result<()>>,
+        zeroize::Zeroizing<String>,
+    ),
     /// Submit voucher to add time to the current account. Returns time added in seconds
     SubmitVoucher(ResponseTx<VoucherSubmission, Error>, String),
     /// Request account history
@@ -273,19 +452,82 @@ pub enum DaemonCommand {
     /// Log in with a given account and create a new device.
     LoginAccount(ResponseTx<(), Error>, AccountNumber),
     /// Log out of the current account and remove the device, if they exist.
-    LogoutAccount(ResponseTx<(), Error>),
-    /// Return the current device configuration.
+    /// The `bool` is `wipe_identity`: when `true` (explicit user
+    /// sign-out from the GUI), the local BIP39 mnemonic is also erased
+    /// from the OS vault (true sign-out). When `false` (e.g. a
+    /// server-driven device-revoked event, or a CLI/Android logout),
+    /// the identity is preserved on the device so it can be recovered.
+    LogoutAccount(ResponseTx<(), Error>, bool),
+    /// Return the current account login state.
     GetDevice(ResponseTx<DeviceState, Error>),
-    /// Update/check the current device, if there is one.
+    /// Update/check the current login state.
     UpdateDevice(ResponseTx<(), Error>),
-    /// Return all the devices for a given account number.
-    ListDevices(ResponseTx<Vec<Device>, Error>, AccountNumber),
-    /// Remove device from a given account.
-    RemoveDevice(ResponseTx<(), Error>, AccountNumber, DeviceId),
     /// Place constraints on the type of tunnel and relay
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
     SetAllowLan(ResponseTx<(), settings::Error>, bool),
+    /// Persistent URL `Settings::warren_api_url`. Empty string ->
+    /// unset (= None on the Settings side).
+    SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
+    /// Persist the Warren parallel QUIC connection count
+    /// (`Settings::warren_n_connections`). `None` resets to the
+    /// compiled default. Applied on the next (re)connect; reconnects
+    /// when the tunnel is up.
+    SetWarrenNConnections(ResponseTx<(), settings::Error>, Option<u8>),
+    /// Persist the client-side Warren bandwidth ceiling in bits per
+    /// second (`Settings::warren_max_rate_bps`). `None` = unlimited.
+    /// Applied to a live tunnel without a reconnect.
+    SetWarrenMaxRateBps(ResponseTx<(), settings::Error>, Option<u64>),
+    /// Persist the advanced Warren "custom exit" override
+    /// (`Settings::warren_custom_exit`). Applied on the next (re)connect;
+    /// reconnects when the tunnel is up so the user sees it take effect.
+    SetWarrenCustomExit(
+        ResponseTx<(), settings::Error>,
+        mullvad_types::settings::WarrenCustomExitSettings,
+    ),
+    /// Persist Warren multi-hop settings (`Settings::warren_multi_hop`).
+    /// Restart required to apply (read at boot only).
+    SetWarrenMultiHopSettings(
+        ResponseTx<(), settings::Error>,
+        mullvad_types::settings::WarrenMultiHopSettings,
+    ),
+    /// Persist Warren NAT-PMP settings (`Settings::warren_nat_pmp`).
+    /// Unlike `SetWarrenMultiHopSettings`, this does NOT require a
+    /// daemon restart: the value is pushed live to the
+    /// `ParametersGenerator` so the next tunnel reconnect picks it up,
+    /// and the live `WarrenStatusCache` is reset to `Disabled` when the
+    /// user toggles off.
+    SetNatPmpSettings(
+        ResponseTx<(), settings::Error>,
+        mullvad_types::settings::WarrenNatPmpSettings,
+    ),
+    /// Replace the pinned key for `exit_id_hex` with
+    /// `new_pubkey_hex` (user accepted a key rotation from the modal).
+    /// The daemon clears `WarrenStatusCache.pubkey_mismatch_pending`
+    /// on success so the modal unmounts.
+    TrustNewExitKey {
+        tx: oneshot::Sender<tunnel::TrustNewExitKeyOutcome>,
+        exit_id_hex: String,
+        new_pubkey_hex: String,
+    },
+    /// Clear the entire TOFU pin table. Returns the
+    /// number of dropped entries.
+    ResetPinnedExitKeys(oneshot::Sender<u32>),
+    /// Dismiss the pending mismatch flag without
+    /// changing the pinned key. The user stays disconnected; a
+    /// subsequent connect attempt would re-trigger the modal.
+    DismissPubkeyMismatch(oneshot::Sender<()>),
+    /// Best-effort POST to
+    /// `/v1/incidents/pubkey-mismatch`. The daemon clears the
+    /// mismatch flag regardless of the network outcome.
+    ReportPubkeyMismatch {
+        tx: oneshot::Sender<()>,
+        exit_id_hex: String,
+        old_pubkey_hex: String,
+        new_pubkey_hex: String,
+        country_code: String,
+        city: String,
+    },
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
@@ -319,16 +561,10 @@ pub enum DaemonCommand {
     SetWireguardMtu(ResponseTx<(), settings::Error>, Option<u16>),
     /// Set allowed IPs for wireguard tunnels
     SetWireguardAllowedIps(ResponseTx<(), settings::Error>, Constraint<AllowedIps>),
-    /// Set automatic key rotation interval for wireguard tunnels
-    SetWireguardRotationInterval(ResponseTx<(), settings::Error>, Option<RotationInterval>),
     /// Get the daemon settings
     GetSettings(oneshot::Sender<Settings>),
     /// Reset all daemon settings to the defaults
     ResetSettings(ResponseTx<(), settings::Error>),
-    /// Generate new wireguard key
-    RotateWireguardKey(ResponseTx<(), Error>),
-    /// Return a public key of the currently set wireguard private key, if there is one
-    GetWireguardKey(ResponseTx<Option<PublicKey>, Error>),
     /// Create custom list
     CreateCustomList(
         ResponseTx<mullvad_types::custom_list::Id, Error>,
@@ -477,15 +713,13 @@ pub(crate) enum InternalDaemonEvent {
     TriggerShutdown(bool),
     /// The background job fetching new `AppVersionInfo`s got a new info object.
     NewAppVersionInfo(AppVersionInfo),
-    /// Sent when a device is updated in any way (key rotation, login, logout, etc.).
+    /// Sent when the account login state changes (login, logout, revoke).
     DeviceEvent(AccountEvent),
     /// Sent when access methods are changed in any way (new active access method).
     AccessMethodEvent {
         event: AccessMethodEvent,
         endpoint_active_tx: oneshot::Sender<()>,
     },
-    /// Handles updates from versions without devices.
-    DeviceMigrationEvent(Result<PrivateAccountAndDevice, device::Error>),
     /// A geographical location has has been received from am.i.mullvad.net
     LocationEvent(LocationEventData),
     /// A generic event for when any settings change.
@@ -495,6 +729,11 @@ pub(crate) enum InternalDaemonEvent {
     ExcludedPathsEvent(ExcludedPathsUpdate, oneshot::Sender<Result<(), Error>>),
     /// A network leak was detected.
     LeakDetected(LeakInfo),
+    /// TOFU pubkey-pinning verify-hook event consumed by
+    /// the daemon main loop. Routes pin inserts / bumps / mismatches /
+    /// trust replacements / resets to the on-disk settings.json and
+    /// (for mismatches) to the live `WarrenStatusCache`.
+    WarrenPinUpdate(tunnel::WarrenPinUpdate),
 }
 
 #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
@@ -678,7 +917,6 @@ pub struct Daemon {
     migration_complete: migrations::MigrationComplete,
     settings: SettingsPersister,
     account_history: account_history::AccountHistory,
-    device_checker: device::TunnelStateChangeHandler,
     account_manager: device::AccountManagerHandle,
     access_mode_handler: mullvad_api::access_mode::AccessModeSelectorHandle,
     api_runtime: mullvad_api::Runtime,
@@ -687,13 +925,57 @@ pub struct Daemon {
     relay_selector: RelaySelector,
     relay_list_updater: RelayListUpdaterHandle,
     parameters_generator: tunnel::ParametersGenerator,
+    /// Live Mullvad-format view of the `WarrenRelayList`. Seeded at boot
+    /// from the bootstrap and **hot-swapped** by the background
+    /// `WarrenRelayListUpdater` on every verified fetch. Substituted for
+    /// the upstream Mullvad list on synchronous pulls
+    /// (`on_get_relay_locations`) and on every push
+    /// (`on_relay_list_update`) - otherwise the GUI offers countries
+    /// absent from the WarrenRelayList and the Warren tunnel returns
+    /// NoMatchingRelay on connect -> kill-switch.
+    ///
+    /// Shared `Arc<Mutex<…>>` so the updater task can refresh it without a
+    /// daemon restart and every reader (pull RPC, broadcast closure) sees
+    /// the current list, not a stale boot snapshot. Always populated
+    /// (Warren is the only mode); the inner `Option` is `None` only before
+    /// the first bootstrap view is computed.
+    warren_relay_list_view: Arc<Mutex<Option<RelayList>>>,
     shutdown_tasks: Vec<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
     tunnel_state_machine_handle: TunnelStateMachineHandle,
     #[cfg(target_os = "windows")]
     volume_update_tx: mpsc::UnboundedSender<()>,
     location_handler: GeoIpHandler,
     leak_checker: LeakChecker,
+    /// Mirrors the tunnel into the desktop's own network indicator.
+    nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator,
     cache_dir: PathBuf,
+    /// Kept to allow runtime reads of the BIP39 mnemonic
+    /// (`<settings_dir>/warren_mnemonic.txt`) via the
+    /// `on_get_warren_mnemonic` handler.
+    settings_dir: PathBuf,
+    /// Shared with the `ManagementInterfaceServer`. The daemon writes
+    /// to it on NAT-PMP toggle changes; the gRPC stream subscribers
+    /// receive the resulting snapshots without polling.
+    warren_status_cache: warren_status::WarrenStatusCache,
+    /// Armed by [`warren_status::auto_recovery_step`] on state edges
+    /// that only automation produces (blocked error while Secured,
+    /// tunnel dying under a live Connected); a Connected arriving with
+    /// it armed counts as one automatic recovery on the UI
+    /// `reconnect_count` row.
+    warren_auto_recovery_pending: bool,
+    /// Single source of truth for the Warren identity: owns both the
+    /// shared `WarrenAuthSigner` (REST factory, tunnel, forum SSO) and
+    /// the SDK seed handle (account backend, incident reporters) and is
+    /// the ONLY surface that swaps them (create/restore/logout), always
+    /// together and from one seed value. Holds the placeholder sentinel
+    /// until the user creates or imports an identity in onboarding.
+    warren_identity: Arc<warren_identity_manager::WarrenIdentityManager>,
+    /// `true` when the Warren multi-hop directory updater is wired and owns
+    /// the reconnect for circuit changes. While active, the standard
+    /// "relay settings changed" restart path must not reconnect on its own
+    /// (it would use the generator's stale multi-hop circuit, flashing the
+    /// wrong exit); the updater issues the single, correct reconnect.
+    warren_multi_hop_directory_active: bool,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -715,12 +997,18 @@ impl Daemon {
         #[cfg(target_os = "macos")]
         macos::bump_filehandle_limit();
 
+        // F7 fork audit: `migrate_all` may fail for non-fatal reasons
+        // (e.g. account-history.json absent on fresh boot Warren mode). The
+        // daemon continues with `None` migration data - this is expected, not
+        // an operational error. Logging WARN avoids false alarms
+        // in prod logs without masking a real migration problem
+        // on an existing upstream install.
         let migration_data = migrations::migrate_all(&config.cache_dir, &config.settings_dir)
             .await
             .unwrap_or_else(|error| {
-                log::error!(
+                log::warn!(
                     "{}",
-                    error.display_chain_with_msg("Failed to migrate settings or cache")
+                    error.display_chain_with_msg("Failed to migrate settings or cache (non-fatal)")
                 );
                 None
             });
@@ -729,8 +1017,17 @@ impl Daemon {
 
         // Initialize relay selector asap, since it's a pre-requisite for accepting incoming gRPC
         // connections.
+        //
+        // F5 fork audit: the upstream Mullvad `relays.json` list is
+        // never consumed - the tunnel
+        // uses `warren-relays.json` parsed by `DaemonWarrenRelaySelector`.
+        // An absence of the file should not log ERROR (= noise that
+        // worries the prod operator) but just DEBUG, since the list is
+        // always unused on the Warren fork.
         let initial_relay_list = parse_relays_from_file(&config.cache_dir, &config.resource_dir)
-            .inspect_err(|err| log::error!("{err}"))
+            .inspect_err(|err| {
+                log::debug!("relays.json unavailable (Warren tunnel active, list unused): {err}");
+            })
             .ok();
         let relay_selector = {
             let (initial_relay_list, initial_bridge_list) = initial_relay_list
@@ -749,12 +1046,14 @@ impl Daemon {
 
         let command_sender = daemon_command_channel.sender();
         let app_upgrade_broadcast = tokio::sync::broadcast::channel(32).0;
+        let warren_status_cache = warren_status::WarrenStatusCache::new();
         let management_interface = ManagementInterfaceServer::start(
             command_sender,
             config.rpc_socket_path,
             app_upgrade_broadcast.clone(),
             config.log_handle,
             relay_selector.clone(),
+            warren_status_cache.clone(),
         )
         .map_err(Error::ManagementInterfaceError)?;
 
@@ -784,6 +1083,16 @@ impl Daemon {
         let api_availability = api_runtime.availability_handle();
         api_availability.suspend();
 
+        // Every Warren fetcher resolves the API host from this same cache from
+        // here on. It is the cache `api::resolve_allowed_endpoint` builds the
+        // firewall's permitted endpoint from, so the address a recovery fetch
+        // dials is exactly the one the blocking state lets through, and no
+        // system DNS query is needed to find it.
+        warren_api_dns::install(warren_api_dns::ApiHostResolver::from_address_cache(
+            config.endpoint.host().to_owned(),
+            api_runtime.address_cache().clone(),
+        ));
+
         let settings_event_listener = management_interface.notifier().clone();
         settings.register_change_listener(move |settings| {
             // Notify management interface server of changes to the settings
@@ -808,15 +1117,49 @@ impl Daemon {
             .await
             .map_err(Error::ApiConnectionModeError)?;
 
-        let api_handle = api_runtime.mullvad_rest_handle(access_mode_provider);
-
-        // Continually update the API IP
-        tokio::spawn(api_address_updater::run_api_address_fetcher(
-            api_runtime.address_cache().clone(),
-            api_handle.clone(),
-            #[cfg(feature = "api-override")]
-            config.endpoint.clone(),
+        // Warren fork: the identity manager is the single owner of both
+        // identity views (signer + SDK seed). It loads the persisted
+        // mnemonic if the user has onboarded, and otherwise runs on the
+        // placeholder sentinel: no identity is ever minted outside the
+        // explicit create/import onboarding actions. It stays in the
+        // `Daemon` struct so create/restore/logout hot-swap the identity
+        // without requiring a daemon restart.
+        let warren_identity = Arc::new(warren_identity_manager::WarrenIdentityManager::load(
+            &config.settings_dir,
         ));
+        if !warren_identity.is_coherent() {
+            // Unreachable by construction (the manager swaps both views
+            // from one seed); kept as a loud tripwire because a signer /
+            // SDK-seed divergence silently strands paid subscriptions on
+            // a wallet the user does not own.
+            log::error!("Warren identity views diverged at boot; identity handling is broken");
+        }
+        let warren_signer = warren_identity.signer();
+        // Single source of truth for the raw-`SigningKey` consumers: the
+        // SAME `Arc<RwLock<SigningKey>>` that `WarrenAuthSigner` wraps is
+        // shared with the tunnel (RPK identity + legacy REST signing). A
+        // manager hot-swap (create/restore/logout) therefore propagates to
+        // every consumer without a daemon restart, instead of leaving
+        // frozen per-consumer copies signing as the old/erased identity.
+        let warren_shared_key = Some(warren_signer.shared());
+        // Companion shared, hot-swappable BIP39 seed for the SDK-backed
+        // `warren_api::WarrenApiClient` (account backend + best-effort
+        // incident reports, via `warren_sdk_client::SharedWarrenApiClient`).
+        // The SDK's `WarrenIdentity` only builds from this pre-HKDF seed,
+        // never from an already-derived `SigningKey` (see
+        // `warren_sdk_client` module doc). Both views live inside the
+        // manager, which is the only surface that ever swaps them, always
+        // together and from one seed value.
+        let warren_shared_seed = Some(warren_identity.seed_handle());
+        let api_handle = api_runtime
+            .mullvad_rest_handle_with_warren_signer(access_mode_provider, Some(warren_signer));
+
+        // Warren uses a single fixed API host, so the upstream Mullvad
+        // API-IP rotation endpoint (`GET app/v1/api-addrs`) does not exist
+        // on the Warren backend and always answers 404. Spawning the fetcher
+        // would just log an error every 15 minutes without ever updating the
+        // cache, so we deliberately do NOT start it. The address cache stays
+        // valid via its default/stored address (read in `api.rs`).
 
         let access_method_handle = access_mode_handler.clone();
         settings.register_change_listener(move |settings| {
@@ -827,32 +1170,105 @@ impl Daemon {
             });
         });
 
-        let migration_complete = if let Some(migration_data) = migration_data {
-            migrations::migrate_device(
-                migration_data,
-                api_handle.clone(),
-                internal_event_tx.clone(),
-            )
-        } else {
-            migrations::MigrationComplete::new(true)
-        };
+        let _ = migration_data;
+        let migration_complete = migrations::MigrationComplete::new(true);
+
+        // Resolution delegated to `warren_remote_config::resolve` (pure
+        // testable fn). Side effects (env, signing_key load) resolved
+        // here, the pure flags passed to the fn. The diff log (Some vs
+        // None) stays here because the fn is silent to remain
+        // testable without log capture.
+        let env_url = std::env::var("WARREN_API_URL").ok();
+        let warren_api_config = warren_remote_config::resolve(
+            settings.warren_api_url.clone(),
+            env_url,
+            warren_shared_seed.clone(),
+        );
+        match &warren_api_config {
+            Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
+            None => log::warn!(
+                "No warren-api signing key (mnemonic missing); account backend unavailable"
+            ),
+        }
 
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
             &config.settings_dir,
-            settings
-                .tunnel_options
-                .wireguard
-                .rotation_interval
-                .unwrap_or_default(),
             internal_event_tx.to_specialized_sender(),
+            warren_api_config,
         )
         .await
         .map_err(Error::LoadAccountManager)?;
 
+        // Boot-time identity reconciliation. The BIP39-derived signer is
+        // the cryptographic root of truth: it signs every API request and
+        // builds the tunnel params. `device.json` is only a cache of the
+        // logged-in pubkey and can drift from the signer (e.g. the
+        // secret-storage backend changed under the daemon, or a partial
+        // restore). When they disagree, the displayed account and the
+        // actually-signing identity diverge, which strands paid
+        // subscriptions on a wallet the user does not see. Re-align
+        // `device.json` to the signer here so the three views (signer,
+        // device.json, `account get`) can never silently differ. Only the
+        // LoggedIn case is touched: `pubkey()` is None for
+        // LoggedOut/Revoked, so a deliberate logout or revocation is
+        // preserved.
+        if warren_identity.has_user_identity() {
+            let expected = warren_identity.pubkey_ss58();
+            let stored = data.pubkey().map(|p| p.as_str().to_owned());
+            if let Some(target) =
+                warren_signer::reconcile_login_target(&expected, stored.as_deref())
+            {
+                // Self-healing: WARN, not ERROR. The drift is re-aligned
+                // on the spot, so it is an operational notice, not a fatal
+                // condition; kept loud because an unnoticed desync strands
+                // paid subscriptions.
+                log::warn!(
+                    "Warren identity desync at boot: signer={target} device.json={}; \
+                     re-aligning device.json to the signer-derived identity",
+                    stored.as_deref().unwrap_or("<none>")
+                );
+                let manager = account_manager.clone();
+                let target = target.to_owned();
+                tokio::spawn(async move {
+                    match manager.login(target).await {
+                        Ok(()) => log::info!(
+                            "Warren identity reconciled: device.json now matches the signer"
+                        ),
+                        // `login` here is a local device-cache write (no
+                        // network), so do NOT force a logout on failure:
+                        // the only failure mode is a cache write error. The
+                        // signer stays the source of truth for signing;
+                        // reconciliation retries on the next boot.
+                        Err(e) => log::warn!(
+                            "Warren identity reconciliation failed ({e}); device.json still \
+                             records a stale identity, will retry next boot"
+                        ),
+                    }
+                });
+            }
+        } else if data.pubkey().is_some() {
+            // device.json claims a logged-in account but no identity
+            // exists on disk (secret storage lost or wiped out-of-band).
+            // The daemon cannot sign as that account anymore; land the
+            // user on a deterministic logged-out state instead of a
+            // logged-in UI whose every request fails.
+            log::warn!(
+                "device.json records a logged-in account but no Warren identity is \
+                 persisted; forcing logout"
+            );
+            let manager = account_manager.clone();
+            tokio::spawn(async move {
+                if let Err(e) = manager.logout().await {
+                    log::warn!("boot logout after lost identity failed: {e}");
+                }
+            });
+        }
+
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
-            data.device().map(|device| device.account_number.clone()),
+            // AccountHistory.set/get take an AccountNumber (= String).
+            data.pubkey().map(|pubkey| pubkey.as_str().to_owned()),
         )
         .await
         .map_err(Error::LoadAccountHistory)?;
@@ -880,12 +1296,229 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
 
-        let parameters_generator = tunnel::ParametersGenerator::new(
-            account_manager.clone(),
+        // Warren fork: init the Warren tunnel artifacts at boot. The
+        // signed exit list is loaded synchronously from the **newest
+        // verifying source** among the on-disk cache (last fetched) and
+        // the build-time baked bootstrap in `resource_dir`, pinned to the
+        // production server pubkey (anti key-swap). This never blocks on
+        // the network; a background `WarrenRelayListUpdater` (spawned
+        // further down) refreshes the list on startup + periodically and
+        // hot-swaps it into the live selector. The BIP39 `SigningKey` is
+        // loaded from the settings dir. Warren is the only tunnel mode on
+        // this fork, so these artifacts are always populated.
+        let warren_api_url = std::env::var("WARREN_API_URL")
+            .ok()
+            .filter(|s| !s.is_empty())
+            .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
+            .unwrap_or_else(|| warren_product_config::WARREN_API_URL.to_owned());
+        // Public `GET /v1/network` descriptor (environment label, degraded
+        // flag, default bandwidth cap, payments flag): fetched in the
+        // background and pushed to both UIs through the status stream.
+        warren_network_info::spawn(warren_api_url.clone(), warren_status_cache.clone());
+        // Pinned server pubkey: env override for dev/staging, else the
+        // baked production key. Pinning is mandatory in prod.
+        let warren_server_pubkey: Option<String> = Some(
+            std::env::var("WARREN_SERVER_PUBKEY")
+                .ok()
+                .filter(|s| !s.is_empty())
+                .unwrap_or_else(|| warren_product_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
+        );
+        // Audit F1 roster: opt-in (off by default), no pubkey baked in.
+        // When enabled, the operator supplies the offline-admin pin via
+        // `WARREN_ADMIN_ROSTER_PUBKEY`; an empty pin falls back to TOFU
+        // (the updater warns at startup).
+        let warren_roster_enabled = matches!(
+            std::env::var("WARREN_ROSTER_ENABLED")
+                .unwrap_or_default()
+                .trim()
+                .to_ascii_lowercase()
+                .as_str(),
+            "1" | "true" | "yes" | "on"
+        );
+        let warren_roster_pin: Option<String> = std::env::var("WARREN_ADMIN_ROSTER_PUBKEY")
+            .ok()
+            .filter(|s| !s.is_empty());
+        let warren_bootstrap = warren_relay_list_updater::load_bootstrap(
+            &config.cache_dir,
+            &config.resource_dir,
+            warren_server_pubkey.as_deref(),
+        );
+        // Seed the updater's anti-rollback high-water mark from the
+        // bootstrap so a later fetch cannot roll back below the baked list.
+        let warren_bootstrap_generation = warren_bootstrap.generation;
+        // Clean up after older clients: they pinned a `<exit_ip>/32` bypass
+        // route per exit, and only the exit being connected to ever gets its
+        // route cleared. Left alone, a leftover turns into a black hole the
+        // day the machine changes network, and it is self-locking (connecting
+        // to that exit would clear it, but the route is what prevents the
+        // connection). Startup is the only moment that can break the loop.
+        crate::warren_stale_route_sweep::sweep_stale_exit_routes(
+            &warren_bootstrap
+                .relays
+                .relays()
+                .iter()
+                .flat_map(|relay| relay.endpoint_addr().ip_addrs())
+                .filter_map(|socket| match socket.ip() {
+                    std::net::IpAddr::V4(addr) => Some(addr),
+                    std::net::IpAddr::V6(_) => None,
+                })
+                .collect::<Vec<_>>(),
+        );
+        let (warren_relay_selector, warren_signing_key) = {
+            let selector = crate::warren_relay_selector::DaemonWarrenRelaySelector::new(
+                warren_bootstrap.relays,
+            );
+            // Share the SAME swappable key handle with the tunnel (read
+            // live at connect) instead of a frozen disk re-read, so a
+            // restore/create takes effect on the next connect.
+            let signing_key = warren_shared_key.clone();
+            if signing_key.is_none() {
+                log::warn!("No Warren signing key available; tunnel attempts will fail");
+            }
+            (Some(selector), signing_key)
+        };
+
+        // Warren multi-hop opt-in: driven by the `warren_multi_hop.enabled`
+        // UI toggle (persisted in settings.json). The `WARREN_MULTI_HOP`
+        // env var is kept as a bench/power-user override so existing
+        // provisioning scripts keep working. When either is on, the
+        // daemon loads the signed descriptor pair from
+        // `<settings_dir>/warren-multihop.json` (minted by ops via
+        // `wapi admin-mint-*`). A missing file surfaces a deliberate
+        // single-hop fallback; a present-but-invalid file surfaces a
+        // loud warn but does not abort the boot. Subsequent toggles
+        // flow through `on_set_warren_multi_hop_settings`, which reloads
+        // the config and reconnects without a daemon restart.
+        let warren_multi_hop_opt_in =
+            settings.warren_multi_hop.enabled || warren_multi_hop_mode::is_enabled();
+        let warren_multi_hop = if warren_multi_hop_opt_in {
+            match warren_multi_hop::load_from_settings_dir(&config.settings_dir) {
+                Ok(Some(cfg)) => {
+                    log::info!(
+                        "Warren multi-hop enabled ({} loaded + PKI verified)",
+                        warren_multi_hop::MULTI_HOP_FILENAME
+                    );
+                    Some(cfg)
+                }
+                Ok(None) => {
+                    log::warn!(
+                        "Warren multi-hop is on but {} is missing in {}; falling back to single-hop",
+                        warren_multi_hop::MULTI_HOP_FILENAME,
+                        config.settings_dir.display()
+                    );
+                    None
+                }
+                Err(e) => {
+                    log::warn!(
+                        "Failed to load {}: {e}. Falling back to single-hop.",
+                        warren_multi_hop::MULTI_HOP_FILENAME
+                    );
+                    None
+                }
+            }
+        } else {
+            None
+        };
+
+        // Live, shared Mullvad-format view of the warren-relays. Seeded
+        // from the bootstrap; the background `WarrenRelayListUpdater`
+        // hot-swaps it on every verified fetch. Shared via `Arc<Mutex<…>>`
+        // so the pull RPC (`on_get_relay_locations`) and the broadcast
+        // closure (`on_relay_list_update`) always read the *current* list
+        // rather than a stale boot snapshot.
+        let warren_relay_list_view: Arc<Mutex<Option<RelayList>>> =
+            Arc::new(Mutex::new(warren_relay_selector.as_ref().map(|sel| {
+                warren_relay_list_view::to_mullvad_relay_list(sel.list())
+            })));
+
+        // Forward the resolved warren-api URL so the
+        // failover path (tunnel.rs) can post a best-effort
+        // exit-down report.
+        let warren_api_url_for_params: Option<String> = Some(warren_api_url.clone());
+        let parameters_generator = tunnel::ParametersGenerator::new_with_optional_warren(
             relay_selector.clone(),
             settings.relay_settings.clone(),
             settings.tunnel_options.clone(),
+            warren_relay_selector,
+            warren_signing_key,
+            warren_shared_seed.clone(),
+            warren_multi_hop,
+            warren_status_cache.clone(),
+            warren_api_url_for_params,
         );
+        // Snapshot the persisted DAITA opt-in onto the
+        // parameters generator at boot. Without this, the first
+        // tunnel connect after a daemon restart would always go out
+        // DAITA-off even when the user had previously toggled it on.
+        // Subsequent toggles flow through `on_set_daita_*` handlers.
+        #[cfg(daita)]
+        {
+            let initial_daita = settings.tunnel_options.wireguard.daita.enabled;
+            let pg_for_daita_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_daita_boot
+                    .set_warren_enable_daita(initial_daita)
+                    .await;
+            });
+        }
+
+        // Snapshot the persisted parallel-connection preference at
+        // boot, mirroring the DAITA snapshot above: without it, the
+        // first connect after a daemon restart would always use the
+        // compiled default even when the user persisted a custom value.
+        {
+            let initial_n_connections = settings.warren_n_connections;
+            let pg_for_nconns_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_nconns_boot
+                    .set_warren_n_connections(initial_n_connections)
+                    .await;
+            });
+        }
+
+        // Snapshot the persisted client-side bandwidth ceiling at boot,
+        // mirroring the n_connections snapshot above: without it, the
+        // first connect after a daemon restart would run uncapped even
+        // when the user persisted a limit.
+        {
+            let initial_max_rate = settings.warren_max_rate_bps;
+            let pg_for_max_rate_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_max_rate_boot
+                    .set_warren_max_rate_bps(initial_max_rate)
+                    .await;
+            });
+        }
+
+        // Snapshot the persisted advanced "custom exit" override at boot,
+        // mirroring the n_connections snapshot above: without it, the
+        // first connect after a daemon restart would ignore a persisted
+        // custom exit and fall back to roster selection.
+        {
+            let initial_custom_exit = settings.warren_custom_exit.clone();
+            let pg_for_custom_exit_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_custom_exit_boot
+                    .set_warren_custom_exit(initial_custom_exit)
+                    .await;
+            });
+        }
+
+        // Snapshot the persisted NAT-PMP (port forwarding) setting at
+        // boot, mirroring the snapshots above: without it, a daemon
+        // restart with the toggle persisted ON starts the first tunnel
+        // with no NatPmpConfig, so no mapping is ever requested (the UI
+        // shows the toggle enabled but port forwarding stays inactive
+        // until the user toggles it off and on again).
+        {
+            let initial_nat_pmp = nat_pmp_settings_to_runtime_cfg(&settings.warren_nat_pmp);
+            let pg_for_nat_pmp_boot = parameters_generator.clone();
+            tokio::spawn(async move {
+                pg_for_nat_pmp_boot
+                    .set_warren_nat_pmp(initial_nat_pmp)
+                    .await;
+            });
+        }
 
         let param_gen = parameters_generator.clone();
         let (param_gen_tx, mut param_gen_rx) = mpsc::unbounded();
@@ -897,6 +1530,27 @@ impl Daemon {
         settings.register_change_listener(move |settings| {
             let _ = param_gen_tx.unbounded_send(settings.tunnel_options.clone());
         });
+
+        // Wire the verify-hook channel into the daemon
+        // main loop. Every TOFU pin event (insert / bump / mismatch /
+        // trust / reset) is forwarded as an `InternalDaemonEvent` so
+        // the daemon's `handle_event` can persist it through
+        // `SettingsPersister::update` and (for mismatches) push it to
+        // the live `WarrenStatusCache`.
+        {
+            let (warren_pin_tx, mut warren_pin_rx) =
+                tokio::sync::mpsc::unbounded_channel::<tunnel::WarrenPinUpdate>();
+            parameters_generator
+                .set_warren_pin_update_tx(Some(warren_pin_tx))
+                .await;
+            let internal_event_tx_pin = internal_event_tx.clone();
+            tokio::spawn(async move {
+                while let Some(update) = warren_pin_rx.recv().await {
+                    let _ =
+                        internal_event_tx_pin.send(InternalDaemonEvent::WarrenPinUpdate(update));
+                }
+            });
+        }
 
         let param_gen_relay_settings = parameters_generator.clone();
         settings.register_change_listener(move |settings| {
@@ -942,6 +1596,7 @@ impl Daemon {
                 exclude_paths,
             },
             parameters_generator.clone(),
+            Arc::new(parameters_generator.clone()),
             config.log_dir,
             config.resource_dir.clone(),
             internal_event_tx.to_specialized_sender(),
@@ -964,18 +1619,72 @@ impl Daemon {
         .await
         .map_err(Error::TunnelError)?;
 
-        api::forward_offline_state(api_availability.clone(), offline_state_rx);
+        // Connectivity online-edge signal: bumped on every offline→online
+        // transition so the Warren multi-hop directory updater and exit-list
+        // updater force an immediate refresh when connectivity returns
+        // (notably on sleep/wake), instead of sitting on a stale set until
+        // their next coarse periodic tick.
+        let (warren_online_edge_tx, warren_online_edge_rx) = tokio::sync::watch::channel(0u64);
+        api::forward_offline_state(
+            api_availability.clone(),
+            offline_state_rx,
+            warren_online_edge_tx,
+            warren_status_cache.clone(),
+        );
 
         let relay_list_listener = management_interface.notifier().clone();
         let internal_event_tx_clone = internal_event_tx.clone();
+
+        // In Warren tunnel mode, we replace the `RelayList` broadcast to
+        // the GUI with a view built from `warren-relays.json`
+        // (see `warren_relay_list_view::to_mullvad_relay_list`). The
+        // upstream Mullvad `RelayListUpdater` keeps running to
+        // feed the other internal consumers (API access methods,
+        // bridges) that still depend on the Mullvad list, but the
+        // payload exposed to the GUI comes solely from Warren.
+        let warren_view_for_closure = Arc::clone(&warren_relay_list_view);
         let on_relay_list_update = move |relay_list: &RelayList| {
-            relay_list_listener.notify_relay_list(relay_list.clone());
+            // Read the *current* Warren view (hot-swapped by the updater),
+            // never a boot snapshot - otherwise a late Mullvad relay-list
+            // refresh would clobber the GUI with the stale (often empty)
+            // boot list.
+            let to_broadcast = warren_view_for_closure
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .clone()
+                .unwrap_or_else(|| relay_list.clone());
+            relay_list_listener.notify_relay_list(to_broadcast);
             let (tx, _) = oneshot::channel();
             let _ = internal_event_tx_clone.send(InternalDaemonEvent::Command(
                 DaemonCommand::UpdateDefaultLocationCountry(tx),
             ));
         };
 
+        // Immediate broadcast of the Warren view (= without waiting
+        // for the first `RelayListUpdater` refresh which may arrive
+        // minutes later): the GUI will display the Warren exits as
+        // soon as it first connects to the management interface.
+        if let Some(view) = warren_relay_list_view
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .as_ref()
+        {
+            log::info!(
+                "Broadcasting Warren relay list view ({} countries) to GUI at boot",
+                view.countries.len()
+            );
+            management_interface
+                .notifier()
+                .notify_relay_list(view.clone());
+        }
+
+        // Warren fork: `downloads_enabled = false`. The upstream Mullvad
+        // relay list is never consumed (Warren is the only tunnel mode; the
+        // GUI is fed the Warren view, the tunnel uses the Warren selector),
+        // and warren-api does not serve the Mullvad relay endpoint, so every
+        // download would 404. Keeping the updater spawned preserves the
+        // override-application path and the handle wiring; only the futile
+        // network fetch is disabled.
         let mut relay_list_updater = RelayListUpdater::spawn(
             relay_selector.clone(),
             api_handle.clone(),
@@ -983,6 +1692,7 @@ impl Daemon {
             settings.relay_overrides.clone(),
             on_relay_list_update,
             initial_relay_list,
+            false,
         );
 
         // Notify the relay list updater when new relay IP overrides are available.
@@ -996,37 +1706,228 @@ impl Daemon {
             });
         });
 
-        #[cfg(not(target_os = "android"))]
-        let rollout = {
-            settings
-                .update(|settings| {
-                    settings
-                        .rollout_threshold_seed
-                        .get_or_insert_with(Rollout::seed);
-                })
-                .await
-                .map_err(Error::SettingsError)?;
-            let seed = settings
-                .rollout_threshold_seed
-                .expect("Rollout seed must have been initialized");
-            let version = mullvad_version::VERSION
-                .parse()
-                .expect("App version to be parsable");
-            Rollout::threshold(seed, version)
-        };
+        // The version router polls the Warren update channel for signed
+        // metadata. The persisted rollout seed (if any) places this client at
+        // a stable position in staged rollouts; when absent the poller only
+        // surfaces fully rolled-out releases.
         let version_handle = version::router::spawn_version_router(
-            api_handle.clone(),
-            api_handle.availability.clone(),
             config.cache_dir.clone(),
             internal_event_tx.to_specialized_sender(),
             settings.show_beta_releases,
-            #[cfg(not(target_os = "android"))]
-            rollout,
+            settings.rollout_threshold_seed,
             app_upgrade_broadcast,
         );
 
-        // Attempt to download a fresh relay list
+        // Warren fork: no-op (Mullvad relay downloads are disabled, see
+        // `RelayListUpdater::spawn(.., false)`). Kept for parity with
+        // upstream boot sequencing; the Warren exit list is fetched by the
+        // dedicated `WarrenRelayListUpdater` spawned just below.
         relay_list_updater.update().await;
+
+        // Warren fork: spawn the dynamic Warren exit-list updater. It
+        // refreshes `GET {warren_api_url}/v1/exits` on startup +
+        // periodically, verifies the signature against the pinned server
+        // pubkey before caching, writes the cache atomically, and
+        // hot-swaps the live selector + rebroadcasts the GUI view with no
+        // daemon restart. Mirrors the upstream `RelayListUpdater` above.
+        {
+            let warren_pg = parameters_generator.clone();
+            let warren_notifier = management_interface.notifier().clone();
+            // Shared live view so the updater's hot-swap is visible to the
+            // synchronous pull RPC (`on_get_relay_locations`) too - not just
+            // the broadcast push. Without this the GUI's mount-time pull
+            // keeps returning the stale (empty in dev) boot view.
+            let warren_view_for_updater = Arc::clone(&warren_relay_list_view);
+            // The handle is retained to kick an immediate refresh on the
+            // connectivity online edge (sleep/wake); the task also keeps
+            // itself alive via its internal keepalive sender (periodic
+            // refresh for the daemon's whole lifetime).
+            let warren_updater = warren_relay_list_updater::WarrenRelayListUpdater::spawn(
+                warren_api_url.clone(),
+                &config.cache_dir,
+                warren_server_pubkey.clone(),
+                None,
+                warren_bootstrap_generation,
+                // Optional roster feature, off by default (WARREN_ROSTER_ENABLED).
+                warren_roster_enabled,
+                warren_roster_pin.clone(),
+                // No roster bootstrap-from-disk yet: when enabled, the
+                // startup refresh_roster() fetches it. Until it lands (or
+                // when disabled), the live list passes through unfiltered.
+                None,
+                move |list| {
+                    let view = warren_relay_list_view::to_mullvad_relay_list(&list);
+                    let pg = warren_pg.clone();
+                    let notifier = warren_notifier.clone();
+                    // Hot-swap the shared view BEFORE notifying so a GUI
+                    // pull that races the push observes the fresh list.
+                    *warren_view_for_updater
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(view.clone());
+                    tokio::spawn(async move {
+                        pg.set_warren_relay_selector(
+                            crate::warren_relay_selector::DaemonWarrenRelaySelector::new(list),
+                        )
+                        .await;
+                        notifier.notify_relay_list(view);
+                    });
+                },
+            );
+            // Force an exit-list refresh on every connectivity online edge so
+            // a post-wake reconnect selects from a fresh list rather than the
+            // stale pre-sleep one (single-hop `no relay matches` wedge).
+            let mut warren_updater = warren_updater;
+            let mut online_edge_rx = warren_online_edge_rx.clone();
+            tokio::spawn(async move {
+                while online_edge_rx.changed().await.is_ok() {
+                    log::info!("Warren exit list: connectivity restored; refreshing now");
+                    warren_updater.update().await;
+                }
+            });
+        }
+
+        // Broadcast notices: a background updater fetches the
+        // server-signed notice envelope, verifies it against the same
+        // pinned server key as the relay list, and pushes what must be
+        // displayed into the live status the GUI subscribes to. Nothing is
+        // cached to disk on purpose (see the module docs): an erased
+        // message must not be able to come back.
+        {
+            let notices_status = warren_status_cache.clone();
+            warren_notices_updater::WarrenNoticesUpdater::spawn(
+                warren_api_url.clone(),
+                warren_server_pubkey.clone(),
+                Some(mullvad_version::VERSION.to_owned()),
+                move |notices| notices_status.set_notices(notices),
+            );
+        }
+
+        // Dynamic multi-hop: a background updater fetches the signed
+        // directory from warren-api, verifies the full trust chain
+        // (server envelope -> pinned root cert -> operational descriptors),
+        // selects a 2-distinct-node circuit honoring the user's country
+        // hints, and pushes the assembled `MultiHopConfig` to the
+        // parameters generator, requesting a reconnect when the active
+        // circuit changes. The directory is signed by the same server key
+        // as the relay list, so the relay-list server pin is reused; the
+        // root pin comes from `warren_multi_hop_directory::resolve_root_pins`.
+        //
+        // `warren_multi_hop_directory_active` records whether that updater is
+        // wired and owns the reconnect for circuit changes. When it is, the
+        // standard "relay settings changed" restart path MUST NOT reconnect
+        // on its own: it would rebuild tunnel params from the generator's
+        // currently-stored (and now stale) multi-hop circuit, briefly
+        // connecting to the wrong exit before the updater re-selects the
+        // correct one. The directory updater is the single source of truth
+        // for the active circuit and issues exactly one reconnect with the
+        // freshly-selected circuit.
+        let warren_multi_hop_directory_active;
+        {
+            let warren_mh_root_mode = warren_multi_hop_directory::root_pin_mode();
+            // Fail-closed (`Unconfigured`) never produces a circuit, so the
+            // updater does not own reconnects in that mode - keep the standard
+            // restart path so a location change still reconnects.
+            warren_multi_hop_directory_active =
+                warren_mh_root_mode != warren_multi_hop_directory::RootPinMode::Unconfigured;
+            // Mirror the GUI's exit-location choice (written into the
+            // standard relay `location` constraint) into the multi-hop
+            // exit-country hint the circuit selector reads. The GUI does
+            // NOT write `warren_multi_hop.exit_country` directly, so
+            // without this bridge the user's exit selection is silently
+            // ignored and the selector picks a random circuit. Entry is
+            // left "any": the GUI defaults the entry location to a country
+            // that may not host a Warren node, and with a small fleet the
+            // entry is implied by the exit (different-country rule).
+            fn effective_warren_multi_hop(
+                s: &mullvad_types::settings::Settings,
+            ) -> mullvad_types::settings::WarrenMultiHopSettings {
+                use mullvad_types::constraints::Constraint;
+                use mullvad_types::relay_constraints::{
+                    GeographicLocationConstraint, LocationConstraint, RelaySettings,
+                };
+                let mut mh = s.warren_multi_hop.clone();
+                if mh.exit_country.is_empty()
+                    && let RelaySettings::Normal(rc) = &s.relay_settings
+                    && let Constraint::Only(LocationConstraint::Location(geo)) = &rc.location
+                {
+                    mh.exit_country = match geo {
+                        GeographicLocationConstraint::Country(cc)
+                        | GeographicLocationConstraint::City(cc, _)
+                        | GeographicLocationConstraint::Hostname(cc, _, _) => cc.clone(),
+                    };
+                }
+                mh
+            }
+            let (warren_mh_tx, warren_mh_rx) =
+                tokio::sync::watch::channel(effective_warren_multi_hop(&settings));
+            // Push the multi-hop setting to the updater on every change so
+            // a toggle flip (or exit-location edit) refreshes the circuit
+            // without a daemon restart. Guarded so unrelated settings
+            // changes do not wake the updater.
+            settings.register_change_listener(move |s| {
+                let eff = effective_warren_multi_hop(s);
+                warren_mh_tx.send_if_modified(|cur| {
+                    if *cur != eff {
+                        *cur = eff;
+                        true
+                    } else {
+                        false
+                    }
+                });
+            });
+            let reconnect_event_tx: DaemonEventSender<DaemonCommand> =
+                internal_event_tx.to_specialized_sender();
+            let request_reconnect: Arc<dyn Fn() + Send + Sync> = Arc::new(move || {
+                let tx = reconnect_event_tx.clone();
+                let (otx, orx) = oneshot::channel();
+                if tx.send(DaemonCommand::Reconnect(otx)).is_ok() {
+                    // Keep the receiver alive until `on_reconnect` replies,
+                    // mirroring `schedule_reconnect`. Dropping it makes the
+                    // reply send fail and log a spurious "Unable to send
+                    // reconnect issued to the daemon command sender".
+                    tokio::spawn(async move {
+                        let _ = orx.await;
+                    });
+                }
+            });
+            // ADR 36 gap-free drain path: request channel from the drain
+            // reactor (through the generator) into the directory updater.
+            let (warren_drain_migration_tx, warren_drain_migration_rx) =
+                tokio::sync::mpsc::unbounded_channel();
+            parameters_generator
+                .set_warren_drain_migration_tx(Some(warren_drain_migration_tx))
+                .await;
+            warren_multi_hop_directory::spawn(warren_multi_hop_directory::UpdaterConfig {
+                api_url: warren_api_url.clone(),
+                server_pins: warren_server_pubkey.clone().into_iter().collect(),
+                root_mode: warren_mh_root_mode,
+                settings_rx: warren_mh_rx,
+                parameters_generator: parameters_generator.clone(),
+                request_reconnect,
+                on_maintenance_migration: Some({
+                    let cache = warren_status_cache.clone();
+                    Arc::new(move || {
+                        cache.record_maintenance_migration();
+                        // Time-driven flip back to inactive: re-broadcast
+                        // once the display TTL elapses so the UI banner
+                        // drops without polling. The extra second absorbs
+                        // timer/clock skew at the boundary.
+                        let cache = cache.clone();
+                        tokio::spawn(async move {
+                            tokio::time::sleep(
+                                warren_status::MAINTENANCE_MIGRATION_TTL
+                                    + std::time::Duration::from_secs(1),
+                            )
+                            .await;
+                            cache.rebroadcast();
+                        });
+                    })
+                }),
+                settings_dir: config.settings_dir.clone(),
+                online_edge_rx: Some(warren_online_edge_rx.clone()),
+                drain_migration_rx: Some(warren_drain_migration_rx),
+            });
+        }
 
         let location_handler = GeoIpHandler::new(
             api_runtime.rest_handle(
@@ -1065,7 +1966,6 @@ impl Daemon {
             migration_complete,
             settings,
             account_history,
-            device_checker: device::TunnelStateChangeHandler::new(account_manager.clone()),
             account_manager,
             access_mode_handler,
             api_runtime,
@@ -1074,13 +1974,20 @@ impl Daemon {
             relay_selector,
             relay_list_updater,
             parameters_generator,
+            warren_relay_list_view,
             shutdown_tasks: vec![],
             tunnel_state_machine_handle,
             #[cfg(target_os = "windows")]
             volume_update_tx,
             location_handler,
             leak_checker,
+            nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(),
             cache_dir: config.cache_dir,
+            settings_dir: config.settings_dir,
+            warren_status_cache,
+            warren_auto_recovery_pending: false,
+            warren_identity,
+            warren_multi_hop_directory_active,
         };
 
         api_availability.unsuspend();
@@ -1207,7 +2114,6 @@ impl Daemon {
                 event,
                 endpoint_active_tx,
             } => self.handle_access_method_event(event, endpoint_active_tx),
-            DeviceMigrationEvent(event) => self.handle_device_migration_event(event),
             LocationEvent(location_data) => self.handle_location_event(location_data),
             SettingsChanged => {
                 self.update_feature_indicators_on_settings_changed();
@@ -1215,12 +2121,131 @@ impl Daemon {
             #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             ExcludedPathsEvent(update, tx) => self.handle_new_excluded_paths(update, tx).await,
             LeakDetected(leak_info) => {
-                log::warn!("Network leak detected! Please contact Mullvad support.");
+                log::warn!("Network leak detected! Please contact Warren support.");
                 log::warn!("{leak_info:?}");
                 self.handle_leak_event(leak_info)
             }
+            WarrenPinUpdate(update) => self.handle_warren_pin_update(update).await,
         }
         should_stop
+    }
+
+    /// Route a verify-hook event to (a) the live
+    /// `WarrenStatusCache` so the UI modal can mount on mismatch and
+    /// (b) the on-disk settings.json so the TOFU pin table survives a
+    /// daemon restart. The fields on `Settings::warren_pinned_exit_pubkeys`
+    /// are the source of truth across restarts; the in-memory copy on
+    /// the parameters generator is rehydrated through the existing
+    /// `set_settings` change listener.
+    async fn handle_warren_pin_update(&mut self, update: tunnel::WarrenPinUpdate) {
+        use mullvad_types::settings::WarrenPinnedExitPubkey;
+        match update {
+            tunnel::WarrenPinUpdate::PinNewExit {
+                exit_id_hex,
+                pubkey_hex,
+                country_code,
+                city,
+                now_unix,
+            } => {
+                let result = self
+                    .settings
+                    .update(move |s| {
+                        s.warren_pinned_exit_pubkeys.entries.insert(
+                            exit_id_hex.clone(),
+                            WarrenPinnedExitPubkey {
+                                pubkey_hex,
+                                first_seen_unix: now_unix,
+                                last_seen_unix: now_unix,
+                                country_code,
+                                city,
+                            },
+                        );
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren TOFU pin-insert persist failed: {e}");
+                }
+            }
+            tunnel::WarrenPinUpdate::BumpLastSeen {
+                exit_id_hex,
+                now_unix,
+            } => {
+                let result = self
+                    .settings
+                    .update(move |s| {
+                        if let Some(entry) =
+                            s.warren_pinned_exit_pubkeys.entries.get_mut(&exit_id_hex)
+                        {
+                            entry.last_seen_unix = now_unix;
+                        }
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren TOFU last_seen bump persist failed: {e}");
+                }
+            }
+            tunnel::WarrenPinUpdate::Mismatch {
+                exit_id_hex,
+                pinned_pubkey_hex,
+                observed_pubkey_hex,
+                country_code,
+                city,
+            } => {
+                // No settings write: a mismatch deliberately does NOT
+                // mutate the pinned key (that's a Trust event).
+                self.warren_status_cache.set_pubkey_mismatch_pending(
+                    crate::warren_status::PubkeyMismatchPending {
+                        exit_id_hex,
+                        pinned_pubkey_hex,
+                        observed_pubkey_hex,
+                        country_code,
+                        city,
+                    },
+                );
+            }
+            tunnel::WarrenPinUpdate::TrustReplaceKey {
+                exit_id_hex,
+                new_pubkey_hex,
+                now_unix,
+            } => {
+                let result = self
+                    .settings
+                    .update(move |s| {
+                        if let Some(entry) =
+                            s.warren_pinned_exit_pubkeys.entries.get_mut(&exit_id_hex)
+                        {
+                            entry.pubkey_hex = new_pubkey_hex;
+                            entry.first_seen_unix = now_unix;
+                            entry.last_seen_unix = now_unix;
+                        }
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren TOFU trust-replace persist failed: {e}");
+                }
+            }
+            tunnel::WarrenPinUpdate::ResetAll => {
+                let result = self
+                    .settings
+                    .update(|s| {
+                        s.warren_pinned_exit_pubkeys.entries.clear();
+                    })
+                    .await;
+                if let Err(e) = result {
+                    log::warn!("warren TOFU reset-all persist failed: {e}");
+                }
+            }
+        }
+    }
+
+    fn tunnel_state_kind(state: &TunnelState) -> warren_status::TunnelStateKind {
+        match state {
+            TunnelState::Disconnected { .. } => warren_status::TunnelStateKind::Disconnected,
+            TunnelState::Connecting { .. } => warren_status::TunnelStateKind::Connecting,
+            TunnelState::Connected { .. } => warren_status::TunnelStateKind::Connected,
+            TunnelState::Disconnecting(_) => warren_status::TunnelStateKind::Disconnecting,
+            TunnelState::Error(_) => warren_status::TunnelStateKind::Error,
+        }
     }
 
     async fn handle_tunnel_state_transition(
@@ -1229,10 +2254,22 @@ impl Daemon {
     ) {
         self.leak_checker
             .on_tunnel_state_transition(tunnel_state_transition.clone());
+        self.nm_vpn_indicator
+            .on_tunnel_state_transition(&tunnel_state_transition);
 
         self.reset_rpc_sockets_on_tunnel_state_transition(&tunnel_state_transition);
-        self.device_checker
-            .handle_state_transition(&tunnel_state_transition);
+        // Refresh the account expiry when a connection attempt starts,
+        // so the subscription-expiry kill-switch (driven by
+        // `AccountEvent::Expiry`) keeps working.
+        if matches!(
+            tunnel_state_transition,
+            TunnelStateTransition::Connecting(_)
+        ) {
+            let account_manager = self.account_manager.clone();
+            tokio::spawn(async move {
+                let _ = account_manager.check_expiry().await;
+            });
+        }
 
         let tunnel_state = match tunnel_state_transition {
             #[cfg(not(target_os = "android"))]
@@ -1319,6 +2356,25 @@ impl Daemon {
                 }
             }
             _ => {}
+        }
+
+        // Doc 62 item 5: the egress-dead verdict only means something
+        // while a tunnel is up; leaving Connected (rebuild, disconnect,
+        // error) invalidates it. The probe of the next tunnel re-raises
+        // it if the condition persists.
+        if !tunnel_state.is_connected() {
+            self.warren_status_cache.set_exit_egress_dead(false);
+        }
+
+        let (pending, count_recovery) = warren_status::auto_recovery_step(
+            self.warren_auto_recovery_pending,
+            Self::tunnel_state_kind(&self.tunnel_state),
+            Self::tunnel_state_kind(&tunnel_state),
+            *self.target_state == TargetState::Secured,
+        );
+        self.warren_auto_recovery_pending = pending;
+        if count_recovery {
+            self.warren_status_cache.record_reconnect();
         }
 
         self.tunnel_state = tunnel_state.clone();
@@ -1429,8 +2485,17 @@ impl Daemon {
                 let ip_override = feature_indicators
                     .active_features()
                     .any(|f| matches!(&f, FeatureIndicator::ServerIpOverride));
-                let new_feature_indicators =
+                let mut new_feature_indicators =
                     compute_feature_indicators(self.settings.settings(), endpoint, ip_override);
+                // DAITA unavailability is a per-session negotiated fact: the
+                // setting says what was REQUESTED, the endpoint what this
+                // session GRANTED. Recomputing it here mixes the fresh
+                // settings with the OLD session's endpoint and flashes a
+                // spurious "DAITA: not active on this server" banner until
+                // the settings-scheduled reconnect lands; only tunnel state
+                // transitions carry fresh endpoint truth for it.
+                new_feature_indicators
+                    .carry_over_from(feature_indicators, FeatureIndicator::DaitaUnavailable);
                 // Update and broadcast the new feature indicators if they have changed
                 if *feature_indicators != new_feature_indicators {
                     // Make sure to update the daemon's actual tunnel state. Otherwise, feature
@@ -1495,22 +2560,60 @@ impl Daemon {
             CreateNewAccount(tx) => self.on_create_new_account(tx),
             GetAccountData(tx, account_number) => self.on_get_account_data(tx, account_number),
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
+            GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
+            SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
+            SignForumAttachLogs(tx, sid, topic_id, log_gz) => {
+                self.on_sign_forum_attach_logs(tx, sid, topic_id, log_gz)
+            }
+            SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
             LoginAccount(tx, account_number) => self.on_login_account(tx, account_number),
-            LogoutAccount(tx) => self.on_logout_account(tx),
+            LogoutAccount(tx, wipe_identity) => self.on_logout_account(tx, wipe_identity).await,
             GetDevice(tx) => self.on_get_device(tx),
             UpdateDevice(tx) => self.on_update_device(tx),
-            ListDevices(tx, account_number) => self.on_list_devices(tx, account_number),
-            RemoveDevice(tx, account_number, device_id) => {
-                self.on_remove_device(tx, account_number, device_id)
-            }
             GetAccountHistory(tx) => self.on_get_account_history(tx),
             ClearAccountHistory(tx) => self.on_clear_account_history(tx).await,
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
+            SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
+            SetWarrenNConnections(tx, n) => self.on_set_warren_n_connections(tx, n).await,
+            SetWarrenMaxRateBps(tx, bps) => self.on_set_warren_max_rate_bps(tx, bps).await,
+            SetWarrenCustomExit(tx, custom) => self.on_set_warren_custom_exit(tx, custom).await,
+            SetWarrenMultiHopSettings(tx, settings) => {
+                self.on_set_warren_multi_hop_settings(tx, settings).await
+            }
+            SetNatPmpSettings(tx, settings) => self.on_set_nat_pmp_settings(tx, settings).await,
+            TrustNewExitKey {
+                tx,
+                exit_id_hex,
+                new_pubkey_hex,
+            } => {
+                self.on_trust_new_exit_key(tx, exit_id_hex, new_pubkey_hex)
+                    .await
+            }
+            ResetPinnedExitKeys(tx) => self.on_reset_pinned_exit_keys(tx).await,
+            DismissPubkeyMismatch(tx) => self.on_dismiss_pubkey_mismatch(tx),
+            ReportPubkeyMismatch {
+                tx,
+                exit_id_hex,
+                old_pubkey_hex,
+                new_pubkey_hex,
+                country_code,
+                city,
+            } => {
+                self.on_report_pubkey_mismatch(
+                    tx,
+                    exit_id_hex,
+                    old_pubkey_hex,
+                    new_pubkey_hex,
+                    country_code,
+                    city,
+                )
+                .await
+            }
             SetShowBetaReleases(tx, enabled) => self.on_set_show_beta_releases(tx, enabled).await,
             #[cfg(not(target_os = "android"))]
             SetLockdownMode(tx, lockdown_mode) => {
@@ -1547,13 +2650,8 @@ impl Daemon {
             SetWireguardAllowedIps(tx, allowed_ips) => {
                 self.on_set_wireguard_allowed_ips(tx, allowed_ips).await
             }
-            SetWireguardRotationInterval(tx, interval) => {
-                self.on_set_wireguard_rotation_interval(tx, interval).await
-            }
             GetSettings(tx) => self.on_get_settings(tx),
             ResetSettings(tx) => self.on_reset_settings(tx).await,
-            RotateWireguardKey(tx) => self.on_rotate_wireguard_key(tx),
-            GetWireguardKey(tx) => self.on_get_wireguard_key(tx).await,
             CreateCustomList(tx, name, locations) => {
                 self.on_create_custom_list(tx, name, locations).await
             }
@@ -1649,12 +2747,8 @@ impl Daemon {
 
     async fn handle_device_event(&mut self, event: AccountEvent) {
         match &event {
-            AccountEvent::Device(PrivateDeviceEvent::Login(device)) => {
-                if let Err(error) = self
-                    .account_history
-                    .set(device.account_number.clone())
-                    .await
-                {
+            AccountEvent::Device(PrivateDeviceEvent::Login(pubkey)) => {
+                if let Err(error) = self.account_history.set(pubkey.as_str().to_owned()).await {
                     log::error!(
                         "{}",
                         error.display_chain_with_msg("Failed to update account history")
@@ -1688,9 +2782,6 @@ impl Daemon {
                 if *self.target_state == TargetState::Secured =>
             {
                 self.connect_tunnel();
-            }
-            AccountEvent::Device(PrivateDeviceEvent::RotatedKey(_)) => {
-                self.schedule_reconnect(WG_RECONNECT_DELAY);
             }
             AccountEvent::Expiry(expiry) if *self.target_state == TargetState::Secured => {
                 if expiry >= &chrono::Utc::now() {
@@ -1788,45 +2879,6 @@ impl Daemon {
         }
     }
 
-    fn handle_device_migration_event(
-        &mut self,
-        result: Result<PrivateAccountAndDevice, device::Error>,
-    ) {
-        let account_manager = self.account_manager.clone();
-        let notifier = self.management_interface.notifier().clone();
-        tokio::spawn(async move {
-            if let Ok(Some(_)) = account_manager
-                .data_after_login()
-                .await
-                .map(|s| s.into_device())
-            {
-                // Discard stale device
-                return;
-            }
-
-            let result = async { account_manager.set(result?).await }.await;
-
-            if let Err(error) = result {
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg("Failed to move over account from old settings")
-                );
-                // Synthesize a logout or revocation if migration fails.
-                let event = match error {
-                    device::Error::InvalidDevice => DeviceEvent {
-                        cause: DeviceEventCause::Revoked,
-                        new_state: DeviceState::Revoked,
-                    },
-                    _ => DeviceEvent {
-                        cause: DeviceEventCause::LoggedOut,
-                        new_state: DeviceState::LoggedOut,
-                    },
-                };
-                notifier.notify_device_event(event);
-            }
-        });
-    }
-
     #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     async fn handle_new_excluded_paths(
         &mut self,
@@ -1901,8 +2953,31 @@ impl Daemon {
         Self::oneshot_send(tx, performing_post_upgrade, "performing post upgrade");
     }
 
+    /// Mints a brand-new Warren identity and logs into it.
+    ///
+    /// Unlike the legacy Mullvad flow (which asked the server for a new
+    /// account number), a Warren identity is a freshly generated BIP39
+    /// mnemonic: we generate one, persist it to the OS vault, hot-swap
+    /// it into the daemon identity, then `login()` under the new pubkey
+    /// so the device state is consistent for every client (CLI, Android,
+    /// desktop) that calls `CreateNewAccount`. Guarded by the logged-in
+    /// check below: overwriting the vault is only reachable from a
+    /// logged-out state, where the GUI has already made the user confirm
+    /// that any prior identity is theirs to discard.
+    ///
+    /// The desktop GUI additionally runs a mandatory recovery-phrase
+    /// backup step before letting the user proceed past the login
+    /// screen (it observes the `logged in` device event, fetches the
+    /// phrase via `GetWarrenMnemonic`, and only advances once the user
+    /// confirms they saved it) - but that gating lives in the GUI, not
+    /// here, so non-GUI clients still get a logged-in account.
+    ///
+    /// Returns the new pubkey (SS58) as the account "token". No-log
+    /// policy: the mnemonic itself is never logged or returned here.
     fn on_create_new_account(&mut self, tx: ResponseTx<String, Error>) {
         let account_manager = self.account_manager.clone();
+        let settings_dir = self.settings_dir.clone();
+        let identity = self.warren_identity.clone();
         tokio::spawn(async move {
             let result = async {
                 if let Ok(data) = account_manager.data().await
@@ -1910,11 +2985,24 @@ impl Daemon {
                 {
                     return Err(Error::AlreadyLoggedIn);
                 }
-                let token = account_manager
-                    .account_service
-                    .create_account()
-                    .await
-                    .map_err(Error::RestError)?;
+
+                // Generate + persist a fresh mnemonic, then hot-swap the
+                // daemon identity (signer AND SDK seed, atomically: a
+                // purchase or balance query right after create-account
+                // must run under the new wallet, never the placeholder).
+                // Both steps are synchronous keychain/DPAPI I/O, so run
+                // them off the async executor to avoid stalling a worker
+                // thread on a slow vault.
+                let new_pubkey_bytes =
+                    tokio::task::spawn_blocking(move || identity.mint_new_identity(&settings_dir))
+                        .await
+                        .unwrap_or_else(|join_err| Err(io::Error::other(join_err)))
+                        .map_err(Error::WarrenIdentityError)?;
+
+                let token =
+                    mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes)
+                        .to_string();
+
                 account_manager
                     .login(token.clone())
                     .await
@@ -1936,20 +3024,29 @@ impl Daemon {
         tx: ResponseTx<AccountData, mullvad_api::rest::Error>,
         account_number: AccountNumber,
     ) {
-        let account = self.account_manager.account_service.clone();
+        let account = self.account_manager.warren_identity_service.clone();
         tokio::spawn(async move {
-            let result = account.get_data(account_number).await;
+            // `get_data` takes a `WarrenPubKey`. We parse the legacy
+            // `account_number` (= possibly non-hex string) with a
+            // dummy fallback.
+            let pubkey = device::account_number_to_warren_pubkey(&account_number);
+            let result = account.get_data(pubkey).await;
             Self::oneshot_send(tx, result, "account data");
         });
     }
 
     async fn on_get_www_auth_token(&mut self, tx: ResponseTx<String, Error>) {
-        match self.account_manager.data().await.map(|s| s.into_device()) {
-            Ok(Some(device)) => {
+        match self
+            .account_manager
+            .data()
+            .await
+            .map(|s| s.pubkey().cloned())
+        {
+            Ok(Some(pubkey)) => {
                 let future = self
                     .account_manager
-                    .account_service
-                    .get_www_auth_token(device.account_number);
+                    .warren_identity_service
+                    .get_www_auth_token(pubkey.as_str().to_owned());
                 tokio::spawn(async {
                     Self::oneshot_send(
                         tx,
@@ -1968,6 +3065,219 @@ impl Daemon {
         }
     }
 
+    /// Reads the user's BIP39 mnemonic via
+    /// `warren_signer::get_warren_mnemonic`. Read-only, sync (no
+    /// spawn needed - `read_to_string` < 1 ms on a 100-byte file).
+    /// **No-log policy**: we only log the fact that a read occurred,
+    /// never the content.
+    fn on_get_warren_mnemonic(&self, tx: oneshot::Sender<Option<zeroize::Zeroizing<String>>>) {
+        let mnemonic = warren_signer::get_warren_mnemonic(&self.settings_dir);
+        log::debug!(
+            "on_get_warren_mnemonic: present={} (content NEVER logged)",
+            mnemonic.is_some()
+        );
+        Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
+    }
+
+    /// Signs the community-forum login challenge for `sid` (doc 55).
+    /// Signs the fixed canonical request `POST /v1/forum/login` with body
+    /// `{"sid":"<sid>"}` using the Warren identity key held in the daemon,
+    /// and returns the header values + body. Replies `None` when no signer
+    /// is bootstrapped. The `sid` is validated (32 lowercase hex) upstream
+    /// in the gRPC layer, so it is safe to embed here.
+    ///
+    /// **No-log policy**: the `sid`, pubkey and signature are never logged.
+    fn on_sign_forum_login(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        sid: String,
+    ) {
+        let result = self.warren_identity.has_user_identity().then(|| {
+            let body = forum_login_body(&sid);
+            let headers = self.warren_identity.signer().sign_request(
+                "POST",
+                "/v1/forum/login",
+                body.as_bytes(),
+            );
+            (headers, body)
+        });
+        log::debug!("on_sign_forum_login: signed={}", result.is_some());
+        Self::oneshot_send(tx, result, "sign_forum_login");
+    }
+
+    /// Signs the community-forum attach-logs request for `sid` (doc 55).
+    /// Builds the canonical body via [`forum_attach_body`] and signs
+    /// `POST /v1/forum/attach-logs` with the Warren identity key held in
+    /// the daemon, returning the header values + the exact signed body (the
+    /// GUI POSTs it verbatim). Replies `None` when no signer is
+    /// bootstrapped. The `sid` and `log_gz` are validated upstream in the
+    /// gRPC layer, so they are safe to embed here.
+    ///
+    /// **No-log policy**: the `sid`, pubkey, signature and log content are
+    /// never logged.
+    fn on_sign_forum_attach_logs(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        sid: String,
+        topic_id: u64,
+        log_gz: Vec<u8>,
+    ) {
+        let result = self.warren_identity.has_user_identity().then(|| {
+            let body = forum_attach_body(&sid, topic_id, &log_gz);
+            let headers = self.warren_identity.signer().sign_request(
+                "POST",
+                "/v1/forum/attach-logs",
+                body.as_bytes(),
+            );
+            (headers, body)
+        });
+        log::debug!("on_sign_forum_attach_logs: signed={}", result.is_some());
+        Self::oneshot_send(tx, result, "sign_forum_attach_logs");
+    }
+
+    /// Restores the mnemonic via
+    /// `warren_signer::set_warren_mnemonic`, then hot-swaps the new
+    /// identity into the running daemon so the user does not have to
+    /// restart Warren VPN to activate it.
+    ///
+    /// Steps on success:
+    ///
+    /// 1. Reload the daemon identity from disk via
+    ///    `WarrenIdentityManager::reload_from_disk` (signer and SDK seed
+    ///    together) so every subsequent API request is signed with the
+    ///    freshly derived Ed25519 key.
+    /// 2. If `device.json` exists and the stored pubkey differs from
+    ///    the new pubkey, spawn an `account_manager.login(new_pubkey)`
+    ///    so the daemon re-registers a device under the new identity
+    ///    and emits a `DeviceEvent::LoggedIn(new_identity)`. The GUI
+    ///    observes the resulting `deviceState` change and continues
+    ///    the onboarding/restore flow naturally.
+    /// 3. If no `device.json` is present (first-launch boot) or the
+    ///    pubkey is unchanged (no-op import), no device action is
+    ///    needed - the signer reload alone is sufficient.
+    ///
+    /// **No-log policy**: never the content of `mnemonic`, just the
+    /// result, whether identity changed, and the public pubkey hex.
+    fn on_set_warren_mnemonic(
+        &self,
+        tx: oneshot::Sender<std::io::Result<()>>,
+        mnemonic: zeroize::Zeroizing<String>,
+    ) {
+        let write_result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
+        log::info!(
+            "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",
+            write_result.is_ok()
+        );
+
+        if let Err(e) = write_result {
+            Self::oneshot_send(tx, Err(e), "set_warren_mnemonic");
+            return;
+        }
+
+        // Step 1 - hot-swap the daemon identity (signer AND SDK seed,
+        // atomically through the manager) so the new identity is active
+        // for every subsequent signed request, purchase and balance
+        // query. Read-after-write: `set_warren_mnemonic` above already
+        // persisted the new mnemonic. On reload failure NEITHER view is
+        // touched, so the daemon keeps the pre-swap identity coherently
+        // instead of ending up half-swapped.
+        let new_pubkey_bytes = self.warren_identity.reload_from_disk(&self.settings_dir);
+
+        // Step 2 - determine whether a `login()` under the new pubkey
+        // is needed before acknowledging, so the GUI does not observe a
+        // `set_mnemonic` Ok while the daemon is still mid-swap.
+        //
+        // We log in whenever the daemon is not already logged in as the
+        // new identity:
+        // - `device.json` records a DIFFERENT pubkey → identity change.
+        // - `device.json` is logged out / absent (restore from the
+        //   logged-out welcome screen, or first-launch import) → the
+        //   restore IS the login; the GUI relies on the resulting
+        //   `LoggedIn` device event to navigate.
+        // The only no-op case is when we are already logged in as the
+        // exact same pubkey.
+        let needs_login = if let Some(new_pubkey_bytes) = new_pubkey_bytes {
+            let new_pubkey =
+                mullvad_types::warren_pubkey::WarrenPubKey::from_bytes(&new_pubkey_bytes);
+            let device_path = self.settings_dir.join(device::DEVICE_CACHE_FILENAME);
+            let stored_pubkey = std::fs::read_to_string(&device_path)
+                .ok()
+                .and_then(|raw| serde_json::from_str::<device::PrivateDeviceState>(&raw).ok())
+                .and_then(|state| state.pubkey().cloned());
+
+            match stored_pubkey {
+                Some(old) if old == new_pubkey => {
+                    log::debug!(
+                        "on_set_warren_mnemonic: same pubkey as device.json, \
+                         signer swapped, no device action needed"
+                    );
+                    None
+                }
+                _ => Some(new_pubkey),
+            }
+        } else {
+            None
+        };
+
+        let Some(new_pubkey) = needs_login else {
+            Self::oneshot_send(tx, Ok(()), "set_warren_mnemonic");
+            return;
+        };
+
+        // Step 3 - async login under the new pubkey, then ack the
+        // gRPC caller. We DO NOT ack before login completion: the
+        // GUI relies on the Ok response to know the daemon is in
+        // its post-import steady state. Acking early would let the
+        // GUI navigate past the import screen while the daemon is
+        // still mid-login, causing the next screen to read a stale
+        // `loggedOut` deviceState and bounce back to the login
+        // view (= exactly the user-visible bug we want to avoid).
+        log::info!(
+            "on_set_warren_mnemonic: identity changed, hot-swapping device state \
+             to new pubkey={new_pubkey}"
+        );
+        let manager = self.account_manager.clone();
+        let new_pubkey_string = new_pubkey.to_string();
+        tokio::spawn(async move {
+            let ack: io::Result<()> = match manager.login(new_pubkey_string).await {
+                Ok(()) => {
+                    log::info!(
+                        "on_set_warren_mnemonic: device state successfully \
+                         migrated to the new identity"
+                    );
+                    Ok(())
+                }
+                Err(login_err) => {
+                    // Security-relevant failure mode: the in-memory
+                    // signer is now signing with the new key, but
+                    // `device.json` still points at the old identity,
+                    // leaving the daemon in a hybrid state where
+                    // outgoing requests carry a pubkey the local
+                    // device record does not claim. Force a
+                    // `logout()` so the user lands in a deterministic
+                    // `logged out` state and the gRPC caller (GUI)
+                    // sees the error rather than a misleading Ok.
+                    log::error!(
+                        "on_set_warren_mnemonic: hot-swap login failed \
+                         ({login_err}) - forcing logout to leave the \
+                         daemon in a deterministic state"
+                    );
+                    if let Err(logout_err) = manager.logout().await {
+                        log::error!(
+                            "on_set_warren_mnemonic: subsequent logout also failed: \
+                             {logout_err} - daemon is in an inconsistent state, \
+                             user should re-login"
+                        );
+                    }
+                    Err(io::Error::other(format!(
+                        "hot-swap login failed after mnemonic import: {login_err}"
+                    )))
+                }
+            };
+            Self::oneshot_send(tx, ack, "set_warren_mnemonic");
+        });
+    }
+
     fn on_submit_voucher(&mut self, tx: ResponseTx<VoucherSubmission, Error>, voucher: String) {
         let manager = self.account_manager.clone();
         tokio::spawn(async move {
@@ -1983,7 +3293,19 @@ impl Daemon {
     }
 
     fn on_get_relay_locations(&mut self, tx: oneshot::Sender<RelayList>) {
-        Self::oneshot_send(tx, self.relay_selector.get_relays(), "relay locations");
+        // Substitute the Warren view for the Mullvad list on the
+        // synchronous pull - without this, the GUI populates its
+        // selector with relays absent from the WarrenRelayList ->
+        // NoMatchingRelay on connect -> kill-switch. Substitution
+        // equivalent to the `on_relay_list_update` closure on the
+        // broadcast push side.
+        let relays = self
+            .warren_relay_list_view
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
+            .unwrap_or_else(|| self.relay_selector.get_relays());
+        Self::oneshot_send(tx, relays, "relay locations");
     }
 
     fn on_get_bridges(&mut self, tx: oneshot::Sender<BridgeList>) {
@@ -2050,17 +3372,60 @@ impl Daemon {
         });
     }
 
-    fn on_logout_account(&mut self, tx: ResponseTx<(), Error>) {
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = async {
-                account_manager.logout().await.map_err(|error| {
-                    log::error!("{}", error.display_chain_with_msg("Logout failed"));
-                    Error::LogoutError(error)
-                })
-            };
-            Self::oneshot_send(tx, result.await, "logout_account response");
+    /// Logs out of the current device.
+    ///
+    /// When `wipe_identity` is `true` (explicit, backup-confirmed user
+    /// sign-out from the GUI) this is a **true sign-out**: after the
+    /// device is logged out, the BIP39 mnemonic is erased from the OS
+    /// vault, the in-memory signer is neutralized, and the account
+    /// history is cleared - so a subsequent "Create a new account"
+    /// mints a genuinely fresh identity and nothing is left to silently
+    /// "continue as".
+    ///
+    /// When `wipe_identity` is `false` (a server-driven device-revoked
+    /// event, or a CLI/Android logout) the identity is PRESERVED on the
+    /// device: only the device-login state is cleared, so the account
+    /// stays recoverable. This avoids irreversible data loss on a
+    /// revocation the user did not initiate.
+    async fn on_logout_account(&mut self, tx: ResponseTx<(), Error>, wipe_identity: bool) {
+        let logout_result = self.account_manager.logout().await.map_err(|error| {
+            log::error!("{}", error.display_chain_with_msg("Logout failed"));
+            Error::LogoutError(error)
         });
+
+        let result = match logout_result {
+            Ok(()) if wipe_identity => {
+                // Erase the on-disk identity off the async executor -
+                // keychain/DPAPI deletes are synchronous and can take
+                // tens to hundreds of ms; running them inline would
+                // stall the daemon command loop.
+                let settings_dir = self.settings_dir.clone();
+                let wipe = tokio::task::spawn_blocking(move || {
+                    warren_signer::clear_warren_mnemonic(&settings_dir)
+                })
+                .await
+                .unwrap_or_else(|join_err| Err(io::Error::other(join_err)))
+                .map_err(Error::WarrenIdentityError);
+
+                // Neutralize the in-memory identity (signer and SDK seed
+                // together) so no signed request, purchase or balance
+                // query can keep authenticating as the just-erased
+                // identity.
+                self.warren_identity.clear();
+
+                let history = self
+                    .account_history
+                    .clear()
+                    .await
+                    .map_err(Error::AccountHistory);
+                // Attempt both regardless so we never leave a half-wiped
+                // state, but surface the first failure.
+                wipe.and(history)
+            }
+            other => other,
+        };
+
+        Self::oneshot_send(tx, result, "logout_account response");
     }
 
     #[cfg(target_os = "android")]
@@ -2091,61 +3456,7 @@ impl Daemon {
     }
 
     fn on_update_device(&mut self, tx: ResponseTx<(), Error>) {
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = match account_manager.validate_device().await {
-                Ok(_) | Err(device::Error::NoDevice) => Ok(()),
-                Err(error) => Err(error),
-            };
-            Self::oneshot_send(
-                tx,
-                result.map_err(Error::UpdateDeviceError),
-                "update_device response",
-            );
-        });
-    }
-
-    fn on_list_devices(&self, tx: ResponseTx<Vec<Device>, Error>, token: AccountNumber) {
-        let service = self.account_manager.device_service.clone();
-        tokio::spawn(async move {
-            Self::oneshot_send(
-                tx,
-                service
-                    .list_devices(token)
-                    .await
-                    .map_err(Error::ListDevicesError),
-                "list_devices response",
-            );
-        });
-    }
-
-    fn on_remove_device(
-        &mut self,
-        tx: ResponseTx<(), Error>,
-        account_number: AccountNumber,
-        device_id: DeviceId,
-    ) {
-        let device_service = self.account_manager.device_service.clone();
-        let notifier = self.management_interface.notifier().clone();
-
-        tokio::spawn(async move {
-            let result = device_service
-                .remove_device(account_number.clone(), device_id)
-                .await
-                .map(move |new_devices| {
-                    // FIXME: We should be able to get away with only returning the removed ID,
-                    //        and not have to request the list from the API.
-                    notifier.notify_remove_device_event(RemoveDeviceEvent {
-                        account_number,
-                        new_devices,
-                    });
-                });
-            Self::oneshot_send(
-                tx,
-                result.map_err(Error::RemoveDeviceError),
-                "remove_device response",
-            );
-        });
+        Self::oneshot_send(tx, Ok(()), "update_device response");
     }
 
     fn on_get_account_history(&mut self, tx: oneshot::Sender<Option<AccountNumber>>) {
@@ -2174,10 +3485,27 @@ impl Daemon {
                     .get_latest_version()
                     .await
                     .inspect_err(|error| {
-                        log::error!(
-                            "{}",
-                            error.display_chain_with_msg("Error running version check")
-                        )
+                        // In Warren mode the Mullvad version updater is
+                        // intentionally disabled at boot (Warren ships
+                        // its own GitHub Releases pipeline), so the
+                        // router is permanently in `VersionRouterClosed`
+                        // state. The GUI still calls `get_version_info`
+                        // periodically - logging that at ERROR drowns
+                        // the daemon log in expected noise. Demote the
+                        // "router closed" variant to DEBUG; any other
+                        // failure mode (API down, parse error, etc.)
+                        // still surfaces at ERROR as before.
+                        if matches!(error, version::Error::VersionRouterClosed) {
+                            log::debug!(
+                                "Version check skipped: router closed \
+                                 (expected in Warren mode)"
+                            );
+                        } else {
+                            log::error!(
+                                "{}",
+                                error.display_chain_with_msg("Error running version check")
+                            );
+                        }
                     })
                     .map_err(Error::VersionCheckError),
                 "get_version_info response",
@@ -2411,6 +3739,14 @@ impl Daemon {
 
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "android"))]
     fn on_add_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: SplitApp) {
+        // Refuse to add an excluded app on a build where split tunneling
+        // cannot actually run (unsigned macOS): doing so would
+        // half-initialise the ES/BPF stack and corrupt routing. No-op on
+        // platforms where ST is supported.
+        if let Err(e) = macos_split_tunnel_enable_allowed() {
+            Self::oneshot_send(tx, Err(e), "add_split_tunnel_app response");
+            return;
+        }
         let settings = self.settings.to_settings();
 
         let excluded_apps = {
@@ -2459,6 +3795,15 @@ impl Daemon {
 
     #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     fn on_set_split_tunnel_state(&mut self, tx: ResponseTx<(), Error>, state: bool) {
+        // Only ENABLING is gated: turning split tunneling OFF (or leaving
+        // it off) must always be allowed so a user can recover. On an
+        // unsigned macOS build, enabling is refused before any ES/BPF
+        // setup, preventing the half-initialised state that breaks
+        // connectivity and crashes on quit.
+        if state && let Err(e) = macos_split_tunnel_enable_allowed() {
+            Self::oneshot_send(tx, Err(e), "set_split_tunnel_state response");
+            return;
+        }
         let settings = self.settings.to_settings();
         self.set_split_tunnel_paths(
             tx,
@@ -2502,8 +3847,23 @@ impl Daemon {
             Ok(settings_changed) => {
                 Self::oneshot_send(tx, Ok(()), "set_relay_settings response");
                 if settings_changed {
-                    log::info!("Initiating tunnel restart because the relay settings changed");
-                    self.reconnect_tunnel();
+                    // When the Warren multi-hop directory updater owns the
+                    // reconnect, do NOT restart here: this path would rebuild
+                    // tunnel params from the generator's stale multi-hop
+                    // circuit and briefly connect to the wrong exit before the
+                    // updater re-selects the correct one. The settings change
+                    // still fired the change listeners (the watch wakes the
+                    // updater), so the updater performs the single, correct
+                    // reconnect with the freshly-selected circuit.
+                    if self.warren_multi_hop_directory_active {
+                        log::info!(
+                            "Relay settings changed; deferring reconnect to the Warren \
+                             multi-hop directory updater (single source of truth)"
+                        );
+                    } else {
+                        log::info!("Initiating tunnel restart because the relay settings changed");
+                        self.reconnect_tunnel();
+                    }
                 }
             }
             Err(e) => {
@@ -2549,6 +3909,315 @@ impl Daemon {
                 Self::oneshot_send(tx, Err(e), "set_allow_lan response");
             }
         }
+    }
+
+    /// Persists `Settings::warren_api_url`. Restart required to
+    /// apply (the daemon resolves the URL at boot in `Daemon::start`,
+    /// it does not re-check Settings at runtime). Empty string -> `None`
+    /// on the Settings side (= unset = fallback to Mullvad upstream backend).
+    async fn on_set_warren_api_url(&mut self, tx: ResponseTx<(), settings::Error>, url: String) {
+        let new_value = if url.is_empty() { None } else { Some(url) };
+        let display_value = new_value
+            .as_deref()
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| "<unset>".to_owned());
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_api_url = new_value)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            log::info!("Warren api_url persisted to {display_value} ; restart required for effect");
+        }
+        Self::oneshot_send(tx, result, "set_warren_api_url response");
+    }
+
+    /// Persists `Settings::warren_n_connections` and mirrors it onto
+    /// the parameters generator so the next (re)connect uses the new
+    /// count. Range validation (1..=16) happens at the gRPC boundary;
+    /// `None` resets to the compiled default. Mirrors the
+    /// settings-then-reconnect flow of `on_set_daita_enabled`.
+    async fn on_set_warren_n_connections(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        value: Option<u8>,
+    ) {
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_n_connections = value)
+            .await;
+        match result {
+            Ok(settings_changed) => {
+                Self::oneshot_send(tx, Ok(()), "set_warren_n_connections response");
+                self.parameters_generator
+                    .set_warren_n_connections(value)
+                    .await;
+                if settings_changed {
+                    log::info!("Reconnecting because the Warren n_connections setting changed");
+                    self.reconnect_tunnel();
+                }
+            }
+            Err(e) => {
+                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+                Self::oneshot_send(tx, Err(e), "set_warren_n_connections response");
+            }
+        }
+    }
+
+    /// Persists `Settings::warren_max_rate_bps` and mirrors it onto the
+    /// parameters generator, which fans it out to every live tunnel
+    /// over a watch channel: the cap applies immediately, no reconnect
+    /// (mirrors the NAT-PMP live-reconfig flow).
+    async fn on_set_warren_max_rate_bps(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        value: Option<u64>,
+    ) {
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_max_rate_bps = value)
+            .await;
+        match result {
+            Ok(_settings_changed) => {
+                Self::oneshot_send(tx, Ok(()), "set_warren_max_rate_bps response");
+                self.parameters_generator
+                    .set_warren_max_rate_bps(value)
+                    .await;
+            }
+            Err(e) => {
+                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+                Self::oneshot_send(tx, Err(e), "set_warren_max_rate_bps response");
+            }
+        }
+    }
+
+    /// Persists the advanced `Settings::warren_custom_exit` override and
+    /// mirrors it onto the parameters generator so the next (re)connect
+    /// dials it. Field-content validation (parseable endpoint, well-formed
+    /// pubkey) happens at parameter-production time in `assemble_custom`;
+    /// here we only persist and propagate, mirroring
+    /// [`Self::on_set_warren_n_connections`]. Reconnects when the tunnel is
+    /// up so the user observes the switch take effect.
+    async fn on_set_warren_custom_exit(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        custom: mullvad_types::settings::WarrenCustomExitSettings,
+    ) {
+        let value = custom.clone();
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_custom_exit = value)
+            .await;
+        match result {
+            Ok(settings_changed) => {
+                Self::oneshot_send(tx, Ok(()), "set_warren_custom_exit response");
+                self.parameters_generator
+                    .set_warren_custom_exit(custom)
+                    .await;
+                if settings_changed {
+                    log::info!("Reconnecting because the Warren custom-exit setting changed");
+                    self.reconnect_tunnel();
+                }
+            }
+            Err(e) => {
+                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+                Self::oneshot_send(tx, Err(e), "set_warren_custom_exit response");
+            }
+        }
+    }
+
+    /// Persists `Settings::warren_multi_hop`. Application is **live** but
+    /// handled out-of-band: the boot-registered settings change listener
+    /// forwards the new value to the background
+    /// [`warren_multi_hop_directory`] updater, which re-fetches the signed
+    /// directory, re-selects a circuit (or clears it when disabled), pushes
+    /// the result onto the parameters generator and requests a reconnect.
+    /// This handler therefore only persists - it must NOT also reconnect,
+    /// or the tunnel would bounce twice per toggle.
+    async fn on_set_warren_multi_hop_settings(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        new_value: mullvad_types::settings::WarrenMultiHopSettings,
+    ) {
+        let display_value = format!(
+            "enabled={} entry={} exit={} rotation={:?}",
+            new_value.enabled,
+            new_value.entry_country,
+            new_value.exit_country,
+            new_value.hpke_epoch_rotation,
+        );
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_multi_hop = new_value)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            log::info!(
+                "Warren multi-hop persisted: {display_value} (applied live by the directory updater)"
+            );
+        }
+        Self::oneshot_send(tx, result, "set_warren_multi_hop_settings response");
+    }
+
+    /// Persists `Settings::warren_nat_pmp` AND pushes the new value
+    /// live to the `ParametersGenerator` so the next tunnel reconnect
+    /// picks it up without a daemon restart. On a disable, the live
+    /// `WarrenStatusCache` is reset to `Disabled` so the UI immediately
+    /// hides the port-forwarding row.
+    async fn on_set_nat_pmp_settings(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        new_value: mullvad_types::settings::WarrenNatPmpSettings,
+    ) {
+        let display_value = format!(
+            "enabled={} lifetime_secs={} proto={:?} internal_port={}",
+            new_value.enabled, new_value.lifetime_secs, new_value.protocol, new_value.internal_port,
+        );
+        let new_value_for_gen = new_value.clone();
+        let result = self
+            .settings
+            .update(move |settings| settings.warren_nat_pmp = new_value)
+            .await
+            .map(|_changed| ());
+        if let Err(ref e) = result {
+            log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+        } else {
+            // Push the live value to the parameters generator:
+            // the generator now fans the value to every active tunnel
+            // via a watch channel, and the in-tunnel controller task
+            // calls `NatPmpManager::reconfigure` (or release+drop, or
+            // fresh spawn) - no tunnel reconnect required to apply
+            // the change.
+            let nat_pmp_cfg = nat_pmp_settings_to_runtime_cfg(&new_value_for_gen);
+            // Capture the rule ids before the cfg is moved into the
+            // parameters generator, so the cache can reconcile its
+            // mapping list to exactly the rules the user now wants.
+            let nat_pmp_rule_ids: Vec<_> = nat_pmp_cfg
+                .as_ref()
+                .map(|c| c.effective_rules().iter().map(|r| r.id()).collect())
+                .unwrap_or_default();
+            self.parameters_generator
+                .set_warren_nat_pmp(nat_pmp_cfg)
+                .await;
+            // Pre-set the live cache so the UI reflects the pending
+            // transition the moment the user clicks: `Requesting` on
+            // toggle-on (the manager spawn + first request_map fire
+            // async after the watch push), `Disabled` on toggle-off.
+            // The eventual `Mapped` / `Failed` event from the manager
+            // (when on) overrides this pre-set value.
+            if new_value_for_gen.enabled {
+                self.warren_status_cache
+                    .set_nat_pmp_requesting(&nat_pmp_rule_ids);
+            } else {
+                self.warren_status_cache.set_nat_pmp_disabled();
+            }
+            log::info!("Warren NAT-PMP persisted + pushed live: {display_value}");
+        }
+        Self::oneshot_send(tx, result, "set_nat_pmp_settings response");
+    }
+
+    /// Forward the trust event to the parameters
+    /// generator (replaces the in-memory pin) AND clear the
+    /// WarrenStatus.pubkey_mismatch_pending flag so the UI modal
+    /// unmounts. Persistence to settings.json is wired through the
+    /// existing `warren_pin_update_tx` consumer task.
+    async fn on_trust_new_exit_key(
+        &mut self,
+        tx: oneshot::Sender<tunnel::TrustNewExitKeyOutcome>,
+        exit_id_hex: String,
+        new_pubkey_hex: String,
+    ) {
+        let outcome = self
+            .parameters_generator
+            .trust_new_exit_key(&exit_id_hex, &new_pubkey_hex)
+            .await;
+        if matches!(outcome, tunnel::TrustNewExitKeyOutcome::Ok) {
+            self.warren_status_cache.clear_pubkey_mismatch_pending();
+            log::info!(
+                "warren: TOFU pin updated for exit_id={exit_id_hex} (user-trusted rotation)"
+            );
+        }
+        Self::oneshot_send(tx, outcome, "trust_new_exit_key response");
+    }
+
+    /// Clears the entire in-memory pin table and the
+    /// pending mismatch flag, then signals the persistence consumer
+    /// to wipe the on-disk copy.
+    async fn on_reset_pinned_exit_keys(&mut self, tx: oneshot::Sender<u32>) {
+        let count = self.parameters_generator.reset_pinned_exit_keys().await;
+        self.warren_status_cache.clear_pubkey_mismatch_pending();
+        log::info!("warren: pin table reset, dropped {count} entries");
+        Self::oneshot_send(tx, count, "reset_pinned_exit_keys response");
+    }
+
+    /// Clears the pending mismatch flag without
+    /// touching the pinned key (= the user picked Reject from the
+    /// modal). A subsequent connect would re-emit the mismatch.
+    fn on_dismiss_pubkey_mismatch(&mut self, tx: oneshot::Sender<()>) {
+        self.warren_status_cache.clear_pubkey_mismatch_pending();
+        log::info!("warren: pubkey-mismatch dismissed by user");
+        Self::oneshot_send(tx, (), "dismiss_pubkey_mismatch response");
+    }
+
+    /// Forensic report to warren-api. Best-effort:
+    /// the mismatch flag is cleared regardless of the network
+    /// outcome so the UI does not stay stuck on a transient
+    /// network failure.
+    async fn on_report_pubkey_mismatch(
+        &mut self,
+        tx: oneshot::Sender<()>,
+        exit_id_hex: String,
+        old_pubkey_hex: String,
+        new_pubkey_hex: String,
+        country_code: String,
+        city: String,
+    ) {
+        self.warren_status_cache.clear_pubkey_mismatch_pending();
+        if let (Some(api_url), Some(seed)) = (
+            self.warren_api_url_for_incidents(),
+            self.parameters_generator.warren_seed_for_incidents().await,
+        ) {
+            tokio::spawn(async move {
+                let client = crate::warren_sdk_client::SharedWarrenApiClient::new(api_url, seed);
+                let req = warren_api::IncidentPubkeyMismatchRequest {
+                    exit_id_hex,
+                    old_pubkey_hex,
+                    new_pubkey_hex,
+                    country_code,
+                    city,
+                    ts_unix: warrenguard_config::unix_now(),
+                };
+                if let Err(e) = client.report_pubkey_mismatch(&req).await {
+                    log::debug!(
+                        "pubkey-mismatch report best-effort POST failed: {e} (telemetry only)"
+                    );
+                }
+            });
+        } else {
+            log::debug!("pubkey-mismatch report suppressed: no warren_api_url or seed configured");
+        }
+        Self::oneshot_send(tx, (), "report_pubkey_mismatch response");
+    }
+
+    /// Accessor for the warren-api URL used by the pubkey-mismatch forensic
+    /// reports. Mirrors the resolution path used by
+    /// `warren_api_url_for_params` at boot.
+    fn warren_api_url_for_incidents(&self) -> Option<String> {
+        let from_env = std::env::var("WARREN_API_URL")
+            .ok()
+            .filter(|s| !s.is_empty());
+        if from_env.is_some() {
+            return from_env;
+        }
+        let url = self.settings.warren_api_url.clone();
+        if let Some(url) = url.filter(|s| !s.is_empty()) {
+            return Some(url);
+        }
+        Some(warren_product_config::WARREN_API_URL.to_owned())
     }
 
     async fn on_set_show_beta_releases(
@@ -2772,6 +4441,15 @@ impl Daemon {
                     return; // DAITA is not supported for custom relays
                 }
 
+                // Mirror the toggle onto the Warren-side
+                // parameters generator so the next reconnect picks up
+                // `Setup.daita_support = value` on the warrenguard-wire
+                // v3 handshake. Single UI surface drives both
+                // backends (WireGuard upstream + Quinn Warren).
+                self.parameters_generator
+                    .set_warren_enable_daita(value)
+                    .await;
+
                 if settings_changed {
                     log::info!("Reconnecting because DAITA settings changed");
                     self.reconnect_tunnel();
@@ -2828,6 +4506,7 @@ impl Daemon {
         tx: ResponseTx<(), settings::Error>,
         daita_settings: DaitaSettings,
     ) {
+        let new_enabled = daita_settings.enabled;
         match self
             .settings
             .update(|settings| settings.tunnel_options.wireguard.daita = daita_settings)
@@ -2835,6 +4514,12 @@ impl Daemon {
         {
             Ok(settings_changed) => {
                 Self::oneshot_send(tx, Ok(()), "set_daita_settings response");
+                // Same mirror as `on_set_daita_enabled`. The
+                // struct-update path can also flip `enabled`, so we
+                // forward the new value here too.
+                self.parameters_generator
+                    .set_warren_enable_daita(new_enabled)
+                    .await;
                 if settings_changed {
                     log::info!("Reconnecting because DAITA settings changed");
                     self.reconnect_tunnel();
@@ -2947,37 +4632,6 @@ impl Daemon {
         }
     }
 
-    async fn on_set_wireguard_rotation_interval(
-        &mut self,
-        tx: ResponseTx<(), settings::Error>,
-        interval: Option<RotationInterval>,
-    ) {
-        match self
-            .settings
-            .update(move |settings| settings.tunnel_options.wireguard.rotation_interval = interval)
-            .await
-        {
-            Ok(settings_changed) => {
-                Self::oneshot_send(tx, Ok(()), "set_wireguard_rotation_interval response");
-                if settings_changed
-                    && let Err(error) = self
-                        .account_manager
-                        .set_rotation_interval(interval.unwrap_or_default())
-                        .await
-                {
-                    log::error!(
-                        "{}",
-                        error.display_chain_with_msg("Failed to update rotation interval")
-                    );
-                }
-            }
-            Err(e) => {
-                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set_wireguard_rotation_interval response");
-            }
-        }
-    }
-
     async fn on_set_wireguard_allowed_ips(
         &mut self,
         tx: ResponseTx<(), settings::Error>,
@@ -3006,26 +4660,6 @@ impl Daemon {
                 Self::oneshot_send(tx, Err(e), "set_wireguard_allowed_ips response");
             }
         }
-    }
-
-    fn on_rotate_wireguard_key(&self, tx: ResponseTx<(), Error>) {
-        let manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            let result = manager
-                .rotate_key()
-                .await
-                .map(|_| ())
-                .map_err(Error::KeyRotationError);
-            Self::oneshot_send(tx, result, "rotate_wireguard_key response");
-        });
-    }
-
-    async fn on_get_wireguard_key(&self, tx: ResponseTx<Option<PublicKey>, Error>) {
-        let result = match self.account_manager.data().await.map(|s| s.into_device()) {
-            Ok(Some(config)) => Ok(Some(config.device.wg_data.get_public_key())),
-            _ => Err(Error::NoAccountNumber),
-        };
-        Self::oneshot_send(tx, result, "get_wireguard_key response");
     }
 
     async fn on_create_custom_list(
@@ -3206,8 +4840,8 @@ impl Daemon {
                 "API access method {method} {verdict}",
                 method = test_subject.setting.name,
                 verdict = match result {
-                    Ok(true) => "could successfully connect to the Mullvad API",
-                    _ => "could not connect to the Mullvad API",
+                    Ok(true) => "could successfully connect to the Warren API",
+                    _ => "could not connect to the Warren API",
                 }
             );
 
@@ -3263,20 +4897,6 @@ impl Daemon {
         tokio::spawn(async move {
             if let Err(error) = access_mode_handler.rotate().await {
                 log::error!("Failed to rotate API endpoint: {error}");
-            }
-        });
-
-        let interval = self.settings.tunnel_options.wireguard.rotation_interval;
-        let account_manager = self.account_manager.clone();
-        tokio::spawn(async move {
-            if let Err(error) = account_manager
-                .set_rotation_interval(interval.unwrap_or_default())
-                .await
-            {
-                log::error!(
-                    "{}",
-                    error.display_chain_with_msg("Failed to update rotation interval")
-                );
             }
         });
 
@@ -3617,6 +5237,48 @@ impl DaemonShutdownHandle {
     }
 }
 
+/// Converts the persisted user setting into the runtime
+/// [`talpid_warren_tunnel::NatPmpConfig`] consumed by the
+/// `NatPmpManager`. Returns `None` when the toggle is OFF so the
+/// dispatcher short-circuits without spawning a refresh loop.
+fn nat_pmp_settings_to_runtime_cfg(
+    settings: &mullvad_types::settings::WarrenNatPmpSettings,
+) -> Option<talpid_warren_tunnel::NatPmpConfig> {
+    use mullvad_types::settings::WarrenNatPmpProto;
+    use talpid_warren_tunnel::{NatPmpConfig, NatPmpProto, NatPmpRule};
+
+    if !settings.enabled {
+        return None;
+    }
+    let map_proto = |p: WarrenNatPmpProto| match p {
+        WarrenNatPmpProto::Udp => NatPmpProto::Udp,
+        WarrenNatPmpProto::Tcp => NatPmpProto::Tcp,
+        WarrenNatPmpProto::Both => NatPmpProto::Both,
+    };
+    let rules = settings
+        .effective_rules()
+        .into_iter()
+        .map(|r| NatPmpRule {
+            protocol: map_proto(r.protocol),
+            suggested_external_port: r.suggested_external_port,
+            internal_port: r.internal_port,
+            sticky_suggestion: false,
+        })
+        .collect();
+    Some(NatPmpConfig {
+        enabled: true,
+        lifetime_secs: settings.lifetime_secs,
+        rules,
+        // Legacy flat fields stay at defaults: `rules` is the source of
+        // truth and the runtime `effective_rules` prefers it.
+        protocol: NatPmpProto::Udp,
+        suggested_external_port: 0,
+        internal_port: 0,
+        sticky_suggestion: false,
+        remap_epoch: 0,
+    })
+}
+
 /// Consume a oneshot sender of `T1` and return a sender that takes a different type `T2`.
 /// `forwarder` should map `T1` back to `T2` and send the result back to the original receiver.
 fn oneshot_map<T1: Send + 'static, T2: Send + 'static>(
@@ -3632,6 +5294,65 @@ fn oneshot_map<T1: Send + 'static, T2: Send + 'static>(
     new_tx
 }
 
+/// Canonical `POST /v1/forum/login` JSON body (doc 55). Frozen wire
+/// contract with warren-connect: the daemon signs exactly this string and
+/// the GUI POSTs it verbatim, so a reformat here would silently break
+/// signature verification. `sid` is validated to `^[0-9a-f]{32}$` upstream,
+/// so it needs no JSON escaping.
+fn forum_login_body(sid: &str) -> String {
+    format!("{{\"sid\":\"{sid}\"}}")
+}
+
+/// Canonical `POST /v1/forum/attach-logs` JSON body (doc 55). The field
+/// order and formatting are a frozen wire contract with warren-connect:
+/// the daemon signs exactly this string and the GUI POSTs it verbatim, so
+/// the signed bytes and the sent bytes are identical. Standard base64
+/// alphabet, no line wrapping.
+fn forum_attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> String {
+    use base64::Engine;
+    let log_gz_b64 = base64::engine::general_purpose::STANDARD.encode(log_gz);
+    format!("{{\"sid\":\"{sid}\",\"topic_id\":{topic_id},\"log_gz_b64\":\"{log_gz_b64}\"}}")
+}
+
+#[cfg(test)]
+mod forum_attach_body_tests {
+    use super::{forum_attach_body, forum_login_body};
+
+    #[test]
+    fn forum_login_body_pins_the_wire_contract() {
+        assert_eq!(
+            forum_login_body("0123456789abcdef0123456789abcdef"),
+            "{\"sid\":\"0123456789abcdef0123456789abcdef\"}"
+        );
+    }
+
+    #[test]
+    fn forum_attach_body_pins_the_wire_contract() {
+        let sid = "0123456789abcdef0123456789abcdef";
+        // gzip content is opaque to the contract; any bytes exercise the
+        // base64 path, including padding.
+        let body = forum_attach_body(sid, 42, b"hello");
+        assert_eq!(
+            body,
+            "{\"sid\":\"0123456789abcdef0123456789abcdef\",\
+             \"topic_id\":42,\"log_gz_b64\":\"aGVsbG8=\"}"
+        );
+    }
+
+    #[test]
+    fn forum_attach_body_pins_the_pre_topic_variant() {
+        // topic_id 0 = pre-topic session: the logs are sent while the report
+        // is still being composed; the forum binds them after creation.
+        let sid = "0123456789abcdef0123456789abcdef";
+        let body = forum_attach_body(sid, 0, b"hello");
+        assert_eq!(
+            body,
+            "{\"sid\":\"0123456789abcdef0123456789abcdef\",\
+             \"topic_id\":0,\"log_gz_b64\":\"aGVsbG8=\"}"
+        );
+    }
+}
+
 /// Remove any old RPC socket (if it exists).
 #[cfg(not(target_os = "windows"))]
 pub async fn cleanup_old_rpc_socket(rpc_socket_path: impl AsRef<std::path::Path>) {
@@ -3639,5 +5360,38 @@ pub async fn cleanup_old_rpc_socket(rpc_socket_path: impl AsRef<std::path::Path>
         && err.kind() != std::io::ErrorKind::NotFound
     {
         log::error!("Failed to remove old RPC socket: {}", err);
+    }
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod macos_split_tunnel_gate_tests {
+    use super::{Error, macos_split_tunnel_enable_allowed, macos_split_tunnel_supported};
+
+    #[test]
+    fn unsigned_macos_build_reports_split_tunnel_unsupported() {
+        // The `macos-split-tunnel` feature is OFF in the default (=
+        // unsigned) build, so split tunneling must report unsupported.
+        // Guards against accidentally shipping it enabled before the app
+        // is signed (which would reintroduce the connects-but-no-internet
+        // + quit-crash regression two users hit at ST activation).
+        assert!(
+            !macos_split_tunnel_supported(),
+            "macOS split tunneling must be unsupported unless built with the \
+             `macos-split-tunnel` (signed-release) feature"
+        );
+    }
+
+    #[test]
+    fn enabling_split_tunnel_is_refused_on_unsigned_macos() {
+        // The enable gate must return the explicit, non-destructive error
+        // BEFORE any ES/BPF/TUN setup, so a user cannot reach the
+        // half-initialised state that loops the exit route into a tunnel
+        // (downlink=0) and crashes the GUI on quit.
+        let err = macos_split_tunnel_enable_allowed()
+            .expect_err("enabling ST on an unsigned macOS build must be refused");
+        assert!(
+            matches!(err, Error::MacosSplitTunnelUnsupported),
+            "must be the explicit MacosSplitTunnelUnsupported error, got: {err:?}"
+        );
     }
 }

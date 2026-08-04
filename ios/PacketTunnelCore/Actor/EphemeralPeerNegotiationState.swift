@@ -6,8 +6,8 @@
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
 
-import MullvadREST
-import MullvadTypes
+import WarrenREST
+import WarrenTypes
 
 public enum EphemeralPeerNegotiationState: Equatable, Sendable {
     case single(EphemeralPeerRelayConfiguration)

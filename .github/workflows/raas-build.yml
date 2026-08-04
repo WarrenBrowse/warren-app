@@ -1,15 +1,9 @@
 ---
 name: RaaS - Build (Nix)
 on:
-  pull_request:
-    paths:
-      - .github/workflows/raas-build.yml
-      - ci/ios/test-router/flake.nix
-      - ci/ios/test-router/raas.nix
-      - 'ci/ios/test-router/raas/**'
-  push:
-    branches:
-      - main
+  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
+  # Kept runnable on-demand via the Actions tab.
+  workflow_dispatch:
 
 permissions: {}
 

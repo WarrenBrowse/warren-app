@@ -70,12 +70,27 @@ pub async fn spawn_monitor(
     Ok(monitor_handle)
 }
 
+/// `true` when a route found for the probe destination proves real host
+/// connectivity. The Warren tunnel installs split-default /1 routes in
+/// the MAIN table over its tun device (no fwmark policy routing like
+/// WireGuard), so while the tunnel is up a plain lookup always matches
+/// the tunnel's own route: circular evidence, not connectivity. Such a
+/// route must not count, or the monitor can never report offline while
+/// a (dead) tunnel holds its routes, and the host-offline UI signal
+/// fires on Linux only after teardown instead of on the edge like the
+/// other platforms.
+fn route_proves_connectivity(device: Option<&str>) -> bool {
+    !matches!(device, Some(d) if d.starts_with("tun"))
+}
+
 async fn check_connectivity(handle: &RouteManagerHandle, fwmark: Option<u32>) -> Connectivity {
     let route_exists = |destination| async move {
         handle
             .get_destination_route(destination, fwmark)
             .await
-            .map(|route| route.is_some())
+            .map(|route| {
+                route.is_some_and(|route| route_proves_connectivity(route.get_node().get_device()))
+            })
     };
 
     match (
@@ -101,5 +116,25 @@ async fn check_connectivity(handle: &RouteManagerHandle, fwmark: Option<u32>) ->
             );
             Connectivity::new(ipv4, false)
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn physical_routes_prove_connectivity() {
+        assert!(route_proves_connectivity(Some("enp0s5")));
+        assert!(route_proves_connectivity(Some("wlan0")));
+        assert!(route_proves_connectivity(Some("eth0")));
+        // Gateway-only routes carry no device; keep the fail-open default.
+        assert!(route_proves_connectivity(None));
+    }
+
+    #[test]
+    fn the_tunnels_own_route_is_not_connectivity() {
+        assert!(!route_proves_connectivity(Some("tun0")));
+        assert!(!route_proves_connectivity(Some("tun3")));
     }
 }

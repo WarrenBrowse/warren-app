@@ -1,8 +1,8 @@
 use crate::Result;
 use std::{env, path::PathBuf};
 
-/// Creates and returns the logging directory pointed to by `MULLVAD_LOG_DIR`, or the default
-/// one if that variable is unset.
+/// Creates and returns the logging directory pointed to by `WARREN_LOG_DIR`,
+/// `MULLVAD_LOG_DIR` (back-compat upstream), or the default if neither is set.
 pub fn log_dir() -> Result<PathBuf> {
     let permissions = Some(crate::UserPermissions {
         read: true,
@@ -16,7 +16,7 @@ pub fn log_dir() -> Result<PathBuf> {
 
 /// Get the logging directory, but don't try to create it.
 pub fn get_log_dir() -> Result<PathBuf> {
-    match env::var_os("MULLVAD_LOG_DIR") {
+    match env::var_os("WARREN_LOG_DIR").or_else(|| env::var_os("MULLVAD_LOG_DIR")) {
         Some(path) => Ok(PathBuf::from(path)),
         None => get_default_log_dir(),
     }
