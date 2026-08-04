@@ -188,6 +188,10 @@ warren-contract = { path = "../../warren-contract" }
 
 [dev-dependencies]
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
+# Mints authentically-signed multi-hop directory bodies so the cold-start
+# cache tests exercise the REAL verification path (signature + pins +
+# expiry) instead of a hand-built VerifiedMultiHopDirectory.
+warren-discovery-core = { path = "../../warren-contract/warren-discovery", features = ["test-helpers"] }
 insta = { workspace = true, features = ["json"] }
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }

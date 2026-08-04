@@ -50,6 +50,15 @@ const WARREN_MULTIHOP_ROOT_PUBKEY_BAKED: &str =
 /// authority; this just decides how often we re-pull.
 const REFRESH_INTERVAL: Duration = Duration::from_secs(30 * 60);
 
+/// Ceiling on how far past its signed `expires_at` a cached directory may
+/// be and still serve as the cold-start stale seed. Covers any realistic
+/// powered-off stretch (overnight to a long vacation) while keeping the
+/// disk cache from pinning the boot circuit to an arbitrarily old signed
+/// body: a signed directory is public, so without a ceiling an attacker
+/// with settings-dir write could park a years-old body there and make it
+/// the circuit source on every boot until a live fetch lands.
+const STALE_SEED_MAX_AGE: Duration = Duration::from_secs(30 * 24 * 3600);
+
 /// First fast-retry delay after a *transport* fetch failure (no network).
 /// The periodic [`REFRESH_INTERVAL`] is far too coarse for the wake case:
 /// right after a sleep/wake the network is unreachable for a few seconds,
@@ -848,25 +857,54 @@ async fn fetch_path_quality(http: &reqwest::Client, api_url: &str) -> Option<Pat
 /// File name of the on-disk directory cache (sits next to the daemon's
 /// other Warren caches). The stored bytes are the SIGNED API payload, so
 /// loading re-runs the full verification (signature + root pin +
-/// freshness) and a tampered or stale file is rejected exactly like a
-/// hostile server response.
+/// structure) and a tampered or unsigned file is rejected exactly like a
+/// hostile server response. Freshness alone is softer: an expired body
+/// within [`STALE_SEED_MAX_AGE`] still seeds the boot selection
+/// ([`CachedSeed::Stale`]); older than that it is rejected.
 const DIRECTORY_CACHE_FILE: &str = "warren-multihop-directory.json";
 
+/// Outcome of re-verifying the on-disk cache for the cold-start seed.
+#[derive(Debug)]
+enum CachedSeed {
+    /// Verified and within its signed `expires_at`.
+    Fresh(VerifiedMultiHopDirectory),
+    /// Signature, pins and structure all verified, but `expires_at` is
+    /// past: trustworthy authorship, stale content. A machine that was
+    /// off longer than the 6 h expiry window (any overnight shutdown)
+    /// always boots in this state, and refusing the seed here left the
+    /// first connect with no circuit: NoCircuit fails closed, the blocked
+    /// state takes DNS down, and the live refresh that would fix it
+    /// cannot resolve the API host until the user manually disconnects.
+    /// Usable as a boot seed only; the immediate live fetch replaces it.
+    /// The updater already keeps an in-memory directory past its expiry
+    /// when fetches fail, so this matches steady-state behavior. Staleness
+    /// is bounded by [`STALE_SEED_MAX_AGE`]; within it, dialing a
+    /// decommissioned endpoint fails the key-pinned handshake
+    /// (recoverable, retried) while the live fetch converges, which still
+    /// beats booting with no circuit.
+    Stale(VerifiedMultiHopDirectory),
+}
+
 /// Re-verify a cached signed directory body. Same trust path as a live
-/// fetch: a tampered, unsigned, or expired file fails closed.
+/// fetch: a tampered or unsigned file fails closed. Freshness is
+/// reported, not enforced ([`CachedSeed::Stale`]): the boot seed is the
+/// one consumer for which an expired-but-authentic directory beats none.
 fn verify_cached_directory(
     body: &str,
     server_pins: &[String],
     root_pins: &[String],
     now_unix: u64,
-) -> Result<VerifiedMultiHopDirectory, Error> {
+) -> Result<CachedSeed, Error> {
     let server_refs: Vec<&str> = server_pins.iter().map(String::as_str).collect();
     let root_refs: Vec<&str> = root_pins.iter().map(String::as_str).collect();
     let verified = verify_multihop_directory_any(body, &server_refs, &root_refs)?;
     if verified.is_expired(now_unix) {
-        return Err(Error::Expired);
+        if now_unix.saturating_sub(verified.expires_at) > STALE_SEED_MAX_AGE.as_secs() {
+            return Err(Error::Expired);
+        }
+        return Ok(CachedSeed::Stale(verified));
     }
-    Ok(verified)
+    Ok(CachedSeed::Fresh(verified))
 }
 
 /// ADR 36 gap-free drain path: a request the drain reactor (or the
@@ -1068,10 +1106,20 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         let mut seeded_from_cache = false;
         if !unconfigured && let Ok(body) = std::fs::read_to_string(&dir_cache_path) {
             match verify_cached_directory(&body, &cfg.server_pins, &root_pins, now_unix()) {
-                Ok(dir) => {
+                Ok(CachedSeed::Fresh(dir)) => {
                     log::info!(
                         "Warren multi-hop: seeded directory from disk cache \
                          (generation {})",
+                        dir.generation
+                    );
+                    highest_generation = dir.generation;
+                    cached_dir = Some(dir);
+                    seeded_from_cache = true;
+                }
+                Ok(CachedSeed::Stale(dir)) => {
+                    log::info!(
+                        "Warren multi-hop: seeded EXPIRED directory from disk cache \
+                         (generation {}); stale boot seed, live refresh due now",
                         dir.generation
                     );
                     highest_generation = dir.generation;
@@ -2514,6 +2562,82 @@ mod tests {
                 "untrusted cache body {bad:?} must be rejected (fail-closed)"
             );
         }
+    }
+
+    /// Keys and pins for the signed-body cache tests below.
+    fn minted_cache_body(expires_at: u64) -> (String, [String; 1], [String; 1]) {
+        let root = SigningKey::from_bytes(&[0x01; 32]);
+        let op = SigningKey::from_bytes(&[0x02; 32]);
+        let server = SigningKey::from_bytes(&[0x03; 32]);
+        let body = warren_discovery_core::test_helpers::mint_directory_json(
+            &root, &op, &server, 7, 1_000, expires_at,
+        );
+        let server_pins = [hex::encode(server.verifying_key().as_bytes())];
+        let root_pins = [hex::encode(root.verifying_key().as_bytes())];
+        (body, server_pins, root_pins)
+    }
+
+    #[test]
+    fn cold_start_cache_seeds_an_expired_body_as_stale() {
+        // Any overnight shutdown boots past the 6 h signed expiry, so an
+        // expired-but-authentic cache must seed (see [`CachedSeed::Stale`]
+        // for the full rationale); rejecting it booted the host into a
+        // blocked state with no self-recovery (user report, 2026-08-04).
+        let (body, server_pins, root_pins) = minted_cache_body(2_000);
+        match verify_cached_directory(&body, &server_pins, &root_pins, 50_000) {
+            Ok(CachedSeed::Stale(dir)) => {
+                assert_eq!(dir.generation, 7, "stale seed must keep its generation");
+            }
+            other => panic!("expired-but-authentic cache must seed as stale, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn cold_start_cache_returns_an_unexpired_body_as_fresh() {
+        let (body, server_pins, root_pins) = minted_cache_body(100_000);
+        match verify_cached_directory(&body, &server_pins, &root_pins, 50_000) {
+            Ok(CachedSeed::Fresh(dir)) => {
+                assert_eq!(dir.generation, 7, "fresh seed must keep its generation");
+            }
+            other => panic!("unexpired cache must seed as fresh, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn cold_start_cache_rejects_a_body_expired_beyond_the_stale_ceiling() {
+        // The stale seed is for machines that were merely switched off
+        // (overnight, a vacation), never a license to pin the boot
+        // circuit to an arbitrarily old signed body planted in the
+        // settings dir: past the ceiling the cache is rejected exactly
+        // as before the stale seed existed.
+        let (body, server_pins, root_pins) = minted_cache_body(2_000);
+        let past_ceiling = 2_000 + STALE_SEED_MAX_AGE.as_secs() + 1;
+        assert!(
+            verify_cached_directory(&body, &server_pins, &root_pins, past_ceiling).is_err(),
+            "a cache expired beyond the ceiling must be rejected"
+        );
+        let at_ceiling = 2_000 + STALE_SEED_MAX_AGE.as_secs();
+        assert!(
+            matches!(
+                verify_cached_directory(&body, &server_pins, &root_pins, at_ceiling),
+                Ok(CachedSeed::Stale(_))
+            ),
+            "a cache within the ceiling must still seed as stale"
+        );
+    }
+
+    #[test]
+    fn cold_start_cache_still_rejects_a_tampered_expired_body() {
+        // Stale acceptance is about freshness only: it must never bypass
+        // the signature. One flipped byte in the signed content fails
+        // closed exactly like an unsigned file.
+        let (body, server_pins, root_pins) = minted_cache_body(2_000);
+        let tampered = body.replacen("\"RO\"", "\"XX\"", 1);
+        assert_ne!(tampered, body, "fixture must contain the tampered field");
+        assert!(
+            verify_cached_directory(&tampered, &server_pins, &root_pins, 50_000).is_err(),
+            "a tampered body must be rejected even on the stale-seed path"
+        );
     }
 
     /// The daemon's historical `(continent distance, weight product, ids)`
