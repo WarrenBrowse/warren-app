@@ -61,9 +61,10 @@ jobs:
     # already published its own metadata.
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    # Sized for streaming ~800 MB of installers to the update host over a
-    # link measured at 0.5-1 MB/s, not just for the re-signing.
-    timeout-minutes: 60
+    # Sized for streaming ~800 MB of installers to the update host at the
+    # ~150 KB/s measured from the runner fleet; the file-granular resume in
+    # the upload step makes a rerun after a timeout cheap.
+    timeout-minutes: 150
     strategy:
       # One channel must never take the other down with it.
       fail-fast: false
@@ -271,8 +272,18 @@ jobs:
           # Streamed as tar through the ssh exec channel: the hardened update
           # host runs dropbear with no sftp-server and no server-side scp, so
           # scp cannot land files there in either protocol mode.
-          (cd release-files && tar --format=ustar -cf - \
-            "${WARREN_ARTIFACT_PREFIX}-${VERSION}"-* SHA256SUMS) \
+          # File-granular resume: stream only the installers whose (size, name)
+          # is absent on the host, so an interrupted upload only re-pays its
+          # unfinished file (a truncated file has a short size and is re-sent).
+          # Integrity is carried by SHA256SUMS and the signed manifests, both
+          # re-sent every run.
+          (cd release-files && ls -ln "${WARREN_ARTIFACT_PREFIX}-${VERSION}"-* \
+            | awk '{print $5, $NF}' | sort) > "$RUNNER_TEMP/local.list"
+          $ssh "$target" "ls -ln '$dest' 2>/dev/null" \
+            | awk 'NF>=5 {print $5, $NF}' | sort > "$RUNNER_TEMP/remote.list"
+          missing=$(comm -23 "$RUNNER_TEMP/local.list" "$RUNNER_TEMP/remote.list" | awk '{print $2}')
+          echo "files to stream: ${missing:-none (all present)}"
+          (cd release-files && tar --format=ustar -cf - $missing SHA256SUMS) \
             | $ssh "$target" "tar -xf - -C '$dest'"
           # Manifests last: until they land, the previous version stays served
           # and coherent with the files already on the host.
