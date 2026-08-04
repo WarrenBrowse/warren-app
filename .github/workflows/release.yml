@@ -67,10 +67,10 @@
 #     relay/admin signing key. When unset, update metadata is not published.
 #
 #   WARREN_UPDATES_SSH_KEY / _HOST / _USER / _PATH  (publish-update-metadata)
-#     SSH private key + target for scp'ing the signed `*.json` manifests to the
-#     Hetzner/Caddy host that serves them (Let's Encrypt cert, matching the
+#     SSH private key + target for streaming the signed `*.json` manifests to
+#     the Caddy host that serves them (Let's Encrypt cert, matching the
 #     client pin) at https://api.warrenbrowse.com/updates/desktop/. Values:
-#     _USER=warren-deploy, _HOST=204.168.244.76 (the API VPS IP),
+#     _USER=warren-deploy, _HOST=185.146.232.126 (bvc01, the beta host),
 #     _PATH=/srv/warren-updates/desktop (a beta run uploads to its `beta/`
 #     subdirectory instead, served as /updates/desktop by the beta vhost). When
 #     unset, the signed manifests are only attached as a run artifact.
@@ -1228,8 +1228,8 @@ jobs:
       - name: Preflight ssh client
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
         run: |
-          command -v scp >/dev/null || {
-            echo "::error::scp missing on this runner: bake openssh-client into the runner image (metadata upload cannot work without it)"
+          command -v ssh >/dev/null && command -v tar >/dev/null || {
+            echo "::error::ssh or tar missing on this runner: bake openssh-client into the runner image (metadata upload cannot work without it)"
             exit 1
           }
 
@@ -1256,15 +1256,16 @@ jobs:
           # answers 404 without a token and no user could download anything.
           # Version-anchored glob, so a prod run never sweeps up the beta
           # artifacts sharing the same release.
-          scp -i "$key" -o StrictHostKeyChecking=accept-new \
-            release-files/"${prefix}-${WARREN_VERSION}"-* \
-            release-files/SHA256SUMS \
-            "${target}:${dest}/"
+          # Streamed as tar through the ssh exec channel: the hardened update
+          # host runs dropbear with no sftp-server and no server-side scp, so
+          # scp cannot land files there in either protocol mode.
+          (cd release-files && tar --format=ustar -cf - \
+            "${prefix}-${WARREN_VERSION}"-* SHA256SUMS) \
+            | $ssh "$target" "tar -xf - -C '$dest'"
           # Manifests last: until they land, the previous version stays served
           # and coherent with the files already on the host.
-          scp -i "$key" -o StrictHostKeyChecking=accept-new \
-            signed/*.json \
-            "${target}:${dest}/"
+          (cd signed && tar --format=ustar -cf - -- *.json) \
+            | $ssh "$target" "tar -xf - -C '$dest'"
           # Bound the disk: only the version the manifests offer for download
           # needs its installers mirrored. Scoped to installer names so no
           # manifest can be caught by it.

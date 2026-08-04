@@ -234,8 +234,8 @@ jobs:
       - name: Preflight ssh client
         if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY != ''
         run: |
-          command -v scp >/dev/null || {
-            echo "::error::scp missing on this runner: bake openssh-client into the runner image"
+          command -v ssh >/dev/null && command -v tar >/dev/null || {
+            echo "::error::ssh or tar missing on this runner: bake openssh-client into the runner image"
             exit 1
           }
 
@@ -260,15 +260,16 @@ jobs:
           # answers 404 without a token and no user could download anything.
           # Version-anchored glob, so a prod run never sweeps up the beta
           # artifacts sharing the same release.
-          scp -i "$key" -o StrictHostKeyChecking=accept-new \
-            release-files/"${WARREN_ARTIFACT_PREFIX}-${VERSION}"-* \
-            release-files/SHA256SUMS \
-            "${target}:${dest}/"
+          # Streamed as tar through the ssh exec channel: the hardened update
+          # host runs dropbear with no sftp-server and no server-side scp, so
+          # scp cannot land files there in either protocol mode.
+          (cd release-files && tar --format=ustar -cf - \
+            "${WARREN_ARTIFACT_PREFIX}-${VERSION}"-* SHA256SUMS) \
+            | $ssh "$target" "tar -xf - -C '$dest'"
           # Manifests last: until they land, the previous version stays served
           # and coherent with the files already on the host.
-          scp -i "$key" -o StrictHostKeyChecking=accept-new \
-            signed/*.json \
-            "${target}:${dest}/"
+          (cd signed && tar --format=ustar -cf - -- *.json) \
+            | $ssh "$target" "tar -xf - -C '$dest'"
           # Bound the disk: only the version the manifests offer for download
           # needs its installers mirrored. Older entries keep their historical
           # URLs and clients only ever fetch the newest. Scoped to installer
