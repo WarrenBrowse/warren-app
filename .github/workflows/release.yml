@@ -1311,8 +1311,19 @@ jobs:
           for f in $missing SHA256SUMS; do
             (
               set -o pipefail
-              cd release-files \
-                && tar --format=ustar -cf - "$f" | $ssh "$target" "tar -xf - -C '$dest'"
+              cd release-files
+              sz=$(wc -c < "$f" | tr -d ' ')
+              t0=$(date +%s)
+              # Per-file timing, because this step used to print nothing at all:
+              # one release spent 32 minutes here and left no way to tell which
+              # file, or which rate, or whether it was stalled or merely slow.
+              if tar --format=ustar -cf - "$f" | $ssh "$target" "tar -xf - -C '$dest'"; then
+                d=$(( $(date +%s) - t0 )); [ "$d" -gt 0 ] || d=1
+                echo "  streamed $f: $((sz / 1048576)) MB in ${d}s ($((sz / d / 1024)) KB/s)"
+              else
+                echo "  FAILED to stream $f"
+                exit 1
+              fi
             ) &
             batch="$batch $!"
             n=$((n + 1))
