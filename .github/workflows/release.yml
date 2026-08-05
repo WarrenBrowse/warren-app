@@ -1287,8 +1287,42 @@ jobs:
             | awk 'NF>=5 {print $5, $NF}' | sort > "$RUNNER_TEMP/remote.list"
           missing=$(comm -23 "$RUNNER_TEMP/local.list" "$RUNNER_TEMP/remote.list" | awk '{print $2}')
           echo "files to stream: ${missing:-none (all present)}"
-          (cd release-files && tar --format=ustar -cf - $missing SHA256SUMS) \
-            | $ssh "$target" "tar -xf - -C '$dest'"
+          # One ssh channel PER FILE, all at once. A single stream is capped at
+          # window/RTT, and this runner shares a Mac with the Windows build VM
+          # and macOS background scans: under that load its RTT to the update
+          # host inflates from 51 ms to several hundred (LAN ping to its own
+          # router reached 696 ms), which took one release's upload from 2 min
+          # to 32 for the same 800 MB. N channels multiply the ceiling by N, so
+          # the step stops depending on how busy the machine happens to be.
+          # pipefail inside each subshell so a failing tar is not hidden by a
+          # succeeding ssh; `wait` per pid because macOS ships bash 3.2, which
+          # has no `wait -n`.
+          # Four at a time, never more: dropbear caps concurrent PRE-AUTH
+          # connections per source IP (MAX_UNAUTH_PER_IP, 5 by default) and
+          # silently refuses the rest. Measured against this host: 5 concurrent
+          # all connect, 7 lose 2. Four keeps a margin.
+          rc=0
+          batch=""
+          flush_batch() {
+            for p in $batch; do wait "$p" || rc=1; done
+            batch=""
+          }
+          n=0
+          for f in $missing SHA256SUMS; do
+            (
+              set -o pipefail
+              cd release-files \
+                && tar --format=ustar -cf - "$f" | $ssh "$target" "tar -xf - -C '$dest'"
+            ) &
+            batch="$batch $!"
+            n=$((n + 1))
+            if [ "$n" -ge 4 ]; then flush_batch; n=0; fi
+          done
+          flush_batch
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::at least one file failed to stream to the update host"
+            exit 1
+          fi
           # Manifests last: until they land, the previous version stays served
           # and coherent with the files already on the host.
           (cd signed && tar --format=ustar -cf - -- *.json) \

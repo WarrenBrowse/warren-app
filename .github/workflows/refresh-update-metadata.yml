@@ -285,8 +285,34 @@ jobs:
             | awk 'NF>=5 {print $5, $NF}' | sort > "$RUNNER_TEMP/remote.list"
           missing=$(comm -23 "$RUNNER_TEMP/local.list" "$RUNNER_TEMP/remote.list" | awk '{print $2}')
           echo "files to stream: ${missing:-none (all present)}"
-          (cd release-files && tar --format=ustar -cf - $missing SHA256SUMS) \
-            | $ssh "$target" "tar -xf - -C '$dest'"
+          # One ssh channel PER FILE, all at once: a single stream is capped at
+          # window/RTT, and this runner's RTT to the update host inflates into
+          # the hundreds of ms whenever the shared Mac is busy. See the same
+          # block in release.yml.
+          # Four at a time: dropbear refuses beyond 5 concurrent pre-auth
+          # connections from one IP. See the same block in release.yml.
+          rc=0
+          batch=""
+          flush_batch() {
+            for p in $batch; do wait "$p" || rc=1; done
+            batch=""
+          }
+          n=0
+          for f in $missing SHA256SUMS; do
+            (
+              set -o pipefail
+              cd release-files \
+                && tar --format=ustar -cf - "$f" | $ssh "$target" "tar -xf - -C '$dest'"
+            ) &
+            batch="$batch $!"
+            n=$((n + 1))
+            if [ "$n" -ge 4 ]; then flush_batch; n=0; fi
+          done
+          flush_batch
+          if [ "$rc" -ne 0 ]; then
+            echo "::error::at least one file failed to stream to the update host"
+            exit 1
+          fi
           # Manifests last: until they land, the previous version stays served
           # and coherent with the files already on the host.
           (cd signed && tar --format=ustar -cf - -- *.json) \
