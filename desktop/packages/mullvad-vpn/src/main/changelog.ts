@@ -152,7 +152,28 @@ export function parseChangelog(changelog: string): IChangelog {
 
   flush();
 
-  return blocks;
+  return dropEmptySections(blocks);
+}
+
+/**
+ * Removes a heading the platform filtering left with nothing under it, which a
+ * release whose whole section targets another platform would otherwise show as
+ * a bare title.
+ */
+function dropEmptySections(blocks: ChangelogBlock[]): ChangelogBlock[] {
+  // A heading survives when some content reaches it before the next heading of
+  // its own level or above; a deeper heading carries its content up to it.
+  const hasContent = (index: number, level: number): boolean => {
+    for (const block of blocks.slice(index + 1)) {
+      if (block.type !== 'heading') return true;
+      if (block.level <= level) return false;
+    }
+    return false;
+  };
+
+  return blocks.filter(
+    (block, index) => block.type !== 'heading' || hasContent(index, block.level),
+  );
 }
 
 /**

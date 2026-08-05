@@ -80,6 +80,37 @@ describe('Changelog parser', () => {
 
       expect(parseChangelog('- [Windows] Only for Windows')).to.deep.equal([]);
     });
+
+    it('drops the heading of a section the filtering emptied', () => {
+      // Dropping only the list leaves its heading dangling over nothing, which
+      // is what a release whose whole Fixed section is for another platform
+      // shows to everyone else.
+      mockPlatform('darwin');
+
+      const blocks = parseChangelog(
+        [
+          '### Changed',
+          '- Repaint the connect screen',
+          '',
+          '### Fixed',
+          '- [Android] Not here',
+        ].join('\n'),
+      );
+
+      expect(blocks.map((block) => block.type)).to.deep.equal(['heading', 'list']);
+      expect(text((blocks[0] as { content: ChangelogInline[] }).content)).to.equal('Changed');
+    });
+
+    it('keeps a heading that still has content under it', () => {
+      mockPlatform('darwin');
+
+      const blocks = parseChangelog(
+        ['### Fixed', '- [macOS] Kept', '- [Windows] Dropped'].join('\n'),
+      );
+
+      expect(blocks.map((block) => block.type)).to.deep.equal(['heading', 'list']);
+      expect(listItems(blocks[1])).to.deep.equal(['Kept']);
+    });
   });
 
   describe('Markdown structure', () => {
@@ -87,7 +118,7 @@ describe('Changelog parser', () => {
       // The regression this parser exists for: the release notes served in the
       // update manifest are Markdown, and the previous line-splitting parser
       // rendered '### Added' verbatim as a bullet.
-      const [block] = parseChangelog('### Added');
+      const [block] = parseChangelog(['### Added', '- An entry'].join('\n'));
 
       expect(block).to.deep.equal({
         type: 'heading',
