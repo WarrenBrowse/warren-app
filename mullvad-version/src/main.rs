@@ -73,20 +73,23 @@ mod inner {
     fn to_android_version_code(version: &str) -> String {
         let version: Version = version.parse().unwrap();
 
+        // The stable build-number slot doubles as the semver patch: the layout has
+        // no field of its own for it, and without this every patch release shares
+        // its minor's versionCode, so Android refuses the APK as an upgrade. The
+        // calendar versions carry no patch, so their codes are unchanged.
+        let patch = version.patch.unwrap_or(0).to_string();
+
         let (build_type, build_number) = if version.dev.is_some() {
-            ("9", "000".to_string())
+            ("9", patch)
         } else {
             match &version.pre_stable {
                 Some(PreStableType::Alpha(v)) => ("0", v.to_string()),
                 Some(PreStableType::Beta(v)) => ("1", v.to_string()),
                 // Stable version
-                None => ("9", "000".to_string()),
+                None => ("9", patch),
             }
         };
 
-        // Note: the semver patch component is not encoded in the Android
-        // versionCode (the YYVVXZZZ layout has no room for it). Monotonicity
-        // across releases must come from the major/minor components.
         let major_last_two_digits = version.major % 100;
 
         format!(
@@ -172,6 +175,21 @@ mod inner {
         fn test_version_code_semver() {
             // 1.0.0 stable: major%100=1, minor=0, stable build type 9, build 000.
             assert_eq!("1009000", to_android_version_code("1.0.0"));
+        }
+
+        #[test]
+        fn test_version_code_semver_patch_is_monotonic() {
+            // A patch release must outrank the release it patches, or Android
+            // refuses the APK as an upgrade. The .0 code stays what it was.
+            assert_eq!("1019000", to_android_version_code("1.1.0"));
+            assert_eq!("1019001", to_android_version_code("1.1.1"));
+            assert!(to_android_version_code("1.1.1") > to_android_version_code("1.1.0"));
+        }
+
+        #[test]
+        fn test_version_code_semver_patch_prerelease_precedes_stable() {
+            // A beta of a patch still sorts below the stable it leads to.
+            assert!(to_android_version_code("1.1.1-beta1") < to_android_version_code("1.1.1"));
         }
     }
 }
