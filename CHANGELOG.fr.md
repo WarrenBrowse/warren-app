@@ -20,11 +20,6 @@ par l'application, gardez-le tel quel.
 - Affiner l'illustration de l'écran de connexion : nouvelle pose de Bula, cadrage décentré et
   ligne de sol retouchée.
 
-### Corrigé
-- [Android] Installer une version corrective par-dessus celle qu'elle corrige. Une version
-  corrective portait le même numéro de version interne que la précédente, et le système la
-  refusait comme mise à jour.
-
 ## [1.1.0] - 2026-08-05
 ### Ajouté
 - Afficher les notes de version d'une mise à jour dans la langue de
