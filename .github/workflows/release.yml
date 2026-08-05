@@ -1079,11 +1079,19 @@ jobs:
   publish-update-metadata:
     name: Sign + publish update metadata
     needs: [tag-guard, publish-release]
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    # Sized for streaming ~800 MB of installers to the update host at the
-    # ~150 KB/s measured from the runner fleet; the file-granular resume in
-    # the upload step makes a rerun after a timeout cheap.
-    timeout-minutes: 150
+    # The native macOS pool, NOT a Colima container, because this job's cost is
+    # one ~800 MB upload to the update host. Outbound bulk from a container is
+    # pathologically slow to a distant host: measured on the same Mac, same key,
+    # same destination, 20 MB took 3.2 s to download over ssh but 135 s to
+    # upload (148 KB/s), while the host itself uploads at 6 MB/s and the same
+    # container downloads over HTTPS at 18 MB/s. It is the container egress
+    # path, not the link, not the disk, not Rosetta (the arm64 container is
+    # worse still at 59 KB/s). Keep this job off the container pools.
+    runs-on: [self-hosted, macOS, ARM64]
+    # ~800 MB at the 6 MB/s measured from this pool is a few minutes; the budget
+    # leaves room for a degraded link, and the file-granular resume in the
+    # upload step makes a rerun after a timeout cheap.
+    timeout-minutes: 60
     # Signs the per-platform version manifests and serves them so existing apps
     # detect the new release. Gated on a signing key being present: without it
     # the whole step is a no-op (same opt-in philosophy as the build signing).

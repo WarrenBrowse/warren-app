@@ -60,11 +60,13 @@ jobs:
     # workflow_run only self-heals after a FAILED release; a green release
     # already published its own metadata.
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'failure'
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    # Sized for streaming ~800 MB of installers to the update host at the
-    # ~150 KB/s measured from the runner fleet; the file-granular resume in
-    # the upload step makes a rerun after a timeout cheap.
-    timeout-minutes: 150
+    # Native macOS, never a Colima container: outbound bulk from a container to
+    # the update host collapses to ~150 KB/s while the host itself does 6 MB/s.
+    # The reasoning is spelled out on `publish-update-metadata` in release.yml.
+    runs-on: [self-hosted, macOS, ARM64]
+    # A refresh normally re-signs only, the installers already being on the
+    # host, so this is sized for the rare run that has to re-stream them.
+    timeout-minutes: 60
     strategy:
       # One channel must never take the other down with it.
       fail-fast: false
