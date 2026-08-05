@@ -129,9 +129,16 @@ pub fn is_version_supported(
 ///
 /// If the manifest declares a [`Response::minimum_supported_version`], the app
 /// is supported iff it is at least that version. This is the forced-update
-/// lever: raise the minimum to hard-block older clients. Otherwise fall back to
-/// [`is_version_supported`] ("listed in `releases`"). Dev builds are always
-/// supported so local testing is never blocked.
+/// lever: raise the minimum to hard-block older clients. Otherwise the app is
+/// supported when it is listed in `releases`, or when it is newer than every
+/// release listed there. Dev builds are always supported so local testing is
+/// never blocked.
+///
+/// Being newer than the whole manifest counts as supported because the manifest
+/// only ever describes what has been published: a build is newer than it for the
+/// whole window between a release's build job and its publish job, and for every
+/// local or pre-release build. Blocking there raises the forced-update screen on
+/// whoever runs the newest code, and no update can clear it.
 ///
 /// Shared by the desktop daemon and the mobile (`warren-jni`) version check so
 /// every platform applies the same rule.
@@ -144,7 +151,13 @@ pub fn is_current_version_supported(
     }
     match response.minimum_supported_version.as_ref() {
         Some(minimum) => current_version >= minimum,
-        None => is_version_supported(current_version.clone(), response),
+        None => {
+            is_version_supported(current_version.clone(), response)
+                || response
+                    .releases
+                    .iter()
+                    .all(|release| current_version > &release.version)
+        }
     }
 }
 
@@ -272,6 +285,39 @@ mod test {
         ));
         assert!(!is_version_supported(
             non_supported_version,
+            &response.signed
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn a_version_newer_than_every_release_is_supported() -> anyhow::Result<()> {
+        // A build is newer than the manifest for the whole window between a
+        // release's build job and its publish job, and for every local or
+        // pre-release build. Blocking there tells whoever runs the newest code
+        // that their version is no longer supported, and the forced-update
+        // screen it raises cannot be cleared by updating.
+        let response = SignedResponse::deserialize_insecure(TEST_RESPONSE)?;
+        let newer_than_every_release = mullvad_version::Version::from_str("2031.1").unwrap();
+
+        assert!(is_current_version_supported(
+            &newer_than_every_release,
+            &response.signed
+        ));
+
+        Ok(())
+    }
+
+    #[test]
+    fn an_older_unlisted_version_stays_unsupported() -> anyhow::Result<()> {
+        // The force-update lever must keep working: only versions ABOVE the
+        // whole manifest get the benefit of the doubt.
+        let response = SignedResponse::deserialize_insecure(TEST_RESPONSE)?;
+        let older_unlisted = mullvad_version::Version::from_str("2025.5").unwrap();
+
+        assert!(!is_current_version_supported(
+            &older_unlisted,
             &response.signed
         ));
 
