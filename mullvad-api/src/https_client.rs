@@ -470,10 +470,17 @@ impl HttpsConnector {
             .map_err(|err| io::Error::new(io::ErrorKind::TimedOut, err))?
     }
 
-    /// Resolve the provided `uri` to an IP and port. If the URI contains an IP, that IP will be
-    /// used. Otherwise `dns_resolver` will be used as a fallback.
+    /// Resolve the provided `uri` to every candidate IP and port, in resolver order. If the URI
+    /// contains an IP, that IP is the only candidate. Otherwise `dns_resolver` is used.
     /// If the URI contains a port, then that port will be used.
-    async fn resolve_address(dns_resolver: &dyn DnsResolver, uri: Uri) -> io::Result<SocketAddr> {
+    ///
+    /// Every address is kept, not just the first: `getaddrinfo` sorts IPv6 ahead of IPv4 on a
+    /// dual-stack host (RFC 6724), so returning one address makes an unreachable family a hard
+    /// failure for every API call instead of something the caller can step past.
+    async fn resolve_addresses(
+        dns_resolver: &dyn DnsResolver,
+        uri: Uri,
+    ) -> io::Result<Vec<SocketAddr>> {
         const DEFAULT_PORT: u16 = 443;
 
         let hostname = uri.host().ok_or_else(|| {
@@ -481,19 +488,24 @@ impl HttpsConnector {
         })?;
         let port = uri.port_u16();
         if let Ok(addr) = hostname.parse::<IpAddr>() {
-            return Ok(SocketAddr::new(addr, port.unwrap_or(DEFAULT_PORT)));
+            return Ok(vec![SocketAddr::new(addr, port.unwrap_or(DEFAULT_PORT))]);
         }
 
         let addrs = dns_resolver.resolve(hostname.to_owned()).await?;
-        let addr = addrs
-            .first()
-            .ok_or_else(|| io::Error::other("Empty DNS response"))?;
-        let port = match (addr.port(), port) {
-            (_, Some(port)) => port,
-            (0, None) => DEFAULT_PORT,
-            (addr_port, None) => addr_port,
-        };
-        Ok(SocketAddr::new(addr.ip(), port))
+        if addrs.is_empty() {
+            return Err(io::Error::other("Empty DNS response"));
+        }
+        Ok(addrs
+            .into_iter()
+            .map(|addr| {
+                let port = match (addr.port(), port) {
+                    (_, Some(port)) => port,
+                    (0, None) => DEFAULT_PORT,
+                    (addr_port, None) => addr_port,
+                };
+                SocketAddr::new(addr.ip(), port)
+            })
+            .collect())
     }
 }
 
@@ -538,27 +550,49 @@ impl Service<Uri> for HttpsConnector {
                     "invalid url, missing host",
                 ));
             };
-            let addr = Self::resolve_address(&*dns_resolver, uri).await?;
+            let addrs = Self::resolve_addresses(&*dns_resolver, uri).await?;
 
             // Loop until we have established a connection. This starts over if a new endpoint
             // is selected while connecting.
             let stream = loop {
                 let notify = abort_notify.notified();
                 let proxy_config = { inner.lock().unwrap().proxy_config.clone() };
-                let stream_fut = proxy_config.connect(
-                    &hostname,
-                    &addr,
-                    #[cfg(target_os = "android")]
-                    socket_bypass_tx.clone(),
-                    #[cfg(any(feature = "api-override", test))]
-                    disable_tls,
-                );
 
-                pin_mut!(stream_fut);
+                // Try every resolved address before giving up: the first one can belong to an
+                // address family with no route out (a v4-only tunnel makes IPv6 unreachable),
+                // and that must cost one failed connect, not the whole request.
+                let connect_all = async {
+                    let mut last_err = None;
+                    for addr in &addrs {
+                        match proxy_config
+                            .clone()
+                            .connect(
+                                &hostname,
+                                addr,
+                                #[cfg(target_os = "android")]
+                                socket_bypass_tx.clone(),
+                                #[cfg(any(feature = "api-override", test))]
+                                disable_tls,
+                            )
+                            .await
+                        {
+                            Ok(stream) => return Ok(stream),
+                            Err(err) => {
+                                if addrs.len() > 1 {
+                                    log::debug!("API connect to {addr} failed: {err}");
+                                }
+                                last_err = Some(err);
+                            }
+                        }
+                    }
+                    Err(last_err.unwrap_or_else(|| io::Error::other("Empty DNS response")))
+                };
+
+                pin_mut!(connect_all);
                 pin_mut!(notify);
 
                 // Wait for connection. Abort and retry if we switched to a different server.
-                if let future::Either::Left((stream, _)) = future::select(stream_fut, notify).await
+                if let future::Either::Left((stream, _)) = future::select(connect_all, notify).await
                 {
                     break stream?;
                 }
@@ -608,5 +642,91 @@ impl RequestHandler {
             handle.close();
         }
         self.notify.notify_waiters();
+    }
+}
+
+#[cfg(test)]
+mod resolve_tests {
+    use super::*;
+
+    struct StubResolver(Vec<SocketAddr>);
+
+    #[async_trait::async_trait]
+    impl DnsResolver for StubResolver {
+        async fn resolve(&self, _host: String) -> io::Result<Vec<SocketAddr>> {
+            Ok(self.0.clone())
+        }
+    }
+
+    fn addr(s: &str) -> SocketAddr {
+        s.parse().unwrap()
+    }
+
+    #[tokio::test]
+    async fn keeps_every_resolved_address_so_a_dead_family_can_be_skipped() {
+        // getaddrinfo sorts IPv6 first on a dual-stack host (RFC 6724). Keeping
+        // only the first address strands every daemon API call whenever that
+        // family is unreachable, which is what a v4-only tunnel makes of IPv6.
+        let resolver = StubResolver(vec![addr("[2a06:1700::1]:0"), addr("185.146.232.126:0")]);
+
+        let addrs = HttpsConnector::resolve_addresses(
+            &resolver,
+            "https://api.example.com/x".parse().unwrap(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(
+            addrs,
+            vec![addr("[2a06:1700::1]:443"), addr("185.146.232.126:443")],
+            "both families must survive resolution, in getaddrinfo order"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_explicit_uri_port_overrides_every_resolved_port() {
+        let resolver = StubResolver(vec![addr("[2a06:1700::1]:80"), addr("185.146.232.126:0")]);
+
+        let addrs = HttpsConnector::resolve_addresses(
+            &resolver,
+            "https://api.example.com:8443/x".parse().unwrap(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(
+            addrs,
+            vec![addr("[2a06:1700::1]:8443"), addr("185.146.232.126:8443")]
+        );
+    }
+
+    #[tokio::test]
+    async fn a_literal_ip_host_resolves_to_itself() {
+        let resolver = StubResolver(vec![]);
+
+        let addrs = HttpsConnector::resolve_addresses(
+            &resolver,
+            "https://185.146.232.126/x".parse().unwrap(),
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(addrs, vec![addr("185.146.232.126:443")]);
+    }
+
+    #[tokio::test]
+    async fn an_empty_dns_response_is_an_error() {
+        let resolver = StubResolver(vec![]);
+
+        let result = HttpsConnector::resolve_addresses(
+            &resolver,
+            "https://api.example.com/x".parse().unwrap(),
+        )
+        .await;
+
+        assert!(
+            result.is_err(),
+            "an empty resolution cannot yield a connection"
+        );
     }
 }
