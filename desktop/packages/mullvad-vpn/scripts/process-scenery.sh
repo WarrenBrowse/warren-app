@@ -48,7 +48,7 @@ LAYERS=(
   "INTERFACE FINLANDE V14.jpg|finland|SceneryFinland|bg"
   "INTERFACE PAYS BAS V14.jpg|netherlands|SceneryNetherlands|bg"
   "INTERFACE SINGAPOUR V14.jpg|singapore|ScenerySingapore|bg"
-  "INTERFACE TERRIER V14.png|terrier|SceneryTerrier|fg"
+  "INTERFACE TERRIER V15.png|terrier|SceneryTerrier|fg"
   "INTERFACE LAPIN V14.png|bula|SceneryBula|fg"
 )
 

@@ -341,10 +341,12 @@ final class SceneryViewController: UIViewController {
     // The burrow foreground and Bula are raised by a constant share of the
     // frame height so the burrow mouth clears the connection card. It is the
     // same in every phase on purpose: only the landscape crossfades, so the
-    // foreground never jumps between modes. Larger than the desktop 8% because
-    // the phone foreground is drawn at canvas width (see the width-fit layout
-    // below) and would otherwise sink behind the connection card.
-    private static let foregroundLift: CGFloat = 0.12
+    // foreground never jumps between modes. Desktop needs no lift at all, its
+    // frame carries the canvas ratio so the master's own framing lands right;
+    // the phone draws the foreground at canvas width (see the width-fit layout
+    // below), far shorter than the bounds, so it would otherwise sink behind
+    // the connection card.
+    private static let foregroundLift: CGFloat = 0.07
 
     // Hiding slides Bula this share of the height down into the burrow.
     private static let bulaHideDrop: CGFloat = 0.03

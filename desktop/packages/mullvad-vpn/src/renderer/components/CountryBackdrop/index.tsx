@@ -53,32 +53,11 @@ const FrontLandscape = styled(FullBleed)<{ $animate: boolean }>`
   }
 `;
 
-// The foreground (burrow + Bula) is raised by a constant share of the frame
-// height so the burrow mouth and the rabbit clear the panel. It is the SAME in
-// every phase on purpose: only the background crossfades between modes, so the
-// foreground never jumps. The seam it uncovers at the bottom stays behind the
-// panel. Kept small so the burrow stays discreet over a cityscape.
-const LIFT_PERCENT = 8;
-
-// Bula rides a smaller lift than the burrow, which lands him just above the
-// connection panel instead of floating in the middle of the sky. He stays on
-// the hillside either way, the slope runs the full width down to the panel, so
-// the lower framing costs nothing and fills the empty band above the card.
+// Bula rides a small lift, which lands him just above the connection panel
+// instead of floating in the middle of the sky. He stays on the hillside either
+// way, the slope runs the full width down to the panel, so the lower framing
+// costs nothing and fills the empty band above the card.
 const BULA_LIFT_PERCENT = 1;
-
-// The burrow foreground, always at the raised framing position.
-//
-// The lift leaves the bottom of the frame with no foreground pixels, so the
-// landscape's own bottom edge showed through: on the watercolor plates that is
-// the pale canal, and it read as a band of sky sitting under the connection
-// card. The gradient footer used to swallow it; the solid footer bar does not.
-// So the layer is drawn a second time UNLIFTED, underneath, sealing that strip
-// with its own grass. It changes no framing, and it can never show anywhere
-// else: above the lifted copy's bottom edge, wherever this copy is opaque the
-// lifted one is opaque too, so it is always fully covered.
-const Foreground = styled(FullBleed)`
-  transform: translateY(-${LIFT_PERCENT}%);
-`;
 
 // Bula sits exposed outside the burrow; when protected he is hidden inside it,
 // sliding down and fading out.
@@ -157,7 +136,6 @@ export default function CountryBackdrop() {
     <Root>
       <CrossfadeLandscape src={scenery.image} animate={animate} blurred={scenery.blurred} />
       <FullBleed src={TERRIER_IMAGE} alt="" aria-hidden />
-      <Foreground src={TERRIER_IMAGE} alt="" aria-hidden />
       <Bula src={BULA_IMAGE} alt="" aria-hidden $visible={scenery.showBula} $animate={animate} />
       <AccentWash $color={accent} $animate={animate} />
     </Root>
