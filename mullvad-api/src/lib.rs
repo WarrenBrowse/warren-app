@@ -154,14 +154,15 @@ impl ApiEndpoint {
                     api_addr = env::API_ADDR_VAR,
                     api_host = env::API_HOST_VAR
                 );
-                api.address = format!("{host}:{API_PORT_DEFAULT}")
-                    .to_socket_addrs()
-                    .unwrap_or_else(|_| {
-                        panic!(
-                            "Unable to resolve API IP address from host {host}:{API_PORT_DEFAULT}"
-                        )
-                    })
-                    .next();
+                api.address = preferred_api_address(
+                    format!("{host}:{API_PORT_DEFAULT}")
+                        .to_socket_addrs()
+                        .unwrap_or_else(|_| {
+                            panic!(
+                                "Unable to resolve API IP address from host {host}:{API_PORT_DEFAULT}"
+                            )
+                        }),
+                );
                 api.host = Some(host);
             }
             (host, Some(address)) => {
@@ -284,7 +285,7 @@ impl ApiEndpoint {
         (API_HOST_DEFAULT, API_PORT_DEFAULT)
             .to_socket_addrs()
             .ok()
-            .and_then(|mut addrs| addrs.next())
+            .and_then(preferred_api_address)
             .unwrap_or(SocketAddr::new(API_IP_DEFAULT, API_PORT_DEFAULT))
     }
 
@@ -350,6 +351,27 @@ impl DnsResolver for NullDnsResolver {
 /// budget only bites on the rare dead-pin path.
 const PINNED_IP_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(3);
 
+/// The API address to pin, out of everything the host resolved.
+///
+/// IPv4 wins whenever the host offers one. The daemon pins a SINGLE API address
+/// (the address cache, the firewall's allowed endpoint, and the resolver its own
+/// fetchers use), so the choice has no second chance: a v6 pin stops resolving
+/// the moment a v4-only tunnel declares IPv6 unreachable, and every daemon API
+/// call fails with `ENETUNREACH` while the tunnel is up. `getaddrinfo` sorts v6
+/// first on a dual-stack host (RFC 6724), so taking its first answer is exactly
+/// the pin that breaks. A host with only IPv6 (NAT64/DNS64 among them, where no
+/// A record is synthesised into the list) still gets its IPv6 address.
+fn preferred_api_address(addrs: impl IntoIterator<Item = SocketAddr>) -> Option<SocketAddr> {
+    let mut fallback = None;
+    for addr in addrs {
+        if addr.is_ipv4() {
+            return Some(addr);
+        }
+        fallback.get_or_insert(addr);
+    }
+    fallback
+}
+
 /// True if a TCP connection to `addr` completes within `dur`.
 async fn tcp_reachable(addr: SocketAddr, dur: std::time::Duration) -> bool {
     matches!(
@@ -377,9 +399,12 @@ async fn seed_pinned_or_dns_fallback<T: address_cache::AddressCacheBacking>(
     if tcp_reachable(seeded, PINNED_IP_PROBE_TIMEOUT).await {
         return;
     }
-    match DefaultDnsResolver.resolve(endpoint.host().to_owned()).await {
-        Ok(addrs) if !addrs.is_empty() => {
-            let a = addrs[0];
+    match DefaultDnsResolver
+        .resolve(endpoint.host().to_owned())
+        .await
+        .map(preferred_api_address)
+    {
+        Ok(Some(a)) => {
             let port = if a.port() == 0 {
                 API_PORT_DEFAULT
             } else {
@@ -894,6 +919,27 @@ mod bootstrap_privacy_tests {
             ApiEndpoint::pinned_or_explicit(Some(explicit), None),
             Some(explicit)
         );
+    }
+
+    #[test]
+    fn the_api_address_prefers_ipv4_when_the_host_offers_both() {
+        // getaddrinfo sorts IPv6 first on a dual-stack host, and the daemon pins
+        // ONE API address (cache, firewall allowed endpoint, fetcher resolver).
+        // Pinning the v6 one kills every daemon API call the moment a v4-only
+        // tunnel makes IPv6 unreachable.
+        let v6: SocketAddr = "[2a06:1700::1]:443".parse().unwrap();
+        let v4: SocketAddr = "185.146.232.126:443".parse().unwrap();
+
+        assert_eq!(super::preferred_api_address([v6, v4]), Some(v4));
+        assert_eq!(super::preferred_api_address([v4, v6]), Some(v4));
+    }
+
+    #[test]
+    fn an_ipv6_only_host_still_gets_its_ipv6_address() {
+        let v6: SocketAddr = "[2a06:1700::1]:443".parse().unwrap();
+
+        assert_eq!(super::preferred_api_address([v6]), Some(v6));
+        assert_eq!(super::preferred_api_address([]), None);
     }
 
     #[tokio::test]
