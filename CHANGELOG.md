@@ -24,6 +24,21 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.0] - 2026-08-05
+### Added
+- Show the release notes of an available update in the language the app runs in, when the release
+  was published with a translation for it. English remains the fallback.
+
+### Fixed
+- [macOS] Stop websites stalling for the first minutes after connecting or switching server. The
+  tunnel carries no IPv6 unless you enable it, but the Mac kept a working global IPv6 address, so
+  it tried IPv6 first for every dual-stack site and only the firewall stopped it, late and
+  unreliably. IPv6 is now declared unreachable while the tunnel carries none, so those sites go
+  straight over IPv4.
+- Render the release notes of an available update as formatted text. Headings, bullets and
+  emphasis were shown as raw Markdown, and entries wrapped over several lines were broken into
+  separate bullets.
+
 ## [1.0.0] - 2026-08-05
 First public beta release. Free during the open beta.
 ### Added
