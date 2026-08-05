@@ -14,6 +14,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.2] - 2026-08-05
+### Reparat
+- [macOS] Aplicația contactează din nou API-ul Warren cât timp tunelul este activ. Începând cu
+  1.1.0 nu mai putea verifica actualizările, reîmprospăta contul sau reînnoi jetoanele de acces
+  odată conectată, iar un abonament activ apărea ca inactiv.
+
 ## [1.1.1] - 2026-08-05
 ### Modificat
 - Rafinarea ilustrației din ecranul de conectare: o nouă poziție a lui Bula, încadrare

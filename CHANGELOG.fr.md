@@ -15,6 +15,12 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.2] - 2026-08-05
+### Corrigé
+- [macOS] L'application joint à nouveau l'API Warren pendant que le tunnel est actif. Depuis la
+  1.1.0, elle ne pouvait plus vérifier les mises à jour, rafraîchir votre compte ni renouveler ses
+  jetons d'accès une fois connectée, et affichait un abonnement actif comme inactif.
+
 ## [1.1.1] - 2026-08-05
 ### Modifié
 - Affiner l'illustration de l'écran de connexion : nouvelle pose de Bula, cadrage décentré et

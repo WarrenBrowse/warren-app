@@ -24,6 +24,12 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.2] - 2026-08-05
+### Fixed
+- [macOS] Reach the Warren API again while the tunnel is up. Since 1.1.0 the app could not check
+  for updates, refresh your account or renew its access tokens once connected, and showed an
+  active subscription as inactive.
+
 ## [1.1.1] - 2026-08-05
 ### Changed
 - Refine the connect screen artwork: a new Bula pose, off-centre framing and a retuned ground
