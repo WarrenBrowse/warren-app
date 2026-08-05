@@ -86,6 +86,49 @@ pub use warrenguard_route_split::default_route_split_windows::DefaultRouteSplitV
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use v6_stub::DefaultRouteSplitV6Guard;
 
+// The complement of the guard above, for the tunnel that carries NO IPv6:
+// declare global v6 unreachable so the host stops preferring a path that
+// cannot work. Only macOS needs it. Every platform blocks native v6 in its
+// firewall, so none of them leaks, but they do not fail alike:
+//
+// - Linux drops in the nftables output hook, which returns EPERM from the
+//   syscall, and Windows blocks at the WFP ALE layer, which fails `connect()`
+//   immediately. Both let Happy Eyeballs fall back to IPv4 at once.
+// - Android routes `::/0` into a TUN with no v6 address, so the OS advertises
+//   the network as IPv4-only and its resolver stops offering AAAA at all;
+//   iOS captures `::/0` behind a ULA, which RFC 6724 deprioritises.
+// - macOS blocks with pf `block return out`, and the RST it synthesises races
+//   `connect()` to completion: the socket can report connected and fail only
+//   on the first `send()`, by which point the application is committed to the
+//   v6 address and never tries the v4 one.
+//
+// So macOS gets the real guard and the others a no-op: not an unsupported
+// target, a platform whose own block already fails fast.
+#[cfg(target_os = "macos")]
+pub use warrenguard_route_split::default_route_split_macos::Ipv6UnreachableGuard;
+
+#[cfg(not(target_os = "macos"))]
+pub use v6_unreachable_noop::Ipv6UnreachableGuard;
+
+#[cfg(not(target_os = "macos"))]
+mod v6_unreachable_noop {
+    /// No-op on every platform whose firewall already fails blocked IPv6
+    /// synchronously. Keeps the monitor field type and the install call site
+    /// OS-agnostic.
+    #[derive(Debug)]
+    pub struct Ipv6UnreachableGuard;
+
+    impl Ipv6UnreachableGuard {
+        pub async fn install() -> anyhow::Result<Self> {
+            Ok(Self)
+        }
+
+        pub async fn uninstall(self) -> anyhow::Result<()> {
+            Ok(())
+        }
+    }
+}
+
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 mod v6_stub {
     use std::net::Ipv6Addr;
@@ -139,6 +182,11 @@ pub fn force_route_cleanup() {
     {
         warrenguard_route_split::default_route_split_macos::force_cleanup_all();
         warrenguard_route_split::default_route_split_macos::force_cleanup_all_v6();
+        // A leaked reject half would keep global IPv6 down after the tunnel is
+        // gone, so it is swept on the same reset paths. Stateless (the reject
+        // flag is the ownership proof), so it also reclaims what a crashed
+        // predecessor left behind.
+        warrenguard_route_split::default_route_split_macos::force_cleanup_all_v6_unreachable();
         // macOS v6 teardown repairs: talpid's restore can miss BOTH the
         // unscoped v6 default (its tracked best-v6 is empty at teardown; the
         // kernel re-adds an RA default only at the next RA, so native v6 dies
@@ -174,8 +222,23 @@ pub fn force_route_cleanup() {
 
 #[cfg(test)]
 mod facade_tests {
-    use super::{DefaultRouteSplitGuard, DefaultRouteSplitV6Guard};
+    use super::{DefaultRouteSplitGuard, DefaultRouteSplitV6Guard, Ipv6UnreachableGuard};
     use std::net::{Ipv4Addr, Ipv6Addr};
+
+    #[test]
+    fn v6_unreachable_api_surface_matches_lib_rs_call_site() {
+        // Same compile-time pin for the guard held while the tunnel carries no
+        // v6: the real macOS impl and the no-op used elsewhere must keep the
+        // argument-free `install() -> Result<Self>` + `uninstall(self) ->
+        // Result<()>` shape the lib.rs call site relies on.
+        let _exercise = async {
+            let guard: anyhow::Result<Ipv6UnreachableGuard> = Ipv6UnreachableGuard::install().await;
+            if let Ok(g) = guard {
+                let _: anyhow::Result<()> = g.uninstall().await;
+            }
+        };
+        let _ = &_exercise;
+    }
 
     // Anti-regression: the facade must expose the same `install
     // (Ipv4Addr, &str) -> Result<Self>` shape and a `uninstall(self)

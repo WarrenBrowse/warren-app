@@ -1063,6 +1063,11 @@ pub struct WarrenTunnelMonitor {
     /// firewall blocks native v6 regardless so a failed install never
     /// leaks.
     v6_route_guard: Option<default_route_split::DefaultRouteSplitV6Guard>,
+    /// Mutually exclusive with [`Self::v6_route_guard`]: held while the tunnel
+    /// carries no IPv6, to make global v6 unroutable rather than merely
+    /// blocked. `None` when the exit allocated a tunnel v6, or when the
+    /// install failed (v6 then stays firewall-blocked, so still no leak).
+    v6_unreachable_guard: Option<default_route_split::Ipv6UnreachableGuard>,
     /// Lifecycle owner of the NAT-PMP refresh loop + event forwarder
     /// spawned after the tunnel is up. `None` when port-forwarding is
     /// disabled in the user settings (`params.nat_pmp.is_none()` OR
@@ -1803,6 +1808,30 @@ impl WarrenTunnelMonitor {
             None
         };
 
+        // The other half of the same decision: with no tunnel v6, declare
+        // global IPv6 unreachable so the host stops choosing it. The firewall
+        // already blocks it, but blocking is not the same as being unroutable:
+        // the in-tunnel resolver answers AAAA for every dual-stack host, and on
+        // macOS a blocked v6 connect can report success and fail on the first
+        // send, which strands the request instead of falling back to IPv4.
+        // Non-fatal, exactly like the guard above: without it v6 is merely
+        // slow, never leaked.
+        let v6_unreachable_guard = if metadata.ipv6_gateway.is_none() {
+            runtime
+                .block_on(default_route_split::Ipv6UnreachableGuard::install())
+                .map(Some)
+                .unwrap_or_else(|e| {
+                    log::warn!(
+                        "Warren: failed to make native IPv6 unreachable: {e}. \
+                         It stays firewall-blocked (no leak), but dual-stack \
+                         destinations may be slow to fall back to IPv4."
+                    );
+                    None
+                })
+        } else {
+            None
+        };
+
         // macOS carrier egress guard (the carrier-blackhole failure mode):
         // now that the default route points at the TUN, VERIFY the
         // `IP_BOUND_IF`-bound carrier actually egresses. The guard always
@@ -2228,6 +2257,7 @@ impl WarrenTunnelMonitor {
             // Multi-hop `/v2` dual-stack: holds the `::/1`+`8000::/1` split
             // route when the exit allocated a v6; `None` keeps it v4-only.
             v6_route_guard,
+            v6_unreachable_guard,
             nat_pmp_managers,
             nat_pmp_controller,
         })
@@ -2256,6 +2286,7 @@ impl WarrenTunnelMonitor {
             close_rx,
             default_route_guard,
             v6_route_guard,
+            v6_unreachable_guard,
             nat_pmp_managers,
             nat_pmp_controller,
         } = self;
@@ -2468,6 +2499,13 @@ impl WarrenTunnelMonitor {
                     && let Err(e) = guard.uninstall().await
                 {
                     log::warn!("Warren IPv6 split-default cleanup failed: {e}");
+                }
+                // Mutually exclusive with the split above, so the two share one
+                // teardown arm: at most one of them ever holds routes.
+                if let Some(guard) = v6_unreachable_guard
+                    && let Err(e) = guard.uninstall().await
+                {
+                    log::warn!("Warren IPv6 unreachable-guard cleanup failed: {e}");
                 }
             });
             let _ = tokio::join!(v4, v6);
