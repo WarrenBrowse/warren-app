@@ -58,7 +58,7 @@ private val CONTINUATION_BLUR_RADIUS = 28.dp
 // shadow included) slides vertically so this line always sits just above the
 // connection card: right above the card while disconnected, and never under it
 // when the card grows.
-private const val BULA_FEET_FRACTION = 1316f / 1706f
+private const val BULA_FEET_FRACTION = 1332f / 1706f
 
 // Air kept between Bula's feet and the card's top edge.
 private val FOREGROUND_CARD_GAP = 16.dp
