@@ -60,7 +60,7 @@ jobs:
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli \
             -p talpid-warren-tunnel -p talpid-core \
-            -p warren-jni -p warren-ios -p warren-forum \
+            -p warren-jni -p warren-ios -p warren-forum -p mullvad-update \
             -- --check
 
       - name: install cargo-nextest
@@ -81,7 +81,8 @@ jobs:
           cargo nextest run --locked --profile warren-ci \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli \
-            -p talpid-warren-tunnel -p talpid-core -p warren-jni
+            -p talpid-warren-tunnel -p talpid-core -p warren-jni \
+            -p mullvad-update
           cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope
@@ -91,7 +92,7 @@ jobs:
         # that are not part of the Warren surface and carry their own upstream CI.
         timeout-minutes: 20
         run: |
-          for crate in mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core warren-jni; do
+          for crate in mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core warren-jni mullvad-update; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
 

@@ -26,6 +26,10 @@ on:
       - "mullvad-types/**"
       - "mullvad-management-interface/**"
       - "mullvad-cli/**"
+      # Carries the signed update manifest and the force-update decision: a bug
+      # here can hard-block every installed app, and it was ungated until a
+      # "newer than the manifest is unsupported" verdict did exactly that.
+      - "mullvad-update/**"
       - "talpid-warren-tunnel/**"
       - "talpid-core/**"
       - "warren-jni/**"
