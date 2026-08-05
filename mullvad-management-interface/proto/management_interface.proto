@@ -1198,6 +1198,10 @@ message SuggestedUpgrade {
   string version = 1;
   string changelog = 2;
   optional string verified_installer_path = 3;
+  // Changelog per language tag, so the UI can show the release notes in its own
+  // language. Empty for a release published without translations, in which case
+  // `changelog` (English) is what gets shown.
+  map<string, string> changelog_translations = 4;
 }
 
 message AppVersionInfo {

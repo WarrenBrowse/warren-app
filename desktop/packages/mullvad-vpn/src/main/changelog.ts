@@ -17,6 +17,54 @@ export function readChangelog(): IChangelog {
   }
 }
 
+// Resolved once at startup, like the gettext catalogs, because the release
+// notes reach the conversion layer far from where the locale is detected.
+let appLocale = 'en';
+
+export function setChangelogLocale(locale: string) {
+  appLocale = locale;
+}
+
+/**
+ * Resolves the release notes offered by an update into renderable blocks, in
+ * the app's own language when the release was published with a translation.
+ */
+export function parseSuggestedUpgradeChangelog(
+  english: string,
+  translations: Array<[string, string]>,
+): IChangelog {
+  return parseChangelog(selectChangelog(english, translations, appLocale));
+}
+
+/**
+ * Picks the release notes to show, given the ones the update manifest carries
+ * per language and the language the app runs in.
+ *
+ * English is the fallback for anything not translated, and for a translation
+ * that came through empty: blank notes read as "this release changed nothing",
+ * which is worse than notes in another language.
+ */
+export function selectChangelog(
+  english: string,
+  translations: Array<[string, string]>,
+  locale: string,
+): string {
+  const byTag = new Map(translations.map(([tag, text]) => [tag.toLowerCase(), text]));
+  const normalized = locale.replace('_', '-').toLowerCase();
+  // Regional first: pt-BR and pt are genuinely different translations, while
+  // fr-FR is served by fr.
+  const candidates = [normalized, normalized.split('-')[0]];
+
+  for (const candidate of candidates) {
+    const translated = byTag.get(candidate);
+    if (translated !== undefined && translated.trim() !== '') {
+      return translated;
+    }
+  }
+
+  return english;
+}
+
 const HEADING = /^(#{1,6})\s+(.+)$/;
 const BULLET = /^[-*]\s+(.+)$/;
 const PLATFORM_TAG = /^\[.*?\]/;

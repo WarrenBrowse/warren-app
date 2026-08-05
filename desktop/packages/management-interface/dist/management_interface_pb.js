@@ -25296,7 +25296,8 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.toObject = function(i
   var f, obj = {
     version: jspb.Message.getFieldWithDefault(msg, 1, ""),
     changelog: jspb.Message.getFieldWithDefault(msg, 2, ""),
-    verifiedInstallerPath: jspb.Message.getFieldWithDefault(msg, 3, "")
+    verifiedInstallerPath: jspb.Message.getFieldWithDefault(msg, 3, ""),
+    changelogTranslationsMap: (f = msg.getChangelogTranslationsMap()) ? f.toObject(includeInstance, undefined) : []
   };
 
   if (includeInstance) {
@@ -25344,6 +25345,12 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.deserializeBinaryFrom
     case 3:
       var value = /** @type {string} */ (reader.readString());
       msg.setVerifiedInstallerPath(value);
+      break;
+    case 4:
+      var value = msg.getChangelogTranslationsMap();
+      reader.readMessage(value, function(message, reader) {
+        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
+         });
       break;
     default:
       reader.skipField();
@@ -25394,6 +25401,10 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.serializeBinaryToWrit
       3,
       f
     );
+  }
+  f = message.getChangelogTranslationsMap(true);
+  if (f && f.getLength() > 0) {
+    f.serializeBinary(4, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
   }
 };
 
@@ -25468,6 +25479,28 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.clearVerifi
 proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.hasVerifiedInstallerPath = function() {
   return jspb.Message.getField(this, 3) != null;
 };
+
+
+/**
+ * map<string, string> changelog_translations = 4;
+ * @param {boolean=} opt_noLazyCreate Do not create the map if
+ * empty, instead returning `undefined`
+ * @return {!jspb.Map<string,string>}
+ */
+proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.getChangelogTranslationsMap = function(opt_noLazyCreate) {
+  return /** @type {!jspb.Map<string,string>} */ (
+      jspb.Message.getMapField(this, 4, opt_noLazyCreate,
+      null));
+};
+
+
+/**
+ * Clears values from the map. The map will be non-null.
+ * @return {!proto.mullvad_daemon.management_interface.SuggestedUpgrade} returns this
+ */
+proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.clearChangelogTranslationsMap = function() {
+  this.getChangelogTranslationsMap().clear();
+  return this;};
 
 
 

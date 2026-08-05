@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseChangelog } from '../../src/main/changelog';
+import { parseChangelog, selectChangelog } from '../../src/main/changelog';
 import { ChangelogBlock, ChangelogInline } from '../../src/shared/ipc-types';
 
 const mockPlatform = (platform: string) => {
@@ -177,5 +177,43 @@ describe('Changelog parser', () => {
   it('returns nothing for an empty changelog', () => {
     expect(parseChangelog('')).to.deep.equal([]);
     expect(parseChangelog('\n\n  \n')).to.deep.equal([]);
+  });
+});
+
+describe('Changelog language selection', () => {
+  const english = 'English notes';
+  const translations: Array<[string, string]> = [
+    ['fr', 'Notes en francais'],
+    ['ro', 'Note in romana'],
+    ['pt-BR', 'Notas brasileiras'],
+    ['pt', 'Notas portuguesas'],
+  ];
+
+  it('picks the translation matching the app language', () => {
+    expect(selectChangelog(english, translations, 'fr')).to.equal('Notes en francais');
+    expect(selectChangelog(english, translations, 'ro')).to.equal('Note in romana');
+  });
+
+  it('falls back to the base language for a regional variant', () => {
+    // The app reports locales such as `fr-FR`, and the notes are translated per
+    // language, not per region.
+    expect(selectChangelog(english, translations, 'fr-FR')).to.equal('Notes en francais');
+    expect(selectChangelog(english, translations, 'fr_FR')).to.equal('Notes en francais');
+  });
+
+  it('prefers an exact regional translation over its base language', () => {
+    expect(selectChangelog(english, translations, 'pt-BR')).to.equal('Notas brasileiras');
+    expect(selectChangelog(english, translations, 'pt-PT')).to.equal('Notas portuguesas');
+  });
+
+  it('falls back to English for an untranslated language', () => {
+    expect(selectChangelog(english, translations, 'de')).to.equal(english);
+    expect(selectChangelog(english, [], 'fr')).to.equal(english);
+  });
+
+  it('falls back to English rather than showing a blank translation', () => {
+    // A release published with an empty entry for a language must not blank the
+    // release notes for everyone running in it.
+    expect(selectChangelog(english, [['fr', '   ']], 'fr')).to.equal(english);
   });
 });

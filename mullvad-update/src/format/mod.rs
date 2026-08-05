@@ -24,8 +24,50 @@ pub use architecture::Architecture;
 
 #[cfg(test)]
 mod test {
+    use std::collections::BTreeMap;
+
     use crate::format::release::Release;
     use crate::version::rollout::Rollout;
+
+    #[test]
+    fn changelog_translations_are_optional_and_omitted_when_empty() {
+        // The signature covers the canonical JSON of `signed`, so a field that
+        // always serialized would change the bytes of every manifest that has
+        // no translations at all. It must stay absent unless populated.
+        let untranslated = serde_json::to_value(Release {
+            version: "2024.1".parse().unwrap(),
+            changelog: "notes".to_owned(),
+            changelog_translations: BTreeMap::new(),
+            installers: vec![],
+            rollout: Rollout::complete(),
+        })
+        .unwrap();
+        assert!(untranslated.get("changelog_translations").is_none());
+
+        // A manifest published before the field existed still deserializes.
+        let legacy: Release = serde_json::from_value(serde_json::json!({
+            "version": "2024.1",
+            "changelog": "notes",
+            "installers": [],
+        }))
+        .expect("a manifest without translations must still parse");
+        assert!(legacy.changelog_translations.is_empty());
+
+        let translated: Release = serde_json::from_value(serde_json::json!({
+            "version": "2024.1",
+            "changelog": "notes",
+            "changelog_translations": { "fr": "notes en francais" },
+            "installers": [],
+        }))
+        .expect("a manifest with translations must parse");
+        assert_eq!(
+            translated
+                .changelog_translations
+                .get("fr")
+                .map(String::as_str),
+            Some("notes en francais")
+        );
+    }
 
     #[test]
     fn test_default_rollout_serialize() {
@@ -33,6 +75,7 @@ mod test {
         let serialized = serde_json::to_value(Release {
             version: "2024.1".parse().unwrap(),
             changelog: "".to_owned(),
+            changelog_translations: BTreeMap::new(),
             installers: vec![],
             rollout: Rollout::complete(),
         })
@@ -52,6 +95,7 @@ mod test {
         let serialized = serde_json::to_value(Release {
             version: "2024.1".parse().unwrap(),
             changelog: "".to_owned(),
+            changelog_translations: BTreeMap::new(),
             installers: vec![],
             rollout,
         })

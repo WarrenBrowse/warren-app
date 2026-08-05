@@ -8,6 +8,7 @@ stable:
     - "https://releases.mullvad.net/desktop/releases/2025.3-beta1/MullvadVPN-2025.3-beta1_x64.exe"
   size: 106297504
   changelog: "[macos] Everything has been fixed"
+  changelog_translations: {}
   sha256:
     - 12
     - 86

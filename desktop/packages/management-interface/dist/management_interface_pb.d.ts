@@ -3223,6 +3223,9 @@ export class SuggestedUpgrade extends jspb.Message {
     getVerifiedInstallerPath(): string | undefined;
     setVerifiedInstallerPath(value: string): SuggestedUpgrade;
 
+    getChangelogTranslationsMap(): jspb.Map<string, string>;
+    clearChangelogTranslationsMap(): void;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): SuggestedUpgrade.AsObject;
     static toObject(includeInstance: boolean, msg: SuggestedUpgrade): SuggestedUpgrade.AsObject;
@@ -3238,6 +3241,8 @@ export namespace SuggestedUpgrade {
         version: string,
         changelog: string,
         verifiedInstallerPath?: string,
+
+        changelogTranslationsMap: Array<[string, string]>,
     }
 }
 

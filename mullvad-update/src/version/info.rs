@@ -31,8 +31,10 @@ pub struct Metadata {
     pub urls: Vec<String>,
     /// Size of installer, in bytes
     pub size: usize,
-    /// Version changelog
+    /// Version changelog, in English
     pub changelog: String,
+    /// Version changelog per language tag, English staying the fallback
+    pub changelog_translations: std::collections::BTreeMap<String, String>,
     /// App installer checksum
     pub sha256: [u8; 32],
 }
@@ -57,7 +59,7 @@ impl VersionInfo {
         .filter(|release| release.rollout >= params.rollout)
         // Filter out dev versions
         .filter(|release| !release.version.is_dev())
-        .flat_map(|Release { version, changelog, installers, .. }| {
+        .flat_map(|Release { version, changelog, changelog_translations, installers, .. }| {
             if installers.is_empty() && params.allow_empty {
                 // HACK: If there are no installers (e.g. on Linux), return the version anyway
                 return Some(anyhow::Ok(Metadata {
@@ -65,6 +67,7 @@ impl VersionInfo {
                     size: 0,
                     urls: vec![],
                     changelog,
+                    changelog_translations,
                     sha256: [0u8; 32],
                 }));
             }
@@ -79,6 +82,7 @@ impl VersionInfo {
                         size,
                         urls,
                         changelog,
+                        changelog_translations,
                         sha256: hex::decode(sha256)
                         .context("Invalid checksum hex")?
                         .try_into()

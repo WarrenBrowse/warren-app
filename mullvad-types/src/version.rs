@@ -42,8 +42,11 @@ impl Display for AppVersionInfo {
 pub struct SuggestedUpgrade {
     /// Version available for update
     pub version: mullvad_version::Version,
-    /// Changelog
+    /// Changelog, in English
     pub changelog: String,
+    /// Changelog per language tag, for a UI running in another language.
+    /// English (`changelog`) stays the fallback.
+    pub changelog_translations: std::collections::BTreeMap<String, String>,
     /// Path to the available installer, iff it has been verified
     pub verified_installer_path: Option<std::path::PathBuf>,
 }

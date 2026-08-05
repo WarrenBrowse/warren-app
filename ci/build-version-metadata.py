@@ -151,6 +151,28 @@ def extract_changelog(changelog_path: Path, version: str) -> str:
     return "\n".join(captured).strip()
 
 
+TRANSLATED_CHANGELOG = re.compile(r"^CHANGELOG\.([a-z]{2}(?:-[A-Za-z]{2})?)\.md$")
+
+
+def extract_changelog_translations(changelog_path: Path, version: str) -> dict[str, str]:
+    """Collect the section for `version` from every `CHANGELOG.<lang>.md` sibling.
+
+    A language whose file carries no section for this version is left out, so
+    the client falls back to the English notes rather than showing none. The
+    language tag comes from the filename, which is what the app matches its
+    locale against.
+    """
+    translations: dict[str, str] = {}
+    for sibling in sorted(changelog_path.parent.glob("CHANGELOG.*.md")):
+        match = TRANSLATED_CHANGELOG.match(sibling.name)
+        if not match:
+            continue
+        section = extract_changelog(sibling, version)
+        if section:
+            translations[match.group(1)] = section
+    return translations
+
+
 def fetch_previous(metadata_base_url: str, platform: str) -> tuple[int, list]:
     """Return (previous metadata_version, previous releases) for a platform.
 
@@ -322,8 +344,17 @@ def build_downloads(args, classified: dict) -> dict:
     return {"updated_at": args.now, "platforms": platforms}
 
 
-def build_release(version: str, changelog: str, installers: list) -> dict:
-    return {"version": version, "changelog": changelog, "installers": installers}
+def build_release(
+    version: str, changelog: str, changelog_translations: dict[str, str], installers: list
+) -> dict:
+    release = {"version": version, "changelog": changelog}
+    # Omitted when empty: the signature covers the canonical JSON of the whole
+    # `signed` object, so an always-present empty map would change the bytes of
+    # every manifest that has no translations.
+    if changelog_translations:
+        release["changelog_translations"] = changelog_translations
+    release["installers"] = installers
+    return release
 
 
 def merge_release(previous: list, new_release: dict) -> list:
@@ -343,7 +374,10 @@ def build_platform(platform: str, installers: list, args, version: str, min_vers
             r for r in prev_releases if IOS_CALENDAR_VERSION.match(str(r.get("version", "")))
         ]
     changelog = extract_changelog(Path(args.changelog), version)
-    releases = merge_release(prev_releases, build_release(version, changelog, installers))
+    changelog_translations = extract_changelog_translations(Path(args.changelog), version)
+    releases = merge_release(
+        prev_releases, build_release(version, changelog, changelog_translations, installers)
+    )
 
     response = {
         "metadata_version": prev_version + 1,

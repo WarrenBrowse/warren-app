@@ -229,6 +229,7 @@ mod tests {
                 .map(|raw| Release {
                     version: version(raw),
                     changelog: String::new(),
+                    changelog_translations: Default::default(),
                     installers: vec![],
                     rollout: Rollout::complete(),
                 })

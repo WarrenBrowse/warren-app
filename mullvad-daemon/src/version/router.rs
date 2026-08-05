@@ -573,6 +573,9 @@ async fn wait_for_update(state: &mut State) -> Option<AppVersionInfo> {
                         SuggestedUpgrade {
                             version: upgrading_to_version.version.clone(),
                             changelog: upgrading_to_version.changelog.clone(),
+                            changelog_translations: upgrading_to_version
+                                .changelog_translations
+                                .clone(),
                             verified_installer_path: Some(verified_installer_path.clone()),
                         }
                     }),
@@ -619,6 +622,7 @@ fn to_app_version_info(
             |version| SuggestedUpgrade {
                 version: version.version,
                 changelog: version.changelog,
+                changelog_translations: version.changelog_translations,
                 verified_installer_path,
             },
         ),
@@ -899,6 +903,7 @@ mod test {
                     urls: vec!["https://example.com".to_string()],
                     size: 123456,
                     changelog: "Changelog".to_string(),
+                    changelog_translations: Default::default(),
                     sha256: [0; 32],
                 },
             },
@@ -915,6 +920,7 @@ mod test {
             urls: vec!["https://example.com".to_string()],
             size: 123456,
             changelog: "Changelog".to_string(),
+            changelog_translations: Default::default(),
             sha256: [0; 32],
         };
         let mut beta = stable.clone();

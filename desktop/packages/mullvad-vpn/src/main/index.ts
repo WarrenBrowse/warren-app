@@ -57,7 +57,7 @@ import { shortenWarrenPubKey } from '../shared/utils';
 import Account, { AccountDelegate, LocaleProvider } from './account';
 import AppUpgrade from './app-upgrade';
 import { getOpenAtLogin } from './autostart';
-import { readChangelog } from './changelog';
+import { readChangelog, setChangelogLocale } from './changelog';
 import {
   CommandLineOptions,
   printCommandLineOptions,
@@ -1384,6 +1384,9 @@ class ApplicationMain
 
   private updateCurrentLocale() {
     this.locale = this.detectLocale();
+    // The update notes are translated per language too, and are resolved far
+    // from here, in the gRPC conversion layer.
+    setChangelogLocale(this.locale);
 
     log.info(`Detected locale: ${this.locale}`);
 

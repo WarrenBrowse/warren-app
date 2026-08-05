@@ -69,7 +69,7 @@ import {
   wrapConstraint,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
-import { parseChangelog } from './changelog';
+import { parseSuggestedUpgradeChangelog } from './changelog';
 
 export class ResponseParseError extends Error {
   constructor(message: string) {
@@ -1086,14 +1086,19 @@ export function convertFromAppUpgradeEvent(data: grpcTypes.AppUpgradeEvent): Dae
 
 export function convertFromAppVersionInfo(data: grpcTypes.AppVersionInfo): IAppVersionInfo {
   const { suggestedUpgrade, ...appVersionInfo } = data.toObject();
-  const changelog = suggestedUpgrade?.changelog ? parseChangelog(suggestedUpgrade?.changelog) : [];
 
   if (suggestedUpgrade) {
+    // The per-language notes are resolved here and never forwarded: the
+    // renderer only ever receives the blocks it has to draw.
+    const { changelogTranslationsMap, ...upgrade } = suggestedUpgrade;
     return {
       ...appVersionInfo,
       suggestedUpgrade: {
-        ...suggestedUpgrade,
-        changelog,
+        ...upgrade,
+        changelog: parseSuggestedUpgradeChangelog(
+          suggestedUpgrade.changelog,
+          changelogTranslationsMap,
+        ),
       },
     };
   }
