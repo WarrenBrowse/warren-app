@@ -119,10 +119,13 @@ mod v6_unreachable_noop {
     pub struct Ipv6UnreachableGuard;
 
     impl Ipv6UnreachableGuard {
+        // Async only to match the macOS guard, which shells out to `route`.
+        #[expect(clippy::unused_async, reason = "keeps the facade OS-agnostic")]
         pub async fn install() -> anyhow::Result<Self> {
             Ok(Self)
         }
 
+        #[expect(clippy::unused_async, reason = "keeps the facade OS-agnostic")]
         pub async fn uninstall(self) -> anyhow::Result<()> {
             Ok(())
         }
