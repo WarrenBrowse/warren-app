@@ -24,6 +24,15 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.1] - 2026-08-05
+### Changed
+- Refine the connect screen artwork: a new Bula pose, off-centre framing and a retuned ground
+  line.
+
+### Fixed
+- [Android] Install a patch release over the version it patches. A patch release carried the same
+  internal version number as the release it followed, and the system refused it as an update.
+
 ## [1.1.0] - 2026-08-05
 ### Added
 - Show the release notes of an available update in the language the app runs in, when the release

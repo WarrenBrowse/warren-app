@@ -14,6 +14,16 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.1] - 2026-08-05
+### Modificat
+- Rafinarea ilustrației din ecranul de conectare: o nouă poziție a lui Bula, încadrare
+  descentrată și o linie a solului ajustată.
+
+### Reparat
+- [Android] Instalarea unei versiuni corective peste cea pe care o corectează. O versiune
+  corectivă avea același număr intern de versiune ca precedenta, iar sistemul o refuza ca
+  actualizare.
+
 ## [1.1.0] - 2026-08-05
 ### Adăugat
 - Afișarea notelor de versiune ale unei actualizări în limba aplicației, atunci
