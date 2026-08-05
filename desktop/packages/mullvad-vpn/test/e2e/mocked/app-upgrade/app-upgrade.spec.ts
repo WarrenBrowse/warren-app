@@ -4,6 +4,7 @@ import { Page } from 'playwright';
 import { RoutePath } from '../../../../src/shared/routes';
 import { MockedTestUtils, startMockedApp } from '../mocked-utils';
 import {
+  changelogItemTexts,
   createAppUpgradeEventIpcHelper,
   createHelpers,
   createSelectors,
@@ -77,11 +78,11 @@ test.describe('App upgrade', () => {
     test('Should display new version changelog', async () => {
       const changelogList = page.getByRole('list');
       const changelogListText = await changelogList.textContent();
-      expect(changelogListText).toEqual(mockData.changelog.join(''));
+      expect(changelogListText).toEqual(changelogItemTexts.join(''));
 
       const changelogListItems = page.getByRole('listitem');
       const changelogListItemsCount = await changelogListItems.count();
-      expect(changelogListItemsCount).toBe(mockData.changelog.length);
+      expect(changelogListItemsCount).toBe(changelogItemTexts.length);
     });
   });
 

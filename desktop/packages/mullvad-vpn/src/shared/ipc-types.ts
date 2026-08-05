@@ -53,7 +53,27 @@ export type ScrollToAnchorOption = {
 
 export type LocationStateOptions = ScrollToAnchorOption;
 
-export type IChangelog = Array<string>;
+/**
+ * A run of inline text inside a changelog block. The parser resolves Markdown
+ * emphasis in the main process so the renderer never interprets markup, which
+ * keeps the release notes off any HTML-injection path.
+ */
+export type ChangelogInline =
+  | { type: 'text'; value: string }
+  | { type: 'strong'; value: string }
+  | { type: 'code'; value: string }
+  | { type: 'link'; value: string; href: string };
+
+export type ChangelogBlock =
+  | { type: 'heading'; level: number; content: ChangelogInline[] }
+  | { type: 'paragraph'; content: ChangelogInline[] }
+  | { type: 'list'; items: ChangelogInline[][] };
+
+/**
+ * Parsed release notes. Still an array, so the "is there anything to show"
+ * checks that gate the changelog views keep working unchanged.
+ */
+export type IChangelog = Array<ChangelogBlock>;
 
 export interface LocationState {
   scrollPosition: [number, number];

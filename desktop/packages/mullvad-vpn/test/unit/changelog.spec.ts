@@ -1,22 +1,18 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { parseChangelog } from '../../src/main/changelog';
-
-// It should be handled the same no matter if the platforms are split with a space or not.
-const changelogItems = [
-  'Changelog item 1',
-  '[Windows] Changelog item 2',
-  '[macOS] Changelog item 3',
-  '[linux] Changelog item 4',
-  '[Windows, macOS] Changelog item 5',
-  '[Windows,linux] Changelog item 6',
-  '[Windows, macOS,linux] Changelog item 7',
-];
-
-const changelogString = changelogItems.join('\n');
+import { ChangelogBlock, ChangelogInline } from '../../src/shared/ipc-types';
 
 const mockPlatform = (platform: string) => {
   Object.defineProperty(process, 'platform', { value: platform });
+};
+
+/** Flattens a block's inline runs back to plain text, for assertions. */
+const text = (content: ChangelogInline[]): string => content.map((inline) => inline.value).join('');
+
+const listItems = (block: ChangelogBlock): string[] => {
+  if (block.type !== 'list') throw new Error(`expected a list block, got ${block.type}`);
+  return block.items.map(text);
 };
 
 describe('Changelog parser', () => {
@@ -26,40 +22,160 @@ describe('Changelog parser', () => {
     mockPlatform(platform);
   });
 
-  it('should show Windows items', () => {
-    mockPlatform('win32');
+  describe('platform filtering', () => {
+    // The same item set, tagged for different platforms. A tag may be written
+    // with or without a space after the comma.
+    const tagged = [
+      '- Changelog item 1',
+      '- [Windows] Changelog item 2',
+      '- [macOS] Changelog item 3',
+      '- [linux] Changelog item 4',
+      '- [Windows, macOS] Changelog item 5',
+      '- [Windows,linux] Changelog item 6',
+      '- [Windows, macOS,linux] Changelog item 7',
+    ].join('\n');
 
-    const changelog = parseChangelog(changelogString);
+    it('keeps untagged items and Windows ones on Windows', () => {
+      mockPlatform('win32');
 
-    expect(changelog).to.have.length(5);
-    expect(changelogItems[0].endsWith(changelog[0])).to.be.true;
-    expect(changelogItems[1].endsWith(changelog[1])).to.be.true;
-    expect(changelogItems[4].endsWith(changelog[2])).to.be.true;
-    expect(changelogItems[5].endsWith(changelog[3])).to.be.true;
-    expect(changelogItems[6].endsWith(changelog[4])).to.be.true;
+      const [list] = parseChangelog(tagged);
+
+      expect(listItems(list)).to.deep.equal([
+        'Changelog item 1',
+        'Changelog item 2',
+        'Changelog item 5',
+        'Changelog item 6',
+        'Changelog item 7',
+      ]);
+    });
+
+    it('keeps untagged items and macOS ones on macOS', () => {
+      mockPlatform('darwin');
+
+      const [list] = parseChangelog(tagged);
+
+      expect(listItems(list)).to.deep.equal([
+        'Changelog item 1',
+        'Changelog item 3',
+        'Changelog item 5',
+        'Changelog item 7',
+      ]);
+    });
+
+    it('keeps untagged items and Linux ones on Linux', () => {
+      mockPlatform('linux');
+
+      const [list] = parseChangelog(tagged);
+
+      expect(listItems(list)).to.deep.equal([
+        'Changelog item 1',
+        'Changelog item 4',
+        'Changelog item 6',
+        'Changelog item 7',
+      ]);
+    });
+
+    it('drops a list block whose every item was filtered out', () => {
+      mockPlatform('darwin');
+
+      expect(parseChangelog('- [Windows] Only for Windows')).to.deep.equal([]);
+    });
   });
 
-  it('should show macOS items', () => {
-    mockPlatform('darwin');
+  describe('Markdown structure', () => {
+    it('reads a heading as a heading block, not as a bullet', () => {
+      // The regression this parser exists for: the release notes served in the
+      // update manifest are Markdown, and the previous line-splitting parser
+      // rendered '### Added' verbatim as a bullet.
+      const [block] = parseChangelog('### Added');
 
-    const changelog = parseChangelog(changelogString);
+      expect(block).to.deep.equal({
+        type: 'heading',
+        level: 3,
+        content: [{ type: 'text', value: 'Added' }],
+      });
+    });
 
-    expect(changelog).to.have.length(4);
-    expect(changelogItems[0].endsWith(changelog[0])).to.be.true;
-    expect(changelogItems[2].endsWith(changelog[1])).to.be.true;
-    expect(changelogItems[4].endsWith(changelog[2])).to.be.true;
-    expect(changelogItems[6].endsWith(changelog[3])).to.be.true;
+    it('joins a bullet wrapped over several lines into one item', () => {
+      // CHANGELOG.md is hard-wrapped at 100 columns, so nearly every entry
+      // spans several lines. Splitting on newlines turned each continuation
+      // into its own bullet.
+      const [list] = parseChangelog(
+        ['- Tunnel all traffic through a QUIC transport,', '  with a TCP fallback carrier.'].join(
+          '\n',
+        ),
+      );
+
+      expect(listItems(list)).to.deep.equal([
+        'Tunnel all traffic through a QUIC transport, with a TCP fallback carrier.',
+      ]);
+    });
+
+    it('groups consecutive bullets into a single list block', () => {
+      const blocks = parseChangelog(['- First', '- Second', '- Third'].join('\n'));
+
+      expect(blocks).to.have.length(1);
+      expect(listItems(blocks[0])).to.have.length(3);
+    });
+
+    it('starts a new list after a heading', () => {
+      const blocks = parseChangelog(['### Added', '- One', '', '### Fixed', '- Two'].join('\n'));
+
+      expect(blocks.map((block) => block.type)).to.deep.equal([
+        'heading',
+        'list',
+        'heading',
+        'list',
+      ]);
+    });
+
+    it('reads free text as a paragraph', () => {
+      const [block] = parseChangelog('First public beta release.');
+
+      expect(block.type).to.equal('paragraph');
+      expect(block.type === 'paragraph' && text(block.content)).to.equal(
+        'First public beta release.',
+      );
+    });
+
+    it('keeps a blank line as a paragraph boundary', () => {
+      const blocks = parseChangelog(['First sentence.', '', 'Second sentence.'].join('\n'));
+
+      expect(blocks).to.have.length(2);
+      expect(blocks.every((block) => block.type === 'paragraph')).to.be.true;
+    });
   });
 
-  it('should show Linux items', () => {
-    mockPlatform('linux');
+  describe('inline formatting', () => {
+    it('reads bold, code and links as their own runs', () => {
+      const [list] = parseChangelog('- Use **bold**, `code` and [a link](https://example.com).');
 
-    const changelog = parseChangelog(changelogString);
+      if (list.type !== 'list') throw new Error('expected a list');
+      expect(list.items[0]).to.deep.equal([
+        { type: 'text', value: 'Use ' },
+        { type: 'strong', value: 'bold' },
+        { type: 'text', value: ', ' },
+        { type: 'code', value: 'code' },
+        { type: 'text', value: ' and ' },
+        { type: 'link', value: 'a link', href: 'https://example.com' },
+        { type: 'text', value: '.' },
+      ]);
+    });
 
-    expect(changelog).to.have.length(4);
-    expect(changelogItems[0].endsWith(changelog[0])).to.be.true;
-    expect(changelogItems[3].endsWith(changelog[1])).to.be.true;
-    expect(changelogItems[5].endsWith(changelog[2])).to.be.true;
-    expect(changelogItems[6].endsWith(changelog[3])).to.be.true;
+    it('leaves a link with a non-http target as plain text', () => {
+      // The renderer turns a link run into an anchor handed to the OS browser,
+      // so only http(s) may become one. CHANGELOG.md carries relative doc
+      // paths that must never become clickable.
+      const [list] = parseChangelog('- See [the docs](docs/relay-selector.md).');
+
+      if (list.type !== 'list') throw new Error('expected a list');
+      expect(list.items[0].some((inline) => inline.type === 'link')).to.be.false;
+      expect(text(list.items[0])).to.equal('See the docs.');
+    });
+  });
+
+  it('returns nothing for an empty changelog', () => {
+    expect(parseChangelog('')).to.deep.equal([]);
+    expect(parseChangelog('\n\n  \n')).to.deep.equal([]);
   });
 });

@@ -1,4 +1,7 @@
 First public beta release.
-Connect through a QUIC tunnel that looks like ordinary HTTPS traffic, with a TCP fallback where UDP is blocked.
-Keep your identity to yourself: a recovery phrase on your device replaces accounts, emails and passwords.
-Block ads, trackers and malware per category, resolved on the exit with no query log.
+
+- Connect through a QUIC tunnel that looks like ordinary HTTPS traffic, with a TCP fallback where
+  UDP is blocked.
+- Keep your identity to yourself: a recovery phrase on your device replaces accounts, emails and
+  passwords.
+- Block ads, trackers and malware per category, resolved on the exit with no query log.

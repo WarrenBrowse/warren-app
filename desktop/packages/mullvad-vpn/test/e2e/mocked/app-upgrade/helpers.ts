@@ -82,8 +82,19 @@ export const createSelectors = (page: Page) => ({
     }),
 });
 
+export const changelogItemTexts = [
+  'This is a changelog.',
+  'Each item is on a separate line.',
+  'There are three items.',
+];
+
 export const mockData = {
-  changelog: ['This is a changelog.', 'Each item is on a separate line.', 'There are three items.'],
+  changelog: [
+    {
+      type: 'list' as const,
+      items: changelogItemTexts.map((value) => [{ type: 'text' as const, value }]),
+    },
+  ],
   verifiedInstallerPath: '/tmp/dummy-path',
   version: '2100.1',
 };

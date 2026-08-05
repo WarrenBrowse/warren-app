@@ -101,7 +101,7 @@ test.describe('App upgrade notifications', () => {
       supported: true,
       suggestedIsBeta: false,
       suggestedUpgrade: {
-        changelog: [''],
+        changelog: [],
         version: '2025.11',
       },
     });
