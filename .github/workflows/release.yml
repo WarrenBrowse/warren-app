@@ -176,7 +176,10 @@ jobs:
     name: Build macOS DMG/PKG
     needs: [tag-guard, tests]
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 60
+    # The universal build compiles the Rust workspace twice (the native aarch64
+    # slice, then x86_64), and the second slice has no warm cache on a runner
+    # that has only ever built the native one.
+    timeout-minutes: 120
     env:
       WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
       WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
@@ -204,15 +207,23 @@ jobs:
           printf '%s' "$WARREN_CSC_LINK_MACOS_B64" | base64 -d > "$tmp"
           echo "WARREN_CSC_LINK_MACOS=$tmp" >> "$GITHUB_ENV"
 
+      # `--universal` is what makes the shipped pkg installable on Intel Macs.
+      # Without it the runner (Apple Silicon) produces an arm64-only payload,
+      # whose Distribution then carries hostArchitectures="arm64" and makes
+      # Installer refuse every Intel Mac with "cannot be installed on this
+      # computer". The name the asset is staged under, the update manifest that
+      # serves it for x86 and the website all say universal, so the build is the
+      # part that has to agree. `x86_64-apple-darwin` is installed for this by
+      # the build-env action.
       - name: Build (signed + notarized)
         if: env.WARREN_CHANNEL == 'prod' && env.WARREN_CSC_LINK_MACOS != ''
-        run: bash ci/build-with-retry.sh --optimize --sign --notarize
+        run: bash ci/build-with-retry.sh --optimize --universal --sign --notarize
 
       - name: Build (unsigned, signing assets missing)
         if: env.WARREN_CHANNEL == 'prod' && env.WARREN_CSC_LINK_MACOS == ''
         run: |
           echo "::warning::WARREN_CSC_LINK_MACOS secret not set; producing unsigned dev build."
-          bash ci/build-with-retry.sh --optimize
+          bash ci/build-with-retry.sh --optimize --universal
 
       - name: Stage release assets (harmonized names)
         if: env.WARREN_CHANNEL == 'prod'
@@ -226,13 +237,13 @@ jobs:
         if: env.WARREN_CHANNEL == 'beta' && env.WARREN_CSC_LINK_MACOS != ''
         env:
           WARREN_PRODUCT_ENV: beta
-        run: bash ci/build-with-retry.sh --optimize --sign --notarize
+        run: bash ci/build-with-retry.sh --optimize --universal --sign --notarize
 
       - name: Build beta (unsigned, signing assets missing)
         if: env.WARREN_CHANNEL == 'beta' && env.WARREN_CSC_LINK_MACOS == ''
         env:
           WARREN_PRODUCT_ENV: beta
-        run: bash ci/build-with-retry.sh --optimize
+        run: bash ci/build-with-retry.sh --optimize --universal
 
       - name: Stage beta release assets
         if: env.WARREN_CHANNEL == 'beta'
