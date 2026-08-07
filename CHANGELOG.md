@@ -24,6 +24,13 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.3] - 2026-08-08
+### Fixed
+- [macOS] Install on Intel Macs. The macOS package was built for Apple Silicon only while being
+  published as universal, so Installer refused it on every Intel Mac with "Warren VPN Beta cannot
+  be installed on this computer", whatever the macOS version.
+
+
 ## [1.1.2] - 2026-08-05
 ### Fixed
 - [macOS] Reach the Warren API again while the tunnel is up. Since 1.1.0 the app could not check

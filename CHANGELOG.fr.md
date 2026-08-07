@@ -15,6 +15,14 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.3] - 2026-08-08
+### Corrigé
+- [macOS] L'installation est possible sur les Mac Intel. Le paquet macOS était compilé pour Apple
+  Silicon uniquement tout en étant publié comme universel, si bien que le programme d'installation
+  le refusait sur tout Mac Intel avec « Warren VPN Beta ne peut pas être installé sur cet
+  ordinateur », quelle que soit la version de macOS.
+
+
 ## [1.1.2] - 2026-08-05
 ### Corrigé
 - [macOS] L'application joint à nouveau l'API Warren pendant que le tunnel est actif. Depuis la
