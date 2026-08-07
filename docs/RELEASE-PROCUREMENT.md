@@ -9,11 +9,76 @@ Without these credentials the CI still builds unsigned artifacts (skip-if-no-sec
 | Item | Cost | Recurrence |
 |------|------|------------|
 | Apple Developer Program (macOS notarization + iOS TestFlight) | 99 USD | annual |
-| Windows OV code-signing certificate | ~280 EUR | annual (SSL.com, DigiCert, Sectigo) |
+| Windows Authenticode certificate (IV individual or OV org, cloud-signing) | ~200-280 EUR | annual (Sectigo, SSL.com, Certum) |
 | Google Play Console developer account | 25 USD | one-time |
 | Hetzner production servers (warren-exit-1 + warren-backend-api) | already provisioned | monthly |
 
 Cost considered for the first year, baseline beta launch: **~400-500 EUR**.
+
+## No company yet: what is actually reachable today
+
+State on 2026-08-07: **no signing secret exists on `WarrenBrowse/warren-app`**
+(`gh secret list` shows only the engine, core-read and update-publishing ones), so
+every desktop installer the beta ships is unsigned. `pkgutil --check-signature` on
+the published `WarrenVPN-Beta-1.1.2-macos-universal.pkg` answers `no signature`.
+That is not only cosmetic on Windows: Smart App Control refuses to load an
+unsigned DLL, so `warren-daemon.exe --register-service` fails and the NSIS
+installer stops on "Failed to install Warren VPN Beta service".
+
+The two platforms are NOT symmetric on what an entity buys you.
+
+- **macOS needs no company.** The Apple Developer Program enrolls a natural
+  person (Individual, 99 USD/year, no D-U-N-S, approval in about 24-48 h) and an
+  Individual account issues **Developer ID Application** and **Developer ID
+  Installer** certificates plus notarization, which is the whole macOS story. The
+  certificate carries the person's legal name instead of a company name; that is
+  the only difference the user sees. Nothing else about `docs/macos-signing.md`
+  changes.
+- **Windows has no free lane.** Azure Trusted Signing (renamed Azure Artifact
+  Signing) is closed to us twice over: Public Trust for *individual* developers
+  requires the developer to be located in the US or Canada, and the
+  *organization* path requires roughly three years of verifiable operating
+  history, which a freshly registered warrenBrowse SRL will not have. Both are
+  Microsoft's own documented rules, so the workflow's Trusted Signing path stays
+  wired and unusable for now.
+
+So Windows means a classic Authenticode certificate from a CA in the Microsoft
+Trusted Root Program. Since 2023-06-01 the private key must live on certified
+hardware, so CI signs through the CA's cloud service (SSL.com eSigner, Certum
+SimplySign, DigiCert KeyLocker) rather than from a `.pfx`.
+
+| option | who it is issued to | rough price | what it fixes |
+|---|---|---|---|
+| Sectigo / SSL.com **IV** (Individual Validation) | a natural person, ID check | ~200-280 EUR/year | Smart App Control blocks, "unknown publisher" |
+| Certum **Open Source Code Signing** | a natural person, publisher shown as "Open Source Developer" | ~100-190 EUR/year | same, cheaper, needs the project to be verifiably open source |
+| Sectigo / SSL.com **OV** | the company, once it exists | ~270-280 EUR/year | same, publisher shows the company |
+| any **EV** | the company | ~600-1000 EUR/year | the above plus instant SmartScreen reputation |
+
+Two facts decide this table:
+
+- **Smart App Control accepts any RSA signature from a CA in the Trusted Root
+  Program.** EV is not required, which is what makes the cheap individual
+  certificate worth buying: it turns a hard install failure into, at worst, a
+  dismissable SmartScreen screen. Note the constraint in Microsoft's own page:
+  SAC does not evaluate ECC signatures, so the certificate must be RSA.
+- **SmartScreen reputation is per certificate and accrues with downloads.** Only
+  EV grants it on day one. An IV or OV certificate still shows "Windows protected
+  your PC" at first, which the user can click past.
+
+Certum's open-source product is the cheapest lane but it verifies the project is
+published under an open licence. warren-app is GPL-3.0 and warrenguard AGPL-3.0,
+yet both repositories are private until launch, so eligibility has to be
+confirmed with Certum before counting on it.
+
+Since 2026-03-01 no publicly trusted code-signing certificate may be issued for
+more than 458 days, so a multi-year purchase means scheduled reissues, not one
+long certificate.
+
+Recommended order, given a beta that is live and blocking real testers: enroll
+Apple as an Individual first (it is the only fully closing fix and the fastest),
+then buy one Windows IV certificate with cloud signing. Waiting for the SRL buys
+nothing on Windows, because Trusted Signing stays out of reach for three years
+after incorporation either way.
 
 ## Linux: no signing required
 
@@ -21,7 +86,10 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
 
 ## macOS: Apple Developer Program
 
-1. Subscribe to https://developer.apple.com/programs/ as an organization (warrenBrowse SRL or holcommOn SAS). Cost: 99 USD/year.
+1. Subscribe to https://developer.apple.com/programs/. Cost: 99 USD/year. Enroll as
+   an **Individual** while no company exists (no D-U-N-S, approval in about 24-48 h,
+   Developer ID and notarization included); switch to Organization later if the
+   published publisher name has to read warrenBrowse SRL rather than a person.
 2. Once enrolled, generate two signing keys and certificates following `docs/macos-signing.md`:
     - "Developer ID Application" `.p12`
     - "Developer ID Installer" `.p12`
@@ -48,13 +116,17 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
 
 ## Windows: Authenticode OV (or EV) certificate
 
-> **Superseded.** Since 2023-06-01 CAs no longer deliver OV/EV certificates as a downloadable
-> `.pfx` (keys must live on FIPS hardware). The release workflow signs via **Azure Trusted
-> Signing** (`WARREN_WIN_SIGN_BACKEND=trusted-signing`, see
-> `signing-accounts-agent-runbook.md` § 3); the `WARREN_CSC_LINK_WIN` path below remains only as
-> a legacy fallback for a pre-existing `.pfx`.
+> **Read "No company yet" above first.** Since 2023-06-01 CAs no longer deliver OV/EV
+> certificates as a downloadable `.pfx` (keys must live on certified hardware), so the release
+> workflow was migrated to **Azure Trusted Signing**
+> (`WARREN_WIN_SIGN_BACKEND=trusted-signing`, see `signing-accounts-agent-runbook.md` § 3).
+> That path is currently unreachable for us (US/Canada only for individuals, three years of
+> operating history for organizations), so the realistic route is a CA certificate signed
+> through that CA's cloud service. The `WARREN_CSC_LINK_WIN` path below assumes a downloadable
+> `.pfx` and only applies to a pre-existing one.
 
-1. Purchase an OV (Organization Validation) code-signing certificate from a recognized CA. Recommended vendors:
+1. Purchase a code-signing certificate from a recognized CA: **IV** (Individual Validation) while
+   there is no company, **OV** (Organization Validation) once there is one. Recommended vendors:
     - SSL.com (~280 EUR/year, fast OV validation)
     - DigiCert (~430 USD/year)
     - Sectigo (~270 EUR/year)
