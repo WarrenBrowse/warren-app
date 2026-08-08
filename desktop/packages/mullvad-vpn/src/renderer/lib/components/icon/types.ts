@@ -29,6 +29,7 @@ export const icons = {
   hide: 'icon-hide',
   'history-remove': 'icon-history-remove',
   'info-circle': 'icon-info-circle',
+  'lifebuoy-outline': 'icon-lifebuoy-outline',
   'message-outline': 'icon-message-outline',
   'more-horizontal-circle': 'icon-more-horizontal-circle',
   'more-horizontal': 'icon-more-horizontal',

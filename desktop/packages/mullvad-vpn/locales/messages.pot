@@ -332,6 +332,13 @@ msgctxt "accessibility"
 msgid "Collapse %(location)s"
 msgstr ""
 
+#. Accessible name of the header button that opens the
+#. community forum, shown before the user has a forum
+#. account.
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr ""
+
 #. Accessibility label for a button that connects to a location.
 #. Available placeholders:
 #. %(location)s - The name of the location that will be connected to when the button is clicked.

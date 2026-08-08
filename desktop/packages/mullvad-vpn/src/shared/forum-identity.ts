@@ -60,7 +60,7 @@ export function parseForumIdentity(blob: string): ForumIdentity | undefined {
 }
 
 /**
- * Whether the app shows forum activity at all: the header bell, the desktop
+ * Whether the app shows forum ACTIVITY at all: the header bell, the desktop
  * banner and the mark on the tray icon alike.
  *
  * One rule for the three, so none of them can be left behind the others.
@@ -68,9 +68,32 @@ export function parseForumIdentity(blob: string): ForumIdentity | undefined {
  * the activity the user just asked not to be shown, and a bell shown to a
  * wallet with no forum account would invite a click into a login flow nobody
  * asked for.
+ *
+ * What the header puts in the bell's place for that accountless wallet is
+ * `forumHeaderButton`, below. The tray and the banner have no equivalent:
+ * they report activity, and there is none to report without an account.
  */
 export function showsForumActivity(hasAccount: boolean, enabled: boolean): boolean {
   return hasAccount && enabled;
+}
+
+/** What the header's forum slot carries: the bell, the lifebuoy, or nothing. */
+export type ForumHeaderButton = 'activity' | 'community' | 'none';
+
+/**
+ * Which button the header's forum slot shows.
+ *
+ * A wallet with no forum account gets a lifebuoy straight to the forum rather
+ * than an empty slot: the bell would be inert for them, but the forum is the
+ * one thing they might actually want, and it is where an account comes from.
+ * The setting still governs the whole slot, lifebuoy included, so a user who
+ * turned the forum off gets no forum in their header either.
+ */
+export function forumHeaderButton(hasAccount: boolean, enabled: boolean): ForumHeaderButton {
+  if (!enabled) {
+    return 'none';
+  }
+  return hasAccount ? 'activity' : 'community';
 }
 
 /** True for a value usable as a digest slot index. */

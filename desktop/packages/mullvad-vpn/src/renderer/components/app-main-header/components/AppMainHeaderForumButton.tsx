@@ -1,11 +1,13 @@
 import { useCallback } from 'react';
 import styled from 'styled-components';
 
+import { urls } from '../../../../shared/constants';
 import { UNREAD_SATURATED } from '../../../../shared/forum-identity';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
+import { useAppContext } from '../../../context';
 import { IconButton, IconButtonProps, MainHeader } from '../../../lib/components';
-import { useForumUnreadCount, useShowsForumActivity } from '../../../lib/forum-activity';
+import { useForumHeaderButton, useForumUnreadCount } from '../../../lib/forum-activity';
 import { colors, spacings } from '../../../lib/foundations';
 import { TransitionType, useHistory } from '../../../lib/history';
 
@@ -39,23 +41,49 @@ const StyledDiv = styled.div`
 `;
 
 /**
- * Forum activity bell. Rendered only for a wallet that has signed in to the
- * forum at least once, and only while forum notifications are on: there is
- * no badge to show anyone else, and a bell left behind the setting would
- * keep offering the activity the user just asked not to be shown.
+ * The header's forum slot, which carries one of two buttons or none at all
+ * (see `forumHeaderButton`).
+ *
+ * With a forum account, the activity bell and its unread badge, opening the
+ * activity panel. Without one, a lifebuoy opening the forum itself in the
+ * browser: the bell would be inert for a wallet that has never signed in,
+ * while the forum is where help and an account both come from. Forum
+ * notifications off removes the slot entirely, lifebuoy included.
  */
 export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
   const history = useHistory();
-  const shown = useShowsForumActivity();
+  const button = useForumHeaderButton();
   const unread = useForumUnreadCount();
+  const { openUrl } = useAppContext();
 
   const openForumActivity = useCallback(
     () => history.push(RoutePath.forumActivity, { transition: TransitionType.show }),
     [history],
   );
+  const openForum = useCallback(() => openUrl(urls.forum), [openUrl]);
 
-  if (!shown) {
+  if (button === 'none') {
     return null;
+  }
+
+  if (button === 'community') {
+    return (
+      <MainHeader.IconButton
+        onClick={openForum}
+        data-testid="forum-community-button"
+        aria-label={
+          // TRANSLATORS: Accessible name of the header button that opens the
+          // TRANSLATORS: community forum, shown before the user has a forum
+          // TRANSLATORS: account.
+          messages.pgettext('accessibility', 'Community forum')
+        }
+        aria-description={messages.pgettext('accessibility', 'Opens externally')}
+        {...props}>
+        {/* Same outline weight as the bell it stands in for, so the header
+            keeps one stroke across its three buttons. */}
+        <IconButton.Icon icon="lifebuoy-outline" />
+      </MainHeader.IconButton>
+    );
   }
 
   const label =

@@ -23,6 +23,9 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- Offer a way into the community forum from the app header before you have a forum account. The
+  slot that later holds the activity bell now shows a lifebuoy that opens the forum. Once you sign
+  in there, it becomes the bell. Turning forum notifications off removes both.
 - Publish Warren VPN for 64-bit ARM Linux. The `.deb`, `.rpm` and Arch packages now come in an
   arm64 build alongside the x86_64 one, so a Raspberry Pi 4 or 5, an ARM laptop or an ARM cloud
   instance installs the app directly instead of having nothing to download.

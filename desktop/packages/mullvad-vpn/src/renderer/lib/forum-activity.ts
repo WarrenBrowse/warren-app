@@ -1,4 +1,8 @@
-import { showsForumActivity } from '../../shared/forum-identity';
+import {
+  ForumHeaderButton,
+  forumHeaderButton,
+  showsForumActivity,
+} from '../../shared/forum-identity';
 import { useSelector } from '../redux/store';
 
 // The forum activity badge.
@@ -24,8 +28,22 @@ export function useHasForumAccount(): boolean {
  */
 export function useShowsForumActivity(): boolean {
   const hasAccount = useHasForumAccount();
-  const enabled = useSelector((state) => state.settings.guiSettings.forumNotifications ?? true);
-  return showsForumActivity(hasAccount, enabled);
+  return showsForumActivity(hasAccount, useForumNotificationsEnabled());
+}
+
+/**
+ * Which button the header's forum slot carries: the activity bell, the
+ * lifebuoy into the forum, or nothing. Only the header has three states; the
+ * tray and the banner report activity, so they keep `useShowsForumActivity`.
+ */
+export function useForumHeaderButton(): ForumHeaderButton {
+  const hasAccount = useHasForumAccount();
+  return forumHeaderButton(hasAccount, useForumNotificationsEnabled());
+}
+
+/** The setting, defaulting to on for an installation that never touched it. */
+function useForumNotificationsEnabled(): boolean {
+  return useSelector((state) => state.settings.guiSettings.forumNotifications ?? true);
 }
 
 /**
