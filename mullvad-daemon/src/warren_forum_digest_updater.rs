@@ -27,18 +27,23 @@ use crate::warren_artifact_refresh::{
     FETCH_TIMEOUT, FetchResponse, TransportRetryBackoff, conditional_get, now_unix, split_pins,
 };
 
-/// How often the digest is re-fetched. Matches the notices cadence: this
-/// is how long a reply takes to raise a badge, and how long a badge the
-/// user has cleared takes to drop. The request is a conditional GET, so a
-/// quiet forum costs one header round trip.
-const CHECK_INTERVAL: Duration = Duration::from_secs(5 * 60);
+/// How often the digest is re-fetched: how long a reply takes to raise a
+/// badge, and how long a badge cleared elsewhere takes to drop here.
+///
+/// Shorter than the notices cadence it used to share, because this one
+/// carries a number the user checks against the forum and expects to
+/// agree. The cost is bounded by design: the request is a conditional GET
+/// on a document identical for every client, so a quiet forum answers it
+/// with a 304 and a few hundred bytes. Anything the user does in the app
+/// itself corrects the count immediately without waiting for this at all.
+const CHECK_INTERVAL: Duration = Duration::from_secs(60);
 
 /// Fast retry window after a transport failure, so a client that just
 /// woke or just regained a network does not sit a full interval with a
 /// badge it can no longer justify.
 const RETRY_MIN: Duration = Duration::from_secs(20);
 /// Ceiling for the fast retry, kept under [`CHECK_INTERVAL`].
-const RETRY_MAX: Duration = Duration::from_secs(240);
+const RETRY_MAX: Duration = Duration::from_secs(45);
 
 /// The periodic forum-digest task.
 pub struct WarrenForumDigestUpdater {
