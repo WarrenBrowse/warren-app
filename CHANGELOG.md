@@ -30,6 +30,26 @@ Line wrap the file at 100 chars.                                              Th
   install script works on an ARM machine.
 
 
+## [1.1.8] - 2026-08-08
+### Added
+- Mark every forum notification as read, from a button at the top of the forum panel. It marks them
+  read on the forum too, so its own counter follows.
+
+### Changed
+- Close the forum panel and return to the main view when you open a notification, instead of
+  leaving the list behind the browser.
+- Leave badge awards out of the forum panel and out of its count. They were the most common
+  notification and the only one nobody sends you.
+- Update the forum count the moment you act on it, instead of when the app next checks. Opening the
+  panel, opening a notification, or marking everything read now moves the bell and the dot at once.
+- Check for new forum activity every minute instead of every five, so something read elsewhere
+  stops showing here sooner.
+
+### Fixed
+- Count unread forum notifications exactly as the forum does, including dropping the ones whose
+  topic has since been deleted.
+
+
 ## [1.1.7] - 2026-08-08
 ### Added
 - Tell you when something new happens to you on the community forum, with a desktop notification
