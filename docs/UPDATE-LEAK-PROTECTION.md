@@ -124,30 +124,58 @@ rules). Android already ships an `ACTION_MY_PACKAGE_REPLACED` receiver
 
 ## Plan
 
-Five lots. Lot 1 is independent and ships first. Lots 2 to 4 are the leak
-protection proper and share one primitive. Lot 5 is mobile.
+Six lots. Lot 0 comes first because without it the next occurrence cannot be
+diagnosed. Lot 1 is independent of the rest. Lots 2 to 4 are the leak protection
+proper and share one primitive. Lot 5 is mobile.
 
-### Lot 1: an update that succeeds must not block the host (G1)
+### Lot 0: be able to see the failure at all
 
-The fix for the recorded incident, in two parts.
+Two defects found while diagnosing the 2026-08-08 second occurrence, both of
+which make every later lot harder to validate.
 
-- **Seed the circuit before the boot connect.** `Daemon::start` spawns the
-  multi-hop updater and `run()` immediately dispatches the boot `Connect`, with
-  no barrier between them. Extract the cold-start seed (already a pure
-  verify-then-select over the on-disk signed directory) and run it synchronously
-  in `Daemon::start`, populating `ParametersGenerator.warren_multi_hop` before
-  `run()` can dial. Nothing about the verification changes; the work simply moves
-  ahead of the race.
-- **Give `Error(StartTunnelError)` a bounded recovery.** `handle_tunnel_state_transition`
-  already schedules a reconnect for `AuthFailed`
-  (`mullvad-daemon/src/lib.rs:2375`). Add a bounded equivalent for a blocking
-  start failure, so a daemon parked with a circuit it did not have at dial time
-  retries instead of waiting for a human. Bounded on purpose:
-  `StartTunnelError` also covers failures no retry can fix, and an unbounded
-  loop there is the defect `2026-08-03` had to pace afterwards.
+- **Preserve the post-update daemon's log.** The daemon rotates to
+  `daemon.old.log` at every start and the postinstall copies the **replaced**
+  daemon's log to `old-install-daemon.log`, so nothing preserves the daemon that
+  came up after the install. Two restarts erased the window that mattered. Give
+  the first post-update start its own retained copy, or widen rotation depth
+  around an update.
+- **Stop the boot stalling on a DNS lookup the kill switch blocks.**
+  `ApiEndpoint::address` (`mullvad-api/src/lib.rs:284`) resolves with
+  `ToSocketAddrs::to_socket_addrs`, a synchronous blocking lookup, called from
+  the async `AddressCache::resolved_or_persisted`. In a blocked state it can only
+  time out: measured 30.006 s of stalled boot on this machine, with the tokio
+  runtime held. Consult the persisted address first, or move the lookup off the
+  runtime with a bounded timeout.
+- **Say which lockdown is armed.** `Persistent lockdown is enabled ...` is
+  printed for the ten-second lockdown an installer arms, on a machine whose
+  setting is off. Distinguish the two in the message, so a lock-out log states
+  which one it is.
 
-RED first: a daemon boot where the circuit is published after the connect,
-asserting the tunnel reaches `Connected` and never parks blocked.
+### Lot 1: an update that succeeds must not block the host (G1) [DONE]
+
+Shipped in `c4f70d5572`, host tests only, still to be validated on a real
+upgrade. The two parts as built:
+
+- **The circuit is seeded before the boot connect.** `boot_seed` reads and
+  verifies the on-disk signed directory and selects a circuit synchronously, and
+  `Daemon::start` pushes it onto the generator before `run()` can dial. The
+  verification is the code that already ran inside the updater task, moved ahead
+  of the race: the task no longer reads the file, it adopts the seed through
+  `UpdaterConfig.boot_seed`, and adopting the seeded circuit as its
+  `last_circuit` is what stops its first pass requesting a reconnect the
+  generator does not need.
+- **A blocking start failure retries.** `reschedules_reconnect` replaces the
+  inline `AuthFailed` check with an explicit cause matrix, and `StartTunnelError`
+  joins it on the same 60 s timer. `WarrenTunnelFlapping` and
+  `WarrenPubkeyMismatch` are excluded by name (both exist to stop retrying), and
+  `IsOffline` stays with the connectivity edge that already revives it.
+  Unbounded in count on purpose: bounding it leaves a user whose circuit arrives
+  late permanently dark, which is the failure being fixed, and one dial per
+  minute against a cancelable blocked state is the cheaper side of that trade.
+
+This also downgrades the no-cache boot race that `2026-08-04` recorded: a machine
+with no usable cache still dials before any circuit exists, but now recovers
+within a minute instead of never.
 
 ### Lot 2: the in-process dead-man (G2, first half)
 
