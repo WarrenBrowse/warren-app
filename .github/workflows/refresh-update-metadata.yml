@@ -51,7 +51,7 @@ on:
         default: auto
         options: [auto, prod, beta]
       drop_version:
-        description: "Withdraw these versions from the channel, comma-separated (e.g. 1.1.5). Dispatch with the tag BELOW them"
+        description: "Withdraw these versions, comma-separated (e.g. 1.1.5). Dispatch with the tag BELOW them"
         required: false
         type: string
 
@@ -198,12 +198,28 @@ jobs:
         env:
           TAG_NAME: ${{ steps.tag.outputs.tag }}
           VERSION: ${{ steps.tag.outputs.version }}
+          DROP_VERSION: ${{ inputs.drop_version }}
         run: |
           # No forced-update floor on the beta channel (a permanent free beta is
           # never forced onto a version by the prod policy).
           if [ "$WARREN_CHANNEL" != prod ]; then
             WARREN_UPDATE_MIN_VERSION=""
             WARREN_UPDATE_MIN_VERSION_IOS=""
+          fi
+          # Withdrawing a bad release is re-signing the one below it with that
+          # version dropped: the generator preserves history, so its entry would
+          # otherwise survive every future publish, and clients resolve the
+          # highest version listed rather than the newest published.
+          set --
+          if [ -n "${DROP_VERSION:-}" ]; then
+            old_ifs="$IFS"; IFS=','
+            for v in $DROP_VERSION; do
+              v="$(printf '%s' "$v" | tr -d '[:space:]')"
+              # An explicit if, never `[ -n "$v" ] && set --`: under `set -e` an
+              # AND-list whose test fails is the loop body's exit status.
+              if [ -n "$v" ]; then set -- "$@" --drop-version "$v"; fi
+            done
+            IFS="$old_ifs"
           fi
           python3 ci/build-version-metadata.py \
             --tag "$TAG_NAME" \
@@ -218,7 +234,8 @@ jobs:
             --out-dir unsigned \
             --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             ${WARREN_UPDATE_MIN_VERSION:+--min-version "$WARREN_UPDATE_MIN_VERSION"} \
-            ${WARREN_UPDATE_MIN_VERSION_IOS:+--ios-min-version "$WARREN_UPDATE_MIN_VERSION_IOS"}
+            ${WARREN_UPDATE_MIN_VERSION_IOS:+--ios-min-version "$WARREN_UPDATE_MIN_VERSION_IOS"} \
+            "$@"
 
       - name: Sign metadata
         if: env.WARREN_CHANNEL_LIVE == 'true'
