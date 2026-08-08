@@ -143,6 +143,31 @@ jobs:
             echo "api-url=$api_url"
           } >> "$GITHUB_OUTPUT"
           echo "channel=$channel version=$version api=$api_url (tag $ref)"
+      # A release is defined by what it CONTAINS, and the guard below only ever
+      # compared numbers. On 2026-08-08 `beta-v1.1.5` was cut from a `main`
+      # carrying three unreviewed commits; one imported `electron` into the
+      # sandboxed renderer, so no desktop window could paint at all. The version
+      # was correct throughout. Printing the range does not block anything, it
+      # puts the contents in the run's own log where the tagger and the next
+      # reader both see them.
+      - name: Show what this release contains
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          WARREN_CHANNEL: ${{ steps.channel.outputs.channel }}
+        run: |
+          git fetch --tags --force origin
+          if [ "$WARREN_CHANNEL" = beta ]; then pattern='beta-v[0-9]*'; else pattern='v[0-9]*'; fi
+          previous=$(git tag -l "$pattern" | sort -V | grep -vFx "${GITHUB_REF_NAME}" | tail -1)
+          if [ -z "$previous" ]; then
+            echo "::notice::${GITHUB_REF_NAME} opens the $WARREN_CHANNEL series; no range to review"
+            exit 0
+          fi
+          count=$(git log --oneline "$previous..${GITHUB_REF_NAME}" | wc -l | tr -d ' ')
+          echo "### ${GITHUB_REF_NAME}: $count commit(s) since $previous" >> "$GITHUB_STEP_SUMMARY"
+          git log --pretty='- `%h` %s (%an)' "$previous..${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
+          echo "$count commit(s) since $previous:"
+          git log --oneline "$previous..${GITHUB_REF_NAME}"
+
       - name: Refuse a version-regressing release tag
         if: startsWith(github.ref, 'refs/tags/')
         env:
