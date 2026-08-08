@@ -45,6 +45,7 @@ export const ALLOWED_CONNECT_HOSTS = ['connect.warrenbrowse.com'];
 interface ParsedForumLogin {
   sid: string;
   host: string;
+  crossDevice: boolean;
 }
 
 /**
@@ -77,7 +78,11 @@ export function parseForumLoginUrl(rawUrl: string): ParsedForumLogin | undefined
   if (!ALLOWED_CONNECT_HOSTS.includes(host)) {
     return undefined;
   }
-  return { sid, host };
+  // The provider sets `xd=1` on the QR's link only. Anything else, including
+  // an absent parameter, is the same-device button, so an older provider that
+  // does not send it degrades to the ordinary prompt rather than to a warning
+  // nobody can act on.
+  return { sid, host, crossDevice: url.searchParams.get('xd') === '1' };
 }
 
 /**

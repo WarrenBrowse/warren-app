@@ -64,4 +64,21 @@ class ForumLoginLinkTest {
             ),
         )
     }
+
+    @Test
+    fun the_qr_link_is_marked_cross_device_so_the_prompt_can_say_so() {
+        // A relayed sign-in and a legitimate cross-device one are identical on
+        // the wire. This flag is what lets the person approving tell them
+        // apart, so it has to survive the parser.
+        assertEquals(true, parse("$good&xd=1")?.crossDevice)
+    }
+
+    @Test
+    fun anything_but_xd_equals_one_is_the_same_device_button() {
+        // An older provider sends no flag at all and must degrade to the
+        // ordinary prompt, never to a warning nobody can act on.
+        for (suffix in listOf("", "&xd=0", "&xd=true", "&xd=")) {
+            assertEquals(false, parse("$good$suffix")?.crossDevice, "suffix: $suffix")
+        }
+    }
 }

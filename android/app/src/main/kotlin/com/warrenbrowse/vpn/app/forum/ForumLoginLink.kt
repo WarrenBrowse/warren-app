@@ -3,8 +3,15 @@ package com.warrenbrowse.vpn.app.forum
 import java.net.URI
 import java.net.URISyntaxException
 
-/** A validated `warren://forum-login` deep link. */
-data class ForumLoginLink(val sid: String, val host: String)
+/**
+ * A validated `warren://forum-login` deep link.
+ *
+ * [crossDevice] means the link came from the QR on the approval page, so the
+ * browser signing in is on another device. That is also exactly what a relayed
+ * (phished) approval looks like, and nothing on the wire tells the two apart,
+ * so the consent prompt says which one it is and lets the person decide.
+ */
+data class ForumLoginLink(val sid: String, val host: String, val crossDevice: Boolean = false)
 
 // The single connect host accepted from a forum-login deep link. A hard
 // allowlist: a hostile link must not be able to point the wallet-signed request
@@ -42,7 +49,10 @@ fun parseForumLoginLink(
     val host = params["host"] ?: return null
     if (!SID_REGEX.matches(sid)) return null
     if (host != ALLOWED_CONNECT_HOST) return null
-    return ForumLoginLink(sid, host)
+    // The provider sets `xd=1` on the QR link only. Anything else, an older
+    // provider included, is the same-device button and gets the ordinary
+    // prompt rather than a warning nobody can act on.
+    return ForumLoginLink(sid, host, crossDevice = params["xd"] == "1")
 }
 
 private fun parseQuery(rawQuery: String?): Map<String, String> {

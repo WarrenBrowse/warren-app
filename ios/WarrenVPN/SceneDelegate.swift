@@ -234,11 +234,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
     private func handleForumLoginURL(_ url: URL) {
         guard let link = Self.parseForumLogin(url) else { return }
         DispatchQueue.main.async { [weak self] in
-            self?.presentForumLoginConsent(sid: link.sid, host: link.host)
+            self?.presentForumLoginConsent(
+                sid: link.sid, host: link.host, crossDevice: link.crossDevice)
         }
     }
 
-    private static func parseForumLogin(_ url: URL) -> (sid: String, host: String)? {
+    /// `crossDevice` means the link came from the QR on the approval page, so
+    /// the browser signing in is on another device. A relayed (phished)
+    /// approval has exactly that shape and nothing on the wire tells the two
+    /// apart, so the prompt names the situation and lets the reader decide.
+    /// An older provider sends no flag, which degrades to the ordinary prompt.
+    private static func parseForumLogin(_ url: URL)
+        -> (sid: String, host: String, crossDevice: Bool)?
+    {
         guard url.scheme == "warren", url.host == "forum-login",
               let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
               let items = components.queryItems else { return nil }
@@ -250,24 +258,39 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
               sid.count == 32,
               sid.allSatisfy({ $0.isHexDigit && ($0.isNumber || $0.isLowercase) })
         else { return nil }
-        return (sid, host)
+        return (sid, host, params["xd"] == "1")
     }
 
-    private func presentForumLoginConsent(sid: String, host: String) {
+    private func presentForumLoginConsent(sid: String, host: String, crossDevice: Bool) {
         guard let presenter = topViewController() else { return }
-        let alert = UIAlertController(
-            title: NSLocalizedString(
+        let title =
+            crossDevice
+            ? NSLocalizedString(
+                "Sign in to the forum on another device?",
+                comment: "Forum login consent prompt title, cross device")
+            : NSLocalizedString(
                 "Sign in to the Warren community forum?",
-                comment: "Forum login consent prompt title"),
-            message: NSLocalizedString(
+                comment: "Forum login consent prompt title")
+        let message =
+            crossDevice
+            ? NSLocalizedString(
+                """
+                This request came from a QR code, so the browser being signed in is on \
+                another device, not this one. Approve only if you are looking at that \
+                sign in page right now. If someone sent you this code, they are signing \
+                in as you. No email and no password are used.
+                """,
+                comment: "Forum login consent prompt body, cross device")
+            : NSLocalizedString(
                 """
                 Your app will sign a one time challenge with your wallet key to \
                 prove it is you. No email and no password are used, and you appear \
                 under an anonymous handle that cannot be linked to your Warren \
                 account. Only approve if you started this sign in.
                 """,
-                comment: "Forum login consent prompt body"),
-            preferredStyle: .alert)
+                comment: "Forum login consent prompt body")
+        let alert = UIAlertController(
+            title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(
             title: NSLocalizedString("Cancel", comment: ""),
             style: .cancel,

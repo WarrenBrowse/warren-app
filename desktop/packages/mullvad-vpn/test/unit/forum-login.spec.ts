@@ -13,7 +13,30 @@ describe('forum-login deep link parsing', () => {
   const good = `warren://forum-login?sid=${sid}&host=connect.warrenbrowse.com`;
 
   it('accepts a well-formed allowlisted link', () => {
-    expect(parseForumLoginUrl(good)).toEqual({ sid, host: 'connect.warrenbrowse.com' });
+    expect(parseForumLoginUrl(good)).toEqual({
+      sid,
+      host: 'connect.warrenbrowse.com',
+      crossDevice: false,
+    });
+  });
+
+  it('marks the QR link as cross-device so the prompt can say so', () => {
+    // The provider sets xd=1 on the QR only. A relayed sign-in is
+    // indistinguishable from a legitimate cross-device one on the wire, so
+    // this flag is what lets the person approving tell them apart.
+    expect(parseForumLoginUrl(`${good}&xd=1`)).toEqual({
+      sid,
+      host: 'connect.warrenbrowse.com',
+      crossDevice: true,
+    });
+  });
+
+  it('treats anything but xd=1 as the same-device button', () => {
+    // An older provider sends no flag at all, and must degrade to the
+    // ordinary prompt rather than to a warning nobody can act on.
+    for (const suffix of ['', '&xd=0', '&xd=true', '&xd=']) {
+      expect(parseForumLoginUrl(`${good}${suffix}`)?.crossDevice).toBe(false);
+    }
   });
 
   it('rejects a non-allowlisted host so a hostile link cannot redirect a signed request', () => {
@@ -52,8 +75,16 @@ describe('forum-login deep link parsing', () => {
 });
 
 describe('pending forum-login buffer (cold-start delivery)', () => {
-  const request = { sid: 'a'.repeat(32), host: 'connect.warrenbrowse.com' };
-  const later = { sid: 'b'.repeat(32), host: 'connect.warrenbrowse.com' };
+  const request = {
+    sid: 'a'.repeat(32),
+    host: 'connect.warrenbrowse.com',
+    crossDevice: false,
+  };
+  const later = {
+    sid: 'b'.repeat(32),
+    host: 'connect.warrenbrowse.com',
+    crossDevice: false,
+  };
   const t0 = 1_000_000;
 
   it('replays a buffered request to a renderer that subscribes later', () => {

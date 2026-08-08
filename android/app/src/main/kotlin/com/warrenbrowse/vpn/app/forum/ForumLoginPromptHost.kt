@@ -68,11 +68,28 @@ fun ForumLoginPromptHost() {
 
     AlertDialog(
         onDismissRequest = onDecline,
-        title = { Text(stringResource(R.string.forum_login_title)) },
+        title = {
+            Text(
+                stringResource(
+                    if (link.crossDevice) R.string.forum_login_title_cross_device
+                    else R.string.forum_login_title
+                )
+            )
+        },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
-                Text(stringResource(R.string.forum_login_body_first))
-                Text(stringResource(R.string.forum_login_body_second))
+                Text(
+                    stringResource(
+                        if (link.crossDevice) R.string.forum_login_body_first_cross_device
+                        else R.string.forum_login_body_first
+                    )
+                )
+                Text(
+                    stringResource(
+                        if (link.crossDevice) R.string.forum_login_body_second_cross_device
+                        else R.string.forum_login_body_second
+                    )
+                )
                 failure?.let { reason ->
                     Text(
                         text = reason,

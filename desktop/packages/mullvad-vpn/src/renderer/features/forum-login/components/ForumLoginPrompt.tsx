@@ -95,20 +95,41 @@ export function ForumLoginPrompt() {
     close();
   }, [request, close]);
 
+  // A cross-device link (the QR on the approval page) is also exactly what a
+  // relayed sign-in looks like: the browser being signed in is not this
+  // machine. Nothing on the wire can tell those apart, only the person
+  // approving can, so the prompt names the situation instead of asking the
+  // same neutral question either way.
+  const crossDevice = request?.crossDevice === true;
+
   return (
     <ModalAlert
       isOpen={request !== undefined}
-      type={ModalAlertType.info}
-      title={messages.pgettext('forum-login', 'Sign in to the Warren community forum?')}
+      type={crossDevice ? ModalAlertType.warning : ModalAlertType.info}
+      title={
+        crossDevice
+          ? messages.pgettext('forum-login', 'Sign in to the forum on another device?')
+          : messages.pgettext('forum-login', 'Sign in to the Warren community forum?')
+      }
       message={[
-        messages.pgettext(
-          'forum-login',
-          'A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you.',
-        ),
-        messages.pgettext(
-          'forum-login',
-          'No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.',
-        ),
+        crossDevice
+          ? messages.pgettext(
+              'forum-login',
+              'This request came from a QR code, so the browser being signed in is on another device, not this one. Your app will sign a one-time challenge with your wallet key to prove it is you.',
+            )
+          : messages.pgettext(
+              'forum-login',
+              'A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you.',
+            ),
+        crossDevice
+          ? messages.pgettext(
+              'forum-login',
+              'Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used.',
+            )
+          : messages.pgettext(
+              'forum-login',
+              'No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.',
+            ),
       ]}
       buttons={[
         <Button

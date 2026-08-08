@@ -8,6 +8,11 @@ export interface IForumLoginRequest {
   sid: string;
   // Connect host from the deep link (validated against an allowlist in main).
   host: string;
+  // The link came from the QR on the approval page, so the browser signing in
+  // is on ANOTHER device. That is also the shape of a relayed (phished)
+  // approval, and the user is the only one who can tell the two apart, so the
+  // prompt says it plainly instead of asking the same question either way.
+  crossDevice: boolean;
 }
 
 export type ForumLoginResult =

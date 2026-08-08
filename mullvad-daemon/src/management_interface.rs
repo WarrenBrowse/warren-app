@@ -731,10 +731,15 @@ impl ManagementService for ManagementServiceImpl {
         if request.log_gz.is_empty() {
             return Err(Status::invalid_argument("log_gz must not be empty"));
         }
-        // The connect provider caps the upload at 1 MiB; refusing here
-        // avoids signing a request the server is guaranteed to reject.
-        if request.log_gz.len() > 1024 * 1024 {
-            return Err(Status::invalid_argument("log_gz exceeds 1 MiB"));
+        // Tracks the GUI's own `MAX_LOG_GZ_BYTES` and warren-connect's
+        // `MAX_LOG_GZ_B64_CHARS`, which is what this refusal exists to
+        // anticipate. It is the FIRST leg of the report-size chain that can
+        // still refuse, so a stale value here silently caps every report
+        // whatever the other four legs say: it sat at 1 MiB while the rest of
+        // the chain had moved to 12, and the reporter only saw a generic
+        // failure. Raise it with them, never after them.
+        if request.log_gz.len() > 12 * 1024 * 1024 {
+            return Err(Status::invalid_argument("log_gz exceeds 12 MiB"));
         }
         log::debug!("sign_forum_attach_logs (sid/pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
