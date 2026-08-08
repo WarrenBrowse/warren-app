@@ -652,6 +652,23 @@ function packMac() {
   const appOutDirs = [];
   const config = newConfig();
 
+  // A universal app is merged from an x64 and an arm64 slice, and
+  // @electron/universal aborts the merge as soon as a file exists in one slice
+  // and not the other. nseventforwarder is a per-arch native module
+  // (dist/darwin-x64 vs dist/darwin-arm64) that beforeBuild compiles lazily,
+  // one arch at a time, while electron-builder packs x64 FIRST: the x64 slice
+  // then holds one .node and the arm64 slice two, and the merge dies on
+  // "the number of mach-o files is not the same". mac.x64ArchFiles only excuses
+  // files unique to x64, so it cannot cover that direction.
+  //
+  // Building both up front makes every slice carry both modules, which is the
+  // shape x64ArchFiles expects. The per-arch beforeBuild calls below stay: they
+  // also set TARGET_TRIPLE/BINARIES_PATH, and cargo makes the rebuild a no-op.
+  if (universal) {
+    execFileSync('npm', ['-w', 'nseventforwarder', 'run', 'build-x86']);
+    execFileSync('npm', ['-w', 'nseventforwarder', 'run', 'build-arm']);
+  }
+
   return builder.build({
     targets: builder.Platform.MAC.createTarget(),
     config: {
