@@ -6,6 +6,7 @@ use talpid_core::firewall::{self, Firewall};
 use talpid_types::ErrorExt;
 use tracing_subscriber::EnvFilter;
 
+mod deadman;
 #[cfg(target_os = "windows")]
 mod driver_setup;
 #[cfg(target_os = "windows")]
@@ -110,6 +111,8 @@ pub enum Error {
     #[cfg(target_os = "windows")]
     #[error("Failed to delete driver")]
     DeleteDriver,
+    #[error("Failed to manage the detached update guard")]
+    Deadman(#[source] deadman::Error),
 }
 
 #[derive(Debug, Parser)]
@@ -133,6 +136,17 @@ enum Cli {
         #[arg(required = true)]
         old_version: String,
     },
+    /// Stage the detached update guard and arm its OS timer.
+    ///
+    /// Run by every installer BEFORE it arms the lockdown and kills the daemon,
+    /// so a machine whose daemon never comes back regains its internet on its
+    /// own instead of waiting for a human with a terminal.
+    ArmDeadman,
+    /// Remove the detached update guard. Run by every installer on success.
+    DisarmDeadman,
+    /// The guard's own timer action. Resets the firewall only when no daemon is
+    /// managing the machine, then removes the guard either way.
+    DeadmanFire,
     /// Start the Mullvad daemon service
     #[cfg(target_os = "windows")]
     StartService,
@@ -169,6 +183,9 @@ async fn main() {
 
     let result = match Cli::parse() {
         Cli::PrepareRestart => prepare_restart().await,
+        Cli::ArmDeadman => arm_deadman(),
+        Cli::DisarmDeadman => disarm_deadman(),
+        Cli::DeadmanFire => deadman_fire().await,
         Cli::ResetFirewall => reset_firewall().await,
         Cli::RemoveDevice => remove_device().await,
         Cli::IsOlderVersion { old_version } => {
@@ -205,6 +222,35 @@ fn is_older_version(old_version: &str) -> Result<ExitStatus, Error> {
     } else {
         ExitStatus::VersionNotOlder
     })
+}
+
+/// Stages a copy of this binary outside any install directory and registers a
+/// one-shot OS timer that runs [`Cli::DeadmanFire`] on it.
+fn arm_deadman() -> Result<(), Error> {
+    deadman::arm().map_err(Error::Deadman)
+}
+
+/// Removes the guard and its timer. Succeeds when nothing was armed, so an
+/// installer can call it unconditionally.
+fn disarm_deadman() -> Result<(), Error> {
+    deadman::disarm().map_err(Error::Deadman)
+}
+
+/// The timer fired. A daemon answering means the update finished and owns the
+/// firewall; nobody answering means the machine is sealed with no owner.
+async fn deadman_fire() -> Result<(), Error> {
+    let daemon_answers = MullvadProxyClient::new().await.is_ok();
+    let verdict = deadman::deadman_verdict(daemon_answers);
+    eprintln!("Update guard fired: {verdict:?}");
+    let outcome = match verdict {
+        deadman::DeadmanVerdict::DaemonAlive => Ok(()),
+        deadman::DeadmanVerdict::ResetFirewall => reset_firewall().await,
+    };
+    // The guard removes itself on EVERY path, including a failed reset: leaving
+    // an armed timer behind would re-fire against a machine somebody has since
+    // taken over.
+    let _ = deadman::disarm();
+    outcome
 }
 
 async fn prepare_restart() -> Result<(), Error> {

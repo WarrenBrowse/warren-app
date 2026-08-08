@@ -775,6 +775,13 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	${AddCLIToEnvironPath}
 	${InstallTrayIcon}
 
+	# The install succeeded and the service owns the machine again: retire the
+	# detached update guard. Idempotent, so it is safe whether or not the
+	# uninstall step managed to arm it.
+	nsExec::ExecToStack '"$INSTDIR\resources\warren-setup.exe" disarm-deadman'
+	Pop $0
+	Pop $1
+
 	Goto customInstall_skip_abort
 
 	customInstall_abort_installation:
@@ -1057,6 +1064,15 @@ ManifestSupportedOS "{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}"
 	nsExec::Exec `"$SYSDIR\taskkill.exe" /f /t /im "${APP_EXECUTABLE_FILENAME}"` $0
 
 	${If} $FullUninstall == 0
+		# Arm the detached update guard before anything is sealed or removed.
+		# It stages its own copy of warren-setup outside the install directory
+		# and registers a scheduled task, so a machine whose service never comes
+		# back resets its own firewall. Not fatal: the in-service dead-man still
+		# covers the case where the daemon survives.
+		nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" arm-deadman'
+		Pop $0
+		Pop $1
+
 		# Save the target tunnel state if we're upgrading
 		nsExec::ExecToStack '"$PLUGINSDIR\warren-setup.exe" prepare-restart'
 		Pop $0

@@ -5072,30 +5072,6 @@ impl Daemon {
     ///
     /// - `shutdown`: If the daemon should shut down itself when after setting the secured target
     ///   state. set to `false` if the intention is to close the daemon process manually.
-    /// The restart window expired and this daemon is still running, so the
-    /// installer that armed the lockdown never came back for it. Put the
-    /// lockdown back to the setting and say so loudly: a host blocked with no
-    /// owner is the failure this exists to end.
-    #[cfg(not(target_os = "android"))]
-    fn on_restart_lockdown_deadman(&mut self) {
-        let setting = self.settings.settings().lockdown_mode;
-        let Some(restore) = restart_lockdown_verdict(self.restart_lockdown_armed, setting) else {
-            return;
-        };
-        self.restart_lockdown_armed = false;
-        log::warn!(
-            "The app update that armed the restart lockdown never shut this daemon down \
-             ({}s). Restoring lockdown_mode={restore} from the settings so the host is not \
-             left blocked by an installer that gave up.",
-            RESTART_LOCKDOWN_DEADMAN.as_secs()
-        );
-        let (tx, _rx) = oneshot::channel();
-        self.send_tunnel_command(TunnelCommand::LockdownMode(
-            LockdownMode::from(restore).persist(restore),
-            tx,
-        ));
-    }
-
     fn on_prepare_restart(&mut self, shutdown: bool) {
         // TODO: See if this can be made to also shut down the daemon
         //       without causing the service to be restarted.
@@ -5142,6 +5118,30 @@ impl Daemon {
         if shutdown {
             let _ = self.tx.send(InternalDaemonEvent::TriggerShutdown(false));
         }
+    }
+
+    /// The restart window expired and this daemon is still running, so the
+    /// installer that armed the lockdown never came back for it. Put the
+    /// lockdown back to the setting and say so loudly: a host blocked with no
+    /// owner is the failure this exists to end.
+    #[cfg(not(target_os = "android"))]
+    fn on_restart_lockdown_deadman(&mut self) {
+        let setting = self.settings.settings().lockdown_mode;
+        let Some(restore) = restart_lockdown_verdict(self.restart_lockdown_armed, setting) else {
+            return;
+        };
+        self.restart_lockdown_armed = false;
+        log::warn!(
+            "The app update that armed the restart lockdown never shut this daemon down \
+             ({}s). Restoring lockdown_mode={restore} from the settings so the host is not \
+             left blocked by an installer that gave up.",
+            RESTART_LOCKDOWN_DEADMAN.as_secs()
+        );
+        let (tx, _rx) = oneshot::channel();
+        self.send_tunnel_command(TunnelCommand::LockdownMode(
+            LockdownMode::from(restore).persist(restore),
+            tx,
+        ));
     }
 
     #[cfg(target_os = "android")]

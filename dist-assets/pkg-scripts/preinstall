@@ -22,9 +22,27 @@ exec > $LOG_DIR/preinstall.log 2>&1
 
 echo "Running preinstall at $(date)"
 
+SETUP="$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-setup"
+
+# Arm the detached update guard BEFORE anything is armed or removed. It stages
+# its own copy of warren-setup outside this bundle and registers an OS timer, so
+# a machine whose daemon never comes back resets its own firewall instead of
+# waiting for a human with a terminal. Runs as root: it writes a LaunchDaemon.
+# Not fatal: a machine that cannot schedule the guard is still better served by
+# an update that proceeds with the in-daemon dead-man than by no update at all.
+"$SETUP" arm-deadman || echo "Failed to arm the detached update guard"
+
 # Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing warren-setup.
-sudo -u nobody "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-setup" prepare-restart &>/dev/null || \
-    echo "Failed to send 'prepare-restart' command to old warren-daemon"
+#
+# FATAL since 2026-08-08, matching Windows: this is what seals the host for the
+# swap, and an installer that could not arm the protection must not go on to
+# delete the app and kill the daemon. Proceeding is how a user ends up with no
+# internet, no daemon and no app to click.
+if ! sudo -u nobody "$SETUP" prepare-restart &>/dev/null; then
+    echo "Failed to send 'prepare-restart' command to old warren-daemon; aborting the install"
+    "$SETUP" disarm-deadman || true
+    exit 1
+fi
 
 # NOTE: This path must be kept in sync with the path defined
 # in warren-daemon/src/macos_launch_daemon.rs and postinstall

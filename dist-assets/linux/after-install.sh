@@ -12,6 +12,11 @@ chmod u+s "/usr/bin/warren-exclude"
 
 systemctl enable "/usr/lib/systemd/system/warren-daemon.service"
 systemctl start warren-daemon.service || echo "Failed to start warren-daemon.service"
+
+# The update finished and a daemon owns the machine again: retire the guard.
+# Idempotent, so it is safe whether or not the preinstall managed to arm it.
+/opt/Warren\ VPN/resources/warren-setup disarm-deadman \
+    || echo "Failed to disarm the detached update guard"
 systemctl enable "/usr/lib/systemd/system/warren-early-boot-blocking.service"
 
 # The system bus reads /usr/share/dbus-1/system.d once, and denies ownership of

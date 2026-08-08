@@ -120,6 +120,11 @@ echo "$DAEMON_PLIST" > $DAEMON_PLIST_PATH
 chmod 644 $DAEMON_PLIST_PATH
 launchctl load -w $DAEMON_PLIST_PATH
 
+# The update finished and a daemon owns the machine again: retire the guard.
+# Idempotent, so this is safe whether or not the preinstall managed to arm it.
+"$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-setup" disarm-deadman \
+  || echo "Failed to disarm the detached update guard"
+
 mkdir -p /usr/local/bin
 ln -sf "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren" /usr/local/bin/warren
 ln -sf "$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-problem-report" /usr/local/bin/warren-problem-report
