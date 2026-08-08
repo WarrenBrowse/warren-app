@@ -7,6 +7,53 @@ import log from '../shared/logging';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import { IpcMainEventChannel } from './ipc-event-channel';
 
+/** Effects [`startVerifiedInstaller`] can trigger, injected so the decision
+ * logic is testable without Electron or a daemon. */
+export interface InstallerStartEffects {
+  getVersionInfo(): ReturnType<DaemonRpc['getVersionInfo']>;
+  restartUpgrade(): void;
+  launchInstaller(verifiedInstallerPath: string): Promise<void>;
+  notifyStartFailed(): void;
+}
+
+/**
+ * Launches the verified installer of the suggested upgrade, re-validated
+ * against the version info the daemon answers right now (a fresh manifest
+ * check when the channel is reachable). Every branch resolves into an
+ * effect, because the two silent outcomes both shipped as bugs: swallowing
+ * an error left the update screen waiting on "Starting installer..."
+ * forever, and a fresh manifest without a verified path means a release
+ * superseded the downloaded installer, where launching anyway installs an
+ * outdated version and the only move that still installs the latest one is
+ * to restart the upgrade. Never throws.
+ */
+export async function startVerifiedInstaller(effects: InstallerStartEffects): Promise<void> {
+  let verifiedInstallerPath: string | undefined;
+  try {
+    const versionInfo = await effects.getVersionInfo();
+    verifiedInstallerPath = versionInfo.suggestedUpgrade?.verifiedInstallerPath;
+  } catch (e) {
+    const error = e as Error;
+    log.error(`Failed to get version info to start the installer: ${error.message}`);
+    effects.notifyStartFailed();
+    return;
+  }
+  try {
+    if (verifiedInstallerPath === undefined) {
+      log.info('Downloaded installer superseded by a newer release, restarting the upgrade');
+      effects.restartUpgrade();
+      return;
+    }
+    await effects.launchInstaller(verifiedInstallerPath);
+  } catch (e) {
+    const error = e as Error;
+    log.error(
+      `An error occurred when trying to start the installer: ${verifiedInstallerPath}. Error: ${error.message}`,
+    );
+    effects.notifyStartFailed();
+  }
+}
+
 export default class AppUpgrade {
   public constructor(private daemonRpc: DaemonRpc) {}
 
@@ -19,22 +66,24 @@ export default class AppUpgrade {
       this.daemonRpc.appUpgradeAbort();
     });
 
-    IpcMainEventChannel.app.handleUpgradeInstallerStart(async () => {
-      const versionInfo = await this.daemonRpc.getVersionInfo();
-      const verifiedInstallerPath = versionInfo.suggestedUpgrade?.verifiedInstallerPath;
-      try {
-        if (!verifiedInstallerPath) {
-          throw new Error('Verified installer path is not set.');
-        }
-        await this.checkInstallerPath(verifiedInstallerPath);
-        this.startInstaller(verifiedInstallerPath);
-      } catch (e) {
-        const error = e as Error;
-        log.error(
-          `An error occurred when trying to start the installer: ${verifiedInstallerPath}. Error: ${error.message}`,
-        );
-      }
-    });
+    IpcMainEventChannel.app.handleUpgradeInstallerStart(() =>
+      startVerifiedInstaller({
+        getVersionInfo: () => this.daemonRpc.getVersionInfo(),
+        restartUpgrade: () => this.daemonRpc.appUpgrade(),
+        launchInstaller: async (verifiedInstallerPath) => {
+          await this.checkInstallerPath(verifiedInstallerPath);
+          this.startInstaller(verifiedInstallerPath);
+        },
+        notifyStartFailed: () => {
+          IpcMainEventChannel.app.notifyUpgradeError?.('START_INSTALLER_FAILED');
+          // Hand the renderer back the manual install button: without an
+          // event it waits on "Starting installer..." with no way out.
+          IpcMainEventChannel.app.notifyUpgradeEvent?.({
+            type: 'APP_UPGRADE_STATUS_MANUAL_START_INSTALLER',
+          });
+        },
+      }),
+    );
 
     IpcMainEventChannel.app.handleGetUpgradeCacheDir(() => this.daemonRpc.getAppUpgradeCacheDir());
   }
