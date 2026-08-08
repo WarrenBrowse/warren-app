@@ -5313,3 +5313,7 @@ msgstr "Foorumin ilmoitukset"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Foorumi päivitettiin"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Merkitse kaikki luetuiksi"

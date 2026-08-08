@@ -5,6 +5,8 @@ export interface ForumActivityMonitorDelegate {
   notify(notification: SystemNotification): void;
   /** Drives the dot on the tray icon, independently of any banner's lifetime. */
   showForumActivityIndicator(unread: boolean): void;
+  /** Hands the renderer the same number, so the bell cannot disagree. */
+  publishUnread(count: number): void;
 }
 
 /**
@@ -42,10 +44,31 @@ export default class ForumActivityMonitor {
   // new" from "nothing known yet".
   private acknowledged?: number;
 
+  // What the app saw for itself, by reading the panel or by marking the list
+  // seen, and the digest that was current at the time. The digest is up to a
+  // server refresh plus a client poll behind, so without this the badge and
+  // the dot would sit on a stale number for minutes after the user acted.
+  // Held only until the digest is rebuilt: a changed document has either seen
+  // our write or carries something newer, and either way it is the better
+  // source. Pinning it to the document itself rather than to a clock is what
+  // makes that handover exact.
+  private observed?: { unread: number; digest: string | null };
+
+  private lastPublished?: number;
+
   public constructor(private delegate: ForumActivityMonitorDelegate) {}
 
   public setDigest(digest: string | null | undefined) {
     this.digest = digest ?? null;
+    this.refresh();
+  }
+
+  /** What a panel read or a mark-seen just proved, effective immediately. */
+  public setObservedUnread(unread: number) {
+    this.observed = { unread, digest: this.digest };
+    // The user is looking at the panel or has just acted in it. Whatever the
+    // number does here, it is not news to them.
+    this.acknowledged = unread;
     this.refresh();
   }
 
@@ -69,8 +92,13 @@ export default class ForumActivityMonitor {
   }
 
   private refresh() {
-    const unread = unreadForSlot(this.digest, this.slot);
+    if (this.observed !== undefined && this.observed.digest !== this.digest) {
+      this.observed = undefined;
+    }
+    const unread = this.observed?.unread ?? unreadForSlot(this.digest, this.slot);
+
     this.showIndicator(this.enabled && unread > 0);
+    this.publish(unread);
 
     if (this.digest === null || this.slot === null) {
       // Keep the watermark: this is a gap in what we know, not a read.
@@ -87,6 +115,14 @@ export default class ForumActivityMonitor {
     }
 
     this.delegate.notify(new ForumActivityNotificationProvider({ unread }).getSystemNotification());
+  }
+
+  private publish(unread: number) {
+    if (unread === this.lastPublished) {
+      return;
+    }
+    this.lastPublished = unread;
+    this.delegate.publishUnread(unread);
   }
 
   private showIndicator(value: boolean) {

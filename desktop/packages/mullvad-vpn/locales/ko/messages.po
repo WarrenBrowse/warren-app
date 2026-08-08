@@ -5285,3 +5285,7 @@ msgstr "포럼 알림"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "포럼이 업데이트되었습니다"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "모두 읽음으로 표시"

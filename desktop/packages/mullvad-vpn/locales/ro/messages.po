@@ -4462,3 +4462,7 @@ msgstr "Notificări de pe forum"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Forumul a fost actualizat"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Marchează tot ca citit"

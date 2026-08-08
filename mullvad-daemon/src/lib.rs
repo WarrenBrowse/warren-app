@@ -410,6 +410,12 @@ pub enum DaemonCommand {
     SignForumNotifications(
         oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
     ),
+    /// Sign marking the caller's own forum notification list seen (doc 55).
+    /// Its own signature: one is bound to one method and one path, so the
+    /// read above can never be replayed as this write.
+    SignForumNotificationsSeen(
+        oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+    ),
     SignForumLogin(
         oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         String,
@@ -2640,6 +2646,7 @@ impl Daemon {
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
             SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
             SignForumNotifications(tx) => self.on_sign_forum_notifications(tx),
+            SignForumNotificationsSeen(tx) => self.on_sign_forum_notifications_seen(tx),
             SignForumAttachLogs(tx, sid, topic_id, log_gz) => {
                 self.on_sign_forum_attach_logs(tx, sid, topic_id, log_gz)
             }
@@ -3204,6 +3211,31 @@ impl Daemon {
         });
         log::debug!("on_sign_forum_notifications: signed={}", result.is_some());
         Self::oneshot_send(tx, result, "sign_forum_notifications");
+    }
+
+    /// Signs marking the caller's own forum notification list seen (doc 55).
+    /// Same empty body and same account derivation as the read, over its own
+    /// path so the two signatures are not interchangeable.
+    ///
+    /// **No-log policy**: the pubkey and signature are never logged.
+    fn on_sign_forum_notifications_seen(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+    ) {
+        let result = self.warren_identity.has_user_identity().then(|| {
+            let body = forum_notifications_body();
+            let headers = self.warren_identity.signer().sign_request(
+                "POST",
+                "/v1/forum/notifications/seen",
+                body.as_bytes(),
+            );
+            (headers, body)
+        });
+        log::debug!(
+            "on_sign_forum_notifications_seen: signed={}",
+            result.is_some()
+        );
+        Self::oneshot_send(tx, result, "sign_forum_notifications_seen");
     }
 
     /// Signs the community-forum attach-logs request for `sid` (doc 55).

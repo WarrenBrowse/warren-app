@@ -23,7 +23,13 @@ export type ForumActivityState =
  * anybody. This is the only request tied to the account, and it happens
  * only because the user asked to see the content.
  */
-export function useForumActivity(): { state: ForumActivityState; reload: () => void } {
+export function useForumActivity(): {
+  state: ForumActivityState;
+  reload: () => void;
+  hasUnread: boolean;
+  markAllRead: () => void;
+  markOneRead: (id: number) => void;
+} {
   const [state, setState] = useState<ForumActivityState>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
 
@@ -46,5 +52,40 @@ export function useForumActivity(): { state: ForumActivityState; reload: () => v
   }, [attempt]);
 
   const reload = useCallback(() => setAttempt((n) => n + 1), []);
-  return { state, reload };
+
+  const markAllRead = useCallback(() => {
+    // Repainted before the round trip: the forum is a network away and the
+    // user has already decided. A failure leaves the cards read here while
+    // the next digest puts them back, which is the harmless direction.
+    setState((current) =>
+      current.status === 'ready'
+        ? {
+            status: 'ready',
+            notifications: current.notifications.map((n) => ({ ...n, unread: false })),
+          }
+        : current,
+    );
+    void window.ipc.forumActivity.markSeen();
+  }, []);
+
+  const markOneRead = useCallback((id: number) => {
+    // Opening the post is what marks it read on the forum, and that happens
+    // in the browser a moment later. This only stops the card from claiming
+    // otherwise in the meantime.
+    setState((current) =>
+      current.status === 'ready'
+        ? {
+            status: 'ready',
+            notifications: current.notifications.map((n) =>
+              n.id === id ? { ...n, unread: false } : n,
+            ),
+          }
+        : current,
+    );
+  }, []);
+
+  const hasUnread =
+    state.status === 'ready' && state.notifications.some((notification) => notification.unread);
+
+  return { state, reload, hasUnread, markAllRead, markOneRead };
 }

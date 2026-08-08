@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import { useAppContext } from '../../../context';
-import { Button, Icon, Spinner } from '../../../lib/components';
+import { Button, Icon, IconButton, Spinner } from '../../../lib/components';
 import { View } from '../../../lib/components/view';
 import { colors, Radius, spacings } from '../../../lib/foundations';
 import { useHistory } from '../../../lib/history';
@@ -68,7 +68,7 @@ export function ForumActivityView() {
   const { pop } = useHistory();
   const { openUrl } = useAppContext();
   const handle = useSelector((state) => state.account.forumIdentity?.handle);
-  const { state, reload } = useForumActivity();
+  const { state, reload, hasUnread, markAllRead, markOneRead } = useForumActivity();
 
   const openForum = useCallback(() => void openUrl(urls.forum), [openUrl]);
 
@@ -79,7 +79,19 @@ export function ForumActivityView() {
     <View backgroundColor="darkBlue">
       <BackAction action={pop}>
         <NavigationContainer>
-          <AppNavigationHeader title={title} />
+          <AppNavigationHeader title={title}>
+            {hasUnread && (
+              <AppNavigationHeader.IconButton
+                onClick={markAllRead}
+                aria-label={
+                  // TRANSLATORS: Button that marks every forum notification as
+                  // TRANSLATORS: read, both in the app and on the forum.
+                  messages.pgettext('forum-activity-view', 'Mark all as read')
+                }>
+                <IconButton.Icon icon="checkmark" />
+              </AppNavigationHeader.IconButton>
+            )}
+          </AppNavigationHeader>
           <NavigationScrollbars>
             <View.Content>
               {state.status === 'loading' && (
@@ -118,7 +130,11 @@ export function ForumActivityView() {
               {state.status === 'ready' && state.notifications.length > 0 && (
                 <StyledStack>
                   {state.notifications.map((notification) => (
-                    <ForumNotificationCard key={notification.id} notification={notification} />
+                    <ForumNotificationCard
+                      key={notification.id}
+                      notification={notification}
+                      onOpen={markOneRead}
+                    />
                   ))}
                 </StyledStack>
               )}

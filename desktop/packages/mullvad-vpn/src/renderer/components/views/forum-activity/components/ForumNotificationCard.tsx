@@ -6,11 +6,13 @@ import { messages } from '../../../../../shared/gettext';
 import { useAppContext } from '../../../../context';
 import { Icon } from '../../../../lib/components';
 import { colors, Radius, spacings } from '../../../../lib/foundations';
+import { useHistory } from '../../../../lib/history';
 import { useSelector } from '../../../../redux/store';
 import { headlineFor, iconFor, relativeTime } from '../helpers';
 
 export interface ForumNotificationCardProps {
   notification: ForumNotification;
+  onOpen: (id: number) => void;
 }
 
 // A card of its own rather than the app's `ListItem`. That primitive lays its
@@ -119,16 +121,22 @@ const StyledUnreadDot = styled.span`
   background-color: ${colors.fur};
 `;
 
-export function ForumNotificationCard({ notification }: ForumNotificationCardProps) {
+export function ForumNotificationCard({ notification, onOpen }: ForumNotificationCardProps) {
   const { openUrl } = useAppContext();
+  const { pop } = useHistory();
   const locale = useSelector((state) => state.userInterface.locale);
-  const { path, unread } = notification;
+  const { id, path, unread } = notification;
 
   const open = useCallback(() => {
-    if (path !== undefined) {
-      void openUrl(forumPostUrl(path));
+    if (path === undefined) {
+      return;
     }
-  }, [openUrl, path]);
+    onOpen(id);
+    void openUrl(forumPostUrl(path));
+    // The reading happens in the browser now, so leaving the panel up behind
+    // it would be a list the user has to dismiss to get back to the app.
+    pop();
+  }, [openUrl, pop, onOpen, id, path]);
 
   const headline = headlineFor(notification);
 

@@ -5285,3 +5285,7 @@ msgstr "การแจ้งเตือนจากฟอรัม"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "ฟอรัมได้รับการอัปเดตแล้ว"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด"

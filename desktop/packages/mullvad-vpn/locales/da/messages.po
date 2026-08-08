@@ -5313,3 +5313,7 @@ msgstr "Forumnotifikationer"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Forummet er opdateret"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Markér alle som læst"

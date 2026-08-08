@@ -32,6 +32,10 @@ export interface IAccountReduxState {
   // until the user has signed in to the forum at least once, since both are
   // minted server side and the app can compute neither.
   forumIdentity?: ForumIdentity;
+  // Unread forum notifications. Computed in the main process from the
+  // broadcast digest and from whatever the app last observed for itself, so
+  // the bell, the tray dot and the desktop banner all read one number.
+  forumUnread: number;
 }
 
 const initialState: IAccountReduxState = {
@@ -42,6 +46,7 @@ const initialState: IAccountReduxState = {
   purchaseInFlight: false,
   renewalState: undefined,
   forumIdentity: undefined,
+  forumUnread: 0,
 };
 
 export default function (
@@ -147,6 +152,11 @@ export default function (
       return {
         ...state,
         forumIdentity: action.forumIdentity,
+      };
+    case 'UPDATE_FORUM_UNREAD':
+      return {
+        ...state,
+        forumUnread: action.forumUnread,
       };
   }
 

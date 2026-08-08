@@ -1108,6 +1108,22 @@ signForumNotifications: {
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },
+  // Signs a request marking the caller's own forum notification list as
+// seen, which is what the forum bell does by itself when a reader opens
+// it. Its own signature rather than a reuse of the one above: a signature
+// is bound to one method and one path, so a read can never be replayed as
+// a write. Same account derivation, same empty body.
+signForumNotificationsSeen: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumNotificationsSeen',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
   // Signs a community-forum attach-logs request (warren-core doc 55). The
 // GUI passes the `sid` + `topic_id` from a
 // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped

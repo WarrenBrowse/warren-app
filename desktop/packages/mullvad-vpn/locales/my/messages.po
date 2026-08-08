@@ -5288,3 +5288,7 @@ msgstr "ဖိုရမ် အသိပေးချက်များ"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "ဖိုရမ်ကို အပ်ဒိတ်လုပ်ပြီးပါပြီ"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "အားလုံးကို ဖတ်ပြီးအဖြစ် မှတ်ရန်"

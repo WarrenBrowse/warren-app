@@ -340,6 +340,26 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
+   * Signs marking the caller's own forum notification list as seen, which is
+   * what the forum bell does by itself. Its own signature rather than a reuse
+   * of the read above: a signature is bound to one method and one path, so a
+   * read can never be replayed as this write.
+   */
+  public async signForumNotificationsSeen(): Promise<ForumLoginSignature> {
+    const response = await this.call<Empty, grpcTypes.ForumLoginSignature>(
+      this.client.signForumNotificationsSeen,
+      new Empty(),
+    );
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
+  }
+
+  /**
    * Signs a community-forum attach-logs request (doc 55). `sid` and
    * `topicId` come from a `warren://attach-logs?sid=..&topic=..` deep link
    * and `logGz` is the gzipped redacted problem report. The daemon builds

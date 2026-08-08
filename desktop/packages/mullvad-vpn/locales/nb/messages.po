@@ -5313,3 +5313,7 @@ msgstr "Forumvarsler"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Forumet er oppdatert"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Merk alle som lest"

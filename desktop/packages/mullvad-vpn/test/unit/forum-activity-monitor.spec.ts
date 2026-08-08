@@ -11,11 +11,13 @@ const TWO = '002000';
 function harness() {
   const notified: SystemNotification[] = [];
   const indicator: boolean[] = [];
+  const published: number[] = [];
   const monitor = new ForumActivityMonitor({
     notify: (notification) => notified.push(notification),
     showForumActivityIndicator: (unread) => indicator.push(unread),
+    publishUnread: (count) => published.push(count),
   });
-  return { monitor, notified, indicator };
+  return { monitor, notified, indicator, published };
 }
 
 describe('the forum activity monitor', () => {
@@ -141,6 +143,69 @@ describe('the forum activity monitor', () => {
 
     expect(single).not.toEqual(plural);
     expect(plural).toMatch(/2/);
+  });
+
+  it('publishes the count the app must show', () => {
+    // The leading zero is the boot state: the renderer is told the count is
+    // known and empty, rather than left guessing.
+    h.monitor.setDigest(TWO);
+
+    expect(h.published).toEqual([0, 2]);
+  });
+
+  describe('what the app itself just observed', () => {
+    it('wins over the digest at once, without waiting for it to catch up', () => {
+      // The digest is up to a minute of server refresh plus a client poll
+      // behind. Reading the panel, or marking the list seen, tells the truth
+      // now, and the badge and the dot must follow now.
+      h.monitor.setDigest(TWO);
+      expect(h.indicator).toEqual([true]);
+
+      h.monitor.setObservedUnread(0);
+
+      expect(h.indicator).toEqual([true, false]);
+      expect(h.published).toEqual([0, 2, 0]);
+    });
+
+    it('keeps winning while the digest still says the stale thing', () => {
+      h.monitor.setDigest(TWO);
+      h.monitor.setObservedUnread(0);
+
+      // The same document again, a minute later: still the one that predates
+      // what we did, so it must not undo it.
+      h.monitor.setDigest(TWO);
+
+      expect(h.indicator).toEqual([true, false]);
+    });
+
+    it('steps aside as soon as the digest is rebuilt', () => {
+      // A changed document has seen our write, or carries something newer
+      // than what we observed. Either way it is now the better source, and
+      // holding the observation would freeze the badge forever.
+      h.monitor.setDigest(TWO);
+      h.monitor.setObservedUnread(0);
+      h.monitor.setDigest(ONE);
+
+      expect(h.indicator).toEqual([true, false, true]);
+    });
+
+    it('does not announce what it observed itself', () => {
+      // The user is looking at the panel; a banner about it would be absurd.
+      h.monitor.setDigest(NOTHING);
+      h.monitor.setObservedUnread(3);
+
+      expect(h.notified).toHaveLength(0);
+    });
+
+    it('does not re-announce a rise it already accounted for', () => {
+      // Observing 3 then seeing the digest catch up to 3 is one event, not
+      // two, so the banner must not fire on the digest's arrival either.
+      h.monitor.setDigest(NOTHING);
+      h.monitor.setObservedUnread(3);
+      h.monitor.setDigest('003000');
+
+      expect(h.notified).toHaveLength(0);
+    });
   });
 
   it('opens the activity panel when acted on', () => {

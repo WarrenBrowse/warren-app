@@ -5313,3 +5313,7 @@ msgstr "Forum bildirimleri"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Forum güncellendi"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Tümünü okundu olarak işaretle"

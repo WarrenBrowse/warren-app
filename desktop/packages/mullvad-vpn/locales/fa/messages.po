@@ -5300,3 +5300,7 @@ msgstr "اعلان‌های انجمن"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "انجمن به‌روزرسانی شد"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "علامت‌گذاری همه به عنوان خوانده‌شده"

@@ -66,6 +66,11 @@ interface IUpdateForumIdentityAction {
   forumIdentity?: ForumIdentity;
 }
 
+interface IUpdateForumUnreadAction {
+  type: 'UPDATE_FORUM_UNREAD';
+  forumUnread: number;
+}
+
 export type AccountAction =
   | ILoggedInAction
   | ILoggedOutAction
@@ -79,7 +84,8 @@ export type AccountAction =
   | IUpdateAccountExpiryAction
   | IUpdatePurchaseInFlightAction
   | IUpdateRenewalStateAction
-  | IUpdateForumIdentityAction;
+  | IUpdateForumIdentityAction
+  | IUpdateForumUnreadAction;
 
 function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   return {
@@ -168,6 +174,13 @@ function updateForumIdentity(forumIdentity?: ForumIdentity): IUpdateForumIdentit
   };
 }
 
+function updateForumUnread(forumUnread: number): IUpdateForumUnreadAction {
+  return {
+    type: 'UPDATE_FORUM_UNREAD',
+    forumUnread,
+  };
+}
+
 export default {
   loggedIn,
   loggedOut,
@@ -182,4 +195,5 @@ export default {
   updatePurchaseInFlight,
   updateRenewalState,
   updateForumIdentity,
+  updateForumUnread,
 };

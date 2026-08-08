@@ -110,6 +110,13 @@ service ManagementService {
   // bootstrapped.
   rpc SignForumNotifications(google.protobuf.Empty) returns (ForumLoginSignature) {}
 
+  // Signs a request marking the caller's own forum notification list as
+  // seen, which is what the forum bell does by itself when a reader opens
+  // it. Its own signature rather than a reuse of the one above: a signature
+  // is bound to one method and one path, so a read can never be replayed as
+  // a write. Same account derivation, same empty body.
+  rpc SignForumNotificationsSeen(google.protobuf.Empty) returns (ForumLoginSignature) {}
+
   // Signs a community-forum attach-logs request (warren-core doc 55). The
   // GUI passes the `sid` + `topic_id` from a
   // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped

@@ -4466,3 +4466,7 @@ msgstr "Notifications du forum"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Le forum a été mis à jour"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Tout marquer comme lu"

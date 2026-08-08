@@ -5285,3 +5285,7 @@ msgstr "論壇通知"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "論壇已更新"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "全部標為已讀"

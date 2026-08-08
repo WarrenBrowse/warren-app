@@ -5285,3 +5285,7 @@ msgstr "フォーラムの通知"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "フォーラムが更新されました"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "すべて既読にする"

@@ -81,7 +81,7 @@ import {
   parseForumLoginUrl,
   PendingForumRequest,
 } from './forum-login';
-import { fetchForumNotifications } from './forum-notifications';
+import { fetchForumNotifications, markForumNotificationsSeen } from './forum-notifications';
 import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
@@ -191,6 +191,9 @@ class ApplicationMain
   private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>();
   private forumIdentityStore = new SafeStorageForumIdentityStore();
   private forumActivityMonitor = new ForumActivityMonitor(this);
+  // Last count the monitor published, replayed in the initial state: the
+  // renderer boots after the first digest has already been matched.
+  private forumUnread = 0;
   private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>();
 
   private purchaseFlow: PurchaseFlow;
@@ -1175,6 +1178,7 @@ class ApplicationMain
       currentApiAccessMethod: this.currentApiAccessMethod,
       isMacOs13OrNewer: isMacOs13OrNewer(),
       forumIdentity: this.forumIdentityStore.get(),
+      forumUnread: this.forumUnread,
       warrenStatus: this.warrenStatus,
     }));
 
@@ -1294,7 +1298,24 @@ class ApplicationMain
     );
     // Forum activity panel: a user-initiated read of their own
     // notifications, signed with the wallet key. Never polled.
-    IpcMainEventChannel.forumActivity.handleList(() => fetchForumNotifications(this.daemonRpc));
+    IpcMainEventChannel.forumActivity.handleList(async () => {
+      const result = await fetchForumNotifications(this.daemonRpc);
+      if (result.result === 'ok') {
+        // The panel just read the truth. The digest is up to a server
+        // refresh plus a client poll behind it, so this is what the badge
+        // and the tray dot follow until it catches up.
+        this.forumActivityMonitor.setObservedUnread(
+          result.notifications.filter((n) => n.unread).length,
+        );
+      }
+      return result;
+    });
+    IpcMainEventChannel.forumActivity.handleMarkSeen(async () => {
+      if (await markForumNotificationsSeen(this.daemonRpc)) {
+        this.forumActivityMonitor.setObservedUnread(0);
+      }
+      return this.forumUnread;
+    });
     IpcMainEventChannel.forumLogin.handleGetIdentity(() =>
       Promise.resolve(this.forumIdentityStore.get()),
     );
@@ -1587,6 +1608,10 @@ class ApplicationMain
   // digest says the forum has been read, wherever it was read.
   public showForumActivityIndicator = (unread: boolean) =>
     this.notificationController.setForumActivityIndicator(unread);
+  public publishUnread = (count: number) => {
+    this.forumUnread = count;
+    IpcMainEventChannel.forumActivity.notifyUnread?.(count);
+  };
 
   // UserInterfaceDelegate
   public dismissActiveNotifications = () =>

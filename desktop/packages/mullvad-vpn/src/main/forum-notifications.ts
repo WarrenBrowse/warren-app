@@ -25,9 +25,48 @@ export async function fetchForumNotifications(
     return { result: 'error' };
   }
 
+  const response = await post('/v1/forum/notifications', signature);
+  if (response === undefined) {
+    return { result: 'error' };
+  }
+  try {
+    return { result: 'ok', notifications: parseForumNotifications(await response.json()) };
+  } catch (error) {
+    log.error(`Forum notifications: unreadable answer: ${String(error)}`);
+    return { result: 'error' };
+  }
+}
+
+/**
+ * Marks the caller's own list as seen, which is what opening the forum bell
+ * does there. Signed over its own path, so this write cannot be reached with
+ * a signature minted for the read above.
+ */
+export async function markForumNotificationsSeen(daemonRpc: DaemonRpc): Promise<boolean> {
+  let signature;
+  try {
+    signature = await daemonRpc.signForumNotificationsSeen();
+  } catch (error) {
+    log.error(`Forum seen: daemon could not sign: ${String(error)}`);
+    return false;
+  }
+  return (await post('/v1/forum/notifications/seen', signature)) !== undefined;
+}
+
+interface SignedRequest {
+  pubkeySs58: string;
+  signatureHex: string;
+  timestamp: number;
+  nonceHex: string;
+  body: string;
+}
+
+// The body is POSTed verbatim: the signed bytes and the sent bytes must be
+// identical.
+async function post(path: string, signature: SignedRequest): Promise<Response | undefined> {
   const host = ALLOWED_CONNECT_HOSTS[0];
   try {
-    const response = await getForumSession().fetch(`https://${host}/v1/forum/notifications`, {
+    const response = await getForumSession().fetch(`https://${host}${path}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -39,14 +78,14 @@ export async function fetchForumNotifications(
       body: signature.body,
     });
     if (!response.ok) {
-      log.error(`Forum notifications: provider returned HTTP ${response.status}`);
-      return { result: 'error' };
+      log.error(`Forum request ${path}: provider returned HTTP ${response.status}`);
+      return undefined;
     }
-    return { result: 'ok', notifications: parseForumNotifications(await response.json()) };
+    return response;
   } catch (error) {
     // Never log the pubkey or the signature (no-log policy), and never the
     // response body: it carries the user's own forum content.
-    log.error(`Forum notifications: request to the connect host failed: ${String(error)}`);
-    return { result: 'error' };
+    log.error(`Forum request ${path}: request to the connect host failed: ${String(error)}`);
+    return undefined;
   }
 }

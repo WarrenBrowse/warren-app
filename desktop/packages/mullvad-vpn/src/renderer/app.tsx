@@ -185,6 +185,12 @@ export default class AppRenderer {
       this.reduxActions.account.updateForumIdentity(identity);
     });
 
+    // One number for the bell, the tray dot and the desktop banner, computed
+    // in the main process and pushed here.
+    IpcRendererEventChannel.forumActivity.listenUnread((unread) => {
+      this.reduxActions.account.updateForumUnread(unread);
+    });
+
     IpcRendererEventChannel.accountHistory.listen((newPubKeyHistory?: WarrenPubKey) => {
       this.setPubKeyHistory(newPubKeyHistory);
     });
@@ -369,6 +375,7 @@ export default class AppRenderer {
     this.setAccountExpiry(initialState.accountData?.expiry);
     this.reduxActions.account.updatePurchaseInFlight(initialState.purchaseInFlight);
     this.reduxActions.account.updateForumIdentity(initialState.forumIdentity);
+    this.reduxActions.account.updateForumUnread(initialState.forumUnread);
 
     this.setPubKeyHistory(initialState.accountHistory);
     this.setTunnelState(initialState.tunnelState);

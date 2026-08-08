@@ -5343,3 +5343,7 @@ msgstr "Сповіщення форуму"
 msgctxt "forum-activity-view"
 msgid "The forum was updated"
 msgstr "Форум оновлено"
+
+msgctxt "forum-activity-view"
+msgid "Mark all as read"
+msgstr "Позначити все як прочитане"

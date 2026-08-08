@@ -101,6 +101,9 @@ export interface IAppStateSnapshot {
   // the user has signed in to the forum once, since both are minted server
   // side and the app can compute neither.
   forumIdentity?: ForumIdentity;
+  // Unread forum notifications, already matched against this installation's
+  // digest slot by the main process.
+  forumUnread: number;
   // Latest Warren live status known to the main process. Part of the initial
   // snapshot for the same reason as `splitTunnelingSupported`: the daemon's
   // status stream delivers its current value once, at subscribe time, which
@@ -194,6 +197,15 @@ export const ipcSchema = {
   // the server nothing about anybody.
   forumActivity: {
     list: invoke<void, ForumNotificationsResult>(),
+    // Marks the caller's own list seen, which is what opening the forum bell
+    // does there. Answers the count afterwards so the caller never has to
+    // guess it.
+    markSeen: invoke<void, number>(),
+    // The one unread count the app shows, computed in the main process from
+    // the digest and from whatever the app last observed for itself. Pushed
+    // rather than derived in the renderer so the bell, the tray dot and the
+    // banner cannot drift apart.
+    unread: notifyRenderer<number>(),
   },
   // Community-forum attach-logs (doc 55). `request` is pushed when a
   // `warren://attach-logs` deep link arrives; the renderer shows a consent

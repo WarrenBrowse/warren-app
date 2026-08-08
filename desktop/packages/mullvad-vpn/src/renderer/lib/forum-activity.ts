@@ -1,12 +1,13 @@
-import { unreadForSlot } from '../../shared/forum-identity';
 import { useSelector } from '../redux/store';
 
-// The forum activity badge, read out of the broadcast digest.
+// The forum activity badge.
 //
-// The daemon holds a document identical for every client and has already
-// checked its signature and its freshness. Only this process knows which
-// slot belongs to this installation, so the count is computed here and
-// the server is never asked about this account.
+// The number is computed in the main process, from the broadcast digest
+// matched against this installation's slot, corrected by whatever the app
+// last observed for itself when the panel was read or the list marked seen.
+// Computed there rather than here so the bell, the tray dot and the desktop
+// banner cannot drift apart, and so the badge is right the moment the user
+// acts instead of when the digest next catches up.
 
 /** True once the user has signed in to the forum at least once. */
 export function useHasForumAccount(): boolean {
@@ -19,7 +20,5 @@ export function useHasForumAccount(): boolean {
  * which is how the badge clears.
  */
 export function useForumUnreadCount(): number {
-  const digest = useSelector((state) => state.settings.warrenStatus?.forumDigest ?? null);
-  const slot = useSelector((state) => state.account.forumIdentity?.notifySlot ?? null);
-  return unreadForSlot(digest, slot);
+  return useSelector((state) => state.account.forumUnread);
 }
