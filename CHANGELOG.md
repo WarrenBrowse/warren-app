@@ -25,21 +25,28 @@ Line wrap the file at 100 chars.                                              Th
 
 
 ## [1.1.6] - 2026-08-08
-### Fixed
-- Open the app window again. In 1.1.5 the window stayed blank and clicking the icon did nothing:
-  the interface crashed while loading, before it could draw anything. Only the display was
-  affected, and the VPN itself kept working throughout.
+### Added
+- Show a forum activity bell in the app, with a panel listing what happened to you on the
+  community forum. The count comes from a document identical for every client, so the server is
+  never asked anything about your account to draw the badge.
 
-
-## [1.1.5] - 2026-08-08
 ### Fixed
+- Open the app window again. 1.1.5 shipped an interface that crashed while loading, so the window
+  stayed blank and clicking the icon did nothing. That build was withdrawn.
 - Stop the tunnel reconnecting when the network stalls for a few seconds. A brief stall (a Wi-Fi
   roam, a saturated uplink, a weak signal) was enough for the app to decide the server had stopped
   forwarding and rebuild the tunnel, which dropped every request in flight. The app now checks
-  whether anything at all is still reaching the server before blaming it, so a stall that clears on
-  its own costs nothing. A server that really has stopped forwarding is still detected as fast as
-  before.
+  whether anything at all is still reaching the server before blaming it. A server that really has
+  stopped forwarding is still detected as fast as before.
+- Do not leave the computer without internet after an app update. The update seals the network
+  while the app is replaced, which is deliberate, but nothing used to undo that seal if the update
+  failed halfway. A guard now frees the machine on its own, and the app no longer waits half a
+  minute on a name lookup its own protection was blocking.
+- Reconnect on your own after an update instead of staying blocked until you click.
 
+## [1.1.5] - 2026-08-08 [WITHDRAWN]
+This build was published and withdrawn the same day: its interface could not open. Everything it
+contained ships in 1.1.6.
 
 ## [1.1.4] - 2026-08-08
 ### Fixed
