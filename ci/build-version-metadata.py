@@ -30,7 +30,10 @@ their version listed and `suggested_upgrade` keeps working.
 Restarting a channel at a LOWER version (the beta line restarting at 0.0.1)
 therefore requires clearing that channel's published manifests first: merged
 into a preserved history, the older higher version stays the newest entry and
-clients never resolve the reset release.
+clients never resolve the reset release. Withdrawing a single bad release from a
+live channel is `--drop-version`: republish the release below it with the bad
+version dropped, and the bumped `metadata_version` carries the removal past the
+client anti-rollback floor.
 
 stdlib only (runs on a stock python3); no third-party dependencies.
 """
@@ -338,7 +341,8 @@ def build_downloads(args, classified: dict) -> dict:
     release that ships only some platforms never blanks the others on the
     download page.
     """
-    platforms = fetch_previous_downloads(args.metadata_base_url)
+    platforms = drop_downloads_versions(
+        fetch_previous_downloads(args.metadata_base_url), args.dropped_versions)
     for platform, assets in classified.items():
         platforms[platform] = {"version": args.version, "assets": assets}
     return {"updated_at": args.now, "platforms": platforms}
@@ -363,8 +367,32 @@ def merge_release(previous: list, new_release: dict) -> list:
     return [new_release] + kept
 
 
+def drop_versions(releases: list, dropped: set) -> list:
+    """Remove the entries of releases withdrawn from the channel.
+
+    A withdrawn release has to leave the list: clients resolve the highest
+    version listed, so republishing an older one on top never supersedes it,
+    and the history-preserving merge would carry it forward for ever.
+    """
+    if not dropped:
+        return list(releases)
+    return [r for r in releases if str(r.get("version")) not in dropped]
+
+
+def drop_downloads_versions(platforms: dict, dropped: set) -> dict:
+    """Same withdrawal, applied to the website manifest's per-platform map.
+
+    A platform absent from the republished release keeps its previous entry,
+    which would go on offering the withdrawn installers on the download page.
+    """
+    if not dropped:
+        return dict(platforms)
+    return {p: v for p, v in platforms.items() if str(v.get("version")) not in dropped}
+
+
 def build_platform(platform: str, installers: list, args, version: str, min_version: str) -> dict:
     prev_version, prev_releases = fetch_previous(args.metadata_base_url, platform)
+    prev_releases = drop_versions(prev_releases, args.dropped_versions)
     if platform == "ios":
         # Self-heal: early ios.json manifests carried the desktop 1.x release
         # history (the script listed the tag version for every platform). Only
@@ -405,6 +433,9 @@ def main() -> int:
     parser.add_argument("--channel", choices=sorted(SITE_SKIP_FORMATS), default="prod",
                         help="Release channel: decides which formats reach the download page "
                              "(the beta ships Android as a direct APK, prod does not)")
+    parser.add_argument("--drop-version", action="append", default=[], metavar="VERSION",
+                        help="Withdraw this version from the channel: its entry is removed from "
+                             "the preserved history instead of being carried forward. Repeatable")
     parser.add_argument("--out-dir", required=True, help="Output directory for unsigned JSON")
     parser.add_argument("--now", required=True, help="Current time, RFC3339 (e.g. 2026-06-14T00:00:00Z)")
     parser.add_argument("--expiry-months", type=int, default=6)
@@ -416,6 +447,12 @@ def main() -> int:
                              "omitted and clients fall back to 'version listed in releases', "
                              "which blocks builds NEWER than the manifest; set it in practice.")
     args = parser.parse_args()
+
+    args.dropped_versions = {v.strip() for v in args.drop_version if v.strip()}
+    if args.version in args.dropped_versions:
+        raise SystemExit(f"--drop-version {args.version} withdraws the release being published")
+    if args.dropped_versions:
+        print(f"withdrawing from the channel: {', '.join(sorted(args.dropped_versions))}")
 
     ios_version = args.ios_version or ios_marketing_version()
     if not IOS_CALENDAR_VERSION.match(ios_version):

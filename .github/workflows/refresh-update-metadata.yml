@@ -50,6 +50,10 @@ on:
         type: choice
         default: auto
         options: [auto, prod, beta]
+      drop_version:
+        description: "Withdraw these versions from the channel, comma-separated (e.g. 1.1.5). Dispatch with the tag BELOW them"
+        required: false
+        type: string
 
 permissions:
   contents: read

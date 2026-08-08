@@ -115,5 +115,48 @@ class ChangelogTranslations(unittest.TestCase):
         self.assertEqual(release["changelog_translations"], {"fr": "notes en francais"})
 
 
+class DropVersions(unittest.TestCase):
+    """Withdrawing a release means erasing its entry from the manifest.
+
+    Clients resolve the highest version listed, so publishing an older release
+    on top never supersedes a bad one, and the merge that preserves history
+    would otherwise carry it forward for ever.
+    """
+
+    def test_removes_the_withdrawn_entry_from_the_kept_history(self):
+        previous = [{"version": "1.1.5"}, {"version": "1.1.4"}, {"version": "1.1.3"}]
+
+        kept = bvm.drop_versions(previous, {"1.1.5"})
+
+        self.assertEqual([r["version"] for r in kept], ["1.1.4", "1.1.3"])
+
+    def test_keeps_everything_when_nothing_is_withdrawn(self):
+        previous = [{"version": "1.1.5"}, {"version": "1.1.4"}]
+
+        self.assertEqual(bvm.drop_versions(previous, set()), previous)
+
+    def test_republishing_an_older_release_over_a_withdrawn_one_leaves_it_newest(self):
+        previous = [{"version": "1.1.5"}, {"version": "1.1.4"}, {"version": "1.1.3"}]
+
+        merged = bvm.merge_release(
+            bvm.drop_versions(previous, {"1.1.5"}),
+            bvm.build_release("1.1.4", "notes", {}, []),
+        )
+
+        self.assertEqual([r["version"] for r in merged], ["1.1.4", "1.1.3"])
+
+    def test_download_page_stops_advertising_the_withdrawn_version(self):
+        # A platform absent from the republished release keeps its previous
+        # entry, which would go on offering the withdrawn installers.
+        platforms = {
+            "macos": {"version": "1.1.5", "assets": []},
+            "linux": {"version": "1.1.4", "assets": []},
+        }
+
+        kept = bvm.drop_downloads_versions(platforms, {"1.1.5"})
+
+        self.assertEqual(list(kept), ["linux"])
+
+
 if __name__ == "__main__":
     unittest.main()
