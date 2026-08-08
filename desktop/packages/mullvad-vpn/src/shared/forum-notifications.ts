@@ -118,15 +118,17 @@ function parseKind(value: unknown): ForumNotificationKind {
 }
 
 /**
- * Browser URL that opens `path` with the reader already signed in.
+ * Browser URL for the post a notification points at.
  *
- * Entering through the forum's own SSO entry rather than the bare post:
- * the forum has no password, so a reader who is not signed in on that
- * browser would land on a page that cannot show them their own
- * notification. The wallet SSO round trip is the existing one.
+ * The bare post, never the forum's `/session/sso` entry: that route runs
+ * the whole wallet round trip on every visit, including for a browser
+ * already signed in to the forum, which is the ordinary case. A reader
+ * who is signed out lands on the topic and signs in from there, which is
+ * one extra click in the rare case instead of a detour through the
+ * identity broker in every case.
  */
 export function forumPostUrl(path: string): Url {
-  return `${urls.forum}session/sso?return_path=${encodeURIComponent(path)}`;
+  return `${urls.forum}${path.replace(/^\//, '')}`;
 }
 
 function text(value: unknown, max: number): string | undefined {

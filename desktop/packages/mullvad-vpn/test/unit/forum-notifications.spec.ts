@@ -90,11 +90,14 @@ describe('reading the forum notification list', () => {
 });
 
 describe('opening a notification', () => {
-  it('enters through the SSO entry so the reader lands signed in', () => {
-    // The forum has no password: a reader not signed in on that browser
-    // would land on a page that cannot show them their own notification.
-    expect(forumPostUrl('/t/86/4')).toBe(
-      'https://forum.warrenbrowse.com/session/sso?return_path=%2Ft%2F86%2F4',
-    );
+  it('goes straight to the post', () => {
+    expect(forumPostUrl('/t/86/4')).toBe('https://forum.warrenbrowse.com/t/86/4');
+  });
+
+  it('never routes through the sign-in handshake', () => {
+    // `/session/sso` runs the whole wallet round trip every time, including
+    // for a browser already signed in to the forum, which is the common case
+    // and what made every click detour through the identity broker.
+    expect(forumPostUrl('/t/86/4')).not.toContain('sso');
   });
 });
