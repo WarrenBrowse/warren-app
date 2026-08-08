@@ -24,6 +24,16 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.5] - 2026-08-08
+### Fixed
+- Stop the tunnel reconnecting when the network stalls for a few seconds. A brief stall (a Wi-Fi
+  roam, a saturated uplink, a weak signal) was enough for the app to decide the server had stopped
+  forwarding and rebuild the tunnel, which dropped every request in flight. The app now checks
+  whether anything at all is still reaching the server before blaming it, so a stall that clears on
+  its own costs nothing. A server that really has stopped forwarding is still detected as fast as
+  before.
+
+
 ## [1.1.4] - 2026-08-08
 ### Fixed
 - [macOS] Install on Intel Macs. The macOS package was built for Apple Silicon only while being
