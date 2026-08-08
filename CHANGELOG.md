@@ -22,6 +22,9 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+
+## [1.1.9] - 2026-08-08
 ### Added
 - Offer a way into the community forum from the app header before you have a forum account. The
   slot that later holds the activity bell now shows a lifebuoy that opens the forum. Once you sign
@@ -31,6 +34,8 @@ Line wrap the file at 100 chars.                                              Th
   instance installs the app directly instead of having nothing to download.
 - Publish the headless daemon and `warren` command line for 64-bit ARM Linux too, so the server
   install script works on an ARM machine.
+- Say so when a forum sign-in request comes from a QR code: the browser being signed in is on
+  another device, and the prompt tells you to approve only if you started that sign-in yourself.
 
 ### Changed
 - Start an update from a version list fetched at that moment instead of the last poll's. The app
@@ -50,6 +55,9 @@ Line wrap the file at 100 chars.                                              Th
   the translated changelogs had silently stopped at 1.1.4. A release now refuses to publish notes
   that are not translated into every shipped language, and already-published English-only entries
   are repaired at the next publish.
+- Attach the app's logs to a forum bug report again when the report is large. The app refused to
+  sign any report over 1 MiB compressed while every other limit in the chain allowed 12, so a
+  report fattened by a few days of logs failed with a generic "try again" error.
 
 
 ## [1.1.8] - 2026-08-08

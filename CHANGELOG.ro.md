@@ -12,6 +12,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
+
+
+## [1.1.9] - 2026-08-08
 ### Adăugat
 - Un acces către forumul comunității din antetul aplicației, chiar înainte de a avea un cont pe
   forum. Locul care va găzdui clopoțelul de activitate arată un colac de salvare care deschide
@@ -22,6 +25,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   ARM sau o instanță cloud ARM instalează aplicația direct în loc să nu aibă nimic de descărcat.
 - Publicarea daemonului fără interfață și a liniei de comandă `warren` și pentru Linux ARM pe 64
   de biți, ca scriptul de instalare pentru server să funcționeze pe o mașină ARM.
+- Se spune când o cerere de autentificare pe forum vine dintr-un cod QR: browserul autentificat
+  este pe alt dispozitiv, iar mesajul precizează să aprobați doar dacă dumneavoastră ați pornit
+  acea autentificare.
 
 ### Modificat
 - O actualizare pornește de la o listă de versiuni adusă chiar în acel moment, nu de la ultima
@@ -45,6 +51,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   jurnalele traduse se opriseră în tăcere la 1.1.4. O versiune nouă refuză acum să publice note
   netraduse în fiecare limbă livrată, iar intrările deja publicate doar în engleză sunt reparate
   la următoarea publicare.
+- Jurnalele aplicației se pot atașa din nou la un raport de eroare de pe forum când raportul este
+  mare. Aplicația refuza să semneze orice raport de peste 1 MiB comprimat, în timp ce toate
+  celelalte limite din lanț permiteau 12, așa că un raport îngrășat de câteva zile de jurnale
+  eșua cu o eroare generică „încercați din nou”.
 
 
 ## [1.1.8] - 2026-08-08

@@ -13,6 +13,9 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+
+
+## [1.1.9] - 2026-08-08
 ### Ajouté
 - Offrir un accès au forum communautaire depuis l'en-tête de l'application avant même d'avoir un
   compte forum. L'emplacement qui accueillera la cloche d'activité affiche une bouée qui ouvre le
@@ -23,6 +26,9 @@ par l'application, gardez-le tel quel.
   instance cloud ARM installe l'application directement au lieu de n'avoir rien à télécharger.
 - Publier aussi le démon sans interface et la ligne de commande `warren` pour Linux ARM 64 bits,
   pour que le script d'installation serveur fonctionne sur une machine ARM.
+- Le dire quand une demande de connexion au forum vient d'un code QR : le navigateur connecté est
+  sur un autre appareil, et l'invite précise de n'approuver que si vous êtes à l'origine de cette
+  connexion.
 
 ### Modifié
 - Démarrer une mise à jour depuis une liste de versions récupérée à l'instant même plutôt que
@@ -46,6 +52,10 @@ par l'application, gardez-le tel quel.
   les journaux traduits s'étaient arrêtés en silence à la 1.1.4. Une release refuse désormais de
   publier des notes non traduites dans chaque langue livrée, et les entrées déjà publiées en
   anglais seul sont réparées à la prochaine publication.
+- Joindre à nouveau les journaux de l'application à un rapport de bug du forum quand le rapport
+  est volumineux. L'application refusait de signer tout rapport dépassant 1 Mio compressé alors
+  que toutes les autres limites de la chaîne en autorisaient 12, si bien qu'un rapport gonflé par
+  quelques jours de journaux échouait avec une erreur générique « réessayez ».
 
 
 ## [1.1.8] - 2026-08-08
