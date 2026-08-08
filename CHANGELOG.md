@@ -30,6 +30,33 @@ Line wrap the file at 100 chars.                                              Th
   install script works on an ARM machine.
 
 
+## [1.1.7] - 2026-08-08
+### Added
+- Tell you when something new happens to you on the community forum, with a desktop notification
+  and the same dot the app already puts on its icon in the system bar for an update. Both go out
+  on their own once you have read the forum, wherever you read it.
+- Add a "Forum notifications" setting, under user interface settings, to turn those off. It is on
+  by default and appears only once you have a forum account.
+
+### Changed
+- Redraw the forum activity panel. Every notification is now its own card, with an icon telling a
+  reply from a like at a glance, the topic and an extract of what was written, and how long ago it
+  happened. Long text no longer runs off the side of the window.
+
+### Fixed
+- Show the same number of unread forum notifications as the forum itself. The app counted every
+  notification you had not opened individually, while the forum stops counting them once you have
+  looked at your list, so the app could claim three were waiting when there were none.
+- Open a forum notification straight at the post. Clicking one used to run the whole sign-in
+  handshake through the identity broker first, even when the browser was already signed in.
+- Stop showing how long ago a forum notification arrived as a negative duration. In French it read
+  "-2 h" for two hours ago.
+- Say what actually happened for every kind of forum notification. Reactions, new topics in a
+  category you follow and group message summaries all read "New forum activity" before.
+- Translate the app into every language it ships. The forum panel, its notifications, the terms of
+  use link and the port forwarding warnings were shown in English whatever the chosen language.
+
+
 ## [1.1.6] - 2026-08-08
 ### Added
 - Show a forum activity bell in the app, with a panel listing what happened to you on the
