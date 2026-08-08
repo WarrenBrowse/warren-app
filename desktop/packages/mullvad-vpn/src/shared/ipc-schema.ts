@@ -36,6 +36,7 @@ import {
 import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumIdentity } from './forum-identity';
 import { ForumLoginResult, IForumLoginRequest } from './forum-login';
+import { ForumNotificationsResult } from './forum-notifications';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
 import {
@@ -186,6 +187,13 @@ export const ipcSchema = {
     // without a restart.
     identity: notifyRenderer<ForumIdentity | undefined>(),
     getIdentity: invoke<void, ForumIdentity | undefined>(),
+  },
+  // Community-forum activity panel (doc 55). One user-initiated read of
+  // the caller's own notifications, signed with the wallet key. Never
+  // polled: the header badge comes from the broadcast digest, which asks
+  // the server nothing about anybody.
+  forumActivity: {
+    list: invoke<void, ForumNotificationsResult>(),
   },
   // Community-forum attach-logs (doc 55). `request` is pushed when a
   // `warren://attach-logs` deep link arrives; the renderer shows a consent

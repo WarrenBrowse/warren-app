@@ -319,6 +319,27 @@ export class DaemonRpc extends GrpcClient {
   }
 
   /**
+   * Signs a community-forum notification read (doc 55). Takes no argument:
+   * the account read is derived from the signature, so there is nothing to
+   * point at somebody else. Returns the four X-Warren-* header values plus
+   * the exact body to POST verbatim. The signing key never leaves the
+   * daemon.
+   */
+  public async signForumNotifications(): Promise<ForumLoginSignature> {
+    const response = await this.call<Empty, grpcTypes.ForumLoginSignature>(
+      this.client.signForumNotifications,
+      new Empty(),
+    );
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
+  }
+
+  /**
    * Signs a community-forum attach-logs request (doc 55). `sid` and
    * `topicId` come from a `warren://attach-logs?sid=..&topic=..` deep link
    * and `logGz` is the gzipped redacted problem report. The daemon builds

@@ -1091,6 +1091,23 @@ signForumLogin: {
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },
+  // Signs a community-forum notification read (warren-core doc 55). The
+// canonical request is `POST /v1/forum/notifications` with an empty JSON
+// object as its body: the account to read is derived from the signature,
+// never named in the request, so this cannot be pointed at anyone else.
+// Takes no argument for the same reason. Errors if no identity is
+// bootstrapped.
+signForumNotifications: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumNotifications',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
   // Signs a community-forum attach-logs request (warren-core doc 55). The
 // GUI passes the `sid` + `topic_id` from a
 // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped

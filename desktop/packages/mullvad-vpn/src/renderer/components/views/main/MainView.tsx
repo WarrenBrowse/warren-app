@@ -57,6 +57,7 @@ export function MainView() {
       <CountryBackdrop />
       <Foreground>
         <AppMainHeader size="1" variant="transparent" tone="dark">
+          <AppMainHeader.ForumButton />
           <AppMainHeader.AccountButton />
           <AppMainHeader.SettingsButton />
         </AppMainHeader>

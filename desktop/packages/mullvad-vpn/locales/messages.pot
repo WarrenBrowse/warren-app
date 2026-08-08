@@ -366,6 +366,17 @@ msgctxt "accessibility"
 msgid "Expand %(location)s"
 msgstr ""
 
+msgctxt "accessibility"
+msgid "Forum"
+msgstr ""
+
+#. unread activity.
+#. Available placeholder:
+#. %(count)s - number of unread notifications
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr ""
+
 #. Accessibility label for link to app upgrade view.
 msgctxt "accessibility"
 msgid "Go to app update page"
@@ -1409,6 +1420,94 @@ msgstr ""
 
 msgctxt "filter-view"
 msgid "Warren owned only"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr ""
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr ""
+
+#. Shown when the app could not reach the
+#. forum to load the user's notifications.
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr ""
+
+#. Heading of the community-forum activity panel.
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr ""
+
+#. Shown while the app is fetching the
+#. user's forum notifications.
+msgctxt "forum-activity-view"
+msgid "Loading your forum activity..."
+msgstr ""
+
+#. Shown for a kind of forum notification this version of
+#. the app does not have its own wording for.
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr ""
+
+#. Shown when the user has no forum
+#. notifications waiting.
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr ""
+
+#. Button that opens the community forum in
+#. the browser.
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr ""
+
+#. Stands in for the forum member who caused a
+#. notification when the forum did not name them.
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr ""
+
+#. Button that retries loading the forum
+#. notifications.
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr ""
+
+#. Shown when the forum awarded the user a badge.
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr ""
+
+#. Shown above the empty forum panel, with
+#. the user's own public forum name.
+#. Available placeholder:
+#. %(handle)s - the user's forum name
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
 msgstr ""
 
 msgctxt "forum-attach"

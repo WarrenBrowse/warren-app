@@ -655,6 +655,37 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
+    /// Signs a community-forum notification read (doc 55). Takes no
+    /// argument: the account read is derived from the signature, so there
+    /// is nothing a caller could point at somebody else.
+    /// **No-log policy**: never log the pubkey or the signature.
+    async fn sign_forum_notifications(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        // Signs with the wallet identity key, so it is gated per-uid exactly
+        // like the login RPC: the management socket is world-accessible, and
+        // without this a co-tenant local user could read this account's forum
+        // notifications.
+        self.authorize_wallet_access(&request)?;
+        log::debug!("sign_forum_notifications (pubkey/sig NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SignForumNotifications(tx))?;
+        let signed = self.wait_for_result(rx).await?;
+        match signed {
+            Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            None => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+        }
+    }
+
     /// Signs a community-forum attach-logs request (doc 55). Validates the
     /// deep-link `sid` shape and the gzipped report size, then asks the
     /// daemon to build and sign the canonical `POST /v1/forum/attach-logs`

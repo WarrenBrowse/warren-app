@@ -11,6 +11,10 @@ export enum RoutePath {
   settings = '/settings',
   selectLanguage = '/settings/language',
   account = '/account',
+  // Community-forum activity panel, opened from the header bell. A view
+  // rather than a popover: this app opens Account and Settings the same
+  // way, and a dropdown over the connect screen exists nowhere else.
+  forumActivity = '/forum-activity',
   keys = '/account/keys',
   restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',

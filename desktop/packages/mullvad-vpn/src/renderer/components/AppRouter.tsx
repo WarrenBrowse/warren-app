@@ -25,6 +25,7 @@ import {
   EditApiAccessView,
   ExpiredAccountErrorView,
   FilterView,
+  ForumActivityView,
   KeysView,
   LaunchView,
   LoginView,
@@ -80,6 +81,7 @@ export default function AppRouter() {
           <Route exact path={RoutePath.timeAdded} component={TimeAdded} />
           <Route exact path={RoutePath.setupFinished} component={SetupFinished} />
           <Route exact path={RoutePath.account} component={AccountView} />
+          <Route exact path={RoutePath.forumActivity} component={ForumActivityView} />
           <Route exact path={RoutePath.keys} component={KeysView} />
           <Route exact path={RoutePath.restoreKeys} component={RestoreMnemonicView} />
           <Route exact path={RoutePath.settings} component={SettingsView} />

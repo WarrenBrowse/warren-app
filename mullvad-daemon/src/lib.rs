@@ -405,6 +405,11 @@ pub enum DaemonCommand {
     /// deep-link `sid`; replies with the four X-Warren-* header values +
     /// the request body, or `None` if no identity is bootstrapped. The
     /// signing key never leaves the daemon.
+    /// Sign the community-forum notification read (doc 55). Carries no
+    /// argument: the account is derived from the signature itself.
+    SignForumNotifications(
+        oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+    ),
     SignForumLogin(
         oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         String,
@@ -2577,6 +2582,7 @@ impl Daemon {
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
             SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
+            SignForumNotifications(tx) => self.on_sign_forum_notifications(tx),
             SignForumAttachLogs(tx, sid, topic_id, log_gz) => {
                 self.on_sign_forum_attach_logs(tx, sid, topic_id, log_gz)
             }
@@ -3118,6 +3124,29 @@ impl Daemon {
         });
         log::debug!("on_sign_forum_login: signed={}", result.is_some());
         Self::oneshot_send(tx, result, "sign_forum_login");
+    }
+
+    /// Signs the community-forum notification read (doc 55). The body is
+    /// fixed and carries nothing: warren-connect derives the account from
+    /// the signature, so there is no field a caller could point elsewhere.
+    /// Replies `None` when no signer is bootstrapped.
+    ///
+    /// **No-log policy**: the pubkey and signature are never logged.
+    fn on_sign_forum_notifications(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+    ) {
+        let result = self.warren_identity.has_user_identity().then(|| {
+            let body = forum_notifications_body();
+            let headers = self.warren_identity.signer().sign_request(
+                "POST",
+                "/v1/forum/notifications",
+                body.as_bytes(),
+            );
+            (headers, body)
+        });
+        log::debug!("on_sign_forum_notifications: signed={}", result.is_some());
+        Self::oneshot_send(tx, result, "sign_forum_notifications");
     }
 
     /// Signs the community-forum attach-logs request for `sid` (doc 55).
@@ -5318,6 +5347,15 @@ fn forum_login_body(sid: &str) -> String {
     format!("{{\"sid\":\"{sid}\"}}")
 }
 
+/// Canonical `POST /v1/forum/notifications` JSON body (doc 55). Empty by
+/// design and frozen as such: the account read is derived from the
+/// signature, so a field here could only ever be one a caller might point
+/// at somebody else. The daemon signs exactly this string and the GUI
+/// POSTs it verbatim.
+fn forum_notifications_body() -> String {
+    "{}".to_owned()
+}
+
 /// Canonical `POST /v1/forum/attach-logs` JSON body (doc 55). The field
 /// order and formatting are a frozen wire contract with warren-connect:
 /// the daemon signs exactly this string and the GUI POSTs it verbatim, so
@@ -5331,13 +5369,22 @@ fn forum_attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> String {
 
 #[cfg(test)]
 mod forum_attach_body_tests {
-    use super::{forum_attach_body, forum_login_body};
+    use super::{forum_attach_body, forum_login_body, forum_notifications_body};
 
     #[test]
     fn forum_login_body_pins_the_wire_contract() {
         assert_eq!(
             forum_login_body("0123456789abcdef0123456789abcdef"),
             "{\"sid\":\"0123456789abcdef0123456789abcdef\"}"
+        );
+    }
+
+    #[test]
+    fn forum_notifications_body_carries_nothing_to_point_elsewhere() {
+        assert_eq!(
+            forum_notifications_body(),
+            "{}",
+            "the account is derived from the signature; a field here would be one to abuse"
         );
     }
 

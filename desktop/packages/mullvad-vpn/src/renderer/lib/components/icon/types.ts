@@ -4,6 +4,7 @@ export const icons = {
   add: 'icon-add',
   'add-circle': 'icon-add-circle',
   'alert-circle': 'icon-alert-circle',
+  'bell-outline': 'icon-bell-outline',
   'checkbox-checkmark': 'icon-checkbox-checkmark',
   'checkmark-circle': 'icon-checkmark-circle',
   checkmark: 'icon-checkmark',

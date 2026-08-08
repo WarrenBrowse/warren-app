@@ -7,6 +7,7 @@ import { InitialFocus } from '../initial-focus';
 import {
   AppMainFooter,
   AppMainHeaderBarAccountButton,
+  AppMainHeaderForumButton,
   AppMainHeaderPubKey,
   AppMainHeaderSettingsButton,
   AppMainHeaderTimeLeft,
@@ -85,6 +86,7 @@ const AppMainHeader = ({
 
 const AppMainHeaderNamespace = Object.assign(AppMainHeader, {
   AccountButton: AppMainHeaderBarAccountButton,
+  ForumButton: AppMainHeaderForumButton,
   SettingsButton: AppMainHeaderSettingsButton,
   Footer: AppMainFooter,
 });

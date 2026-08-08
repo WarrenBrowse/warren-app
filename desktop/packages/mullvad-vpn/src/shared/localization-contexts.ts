@@ -44,6 +44,7 @@ export type LocalizationContexts =
   | 'warren-multi-hop-view'
   | 'warren-status-view'
   | 'warren-pubkey-warning'
+  | 'forum-activity-view'
   | 'port-forwarding-view'
   | 'warren-onboarding'
   | 'beta-badge'

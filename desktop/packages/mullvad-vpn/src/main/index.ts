@@ -80,6 +80,7 @@ import {
   parseForumLoginUrl,
   PendingForumRequest,
 } from './forum-login';
+import { fetchForumNotifications } from './forum-notifications';
 import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
@@ -1279,6 +1280,9 @@ class ApplicationMain
     IpcMainEventChannel.forumLogin.handleGetPending(() =>
       Promise.resolve(this.pendingForumLogin.get(Date.now())),
     );
+    // Forum activity panel: a user-initiated read of their own
+    // notifications, signed with the wallet key. Never polled.
+    IpcMainEventChannel.forumActivity.handleList(() => fetchForumNotifications(this.daemonRpc));
     IpcMainEventChannel.forumLogin.handleGetIdentity(() =>
       Promise.resolve(this.forumIdentityStore.get()),
     );
