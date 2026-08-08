@@ -14,7 +14,7 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
-## [1.1.3] - 2026-08-08
+## [1.1.4] - 2026-08-08
 ### Reparat
 - [macOS] Instalarea este posibilă pe Mac-urile Intel. Pachetul macOS era compilat doar pentru
   Apple Silicon deși era publicat ca universal, așa că programul de instalare îl refuza pe orice

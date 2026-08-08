@@ -15,7 +15,7 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
-## [1.1.3] - 2026-08-08
+## [1.1.4] - 2026-08-08
 ### Corrigé
 - [macOS] L'installation est possible sur les Mac Intel. Le paquet macOS était compilé pour Apple
   Silicon uniquement tout en étant publié comme universel, si bien que le programme d'installation
