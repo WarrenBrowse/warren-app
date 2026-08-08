@@ -29,7 +29,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use tokio::sync::watch;
 use warrenguard_transport::egress_probe::{
-    EgressProbeIo, ProbeOutcome, jittered, probe_gateway_dns,
+    EgressProbeIo, ProbeOutcome, TransportEvidence, jittered, probe_gateway_dns,
 };
 use warrenguard_transport::supervisor::ClientWatch;
 
@@ -53,6 +53,11 @@ pub(crate) type VerdictSink = Arc<dyn Fn(bool) + Send + Sync>;
 /// module owns.
 pub(crate) type ProbeFn =
     Arc<dyn Fn() -> Pin<Box<dyn Future<Output = ProbeOutcome> + Send>> + Send + Sync>;
+
+/// Reads the live session's QUIC ACK counter. `None` runs the production read
+/// off the session watch; a host test scripts it, because a real
+/// `MultiHopBundle` cannot be built without a network.
+pub(crate) type AckFn = Arc<dyn Fn() -> Option<u64> + Send + Sync>;
 
 /// Compose the single `i32` Kotlin polls out of the two independent verdict
 /// publishers (the supervisor's goodput prober and this probe).
@@ -100,6 +105,26 @@ pub(crate) struct AndroidEgressProbeIo {
     pub escalate: Option<watch::Sender<bool>>,
     /// Datapath probe; see [`ProbeFn`].
     pub probe: Option<ProbeFn>,
+    /// ACK-counter read; see [`AckFn`].
+    pub acks: Option<AckFn>,
+    /// The counter's value when the current failure streak began, so the
+    /// evidence answers about THIS streak and not about the whole session.
+    pub acks_at_streak_start: Option<u64>,
+}
+
+impl AndroidEgressProbeIo {
+    /// ACK frames the peer has sent us on the live session, or `None` when
+    /// there is no session to read.
+    fn read_acks(&mut self) -> Option<u64> {
+        if let Some(scripted) = self.acks.as_ref() {
+            return scripted();
+        }
+        self.sessions
+            .as_mut()?
+            .borrow_and_update()
+            .as_ref()
+            .map(|bundle| bundle.quinn_stats().frame_rx.acks)
+    }
 }
 
 impl EgressProbeIo for AndroidEgressProbeIo {
@@ -153,6 +178,22 @@ impl EgressProbeIo for AndroidEgressProbeIo {
 
     async fn try_migrate(&mut self) -> bool {
         false
+    }
+
+    fn mark_streak_start(&mut self) {
+        self.acks_at_streak_start = self.read_acks();
+    }
+
+    /// Only the peer can acknowledge what it received from us, so a counter
+    /// that has not moved across the failure streak means the path carried
+    /// nothing and the exit is not the suspect. `Unknown` when there is no
+    /// session to read: absent evidence must not suppress a conviction.
+    fn transport_evidence(&mut self) -> TransportEvidence {
+        match (self.acks_at_streak_start, self.read_acks()) {
+            (None, _) | (_, None) => TransportEvidence::Unknown,
+            (Some(before), Some(now)) if now > before => TransportEvidence::Progressing,
+            _ => TransportEvidence::Silent,
+        }
     }
 
     fn escalate_reconnect(&mut self, msg: String) {
@@ -212,6 +253,8 @@ mod tests {
                 sink_cb.0.lock().expect("sink never poisoned").push(dead);
             })),
             escalate: Some(escalate),
+            acks: None,
+            acks_at_streak_start: None,
             probe: Some(Arc::new(move || {
                 let n = calls.fetch_add(1, Ordering::Relaxed);
                 let ok = *results
@@ -225,6 +268,51 @@ mod tests {
                 Box::pin(async move { outcome })
             })),
         }
+    }
+
+    /// A path that carries nothing must never be blamed on the exit. This probe
+    /// convicts an exit that ACKs keep-alives and forwards nothing, so while the
+    /// peer ACKs nothing at all the premise does not hold: the redial the
+    /// conviction triggers rides the same dead path, and the QUIC idle timeout
+    /// owns that death. Convicting anyway costs the user every request in
+    /// flight, which is the 2026-08-08 incident.
+    #[tokio::test(start_paused = true)]
+    async fn a_stalled_path_never_convicts_the_exit() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, escalated) = watch::channel(false);
+        let mut io = io_with(vec![false], &sink, escalate);
+        // The peer acknowledges nothing for the whole run: a path stall.
+        io.acks = Some(Arc::new(|| Some(42)));
+        let _ = tokio::time::timeout(Duration::from_secs(600), run_egress_probe(&mut io, 3)).await;
+        assert!(
+            !*escalated.borrow(),
+            "a stalled path must never end the session"
+        );
+        assert!(
+            sink.seen().is_empty(),
+            "and must not even banner: {:?}",
+            sink.seen()
+        );
+    }
+
+    /// The other side of the same coin: when the path IS carrying traffic and
+    /// the exit still answers nothing, that is evidence against the exit and it
+    /// must still be convicted.
+    #[tokio::test(start_paused = true)]
+    async fn an_exit_that_forwards_nothing_behind_a_live_path_is_still_convicted() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, escalated) = watch::channel(false);
+        let mut io = io_with(vec![false], &sink, escalate);
+        let acks = Arc::new(std::sync::atomic::AtomicU64::new(0));
+        io.acks = Some(Arc::new(move || {
+            Some(acks.fetch_add(10, Ordering::Relaxed))
+        }));
+        let _ = tokio::time::timeout(Duration::from_secs(600), run_egress_probe(&mut io, 3)).await;
+        assert!(
+            *escalated.borrow(),
+            "an exit forwarding nothing over a live path must still be convicted"
+        );
+        assert_eq!(sink.seen(), vec![true]);
     }
 
     /// A forwarding exit must never raise the banner, however long the probe
@@ -314,6 +402,8 @@ mod tests {
             interval: TEST_INTERVAL,
             startup_interval: TEST_STARTUP,
             sessions: None,
+            acks: None,
+            acks_at_streak_start: None,
             verdict: Some(Arc::new(move |dead| {
                 sink_cb.0.lock().expect("sink never poisoned").push(dead);
             })),
@@ -336,6 +426,8 @@ mod tests {
             interval: TEST_INTERVAL,
             startup_interval: TEST_STARTUP,
             sessions: None,
+            acks: None,
+            acks_at_streak_start: None,
             verdict: None,
             escalate: Some(escalate),
             probe: None,
@@ -352,6 +444,8 @@ mod tests {
             interval: TEST_INTERVAL,
             startup_interval: TEST_STARTUP,
             sessions: None,
+            acks: None,
+            acks_at_streak_start: None,
             verdict: None,
             escalate: None,
             probe: None,

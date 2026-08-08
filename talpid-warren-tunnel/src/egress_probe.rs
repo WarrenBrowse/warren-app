@@ -41,7 +41,8 @@
 use std::time::Duration;
 
 pub(crate) use warrenguard_transport::egress_probe::{
-    EgressProbeConfig, EgressProbeIo, ProbeOutcome, jittered, probe_gateway_dns, run_egress_probe,
+    EgressProbeConfig, EgressProbeIo, ProbeOutcome, TransportEvidence, jittered, probe_gateway_dns,
+    run_egress_probe,
 };
 
 /// Watch receiver over the supervisor's published session.
@@ -77,6 +78,27 @@ pub(crate) struct RealEgressProbeIo {
     /// opts out.
     pub pump_error_tx: Option<PumpErrorTx>,
     pub current_exit_id: [u8; 16],
+    /// ACK-counter read. `None` reads the live session off `client_rx`; a test
+    /// scripts it, because a real `MultiHopBundle` needs a network.
+    pub acks: Option<std::sync::Arc<dyn Fn() -> Option<u64> + Send + Sync>>,
+    /// The counter's value when the current failure streak began, so the
+    /// evidence answers about THIS streak and not about the whole session.
+    pub acks_at_streak_start: Option<u64>,
+}
+
+impl RealEgressProbeIo {
+    /// ACK frames the peer has sent us on the live session, or `None` when
+    /// there is no session to read.
+    fn read_acks(&mut self) -> Option<u64> {
+        if let Some(scripted) = self.acks.as_ref() {
+            return scripted();
+        }
+        self.client_rx
+            .as_mut()?
+            .borrow_and_update()
+            .as_ref()
+            .map(|bundle| bundle.quinn_stats().frame_rx.acks)
+    }
 }
 
 impl EgressProbeIo for RealEgressProbeIo {
@@ -115,6 +137,22 @@ impl EgressProbeIo for RealEgressProbeIo {
         }
     }
 
+    fn mark_streak_start(&mut self) {
+        self.acks_at_streak_start = self.read_acks();
+    }
+
+    /// Only the peer can acknowledge what it received from us, so a counter
+    /// that has not moved across the failure streak means the path carried
+    /// nothing and the exit is not the suspect. `Unknown` when there is no
+    /// session to read: absent evidence must not suppress a conviction.
+    fn transport_evidence(&mut self) -> TransportEvidence {
+        match (self.acks_at_streak_start, self.read_acks()) {
+            (None, _) | (_, None) => TransportEvidence::Unknown,
+            (Some(before), Some(now)) if now > before => TransportEvidence::Progressing,
+            _ => TransportEvidence::Silent,
+        }
+    }
+
     fn drain_active(&mut self) -> bool {
         self.drain_rx
             .as_mut()
@@ -150,6 +188,67 @@ impl EgressProbeIo for RealEgressProbeIo {
 mod tests {
     use super::*;
 
+    /// A path that carries nothing must never be blamed on the exit. This probe
+    /// convicts an exit that ACKs keep-alives and forwards nothing, so while the
+    /// peer ACKs nothing at all the premise does not hold and the redial the
+    /// conviction triggers rides the same dead path. Convicting anyway costs the
+    /// user every request in flight (2026-08-08 incident).
+    #[tokio::test(start_paused = true)]
+    async fn a_stalled_path_never_convicts_the_exit() {
+        let fired = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+        let seen = std::sync::Arc::clone(&fired);
+        let (tx, _rx) = tokio::sync::oneshot::channel();
+        let mut io = RealEgressProbeIo {
+            interval: Duration::from_secs(25),
+            startup_interval: Duration::from_secs(3),
+            client_rx: None,
+            verdict: Some(std::sync::Arc::new(move |dead| {
+                if dead {
+                    seen.store(true, std::sync::atomic::Ordering::Relaxed);
+                }
+            })),
+            drain_rx: None,
+            drain_migrate: None,
+            pump_error_tx: Some(std::sync::Arc::new(std::sync::Mutex::new(Some(tx)))),
+            current_exit_id: [0; 16],
+            // The peer acknowledges nothing for the whole run: a path stall.
+            acks: Some(std::sync::Arc::new(|| Some(42))),
+            acks_at_streak_start: None,
+        };
+        io.mark_streak_start();
+        assert_eq!(
+            io.transport_evidence(),
+            TransportEvidence::Silent,
+            "no ACK arrived since the streak began: the path carried nothing"
+        );
+        assert!(!fired.load(std::sync::atomic::Ordering::Relaxed));
+    }
+
+    /// The other side: a path that IS carrying traffic leaves the exit as the
+    /// only suspect, so the conviction must still be reachable.
+    #[tokio::test(start_paused = true)]
+    async fn a_live_path_reports_progress_so_the_exit_stays_convictable() {
+        let acks = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+        let reader = std::sync::Arc::clone(&acks);
+        let mut io = RealEgressProbeIo {
+            interval: Duration::from_secs(25),
+            startup_interval: Duration::from_secs(3),
+            client_rx: None,
+            verdict: None,
+            drain_rx: None,
+            drain_migrate: None,
+            pump_error_tx: None,
+            current_exit_id: [0; 16],
+            acks: Some(std::sync::Arc::new(move || {
+                Some(reader.load(std::sync::atomic::Ordering::Relaxed))
+            })),
+            acks_at_streak_start: None,
+        };
+        io.mark_streak_start();
+        acks.fetch_add(9, std::sync::atomic::Ordering::Relaxed);
+        assert_eq!(io.transport_evidence(), TransportEvidence::Progressing);
+    }
+
     #[tokio::test]
     async fn real_io_without_callback_or_channels_is_inert_but_alive() {
         // Inert config: no supervisor watch, no drain channel, no
@@ -165,6 +264,8 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             current_exit_id: [0; 16],
+            acks: None,
+            acks_at_streak_start: None,
         };
         assert!(io.session_present(), "no watch defaults to session present");
         assert!(!io.drain_active(), "no drain channel => never draining");
@@ -188,6 +289,8 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             current_exit_id: [0; 16],
+            acks: None,
+            acks_at_streak_start: None,
         };
         io.publish(true);
         io.publish(false);
@@ -207,6 +310,8 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: Some(shared.clone()),
             current_exit_id: [0; 16],
+            acks: None,
+            acks_at_streak_start: None,
         };
         io.escalate_reconnect("exit not forwarding".to_owned());
         assert_eq!(

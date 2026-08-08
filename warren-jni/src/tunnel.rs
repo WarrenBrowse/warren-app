@@ -636,6 +636,9 @@ fn spawn_egress_probe(
         escalate: Some(escalate),
         // The production in-tunnel DNS probe against the exit resolver.
         probe: None,
+        // Production reads the ACK counter off the session watch above.
+        acks: None,
+        acks_at_streak_start: None,
     };
     Some(crate::supervised_session::AbortOnDrop::spawn(async move {
         run_egress_probe(&mut io, cfg.failure_threshold).await;
