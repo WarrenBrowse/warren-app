@@ -135,6 +135,13 @@ jobs:
       - name: ESLint (zero warnings)
         run: npm run lint
 
+      # Type-checking and linting both pass on a renderer bundle that throws on
+      # load: 1.1.5 shipped exactly that and no desktop window could paint. This
+      # checks the built artifact, which is the only place the failure is
+      # visible without launching the app.
+      - name: Renderer bundle carries no Node-only globals
+        run: npm run verify:renderer-bundle
+
       - name: Verify messages.pot is up-to-date
         # If TS code calls pgettext/gettext without an update-translations
         # re-run being committed, this check breaks. Prevents

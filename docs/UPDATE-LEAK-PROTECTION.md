@@ -128,7 +128,7 @@ Six lots. Lot 0 comes first because without it the next occurrence cannot be
 diagnosed. Lot 1 is independent of the rest. Lots 2 to 4 are the leak protection
 proper and share one primitive. Lot 5 is mobile.
 
-### Lot 0: be able to see the failure at all
+### Lot 0: be able to see the failure at all [DONE]
 
 Two defects found while diagnosing the 2026-08-08 second occurrence, both of
 which make every later lot harder to validate.
@@ -177,7 +177,7 @@ This also downgrades the no-cache boot race that `2026-08-04` recorded: a machin
 with no usable cache still dials before any circuit exists, but now recovers
 within a minute instead of never.
 
-### Lot 2: the in-process dead-man (G2, first half)
+### Lot 2: the in-process dead-man (G2, first half) [DONE]
 
 `on_prepare_restart` arms a timer alongside the lockdown. If no shutdown follows
 within a bounded window, the daemon reverts `shared_values.lockdown_mode` to the
@@ -190,7 +190,7 @@ The window has to exceed a slow installer on a slow disk. Measured on the
 10 s end to end. A window of a few minutes is two orders of margin and still
 bounds the damage.
 
-### Lot 3: the detached dead-man (G2 second half, G3, G4)
+### Lot 3: the detached dead-man (G2 second half, G3, G4) [DONE, needs real-install validation]
 
 The workspace rule is explicit and was bought by an incident: a dead-man must
 never depend on the thing it is protecting against. The in-process timer dies
@@ -215,7 +215,7 @@ firewall has an owner.
 This also covers G4 without touching the postinstall's two aborts: they stay
 fatal, and the guard restores the user regardless.
 
-### Lot 4: align the three desktop platforms on the Windows caution (G5)
+### Lot 4: align the three desktop platforms on the Windows caution (G5) [DONE, needs real-install validation]
 
 - Make a failed `prepare-restart` fatal on macOS and Linux, matching the Windows
   arm. An installer that cannot arm the protection must not proceed to kill the
@@ -227,7 +227,7 @@ fatal, and the guard restores the user regardless.
   exactly the "re-disable it afterwards" property, made explicit rather than
   inherited from the process dying.
 
-### Lot 5: mobile (G6)
+### Lot 5: mobile (G6) [DONE, Android detection + advice; iOS documented as out of reach]
 
 Neither app can arm the protection, so the honest deliverable is detection and
 guidance, wired into surfaces that already exist:
@@ -258,3 +258,27 @@ Lot 4's fatal `prepare-restart` is the one change that can make an install fail
 where it used to proceed. It is the correct trade (an install that cannot protect
 the user should not start), and it is why lot 3 lands first: the guard must exist
 before the abort does.
+
+## Shipped state, 2026-08-08
+
+Every lot is implemented and on `main`. What each rests on:
+
+| lot | commits | validation |
+|---|---|---|
+| 0 | `34dd1469cb`, `f6257e3770` | host tests; the 30 s boot stall is measured, the rotation depth is asserted |
+| 1 | `c4f70d5572` | host tests |
+| 2 | `6c65c91f37` | host tests, the verdict proven to go red on reverted code |
+| 3 | `4275b55e85` | host tests for the verdict and the staging path; **the OS timers are NOT exercised by any test** |
+| 4 | `4275b55e85` | shell syntax only |
+| 5 | this commit | host tests for the verdict; the `Settings.Secure` read is not exercised |
+
+**Lots 3 and 4 still need what this document always said they need**: a real
+install, a deliberately broken install, and a reboot, on macOS, Linux and
+Windows. Nothing below that proves a scheduled task actually fires, that
+`launchctl` accepts the plist, or that an aborted install leaves a machine that
+recovers. The unit tests pin the decisions, not the platform integration.
+
+The one change that can make a previously-succeeding install fail is lot 4's
+fatal `prepare-restart`. It ships behind lot 3's guard, which is the ordering
+this document required, so a machine that aborts still has something armed to
+free it.

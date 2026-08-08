@@ -13,4 +13,11 @@ message UserPreferences {
   // Version string of the update prompt the user dismissed. Empty means
   // nothing was dismissed; a newer upgrade raises the banner again.
   string dismissed_upgrade_version = 7;
+  // Set once, after an app update, when the OS is NOT holding the network
+  // closed for this app (Always-on VPN + "Block connections without VPN").
+  // Neither mobile OS lets an app seal the network while it is being replaced,
+  // so that system setting is the only thing that covers the window. Unset when
+  // the setting could not be read: a device that hides it must not be told it
+  // is unprotected.
+  bool show_always_on_vpn_advice = 8;
 }

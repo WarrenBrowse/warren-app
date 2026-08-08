@@ -93,7 +93,8 @@
     "update-translations": "node scripts/extract-translations.cjs",
     "pack:mac": "node tasks/pack-mac.cjs",
     "pack:win": "node tasks/pack-windows.cjs",
-    "pack:linux": "node tasks/pack-linux.cjs"
+    "pack:linux": "node tasks/pack-linux.cjs",
+    "verify:renderer-bundle": "npm run build:vite && node scripts/verify-renderer-bundle.mjs"
   },
   "volta": {
     "extends": "../../package.json"

@@ -36,6 +36,17 @@ class UserPreferencesRepository(
         }
     }
 
+    /**
+     * Records that the OS is not blocking connections without this app's VPN,
+     * so the UI can point the user at the system setting once. The desktop
+     * apps arm their own protection across an update; on mobile the OS owns the
+     * tunnel and this setting is the only equivalent.
+     */
+    suspend fun setShowAlwaysOnVpnAdvice(show: Boolean) =
+        userPreferencesStore.updateData { prefs ->
+            prefs.toBuilder().setShowAlwaysOnVpnAdvice(show).build()
+        }
+
     suspend fun setShowAndroid16ConnectWarning(show: Boolean) =
         userPreferencesStore.updateData { prefs ->
             prefs.toBuilder().setShowAndroid16ConnectWarning(show).build()
