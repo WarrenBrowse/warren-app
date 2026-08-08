@@ -5339,3 +5339,7 @@ msgstr "Получайте уведомление, когда вам отвеч�
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Уведомления форума"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Форум обновлён"

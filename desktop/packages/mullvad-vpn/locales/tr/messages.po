@@ -5309,3 +5309,7 @@ msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Uygulamad
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forum bildirimleri"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Forum güncellendi"

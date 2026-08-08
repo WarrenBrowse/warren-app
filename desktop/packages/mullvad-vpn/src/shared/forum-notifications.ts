@@ -23,6 +23,7 @@ export type ForumNotificationKind =
   | 'linked'
   | 'granted_badge'
   | 'watching_first_post'
+  | 'announcement'
   | 'other';
 
 const KINDS: readonly ForumNotificationKind[] = [
@@ -35,6 +36,7 @@ const KINDS: readonly ForumNotificationKind[] = [
   'linked',
   'granted_badge',
   'watching_first_post',
+  'announcement',
   'other',
 ];
 

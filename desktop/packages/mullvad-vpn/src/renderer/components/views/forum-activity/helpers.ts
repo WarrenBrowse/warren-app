@@ -14,6 +14,8 @@ export function iconFor(kind: ForumNotificationKind): keyof typeof icons {
       return 'account-outline';
     case 'granted_badge':
       return 'checkmark-circle';
+    case 'announcement':
+      return 'info-circle';
     case 'linked':
       return 'external';
     case 'replied':
@@ -66,6 +68,10 @@ export function headlineFor(notification: ForumNotification): string {
       // TRANSLATORS: Available placeholder:
       // TRANSLATORS: %(actor)s - the forum member's public name
       return fill(messages.pgettext('forum-activity-view', '%(actor)s opened a new topic'), actor);
+    case 'announcement':
+      // TRANSLATORS: Shown when the forum software itself announces
+      // TRANSLATORS: something, rather than another member.
+      return messages.pgettext('forum-activity-view', 'The forum was updated');
     case 'other':
       // TRANSLATORS: Shown for a kind of forum notification this version of
       // TRANSLATORS: the app does not have its own wording for.

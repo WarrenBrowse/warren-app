@@ -5281,3 +5281,7 @@ msgstr "รับการแจ้งเตือนเมื่อมีคน
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "การแจ้งเตือนจากฟอรัม"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "ฟอรัมได้รับการอัปเดตแล้ว"

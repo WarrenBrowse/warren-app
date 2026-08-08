@@ -4458,3 +4458,7 @@ msgstr "Află când îți răspunde cineva pe forumul comunității. Contorul di
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Notificări de pe forum"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Forumul a fost actualizat"

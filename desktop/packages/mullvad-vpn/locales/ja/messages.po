@@ -5281,3 +5281,7 @@ msgstr "コミュニティフォーラムで誰かが返信したときに知ら
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "フォーラムの通知"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "フォーラムが更新されました"

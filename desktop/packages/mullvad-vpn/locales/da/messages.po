@@ -5309,3 +5309,7 @@ msgstr "Få besked, når nogen svarer dig på fællesskabsforummet. Tælleren i 
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forumnotifikationer"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Forummet er opdateret"

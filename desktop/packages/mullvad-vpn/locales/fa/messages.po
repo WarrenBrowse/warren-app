@@ -5296,3 +5296,7 @@ msgstr "وقتی کسی در انجمن جامعه به شما پاسخ داد،
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "اعلان‌های انجمن"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "انجمن به‌روزرسانی شد"

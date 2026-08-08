@@ -1485,6 +1485,12 @@ msgctxt "forum-activity-view"
 msgid "Someone"
 msgstr ""
 
+#. Shown when the forum software itself announces
+#. something, rather than another member.
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr ""
+
 #. Button that retries loading the forum
 #. notifications.
 msgctxt "forum-activity-view"

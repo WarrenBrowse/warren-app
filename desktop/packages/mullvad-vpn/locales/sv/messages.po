@@ -5309,3 +5309,7 @@ msgstr "Få veta när någon svarar dig på gemenskapsforumet. Räknaren i appen
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forumaviseringar"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Forumet har uppdaterats"

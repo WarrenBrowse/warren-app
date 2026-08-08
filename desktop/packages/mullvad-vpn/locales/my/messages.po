@@ -5284,3 +5284,7 @@ msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ�
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "ဖိုရမ် အသိပေးချက်များ"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "ဖိုရမ်ကို အပ်ဒိတ်လုပ်ပြီးပါပြီ"

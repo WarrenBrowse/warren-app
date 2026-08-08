@@ -5310,3 +5310,7 @@ msgstr "Erfahre, wenn dir jemand im Community-Forum antwortet. Der Zähler in de
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forum-Benachrichtigungen"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Das Forum wurde aktualisiert"

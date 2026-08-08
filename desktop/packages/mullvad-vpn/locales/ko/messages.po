@@ -5281,3 +5281,7 @@ msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다.
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "포럼 알림"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "포럼이 업데이트되었습니다"

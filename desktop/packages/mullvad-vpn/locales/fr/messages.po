@@ -4462,3 +4462,7 @@ msgstr "Soyez prévenu quand quelqu'un vous répond sur le forum communautaire. 
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Notifications du forum"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Le forum a été mis à jour"

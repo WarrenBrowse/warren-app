@@ -5339,3 +5339,7 @@ msgstr "Otrzymuj powiadomienie, gdy ktoś odpowie ci na forum społeczności. Li
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Powiadomienia z forum"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Forum zostało zaktualizowane"

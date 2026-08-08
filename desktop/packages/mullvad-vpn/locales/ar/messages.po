@@ -5356,3 +5356,7 @@ msgstr "أعلمني عندما يرد عليك أحد في منتدى المج�
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "إشعارات المنتدى"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "تم تحديث المنتدى"

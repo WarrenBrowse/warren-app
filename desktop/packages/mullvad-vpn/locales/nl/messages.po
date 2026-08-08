@@ -5309,3 +5309,7 @@ msgstr "Krijg bericht wanneer iemand je antwoordt op het communityforum. De tell
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forummeldingen"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Het forum is bijgewerkt"

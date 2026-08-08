@@ -5281,3 +5281,7 @@ msgstr "有人在社区论坛回复你时提醒你。应用内的计数不受影
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "论坛通知"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "论坛已更新"

@@ -5309,3 +5309,7 @@ msgstr "Recibe un aviso cuando alguien te responda en el foro de la comunidad. E
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Notificaciones del foro"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "El foro se ha actualizado"

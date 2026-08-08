@@ -5309,3 +5309,7 @@ msgstr "Saat tiedon, kun joku vastaa sinulle yhteisöfoorumilla. Sovelluksen las
 msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Foorumin ilmoitukset"
+
+msgctxt "forum-activity-view"
+msgid "The forum was updated"
+msgstr "Foorumi päivitettiin"
