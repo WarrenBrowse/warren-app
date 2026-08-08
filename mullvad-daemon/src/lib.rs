@@ -5054,7 +5054,8 @@ impl Daemon {
             // a lock-out log cannot tell them apart. It cost a wrong root cause
             // on 2026-08-08: the setting was off the whole time.
             log::info!(
-                "Arming the temporary restart lockdown for an app update                  (the persisted lockdown_mode setting is {}, persist={persist})",
+                "Arming the temporary restart lockdown for an app update (the \
+                 persisted lockdown_mode setting is {}, persist={persist})",
                 self.settings.settings().lockdown_mode
             );
             let (tx, _rx) = oneshot::channel();
