@@ -13,6 +13,113 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+### Ajouté
+- Offrir un accès au forum communautaire depuis l'en-tête de l'application avant même d'avoir un
+  compte forum. L'emplacement qui accueillera la cloche d'activité affiche une bouée qui ouvre le
+  forum. Une fois connecté là-bas, elle devient la cloche. Couper les notifications du forum
+  retire les deux.
+- Publier Warren VPN pour Linux ARM 64 bits. Les paquets `.deb`, `.rpm` et Arch existent
+  désormais en arm64 à côté du x86_64, si bien qu'un Raspberry Pi 4 ou 5, un portable ARM ou une
+  instance cloud ARM installe l'application directement au lieu de n'avoir rien à télécharger.
+- Publier aussi le démon sans interface et la ligne de commande `warren` pour Linux ARM 64 bits,
+  pour que le script d'installation serveur fonctionne sur une machine ARM.
+
+### Modifié
+- Démarrer une mise à jour depuis une liste de versions récupérée à l'instant même plutôt que
+  depuis la dernière vérification. L'application ne revérifie que toutes les six heures, donc une
+  version publiée entre-temps était invisible : l'écran de mise à jour pouvait proposer,
+  télécharger et installer une version que le canal avait déjà remplacée.
+
+### Corrigé
+- Ne plus rester bloqué sur « Démarrage de l'installateur… ». Quand une version sortait entre le
+  téléchargement et le lancement de l'installateur, l'application abandonnait l'installateur
+  vérifié sans prévenir personne et l'écran de mise à jour attendait pour toujours ; elle relance
+  désormais d'elle-même la mise à niveau vers la version plus récente. Un échec du lancement de
+  l'installateur le dit maintenant au lieu de ne rien dire.
+- Répondre à une vérification de version qui échoue (hors ligne, hôte de mise à jour
+  injoignable) avec les dernières versions connues, au lieu de laisser l'écran de mise à jour
+  attendre la prochaine vérification réussie.
+- Afficher « Téléchargement terminé ! » et les autres textes de progression du téléchargement
+  dans votre langue. Ils étaient construits avant le chargement des traductions et restaient en
+  anglais quelle que soit la langue choisie.
+- Servir les notes de version françaises et roumaines des 1.1.6 à 1.1.8, affichées en anglais :
+  les journaux traduits s'étaient arrêtés en silence à la 1.1.4. Une release refuse désormais de
+  publier des notes non traduites dans chaque langue livrée, et les entrées déjà publiées en
+  anglais seul sont réparées à la prochaine publication.
+
+
+## [1.1.8] - 2026-08-08
+### Ajouté
+- Marquer toutes les notifications du forum comme lues, depuis un bouton en haut du panneau du
+  forum. Elles sont aussi marquées lues sur le forum, dont le compteur suit.
+
+### Modifié
+- Fermer le panneau du forum et revenir à la vue principale à l'ouverture d'une notification, au
+  lieu de laisser la liste derrière le navigateur.
+- Écarter les badges du panneau du forum et de son compteur. C'était la notification la plus
+  fréquente et la seule que personne ne vous envoie.
+- Mettre à jour le compteur du forum dès que vous agissez, au lieu d'attendre la prochaine
+  vérification. Ouvrir le panneau, ouvrir une notification ou tout marquer lu déplace la cloche et
+  le point d'un coup.
+- Vérifier l'activité du forum chaque minute au lieu de toutes les cinq minutes, pour qu'une
+  lecture faite ailleurs disparaisse ici plus vite.
+
+### Corrigé
+- Compter les notifications non lues exactement comme le forum, y compris en écartant celles dont
+  le sujet a été supprimé depuis.
+
+
+## [1.1.7] - 2026-08-08
+### Ajouté
+- Vous prévenir quand quelque chose de nouveau vous arrive sur le forum communautaire, avec une
+  notification de bureau et le même point que l'application met déjà sur son icône de la barre
+  système pour une mise à jour. Les deux s'éteignent d'eux-mêmes une fois le forum lu, où que ce
+  soit.
+- Ajouter un réglage « Notifications du forum », dans les réglages d'interface, pour les couper.
+  Il est actif par défaut et n'apparaît qu'une fois votre compte forum créé.
+
+### Modifié
+- Redessiner le panneau d'activité du forum. Chaque notification est désormais sa propre carte,
+  avec une icône qui distingue une réponse d'un « j'aime » au premier regard, le sujet, un extrait
+  de ce qui a été écrit et l'ancienneté. Les textes longs ne débordent plus de la fenêtre.
+
+### Corrigé
+- Afficher le même nombre de notifications non lues que le forum lui-même. L'application comptait
+  chaque notification pas encore ouverte individuellement, alors que le forum cesse de les compter
+  dès que la liste a été consultée, si bien que l'application pouvait en annoncer trois quand il
+  n'y en avait aucune.
+- Ouvrir une notification du forum directement sur le message. Un clic déroulait auparavant toute
+  la connexion via le courtier d'identité, même quand le navigateur était déjà connecté.
+- Ne plus afficher l'ancienneté d'une notification en durée négative. En français, « -2 h »
+  s'affichait pour il y a deux heures.
+- Dire ce qui s'est réellement passé pour chaque type de notification du forum. Les réactions, les
+  nouveaux sujets d'une catégorie suivie et les résumés de messages de groupe affichaient tous
+  « Nouvelle activité sur le forum ».
+- Traduire l'application dans toutes les langues livrées. Le panneau du forum, ses notifications,
+  le lien des conditions d'utilisation et les avertissements de redirection de ports s'affichaient
+  en anglais quelle que soit la langue choisie.
+
+
+## [1.1.6] - 2026-08-08
+### Ajouté
+- Afficher une cloche d'activité du forum dans l'application, avec un panneau listant ce qui vous
+  arrive sur le forum communautaire. Le compteur vient d'un document identique pour tous les
+  clients, donc le serveur n'apprend rien de votre compte pour dessiner le badge.
+
+### Corrigé
+- Rouvrir la fenêtre de l'application. La 1.1.5 livrait une interface qui plantait au chargement,
+  la fenêtre restait vide et le clic sur l'icône ne faisait rien. Cette version a été retirée.
+- Ne plus reconstruire le tunnel quand le réseau cale quelques secondes. Un bref blocage (un
+  changement de Wi-Fi, une liaison saturée, un signal faible) suffisait pour que l'application
+  décide que le serveur ne relayait plus et reconstruise le tunnel, ce qui coupait toutes les
+  requêtes en cours. Elle vérifie désormais si quelque chose atteint encore le serveur avant de
+  l'accuser. Un serveur qui a réellement cessé de relayer est détecté aussi vite qu'avant.
+- Ne plus laisser l'ordinateur sans internet après une mise à jour de l'application. La mise à
+  jour scelle le réseau pendant le remplacement de l'application, ce qui est voulu, mais rien ne
+  levait ce scellé si la mise à jour échouait en route. Un garde-fou libère maintenant la machine
+  de lui-même, et l'application n'attend plus trente secondes sur une résolution de nom que sa
+  propre protection bloquait.
+- Se reconnecter tout seul après une mise à jour au lieu de rester bloqué jusqu'au clic.
 
 
 ## [1.1.4] - 2026-08-08

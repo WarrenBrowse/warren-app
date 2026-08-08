@@ -176,6 +176,76 @@ def extract_changelog_translations(changelog_path: Path, version: str) -> dict[s
     return translations
 
 
+def require_complete_translations(changelog_path: Path, version: str) -> None:
+    """Refuse to publish a release whose notes are untranslated.
+
+    Every `CHANGELOG.<lang>.md` sibling must carry a section for `version`
+    whenever the English changelog has one. The client falls back to English
+    when a translation is missing, and that fallback already shipped
+    unnoticed: 1.1.6 through 1.1.8 reached the manifest without their French
+    and Romanian notes because the translated files had silently stopped at
+    1.1.4. Failing the release is the one gate that cannot be skipped.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = (d / "CHANGELOG.md").write_text("## [1.0.1] - x\\n- a change\\n")
+    >>> _ = (d / "CHANGELOG.fr.md").write_text("## [1.0.1] - x\\n- un changement\\n")
+    >>> require_complete_translations(d / "CHANGELOG.md", "1.0.1")
+    >>> _ = (d / "CHANGELOG.ro.md").write_text("## [1.0.0] - x\\n- vechi\\n")
+    >>> require_complete_translations(d / "CHANGELOG.md", "1.0.1")
+    Traceback (most recent call last):
+    ...
+    SystemExit: CHANGELOG.ro.md has no section for 1.0.1: translate the release notes before releasing (the app shows English notes to every user of a missing language)
+
+    A version without English notes requires nothing of the translations:
+
+    >>> require_complete_translations(d / "CHANGELOG.md", "0.9.9")
+    """
+    if not extract_changelog(changelog_path, version):
+        return
+    missing = []
+    for sibling in sorted(changelog_path.parent.glob("CHANGELOG.*.md")):
+        if not TRANSLATED_CHANGELOG.match(sibling.name):
+            continue
+        if not extract_changelog(sibling, version):
+            missing.append(sibling.name)
+    if missing:
+        raise SystemExit(
+            f"{', '.join(missing)} has no section for {version}: translate the release notes "
+            "before releasing (the app shows English notes to every user of a missing language)"
+        )
+
+
+def heal_missing_translations(releases: list, changelog_path: Path) -> list:
+    """Backfill `changelog_translations` on already-published releases.
+
+    The merge keeps previous manifest entries as-is, so a release once
+    published without its translated notes would stay English forever even
+    after the translation lands in the repo. The changelog files are the
+    source of truth and the manifest is generated output, so a section found
+    there always wins over what an earlier publish captured.
+
+    >>> import tempfile
+    >>> d = Path(tempfile.mkdtemp())
+    >>> _ = (d / "CHANGELOG.md").write_text("## [1.1.6] - x\\n- a fix\\n")
+    >>> _ = (d / "CHANGELOG.fr.md").write_text("## [1.1.6] - x\\n- un correctif\\n")
+    >>> healed = heal_missing_translations(
+    ...     [{"version": "1.1.6", "changelog": "- a fix"}], d / "CHANGELOG.md")
+    >>> healed[0]["changelog_translations"]
+    {'fr': '- un correctif'}
+    """
+    healed = []
+    for release in releases:
+        release = dict(release)
+        found = extract_changelog_translations(
+            changelog_path, str(release.get("version", "")))
+        merged = {**(release.get("changelog_translations") or {}), **found}
+        if merged:
+            release["changelog_translations"] = merged
+        healed.append(release)
+    return healed
+
+
 def fetch_previous(metadata_base_url: str, platform: str) -> tuple[int, list]:
     """Return (previous metadata_version, previous releases) for a platform.
 
@@ -397,6 +467,7 @@ def drop_downloads_versions(platforms: dict, dropped: set) -> dict:
 def build_platform(platform: str, installers: list, args, version: str, min_version: str) -> dict:
     prev_version, prev_releases = fetch_previous(args.metadata_base_url, platform)
     prev_releases = drop_versions(prev_releases, args.dropped_versions)
+    prev_releases = heal_missing_translations(prev_releases, Path(args.changelog))
     if platform == "ios":
         # Self-heal: early ios.json manifests carried the desktop 1.x release
         # history (the script listed the tag version for every platform). Only
@@ -457,6 +528,8 @@ def main() -> int:
         raise SystemExit(f"--drop-version {args.version} withdraws the release being published")
     if args.dropped_versions:
         print(f"withdrawing from the channel: {', '.join(sorted(args.dropped_versions))}")
+
+    require_complete_translations(Path(args.changelog), args.version)
 
     ios_version = args.ios_version or ios_marketing_version()
     if not IOS_CALENDAR_VERSION.match(ios_version):

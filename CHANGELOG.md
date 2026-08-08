@@ -32,6 +32,25 @@ Line wrap the file at 100 chars.                                              Th
 - Publish the headless daemon and `warren` command line for 64-bit ARM Linux too, so the server
   install script works on an ARM machine.
 
+### Changed
+- Start an update from a version list fetched at that moment instead of the last poll's. The app
+  only re-checks every six hours, so a release published in between was invisible: the update
+  screen could offer, download and install a version the channel had already superseded.
+
+### Fixed
+- Never hang on "Starting installer...". When a release came out between the download and the
+  installer launch, the app dropped the verified installer without telling anyone and the update
+  screen waited forever; it now restarts the upgrade towards the newer version on its own. A
+  failed installer launch now says so instead of saying nothing.
+- Answer a version check that fails (offline, unreachable update host) with the last known
+  versions instead of leaving the update screen waiting until the next successful check.
+- Show "Download complete!" and the other download progress texts in your language. They were
+  built before the translations were loaded and stayed English whatever the chosen language.
+- Serve the French and Romanian release notes of 1.1.6 through 1.1.8, which were shown in English:
+  the translated changelogs had silently stopped at 1.1.4. A release now refuses to publish notes
+  that are not translated into every shipped language, and already-published English-only entries
+  are repaired at the next publish.
+
 
 ## [1.1.8] - 2026-08-08
 ### Added
