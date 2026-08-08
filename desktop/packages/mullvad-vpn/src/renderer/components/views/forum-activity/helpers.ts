@@ -85,11 +85,15 @@ function fill(template: string, actor: string): string {
  * reads naturally without this app shipping a plural rule per unit per
  * language. Falls back to an absolute date past a week, where "5 weeks ago"
  * stops being the useful thing to say.
+ *
+ * `short` rather than `narrow`: several locales render the narrow past form
+ * with a leading minus sign (French gives "-2 h" for two hours ago), which
+ * reads as a negative duration.
  */
 export function relativeTime(createdAtUnix: number, locale: string, nowMs = Date.now()): string {
   const seconds = Math.round((createdAtUnix * 1000 - nowMs) / 1000);
   const elapsed = Math.abs(seconds);
-  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'narrow' });
+  const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style: 'short' });
 
   if (elapsed < 60) {
     return rtf.format(Math.min(seconds, 0), 'second');

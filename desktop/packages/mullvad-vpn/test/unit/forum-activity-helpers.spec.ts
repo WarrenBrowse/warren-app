@@ -32,6 +32,16 @@ describe('the age shown on a notification', () => {
     expect(relativeTime(at(2 * 3600), 'fr', now)).toMatch(/2/);
   });
 
+  it('never reads as a negative duration, in any locale', () => {
+    // French `narrow` renders "2 hours ago" as "-2 h", which reads as minus
+    // two hours. Reported on 2026-08-08 against a French app.
+    for (const locale of ['fr', 'en', 'de', 'es', 'it', 'pt', 'nb', 'fi', 'ru', 'tr', 'ja', 'zh']) {
+      for (const secondsAgo of [90, 2 * 3600, 3 * 86400]) {
+        expect(relativeTime(at(secondsAgo), locale, now)).not.toMatch(/^[-−]/);
+      }
+    }
+  });
+
   it('falls back to a date once the age stops being informative', () => {
     // "5 weeks ago" tells a reader less than the day it happened.
     expect(relativeTime(at(40 * 86400), 'en', now)).toMatch(/2026/);
