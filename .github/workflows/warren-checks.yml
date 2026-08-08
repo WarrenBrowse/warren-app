@@ -45,6 +45,11 @@ on:
       # run this scope.
       - "android/lib/ui/resource/src/main/res/drawable-nodpi/**"
       - "ios/WarrenVPN/Supporting Files/Assets.xcassets/**"
+      # The update-metadata generator decides the installer URLs that go inside
+      # the signed manifests, and its unit tests run in this scope. Nothing else
+      # gates the file, so an edit touching only it reached main untested.
+      - "ci/build-version-metadata.py"
+      - "ci/test_build_version_metadata.py"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".warrenguard-version"
