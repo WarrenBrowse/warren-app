@@ -2072,6 +2072,11 @@ export class WarrenStatus extends jspb.Message {
     setNoticesList(value: Array<WarrenNotice>): WarrenStatus;
     addNotices(value?: WarrenNotice, index?: number): WarrenNotice;
 
+    hasForumDigest(): boolean;
+    clearForumDigest(): void;
+    getForumDigest(): string | undefined;
+    setForumDigest(value: string): WarrenStatus;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
     static toObject(includeInstance: boolean, msg: WarrenStatus): WarrenStatus.AsObject;
@@ -2097,6 +2102,7 @@ export namespace WarrenStatus {
         exitEgressDead: boolean,
         networkInfo?: WarrenNetworkInfo.AsObject,
         noticesList: Array<WarrenNotice.AsObject>,
+        forumDigest?: string,
     }
 }
 

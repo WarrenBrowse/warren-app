@@ -207,6 +207,15 @@ pub struct WarrenStatusSnapshot {
     /// message is the only thing that outranks the app's own reading of
     /// the connection.
     pub notices: Vec<crate::warren_notices_updater::DisplayNotice>,
+    /// Verified forum activity counts, one lowercase hex character per
+    /// anonymous slot, or `None` while no fresh document is held.
+    ///
+    /// Published verbatim: the daemon checks the signature and the expiry,
+    /// and the renderer indexes the one slot it knows is the user's. That
+    /// slot lives in the renderer's sealed store beside the forum handle,
+    /// so no part of the daemon, and nothing on the wire, ties the
+    /// document to an account.
+    pub forum_digest: Option<String>,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -228,6 +237,7 @@ impl Default for WarrenStatusSnapshot {
             exit_egress_dead: false,
             network_info: None,
             notices: Vec::new(),
+            forum_digest: None,
         }
     }
 }
@@ -267,6 +277,7 @@ struct InternalState {
     exit_egress_dead: bool,
     network_info: Option<NetworkInfoSnapshot>,
     notices: Vec<crate::warren_notices_updater::DisplayNotice>,
+    forum_digest: Option<String>,
 }
 
 impl Default for InternalState {
@@ -286,6 +297,7 @@ impl Default for InternalState {
             exit_egress_dead: false,
             network_info: None,
             notices: Vec::new(),
+            forum_digest: None,
         }
     }
 }
@@ -354,6 +366,7 @@ impl WarrenStatusCache {
             exit_egress_dead: inner.exit_egress_dead,
             network_info: inner.network_info.clone(),
             notices: inner.notices.clone(),
+            forum_digest: inner.forum_digest.clone(),
         }
     }
 
@@ -696,6 +709,29 @@ impl WarrenStatusCache {
                 return;
             }
             inner.notices = notices;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Record the verified forum activity counts, as published by the
+    /// digest updater after signature verification. Idempotent: the
+    /// updater re-publishes on every cycle so freshness keeps being
+    /// applied, and re-pushing an identical document must not wake the UI.
+    ///
+    /// `None` is a meaningful value, not a no-op: it is how an expiry, a
+    /// server that stopped answering, or a failed verification clears the
+    /// badge.
+    pub fn set_forum_digest(&self, counts: Option<String>) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.forum_digest == counts {
+                return;
+            }
+            inner.forum_digest = counts;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send_replace(snapshot);

@@ -243,6 +243,7 @@ fn warren_status_snapshot_to_proto(
                 }),
             })
             .collect(),
+        forum_digest: snap.forum_digest,
     }
 }
 

@@ -16798,7 +16798,8 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     exitEgressDead: jspb.Message.getBooleanFieldWithDefault(msg, 11, false),
     networkInfo: (f = msg.getNetworkInfo()) && proto.mullvad_daemon.management_interface.WarrenNetworkInfo.toObject(includeInstance, f),
     noticesList: jspb.Message.toObjectList(msg.getNoticesList(),
-    proto.mullvad_daemon.management_interface.WarrenNotice.toObject, includeInstance)
+    proto.mullvad_daemon.management_interface.WarrenNotice.toObject, includeInstance),
+    forumDigest: jspb.Message.getFieldWithDefault(msg, 14, "")
   };
 
   if (includeInstance) {
@@ -16891,6 +16892,10 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
       var value = new proto.mullvad_daemon.management_interface.WarrenNotice;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenNotice.deserializeBinaryFromReader);
       msg.addNotices(value);
+      break;
+    case 14:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setForumDigest(value);
       break;
     default:
       reader.skipField();
@@ -17015,6 +17020,13 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
       13,
       f,
       proto.mullvad_daemon.management_interface.WarrenNotice.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 14));
+  if (f != null) {
+    writer.writeString(
+      14,
+      f
     );
   }
 };
@@ -17347,6 +17359,42 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.addNotices = fu
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearNoticesList = function() {
   return this.setNoticesList([]);
+};
+
+
+/**
+ * optional string forum_digest = 14;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getForumDigest = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 14, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setForumDigest = function(value) {
+  return jspb.Message.setField(this, 14, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearForumDigest = function() {
+  return jspb.Message.setField(this, 14, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasForumDigest = function() {
+  return jspb.Message.getField(this, 14) != null;
 };
 
 

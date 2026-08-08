@@ -840,6 +840,16 @@ message WarrenStatus {
   // banner. Empty in the steady state; the empty list is also how an
   // erasure clears the banner.
   repeated WarrenNotice notices = 13;
+  // Verified forum activity counts: one lowercase hex character per
+  // anonymous slot, the whole document exactly as the server published
+  // it. Absent while no fresh document is held, which is how an expiry
+  // or a failed verification clears the badge.
+  //
+  // Published verbatim on purpose. The daemon checks the signature and
+  // the freshness; the slot that turns this into one user's badge lives
+  // only in the UI's sealed store, so nothing here ties the document to
+  // an account.
+  optional string forum_digest = 14;
 }
 
 // One operator-published broadcast notice, ready to display. Carries no

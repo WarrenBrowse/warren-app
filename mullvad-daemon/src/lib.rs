@@ -53,6 +53,7 @@ mod warren_api_transport;
 /// Shared policy pieces of the periodic signed-artifact refreshers
 /// (fast retry, ETag conditional GET, atomic cache write).
 mod warren_artifact_refresh;
+mod warren_forum_digest_updater;
 /// App-side wrapper around the SDK's `warren_api::WarrenApiClient` that
 /// rebuilds its owned `WarrenIdentity` from a shared, hot-swappable BIP39
 /// seed on every call (see the module doc for why a raw shared
@@ -1799,6 +1800,20 @@ impl Daemon {
                 warren_server_pubkey.clone(),
                 Some(mullvad_version::VERSION.to_owned()),
                 move |notices| notices_status.set_notices(notices),
+            );
+        }
+
+        // Forum activity badge: the same signed-artifact discipline, over
+        // a document that is identical for every client. The counts are
+        // pushed to the UI verbatim; the slot that turns them into a badge
+        // is known only to the renderer, so nothing here can tie the
+        // document to an account.
+        {
+            let digest_status = warren_status_cache.clone();
+            warren_forum_digest_updater::WarrenForumDigestUpdater::spawn(
+                warren_api_url.clone(),
+                warren_server_pubkey.clone(),
+                move |counts| digest_status.set_forum_digest(counts),
             );
         }
 
