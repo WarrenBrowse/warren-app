@@ -5,6 +5,56 @@ import globals from 'globals';
 
 import workspaceConfig from '../../eslint.config.mjs';
 
+// A `messages.*gettext*` call evaluated at module load runs before
+// `loadTranslations` has filled the catalogue, so it returns the English
+// msgid forever, in every locale. It shipped that way once: the update
+// screen said "Download complete!" in the middle of a French UI, because a
+// module-level `const translations = { x: messages.pgettext(...) }` captured
+// the untranslated strings at import time. Translation lookups belong inside
+// a function (a hook, a getter, a callback), where they run at render time.
+const lazyGettextPlugin = {
+  rules: {
+    'no-module-scope-gettext': {
+      meta: {
+        type: 'problem',
+        schema: [],
+        messages: {
+          eager:
+            'messages.{{name}}() at module scope runs before the locale is loaded and pins the English msgid. Wrap it in a function or a getter so it runs at render time.',
+        },
+      },
+      create(context) {
+        return {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          CallExpression(node) {
+            const callee = node.callee;
+            const isGettext =
+              callee.type === 'MemberExpression' &&
+              !callee.computed &&
+              callee.object.type === 'Identifier' &&
+              callee.object.name === 'messages' &&
+              callee.property.type === 'Identifier' &&
+              /gettext$/.test(callee.property.name);
+            if (!isGettext) {
+              return;
+            }
+            for (let ancestor = node.parent; ancestor; ancestor = ancestor.parent) {
+              if (
+                ancestor.type === 'FunctionDeclaration' ||
+                ancestor.type === 'FunctionExpression' ||
+                ancestor.type === 'ArrowFunctionExpression'
+              ) {
+                return;
+              }
+            }
+            context.report({ node, messageId: 'eager', data: { name: callee.property.name } });
+          },
+        };
+      },
+    },
+  },
+};
+
 export default [
   ...workspaceConfig,
   react.configs.flat.recommended,
@@ -41,6 +91,11 @@ export default [
       'react/prop-types': 'off',
       'react/react-in-jsx-scope': 'off',
     },
+  },
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    plugins: { 'lazy-gettext': lazyGettextPlugin },
+    rules: { 'lazy-gettext/no-module-scope-gettext': 'error' },
   },
   {
     files: ['test/**/*.spec.ts'],
