@@ -675,8 +675,15 @@ impl TunnelStateMachine {
         {
             let lockdown = self.shared_values.lockdown_mode;
             if lockdown.bool() && lockdown.should_persist() {
+                // Deliberately does not claim WHICH lockdown this is: this
+                // layer holds a two-state `LockdownMode` and cannot tell the
+                // user's setting from the temporary lock an installer arms
+                // through `prepare-restart`. The daemon logs the provenance
+                // when it arms the temporary one; reading the two lines
+                // together is what identifies a lock-out.
                 log::info!(
-                    "Persistent lockdown is enabled; leaving the kill-switch firewall in place on shutdown"
+                    "Lockdown is armed (setting or app-update restart lock); leaving the \
+                     kill-switch firewall in place on shutdown"
                 );
             } else if let Err(error) = self.shared_values.firewall.reset_policy() {
                 log::error!("Failed to reset firewall during shutdown: {error}");

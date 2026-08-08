@@ -2,12 +2,50 @@
 
 use crate::{ApiEndpoint, DnsResolver};
 use async_trait::async_trait;
-use std::{fmt::Debug, io, net::SocketAddr, path::Path, sync::Arc};
+use std::{fmt::Debug, io, net::SocketAddr, path::Path, sync::Arc, time::Duration};
 use tokio::{
     fs,
     io::{AsyncReadExt, AsyncWriteExt},
     sync::Mutex,
 };
+
+/// How long the boot path will wait for the system resolver before falling back.
+///
+/// [`ApiEndpoint::address`] resolves through `ToSocketAddrs`, which is
+/// synchronous and carries no deadline of its own. While the kill switch is up
+/// it can only time out, so the daemon used to spend the resolver's whole budget
+/// (30.006 s, measured on the 2026-08-08 macOS upgrade) blocking the async
+/// runtime before it could reset the firewall that was blocking it. What it
+/// eventually falls back to is the persisted address, which such a firewall
+/// explicitly allows, so waiting longer than this buys nothing.
+const RESOLVE_DEADLINE: Duration = Duration::from_secs(2);
+
+/// Runs a blocking `lookup` off the async runtime under `deadline`.
+///
+/// Generic over the lookup so the deadline is testable without a resolver that
+/// hangs on demand: DNS is a system boundary, and this is its seam. `None` means
+/// it did not answer in time (or the blocking task died), which the caller
+/// treats exactly like an unresolvable name.
+async fn bounded_lookup<F>(deadline: Duration, lookup: F) -> Option<SocketAddr>
+where
+    F: FnOnce() -> Option<SocketAddr> + Send + 'static,
+{
+    // `spawn_blocking`, not a bare timeout: a timeout wrapped around a
+    // synchronous call still holds the runtime thread for the resolver's full
+    // budget. The orphaned blocking task finishes on the blocking pool.
+    match tokio::time::timeout(deadline, tokio::task::spawn_blocking(lookup)).await {
+        Ok(Ok(address)) => address,
+        Ok(Err(_)) => None,
+        Err(_) => {
+            log::warn!(
+                "The API hostname did not resolve within {}s; falling back to the \
+                 persisted address (expected while the kill switch blocks DNS)",
+                deadline.as_secs()
+            );
+            None
+        }
+    }
+}
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -201,7 +239,13 @@ impl<T: AddressCacheBacking> AddressCache<T> {
                 None
             }
         };
-        let resolved = endpoint.address();
+        // Only the hostname path touches DNS, and that is the one that stalls
+        // behind the kill switch; the cheap answers (an explicit override, a
+        // pinned IP) return immediately inside the same call.
+        let endpoint = endpoint.clone();
+        let resolved = bounded_lookup(RESOLVE_DEADLINE, move || Some(endpoint.address()))
+            .await
+            .unwrap_or_else(|| SocketAddr::new(std::net::Ipv4Addr::UNSPECIFIED.into(), 0));
 
         if !is_dialable(resolved) {
             return match persisted {
@@ -531,5 +575,44 @@ mod tests {
         assert!(!is_dialable("0.0.0.0:443".parse().unwrap()));
         assert!(!is_dialable("203.0.113.7:0".parse().unwrap()));
         assert!(!is_dialable("[::]:443".parse().unwrap()));
+    }
+
+    /// The boot path resolves the API hostname through the system resolver,
+    /// which is synchronous. While the kill switch is up that lookup can only
+    /// time out, and the daemon spends the resolver's own budget ON the async
+    /// runtime before it can reset the very firewall blocking it: 30.006 s
+    /// measured on a macOS upgrade (2026-08-08), during which the machine has
+    /// no internet and the GUI has no state to show.
+    ///
+    /// The lookup must therefore cost the deadline, not the resolver's budget,
+    /// and it must not hold the runtime while it waits.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_hanging_dns_lookup_costs_the_deadline_and_not_the_runtime() {
+        // Real time on purpose: the blocking pool does not observe tokio's
+        // paused clock, so a simulated one would just wait out the real sleep
+        // and prove nothing. Scaled down from the shipped seconds.
+        let deadline = Duration::from_millis(200);
+        let hang = Duration::from_millis(1500);
+        let started = std::time::Instant::now();
+        let out = bounded_lookup(deadline, move || {
+            std::thread::sleep(hang);
+            Some("203.0.113.7:443".parse().unwrap())
+        })
+        .await;
+        let waited = started.elapsed();
+        assert_eq!(out, None, "a lookup past the deadline yields no address");
+        assert!(
+            waited < hang / 2,
+            "the wait must be the deadline, not the resolver's budget: waited {waited:?}"
+        );
+    }
+
+    /// The deadline must not become a second failure mode: a resolver that
+    /// answers keeps answering, and its address is returned unchanged.
+    #[tokio::test]
+    async fn a_working_lookup_is_returned_unchanged() {
+        let want: SocketAddr = "203.0.113.7:443".parse().unwrap();
+        let out = bounded_lookup(Duration::from_secs(2), move || Some(want)).await;
+        assert_eq!(out, Some(want));
     }
 }

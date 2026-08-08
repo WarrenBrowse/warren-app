@@ -5048,6 +5048,15 @@ impl Daemon {
             } else {
                 true
             };
+            // Say WHICH lockdown this is. The state machine only sees a
+            // two-state `LockdownMode`, so its shutdown line reads the same for
+            // the user's setting and for this installer-armed restart lock, and
+            // a lock-out log cannot tell them apart. It cost a wrong root cause
+            // on 2026-08-08: the setting was off the whole time.
+            log::info!(
+                "Arming the temporary restart lockdown for an app update                  (the persisted lockdown_mode setting is {}, persist={persist})",
+                self.settings.settings().lockdown_mode
+            );
             let (tx, _rx) = oneshot::channel();
             self.send_tunnel_command(TunnelCommand::LockdownMode(
                 LockdownMode::yes().persist(persist),
