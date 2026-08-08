@@ -1461,12 +1461,6 @@ msgctxt "forum-activity-view"
 msgid "Forum"
 msgstr ""
 
-#. Shown while the app is fetching the
-#. user's forum notifications.
-msgctxt "forum-activity-view"
-msgid "Loading your forum activity..."
-msgstr ""
-
 #. Shown for a kind of forum notification this version of
 #. the app does not have its own wording for.
 msgctxt "forum-activity-view"
@@ -1502,7 +1496,7 @@ msgctxt "forum-activity-view"
 msgid "You earned a badge"
 msgstr ""
 
-#. Shown above the empty forum panel, with
+#. Shown under the empty forum panel, with
 #. the user's own public forum name.
 #. Available placeholder:
 #. %(handle)s - the user's forum name

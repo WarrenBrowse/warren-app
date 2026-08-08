@@ -5,7 +5,7 @@ import { forumPostUrl, parseForumNotifications } from '../../src/shared/forum-no
 const row = {
   id: 7,
   kind: 'replied',
-  read: false,
+  unread: true,
   created_at: 1_700_000_000,
   title: 'Port forwarding',
   actor: 'rudop-tijub-sozom',
@@ -19,7 +19,7 @@ describe('reading the forum notification list', () => {
       {
         id: 7,
         kind: 'replied',
-        read: false,
+        unread: true,
         createdAt: 1_700_000_000,
         title: 'Port forwarding',
         actor: 'rudop-tijub-sozom',

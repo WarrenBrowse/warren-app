@@ -1,1 +1,1 @@
-export * from './ForumNotificationRow';
+export * from './ForumNotificationCard';

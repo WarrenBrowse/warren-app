@@ -41,7 +41,9 @@ const KINDS: readonly ForumNotificationKind[] = [
 export interface ForumNotification {
   id: number;
   kind: ForumNotificationKind;
-  read: boolean;
+  // Unread by Discourse's own rule, so a card marked unread is one the
+  // header badge counted.
+  unread: boolean;
   // Unix epoch seconds.
   createdAt: number;
   title?: string;
@@ -100,7 +102,7 @@ function parseOne(raw: unknown): ForumNotification | undefined {
   return {
     id,
     kind: parseKind(row['kind']),
-    read: row['read'] === true,
+    unread: row['unread'] === true,
     createdAt,
     title: text(row['title'], MAX_LABEL),
     actor: text(row['actor'], MAX_LABEL),
