@@ -24,6 +24,13 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.6] - 2026-08-08
+### Fixed
+- Open the app window again. In 1.1.5 the window stayed blank and clicking the icon did nothing:
+  the interface crashed while loading, before it could draw anything. Only the display was
+  affected, and the VPN itself kept working throughout.
+
+
 ## [1.1.5] - 2026-08-08
 ### Fixed
 - Stop the tunnel reconnecting when the network stalls for a few seconds. A brief stall (a Wi-Fi

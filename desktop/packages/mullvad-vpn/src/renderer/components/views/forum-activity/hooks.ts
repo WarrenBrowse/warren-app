@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 
 import { ForumNotification } from '../../../../shared/forum-notifications';
-import { IpcRendererEventChannel } from '../../../lib/ipc-event-channel';
+
+// IPC goes through the contextBridge-exposed `window.ipc`, never by importing
+// `lib/ipc-event-channel`: that module imports the `electron` package, which
+// Vite pre-bundles into the sandboxed, node-less renderer, and the bundle then
+// throws `__dirname is not defined` on load. That kills the React app before it
+// mounts, so the window has nothing to paint and clicking the tray icon appears
+// to do nothing (shipped in 1.1.5; the same trap is documented in
+// `features/forum-login/components/ForumLoginPrompt.tsx`).
 
 export type ForumActivityState =
   | { status: 'loading' }
@@ -23,7 +30,7 @@ export function useForumActivity(): { state: ForumActivityState; reload: () => v
   useEffect(() => {
     let cancelled = false;
     setState({ status: 'loading' });
-    void IpcRendererEventChannel.forumActivity.list().then((result) => {
+    void window.ipc.forumActivity.list().then((result) => {
       if (cancelled) {
         return;
       }
