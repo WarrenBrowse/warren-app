@@ -34,6 +34,7 @@ import {
   WarrenStatus,
 } from './daemon-rpc-types';
 import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
+import { ForumIdentity } from './forum-identity';
 import { ForumLoginResult, IForumLoginRequest } from './forum-login';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
@@ -94,10 +95,11 @@ export interface IAppStateSnapshot {
   currentApiAccessMethod?: AccessMethodSetting;
   isMacOs13OrNewer: boolean;
   purchaseInFlight: boolean;
-  // This wallet's community-forum handle, absent until the user has signed in
-  // to the forum once (the derivation is keyed server side, so the app cannot
-  // compute it).
-  forumHandle?: string;
+  // This wallet's community-forum identity: the public handle and the slot
+  // this installation occupies in the broadcast activity digest. Absent until
+  // the user has signed in to the forum once, since both are minted server
+  // side and the app can compute neither.
+  forumIdentity?: ForumIdentity;
   // Latest Warren live status known to the main process. Part of the initial
   // snapshot for the same reason as `splitTunnelingSupported`: the daemon's
   // status stream delivers its current value once, at subscribe time, which
@@ -178,11 +180,12 @@ export const ipcSchema = {
     getPending: invoke<void, IForumLoginRequest | undefined>(),
     approve: invoke<IForumLoginRequest, ForumLoginResult>(),
     cancel: invoke<IForumLoginRequest, void>(),
-    // The derived forum handle of this wallet, known only once the user has
-    // signed in to the forum at least once (the derivation is keyed server
-    // side). Pushed on change so the account view updates without a restart.
-    handle: notifyRenderer<string | undefined>(),
-    getHandle: invoke<void, string | undefined>(),
+    // The forum identity of this wallet, known only once the user has signed
+    // in to the forum at least once (both values are minted server side).
+    // Pushed on change so the account view and the activity bell update
+    // without a restart.
+    identity: notifyRenderer<ForumIdentity | undefined>(),
+    getIdentity: invoke<void, ForumIdentity | undefined>(),
   },
   // Community-forum attach-logs (doc 55). `request` is pushed when a
   // `warren://attach-logs` deep link arrives; the renderer shows a consent

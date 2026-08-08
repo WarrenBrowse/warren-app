@@ -1,4 +1,5 @@
 import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { ForumIdentity } from '../../../shared/forum-identity';
 import { RenewalUiState } from '../../../shared/renewal';
 import { ReduxAction } from '../store';
 
@@ -26,10 +27,11 @@ export interface IAccountReduxState {
   // Device-held auto-renewal mandate display state (warren-core doc 65); undefined
   // when the logged-in account holds none.
   renewalState?: RenewalUiState;
-  // This wallet's community-forum handle. Undefined until the user has signed
-  // in to the forum at least once: the derivation is keyed server side, so the
-  // app learns it from the login response and cannot compute it.
-  forumHandle?: string;
+  // This wallet's community-forum identity: the public handle and the slot
+  // this installation occupies in the broadcast activity digest. Undefined
+  // until the user has signed in to the forum at least once, since both are
+  // minted server side and the app can compute neither.
+  forumIdentity?: ForumIdentity;
 }
 
 const initialState: IAccountReduxState = {
@@ -39,7 +41,7 @@ const initialState: IAccountReduxState = {
   status: { type: 'none', deviceRevoked: false },
   purchaseInFlight: false,
   renewalState: undefined,
-  forumHandle: undefined,
+  forumIdentity: undefined,
 };
 
 export default function (
@@ -62,7 +64,7 @@ export default function (
         status: { type: 'none', deviceRevoked: false },
         pubkey: undefined,
         expiry: undefined,
-        forumHandle: undefined,
+        forumIdentity: undefined,
       };
     case 'DEVICE_REVOKED':
       return {
@@ -141,10 +143,10 @@ export default function (
         ...state,
         renewalState: action.renewalState,
       };
-    case 'UPDATE_FORUM_HANDLE':
+    case 'UPDATE_FORUM_IDENTITY':
       return {
         ...state,
-        forumHandle: action.forumHandle,
+        forumIdentity: action.forumIdentity,
       };
   }
 

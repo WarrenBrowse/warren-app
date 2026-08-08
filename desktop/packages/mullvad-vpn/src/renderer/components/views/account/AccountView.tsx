@@ -176,7 +176,7 @@ function RenewalCard() {
 
 export function AccountView() {
   const history = useHistory();
-  const forumHandle = useSelector((state) => state.account.forumHandle);
+  const forumHandle = useSelector((state) => state.account.forumIdentity?.handle);
   const { updateAccountData, logout } = useAppContext();
 
   // `updateAccountData` rejects when the API returns 404 (= no

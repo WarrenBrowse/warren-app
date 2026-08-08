@@ -1,5 +1,6 @@
 import { hasExpired } from '../../../shared/account-expiry';
 import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
+import { ForumIdentity } from '../../../shared/forum-identity';
 import { RenewalUiState } from '../../../shared/renewal';
 
 interface ILoggedInAction {
@@ -60,9 +61,9 @@ interface IUpdatePurchaseInFlightAction {
   purchaseInFlight: boolean;
 }
 
-interface IUpdateForumHandleAction {
-  type: 'UPDATE_FORUM_HANDLE';
-  forumHandle?: string;
+interface IUpdateForumIdentityAction {
+  type: 'UPDATE_FORUM_IDENTITY';
+  forumIdentity?: ForumIdentity;
 }
 
 export type AccountAction =
@@ -78,7 +79,7 @@ export type AccountAction =
   | IUpdateAccountExpiryAction
   | IUpdatePurchaseInFlightAction
   | IUpdateRenewalStateAction
-  | IUpdateForumHandleAction;
+  | IUpdateForumIdentityAction;
 
 function loggedIn(pubkey: WarrenPubKey): ILoggedInAction {
   return {
@@ -160,10 +161,10 @@ function updateRenewalState(renewalState?: RenewalUiState): IUpdateRenewalStateA
   };
 }
 
-function updateForumHandle(forumHandle?: string): IUpdateForumHandleAction {
+function updateForumIdentity(forumIdentity?: ForumIdentity): IUpdateForumIdentityAction {
   return {
-    type: 'UPDATE_FORUM_HANDLE',
-    forumHandle,
+    type: 'UPDATE_FORUM_IDENTITY',
+    forumIdentity,
   };
 }
 
@@ -180,5 +181,5 @@ export default {
   updateAccountExpiry,
   updatePurchaseInFlight,
   updateRenewalState,
-  updateForumHandle,
+  updateForumIdentity,
 };

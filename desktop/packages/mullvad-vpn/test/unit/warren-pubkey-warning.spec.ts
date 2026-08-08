@@ -50,6 +50,7 @@ const BASE_STATUS: WarrenStatus = {
   exitEgressDead: false,
   networkInfo: null,
   notices: [],
+  forumDigest: null,
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

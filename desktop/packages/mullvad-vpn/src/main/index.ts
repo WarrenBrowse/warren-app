@@ -80,7 +80,7 @@ import {
   parseForumLoginUrl,
   PendingForumRequest,
 } from './forum-login';
-import SafeStorageForumHandleStore from './forum-store';
+import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { findIconPath } from './linux-desktop-entry';
@@ -186,7 +186,7 @@ class ApplicationMain
   private navigationHistory?: IHistoryObject;
 
   private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>();
-  private forumHandleStore = new SafeStorageForumHandleStore();
+  private forumIdentityStore = new SafeStorageForumIdentityStore();
   private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>();
 
   private purchaseFlow: PurchaseFlow;
@@ -1161,7 +1161,7 @@ class ApplicationMain
       navigationHistory: this.navigationHistory,
       currentApiAccessMethod: this.currentApiAccessMethod,
       isMacOs13OrNewer: isMacOs13OrNewer(),
-      forumHandle: this.forumHandleStore.get(),
+      forumIdentity: this.forumIdentityStore.get(),
       warrenStatus: this.warrenStatus,
     }));
 
@@ -1279,19 +1279,23 @@ class ApplicationMain
     IpcMainEventChannel.forumLogin.handleGetPending(() =>
       Promise.resolve(this.pendingForumLogin.get(Date.now())),
     );
-    IpcMainEventChannel.forumLogin.handleGetHandle(() =>
-      Promise.resolve(this.forumHandleStore.get()),
+    IpcMainEventChannel.forumLogin.handleGetIdentity(() =>
+      Promise.resolve(this.forumIdentityStore.get()),
     );
     IpcMainEventChannel.forumLogin.handleApprove(async (request) => {
-      const { result, handle } = await approveForumLogin(request, this.daemonRpc);
+      const { result, identity } = await approveForumLogin(request, this.daemonRpc);
       // A transient failure keeps the request buffered so a window reload can
       // retry; any settled outcome must not re-prompt.
       if (result !== 'error') {
         this.pendingForumLogin.clear();
       }
-      if (handle !== undefined && handle !== this.forumHandleStore.get()) {
-        this.forumHandleStore.set(handle);
-        IpcMainEventChannel.forumLogin.notifyHandle?.(handle);
+      const stored = this.forumIdentityStore.get();
+      if (
+        identity !== undefined &&
+        (identity.handle !== stored?.handle || identity.notifySlot !== stored?.notifySlot)
+      ) {
+        this.forumIdentityStore.set(identity);
+        IpcMainEventChannel.forumLogin.notifyIdentity?.(identity);
       }
       if (result === 'approved') {
         // Same reason as the attach flow: the browser is finishing the login,
@@ -1686,9 +1690,9 @@ class ApplicationMain
 
     // Logging out erases the wallet from this device; the handle derived from
     // it is account data and must not survive into the next account.
-    if (!this.account.isLoggedIn() && this.forumHandleStore.get() !== undefined) {
-      this.forumHandleStore.set(undefined);
-      IpcMainEventChannel.forumLogin.notifyHandle?.(undefined);
+    if (!this.account.isLoggedIn() && this.forumIdentityStore.get() !== undefined) {
+      this.forumIdentityStore.set(undefined);
+      IpcMainEventChannel.forumLogin.notifyIdentity?.(undefined);
     }
 
     if (this.isPerformingPostUpgrade) {

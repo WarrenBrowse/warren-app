@@ -786,6 +786,15 @@ export interface WarrenStatus {
   // steady state, and the empty list is also how an erasure clears the
   // banner.
   notices: WarrenNotice[];
+  // Verified forum activity counts: one lowercase hex character per
+  // anonymous slot, the whole document as the server published it, or
+  // `null` while the daemon holds no fresh one (which is how an expiry
+  // or a failed verification clears the badge).
+  //
+  // Deliberately the whole document. The daemon checks the signature and
+  // the freshness; only this process knows which slot is the user's, so
+  // asking the server about one account never happens.
+  forumDigest: string | null;
 }
 
 // One operator-published broadcast notice, ready to display: the daemon

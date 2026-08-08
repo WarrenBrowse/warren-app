@@ -181,8 +181,8 @@ export default class AppRenderer {
 
     // The forum handle lands after a wallet sign-in on the forum, which can
     // happen while this view is open.
-    IpcRendererEventChannel.forumLogin.listenHandle((handle) => {
-      this.reduxActions.account.updateForumHandle(handle);
+    IpcRendererEventChannel.forumLogin.listenIdentity((identity) => {
+      this.reduxActions.account.updateForumIdentity(identity);
     });
 
     IpcRendererEventChannel.accountHistory.listen((newPubKeyHistory?: WarrenPubKey) => {
@@ -368,7 +368,7 @@ export default class AppRenderer {
     // Login state and account needs to be set before expiry.
     this.setAccountExpiry(initialState.accountData?.expiry);
     this.reduxActions.account.updatePurchaseInFlight(initialState.purchaseInFlight);
-    this.reduxActions.account.updateForumHandle(initialState.forumHandle);
+    this.reduxActions.account.updateForumIdentity(initialState.forumIdentity);
 
     this.setPubKeyHistory(initialState.accountHistory);
     this.setTunnelState(initialState.tunnelState);

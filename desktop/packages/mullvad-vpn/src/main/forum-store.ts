@@ -2,33 +2,42 @@ import { app, safeStorage } from 'electron';
 import fs from 'fs';
 import path from 'path';
 
+import {
+  ForumIdentity,
+  parseForumIdentity,
+  serializeForumIdentity,
+} from '../shared/forum-identity';
 import log from '../shared/logging';
 
-// OS-keychain-encrypted file store for the community-forum handle.
+// OS-keychain-encrypted file store for the community-forum identity: the
+// public handle, and the slot this installation occupies in the broadcast
+// activity digest.
 //
 // The handle is public on the forum, but the LINK between it and this
 // installation's wallet is not: written in the clear it would hand any local
 // reader the pairwise identifier that warren-connect deliberately stops
-// storing server side. It therefore gets the same treatment as the renewal
-// mandate (its own sealed blob under userData, never gui_settings.json, which
-// is cleartext by invariant) rather than a settings key.
+// storing server side. The slot belongs in the same blob for the same
+// reason: on its own it names nobody, but beside the handle it is half of
+// that link. Both therefore get the same treatment as the renewal mandate
+// (their own sealed blob under userData, never gui_settings.json, which is
+// cleartext by invariant) rather than a settings key.
 //
 // Unlike the renewal token this is not a credential: when the OS offers no
-// real encryption the handle is simply not persisted, so the account view
-// shows it for the rest of the session and again after the next forum login.
+// real encryption nothing is persisted, so the account view shows the handle
+// for the rest of the session and again after the next forum login.
 
 const FILE_NAME = 'forum.bin';
 
-export interface ForumHandleStore {
-  get(): string | undefined;
-  set(handle: string | undefined): void;
+export interface ForumIdentityStore {
+  get(): ForumIdentity | undefined;
+  set(identity: ForumIdentity | undefined): void;
 }
 
-export default class SafeStorageForumHandleStore implements ForumHandleStore {
-  private cache?: string;
+export default class SafeStorageForumIdentityStore implements ForumIdentityStore {
+  private cache?: ForumIdentity;
   private loaded = false;
 
-  public get(): string | undefined {
+  public get(): ForumIdentity | undefined {
     if (!this.loaded) {
       this.cache = this.load();
       this.loaded = true;
@@ -36,17 +45,23 @@ export default class SafeStorageForumHandleStore implements ForumHandleStore {
     return this.cache;
   }
 
-  public set(handle: string | undefined): void {
-    this.cache = handle;
+  public set(identity: ForumIdentity | undefined): void {
+    this.cache = identity;
     this.loaded = true;
     try {
-      if (handle === undefined) {
+      if (identity === undefined) {
         fs.rmSync(this.filePath(), { force: true });
       } else if (this.available()) {
-        fs.writeFileSync(this.filePath(), safeStorage.encryptString(handle), { mode: 0o600 });
+        fs.writeFileSync(
+          this.filePath(),
+          safeStorage.encryptString(serializeForumIdentity(identity)),
+          {
+            mode: 0o600,
+          },
+        );
       }
     } catch (e) {
-      log.error(`Failed to persist forum handle: ${(e as Error).message}`);
+      log.error(`Failed to persist forum identity: ${(e as Error).message}`);
     }
   }
 
@@ -66,17 +81,17 @@ export default class SafeStorageForumHandleStore implements ForumHandleStore {
     }
   }
 
-  private load(): string | undefined {
+  private load(): ForumIdentity | undefined {
     try {
       if (!this.available() || !fs.existsSync(this.filePath())) {
         return undefined;
       }
-      const handle = safeStorage.decryptString(fs.readFileSync(this.filePath()));
-      // Same shape gate as the login response: a blob sealed under another
-      // keychain state decrypts to garbage, which must never reach the UI.
-      return /^[a-z]{5}-[a-z]{5}-[a-z]{5}$/.test(handle) ? handle : undefined;
+      // The codec applies the same shape gate as the login response: a blob
+      // sealed under another keychain state decrypts to garbage, which must
+      // never reach the UI.
+      return parseForumIdentity(safeStorage.decryptString(fs.readFileSync(this.filePath())));
     } catch (e) {
-      log.warn(`Failed to load forum handle: ${(e as Error).message}`);
+      log.warn(`Failed to load forum identity: ${(e as Error).message}`);
       return undefined;
     }
   }

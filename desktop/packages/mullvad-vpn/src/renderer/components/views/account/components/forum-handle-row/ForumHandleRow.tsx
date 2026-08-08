@@ -5,6 +5,6 @@ import { useSelector } from '../../../../../redux/store';
 // server side with a keyed HMAC, so the app learns it from the forum sign-in
 // response and has nothing to show before the first one.
 export function ForumHandleRow() {
-  const forumHandle = useSelector((state) => state.account.forumHandle);
+  const forumHandle = useSelector((state) => state.account.forumIdentity?.handle);
   return <Text variant="bodySmallSemibold">{forumHandle}</Text>;
 }

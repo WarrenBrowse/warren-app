@@ -1,6 +1,7 @@
 import { Session, session } from 'electron';
 
 import { productAnchors } from '../shared/constants/product-env';
+import { ForumIdentity, isSlot } from '../shared/forum-identity';
 import { ForumLoginResult, IForumLoginRequest } from '../shared/forum-login';
 import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
@@ -113,6 +114,34 @@ export function parseForumHandle(body: unknown): string | undefined {
   return handle;
 }
 
+/**
+ * Pulls the digest slot out of an approved-login response.
+ *
+ * The slot is drawn server side so the published activity document stays
+ * anonymous, which makes this response the only way the app can learn
+ * which position of it is its own. Absent when the allocator had no room,
+ * or when the provider predates the field: both cost the badge and
+ * nothing else, so neither may fail a login the provider accepted.
+ */
+export function parseForumNotifySlot(body: unknown): number | undefined {
+  if (typeof body !== 'object' || body === null) {
+    return undefined;
+  }
+  // Indexed rather than declared as a property: the key is the server's
+  // wire spelling, which is snake_case and must not be renamed here.
+  const slot = (body as Record<string, unknown>)['notify_slot'];
+  return isSlot(slot) ? slot : undefined;
+}
+
+/** Handle plus slot, as far as the provider's answer allows. */
+export function parseForumIdentityResponse(body: unknown): ForumIdentity | undefined {
+  const handle = parseForumHandle(body);
+  if (handle === undefined) {
+    return undefined;
+  }
+  return { handle, notifySlot: parseForumNotifySlot(body) ?? null };
+}
+
 // The connect provider expires a login/attach session 10 minutes after
 // creating it; a request buffered longer than that could only produce a
 // doomed signature.
@@ -148,10 +177,10 @@ export class PendingForumRequest<T> {
   }
 }
 
-/** Outcome of an approved login, plus the handle the provider echoed back. */
+/** Outcome of an approved login, plus the identity the provider echoed back. */
 export interface ApprovedForumLogin {
   result: ForumLoginResult;
-  handle?: string;
+  identity?: ForumIdentity;
 }
 
 /**
@@ -200,14 +229,15 @@ export async function approveForumLogin(
     }
     log.info('Forum login: signed challenge accepted by the provider');
     // A malformed body must not fail a login the provider already accepted:
-    // the handle is a display convenience, the login itself is done.
-    let handle: string | undefined;
+    // the handle is a display convenience and the slot only drives a badge,
+    // while the login itself is done.
+    let identity: ForumIdentity | undefined;
     try {
-      handle = parseForumHandle(await response.json());
+      identity = parseForumIdentityResponse(await response.json());
     } catch {
-      handle = undefined;
+      identity = undefined;
     }
-    return { result: 'approved', handle };
+    return { result: 'approved', identity };
   } catch (error) {
     // Never log the sid/pubkey/signature (no-log policy).
     log.error(`Forum login: POST to connect host failed: ${String(error)}`);

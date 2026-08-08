@@ -662,6 +662,7 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     exitEgressDead: status.getExitEgressDead(),
     networkInfo: convertFromWarrenNetworkInfo(status.getNetworkInfo()),
     notices: status.getNoticesList().map(convertFromWarrenNotice),
+    forumDigest: status.hasForumDigest() ? (status.getForumDigest() ?? null) : null,
   };
 }
 
