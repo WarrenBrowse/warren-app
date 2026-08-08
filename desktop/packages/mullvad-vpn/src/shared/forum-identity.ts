@@ -59,6 +59,20 @@ export function parseForumIdentity(blob: string): ForumIdentity | undefined {
   return { handle, notifySlot: isSlot(notifySlot) ? notifySlot : null };
 }
 
+/**
+ * Whether the app shows forum activity at all: the header bell, the desktop
+ * banner and the mark on the tray icon alike.
+ *
+ * One rule for the three, so none of them can be left behind the others.
+ * Off means off everywhere: a bell surviving the setting would keep offering
+ * the activity the user just asked not to be shown, and a bell shown to a
+ * wallet with no forum account would invite a click into a login flow nobody
+ * asked for.
+ */
+export function showsForumActivity(hasAccount: boolean, enabled: boolean): boolean {
+  return hasAccount && enabled;
+}
+
 /** True for a value usable as a digest slot index. */
 export function isSlot(value: unknown): value is number {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0;

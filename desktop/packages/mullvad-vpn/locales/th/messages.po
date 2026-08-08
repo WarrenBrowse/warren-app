@@ -5275,10 +5275,6 @@ msgid "Terms of use"
 msgstr "ข้อกำหนดการใช้งาน"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน ตัวเลขในแอปไม่เปลี่ยนแปลง"
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "การแจ้งเตือนจากฟอรัม"
 
@@ -5289,3 +5285,7 @@ msgstr "ฟอรัมได้รับการอัปเดตแล้ว
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน การปิดจะซ่อนกระดิ่งฟอรัมด้วย"

@@ -5290,10 +5290,6 @@ msgid "Terms of use"
 msgstr "شرایط استفاده"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "وقتی کسی در انجمن جامعه به شما پاسخ داد، باخبر شوید. شمارندهٔ داخل برنامه تغییری نمی‌کند."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "اعلان‌های انجمن"
 
@@ -5304,3 +5300,7 @@ msgstr "انجمن به‌روزرسانی شد"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "علامت‌گذاری همه به عنوان خوانده‌شده"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "وقتی کسی در انجمن جامعه به شما پاسخ داد، باخبر شوید. خاموش کردن آن، زنگ انجمن را هم پنهان می‌کند."

@@ -1,3 +1,4 @@
+import { showsForumActivity } from '../../shared/forum-identity';
 import { useSelector } from '../redux/store';
 
 // The forum activity badge.
@@ -12,6 +13,19 @@ import { useSelector } from '../redux/store';
 /** True once the user has signed in to the forum at least once. */
 export function useHasForumAccount(): boolean {
   return useSelector((state) => state.account.forumIdentity !== undefined);
+}
+
+/**
+ * Whether the app shows forum activity at all.
+ *
+ * The setting turns the whole surface off, the bell included: leaving a bell
+ * behind would keep offering the activity the user just asked not to be
+ * shown. Off also means no desktop banner and no mark on the tray icon.
+ */
+export function useShowsForumActivity(): boolean {
+  const hasAccount = useHasForumAccount();
+  const enabled = useSelector((state) => state.settings.guiSettings.forumNotifications ?? true);
+  return showsForumActivity(hasAccount, enabled);
 }
 
 /**

@@ -5275,10 +5275,6 @@ msgid "Terms of use"
 msgstr "이용 약관"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 앱 안의 개수 표시는 그대로입니다."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "포럼 알림"
 
@@ -5289,3 +5285,7 @@ msgstr "포럼이 업데이트되었습니다"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "모두 읽음으로 표시"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 끄면 포럼 종 아이콘도 숨겨집니다."

@@ -5,7 +5,7 @@ import { UNREAD_SATURATED } from '../../../../shared/forum-identity';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { IconButton, IconButtonProps, MainHeader } from '../../../lib/components';
-import { useForumUnreadCount, useHasForumAccount } from '../../../lib/forum-activity';
+import { useForumUnreadCount, useShowsForumActivity } from '../../../lib/forum-activity';
 import { colors, spacings } from '../../../lib/foundations';
 import { TransitionType, useHistory } from '../../../lib/history';
 
@@ -39,14 +39,14 @@ const StyledDiv = styled.div`
 `;
 
 /**
- * Forum activity bell. Rendered only for a wallet that has signed in to
- * the forum at least once: there is no badge to show anyone else, and an
- * inert bell would only invite a click into a login flow the user did not
- * ask for.
+ * Forum activity bell. Rendered only for a wallet that has signed in to the
+ * forum at least once, and only while forum notifications are on: there is
+ * no badge to show anyone else, and a bell left behind the setting would
+ * keep offering the activity the user just asked not to be shown.
  */
 export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
   const history = useHistory();
-  const hasAccount = useHasForumAccount();
+  const shown = useShowsForumActivity();
   const unread = useForumUnreadCount();
 
   const openForumActivity = useCallback(
@@ -54,7 +54,7 @@ export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
     [history],
   );
 
-  if (!hasAccount) {
+  if (!shown) {
     return null;
   }
 

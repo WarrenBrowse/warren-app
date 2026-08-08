@@ -5303,10 +5303,6 @@ msgid "Terms of use"
 msgstr "Användarvillkor"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Få veta när någon svarar dig på gemenskapsforumet. Räknaren i appen påverkas inte."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forumaviseringar"
 
@@ -5317,3 +5313,7 @@ msgstr "Forumet har uppdaterats"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Markera alla som lästa"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Få veta när någon svarar dig på gemenskapsforumet. Stänger du av döljs även forumklockan."

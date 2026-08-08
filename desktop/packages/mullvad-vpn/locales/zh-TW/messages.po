@@ -5275,10 +5275,6 @@ msgid "Terms of use"
 msgstr "使用條款"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "有人在社群論壇回覆你時提醒你。應用程式內的計數不受影響。"
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "論壇通知"
 
@@ -5289,3 +5285,7 @@ msgstr "論壇已更新"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "全部標為已讀"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "有人在社群論壇回覆你時提醒你。關閉後也會隱藏論壇鈴鐺。"

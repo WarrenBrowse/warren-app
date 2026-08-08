@@ -5275,10 +5275,6 @@ msgid "Terms of use"
 msgstr "利用規約"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "コミュニティフォーラムで誰かが返信したときに知らせます。アプリ内の件数表示は変わりません。"
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "フォーラムの通知"
 
@@ -5289,3 +5285,7 @@ msgstr "フォーラムが更新されました"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "すべて既読にする"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "コミュニティフォーラムで誰かが返信したときに知らせます。オフにするとフォーラムのベルも非表示になります。"

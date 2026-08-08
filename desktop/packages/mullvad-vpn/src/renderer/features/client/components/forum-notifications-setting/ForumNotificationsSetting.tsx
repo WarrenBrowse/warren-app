@@ -45,7 +45,7 @@ export function ForumNotificationsSetting(props: ForumNotificationsSettingProps)
             // TRANSLATORS: Description of the forum notifications setting.
             messages.pgettext(
               'user-interface-settings-view',
-              'Be told when someone replies to you on the community forum. The count in the app is not affected.',
+              'Be told when someone replies to you on the community forum. Turning this off also hides the forum bell.',
             )
           }
         </SettingsListItem.Footer.Text>

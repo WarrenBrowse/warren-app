@@ -5303,10 +5303,6 @@ msgid "Terms of use"
 msgstr "Käyttöehdot"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Saat tiedon, kun joku vastaa sinulle yhteisöfoorumilla. Sovelluksen laskuri ei muutu."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Foorumin ilmoitukset"
 
@@ -5317,3 +5313,7 @@ msgstr "Foorumi päivitettiin"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Merkitse kaikki luetuiksi"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Saat tiedon, kun joku vastaa sinulle yhteisöfoorumilla. Pois päältä myös piilottaa foorumin kellon."

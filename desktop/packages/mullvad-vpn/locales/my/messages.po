@@ -5278,10 +5278,6 @@ msgid "Terms of use"
 msgstr "အသုံးပြုမှု စည်းကမ်းများ"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ အက်ပ်အတွင်းရှိ အရေအတွက်ကို မထိခိုက်ပါ။"
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "ဖိုရမ် အသိပေးချက်များ"
 
@@ -5292,3 +5288,7 @@ msgstr "ဖိုရမ်ကို အပ်ဒိတ်လုပ်ပြီ�
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "အားလုံးကို ဖတ်ပြီးအဖြစ် မှတ်ရန်"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ ပိတ်လိုက်ပါက ဖိုရမ်ခေါင်းလောင်းကိုပါ ဖျောက်ထားမည်။"

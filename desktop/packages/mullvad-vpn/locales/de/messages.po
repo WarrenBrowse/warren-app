@@ -5304,10 +5304,6 @@ msgid "Terms of use"
 msgstr "Nutzungsbedingungen"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Erfahre, wenn dir jemand im Community-Forum antwortet. Der Zähler in der App bleibt davon unberührt."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forum-Benachrichtigungen"
 
@@ -5318,3 +5314,7 @@ msgstr "Das Forum wurde aktualisiert"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Alle als gelesen markieren"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Erfahre, wenn dir jemand im Community-Forum antwortet. Ausgeschaltet wird auch die Forumsglocke ausgeblendet."

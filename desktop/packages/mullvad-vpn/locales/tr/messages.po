@@ -5303,10 +5303,6 @@ msgid "Terms of use"
 msgstr "Kullanım koşulları"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Uygulamadaki sayaç etkilenmez."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forum bildirimleri"
 
@@ -5317,3 +5313,7 @@ msgstr "Forum güncellendi"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Tümünü okundu olarak işaretle"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Kapatmak forum zilini de gizler."

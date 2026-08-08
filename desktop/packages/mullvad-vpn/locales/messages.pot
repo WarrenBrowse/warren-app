@@ -2986,7 +2986,7 @@ msgstr ""
 
 #. Description of the forum notifications setting.
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr ""
 
 msgctxt "user-interface-settings-view"

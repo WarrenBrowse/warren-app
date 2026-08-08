@@ -5333,10 +5333,6 @@ msgid "Terms of use"
 msgstr "Умови використання"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Отримуйте сповіщення, коли вам відповідають на форумі спільноти. Лічильник у застосунку не змінюється."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Сповіщення форуму"
 
@@ -5347,3 +5343,7 @@ msgstr "Форум оновлено"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Позначити все як прочитане"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Отримуйте сповіщення, коли вам відповідають на форумі спільноти. Вимкнення також ховає дзвіночок форуму."

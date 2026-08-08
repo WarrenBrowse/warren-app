@@ -4452,10 +4452,6 @@ msgid "Terms of use"
 msgstr "Termeni de utilizare"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Află când îți răspunde cineva pe forumul comunității. Contorul din aplicație nu este afectat."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Notificări de pe forum"
 
@@ -4466,3 +4462,7 @@ msgstr "Forumul a fost actualizat"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Marchează tot ca citit"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Află când îți răspunde cineva pe forumul comunității. Dezactivarea ascunde și clopoțelul forumului."

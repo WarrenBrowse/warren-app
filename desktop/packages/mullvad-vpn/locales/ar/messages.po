@@ -5350,10 +5350,6 @@ msgid "Terms of use"
 msgstr "شروط الاستخدام"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "أعلمني عندما يرد عليك أحد في منتدى المجتمع. لا يتأثر العداد داخل التطبيق."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "إشعارات المنتدى"
 
@@ -5364,3 +5360,7 @@ msgstr "تم تحديث المنتدى"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "تعليم الكل كمقروء"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "أعلمني عندما يرد عليك أحد في منتدى المجتمع. إيقاف هذا يخفي أيضًا جرس المنتدى."

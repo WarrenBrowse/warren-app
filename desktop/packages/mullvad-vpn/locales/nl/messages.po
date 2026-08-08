@@ -5303,10 +5303,6 @@ msgid "Terms of use"
 msgstr "Gebruiksvoorwaarden"
 
 msgctxt "user-interface-settings-view"
-msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
-msgstr "Krijg bericht wanneer iemand je antwoordt op het communityforum. De teller in de app verandert niet."
-
-msgctxt "user-interface-settings-view"
 msgid "Forum notifications"
 msgstr "Forummeldingen"
 
@@ -5317,3 +5313,7 @@ msgstr "Het forum is bijgewerkt"
 msgctxt "forum-activity-view"
 msgid "Mark all as read"
 msgstr "Alles als gelezen markeren"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
+msgstr "Krijg bericht wanneer iemand je antwoordt op het communityforum. Uitschakelen verbergt ook de forumbel."
