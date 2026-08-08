@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">To urządzenie ma już portfel. Utworzenie nowego konta zastąpi go, a przywrócić go może wyłącznie jego fraza odzyskiwania.</string>
     <string name="wallet_create_overwrite_action">Utwórz nowe konto</string>
     <string name="wallet_backup_body">Zapisz te 12 słów i przechowuj je w bezpiecznym miejscu. Są jedynym sposobem na przywrócenie konta, jeśli utracisz to urządzenie.</string>
+    <string name="wallet_backup_leave_confirm">Konto, które właśnie utworzono, zostanie porzucone, a jego fraza odzyskiwania nie zostanie pokazana ponownie. Wróć tylko wtedy, gdy chodziło ci o przywrócenie konta, które już masz.</string>
+    <string name="wallet_backup_leave_action">Odrzuć</string>
     <string name="wallet_keys_restore_other">Przywróć z innej frazy</string>
     <string name="wallet_restore_overwrite_confirm">Przywracanie zastąpi portfel na tym urządzeniu. Przywrócić go może wyłącznie jego fraza odzyskiwania.</string>
     <string name="wallet_mnemonic_reveal_hint">Dotknij, aby odsłonić</string>

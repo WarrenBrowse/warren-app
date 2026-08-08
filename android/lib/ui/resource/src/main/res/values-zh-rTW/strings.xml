@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">此裝置上已有錢包。建立新帳戶會將其取代，只有其復原片語才能找回。</string>
     <string name="wallet_create_overwrite_action">建立新帳戶</string>
     <string name="wallet_backup_body">請寫下這 12 個單字並妥善保管。如果您遺失此裝置，它們是復原您帳戶的唯一方式。</string>
+    <string name="wallet_backup_leave_confirm">剛建立的帳戶將被放棄，其復原字詞不會再次顯示。只有當您原本想復原既有帳戶時才返回。</string>
+    <string name="wallet_backup_leave_action">放棄</string>
     <string name="wallet_keys_restore_other">使用其他片語復原</string>
     <string name="wallet_restore_overwrite_confirm">復原會取代此裝置上的錢包。只有其復原片語才能找回。</string>
     <string name="wallet_mnemonic_reveal_hint">點按以顯示</string>

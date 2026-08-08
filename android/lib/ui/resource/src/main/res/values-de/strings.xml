@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Auf diesem Gerät liegt bereits eine Wallet. Ein neues Konto ersetzt sie, und nur ihre Wiederherstellungsphrase bringt sie zurück.</string>
     <string name="wallet_create_overwrite_action">Neues Konto erstellen</string>
     <string name="wallet_backup_body">Schreiben Sie diese 12 Wörter auf und bewahren Sie sie sicher auf. Sie sind die einzige Möglichkeit, Ihr Konto wiederherzustellen, wenn Sie dieses Gerät verlieren.</string>
+    <string name="wallet_backup_leave_confirm">Das gerade erstellte Konto wird verworfen und seine Wiederherstellungsphrase wird nicht erneut angezeigt. Gehen Sie nur zurück, wenn Sie ein Konto wiederherstellen wollten, das Sie bereits haben.</string>
+    <string name="wallet_backup_leave_action">Verwerfen</string>
     <string name="wallet_keys_restore_other">Aus anderer Phrase wiederherstellen</string>
     <string name="wallet_restore_overwrite_confirm">Die Wiederherstellung ersetzt die Wallet auf diesem Gerät. Nur ihre Wiederherstellungsphrase bringt sie zurück.</string>
     <string name="wallet_mnemonic_reveal_hint">Zum Anzeigen tippen</string>

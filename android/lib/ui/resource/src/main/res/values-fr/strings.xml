@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Cet appareil contient déjà un portefeuille. Créer un nouveau compte le remplace, et seule sa phrase de récupération permet de le retrouver.</string>
     <string name="wallet_create_overwrite_action">Créer un nouveau compte</string>
     <string name="wallet_backup_body">Notez ces 12 mots et conservez-les en lieu sûr. Ils sont le seul moyen de restaurer votre compte si vous perdez cet appareil.</string>
+    <string name="wallet_backup_leave_confirm">Le compte qui vient d\'être créé sera abandonné et sa phrase de restauration ne sera plus affichée. Revenez en arrière uniquement si vous vouliez restaurer un compte que vous possédez déjà.</string>
+    <string name="wallet_backup_leave_action">Abandonner</string>
     <string name="wallet_keys_restore_other">Restaurer depuis une autre phrase</string>
     <string name="wallet_restore_overwrite_confirm">La restauration remplace le portefeuille de cet appareil. Seule sa phrase de récupération permet de le retrouver.</string>
     <string name="wallet_mnemonic_reveal_hint">Appuyez pour révéler</string>

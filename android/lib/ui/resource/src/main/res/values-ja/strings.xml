@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">この端末にはすでにウォレットがあります。新しいアカウントを作成すると置き換えられ、復元フレーズでしか戻せません。</string>
     <string name="wallet_create_overwrite_action">新規アカウントを作成</string>
     <string name="wallet_backup_body">この12個の単語を書き留めて安全に保管してください。このデバイスを紛失した場合、アカウントを復元する唯一の方法です。</string>
+    <string name="wallet_backup_leave_confirm">作成したばかりのアカウントは破棄され、その復元フレーズは二度と表示されません。すでにお持ちのアカウントを復元するつもりだった場合のみ戻ってください。</string>
+    <string name="wallet_backup_leave_action">破棄</string>
     <string name="wallet_keys_restore_other">別のフレーズから復元</string>
     <string name="wallet_restore_overwrite_confirm">復元するとこの端末のウォレットが置き換わります。復元フレーズでしか戻せません。</string>
     <string name="wallet_mnemonic_reveal_hint">タップして表示</string>

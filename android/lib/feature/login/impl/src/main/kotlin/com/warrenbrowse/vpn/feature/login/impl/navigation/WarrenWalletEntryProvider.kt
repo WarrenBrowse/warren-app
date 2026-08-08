@@ -27,9 +27,10 @@ import com.warrenbrowse.vpn.lib.repository.MnemonicCache
  *     sentinel. On restore (or any other transition into
  *     `WalletState.Ready`), pops to [ConnectNavKey] clearing the stack.
  *   - [WarrenWalletBackupNavKey] hosts the cleartext phrase + the backup
- *     confirmation. It is a hard gate with no way back: the wallet is already
- *     persisted, so leaving would strand an identity nobody has written down.
- *     On confirm, clears the back stack and pushes [ConnectNavKey].
+ *     confirmation. On confirm, clears the back stack and pushes
+ *     [ConnectNavKey]. Leaving it is possible but confirmed, since the wallet
+ *     is already persisted and its phrase is not shown again: it returns to
+ *     [WarrenWalletNavKey] so the user can pick the restore branch instead.
  *   - [WarrenKeysNavKey] hosts the same phrase read back later from the account
  *     page, and [WarrenRestoreMnemonicNavKey] the non-destructive switch to
  *     another wallet, both mirroring the desktop keys / restore-keys routes.
@@ -73,6 +74,13 @@ fun EntryProviderScope<NavKey2>.walletEntry(
         WarrenWalletBackupScreen(
             onConfirmed = {
                 navigator.navigate(postWalletDestination(key.onboarding), clearBackStack = true)
+            },
+            onDiscarded = {
+                // Back to the create-or-restore choice. The wallet stays on the
+                // device until the user creates or restores over it, both of
+                // which the login screen already gates behind their own
+                // replace-confirmation.
+                navigator.navigate(WarrenWalletNavKey(key.onboarding), clearBackStack = true)
             },
             onProcessRestoreFailure = {
                 // The MnemonicCache slot was empty (process kill or

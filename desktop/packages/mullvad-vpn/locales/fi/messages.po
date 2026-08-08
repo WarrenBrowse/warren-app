@@ -4771,8 +4771,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "Uutta palautuslausetta ei voitu lukea. Yritä uudelleen."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "Hylkää"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "Hylätäänkö tämä uusi tili?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "Anna 12 sanan palautuslauseesi välilyönnein eroteltuna palauttaaksesi tilisi tälle laitteelle."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "Palaa takaisin vain, jos tarkoituksesi oli palauttaa tili, joka sinulla jo on."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4787,12 +4799,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "Virheellinen palautuslause. Tarkista sanat ja niiden järjestys ja yritä uudelleen."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "Säilytä se"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "Palauta tili"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "Palauta tilisi"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "Juuri luotu tili hylätään, eikä sen palautuslausetta näytetä uudelleen."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

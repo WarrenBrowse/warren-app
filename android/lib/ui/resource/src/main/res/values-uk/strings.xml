@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">На цьому пристрої вже є гаманець. Створення нового облікового запису замінить його, і повернути його можна лише фразою відновлення.</string>
     <string name="wallet_create_overwrite_action">Створити обліковий запис</string>
     <string name="wallet_backup_body">Запишіть ці 12 слів і зберігайте їх у надійному місці. Це єдиний спосіб відновити ваш обліковий запис, якщо ви втратите цей пристрій.</string>
+    <string name="wallet_backup_leave_confirm">Щойно створений обліковий запис буде залишено, а його фразу відновлення більше не буде показано. Повертайтеся, лише якщо ви хотіли відновити обліковий запис, який у вас уже є.</string>
+    <string name="wallet_backup_leave_action">Відкинути</string>
     <string name="wallet_keys_restore_other">Відновити з іншої фрази</string>
     <string name="wallet_restore_overwrite_confirm">Відновлення замінить гаманець на цьому пристрої. Повернути його можна лише фразою відновлення.</string>
     <string name="wallet_mnemonic_reveal_hint">Торкніться, щоб показати</string>

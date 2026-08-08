@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Dit apparaat heeft al een wallet. Een nieuw account maken vervangt die, en alleen de herstelzin kan hem terugbrengen.</string>
     <string name="wallet_create_overwrite_action">Nieuw account aanmaken</string>
     <string name="wallet_backup_body">Schrijf deze 12 woorden op en bewaar ze veilig. Ze zijn de enige manier om je account te herstellen als je dit apparaat verliest.</string>
+    <string name="wallet_backup_leave_confirm">Het zojuist aangemaakte account wordt losgelaten en de herstelzin wordt niet opnieuw getoond. Ga alleen terug als je een account wilde herstellen dat je al hebt.</string>
+    <string name="wallet_backup_leave_action">Verwerpen</string>
     <string name="wallet_keys_restore_other">Herstellen met een andere zin</string>
     <string name="wallet_restore_overwrite_confirm">Herstellen vervangt de wallet op dit apparaat. Alleen de herstelzin kan hem terugbrengen.</string>
     <string name="wallet_mnemonic_reveal_hint">Tik om te tonen</string>

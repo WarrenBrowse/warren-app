@@ -4632,8 +4632,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "ไม่สามารถอ่านวลีกู้คืนใหม่ได้ โปรดลองอีกครั้ง"
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "ละทิ้ง"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "ละทิ้งบัญชีใหม่นี้หรือไม่"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "ป้อนวลีกู้คืน 12 คำของคุณ โดยคั่นด้วยช่องว่าง เพื่อกู้คืนบัญชีของคุณบนอุปกรณ์นี้"
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "ย้อนกลับเฉพาะเมื่อคุณตั้งใจจะกู้คืนบัญชีที่คุณมีอยู่แล้ว"
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4648,12 +4660,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "วลีกู้คืนไม่ถูกต้อง ตรวจสอบคำและลำดับของคำ แล้วลองอีกครั้ง"
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "เก็บไว้"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "กู้คืนบัญชี"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "กู้คืนบัญชีของคุณ"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "บัญชีที่เพิ่งสร้างจะถูกละทิ้งและจะไม่แสดงวลีกู้คืนอีก"
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

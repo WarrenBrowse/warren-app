@@ -4771,8 +4771,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "Kan de nieuwe herstelzin niet lezen. Probeer het opnieuw."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "Verwerpen"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "Dit nieuwe account verwerpen?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "Voer je herstelzin van 12 woorden in, gescheiden door spaties, om je account op dit apparaat te herstellen."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "Ga alleen terug als je een account wilde herstellen dat je al hebt."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4787,12 +4799,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "Ongeldige herstelzin. Controleer de woorden en hun volgorde en probeer het opnieuw."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "Behouden"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "Account herstellen"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "Herstel je account"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "Het zojuist aangemaakte account wordt losgelaten en de herstelzin wordt niet opnieuw getoond."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

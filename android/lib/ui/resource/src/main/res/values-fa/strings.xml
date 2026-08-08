@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">این دستگاه از قبل یک کیف پول دارد. ساخت حساب جدید جایگزین آن می‌شود و فقط عبارت بازیابی آن می‌تواند بازش گرداند.</string>
     <string name="wallet_create_overwrite_action">ایجاد یک حساب جدید</string>
     <string name="wallet_backup_body">این ۱۲ کلمه را یادداشت کنید و در جای امنی نگه دارید. اگر این دستگاه را از دست بدهید، تنها راه بازیابی حساب شما هستند.</string>
+    <string name="wallet_backup_leave_confirm">حسابی که هم‌اکنون ساخته شد رها می‌شود و عبارت بازیابی آن دیگر نمایش داده نمی‌شود. فقط در صورتی بازگردید که قصد داشتید حسابی را که از قبل دارید بازیابی کنید.</string>
+    <string name="wallet_backup_leave_action">صرف‌نظر</string>
     <string name="wallet_keys_restore_other">بازیابی از عبارت دیگر</string>
     <string name="wallet_restore_overwrite_confirm">بازیابی، کیف پول این دستگاه را جایگزین می‌کند. فقط عبارت بازیابی آن می‌تواند بازش گرداند.</string>
     <string name="wallet_mnemonic_reveal_hint">برای نمایش ضربه بزنید</string>

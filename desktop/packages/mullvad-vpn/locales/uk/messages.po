@@ -4799,8 +4799,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "Не вдалося прочитати нову фразу відновлення. Спробуйте ще раз."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "Відкинути"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "Відкинути цей новий обліковий запис?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "Введіть свою фразу відновлення з 12 слів, розділених пробілами, щоб відновити обліковий запис на цьому пристрої."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "Повертайтеся, лише якщо ви хотіли відновити обліковий запис, який у вас уже є."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4815,12 +4827,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "Недійсна фраза відновлення. Перевірте слова та їхній порядок, потім спробуйте ще раз."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "Залишити"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "Відновити обліковий запис"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "Відновіть свій обліковий запис"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "Щойно створений обліковий запис буде залишено, а його фразу відновлення більше не буде показано."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

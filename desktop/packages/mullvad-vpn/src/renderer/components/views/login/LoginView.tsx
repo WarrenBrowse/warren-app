@@ -10,11 +10,12 @@ import { FlexColumn } from '../../../lib/components/flex-column';
 import { Link } from '../../../lib/components/link';
 import { View } from '../../../lib/components/view';
 import { colors, Radius, spacings } from '../../../lib/foundations';
-import { LoginViewStep, loginViewStep } from '../../../lib/functions/login-step';
+import { loginStepBack, LoginViewStep, loginViewStep } from '../../../lib/functions/login-step';
 import { formatHtml } from '../../../lib/html-formatter';
 import { IconBadge } from '../../../lib/icon-badge';
 import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
+import { ModalAlert, ModalAlertType } from '../../Modal';
 import {
   CopyMnemonicButton,
   countMnemonicWords,
@@ -50,7 +51,7 @@ const DangerCallout = styled.div`
 type Mode = 'pick' | 'restore';
 
 export function LoginView() {
-  const { createNewAccount, finishAccountBackup, getWarrenMnemonic, setWarrenMnemonic } =
+  const { createNewAccount, finishAccountBackup, getWarrenMnemonic, logout, setWarrenMnemonic } =
     useAppContext();
 
   const status = useSelector((state) => state.account.status);
@@ -70,12 +71,14 @@ export function LoginView() {
 
   const [mode, setMode] = useState<Mode>('pick');
   const step = loginViewStep(status.type, mode);
+  const backAction = loginStepBack(step);
   const isBackup = step === 'backup';
   const [mnemonic, setMnemonic] = useState<string | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [restoreInput, setRestoreInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
 
   // Once the daemon has minted the identity (backup-pending), fetch the
   // freshly generated phrase to display for backup.
@@ -134,6 +137,23 @@ export function LoginView() {
       finishAccountBackup(backupPubkey);
     }
   }, [finishAccountBackup, backupPubkey]);
+
+  const openDiscardConfirm = useCallback(() => setDiscardConfirmOpen(true), []);
+  const closeDiscardConfirm = useCallback(() => setDiscardConfirmOpen(false), []);
+
+  // Leaving the backup step means walking away from the identity the daemon
+  // already minted and logged into, so it takes a logout to get back to the
+  // choice: the `logged out` device event clears the persisted backup gate and
+  // returns the view to the pick step. The source deliberately is not the
+  // wipe-identity one, since erasing the on-disk seed is reserved for a
+  // sign-out the user confirmed they backed up (see `logout_account` in the
+  // daemon's management interface).
+  const discardNewAccount = useCallback(async () => {
+    setDiscardConfirmOpen(false);
+    setMnemonic(null);
+    setConfirmed(false);
+    await logout('gui-discard-new-account');
+  }, [logout]);
 
   const restoreWordCount = countMnemonicWords(restoreInput);
   const restoreValid = restoreWordCount === 12 || restoreWordCount === 24;
@@ -215,6 +235,7 @@ export function LoginView() {
                     confirmed={confirmed}
                     onConfirmedChange={setConfirmed}
                     onContinue={onConfirmBackup}
+                    onBack={backAction === 'discard' ? openDiscardConfirm : undefined}
                   />
                 ) : step === 'restore' ? (
                   <RestoreStep
@@ -223,7 +244,7 @@ export function LoginView() {
                     canSubmit={restoreValid && !busy}
                     busy={busy}
                     onSubmit={onRestore}
-                    onBack={goPick}
+                    onBack={backAction === 'pick' ? goPick : undefined}
                   />
                 ) : (
                   <PickStep creating={creating} onCreate={onCreate} onRestore={goRestore} />
@@ -233,6 +254,45 @@ export function LoginView() {
           </FlexColumn>
         </View.Container>
       </View.Content>
+
+      <ModalAlert
+        isOpen={discardConfirmOpen}
+        type={ModalAlertType.caution}
+        title={messages.pgettext('login-view', 'Discard this new account?')}
+        message={[
+          messages.pgettext(
+            'login-view',
+            'The account that was just created will be abandoned and its recovery phrase will not be shown again.',
+          ),
+          messages.pgettext(
+            'login-view',
+            'Go back only if you meant to restore an account you already have.',
+          ),
+        ]}
+        gridButtons={[
+          <Button key="keep" onClick={closeDiscardConfirm}>
+            <Button.Text>
+              {
+                // TRANSLATORS: Button that closes the dialog and stays on the recovery-phrase backup step.
+                messages.pgettext('login-view', 'Keep it')
+              }
+            </Button.Text>
+          </Button>,
+          <Button
+            key="discard"
+            variant="destructive"
+            onClick={discardNewAccount}
+            data-testid="login-backup-discard-confirm">
+            <Button.Text>
+              {
+                // TRANSLATORS: Button that abandons the freshly created account and returns to the first screen.
+                messages.pgettext('login-view', 'Discard')
+              }
+            </Button.Text>
+          </Button>,
+        ]}
+        close={closeDiscardConfirm}
+      />
     </View>
   );
 }
@@ -319,9 +379,16 @@ interface BackupStepProps {
   confirmed: boolean;
   onConfirmedChange: (value: boolean) => void;
   onContinue: () => void;
+  onBack?: () => void;
 }
 
-function BackupStep({ mnemonic, confirmed, onConfirmedChange, onContinue }: BackupStepProps) {
+function BackupStep({
+  mnemonic,
+  confirmed,
+  onConfirmedChange,
+  onContinue,
+  onBack,
+}: BackupStepProps) {
   if (!mnemonic) {
     return (
       <Flex justifyContent="center">
@@ -364,6 +431,12 @@ function BackupStep({ mnemonic, confirmed, onConfirmedChange, onContinue }: Back
         data-testid="login-backup-continue">
         <Button.Text>{messages.gettext('Continue')}</Button.Text>
       </Button>
+
+      {onBack && (
+        <Link as="button" onClick={onBack} data-testid="login-backup-back">
+          <Link.Text>{messages.gettext('Back')}</Link.Text>
+        </Link>
+      )}
     </FlexColumn>
   );
 }
@@ -374,7 +447,7 @@ interface RestoreStepProps {
   canSubmit: boolean;
   busy: boolean;
   onSubmit: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 function RestoreStep({
@@ -411,9 +484,11 @@ function RestoreStep({
           <Button.Text>{messages.pgettext('login-view', 'Restore account')}</Button.Text>
         )}
       </Button>
-      <Link as="button" onClick={onBack} disabled={busy}>
-        <Link.Text>{messages.gettext('Back')}</Link.Text>
-      </Link>
+      {onBack && (
+        <Link as="button" onClick={onBack} disabled={busy} data-testid="login-restore-back">
+          <Link.Text>{messages.gettext('Back')}</Link.Text>
+        </Link>
+      )}
     </FlexColumn>
   );
 }

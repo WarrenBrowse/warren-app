@@ -4632,8 +4632,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "新しいリカバリーフレーズを読み取れませんでした。もう一度お試しください。"
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "破棄"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "この新しいアカウントを破棄しますか？"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "このデバイスでアカウントを復元するには、12単語のリカバリーフレーズをスペースで区切って入力してください。"
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "すでにお持ちのアカウントを復元するつもりだった場合のみ戻ってください。"
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4648,12 +4660,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "無効なリカバリーフレーズです。単語とその順序を確認してから、もう一度お試しください。"
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "保持する"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "アカウントを復元"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "アカウントを復元する"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "作成したばかりのアカウントは破棄され、その復元フレーズは二度と表示されません。"
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

@@ -2058,8 +2058,21 @@ msgctxt "login-view"
 msgid "Create a new account"
 msgstr ""
 
+#. Button that abandons the freshly created account and returns to the first screen.
+msgctxt "login-view"
+msgid "Discard"
+msgstr ""
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr ""
+
 msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
+msgstr ""
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
 msgstr ""
 
 #. Button that starts restoring an existing account from a recovery phrase.
@@ -2075,6 +2088,11 @@ msgctxt "login-view"
 msgid "Invalid recovery phrase. Check the words and their order, then try again."
 msgstr ""
 
+#. Button that closes the dialog and stays on the recovery-phrase backup step.
+msgctxt "login-view"
+msgid "Keep it"
+msgstr ""
+
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
@@ -2087,6 +2105,10 @@ msgstr ""
 #. Title of the step where the user enters their recovery phrase.
 msgctxt "login-view"
 msgid "Restore your account"
+msgstr ""
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
 msgstr ""
 
 msgctxt "login-view"

@@ -4771,8 +4771,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "Impossibile leggere la nuova frase di recupero. Riprova."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "Scarta"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "Scartare questo nuovo account?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "Inserisci la tua frase di recupero di 12 parole, separate da spazi, per ripristinare il tuo account su questo dispositivo."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "Torna indietro solo se volevi ripristinare un account che hai già."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4787,12 +4799,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "Frase di recupero non valida. Controlla le parole e il loro ordine, quindi riprova."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "Mantienilo"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "Ripristina account"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "Ripristina il tuo account"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "L'account appena creato verrà abbandonato e la sua frase di recupero non sarà mostrata di nuovo."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

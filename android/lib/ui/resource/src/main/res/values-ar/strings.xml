@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">هذا الجهاز يحتوي بالفعل على محفظة. إنشاء حساب جديد سيستبدلها، ولا يمكن استعادتها إلا بعبارة الاسترداد الخاصة بها.</string>
     <string name="wallet_create_overwrite_action">إنشاء حساب جديد</string>
     <string name="wallet_backup_body">اكتب هذه الكلمات الـ 12 واحتفظ بها في مكان آمن. إنها الطريقة الوحيدة لاستعادة حسابك إذا فقدت هذا الجهاز.</string>
+    <string name="wallet_backup_leave_confirm">سيتم التخلي عن الحساب الذي تم إنشاؤه للتو ولن تُعرض عبارة الاسترداد الخاصة به مرة أخرى. ارجع فقط إذا كنت تقصد استعادة حساب لديك بالفعل.</string>
+    <string name="wallet_backup_leave_action">تجاهل</string>
     <string name="wallet_keys_restore_other">الاسترداد من عبارة أخرى</string>
     <string name="wallet_restore_overwrite_confirm">الاسترداد يستبدل المحفظة الموجودة على هذا الجهاز. لا يمكن استعادتها إلا بعبارة الاسترداد الخاصة بها.</string>
     <string name="wallet_mnemonic_reveal_hint">انقر للكشف</string>

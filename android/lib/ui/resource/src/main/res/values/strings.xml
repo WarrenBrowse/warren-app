@@ -198,6 +198,8 @@
     <string name="wallet_create_overwrite_confirm">This device already holds a wallet. Creating a new account replaces it, and only its recovery phrase can bring it back.</string>
     <string name="wallet_create_overwrite_action">Create a new account</string>
     <string name="wallet_backup_body">Write these 12 words down and keep them safe. They are the only way to restore your account if you lose this device.</string>
+    <string name="wallet_backup_leave_confirm">The account that was just created will be abandoned and its recovery phrase will not be shown again. Go back only if you meant to restore an account you already have.</string>
+    <string name="wallet_backup_leave_action">Discard</string>
     <string name="wallet_keys_restore_other">Restore from another phrase</string>
     <string name="wallet_restore_overwrite_confirm">Restoring replaces the wallet on this device. Only its recovery phrase can bring it back.</string>
     <string name="wallet_mnemonic_reveal_hint">Tap to reveal</string>

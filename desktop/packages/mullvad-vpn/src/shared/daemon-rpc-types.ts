@@ -10,7 +10,10 @@ export type DisconnectSource =
   | 'tray-disconnect'
   | 'tray-disconnect-quit';
 
-export type LogoutSource = 'gui-logout-button' | 'gui-device-revoked';
+// The daemon reads this label: only `gui-logout-button` erases the on-disk
+// BIP39 identity, every other source logs out and preserves it. See
+// `logout_account` in the daemon's management interface.
+export type LogoutSource = 'gui-logout-button' | 'gui-device-revoked' | 'gui-discard-new-account';
 
 export interface IAccountData {
   expiry: string;

@@ -4632,8 +4632,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "새 복구 문구를 읽을 수 없습니다. 다시 시도하세요."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "폐기"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "이 새 계정을 폐기할까요?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "이 기기에서 계정을 복원하려면 공백으로 구분된 12단어 복구 문구를 입력하세요."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "이미 가지고 있는 계정을 복구하려던 경우에만 돌아가세요."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4648,12 +4660,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "잘못된 복구 문구입니다. 단어와 순서를 확인한 후 다시 시도하세요."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "유지하기"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "계정 복원"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "계정 복원하기"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "방금 만든 계정은 폐기되며 복구 문구는 다시 표시되지 않습니다."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

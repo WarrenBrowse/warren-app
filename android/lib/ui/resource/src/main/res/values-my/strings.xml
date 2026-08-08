@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">ဤစက်ပစ္စည်းတွင် ပိုက်ဆံအိတ် ရှိပြီးဖြစ်သည်။ အကောင့်အသစ် ဖန်တီးလျှင် ၎င်းကို အစားထိုးမည်ဖြစ်ပြီး ပြန်လည်ရယူရေး စကားစုဖြင့်သာ ပြန်ရနိုင်ပါသည်။</string>
     <string name="wallet_create_overwrite_action">အကောင့်သစ် ဖွင့်ရန်</string>
     <string name="wallet_backup_body">ဤစကားလုံး ၁၂ လုံးကို ချရေး၍ လုံခြုံစွာ သိမ်းဆည်းပါ။ ဤစက်ပစ္စည်းကို ပျောက်ဆုံးပါက သင်၏အကောင့်ကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။</string>
+    <string name="wallet_backup_leave_confirm">ယခုဖန်တီးလိုက်သော အကောင့်ကို စွန့်လွှတ်မည်ဖြစ်ပြီး ၎င်း၏ ပြန်လည်ရယူရေးစကားစုကို ထပ်မံပြသမည်မဟုတ်ပါ။ သင့်တွင် ရှိပြီးသားအကောင့်ကို ပြန်လည်ရယူလိုသည့်အခါမှသာ ပြန်သွားပါ။</string>
+    <string name="wallet_backup_leave_action">စွန့်လွှတ်ရန်</string>
     <string name="wallet_keys_restore_other">အခြား စကားစုမှ ပြန်လည်ရယူရန်</string>
     <string name="wallet_restore_overwrite_confirm">ပြန်လည်ရယူခြင်းက ဤစက်ပစ္စည်းရှိ ပိုက်ဆံအိတ်ကို အစားထိုးမည်။ ၎င်း၏ ပြန်လည်ရယူရေး စကားစုဖြင့်သာ ပြန်ရနိုင်သည်။</string>
     <string name="wallet_mnemonic_reveal_hint">ဖော်ပြရန် တို့ပါ</string>

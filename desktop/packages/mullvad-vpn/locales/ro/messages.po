@@ -4023,8 +4023,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "Nu s-a putut citi noua frază de recuperare. Încearcă din nou."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "Renunță"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "Renunți la acest cont nou?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "Introdu fraza de recuperare din 12 cuvinte, separate prin spații, pentru a-ți restaura contul pe acest dispozitiv."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "Întoarce-te doar dacă voiai să restaurezi un cont pe care îl ai deja."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4039,12 +4051,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "Frază de recuperare invalidă. Verifică cuvintele și ordinea lor, apoi încearcă din nou."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "Păstrează-l"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "Restaurează contul"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "Restaurează-ți contul"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "Contul tocmai creat va fi abandonat, iar fraza sa de recuperare nu va mai fi afișată."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

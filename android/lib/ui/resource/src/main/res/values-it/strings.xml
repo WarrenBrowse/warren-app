@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Questo dispositivo contiene già un wallet. Creare un nuovo account lo sostituisce e solo la sua frase di recupero può riportarlo.</string>
     <string name="wallet_create_overwrite_action">Crea un nuovo account</string>
     <string name="wallet_backup_body">Annota queste 12 parole e conservale in un luogo sicuro. Sono l\'unico modo per ripristinare il tuo account se perdi questo dispositivo.</string>
+    <string name="wallet_backup_leave_confirm">L\'account appena creato verrà abbandonato e la sua frase di recupero non sarà mostrata di nuovo. Torna indietro solo se volevi ripristinare un account che hai già.</string>
+    <string name="wallet_backup_leave_action">Scarta</string>
     <string name="wallet_keys_restore_other">Ripristina da un’altra frase</string>
     <string name="wallet_restore_overwrite_confirm">Il ripristino sostituisce il wallet di questo dispositivo. Solo la sua frase di recupero può riportarlo.</string>
     <string name="wallet_mnemonic_reveal_hint">Tocca per mostrare</string>

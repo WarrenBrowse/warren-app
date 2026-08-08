@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Bu cihazda zaten bir cüzdan var. Yeni hesap oluşturmak onu değiştirir ve yalnızca kurtarma ifadesi geri getirebilir.</string>
     <string name="wallet_create_overwrite_action">Yeni hesap oluştur</string>
     <string name="wallet_backup_body">Bu 12 kelimeyi yazın ve güvenli bir yerde saklayın. Bu cihazı kaybederseniz hesabınızı geri yüklemenin tek yolu bunlardır.</string>
+    <string name="wallet_backup_leave_confirm">Az önce oluşturulan hesap bırakılacak ve kurtarma ifadesi bir daha gösterilmeyecek. Yalnızca zaten sahip olduğunuz bir hesabı geri yüklemek istiyorsanız geri dönün.</string>
+    <string name="wallet_backup_leave_action">Vazgeç</string>
     <string name="wallet_keys_restore_other">Başka bir ifadeden geri yükle</string>
     <string name="wallet_restore_overwrite_confirm">Geri yükleme, bu cihazdaki cüzdanı değiştirir. Yalnızca kurtarma ifadesi geri getirebilir.</string>
     <string name="wallet_mnemonic_reveal_hint">Göstermek için dokunun</string>

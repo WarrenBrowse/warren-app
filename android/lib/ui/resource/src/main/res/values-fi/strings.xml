@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Tällä laitteella on jo lompakko. Uuden tilin luominen korvaa sen, ja vain sen palautuslause tuo sen takaisin.</string>
     <string name="wallet_create_overwrite_action">Luo uusi tili</string>
     <string name="wallet_backup_body">Kirjoita nämä 12 sanaa muistiin ja säilytä ne turvallisesti. Ne ovat ainoa tapa palauttaa tilisi, jos menetät tämän laitteen.</string>
+    <string name="wallet_backup_leave_confirm">Juuri luotu tili hylätään, eikä sen palautuslausetta näytetä uudelleen. Palaa takaisin vain, jos tarkoituksesi oli palauttaa tili, joka sinulla jo on.</string>
+    <string name="wallet_backup_leave_action">Hylkää</string>
     <string name="wallet_keys_restore_other">Palauta toisesta lauseesta</string>
     <string name="wallet_restore_overwrite_confirm">Palauttaminen korvaa tämän laitteen lompakon. Vain sen palautuslause tuo sen takaisin.</string>
     <string name="wallet_mnemonic_reveal_hint">Näytä napauttamalla</string>

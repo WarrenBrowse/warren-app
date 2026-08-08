@@ -27,8 +27,17 @@ export class LoginRouteObjectModel {
     await this.selectors.backupContinueButton().click();
   }
 
+  async discardNewAccount() {
+    await this.selectors.backupBackButton().click();
+    await this.selectors.backupDiscardConfirmButton().click();
+  }
+
   async startRestore() {
     await this.selectors.restoreButton().click();
+  }
+
+  async leaveRestore() {
+    await this.selectors.restoreBackButton().click();
   }
 
   async fillRecoveryPhrase(phrase: string) {

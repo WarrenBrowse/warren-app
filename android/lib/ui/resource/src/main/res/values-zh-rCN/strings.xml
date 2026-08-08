@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">此设备上已有钱包。创建新账户会将其替换，只有其恢复短语才能找回。</string>
     <string name="wallet_create_overwrite_action">创建新帐户</string>
     <string name="wallet_backup_body">请写下这 12 个单词并妥善保管。如果您丢失此设备，它们是恢复您账户的唯一方式。</string>
+    <string name="wallet_backup_leave_confirm">刚创建的账户将被放弃，其恢复短语不会再次显示。只有当您本想恢复已有账户时才返回。</string>
+    <string name="wallet_backup_leave_action">放弃</string>
     <string name="wallet_keys_restore_other">使用其他短语恢复</string>
     <string name="wallet_restore_overwrite_confirm">恢复会替换此设备上的钱包。只有其恢复短语才能找回。</string>
     <string name="wallet_mnemonic_reveal_hint">点按以显示</string>

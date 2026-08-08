@@ -4635,8 +4635,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "ပြန်လည်ရယူရေးစကားစုအသစ်ကို မဖတ်နိုင်ပါ။ ထပ်စမ်းကြည့်ပါ။"
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "စွန့်လွှတ်ရန်"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "ဤအကောင့်သစ်ကို စွန့်လွှတ်မလား။"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "ဤစက်ပစ္စည်းတွင် သင်၏အကောင့်ကို ပြန်လည်ရယူရန် သင်၏ စကားလုံး ၁၂ လုံးပါ ပြန်လည်ရယူရေးစကားစုကို ကွက်လပ်ဖြင့်ခြား၍ ထည့်ပါ။"
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "သင့်တွင် ရှိပြီးသားအကောင့်ကို ပြန်လည်ရယူလိုသည့်အခါမှသာ ပြန်သွားပါ။"
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4651,12 +4663,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "ပြန်လည်ရယူရေးစကားစု မမှန်ကန်ပါ။ စကားလုံးများနှင့် ၎င်းတို့၏ အစီအစဉ်ကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။"
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "ဆက်ထားရန်"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "အကောင့် ပြန်လည်ရယူပါ"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "သင်၏အကောင့်ကို ပြန်လည်ရယူပါ"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "ယခုဖန်တီးလိုက်သော အကောင့်ကို စွန့်လွှတ်မည်ဖြစ်ပြီး ၎င်း၏ ပြန်လည်ရယူရေးစကားစုကို ထပ်မံပြသမည်မဟုတ်ပါ။"
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

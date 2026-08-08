@@ -11,8 +11,11 @@ export const createSelectors = (page: Page) => ({
   mnemonicGrid: () => page.getByTestId('login-mnemonic-grid'),
   backupConfirmCheckbox: () => page.getByRole('checkbox'),
   backupContinueButton: () => page.getByTestId('login-backup-continue'),
+  backupBackButton: () => page.getByTestId('login-backup-back'),
+  backupDiscardConfirmButton: () => page.getByTestId('login-backup-discard-confirm'),
 
   // Restore step.
   restoreInput: () => page.getByTestId('login-restore-input'),
   restoreSubmitButton: () => page.getByTestId('login-restore-submit'),
+  restoreBackButton: () => page.getByTestId('login-restore-back'),
 });

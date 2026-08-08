@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Denne enheten har allerede en lommebok. Å opprette en ny konto erstatter den, og bare gjenopprettingsfrasen kan hente den tilbake.</string>
     <string name="wallet_create_overwrite_action">Opprett en ny konto</string>
     <string name="wallet_backup_body">Skriv ned disse 12 ordene og oppbevar dem trygt. De er den eneste måten å gjenopprette kontoen din på hvis du mister denne enheten.</string>
+    <string name="wallet_backup_leave_confirm">Kontoen som nettopp ble opprettet, blir forlatt, og gjenopprettingsfrasen vises ikke igjen. Gå bare tilbake hvis du mente å gjenopprette en konto du allerede har.</string>
+    <string name="wallet_backup_leave_action">Forkast</string>
     <string name="wallet_keys_restore_other">Gjenopprett fra en annen frase</string>
     <string name="wallet_restore_overwrite_confirm">Gjenoppretting erstatter lommeboken på denne enheten. Bare gjenopprettingsfrasen kan hente den tilbake.</string>
     <string name="wallet_mnemonic_reveal_hint">Trykk for å vise</string>

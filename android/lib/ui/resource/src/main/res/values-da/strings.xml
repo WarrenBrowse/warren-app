@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Denne enhed indeholder allerede en tegnebog. Oprettelse af en ny konto erstatter den, og kun dens gendannelsessætning kan hente den tilbage.</string>
     <string name="wallet_create_overwrite_action">Opret en ny konto</string>
     <string name="wallet_backup_body">Skriv disse 12 ord ned, og opbevar dem sikkert. De er den eneste måde at gendanne din konto på, hvis du mister denne enhed.</string>
+    <string name="wallet_backup_leave_confirm">Kontoen, der lige er oprettet, bliver opgivet, og dens gendannelsessætning vises ikke igen. Gå kun tilbage, hvis du mente at gendanne en konto, du allerede har.</string>
+    <string name="wallet_backup_leave_action">Kassér</string>
     <string name="wallet_keys_restore_other">Gendan fra en anden sætning</string>
     <string name="wallet_restore_overwrite_confirm">Gendannelse erstatter tegnebogen på denne enhed. Kun dens gendannelsessætning kan hente den tilbage.</string>
     <string name="wallet_mnemonic_reveal_hint">Tryk for at vise</string>

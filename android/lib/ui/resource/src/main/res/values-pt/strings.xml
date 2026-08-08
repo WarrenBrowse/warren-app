@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Este dispositivo já contém uma carteira. Criar uma conta nova substitui-a e só a respetiva frase de recuperação a pode trazer de volta.</string>
     <string name="wallet_create_overwrite_action">Criar uma nova conta</string>
     <string name="wallet_backup_body">Anote estas 12 palavras e guarde-as num local seguro. São a única forma de restaurar a sua conta se perder este dispositivo.</string>
+    <string name="wallet_backup_leave_confirm">A conta acabada de criar será abandonada e a sua frase de recuperação não voltará a ser mostrada. Volte atrás apenas se pretendia restaurar uma conta que já tem.</string>
+    <string name="wallet_backup_leave_action">Descartar</string>
     <string name="wallet_keys_restore_other">Restaurar a partir de outra frase</string>
     <string name="wallet_restore_overwrite_confirm">A restauração substitui a carteira deste dispositivo. Só a respetiva frase de recuperação a pode trazer de volta.</string>
     <string name="wallet_mnemonic_reveal_hint">Toque para revelar</string>

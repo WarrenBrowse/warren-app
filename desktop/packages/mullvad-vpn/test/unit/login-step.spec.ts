@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { loginViewStep } from '../../src/renderer/lib/functions/login-step';
+import { loginStepBack, loginViewStep } from '../../src/renderer/lib/functions/login-step';
 
 // The login view stays mounted for a moment after the account state
 // settles (navigation transition, scheduled reset). During that window
@@ -37,5 +37,26 @@ describe('loginViewStep', () => {
 
   it('keeps the pick step after a failed account creation', () => {
     expect(loginViewStep('failed', 'pick')).toBe('pick');
+  });
+});
+
+// Every step the user reached by making a choice must be leavable. A user who
+// taps "Create a new account" when they meant "I already have an account" was
+// trapped on the backup screen with no way back to that choice.
+describe('loginStepBack', () => {
+  it('leaves the restore step by returning to the choice', () => {
+    expect(loginStepBack('restore')).toBe('pick');
+  });
+
+  it('leaves the backup step by discarding the identity the daemon just minted', () => {
+    expect(loginStepBack('backup')).toBe('discard');
+  });
+
+  it('offers nothing on the choice step, which is the first screen', () => {
+    expect(loginStepBack('pick')).toBe('none');
+  });
+
+  it('offers nothing during the post-login transition', () => {
+    expect(loginStepBack('loggedIn')).toBe('none');
   });
 });

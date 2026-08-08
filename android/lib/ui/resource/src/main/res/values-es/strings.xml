@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Este dispositivo ya tiene un monedero. Crear una cuenta nueva lo sustituye, y solo su frase de recuperación puede recuperarlo.</string>
     <string name="wallet_create_overwrite_action">Crear una nueva cuenta</string>
     <string name="wallet_backup_body">Anota estas 12 palabras y guárdalas en un lugar seguro. Son la única forma de restaurar tu cuenta si pierdes este dispositivo.</string>
+    <string name="wallet_backup_leave_confirm">La cuenta que acabas de crear se abandonará y su frase de recuperación no volverá a mostrarse. Vuelve atrás solo si querías restaurar una cuenta que ya tienes.</string>
+    <string name="wallet_backup_leave_action">Descartar</string>
     <string name="wallet_keys_restore_other">Restaurar desde otra frase</string>
     <string name="wallet_restore_overwrite_confirm">Restaurar sustituye el monedero de este dispositivo. Solo su frase de recuperación puede recuperarlo.</string>
     <string name="wallet_mnemonic_reveal_hint">Toca para mostrar</string>

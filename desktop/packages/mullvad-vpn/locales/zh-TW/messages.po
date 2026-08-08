@@ -4632,8 +4632,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "無法讀取新的復原短語。請重試。"
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "放棄"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "放棄這個新帳戶？"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "輸入以空格分隔的 12 個單字復原短語，以在此裝置上復原您的帳戶。"
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "只有當您原本想復原既有帳戶時才返回。"
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4648,12 +4660,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "復原短語無效。請檢查單字及其順序，然後重試。"
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "保留"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "復原帳戶"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "復原您的帳戶"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "剛建立的帳戶將被放棄，其復原字詞不會再次顯示。"
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

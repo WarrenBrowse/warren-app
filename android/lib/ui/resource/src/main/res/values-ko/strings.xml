@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">이 기기에는 이미 지갑이 있습니다. 새 계정을 만들면 대체되며, 복구 문구로만 되돌릴 수 있습니다.</string>
     <string name="wallet_create_overwrite_action">새 계정 생성</string>
     <string name="wallet_backup_body">이 12개 단어를 적어 안전하게 보관하세요. 이 기기를 분실할 경우 계정을 복구할 수 있는 유일한 방법입니다.</string>
+    <string name="wallet_backup_leave_confirm">방금 만든 계정은 폐기되며 복구 문구는 다시 표시되지 않습니다. 이미 가지고 있는 계정을 복구하려던 경우에만 돌아가세요.</string>
+    <string name="wallet_backup_leave_action">폐기</string>
     <string name="wallet_keys_restore_other">다른 문구로 복구</string>
     <string name="wallet_restore_overwrite_confirm">복구하면 이 기기의 지갑이 대체됩니다. 복구 문구로만 되돌릴 수 있습니다.</string>
     <string name="wallet_mnemonic_reveal_hint">탭하여 표시</string>

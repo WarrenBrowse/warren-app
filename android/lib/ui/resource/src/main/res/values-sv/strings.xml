@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">Den här enheten har redan en plånbok. Att skapa ett nytt konto ersätter den, och bara dess återställningsfras kan hämta tillbaka den.</string>
     <string name="wallet_create_overwrite_action">Skapa ett nytt konto</string>
     <string name="wallet_backup_body">Skriv ner dessa 12 ord och förvara dem säkert. De är det enda sättet att återställa ditt konto om du förlorar den här enheten.</string>
+    <string name="wallet_backup_leave_confirm">Kontot som just skapades överges och dess återställningsfras visas inte igen. Gå bara tillbaka om du menade att återställa ett konto du redan har.</string>
+    <string name="wallet_backup_leave_action">Kassera</string>
     <string name="wallet_keys_restore_other">Återställ från en annan fras</string>
     <string name="wallet_restore_overwrite_confirm">Återställning ersätter plånboken på den här enheten. Bara dess återställningsfras kan hämta tillbaka den.</string>
     <string name="wallet_mnemonic_reveal_hint">Tryck för att visa</string>

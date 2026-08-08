@@ -4646,8 +4646,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "خواندن عبارت بازیابی جدید ممکن نشد. دوباره تلاش کنید."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "صرف‌نظر"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "این حساب جدید صرف‌نظر شود؟"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "عبارت بازیابی ۱۲ کلمه‌ای خود را که با فاصله جدا شده‌اند وارد کنید تا حساب خود را روی این دستگاه بازیابی کنید."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "فقط در صورتی بازگردید که قصد داشتید حسابی را که از قبل دارید بازیابی کنید."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4662,12 +4674,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "عبارت بازیابی نامعتبر است. کلمات و ترتیب آن‌ها را بررسی کنید و دوباره تلاش کنید."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "نگه داشتن"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "بازیابی حساب"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "حساب خود را بازیابی کنید"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "حسابی که هم‌اکنون ساخته شد رها می‌شود و عبارت بازیابی آن دیگر نمایش داده نمی‌شود."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

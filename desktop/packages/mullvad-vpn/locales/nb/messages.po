@@ -4771,8 +4771,20 @@ msgid "Could not read the new recovery phrase. Try again."
 msgstr "Kunne ikke lese den nye gjenopprettingsfrasen. Prøv igjen."
 
 msgctxt "login-view"
+msgid "Discard"
+msgstr "Forkast"
+
+msgctxt "login-view"
+msgid "Discard this new account?"
+msgstr "Vil du forkaste denne nye kontoen?"
+
+msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
 msgstr "Skriv inn gjenopprettingsfrasen din på 12 ord, atskilt med mellomrom, for å gjenopprette kontoen din på denne enheten."
+
+msgctxt "login-view"
+msgid "Go back only if you meant to restore an account you already have."
+msgstr "Gå bare tilbake hvis du mente å gjenopprette en konto du allerede har."
 
 msgctxt "login-view"
 msgid "I already have an account"
@@ -4787,12 +4799,20 @@ msgid "Invalid recovery phrase. Check the words and their order, then try again.
 msgstr "Ugyldig gjenopprettingsfrase. Kontroller ordene og rekkefølgen deres, og prøv igjen."
 
 msgctxt "login-view"
+msgid "Keep it"
+msgstr "Behold den"
+
+msgctxt "login-view"
 msgid "Restore account"
 msgstr "Gjenopprett konto"
 
 msgctxt "login-view"
 msgid "Restore your account"
 msgstr "Gjenopprett kontoen din"
+
+msgctxt "login-view"
+msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
+msgstr "Kontoen som nettopp ble opprettet, blir forlatt, og gjenopprettingsfrasen vises ikke igjen."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."

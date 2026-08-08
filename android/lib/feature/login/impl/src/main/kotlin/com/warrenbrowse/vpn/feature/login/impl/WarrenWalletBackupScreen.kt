@@ -28,6 +28,8 @@ import com.warrenbrowse.vpn.common.compose.MNEMONIC_CLIPBOARD_CLEAR_MS
 import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
 import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
+import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
+import com.warrenbrowse.vpn.lib.ui.component.dialog.NegativeConfirmationDialog
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicDisplay
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
@@ -41,10 +43,13 @@ import org.koin.androidx.compose.koinViewModel
  * desktop backup view: the phrase is shown in full alongside a copy action, and
  * a confirmation checkbox gates the Continue button.
  *
- * The step is a hard gate, with no back affordance and an inert system back
- * (desktop `LoginView` holds on `backup-pending` and disables even the settings
- * escape). The wallet is already persisted by the time this screen renders, so
- * leaving here would strand an identity whose phrase was never shown.
+ * The step is leavable, like the desktop backup step: a user who tapped
+ * "Create a new account" when they meant "I already have an account" has to be
+ * able to get back to that choice. The wallet is already persisted by the time
+ * this screen renders, so leaving abandons an identity nobody wrote down, which
+ * is why both the in-page back and the system back go through a confirmation.
+ * The login screen the user lands on already guards creating or restoring over
+ * a wallet that is still present.
  *
  * The copy action flags the clip as sensitive (hidden from the clipboard
  * preview on Android 13+) and schedules the clip to be dropped a minute later,
@@ -59,6 +64,7 @@ import org.koin.androidx.compose.koinViewModel
 fun WarrenWalletBackupScreen(
     onConfirmed: () -> Unit,
     onProcessRestoreFailure: () -> Unit,
+    onDiscarded: () -> Unit,
     modifier: Modifier = Modifier,
     vm: WarrenWalletBackupViewModel = koinViewModel(),
 ) {
@@ -73,9 +79,11 @@ fun WarrenWalletBackupScreen(
 
     // The full phrase is on screen here; block screenshots and the Recents thumbnail.
     SecureScreenWhileInView()
-    // The gate holds until the phrase is acknowledged: the only way on is the
-    // confirmation below.
-    BackHandler {}
+
+    var confirmLeave by remember { mutableStateOf(false) }
+    // The in-page back arrow and the system back do the same thing, so a swipe
+    // cannot skip the warning the arrow raises.
+    BackHandler { confirmLeave = true }
 
     val snackbarHostState = remember { SnackbarHostState() }
     val copyToClipboard =
@@ -89,6 +97,7 @@ fun WarrenWalletBackupScreen(
     ScaffoldWithSmallTopBar(
         modifier = modifier,
         appBarTitle = stringResource(R.string.wallet_backup_title),
+        navigationIcon = { NavigateBackIconButton(onNavigateBack = { confirmLeave = true }) },
         snackbarHostState = snackbarHostState,
     ) { scaffoldModifier ->
         Column(
@@ -147,5 +156,17 @@ fun WarrenWalletBackupScreen(
                 isEnabled = confirmed,
             )
         }
+    }
+
+    if (confirmLeave) {
+        NegativeConfirmationDialog(
+            message = stringResource(R.string.wallet_backup_leave_confirm),
+            confirmationText = stringResource(R.string.wallet_backup_leave_action),
+            onConfirm = {
+                confirmLeave = false
+                onDiscarded()
+            },
+            onBack = { confirmLeave = false },
+        )
     }
 }

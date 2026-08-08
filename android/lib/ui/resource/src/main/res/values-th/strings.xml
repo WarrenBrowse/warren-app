@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">อุปกรณ์นี้มีกระเป๋าเงินอยู่แล้ว การสร้างบัญชีใหม่จะแทนที่กระเป๋าเงินเดิม และมีเพียงวลีกู้คืนเท่านั้นที่นำกลับมาได้</string>
     <string name="wallet_create_overwrite_action">สร้างบัญชีใหม่</string>
     <string name="wallet_backup_body">จดคำ 12 คำเหล่านี้และเก็บไว้ในที่ปลอดภัย คำเหล่านี้เป็นวิธีเดียวที่จะกู้คืนบัญชีของคุณหากคุณทำอุปกรณ์นี้หาย</string>
+    <string name="wallet_backup_leave_confirm">บัญชีที่เพิ่งสร้างจะถูกละทิ้งและจะไม่แสดงวลีกู้คืนอีก ย้อนกลับเฉพาะเมื่อคุณตั้งใจจะกู้คืนบัญชีที่คุณมีอยู่แล้ว</string>
+    <string name="wallet_backup_leave_action">ละทิ้ง</string>
     <string name="wallet_keys_restore_other">กู้คืนจากวลีอื่น</string>
     <string name="wallet_restore_overwrite_confirm">การกู้คืนจะแทนที่กระเป๋าเงินบนอุปกรณ์นี้ มีเพียงวลีกู้คืนเท่านั้นที่นำกลับมาได้</string>
     <string name="wallet_mnemonic_reveal_hint">แตะเพื่อแสดง</string>

@@ -191,6 +191,8 @@
     <string name="wallet_create_overwrite_confirm">На этом устройстве уже есть кошелёк. Создание новой учётной записи заменит его, и вернуть его сможет только его фраза восстановления.</string>
     <string name="wallet_create_overwrite_action">Создать учетную запись</string>
     <string name="wallet_backup_body">Запишите эти 12 слов и храните их в надёжном месте. Это единственный способ восстановить вашу учётную запись, если вы потеряете это устройство.</string>
+    <string name="wallet_backup_leave_confirm">Только что созданная учётная запись будет оставлена, а её фраза восстановления больше не будет показана. Возвращайтесь, только если вы хотели восстановить уже имеющуюся учётную запись.</string>
+    <string name="wallet_backup_leave_action">Отказаться</string>
     <string name="wallet_keys_restore_other">Восстановить из другой фразы</string>
     <string name="wallet_restore_overwrite_confirm">Восстановление заменит кошелёк на этом устройстве. Вернуть его сможет только его фраза восстановления.</string>
     <string name="wallet_mnemonic_reveal_hint">Нажмите, чтобы показать</string>

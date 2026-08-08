@@ -195,6 +195,8 @@
     <string name="wallet_create_overwrite_confirm">Acest dispozitiv are deja un portofel. Crearea unui cont nou îl înlocuiește, iar doar fraza sa de recuperare îl poate readuce.</string>
     <string name="wallet_create_overwrite_action">Creați un cont nou</string>
     <string name="wallet_backup_body">Notează aceste 12 cuvinte și păstrează-le în siguranță. Sunt singurul mod de a-ți restaura contul dacă pierzi acest dispozitiv.</string>
+    <string name="wallet_backup_leave_confirm">Contul tocmai creat va fi abandonat, iar fraza sa de recuperare nu va mai fi afișată. Întoarce-te doar dacă voiai să restaurezi un cont pe care îl ai deja.</string>
+    <string name="wallet_backup_leave_action">Renunță</string>
     <string name="wallet_keys_restore_other">Restaurați dintr-o altă frază</string>
     <string name="wallet_restore_overwrite_confirm">Restaurarea înlocuiește portofelul de pe acest dispozitiv. Doar fraza sa de recuperare îl poate readuce.</string>
     <string name="wallet_mnemonic_reveal_hint">Atingeți pentru a dezvălui</string>
