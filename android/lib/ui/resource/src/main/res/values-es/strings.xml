@@ -497,6 +497,9 @@
     <string name="forum_login_title">¿Iniciar sesión en el foro de la comunidad Warren?</string>
     <string name="forum_login_body_first">Se solicitó un inicio de sesión en el foro de la comunidad Warren. Tu aplicación firmará un desafío de un solo uso con la clave de tu monedero para demostrar que eres tú.</string>
     <string name="forum_login_body_second">No se usa ningún correo electrónico ni contraseña. Apareces con un seudónimo anónimo que no puede vincularse a tu cuenta de Warren. Aprueba solo si iniciaste tú este acceso.</string>
+    <string name="forum_login_title_cross_device">¿Iniciar sesión en el foro en otro dispositivo?</string>
+    <string name="forum_login_body_first_cross_device">Esta solicitud proviene de un código QR, así que el navegador que inicia sesión está en otro dispositivo, no en este. Tu aplicación firmará un desafío de un solo uso con la clave de tu monedero para demostrar que eres tú.</string>
+    <string name="forum_login_body_second_cross_device">Aprueba solo si estás viendo esa página de inicio de sesión ahora mismo. Si alguien te envió este código, está iniciando sesión como tú. No se usa ningún correo electrónico ni contraseña.</string>
     <string name="forum_login_approve">Aprobar inicio de sesión</string>
     <string name="forum_login_cancel">Cancelar</string>
     <string name="forum_login_signing">Firmando, espera un momento.</string>

@@ -494,6 +494,9 @@
     <string name="forum_login_title">Warren コミュニティフォーラムにサインインしますか？</string>
     <string name="forum_login_body_first">Warren コミュニティフォーラムへのサインインが要求されました。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。</string>
     <string name="forum_login_body_second">メールアドレスもパスワードも使用しません。あなたは Warren アカウントに紐付けられない匿名のハンドル名で表示されます。ご自身でこのサインインを開始した場合のみ承認してください。</string>
+    <string name="forum_login_title_cross_device">別のデバイスでフォーラムにサインインしますか？</string>
+    <string name="forum_login_body_first_cross_device">このリクエストは QR コードから届いたため、サインインされるブラウザーはこのデバイスではなく別のデバイスにあります。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。</string>
+    <string name="forum_login_body_second_cross_device">そのサインインページを今まさに見ている場合のみ承認してください。誰かからこのコードを送られた場合、その人があなたとしてサインインしようとしています。メールアドレスもパスワードも使用しません。</string>
     <string name="forum_login_approve">サインインを承認</string>
     <string name="forum_login_cancel">キャンセル</string>
     <string name="forum_login_signing">署名しています。しばらくお待ちください。</string>

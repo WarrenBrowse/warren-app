@@ -503,6 +503,9 @@
     <string name="forum_login_title">Увійти на форум спільноти Warren?</string>
     <string name="forum_login_body_first">Запитано вхід на форум спільноти Warren. Застосунок підпише одноразовий запит ключем вашого гаманця, щоб підтвердити, що це ви.</string>
     <string name="forum_login_body_second">Електронна пошта й пароль не використовуються. Ви відображаєтесь під анонімним іменем, яке не можна пов\'язати з вашим обліковим записом Warren. Підтверджуйте вхід, лише якщо ви самі його розпочали.</string>
+    <string name="forum_login_title_cross_device">Увійти на форум на іншому пристрої?</string>
+    <string name="forum_login_body_first_cross_device">Цей запит надійшов із QR-коду, тож браузер, у якому виконується вхід, розташований на іншому пристрої, а не на цьому. Застосунок підпише одноразовий запит ключем вашого гаманця, щоб підтвердити, що це ви.</string>
+    <string name="forum_login_body_second_cross_device">Підтверджуйте, лише якщо ви просто зараз бачите цю сторінку входу. Якщо хтось надіслав вам цей код, він входить від вашого імені. Електронна пошта й пароль не використовуються.</string>
     <string name="forum_login_approve">Підтвердити вхід</string>
     <string name="forum_login_cancel">Скасувати</string>
     <string name="forum_login_signing">Підписуємо, зачекайте.</string>

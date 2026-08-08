@@ -497,6 +497,9 @@
     <string name="forum_login_title">Iniciar sessão no fórum da comunidade Warren?</string>
     <string name="forum_login_body_first">Foi solicitado um início de sessão no fórum da comunidade Warren. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você.</string>
     <string name="forum_login_body_second">Não são usados e-mail nem palavra-passe. Aparece sob um pseudónimo anónimo que não pode ser associado à sua conta Warren. Aprove apenas se foi você que iniciou este início de sessão.</string>
+    <string name="forum_login_title_cross_device">Iniciar sessão no fórum noutro dispositivo?</string>
+    <string name="forum_login_body_first_cross_device">Este pedido veio de um código QR, por isso o navegador a iniciar sessão está noutro dispositivo, não neste. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você.</string>
+    <string name="forum_login_body_second_cross_device">Aprove apenas se estiver a ver essa página de início de sessão neste momento. Se alguém lhe enviou este código, está a iniciar sessão como você. Não são usados e-mail nem palavra-passe.</string>
     <string name="forum_login_approve">Aprovar início de sessão</string>
     <string name="forum_login_cancel">Cancelar</string>
     <string name="forum_login_signing">A assinar, aguarde.</string>

@@ -494,6 +494,9 @@
     <string name="forum_login_title">登入 Warren 社群論壇？</string>
     <string name="forum_login_body_first">已請求登入 Warren 社群論壇。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。</string>
     <string name="forum_login_body_second">不使用電子郵件和密碼。您將以無法連結至 Warren 帳戶的匿名代號顯示。僅當此次登入由您本人發起時才核准。</string>
+    <string name="forum_login_title_cross_device">在另一部裝置上登入論壇？</string>
+    <string name="forum_login_body_first_cross_device">此請求來自 QR 碼，因此正在登入的瀏覽器位於另一部裝置上，而非本機。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。</string>
+    <string name="forum_login_body_second_cross_device">僅當您此刻正看著那個登入頁面時才核准。如果有人傳送此代碼給您，對方正在以您的身分登入。不使用電子郵件和密碼。</string>
     <string name="forum_login_approve">核准登入</string>
     <string name="forum_login_cancel">取消</string>
     <string name="forum_login_signing">正在簽署，請稍候。</string>

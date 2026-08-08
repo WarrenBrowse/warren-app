@@ -503,6 +503,9 @@
     <string name="forum_login_title">Zalogować się do forum społeczności Warren?</string>
     <string name="forum_login_body_first">Zażądano logowania do forum społeczności Warren. Aplikacja podpisze jednorazowe wyzwanie kluczem Twojego portfela, aby potwierdzić Twoją tożsamość.</string>
     <string name="forum_login_body_second">Nie są używane żadne adresy e-mail ani hasła. Występujesz pod anonimowym pseudonimem, którego nie można powiązać z Twoim kontem Warren. Zatwierdź tylko wtedy, gdy to Ty rozpocząłeś to logowanie.</string>
+    <string name="forum_login_title_cross_device">Zalogować się do forum na innym urządzeniu?</string>
+    <string name="forum_login_body_first_cross_device">To żądanie pochodzi z kodu QR, więc logowana przeglądarka znajduje się na innym urządzeniu, nie na tym. Aplikacja podpisze jednorazowe wyzwanie kluczem Twojego portfela, aby potwierdzić Twoją tożsamość.</string>
+    <string name="forum_login_body_second_cross_device">Zatwierdź tylko wtedy, gdy właśnie masz tę stronę logowania przed sobą. Jeśli ktoś przysłał Ci ten kod, loguje się jako Ty. Nie są używane żadne adresy e-mail ani hasła.</string>
     <string name="forum_login_approve">Zatwierdź logowanie</string>
     <string name="forum_login_cancel">Anuluj</string>
     <string name="forum_login_signing">Podpisywanie, proszę czekać.</string>

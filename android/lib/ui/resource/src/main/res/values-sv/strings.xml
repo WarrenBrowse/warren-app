@@ -497,6 +497,9 @@
     <string name="forum_login_title">Logga in på Warren-gemenskapsforumet?</string>
     <string name="forum_login_body_first">En inloggning till Warren-gemenskapsforumet begärdes. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du.</string>
     <string name="forum_login_body_second">Ingen e-post och inget lösenord används. Du visas under ett anonymt alias som inte kan kopplas till ditt Warren-konto. Godkänn bara om du själv startade den här inloggningen.</string>
+    <string name="forum_login_title_cross_device">Logga in på forumet på en annan enhet?</string>
+    <string name="forum_login_body_first_cross_device">Den här begäran kom från en QR-kod, så webbläsaren som loggas in finns på en annan enhet, inte den här. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du.</string>
+    <string name="forum_login_body_second_cross_device">Godkänn bara om du tittar på den inloggningssidan just nu. Om någon skickade koden till dig loggar de in som du. Ingen e-post och inget lösenord används.</string>
     <string name="forum_login_approve">Godkänn inloggning</string>
     <string name="forum_login_cancel">Avbryt</string>
     <string name="forum_login_signing">Signerar, vänta.</string>

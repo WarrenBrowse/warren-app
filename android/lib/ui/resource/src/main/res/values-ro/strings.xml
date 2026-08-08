@@ -504,6 +504,9 @@
     <string name="forum_login_title">Te autentifici pe forumul comunității Warren?</string>
     <string name="forum_login_body_first">S-a solicitat autentificarea pe forumul comunității Warren. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu.</string>
     <string name="forum_login_body_second">Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare.</string>
+    <string name="forum_login_title_cross_device">Te autentifici pe forum de pe alt dispozitiv?</string>
+    <string name="forum_login_body_first_cross_device">Această cerere a venit dintr-un cod QR, deci browserul care se autentifică este pe alt dispozitiv, nu pe acesta. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu.</string>
+    <string name="forum_login_body_second_cross_device">Aprobă doar dacă te uiți chiar acum la acea pagină de autentificare. Dacă cineva ți-a trimis acest cod, se autentifică în numele tău. Nu se folosesc adrese de e-mail sau parole.</string>
     <string name="forum_login_approve">Aprobă autentificarea</string>
     <string name="forum_login_cancel">Anulați</string>
     <string name="forum_login_signing">Se semnează, te rugăm să aștepți.</string>

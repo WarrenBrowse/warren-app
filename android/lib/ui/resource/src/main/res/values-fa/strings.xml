@@ -497,6 +497,9 @@
     <string name="forum_login_title">ورود به انجمن جامعه Warren؟</string>
     <string name="forum_login_body_first">درخواست ورود به انجمن جامعه Warren ثبت شد. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند.</string>
     <string name="forum_login_body_second">هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار ناشناس نمایش داده می‌شوید که قابل ارتباط با حساب Warren شما نیست. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید.</string>
+    <string name="forum_login_title_cross_device">ورود به انجمن در دستگاهی دیگر؟</string>
+    <string name="forum_login_body_first_cross_device">این درخواست از یک کد QR آمده است، پس مرورگری که وارد می‌شود روی دستگاه دیگری است، نه این دستگاه. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند.</string>
+    <string name="forum_login_body_second_cross_device">فقط در صورتی تأیید کنید که همین حالا آن صفحه ورود را می‌بینید. اگر کسی این کد را برای شما فرستاده است، او با نام شما وارد می‌شود. هیچ ایمیل و رمز عبوری استفاده نمی‌شود.</string>
     <string name="forum_login_approve">تأیید ورود</string>
     <string name="forum_login_cancel">لغو</string>
     <string name="forum_login_signing">در حال امضا، لطفاً صبر کنید.</string>

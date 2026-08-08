@@ -497,6 +497,9 @@
     <string name="forum_login_title">Aanmelden bij het Warren community-forum?</string>
     <string name="forum_login_body_first">Er is een aanmelding bij het Warren community-forum aangevraagd. Je app ondertekent een eenmalige challenge met je wallet-sleutel om te bewijzen dat jij het bent.</string>
     <string name="forum_login_body_second">Er worden geen e-mail en geen wachtwoord gebruikt. Je verschijnt onder een anonieme naam die niet aan je Warren-account kan worden gekoppeld. Keur alleen goed als je deze aanmelding zelf hebt gestart.</string>
+    <string name="forum_login_title_cross_device">Aanmelden bij het forum op een ander apparaat?</string>
+    <string name="forum_login_body_first_cross_device">Dit verzoek kwam van een QR-code, dus de browser die wordt aangemeld staat op een ander apparaat, niet op dit apparaat. Je app ondertekent een eenmalige challenge met je wallet-sleutel om te bewijzen dat jij het bent.</string>
+    <string name="forum_login_body_second_cross_device">Keur alleen goed als je die aanmeldpagina nu voor je hebt. Als iemand je deze code heeft gestuurd, meldt die persoon zich aan als jou. Er worden geen e-mail en geen wachtwoord gebruikt.</string>
     <string name="forum_login_approve">Aanmelding goedkeuren</string>
     <string name="forum_login_cancel">Annuleren</string>
     <string name="forum_login_signing">Bezig met ondertekenen, even geduld.</string>

@@ -497,6 +497,9 @@
     <string name="forum_login_title">Warren topluluk forumuna giriş yapılsın mı?</string>
     <string name="forum_login_body_first">Warren topluluk forumuna giriş talep edildi. Uygulamanız, sizin olduğunuzu kanıtlamak için cüzdan anahtarınızla tek seferlik bir doğrulama kodunu imzalayacak.</string>
     <string name="forum_login_body_second">E-posta ve parola kullanılmaz. Warren hesabınızla ilişkilendirilemeyen anonim bir takma adla görünürsünüz. Yalnızca bu girişi siz başlattıysanız onaylayın.</string>
+    <string name="forum_login_title_cross_device">Foruma başka bir cihazda giriş yapılsın mı?</string>
+    <string name="forum_login_body_first_cross_device">Bu istek bir QR koddan geldi; giriş yapılan tarayıcı bu cihazda değil, başka bir cihazda. Uygulamanız, sizin olduğunuzu kanıtlamak için cüzdan anahtarınızla tek seferlik bir doğrulama kodunu imzalayacak.</string>
+    <string name="forum_login_body_second_cross_device">Yalnızca şu anda o giriş sayfasına bakıyorsanız onaylayın. Bu kodu size biri gönderdiyse sizin adınıza giriş yapıyor demektir. E-posta ve parola kullanılmaz.</string>
     <string name="forum_login_approve">Girişi onayla</string>
     <string name="forum_login_cancel">İptal et</string>
     <string name="forum_login_signing">İmzalanıyor, lütfen bekleyin.</string>
