@@ -5182,3 +5182,117 @@ msgstr "حتی وقتی ترافیک رمزگذاری شده باشد، بسته
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "توجه: این قابلیت ترافیک شبکه را افزایش می‌دهد و می‌تواند سرعت، تأخیر و عمر باتری را تحت تأثیر قرار دهد. در بسته‌های محدود با احتیاط استفاده کنید."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "انجمن"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "انجمن، %(count)s مورد جدید"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "نام انجمن"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "مسدود کردن اینترنت: دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه بازارسالی‌شده تعلیق شد. می‌توانید در %(url)s اعتراض کنید"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s نوشتهٔ شما را پسندید"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s به نوشتهٔ شما پیوند داد"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s از شما نام برد"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s موضوع تازه‌ای باز کرد"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s از شما نقل‌قول کرد"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s پاسخ داد"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s برای شما پیام فرستاد"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "دسترسی به انجمن ممکن نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "انجمن"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "فعالیت تازه در انجمن"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "چیز تازه‌ای در انجمن نیست. بیایید پرسشی بپرسید یا به کسی کمک کنید."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "باز کردن انجمن"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "کسی"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "تلاش دوباره"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "نشانی به دست آوردید"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "با نام %(handle)s می‌نویسید"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "بیش از %(count)d اعلان تازه در انجمن"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "اعلان تازه در انجمن"
+msgstr[1] "%(count)d اعلان تازه در انجمن"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "باز کردن"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "درگاه بازارسالی‌شده از اینترنت در دسترس است. اگر شخص ثالثی سوءاستفاده از آن را گزارش کند، درگاه را می‌بندیم و یک تخلف برای حساب شما ثبت می‌کنیم؛ سه تخلف در ۹۰ روز دسترسی را لغو می‌کند. جزئیات و شیوهٔ اعتراض: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "شرایط استفاده"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "وقتی کسی در انجمن جامعه به شما پاسخ داد، باخبر شوید. شمارندهٔ داخل برنامه تغییری نمی‌کند."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "اعلان‌های انجمن"

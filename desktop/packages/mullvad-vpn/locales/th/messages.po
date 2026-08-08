@@ -5168,3 +5168,116 @@ msgstr "แม้จะเข้ารหัสไว้แล้ว แพ็�
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "หมายเหตุ: ฟีเจอร์นี้เพิ่มปริมาณการรับส่งข้อมูลบนเครือข่าย และอาจลดความเร็ว เพิ่มความหน่วง และลดอายุแบตเตอรี่ โปรดใช้อย่างระมัดระวังกับแพ็กเกจที่จำกัด"
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "ฟอรัม"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "ฟอรัม %(count)s รายการใหม่"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "ชื่อในฟอรัม"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "กำลังบล็อกอินเทอร์เน็ต การเข้าถึงของคุณถูกระงับหลังมีรายงานการละเมิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s ถูกใจโพสต์ของคุณ"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s ลิงก์มาที่โพสต์ของคุณ"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s กล่าวถึงคุณ"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s เปิดกระทู้ใหม่"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s อ้างอิงคุณ"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s ตอบกลับ"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s ส่งข้อความถึงคุณ"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "ติดต่อฟอรัมไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง"
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "ฟอรัม"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "ความเคลื่อนไหวใหม่ในฟอรัม"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "ยังไม่มีอะไรใหม่ในฟอรัม มาตั้งคำถาม หรือช่วยเหลือคนอื่นดูสิ"
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "เปิดฟอรัม"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "มีคน"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "ลองใหม่"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "คุณได้รับตราสัญลักษณ์"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "คุณโพสต์ในชื่อ %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "มีการแจ้งเตือนใหม่ในฟอรัมมากกว่า %(count)d รายการ"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "มีการแจ้งเตือนใหม่ในฟอรัม %(count)d รายการ"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "เปิด"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "พอร์ตที่ส่งต่อสามารถเข้าถึงได้จากอินเทอร์เน็ต หากบุคคลที่สามรายงานการละเมิดที่มาจากพอร์ตนี้ เราจะปิดพอร์ตและบันทึกการกระทำผิดไว้ในบัญชีของคุณ สามครั้งภายใน 90 วันจะเพิกถอนสิทธิ์การใช้งาน รายละเอียดและวิธีโต้แย้ง: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "ข้อกำหนดการใช้งาน"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน ตัวเลขในแอปไม่เปลี่ยนแปลง"
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "การแจ้งเตือนจากฟอรัม"

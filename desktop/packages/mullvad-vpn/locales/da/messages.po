@@ -5195,3 +5195,117 @@ msgstr "Selv når de er krypterede, kan de datapakker, der går ind og ud af din
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Bemærk: dette øger netværkstrafikken og kan forringe hastighed, svartid og batteritid. Brug det med omtanke, hvis du har et begrænset dataabonnement."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Forum"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Forum, %(count)s nye"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Forumnavn"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Blokerer internettet: din adgang er suspenderet efter gentagne misbrugsanmeldelser om en videresendt port. Du kan gøre indsigelse på %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s syntes godt om dit indlæg"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s linkede til dit indlæg"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s nævnte dig"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s oprettede et nyt emne"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s citerede dig"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s svarede"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s sendte dig en besked"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "Kunne ikke nå forummet. Tjek din forbindelse, og prøv igen."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Forum"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Ny aktivitet på forummet"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "Intet nyt på forummet. Kom og stil et spørgsmål, eller hjælp en anden."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Åbn forummet"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Nogen"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Prøv igen"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Du har optjent et mærke"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "Du skriver som %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Mere end %(count)d nye notifikationer på forummet"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "Ny notifikation på forummet"
+msgstr[1] "%(count)d nye notifikationer på forummet"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Åbn"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "En videresendt port kan nås fra internettet. Hvis en tredjepart anmelder misbrug derfra, lukker vi porten og registrerer en advarsel på din konto; tre advarsler inden for 90 dage inddrager adgangen. Detaljer og hvordan du gør indsigelse: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Vilkår for brug"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Få besked, når nogen svarer dig på fællesskabsforummet. Tælleren i appen påvirkes ikke."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Forumnotifikationer"

@@ -5196,3 +5196,117 @@ msgstr "Auch verschlüsselt können die Datenpakete, die Ihr Gerät verlassen un
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Hinweis: Dies erhöht den Netzwerkverkehr und kann sich negativ auf Geschwindigkeit, Latenz und Akkulaufzeit auswirken. Bei begrenzten Tarifen ist Vorsicht geboten."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Forum"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Forum, %(count)s neue"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Forumsname"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Internet blockiert: Ihr Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port gesperrt. Sie können dagegen Einspruch erheben unter %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s gefällt dein Beitrag"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s hat auf deinen Beitrag verlinkt"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s hat dich erwähnt"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s hat ein neues Thema eröffnet"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s hat dich zitiert"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s hat geantwortet"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s hat dir eine Nachricht geschickt"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "Das Forum ist nicht erreichbar. Prüfe deine Verbindung und versuche es erneut."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Forum"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Neue Aktivität im Forum"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "Nichts Neues im Forum. Stell eine Frage oder hilf jemand anderem weiter."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Forum öffnen"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Jemand"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Erneut versuchen"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Du hast ein Abzeichen erhalten"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "Du schreibst als %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Mehr als %(count)d neue Benachrichtigungen im Forum"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "Neue Benachrichtigung im Forum"
+msgstr[1] "%(count)d neue Benachrichtigungen im Forum"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Öffnen"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Ein weitergeleiteter Port ist aus dem Internet erreichbar. Meldet ein Dritter Missbrauch von dort, schließen wir den Port und vermerken einen Verstoß auf deinem Konto; drei Verstöße innerhalb von 90 Tagen entziehen den Zugang. Details und Einspruch: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Nutzungsbedingungen"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Erfahre, wenn dir jemand im Community-Forum antwortet. Der Zähler in der App bleibt davon unberührt."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Forum-Benachrichtigungen"

@@ -5195,3 +5195,117 @@ msgstr "Şifrelenmiş olsalar bile cihazınıza giren ve çıkan veri paketleri,
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Not: bu, ağ trafiğini artırır; hızı, gecikmeyi ve pil ömrünü olumsuz etkileyebilir. Sınırlı veri paketlerinde dikkatli kullanın."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Forum"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Forum, %(count)s yeni"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Forum adı"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "İnternet engelleniyor: yönlendirilmiş bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz askıya alındı. %(url)s adresinden itiraz edebilirsiniz"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s gönderinizi beğendi"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s gönderinize bağlantı verdi"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s sizden bahsetti"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s yeni bir konu açtı"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s sizden alıntı yaptı"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s yanıtladı"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s size bir mesaj gönderdi"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "Foruma ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Forum"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Forumda yeni hareket"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "Forumda yeni bir şey yok. Gelip bir soru sorun, ya da başka birine yardım edin."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Forumu aç"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Biri"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Yeniden dene"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Bir rozet kazandınız"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "%(handle)s adıyla gönderi paylaşıyorsunuz"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Forumda %(count)d taneden fazla yeni bildirim"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "Forumda yeni bildirim"
+msgstr[1] "Forumda %(count)d yeni bildirim"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Aç"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Yönlendirilmiş bir bağlantı noktasına internetten erişilebilir. Üçüncü bir taraf oradan gelen bir kötüye kullanımı bildirirse bağlantı noktasını kapatır ve hesabınıza bir ihlal kaydederiz; 90 gün içinde üç ihlal erişimi iptal eder. Ayrıntılar ve itiraz yolu: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Kullanım koşulları"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Uygulamadaki sayaç etkilenmez."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Forum bildirimleri"

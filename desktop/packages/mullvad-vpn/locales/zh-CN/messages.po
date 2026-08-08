@@ -5168,3 +5168,116 @@ msgstr "即使流量已加密，进出您设备的数据包仍可能被 AI 分�
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "注意：此功能会增加网络流量，并可能降低速度、增加延迟以及缩短电池续航。在流量受限的套餐上请谨慎使用。"
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "论坛"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "论坛，%(count)s 条新消息"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "论坛名称"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "正在阻断网络：由于转发端口被反复举报滥用，您的访问已被暂停。您可以在 %(url)s 提出申诉"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s 赞了你的帖子"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s 链接了你的帖子"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s 提到了你"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s 发起了新话题"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s 引用了你"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s 回复了"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s 给你发了私信"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "无法连接论坛。请检查网络连接后重试。"
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "论坛"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "论坛有新动态"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "论坛暂时没有新内容。来提个问题，或者帮别人解答一下。"
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "打开论坛"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "有人"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "重试"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "你获得了一枚徽章"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "你以 %(handle)s 的身份发帖"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "论坛有超过 %(count)d 条新通知"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "论坛有 %(count)d 条新通知"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "打开"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "转发端口可以从互联网访问。如果第三方举报来自该端口的滥用行为，我们会关闭端口并在你的账户上记一次违规；90 天内三次将吊销访问权限。详情与申诉方式：%(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "使用条款"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "有人在社区论坛回复你时提醒你。应用内的计数不受影响。"
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "论坛通知"

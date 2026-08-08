@@ -5168,3 +5168,116 @@ msgstr "암호화되어 있더라도 기기를 드나드는 데이터 패킷은 
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "참고: 이 기능은 네트워크 트래픽을 늘리고 속도, 지연 시간, 배터리 사용 시간에 영향을 줄 수 있습니다. 제한된 요금제에서는 주의해서 사용하세요."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "포럼"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "포럼, 새 알림 %(count)s개"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "포럼 이름"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "인터넷 차단 중: 전달된 포트에 대한 남용 신고가 반복되어 접근이 정지되었습니다. %(url)s 에서 이의를 제기할 수 있습니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s님이 회원님의 글을 좋아합니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s님이 회원님의 글을 링크했습니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s님이 회원님을 언급했습니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s님이 새 주제를 열었습니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s님이 회원님을 인용했습니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s님이 답글을 남겼습니다"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s님이 메시지를 보냈습니다"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "포럼에 연결하지 못했습니다. 연결을 확인한 뒤 다시 시도하세요."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "포럼"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "포럼의 새 활동"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "포럼에 새 소식이 없습니다. 질문을 올리거나 다른 분을 도와보세요."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "포럼 열기"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "누군가"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "다시 시도"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "배지를 획득했습니다"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "회원님은 %(handle)s(으)로 글을 씁니다"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "포럼에 새 알림 %(count)d개 이상"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "포럼에 새 알림 %(count)d개"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "열기"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "전달된 포트는 인터넷에서 접근할 수 있습니다. 제3자가 해당 포트에서 발생한 남용을 신고하면 포트를 닫고 계정에 위반을 기록합니다. 90일 안에 세 번이면 접근이 취소됩니다. 자세한 내용과 이의 제기: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "이용 약관"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 앱 안의 개수 표시는 그대로입니다."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "포럼 알림"

@@ -5168,3 +5168,116 @@ msgstr "暗号化されていても、デバイスが送受信するデータパ
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "注意: この機能はネットワークトラフィックを増やし、速度、レイテンシ、バッテリー持ちを低下させる場合があります。データ量が限られたプランでは注意して使用してください。"
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "フォーラム"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "フォーラム、新着 %(count)s 件"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "フォーラム名"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "インターネットをブロックしています。転送ポートに関する不正利用の報告が繰り返されたため、アクセスが停止されました。%(url)s で異議を申し立てられます"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s さんがあなたの投稿にいいねしました"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s さんがあなたの投稿にリンクしました"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s さんがあなたに言及しました"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s さんが新しいトピックを作成しました"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s さんがあなたを引用しました"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s さんが返信しました"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s さんからメッセージが届きました"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "フォーラムに接続できませんでした。接続を確認して、もう一度お試しください。"
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "フォーラム"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "フォーラムの新しい動き"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "フォーラムに新しい動きはありません。質問してみるか、誰かの手助けをしてみてください。"
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "フォーラムを開く"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "誰か"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "再試行"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "バッジを獲得しました"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "あなたは %(handle)s として投稿しています"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "フォーラムに %(count)d 件を超える新着通知"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "フォーラムに新着通知 %(count)d 件"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "開く"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "転送ポートはインターネットから到達できます。第三者がそこからの不正利用を報告した場合、ポートを閉じ、アカウントに違反を記録します。90 日以内に 3 回でアクセスを取り消します。詳細と異議申し立て: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "利用規約"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "コミュニティフォーラムで誰かが返信したときに知らせます。アプリ内の件数表示は変わりません。"
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "フォーラムの通知"

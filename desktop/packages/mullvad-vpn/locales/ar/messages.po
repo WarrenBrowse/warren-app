@@ -5238,3 +5238,121 @@ msgstr "حتى مع التشفير، يمكن للذكاء الاصطناعي ت
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "ملاحظة: يزيد ذلك من حركة بيانات الشبكة وقد يخفض السرعة ويرفع زمن الاستجابة ويقلل عمر البطارية. استخدمه بحذر مع الباقات المحدودة."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "المنتدى"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "المنتدى، %(count)s جديد"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "اسم المنتدى"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "حظر الإنترنت: تم تعليق وصولك بعد بلاغات إساءة متكررة بشأن منفذ معاد توجيهه. يمكنك الاعتراض على ذلك عبر %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "أعجب %(actor)s بمشاركتك"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "أشار %(actor)s إلى مشاركتك برابط"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "أشار إليك %(actor)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "فتح %(actor)s موضوعًا جديدًا"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "اقتبس %(actor)s كلامك"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "رد %(actor)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "أرسل إليك %(actor)s رسالة"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "تعذر الوصول إلى المنتدى. تحقق من اتصالك وأعد المحاولة."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "المنتدى"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "نشاط جديد في المنتدى"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "لا جديد في المنتدى. تعال واطرح سؤالًا، أو ساعد شخصًا آخر."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "فتح المنتدى"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "أحدهم"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "أعد المحاولة"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "حصلت على شارة"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "تنشر باسم %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "أكثر من %(count)d إشعار جديد في المنتدى"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "لا إشعارات جديدة في المنتدى"
+msgstr[1] "إشعار جديد في المنتدى"
+msgstr[2] "إشعاران جديدان في المنتدى"
+msgstr[3] "%(count)d إشعارات جديدة في المنتدى"
+msgstr[4] "%(count)d إشعارًا جديدًا في المنتدى"
+msgstr[5] "%(count)d إشعار جديد في المنتدى"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "فتح"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "المنفذ المعاد توجيهه يمكن الوصول إليه من الإنترنت. إذا أبلغ طرف ثالث عن إساءة صادرة منه، نغلق المنفذ ونسجل مخالفة على حسابك؛ ثلاث مخالفات خلال 90 يومًا تلغي الوصول. التفاصيل وكيفية الاعتراض: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "شروط الاستخدام"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "أعلمني عندما يرد عليك أحد في منتدى المجتمع. لا يتأثر العداد داخل التطبيق."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "إشعارات المنتدى"

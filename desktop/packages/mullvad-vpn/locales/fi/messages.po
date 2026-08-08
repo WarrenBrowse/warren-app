@@ -5195,3 +5195,117 @@ msgstr "Vaikka laitteeseesi saapuvat ja siitä lähtevät datapaketit ovat salat
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Huomaa: tämä lisää verkkoliikennettä ja voi heikentää nopeutta, viivettä ja akunkestoa. Käytä harkiten, jos datapakettisi on rajallinen."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Foorumi"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Foorumi, %(count)s uutta"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Foorumin nimi"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Estetään internet: käyttöoikeutesi on keskeytetty toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat edelleenohjattua porttia. Voit riitauttaa tämän osoitteessa %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s tykkäsi viestistäsi"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s linkitti viestiisi"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s mainitsi sinut"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s avasi uuden ketjun"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s lainasi sinua"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s vastasi"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s lähetti sinulle viestin"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "Foorumia ei tavoitettu. Tarkista yhteytesi ja yritä uudelleen."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Foorumi"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Uutta toimintaa foorumilla"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "Ei uutta foorumilla. Tule kysymään tai auta jotakuta toista."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Avaa foorumi"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Joku"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Yritä uudelleen"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Sait ansiomerkin"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "Kirjoitat nimellä %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Yli %(count)d uutta ilmoitusta foorumilla"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "Uusi ilmoitus foorumilla"
+msgstr[1] "%(count)d uutta ilmoitusta foorumilla"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Avaa"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Edelleenohjattu portti on tavoitettavissa internetistä. Jos kolmas osapuoli ilmoittaa siitä tulevasta väärinkäytöstä, suljemme portin ja kirjaamme tilillesi rikkeen; kolme rikettä 90 päivän sisällä peruuttaa käyttöoikeuden. Tiedot ja riitauttaminen: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Käyttöehdot"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Saat tiedon, kun joku vastaa sinulle yhteisöfoorumilla. Sovelluksen laskuri ei muutu."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Foorumin ilmoitukset"

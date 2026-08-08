@@ -5195,3 +5195,117 @@ msgstr "Incluso cifrados, los paquetes de datos que entran y salen de su disposi
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Nota: esto aumenta el tráfico de red y puede afectar a la velocidad, la latencia y la duración de la batería. Úselo con precaución en planes limitados."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Foro"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Foro, %(count)s nuevas"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Nombre en el foro"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Bloqueando internet: tu acceso ha sido suspendido tras denuncias repetidas de abuso sobre un puerto redirigido. Puedes impugnarlo en %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "A %(actor)s le gustó tu publicación"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s enlazó tu publicación"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s te mencionó"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s abrió un tema nuevo"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s te citó"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s respondió"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s te envió un mensaje"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "No se pudo contactar con el foro. Comprueba tu conexión e inténtalo de nuevo."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Foro"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Nueva actividad en el foro"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "Nada nuevo en el foro. Ven a hacer una pregunta o echa una mano a alguien."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Abrir el foro"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Alguien"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Reintentar"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Has ganado una insignia"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "Publicas como %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Más de %(count)d notificaciones nuevas en el foro"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "Nueva notificación en el foro"
+msgstr[1] "%(count)d notificaciones nuevas en el foro"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Abrir"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Un puerto redirigido es accesible desde internet. Si un tercero denuncia un abuso procedente de él, cerramos el puerto y anotamos un aviso en tu cuenta; tres avisos en 90 días revocan el acceso. Detalles y cómo impugnarlo: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Condiciones de uso"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Recibe un aviso cuando alguien te responda en el foro de la comunidad. El contador de la aplicación no cambia."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Notificaciones del foro"

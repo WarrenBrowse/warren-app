@@ -5171,3 +5171,116 @@ msgstr "ကုဒ်ဝှက်ထားသော်လည်း သင့်�
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "မှတ်ချက်: ဤအရာသည် ကွန်ရက် ကူးလူးမှုကို တိုးစေပြီး အမြန်နှုန်း၊ နှောင့်နှေးမှုနှင့် ဘက်ထရီ သက်တမ်းကို ထိခိုက်စေနိုင်ပါသည်။ ကန့်သတ်ထားသော အစီအစဉ်များတွင် ဂရုတစိုက် အသုံးပြုပါ။"
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "ဖိုရမ်"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "ဖိုရမ်၊ အသစ် %(count)s ခု"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "ဖိုရမ်အမည်"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "အင်တာနက်ကို ပိတ်ဆို့နေသည်။ ထပ်ဆင့်ပို့ထားသော port နှင့်ပတ်သက်၍ အလွဲသုံးစားမှု အကြိမ်ကြိမ် တိုင်ကြားခံရပြီးနောက် သင်၏ဝင်ရောက်ခွင့်ကို ရပ်ဆိုင်းထားသည်။ %(url)s တွင် အယူခံဝင်နိုင်သည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s က သင့်ပို့စ်ကို နှစ်သက်သည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s က သင့်ပို့စ်ကို လင့်ခ်ချိတ်ထားသည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s က သင့်ကို ဖော်ပြခဲ့သည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s က ခေါင်းစဉ်အသစ် ဖွင့်လိုက်သည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s က သင့်စကားကို ကိုးကားခဲ့သည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s က ပြန်စာပေးခဲ့သည်"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s က သင့်ထံ စာပို့ခဲ့သည်"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "ဖိုရမ်သို့ မဆက်သွယ်နိုင်ပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "ဖိုရမ်"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "ဖိုရမ်တွင် လှုပ်ရှားမှုအသစ်"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "ဖိုရမ်တွင် အသစ်မရှိပါ။ မေးခွန်းတစ်ခု လာမေးပါ၊ သို့မဟုတ် တစ်ယောက်ယောက်ကို ကူညီပါ။"
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "ဖိုရမ်ကို ဖွင့်ရန်"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "တစ်ဦးတစ်ယောက်"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "ထပ်ကြိုးစားရန်"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "တံဆိပ်တစ်ခု ရရှိခဲ့သည်"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "သင်သည် %(handle)s အဖြစ် ပို့စ်တင်သည်"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "ဖိုရမ်တွင် အသိပေးချက်အသစ် %(count)d ခုကျော်"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "ဖိုရမ်တွင် အသိပေးချက်အသစ် %(count)d ခု"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "ဖွင့်ရန်"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "ထပ်ဆင့်ပို့ထားသော port ကို အင်တာနက်မှ ဝင်ရောက်နိုင်သည်။ ၎င်းမှ အလွဲသုံးစားမှုကို တတိယအဖွဲ့က တိုင်ကြားပါက port ကို ပိတ်ပြီး သင့်အကောင့်တွင် ချိုးဖောက်မှုတစ်ခု မှတ်တမ်းတင်သည်။ ရက် ၉၀ အတွင်း သုံးကြိမ်ဆိုလျှင် ဝင်ရောက်ခွင့် ရုပ်သိမ်းသည်။ အသေးစိတ်နှင့် အယူခံနည်း: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "အသုံးပြုမှု စည်းကမ်းများ"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ အက်ပ်အတွင်းရှိ အရေအတွက်ကို မထိခိုက်ပါ။"
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "ဖိုရမ် အသိပေးချက်များ"

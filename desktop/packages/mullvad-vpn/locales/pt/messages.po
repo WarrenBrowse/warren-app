@@ -5195,3 +5195,117 @@ msgstr "Mesmo encriptados, os pacotes de dados que entram e saem do seu disposit
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Nota: isto aumenta o tráfego de rede e pode afetar a velocidade, a latência e a duração da bateria. Utilize com precaução em planos limitados."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Fórum"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Fórum, %(count)s novas"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Nome no fórum"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "A bloquear a internet: o seu acesso foi suspenso após denúncias repetidas de abuso sobre uma porta reencaminhada. Pode contestar em %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s gostou da sua publicação"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s ligou à sua publicação"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s mencionou-o"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s abriu um novo tópico"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s citou-o"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s respondeu"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s enviou-lhe uma mensagem"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "Não foi possível contactar o fórum. Verifique a sua ligação e tente novamente."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Fórum"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Nova atividade no fórum"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "Nada de novo no fórum. Venha fazer uma pergunta, ou dar uma ajuda a alguém."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Abrir o fórum"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Alguém"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Tentar novamente"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Ganhou um emblema"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "Publica como %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Mais de %(count)d notificações novas no fórum"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "Nova notificação no fórum"
+msgstr[1] "%(count)d notificações novas no fórum"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Abrir"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Uma porta reencaminhada está acessível a partir da internet. Se um terceiro denunciar um abuso vindo dela, fechamos a porta e registamos um aviso na sua conta; três avisos em 90 dias revogam o acesso. Detalhes e como contestar: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Termos de utilização"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Seja avisado quando alguém lhe responder no fórum da comunidade. O contador na aplicação não é afetado."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Notificações do fórum"

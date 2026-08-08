@@ -5223,3 +5223,119 @@ msgstr "Даже в зашифрованном виде пакеты данны�
 msgctxt "wireguard-settings-view"
 msgid "Note: this increases network traffic and can reduce speed, latency, and battery life. Use with caution on limited plans."
 msgstr "Примечание: это увеличивает сетевой трафик и может ухудшить скорость, задержку и время работы от батареи. Используйте с осторожностью на тарифах с ограничениями."
+
+msgctxt "accessibility"
+msgid "Forum"
+msgstr "Форум"
+
+msgctxt "accessibility"
+msgid "Forum, %(count)s new"
+msgstr "Форум, новых: %(count)s"
+
+msgctxt "account-view"
+msgid "Forum name"
+msgstr "Имя на форуме"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Интернет заблокирован: ваш доступ приостановлен после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s liked your post"
+msgstr "%(actor)s оценил(а) ваше сообщение"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s linked to your post"
+msgstr "%(actor)s сослался(лась) на ваше сообщение"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s mentioned you"
+msgstr "%(actor)s упомянул(а) вас"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s opened a new topic"
+msgstr "%(actor)s создал(а) новую тему"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s quoted you"
+msgstr "%(actor)s процитировал(а) вас"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s replied"
+msgstr "%(actor)s ответил(а)"
+
+msgctxt "forum-activity-view"
+msgid "%(actor)s sent you a message"
+msgstr "%(actor)s отправил(а) вам сообщение"
+
+msgctxt "forum-activity-view"
+msgid "Could not reach the forum. Check your connection and try again."
+msgstr "Не удалось связаться с форумом. Проверьте соединение и попробуйте снова."
+
+msgctxt "forum-activity-view"
+msgid "Forum"
+msgstr "Форум"
+
+msgctxt "forum-activity-view"
+msgid "New forum activity"
+msgstr "Новая активность на форуме"
+
+msgctxt "forum-activity-view"
+msgid "Nothing new on the forum. Come and ask a question, or help someone else out."
+msgstr "На форуме ничего нового. Задайте вопрос или помогите кому-нибудь."
+
+msgctxt "forum-activity-view"
+msgid "Open the forum"
+msgstr "Открыть форум"
+
+msgctxt "forum-activity-view"
+msgid "Someone"
+msgstr "Кто-то"
+
+msgctxt "forum-activity-view"
+msgid "Try again"
+msgstr "Повторить"
+
+msgctxt "forum-activity-view"
+msgid "You earned a badge"
+msgstr "Вы получили значок"
+
+msgctxt "forum-activity-view"
+msgid "You post as %(handle)s"
+msgstr "Вы пишете под именем %(handle)s"
+
+msgctxt "in-app-notifications"
+msgid "WARREN"
+msgstr "WARREN"
+
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr "Более %(count)d новых уведомлений на форуме"
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] "%(count)d новое уведомление на форуме"
+msgstr[1] "%(count)d новых уведомления на форуме"
+msgstr[2] "%(count)d новых уведомлений на форуме"
+msgstr[3] "%(count)d новых уведомления на форуме"
+
+msgctxt "notifications"
+msgid "Open"
+msgstr "Открыть"
+
+msgctxt "port-forwarding-view"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Перенаправленный порт доступен из интернета. Если третья сторона пожалуется на злоупотребление с него, мы закроем порт и запишем нарушение в вашу учётную запись; три нарушения за 90 дней отзывают доступ. Подробности и порядок обжалования: %(url)s"
+
+msgctxt "support-view"
+msgid "Terms of use"
+msgstr "Условия использования"
+
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr "Получайте уведомление, когда вам отвечают на форуме сообщества. Счётчик в приложении не меняется."
+
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
+msgstr "Уведомления форума"
