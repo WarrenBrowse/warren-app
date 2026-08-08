@@ -57,6 +57,12 @@ export default class NotificationController {
   private reconnecting = false;
   private lastTunnelState?: TunnelState['state'];
 
+  // Second, independent input to the tray dot. A notification's dot lasts as
+  // long as that notification does; unread forum activity lasts until it is
+  // read, possibly on another machine, so it cannot be expressed as a
+  // long-lived notification without lying about one or the other.
+  private forumActivityUnread = false;
+
   private presentedNotifications: { [key: string]: boolean } = {};
   private activeNotifications: Set<Notification> = new Set();
   private dismissedNotifications: Set<SystemNotification> = new Set();
@@ -141,6 +147,14 @@ export default class NotificationController {
       windowVisible,
       infoNotificationsEnabled,
     );
+  }
+
+  public setForumActivityIndicator(unread: boolean) {
+    if (unread === this.forumActivityUnread) {
+      return;
+    }
+    this.forumActivityUnread = unread;
+    this.updateNotificationIcon();
   }
 
   // Closes still relevant notifications but still lets them affect notification dot in tray icon.
@@ -308,7 +322,9 @@ export default class NotificationController {
     this.updateNotificationIcon();
   }
 
-  private updateNotificationIcon() {
+  // Read when the tray icon is built, which happens after the first
+  // notification or digest may already have raised the dot.
+  public get notificationIconState(): { show: boolean; reason?: string } {
     const activeNotifications = [...this.activeNotifications].map(
       (notification) => notification.specification,
     );
@@ -316,12 +332,17 @@ export default class NotificationController {
       (notification) => notification.severity >= SystemNotificationSeverityType.medium,
     );
 
-    if (notifications.length > 0) {
-      const reason = notifications.map((notification) => `"${notification.message}"`).join(',');
-      this.notificationControllerDelegate.showNotificationIcon(true, reason);
-    } else {
-      this.notificationControllerDelegate.showNotificationIcon(false);
+    const reasons = notifications.map((notification) => `"${notification.message}"`);
+    if (this.forumActivityUnread) {
+      reasons.push('"unread forum activity"');
     }
+
+    return reasons.length > 0 ? { show: true, reason: reasons.join(',') } : { show: false };
+  }
+
+  private updateNotificationIcon() {
+    const { show, reason } = this.notificationIconState;
+    this.notificationControllerDelegate.showNotificationIcon(show, reason);
   }
 
   private evaluateNotification(

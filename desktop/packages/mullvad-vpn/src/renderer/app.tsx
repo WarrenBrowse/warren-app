@@ -509,6 +509,8 @@ export default class AppRenderer {
     IpcRendererEventChannel.guiSettings.setAutoConnect(value);
   public setEnableSystemNotifications = (value: boolean) =>
     IpcRendererEventChannel.guiSettings.setEnableSystemNotifications(value);
+  public setForumNotifications = (value: boolean) =>
+    IpcRendererEventChannel.guiSettings.setForumNotifications(value);
   public setStartMinimized = (value: boolean) =>
     IpcRendererEventChannel.guiSettings.setStartMinimized(value);
   public setMonochromaticIcon = (value: boolean) =>

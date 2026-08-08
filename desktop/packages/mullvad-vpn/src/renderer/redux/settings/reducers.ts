@@ -130,6 +130,7 @@ const initialState: ISettingsReduxState = {
   guiSettings: {
     preferredLocale: 'system',
     enableSystemNotifications: true,
+    forumNotifications: true,
     autoConnect: true,
     monochromaticIcon: false,
     startMinimized: false,

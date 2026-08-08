@@ -80,6 +80,9 @@ export enum SystemNotificationCategory {
   // Auto-renewal lifecycle (warren-core doc 65): its own category so device-event
   // handling that clears `expiry` notifications leaves these alone.
   renewal,
+  // Community-forum activity. Its own category so a fresh count replaces the
+  // previous banner instead of stacking one per refresh.
+  forumActivity,
 }
 
 interface NotificationProvider {

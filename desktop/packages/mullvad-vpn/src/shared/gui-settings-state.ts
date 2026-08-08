@@ -11,6 +11,15 @@ export interface IGuiSettingsState {
   // Enable or disable system notifications on tunnel state etc.
   enableSystemNotifications: boolean;
 
+  // Enable or disable the desktop banner and the tray dot for new activity
+  // on the community forum. On by default: the forum has no mail server, so
+  // this app is the only way a reply ever reaches its author. The setting is
+  // shown only to a wallet that has a forum account, and it gates the badge
+  // in neither direction: the bell and its count are app UI, not a
+  // notification. Optional so settings files written by older versions keep
+  // validating.
+  forumNotifications?: boolean;
+
   // Tells the app to activate auto-connect feature in the mullvad-daemon, but only if the app is
   // set to auto-start with the system.
   autoConnect: boolean;

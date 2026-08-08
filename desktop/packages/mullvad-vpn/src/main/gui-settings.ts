@@ -9,6 +9,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   preferredLocale: 'string',
   autoConnect: 'boolean',
   enableSystemNotifications: 'boolean',
+  forumNotifications: 'boolean',
   monochromaticIcon: 'boolean',
   startMinimized: 'boolean',
   unpinnedWindow: 'boolean',
@@ -25,6 +26,7 @@ const defaultSettings: IGuiSettingsState = {
   preferredLocale: SYSTEM_PREFERRED_LOCALE_KEY,
   autoConnect: false,
   enableSystemNotifications: true,
+  forumNotifications: true,
   monochromaticIcon: false,
   startMinimized: false,
   unpinnedWindow: process.platform !== 'win32' && process.platform !== 'darwin',
@@ -59,6 +61,17 @@ export default class GuiSettings {
 
   get enableSystemNotifications(): boolean {
     return this.stateValue.enableSystemNotifications;
+  }
+
+  // Community-forum banner and tray dot (see gui-settings-state.ts). Absent
+  // in a settings file written before the setting existed, and on there:
+  // a user who already has a forum account wants their replies.
+  set forumNotifications(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, forumNotifications: newValue });
+  }
+
+  get forumNotifications(): boolean {
+    return this.stateValue.forumNotifications ?? true;
   }
 
   set autoConnect(newValue: boolean) {

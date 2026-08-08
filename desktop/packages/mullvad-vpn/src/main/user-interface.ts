@@ -147,9 +147,22 @@ export default class UserInterface implements WindowControllerDelegate {
     });
   }
 
-  public createTrayIconController(tunnelState: TunnelState, monochromaticIcon: boolean) {
+  // `notificationIcon` is passed in rather than assumed false: the tray is
+  // built on the first tunnel state, by which time the forum digest may
+  // already have raised the dot, and a call made before this point reached
+  // no controller.
+  public createTrayIconController(
+    tunnelState: TunnelState,
+    monochromaticIcon: boolean,
+    notificationIcon: boolean,
+  ) {
     const iconType = this.trayIconType(tunnelState);
-    this.trayIconController = new TrayIconController(this.tray, iconType, monochromaticIcon, false);
+    this.trayIconController = new TrayIconController(
+      this.tray,
+      iconType,
+      monochromaticIcon,
+      notificationIcon,
+    );
   }
 
   public async initializeWindow(isLoggedIn: boolean, tunnelState: TunnelState) {

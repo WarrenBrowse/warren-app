@@ -12,6 +12,7 @@ import { IpcMainEventChannel } from './ipc-event-channel';
 export interface SettingsDelegate {
   handleMonochromaticIconChange(value: boolean): void;
   handleUnpinnedWindowChange(): void;
+  handleForumNotificationsChange(value: boolean): void;
 }
 
 export default class Settings implements Readonly<ISettings> {
@@ -132,6 +133,11 @@ export default class Settings implements Readonly<ISettings> {
 
     IpcMainEventChannel.guiSettings.handleSetEnableSystemNotifications((flag: boolean) => {
       this.guiSettings.enableSystemNotifications = flag;
+    });
+
+    IpcMainEventChannel.guiSettings.handleSetForumNotifications((flag: boolean) => {
+      this.guiSettings.forumNotifications = flag;
+      this.delegate.handleForumNotificationsChange(flag);
     });
 
     IpcMainEventChannel.guiSettings.handleSetAutoConnect((autoConnect: boolean) => {

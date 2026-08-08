@@ -6,6 +6,7 @@ export * from './connecting';
 export * from './disconnected';
 export * from './daemon-disconnected';
 export * from './error';
+export * from './forum-activity';
 export * from './inconsistent-version';
 export * from './notification';
 export * from './reconnecting';

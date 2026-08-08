@@ -65,6 +65,7 @@ import {
 } from './command-line-options';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
+import ForumActivityMonitor, { ForumActivityMonitorDelegate } from './forum-activity-monitor';
 import {
   approveForumAttach,
   cancelForumAttach,
@@ -133,7 +134,8 @@ class ApplicationMain
     UserInterfaceDelegate,
     TunnelStateHandlerDelegate,
     SettingsDelegate,
-    AccountDelegate
+    AccountDelegate,
+    ForumActivityMonitorDelegate
 {
   private daemonRpc: DaemonRpc;
 
@@ -188,6 +190,7 @@ class ApplicationMain
 
   private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>();
   private forumIdentityStore = new SafeStorageForumIdentityStore();
+  private forumActivityMonitor = new ForumActivityMonitor(this);
   private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>();
 
   private purchaseFlow: PurchaseFlow;
@@ -658,6 +661,11 @@ class ApplicationMain
 
     this.updateCurrentLocale();
 
+    // Before the daemon connects, so the first digest it pushes is already
+    // matched against the right slot.
+    this.forumActivityMonitor.setEnabled(this.settings.gui.forumNotifications);
+    this.forumActivityMonitor.setSlot(this.forumIdentityStore.get()?.notifySlot ?? null);
+
     // Load split tunneling before connecting to the daemon to make sure that it is initialized
     // before first daemon connected event is handled.
     await this.loadSplitTunneling();
@@ -684,6 +692,7 @@ class ApplicationMain
       this.userInterface?.createTrayIconController(
         this.tunnelState.tunnelState,
         this.settings.gui.monochromaticIcon,
+        this.notificationController.notificationIconState.show,
       );
       await this.userInterface?.updateTrayTheme();
 
@@ -1079,6 +1088,9 @@ class ApplicationMain
     const listener = new SubscriptionListener(
       (snapshot: WarrenStatus) => {
         this.warrenStatus = snapshot;
+        // Same document the renderer badges from, so the banner, the tray
+        // dot and the bell can never disagree.
+        this.forumActivityMonitor.setDigest(snapshot.forumDigest);
         IpcMainEventChannel.warrenStatus.notify?.(snapshot);
       },
       (error: Error) => {
@@ -1299,6 +1311,7 @@ class ApplicationMain
         (identity.handle !== stored?.handle || identity.notifySlot !== stored?.notifySlot)
       ) {
         this.forumIdentityStore.set(identity);
+        this.forumActivityMonitor.setSlot(identity.notifySlot);
         IpcMainEventChannel.forumLogin.notifyIdentity?.(identity);
       }
       if (result === 'approved') {
@@ -1569,6 +1582,12 @@ class ApplicationMain
   public closeNotificationsInCategory = (category: SystemNotificationCategory) =>
     this.notificationController.closeNotificationsInCategory(category);
 
+  // ForumActivityMonitorDelegate. The dot is a second, independent input to
+  // the tray icon: it outlives any banner and goes out on its own once the
+  // digest says the forum has been read, wherever it was read.
+  public showForumActivityIndicator = (unread: boolean) =>
+    this.notificationController.setForumActivityIndicator(unread);
+
   // UserInterfaceDelegate
   public dismissActiveNotifications = () =>
     this.notificationController.dismissActiveNotifications();
@@ -1601,6 +1620,8 @@ class ApplicationMain
   };
 
   // SettingsDelegate
+  public handleForumNotificationsChange = (value: boolean) =>
+    this.forumActivityMonitor.setEnabled(value);
   public handleMonochromaticIconChange = (value: boolean) =>
     this.userInterface?.setMonochromaticIcon(value) ?? Promise.resolve();
   public handleUnpinnedWindowChange = () =>
@@ -1696,6 +1717,7 @@ class ApplicationMain
     // it is account data and must not survive into the next account.
     if (!this.account.isLoggedIn() && this.forumIdentityStore.get() !== undefined) {
       this.forumIdentityStore.set(undefined);
+      this.forumActivityMonitor.setSlot(null);
       IpcMainEventChannel.forumLogin.notifyIdentity?.(undefined);
     }
 

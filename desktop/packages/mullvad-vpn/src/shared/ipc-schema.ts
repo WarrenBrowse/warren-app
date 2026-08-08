@@ -333,6 +333,10 @@ export const ipcSchema = {
   guiSettings: {
     '': notifyRenderer<IGuiSettingsState>(),
     setEnableSystemNotifications: send<boolean>(),
+    // Community-forum banner and tray dot. Separate from the setting above
+    // so a user can keep tunnel notifications and drop forum ones, or the
+    // reverse.
+    setForumNotifications: send<boolean>(),
     setAutoConnect: send<boolean>(),
     setStartMinimized: send<boolean>(),
     setMonochromaticIcon: send<boolean>(),

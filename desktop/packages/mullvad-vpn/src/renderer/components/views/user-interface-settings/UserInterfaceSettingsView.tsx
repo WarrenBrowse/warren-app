@@ -1,5 +1,6 @@
 import { messages } from '../../../../shared/gettext';
 import {
+  ForumNotificationsSetting,
   MonochromaticTrayIconSetting,
   NotificationsSetting,
   StartMinimizedSetting,
@@ -38,6 +39,7 @@ export function UserInterfaceSettingsView() {
                 </HeaderTitle>
 
                 <NotificationsSetting position="solo" />
+                <ForumNotificationsSetting position="solo" />
                 <MonochromaticTrayIconSetting position="solo" />
                 <LanguageListItem position="solo" />
 

@@ -2221,8 +2221,26 @@ msgctxt "notifications"
 msgid "Lockdown mode active, connection blocked"
 msgstr ""
 
+#. Notification shown when a lot of forum activity is
+#. waiting, above the count the app can measure exactly.
+#. Available placeholders:
+#. %(count)d - the highest count the app can measure
+msgctxt "notifications"
+msgid "More than %(count)d new notifications on the forum"
+msgstr ""
+
+msgctxt "notifications"
+msgid "New notification on the forum"
+msgid_plural "%(count)d new notifications on the forum"
+msgstr[0] ""
+msgstr[1] ""
+
 msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Open"
 msgstr ""
 
 #. A link in the in-app banner to encourage the user to update the app.
@@ -2954,12 +2972,23 @@ msgctxt "tunnel-control"
 msgid "Your connection is not encrypted"
 msgstr ""
 
+#. Description of the forum notifications setting.
+msgctxt "user-interface-settings-view"
+msgid "Be told when someone replies to you on the community forum. The count in the app is not affected."
+msgstr ""
+
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
 msgstr ""
 
 msgctxt "user-interface-settings-view"
 msgid "Enable to move the app around as a free-standing window."
+msgstr ""
+
+#. Label of the setting that turns notifications
+#. about community-forum activity on or off.
+msgctxt "user-interface-settings-view"
+msgid "Forum notifications"
 msgstr ""
 
 #. Navigation button to the 'Language' settings view
