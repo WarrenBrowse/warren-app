@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
-  <circle cx="12" cy="12" r="8.6" stroke="white" stroke-width="1.7"/>
-  <circle cx="12" cy="12" r="4" stroke="white" stroke-width="1.7"/>
-  <path d="M9.17 9.17 L5.92 5.92" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M14.83 9.17 L18.08 5.92" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M9.17 14.83 L5.92 18.08" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
-  <path d="M14.83 14.83 L18.08 18.08" stroke="white" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M4.25 9.18A8.25 8.25 0 0 1 19.75 14.82" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+  <path d="M19.97 14.14A8.25 8.25 0 0 1 4.03 9.86" stroke="white" stroke-width="2.1" stroke-linecap="round"/>
+  <path d="M19.54 12.40A7.55 7.55 0 0 1 18.03 16.54L15.87 14.92A4.85 4.85 0 0 0 16.84 12.25Z" fill="white"/>
+  <path d="M11.60 19.54A7.55 7.55 0 0 1 7.46 18.03L9.08 15.87A4.85 4.85 0 0 0 11.75 16.84Z" fill="white"/>
+  <path d="M4.46 11.60A7.55 7.55 0 0 1 5.97 7.46L8.13 9.08A4.85 4.85 0 0 0 7.16 11.75Z" fill="white"/>
+  <path d="M12.40 4.46A7.55 7.55 0 0 1 16.54 5.97L14.92 8.13A4.85 4.85 0 0 0 12.25 7.16Z" fill="white"/>
+  <circle cx="12" cy="12" r="4.15" stroke="white" stroke-width="1.5"/>
 </svg>
