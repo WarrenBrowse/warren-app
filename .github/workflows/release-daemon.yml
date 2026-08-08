@@ -2,7 +2,9 @@
 # Warren VPN: HEADLESS (daemon + CLI) release pipeline
 #
 # Produces the GUI-less artifacts consumed by the `warren-cli` distribution repo:
-#   - Linux:   warren-vpn-daemon_<ver>_<arch>.deb / .rpm  (via build.sh --daemon-only)
+#   - Linux x86_64: warren-vpn-daemon_<ver>_amd64.deb / _x86_64.rpm
+#   - Linux arm64:  warren-vpn-daemon_<ver>_arm64.deb / _aarch64.rpm
+#                   (both via build.sh --daemon-only, each on its native pool)
 #   - macOS:   warren-headless-macos-<arch>.tar.gz         (binaries + resources + launchd)
 #   - Windows: warren-headless-windows-x64.zip             (exes + resources + service script)
 #
@@ -108,6 +110,95 @@ jobs:
         continue-on-error: true
         with:
           name: warren-headless-linux
+          path: release-assets/*
+          retention-days: 7
+
+  linux-arm64:
+    name: Linux arm64 .deb/.rpm (daemon-only)
+    # Native aarch64 pool on the same Mac, so no Rosetta: no CC=clang against
+    # the emulated gcc cc1 crash and no whole-build retry on a crash signature.
+    # scripts/install.sh already resolves warren-vpn-daemon_<ver>_arm64.deb and
+    # _aarch64.rpm, so this job is what makes the one-line installer work on an
+    # ARM server (Raspberry Pi, Ampere/Graviton instances).
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    timeout-minutes: 60
+    env:
+      # Several arm64 runners share one 16-core Colima VM; same cap as
+      # warren-tests.yml, for neighbourliness.
+      CARGO_BUILD_JOBS: "6"
+    steps:
+      - uses: actions/checkout@v5
+      - name: Stamp clean release version (daemon-vX.Y.Z)
+        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
+        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
+        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
+        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
+        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            ver="${BASH_REMATCH[1]}"
+            echo "$ver" > dist-assets/desktop-product-version.txt
+            git tag -f "v$ver"
+            echo "stamped clean version v$ver (no -dev suffix)"
+          else
+            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
+          fi
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          # The headless daemon has its own tag series and no channel split yet.
+          # The only network that exists is the beta one, so name it explicitly
+          # rather than inheriting a default.
+          warren-api-url: https://api.beta.warrenbrowse.com
+      - name: Verify packaging deps
+        # rpm is preinstalled on the runner; cargo-deb / cargo-generate-rpm are
+        # NOT, so the daemon-only path installs them itself (user-level, no sudo).
+        # They persist in the runner volume, so only a fresh volume pays for it.
+        run: |
+          rpm --version
+          cargo deb --version          >/dev/null 2>&1 || cargo install cargo-deb --locked
+          cargo generate-rpm --version >/dev/null 2>&1 || cargo install cargo-generate-rpm --locked
+      - name: Build daemon-only packages
+        # No TARGETS: the runner is aarch64, so build.sh packages for its own
+        # host and cargo-deb / cargo-generate-rpm name the output _arm64.deb and
+        # _aarch64.rpm.
+        run: ./build.sh --daemon-only --optimize
+      - name: Collect artifacts
+        run: |
+          mkdir -p release-assets
+          cp dist/warren-vpn-daemon_* release-assets/
+          ls -lh release-assets
+      - name: Assert the packages really are arm64
+        # cargo-deb and cargo-generate-rpm read the architecture from the build
+        # target, so a package named arm64 while carrying x86_64 binaries can
+        # only come from a misrouted job. It installs cleanly and then fails to
+        # start, which is a much more expensive way to find out.
+        run: |
+          set -euo pipefail
+          ls release-assets/warren-vpn-daemon_*_arm64.deb >/dev/null
+          ls release-assets/warren-vpn-daemon_*_aarch64.rpm >/dev/null
+          readelf -h "${CARGO_TARGET_DIR:-target}/release/warren-daemon" | grep -q AArch64
+      - name: Publish artifacts to the warren-cli release (draft)
+        # Publish to the public-facing distribution repo (warren-cli), not this
+        # one, so the public install one-liner only needs warren-cli to be public.
+        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v3
+        with:
+          repository: WarrenBrowse/warren-cli
+          token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+          target_commitish: main
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+      - uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: warren-headless-linux-arm64
           path: release-assets/*
           retention-days: 7
 

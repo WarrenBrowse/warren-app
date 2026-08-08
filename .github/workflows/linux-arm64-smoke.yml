@@ -1,0 +1,88 @@
+---
+# Warren VPN - Linux arm64 packaging smoke
+#
+# Runs the arm64 half of the Linux release on demand: the same
+# `./build.sh --optimize` and the same staging script as release.yml's
+# `build-linux-arm64` job, on the same aarch64 pool. Publishes nothing, uploads
+# nothing, touches no release.
+#
+# It exists because that job GATES the release. arm64 packaging depends on
+# things nothing else exercises (electron-builder shipping an aarch64 fpm, rpm
+# and bsdtar on the arm64 pool), so without this workflow the first sign of a
+# break would be a blocked release tag, an hour into a build. release.yml stays
+# the authority for what the job does; keep the two build steps in step.
+#
+# What it deliberately does NOT cover: staging under a release version, the
+# draft-release upload and the update-metadata publish. Those need a tag.
+
+name: Linux arm64 - packaging smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: "Product environment to build"
+        type: choice
+        default: beta
+        options: [beta, prod]
+
+# The repository is private, so the job token needs read access or the checkout
+# 404s ("Repository not found") on a token that is simply not allowed to see it.
+permissions:
+  contents: read
+
+jobs:
+  arm64-packaging:
+    name: Build and package Warren VPN for arm64
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    timeout-minutes: 130
+    env:
+      WARREN_CHANNEL: ${{ inputs.channel }}
+      # Several arm64 runners share one 16-core Colima VM; same cap as
+      # warren-tests.yml, for neighbourliness.
+      CARGO_BUILD_JOBS: "6"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: >-
+            ${{ inputs.channel == 'beta'
+            && 'https://api.beta.warrenbrowse.com'
+            || 'https://api.warrenbrowse.com' }}
+
+      - name: Verify Linux packaging deps
+        run: rpm --version
+
+      - name: Build
+        env:
+          WARREN_PRODUCT_ENV: ${{ inputs.channel }}
+        run: ./build.sh --optimize
+
+      - name: Stage release assets
+        # A smoke run has no tag, so the product version keeps its -dev suffix.
+        # Stage under that version rather than inventing one: the destination
+        # names then say which build they came from.
+        run: |
+          set -euo pipefail
+          version="$(cargo run -q --bin mullvad-version)"
+          bash ci/stage-release-assets.sh linux "$version" "$WARREN_CHANNEL"
+
+      - name: Assert the three arm64 packages are there
+        # The package names come from the build target, so they are the
+        # architecture evidence; the daemon is read back as well, because a
+        # package named arm64 around x86_64 binaries installs fine and then
+        # fails to start.
+        run: |
+          set -euo pipefail
+          ls release-assets/*-linux-arm64.deb
+          ls release-assets/*-linux-aarch64.rpm
+          ls release-assets/*-linux-aarch64.pacman
+          readelf -h dist-assets/warren-daemon | grep -q AArch64
+          ls -lh release-assets

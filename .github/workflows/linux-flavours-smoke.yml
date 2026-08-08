@@ -49,10 +49,15 @@ jobs:
             base=https://api.warrenbrowse.com/updates/desktop
           fi
           manifest="$(curl -fsSL "$base/downloads.json")"
-          url="$(printf '%s' "$manifest" \
-            | jq -r '.platforms.linux.assets[] | select(.format == "deb") | .url' | head -1)"
-          sha="$(printf '%s' "$manifest" \
-            | jq -r '.platforms.linux.assets[] | select(.format == "deb") | .sha256' | head -1)"
+          # The plain x64 .deb, named exactly: the channel also publishes an
+          # arm64 .deb (this runner cannot install it) and the sysvinit repack of
+          # the x64 one (repacking it again proves nothing). Both would win a
+          # bare `select(.format == "deb") | head -1`, and the sysvinit repack
+          # already did, because "amd64-sysvinit.deb" sorts before "amd64.deb".
+          select='.platforms.linux.assets[]
+                  | select(.format == "deb" and .architecture == "x64" and (has("flavor") | not))'
+          url="$(printf '%s' "$manifest" | jq -r "$select | .url" | head -1)"
+          sha="$(printf '%s' "$manifest" | jq -r "$select | .sha256" | head -1)"
           version="$(printf '%s' "$manifest" | jq -r '.platforms.linux.version')"
           [ -n "$url" ] && [ "$url" != null ] || { echo "::error::no .deb in $base/downloads.json"; exit 1; }
           {

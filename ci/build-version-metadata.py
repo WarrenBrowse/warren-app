@@ -255,6 +255,10 @@ def split_asset_name(rest: str) -> tuple[str, str, str, str] | None:
 
     >>> split_asset_name("linux-amd64.deb")
     ('linux', 'amd64', '', 'deb')
+    >>> split_asset_name("linux-arm64.deb")
+    ('linux', 'arm64', '', 'deb')
+    >>> split_asset_name("linux-aarch64.pacman")
+    ('linux', 'aarch64', '', 'pacman')
     >>> split_asset_name("linux-amd64-sysvinit.deb")
     ('linux', 'amd64', 'sysvinit', 'deb')
     >>> split_asset_name("linux-x86_64-nixos.tar.gz")

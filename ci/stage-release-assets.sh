@@ -12,6 +12,8 @@
 #   WarrenVPN-1.0.10-macos-universal.pkg
 #   WarrenVPN-1.0.10-linux-amd64.deb
 #   WarrenVPN-1.0.10-linux-x86_64.rpm
+#   WarrenVPN-1.0.10-linux-arm64.deb
+#   WarrenVPN-1.0.10-linux-aarch64.rpm
 #   WarrenVPN-1.0.10-android.apk
 #   WarrenVPN-1.0.10-android.aab
 #
@@ -74,12 +76,42 @@ case "$platform" in
     for f in dist/${SRC}*.dmg; do stage "$f" "${DST}-${version}-macos-universal.dmg"; done
     ;;
   linux)
-    for f in dist/${SRC}*_amd64.deb;  do stage "$f" "${DST}-${version}-linux-amd64.deb";  done
-    for f in dist/${SRC}*_x86_64.rpm; do stage "$f" "${DST}-${version}-linux-x86_64.rpm"; done
-    # Arch Linux package (electron-builder pacman target). Installed with
-    # `sudo pacman -U <file>`; the .pacman extension is electron-builder's, the
-    # archive itself is a standard xz-compressed Arch package.
-    for f in dist/${SRC}*.pacman; do stage "$f" "${DST}-${version}-linux-x86_64.pacman"; done
+    # One invocation stages whatever this runner built, and each runner builds a
+    # single architecture (the x86_64 job and the arm64 job run on their own
+    # pools). electron-builder spells the architecture differently per format
+    # (deb amd64/arm64, rpm x86_64/aarch64, pacman x64/aarch64), so the token is
+    # read off the built file and mapped to the one this release uses for that
+    # format, rather than glob-matching a name per architecture. A token nothing
+    # maps to fails the release: a wrong arch in an installer name is invisible
+    # until a user installs a package their machine cannot run.
+    #
+    # The .pacman is the Arch Linux package (electron-builder pacman target),
+    # installed with `sudo pacman -U <file>`; the extension is
+    # electron-builder's, the archive itself is a standard xz-compressed Arch
+    # package.
+    for f in dist/${SRC}*.deb dist/${SRC}*.rpm dist/${SRC}*.pacman; do
+      # `<prefix>-<version>_<arch>.<ext>`: the version never carries an
+      # underscore and neither does the prefix, so the FIRST underscore of the
+      # basename opens the arch token. Cutting at the LAST one instead splits
+      # x86_64 and leaves "64".
+      base="${f##*/}"
+      ext="${base##*.}"
+      token="${base#*_}"
+      token="${token%.*}"
+      case "$ext:$token" in
+        deb:amd64 | deb:x64 | deb:x86_64)          arch=amd64 ;;
+        deb:arm64 | deb:aarch64)                   arch=arm64 ;;
+        rpm:x86_64 | rpm:amd64 | rpm:x64)          arch=x86_64 ;;
+        rpm:aarch64 | rpm:arm64)                   arch=aarch64 ;;
+        pacman:x86_64 | pacman:amd64 | pacman:x64) arch=x86_64 ;;
+        pacman:aarch64 | pacman:arm64)             arch=aarch64 ;;
+        *)
+          echo "::error::cannot tell the architecture of $f (token '$token'); refusing to stage it" >&2
+          exit 1
+          ;;
+      esac
+      stage "$f" "${DST}-${version}-linux-${arch}.${ext}"
+    done
     # Daemon-only packages (only produced by `build.sh --daemon-only`; absent in
     # the normal full build, harmlessly skipped by nullglob). Prod-only: there
     # is no daemon-only beta channel.

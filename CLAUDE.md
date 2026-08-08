@@ -126,12 +126,28 @@ CI sees it, using throwaway worktrees at the pins (your checkouts untouched), an
 verifies the quinn fork stays pinned. Run it after any `.warren*-version` bump,
 then commit `Cargo.lock`.
 
-## Linux packaging: five artifacts, one build
+## Linux packaging: eight artifacts, two builds
 
-`build.sh` produces `.deb`, `.rpm` and `.pacman` through electron-builder/fpm.
-Two more are derived from the `.deb` afterwards, by the `build-linux-sysvinit`
-and `build-nixos` jobs in `release.yml`, on the docker-capable runner. Neither
-recompiles anything, so both cost minutes, not another Rosetta build hour.
+`build.sh` produces `.deb`, `.rpm` and `.pacman` through electron-builder/fpm,
+for the architecture of the machine it runs on. `release.yml` runs it twice, on
+two pools of the same Mac, each native: `build-linux` on the x86_64 (Rosetta)
+one and `build-linux-arm64` on the aarch64 one. Nothing is cross-compiled, so
+neither job needs a second sysroot and the arm64 packages are built by the same
+path that `warren-tests.yml` already exercises on every push. `release-daemon.yml`
+mirrors the split for the headless daemon and CLI.
+
+The architecture spelling differs per format, and per tool. electron-builder
+emits `_amd64.deb` / `_x86_64.rpm` / `_x64.pacman` and `_arm64.deb` /
+`_aarch64.rpm` / `_aarch64.pacman`; `ci/stage-release-assets.sh` reads that token
+off the file and maps it to the release name (`-linux-amd64.deb`,
+`-linux-aarch64.rpm`, ...), refusing a token it does not know rather than
+shipping an installer whose name lies about its architecture.
+
+Two more artifacts are derived from the **amd64** `.deb` afterwards, by the
+`build-linux-sysvinit` and `build-nixos` jobs in `release.yml`, on the
+docker-capable runner. Neither recompiles anything, so both cost minutes, not
+another Rosetta build hour, and neither has an arm64 counterpart: both target the
+x86_64 desktop and neither script is arch-generic.
 
 - **`-linux-amd64-sysvinit.deb`** (MX Linux, antiX, Devuan). The systemd
   package's postinst runs `systemctl enable` under `set -e`, so on a host with

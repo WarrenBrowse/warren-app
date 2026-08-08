@@ -2,16 +2,21 @@
 # Warren VPN - Release pipeline
 #
 # Builds Warren VPN installers for macOS (DMG/PKG), Linux (.deb + .rpm +
-# .pacman, plus a sysvinit .deb and a NixOS flake), Windows (MSI/NSIS) and
-# Android (AAB/APK), and uploads them to a GitHub Release. Code signing is
-# opt-in per platform: when the signing secrets are absent the jobs produce
-# UNSIGNED builds (the current default, since Warren has no company/store
-# accounts yet). iOS is disabled until an Apple Developer account exists
-# (re-enable by setting the repo variable WARREN_ENABLE_IOS=true).
+# .pacman, for x86_64 and arm64, plus a sysvinit .deb and a NixOS flake),
+# Windows (MSI/NSIS) and Android (AAB/APK), and uploads them to a GitHub
+# Release. Code signing is opt-in per platform: when the signing secrets are
+# absent the jobs produce UNSIGNED builds (the current default, since Warren
+# has no company/store accounts yet). iOS is disabled until an Apple Developer
+# account exists (re-enable by setting the repo variable
+# WARREN_ENABLE_IOS=true).
+#
+# The two Linux architectures are built by two jobs on two runner pools, each
+# native: build-linux on the x86_64 (Rosetta) pool, build-linux-arm64 on the
+# aarch64 one. Nothing is cross-compiled.
 #
 # The two extra Linux artifacts cover distributions the deb/rpm/pacman set
-# cannot reach, and neither recompiles anything: both consume the .deb the
-# Linux job published to the draft release.
+# cannot reach, and neither recompiles anything: both consume the amd64 .deb
+# the Linux job published to the draft release.
 #
 #   WarrenVPN-<ver>-linux-amd64-sysvinit.deb    MX Linux, antiX, Devuan
 #     The systemd package leaves dpkg half-configured on a host with no
@@ -395,10 +400,89 @@ jobs:
           if-no-files-found: warn
           retention-days: 1
 
+  # The same three packages for 64-bit ARM (Raspberry Pi 4/5 and the ARM cloud
+  # instances), built NATIVELY on the aarch64 Colima pool rather than
+  # cross-compiled from the x86_64 one. Both pools live on the same Apple
+  # Silicon Mac, so arm64 is the machine's own architecture: this job needs none
+  # of the Rosetta workarounds the x86_64 job carries (no CC=clang against the
+  # gcc cc1 crash, no whole-build retry on a SIGSEGV signature), and the same
+  # pool already compiles the whole daemon on every push through
+  # warren-tests.yml. Cross-compiling would instead need a second sysroot and
+  # would leave the aarch64 packages built by a path nothing else exercises.
+  build-linux-arm64:
+    name: Build Linux arm64 .deb/.rpm/.pacman
+    needs: [tag-guard, tests]
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    timeout-minutes: 130
+    env:
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      # Several arm64 runners share one 16-core Colima VM, so cap the build
+      # parallelism the way warren-tests.yml does. Neighbourliness, not safety.
+      CARGO_BUILD_JOBS: "6"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
+
+      - name: Verify Linux packaging deps (preinstalled on self-hosted runner)
+        # rpm feeds fpm's rpm target; bsdtar (libarchive-tools, installed by the
+        # build-env action) feeds the pacman one. electron-builder downloads its
+        # own aarch64 fpm, so nothing here needs a system ruby.
+        run: rpm --version
+
+      - name: Build
+        if: env.WARREN_CHANNEL == 'prod'
+        # No TARGETS: the runner IS aarch64, so build.sh takes its local-target
+        # path and electron-builder packages for the host architecture. That
+        # names the artifacts _arm64.deb / _aarch64.rpm / _aarch64.pacman, which
+        # ci/stage-release-assets.sh maps to the harmonized release names.
+        run: ./build.sh --optimize
+
+      - name: Stage release assets (harmonized names)
+        if: env.WARREN_CHANNEL == 'prod'
+        run: bash ci/stage-release-assets.sh linux "$WARREN_VERSION"
+
+      - name: Build beta
+        if: env.WARREN_CHANNEL == 'beta'
+        env:
+          WARREN_PRODUCT_ENV: beta
+        run: ./build.sh --optimize
+
+      - name: Stage beta release assets
+        if: env.WARREN_CHANNEL == 'beta'
+        run: bash ci/stage-release-assets.sh linux "$WARREN_VERSION" beta
+
+      - name: Publish Linux arm64 installers to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: release-assets/*
+
+      - name: Upload Linux arm64 artifacts
+        uses: actions/upload-artifact@v6
+        continue-on-error: true
+        with:
+          name: linux-arm64-installers
+          path: release-assets/*
+          if-no-files-found: warn
+          retention-days: 1
+
   # Two Linux distributions the .deb/.rpm/.pacman set does not reach, each
   # getting the artifact it can actually install. Both jobs consume the .deb
   # build-linux already published to the draft release, so neither recompiles
-  # anything: they add minutes, not another hour of Rosetta build.
+  # anything: they add minutes, not another hour of Rosetta build. Both are
+  # amd64 only, by the artifact they name: the sysvinit distributions and the
+  # NixOS flake target the x86_64 desktop, and neither script is arch-generic.
   #
   # They run on the docker-capable runner because both need a container the
   # Rosetta build runner cannot give them: a systemd-less Debian to install
@@ -958,6 +1042,7 @@ jobs:
       - tag-guard
       - build-macos
       - build-linux
+      - build-linux-arm64
       - build-linux-sysvinit
       - build-nixos
       - build-windows
@@ -965,20 +1050,22 @@ jobs:
       - build-android
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     timeout-minutes: 15
-    # Publish as long as it's a tag and the desktop builds (macOS/Linux/Windows,
-    # the two extra Linux flavours included) AND Android all succeed. iOS stays
-    # non-blocking: it only builds when WARREN_ENABLE_IOS is 'true', and is
-    # never required for the release.
+    # Publish as long as it's a tag and the desktop builds (macOS, Linux x86_64
+    # and arm64, Windows, the two extra Linux flavours included) AND Android all
+    # succeed. iOS stays non-blocking: it only builds when WARREN_ENABLE_IOS is
+    # 'true', and is never required for the release.
     #
-    # The sysvinit and NixOS jobs gate the release like any other platform: both
-    # install-test what they produce, so a red one means the artifact does not
-    # work, and shipping a release without them would quietly drop two
-    # platforms off the download page.
+    # The arm64, sysvinit and NixOS jobs gate the release like any other
+    # platform. The last two install-test what they produce, so a red one means
+    # the artifact does not work; and shipping a release without any of the
+    # three would quietly drop rows off the download page, which is exactly the
+    # failure nobody notices until a user cannot find their build.
     if: >-
       !cancelled() &&
       startsWith(github.ref, 'refs/tags/') &&
       needs.build-macos.result == 'success' &&
       needs.build-linux.result == 'success' &&
+      needs.build-linux-arm64.result == 'success' &&
       needs.build-linux-sysvinit.result == 'success' &&
       needs.build-nixos.result == 'success' &&
       needs.build-windows.result == 'success' &&
