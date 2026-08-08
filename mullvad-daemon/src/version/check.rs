@@ -22,6 +22,13 @@ pub(super) struct VersionCache {
     pub etag: Option<String>,
 }
 
+/// One poller round, fed to the version router: a fresh verified cache, or
+/// the failure that prevented one. Failures MUST flow to the router too, so
+/// pending `get_latest_version` requests and downloads deferred on a fresh
+/// manifest are answered from the cached state instead of hanging until the
+/// next successful check.
+pub(super) type VersionCheckResult = std::result::Result<VersionCache, ()>;
+
 /// Spawn the background poller that fetches signed version metadata from the
 /// Warren update channel and feeds [`VersionCache`] updates to the version
 /// router.
@@ -37,7 +44,7 @@ pub(super) struct VersionCache {
 #[cfg(not(target_os = "android"))]
 pub(super) fn spawn_version_updater(
     rollout_threshold_seed: Option<u32>,
-    new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCache>,
+    new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCheckResult>,
     refresh_rx: futures::channel::mpsc::UnboundedReceiver<()>,
 ) {
     tokio::spawn(version_updater_loop(
@@ -50,7 +57,7 @@ pub(super) fn spawn_version_updater(
 #[cfg(not(target_os = "android"))]
 async fn version_updater_loop(
     rollout_threshold_seed: Option<u32>,
-    new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCache>,
+    new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCheckResult>,
     mut refresh_rx: futures::channel::mpsc::UnboundedReceiver<()>,
 ) {
     use futures::StreamExt;
@@ -88,13 +95,16 @@ async fn version_updater_loop(
                 lowest_metadata_version = lowest_metadata_version.max(cache.metadata_version);
                 // The receiver lives as long as the router; a send error means
                 // the daemon is shutting down, so stop polling.
-                if new_version_tx.unbounded_send(cache).is_err() {
+                if new_version_tx.unbounded_send(Ok(cache)).is_err() {
                     break;
                 }
                 UPDATE_INTERVAL
             }
             Err(error) => {
                 log::error!("Failed to check for app updates: {error:#}");
+                if new_version_tx.unbounded_send(Err(())).is_err() {
+                    break;
+                }
                 RETRY_INTERVAL
             }
         };

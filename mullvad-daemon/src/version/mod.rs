@@ -33,6 +33,9 @@ pub enum Error {
     #[error("Version updater is down")]
     VersionUpdaterDown,
 
+    #[error("App version check failed and no cached version info exists")]
+    VersionCheckFailed,
+
     #[error("Version router is down")]
     VersionRouterClosed,
 

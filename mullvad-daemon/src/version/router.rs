@@ -17,6 +17,7 @@ use talpid_types::ErrorExt;
 use crate::DaemonEventSender;
 use crate::management_interface::AppUpgradeBroadcast;
 
+use super::check::VersionCheckResult;
 #[cfg(in_app_upgrade)]
 use super::downloader::ProgressUpdater;
 use super::{Error, check::VersionCache};
@@ -110,9 +111,14 @@ struct VersionRouter<S = DaemonEventSender<AppVersionInfo>, D = DefaultDownloade
     /// `new_version_rx` channel.
     refresh_version_check_tx: mpsc::UnboundedSender<()>,
     /// Channel used to receive updates from `version_check`
-    new_version_rx: mpsc::UnboundedReceiver<VersionCache>,
+    new_version_rx: mpsc::UnboundedReceiver<VersionCheckResult>,
     /// Channels that receive responses to `get_latest_version`
     version_request_channels: Vec<oneshot::Sender<Result<AppVersionInfo>>>,
+    /// An update request arrived and waits for the version check it
+    /// triggered, so the download starts from a fresh manifest, never from a
+    /// cache that a release published since would supersede.
+    #[cfg(in_app_upgrade)]
+    pending_download_after_refresh: bool,
     /// Broadcast channel for app upgrade events
     #[cfg(in_app_upgrade)]
     app_upgrade_broadcast: AppUpgradeBroadcast,
@@ -250,6 +256,8 @@ pub(crate) fn spawn_version_router(
             new_version_rx,
             version_request_channels: vec![],
             #[cfg(in_app_upgrade)]
+            pending_download_after_refresh: false,
+            #[cfg(in_app_upgrade)]
             app_upgrade_broadcast,
             #[cfg(in_app_upgrade)]
             cache_dir,
@@ -278,12 +286,17 @@ where
     async fn run_step(&mut self) -> ControlFlow<()> {
         tokio::select! {
             // Received version event from `check`
-            Some(new_version) = self.new_version_rx.next() => {
-                let AppVersionInfoEvent { app_version_info, is_new } = self.on_new_version(new_version);
-                self.notify_version_requesters(app_version_info.clone());
-                if is_new {
-                    // Notify the daemon about new version
-                    let _ = self.version_event_sender.send(app_version_info);
+            Some(check_result) = self.new_version_rx.next() => {
+                match check_result {
+                    Ok(new_version) => {
+                        let AppVersionInfoEvent { app_version_info, is_new } = self.on_new_version(new_version);
+                        self.notify_version_requesters(app_version_info.clone());
+                        if is_new {
+                            // Notify the daemon about new version
+                            let _ = self.version_event_sender.send(app_version_info);
+                        }
+                    }
+                    Err(()) => self.on_failed_version_check(),
                 }
             }
             res = wait_for_update(&mut self.state) => {
@@ -399,26 +412,33 @@ where
                     Some(verified_installer_path.clone()),
                 );
 
-                let event = AppVersionInfoEvent {
-                    is_new: prev_app_version_info != app_version_info,
-                    app_version_info,
-                };
-
-                if !event.is_new {
+                if prev_app_version_info == app_version_info {
                     log::trace!("Ignoring same version in downloaded state");
                     // Return here to avoid resetting the state to `HasVersion`
                     // We update the cache because ignored information (eg available beta if beta
                     // program is off) may have changed
                     *prev_cache = version_cache.clone();
-                    return event;
+                    return AppVersionInfoEvent {
+                        is_new: false,
+                        app_version_info,
+                    };
                 }
 
                 log::warn!("Received new version in downloaded state. Aborting download");
 
-                event
+                // The verified installer belongs to the version it was
+                // downloaded for. Handing its path out under the newer
+                // version's name would make a frontend launch an outdated
+                // installer believing it installs the new release.
+                AppVersionInfoEvent {
+                    is_new: true,
+                    app_version_info: to_app_version_info(&version_cache, self.beta_program, None),
+                }
             }
         };
         self.state = State::HasVersion { version_cache };
+        #[cfg(in_app_upgrade)]
+        self.start_pending_download();
         new_app_version_info
     }
 
@@ -426,6 +446,55 @@ where
         // Notify all requesters
         for tx in self.version_request_channels.drain(..) {
             let _ = tx.send(Ok(new_app_version_info.clone()));
+        }
+    }
+
+    /// A version check failed. Nobody may be left hanging on it: pending
+    /// `get_latest_version` requests are answered from the cached state (the
+    /// freshest information that exists when the channel is unreachable), and
+    /// a download deferred on a fresh manifest proceeds from that same cache.
+    /// Before this, a frontend awaiting the check during a network failure
+    /// waited until the next successful poll, minutes to hours later, and the
+    /// update flow wedged with it.
+    fn on_failed_version_check(&mut self) {
+        match self.current_app_version_info() {
+            Some(info) => {
+                for tx in self.version_request_channels.drain(..) {
+                    let _ = tx.send(Ok(info.clone()));
+                }
+            }
+            None => {
+                for tx in self.version_request_channels.drain(..) {
+                    let _ = tx.send(Err(Error::VersionCheckFailed));
+                }
+            }
+        }
+        #[cfg(in_app_upgrade)]
+        self.start_pending_download();
+    }
+
+    /// The version info the router would report right now, from its own
+    /// state, without consulting the poller. Carries the verified installer
+    /// path when a completed download is being held.
+    fn current_app_version_info(&self) -> Option<AppVersionInfo> {
+        match &self.state {
+            State::NoVersion => None,
+            State::HasVersion { version_cache } => {
+                Some(to_app_version_info(version_cache, self.beta_program, None))
+            }
+            #[cfg(in_app_upgrade)]
+            State::Downloading { version_cache, .. } => {
+                Some(to_app_version_info(version_cache, self.beta_program, None))
+            }
+            #[cfg(in_app_upgrade)]
+            State::Downloaded {
+                version_cache,
+                verified_installer_path,
+            } => Some(to_app_version_info(
+                version_cache,
+                self.beta_program,
+                Some(verified_installer_path.clone()),
+            )),
         }
     }
 
@@ -484,8 +553,57 @@ where
         }
     }
 
+    /// Handle an update request from a frontend. The download does NOT start
+    /// from the cached manifest: the cache can be hours old (6 h poll), and a
+    /// release published since would make the app download and install a
+    /// version the channel has already superseded. Instead a version check is
+    /// triggered and the download is deferred until its result arrives,
+    /// fresh manifest or failure ([`Self::on_failed_version_check`] then
+    /// falls back to the cache, the freshest information that exists).
     #[cfg(in_app_upgrade)]
     fn update_application(&mut self) {
+        match &self.state {
+            State::HasVersion { version_cache } => {
+                if recommended_version_upgrade(&version_cache.version_info, self.beta_program)
+                    .is_none()
+                {
+                    // If there's no suggested upgrade, do nothing
+                    log::debug!("Received update request without suggested upgrade");
+                    return;
+                }
+                if self.pending_download_after_refresh {
+                    log::debug!("Ignoring update request while awaiting a fresh manifest");
+                    return;
+                }
+                if self.refresh_version_check_tx.unbounded_send(()).is_ok() {
+                    self.pending_download_after_refresh = true;
+                } else {
+                    // The poller is gone, so no fresher manifest will ever
+                    // arrive: the cache is all there is.
+                    log::warn!("Version updater is down, downloading from the cached manifest");
+                    self.start_download();
+                }
+            }
+            state => {
+                log::debug!("Ignoring update request while in state {:?}", state);
+            }
+        }
+    }
+
+    /// Start the download a previous update request deferred, if any.
+    #[cfg(in_app_upgrade)]
+    fn start_pending_download(&mut self) {
+        if self.pending_download_after_refresh {
+            self.pending_download_after_refresh = false;
+            self.start_download();
+        }
+    }
+
+    /// Spawn the downloader for the upgrade suggested by the current version
+    /// cache. Callers are responsible for that cache being as fresh as the
+    /// situation allows (see [`Self::update_application`]).
+    #[cfg(in_app_upgrade)]
+    fn start_download(&mut self) {
         use crate::version::downloader::spawn_downloader;
 
         match mem::replace(&mut self.state, State::NoVersion) {
@@ -524,6 +642,10 @@ where
     #[cfg(in_app_upgrade)]
     fn cancel_upgrade(&mut self) {
         use mullvad_types::version::AppUpgradeEvent;
+
+        // A download still waiting for its fresh manifest is cancelled by
+        // simply not starting it.
+        self.pending_download_after_refresh = false;
 
         match mem::replace(&mut self.state, State::NoVersion) {
             // If we're upgrading, emit an event if a version was received during the upgrade
@@ -853,7 +975,7 @@ mod test {
     /// This is used in the tests to simulate the daemon and `VersionUpdater`.
     struct VersionRouterChannels {
         daemon_tx: futures::channel::mpsc::UnboundedSender<Message>,
-        new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCache>,
+        new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCheckResult>,
         refresh_version_check_rx: futures::channel::mpsc::UnboundedReceiver<()>,
         version_event_receiver: futures::channel::mpsc::UnboundedReceiver<AppVersionInfo>,
     }
@@ -875,6 +997,7 @@ mod test {
                 version_event_sender,
                 new_version_rx,
                 version_request_channels: vec![],
+                pending_download_after_refresh: false,
                 app_upgrade_broadcast,
                 refresh_version_check_tx,
                 cache_dir: PathBuf::new(),
@@ -965,7 +1088,7 @@ mod test {
             matches!(version_router.state, State::NoVersion),
             "State should not transition"
         );
-        version_router.on_new_version(version_cache);
+        version_router.on_new_version(version_cache.clone());
         assert!(matches!(version_router.state, State::HasVersion { .. }));
         assert!(
             channels.version_event_receiver.try_recv().is_err(),
@@ -984,7 +1107,10 @@ mod test {
             channels.version_event_receiver.try_recv().is_ok(),
             "Version event should be sent on beta program change"
         );
+        // The update request defers to a fresh manifest; the poller answering
+        // with the same cache releases the download.
         version_router.update_application();
+        version_router.on_new_version(version_cache);
         assert!(
             matches!(version_router.state, State::Downloading { .. }),
             "State should transition to Downloading as the beta version is accepted"
@@ -1018,7 +1144,7 @@ mod test {
             .expect("Version check should be triggered");
         channels
             .new_version_tx
-            .unbounded_send(version_cache_test.clone())
+            .unbounded_send(Ok(version_cache_test.clone()))
             .unwrap();
 
         // On the next step, the router should receive the version info
@@ -1055,9 +1181,11 @@ mod test {
             other => panic!("State should be HasVersion, was {other:?}"),
         }
 
-        // Start upgrading
+        // Start upgrading. The request defers to a fresh manifest; the poller
+        // answering with the same cache releases the download.
         let mut app_upgrade_listener = version_router.app_upgrade_broadcast.subscribe();
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
         // Check that the state is now downloading
         match &version_router.state {
             State::Downloading {
@@ -1178,9 +1306,10 @@ mod test {
 
         version_router.on_new_version(upgrade_version.clone());
 
-        // Start upgrading
+        // Start upgrading (the fresh-manifest answer releases the download)
         let mut app_upgrade_listener = version_router.app_upgrade_broadcast.subscribe();
         version_router.update_application();
+        version_router.on_new_version(upgrade_version.clone());
         // Check that the state is now downloading
         assert!(matches!(version_router.state, State::Downloading { .. }),);
 
@@ -1208,9 +1337,10 @@ mod test {
 
         version_router.on_new_version(version_cache_test.clone());
 
-        // Start upgrading
+        // Start upgrading (the fresh-manifest answer releases the download)
         let mut app_upgrade_listener = version_router.app_upgrade_broadcast.subscribe();
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
         // Check that the state is now downloading
         assert!(matches!(version_router.state, State::Downloading { .. }),);
 
@@ -1226,6 +1356,7 @@ mod test {
         );
         assert_eq!(app_upgrade_listener.try_recv(), Err(TryRecvError::Empty));
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
 
         // Verify that we can restart the download again
         assert_eq!(version_router.run_step().await, ControlFlow::Continue(()));
@@ -1242,8 +1373,9 @@ mod test {
 
         version_router.on_new_version(version_cache_test.clone());
 
-        // Start upgrading
+        // Start upgrading (the fresh-manifest answer releases the download)
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
         // Check that the state is now downloading
         assert!(matches!(version_router.state, State::Downloading { .. }),);
 
@@ -1264,8 +1396,9 @@ mod test {
             version_router.state,
         );
 
-        // Restart upgrade
+        // Restart upgrade (the fresh-manifest answer releases the download)
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
 
         // Drive the download to completion
         assert_eq!(version_router.run_step().await, ControlFlow::Continue(()));
@@ -1293,6 +1426,150 @@ mod test {
         );
     }
 
+    /// An update request must never download straight from the cached
+    /// manifest: the cache can be hours old (6 h poll interval), and starting
+    /// from it ships a version the channel has already superseded. The
+    /// download starts only once the poller has answered the refresh the
+    /// request triggered, and it targets whatever that fresh manifest names.
+    #[tokio::test(start_paused = true)]
+    async fn update_application_downloads_the_freshest_manifest_not_the_cache() {
+        let (mut version_router, mut channels) = make_version_router::<SuccessfulAppDownloader>();
+        let stale = get_new_stable_version_cache();
+        version_router.on_new_version(stale.clone());
+
+        version_router.update_application();
+        assert!(
+            matches!(version_router.state, State::HasVersion { .. }),
+            "download must wait for a fresh manifest, state was {:?}",
+            version_router.state,
+        );
+        channels
+            .refresh_version_check_rx
+            .try_recv()
+            .expect("an update request must trigger a version check");
+
+        let mut fresh = stale.clone();
+        fresh.version_info.stable.version.minor += 1;
+        version_router.on_new_version(fresh.clone());
+        match &version_router.state {
+            State::Downloading {
+                upgrading_to_version,
+                ..
+            } => assert_eq!(
+                upgrading_to_version.version, fresh.version_info.stable.version,
+                "the download must target the fresh manifest's version"
+            ),
+            other => panic!("State should be Downloading the fresh version, was {other:?}"),
+        }
+    }
+
+    /// A newer manifest arriving in `Downloaded` state must not hand out the
+    /// superseded installer's path under the new version's name: a frontend
+    /// would launch the old installer believing it installs the new release.
+    #[tokio::test(start_paused = true)]
+    async fn newer_manifest_in_downloaded_state_drops_the_stale_installer_path() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        let version_cache_test = get_new_stable_version_cache();
+        version_router.on_new_version(version_cache_test.clone());
+        version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
+        assert!(matches!(version_router.state, State::Downloading { .. }));
+        assert_eq!(version_router.run_step().await, ControlFlow::Continue(()));
+        assert!(matches!(version_router.state, State::Downloaded { .. }));
+
+        let mut newer = version_cache_test.clone();
+        newer.version_info.stable.version.minor += 1;
+        let event = version_router.on_new_version(newer);
+        assert!(event.is_new);
+        assert_eq!(
+            event
+                .app_version_info
+                .suggested_upgrade
+                .expect("a newer version must stay suggested")
+                .verified_installer_path,
+            None,
+            "the stale installer path must not be attached to the newer version"
+        );
+    }
+
+    /// The check triggered by an update request failed: the download
+    /// proceeds from the cache, the freshest information that exists when
+    /// the update channel is unreachable, instead of wedging the flow.
+    #[tokio::test(start_paused = true)]
+    async fn update_application_falls_back_to_the_cache_when_the_check_fails() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        let cache = get_new_stable_version_cache();
+        version_router.on_new_version(cache.clone());
+        version_router.update_application();
+        version_router.on_failed_version_check();
+        match &version_router.state {
+            State::Downloading {
+                upgrading_to_version,
+                ..
+            } => assert_eq!(
+                upgrading_to_version.version,
+                cache.version_info.stable.version
+            ),
+            other => panic!("State should be Downloading from the cache, was {other:?}"),
+        }
+    }
+
+    /// A failed check answers a pending `get_latest_version` from the cache
+    /// instead of leaving the requester hanging until the next successful
+    /// poll, minutes to hours later.
+    #[tokio::test(start_paused = true)]
+    async fn failed_check_answers_pending_version_requests_from_the_cache() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        let cache = get_new_stable_version_cache();
+        version_router.on_new_version(cache.clone());
+        let (tx, mut rx) = oneshot::channel();
+        version_router.get_latest_version(tx);
+        version_router.on_failed_version_check();
+        let info = rx
+            .try_recv()
+            .expect("the requester must not be left hanging")
+            .expect("sender must not be dropped")
+            .expect("cached info answers as a success");
+        assert_eq!(
+            info.suggested_upgrade
+                .expect("the cache suggests an upgrade")
+                .version,
+            cache.version_info.stable.version
+        );
+    }
+
+    /// With no cache at all, a failed check answers pending requests with an
+    /// error instead of hanging them.
+    #[tokio::test(start_paused = true)]
+    async fn failed_check_without_any_cache_answers_an_error() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        let (tx, mut rx) = oneshot::channel();
+        version_router.get_latest_version(tx);
+        version_router.on_failed_version_check();
+        let result = rx
+            .try_recv()
+            .expect("the requester must not be left hanging")
+            .expect("sender must not be dropped");
+        assert!(result.is_err());
+    }
+
+    /// Cancelling while the update request still waits for its fresh
+    /// manifest must not let the later manifest start the download anyway.
+    #[tokio::test(start_paused = true)]
+    async fn cancel_clears_a_download_awaiting_its_fresh_manifest() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        let cache = get_new_stable_version_cache();
+        version_router.on_new_version(cache.clone());
+        version_router.update_application();
+        version_router.cancel_upgrade();
+        version_router.on_new_version(cache.clone());
+        assert!(
+            matches!(version_router.state, State::HasVersion { .. }),
+            "a cancelled download must not start, state was {:?}",
+            version_router.state,
+        );
+    }
+
     #[tokio::test]
     async fn test_failed_verification() {
         let (mut version_router, _channels) = make_version_router::<FailingAppVerifier>();
@@ -1300,9 +1577,10 @@ mod test {
 
         version_router.on_new_version(version_cache_test.clone());
 
-        // Start upgrading
+        // Start upgrading (the fresh-manifest answer releases the download)
         let mut app_upgrade_listener = version_router.app_upgrade_broadcast.subscribe();
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
         // Check that the state is now downloading
         assert!(matches!(version_router.state, State::Downloading { .. }),);
 
@@ -1322,6 +1600,7 @@ mod test {
         );
         assert_eq!(app_upgrade_listener.try_recv(), Err(TryRecvError::Empty));
         version_router.update_application();
+        version_router.on_new_version(version_cache_test.clone());
 
         // Verify that we can restart the download again
         assert_eq!(version_router.run_step().await, ControlFlow::Continue(()));
