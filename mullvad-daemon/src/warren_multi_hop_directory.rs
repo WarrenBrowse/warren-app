@@ -907,6 +907,111 @@ fn verify_cached_directory(
     Ok(CachedSeed::Fresh(verified))
 }
 
+/// What a synchronous boot seed produced from the on-disk cache.
+pub(crate) struct BootSeed {
+    /// The verified directory, handed to the updater so its first pass
+    /// starts from the same trusted set instead of re-reading the file.
+    pub directory: VerifiedMultiHopDirectory,
+    /// The circuit selected from it. `None` when the directory holds no
+    /// pair satisfying the country hints.
+    pub circuit: Option<MultiHopConfig>,
+    /// Whether the body was past its signed `expires_at`.
+    pub stale: bool,
+}
+
+/// Reads and verifies the on-disk directory cache and selects a circuit
+/// from it, synchronously.
+///
+/// The daemon dispatches its boot `Connect` with no barrier on the
+/// updater's first pass, so a circuit published from that pass can lose
+/// the race by under a millisecond, leaving the tunnel start with `None`.
+/// That fails closed on `NoCircuit`, which is non-recoverable, so the
+/// host parks in a blocking error state with no retry (incident
+/// 2026-08-08). Seeding before the daemon can dial removes the race
+/// instead of widening the window it has to win.
+pub(crate) fn boot_seed(
+    settings_dir: &std::path::Path,
+    server_pins: &[String],
+    root_mode: &RootPinMode,
+    settings: &mullvad_types::settings::WarrenMultiHopSettings,
+) -> Option<BootSeed> {
+    let (root_pins, unconfigured) = root_pins_of(root_mode);
+    if unconfigured {
+        return None;
+    }
+    let body = std::fs::read_to_string(settings_dir.join(DIRECTORY_CACHE_FILE)).ok();
+    boot_seed_from(
+        body.as_deref(),
+        server_pins,
+        &root_pins,
+        settings,
+        now_unix(),
+    )
+}
+
+/// Pure core of [`boot_seed`], parameterized on the cache body so the
+/// trust path and the selection are testable without touching disk.
+fn boot_seed_from(
+    body: Option<&str>,
+    server_pins: &[String],
+    root_pins: &[String],
+    settings: &mullvad_types::settings::WarrenMultiHopSettings,
+    now_unix: u64,
+) -> Option<BootSeed> {
+    let (directory, stale) = match verify_cached_directory(body?, server_pins, root_pins, now_unix)
+    {
+        Ok(CachedSeed::Fresh(dir)) => (dir, false),
+        Ok(CachedSeed::Stale(dir)) => (dir, true),
+        Err(_) => return None,
+    };
+    let circuit = select_boot_circuit(&directory, settings, now_unix);
+    Some(BootSeed {
+        directory,
+        circuit,
+        stale,
+    })
+}
+
+/// The updater's first-pass selection, with the inputs a cold boot has:
+/// no current circuit, nothing drained, no advisory and no measured RTT.
+/// Kept identical to the loop's own call so the seed and the first pass
+/// agree, which is what lets the updater adopt the seeded circuit as its
+/// `last_circuit` and skip a reconnect it has no reason to request.
+fn select_boot_circuit(
+    dir: &VerifiedMultiHopDirectory,
+    settings: &mullvad_types::settings::WarrenMultiHopSettings,
+    now_unix: u64,
+) -> Option<MultiHopConfig> {
+    if settings.enabled {
+        pick_two_hop_circuit_with_rtt(
+            dir,
+            &settings.entry_country,
+            &settings.exit_country,
+            true,
+            true,
+            None,
+            &[],
+            detect_client_locality(),
+            None,
+            &RttCache::new(),
+            now_unix,
+        )
+    } else {
+        pick_one_hop_circuit(dir, &settings.exit_country, true, true, None, &[])
+    }
+}
+
+/// Resolves a [`RootPinMode`] to its pin set plus whether multi-hop is
+/// unconfigured (fail-closed). Pure: the operator-facing warnings stay in
+/// [`spawn`] so resolving the same mode twice does not log twice.
+fn root_pins_of(mode: &RootPinMode) -> (Vec<String>, bool) {
+    match mode {
+        RootPinMode::Pinned(pins) => (pins.clone(), false),
+        RootPinMode::InsecureTofu => (Vec::new(), false),
+        RootPinMode::Unconfigured => (Vec::new(), true),
+    }
+}
+
 /// ADR 36 gap-free drain path: a request the drain reactor (or the
 /// dial-refusal hook) posts to the updater. The updater runs an
 /// immediate cache-only selection pass and answers whether a
@@ -1036,6 +1141,14 @@ pub(crate) struct UpdaterConfig {
     /// migration outcome is sent back on the carried oneshot. `None`
     /// disables the hook (the reactor then always rebuilds).
     pub drain_migration_rx: Option<tokio::sync::mpsc::UnboundedReceiver<DrainMigrationRequest>>,
+    /// Cold-start seed from [`boot_seed`], already published to the
+    /// generator by the daemon before it dispatched its boot connect. The
+    /// updater adopts it as its starting directory and circuit so the first
+    /// pass agrees with what the tunnel is already using. `None` when no
+    /// usable cache existed, which leaves the live fetch as the only
+    /// source (and the boot connect exposed to the race this seed exists
+    /// to remove).
+    pub boot_seed: Option<BootSeed>,
 }
 
 /// Spawns the background directory updater. It refreshes on a timer and
@@ -1094,43 +1207,32 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // server-stamped expiry covers anti-freeze.
         let mut highest_generation: u64 = 0;
 
-        // Cold-start seed: re-verify the on-disk signed directory before the
-        // first network fetch. On a fresh daemon the in-memory cache is
-        // empty, so an immediate connect (reboot, bench) would race the boot
-        // fetch and, once the killswitch blocks DNS, get stuck on "no relay
-        // matches". Seeding from disk gives selection a trusted directory at
-        // t=0; the file is the SIGNED payload, re-verified here, so a
-        // tampered/stale file is rejected (fail-closed). Skipped when
-        // unconfigured (multi-hop disabled).
+        // Cold-start seed, produced by [`boot_seed`] BEFORE the daemon could
+        // dial: the boot connect is dispatched with no barrier on this task,
+        // so a directory read here loses the race often enough to park the
+        // host in a blocking error state (incident 2026-08-08). Adopting the
+        // seed's circuit as `last_circuit` is what keeps the first pass from
+        // requesting a reconnect it has no reason to request: the generator
+        // already carries that exact circuit.
         let dir_cache_path = cfg.settings_dir.join(DIRECTORY_CACHE_FILE);
-        let mut seeded_from_cache = false;
-        if !unconfigured && let Ok(body) = std::fs::read_to_string(&dir_cache_path) {
-            match verify_cached_directory(&body, &cfg.server_pins, &root_pins, now_unix()) {
-                Ok(CachedSeed::Fresh(dir)) => {
-                    log::info!(
-                        "Warren multi-hop: seeded directory from disk cache \
-                         (generation {})",
-                        dir.generation
-                    );
-                    highest_generation = dir.generation;
-                    cached_dir = Some(dir);
-                    seeded_from_cache = true;
-                }
-                Ok(CachedSeed::Stale(dir)) => {
-                    log::info!(
-                        "Warren multi-hop: seeded EXPIRED directory from disk cache \
-                         (generation {}); stale boot seed, live refresh due now",
-                        dir.generation
-                    );
-                    highest_generation = dir.generation;
-                    cached_dir = Some(dir);
-                    seeded_from_cache = true;
-                }
-                Err(e) => log::info!(
-                    "Warren multi-hop: on-disk directory cache unusable ({e}); \
-                     waiting for a live fetch"
-                ),
+        let seeded_from_cache = cfg.boot_seed.is_some();
+        if let Some(seed) = cfg.boot_seed.take() {
+            if seed.stale {
+                log::info!(
+                    "Warren multi-hop: seeded EXPIRED directory from disk cache \
+                     (generation {}); stale boot seed, live refresh due now",
+                    seed.directory.generation
+                );
+            } else {
+                log::info!(
+                    "Warren multi-hop: seeded directory from disk cache \
+                     (generation {})",
+                    seed.directory.generation
+                );
             }
+            highest_generation = seed.directory.generation;
+            cached_dir = Some(seed.directory);
+            last_circuit = seed.circuit;
         }
 
         // Connectivity online-edge receiver (wake hook). Taken out of `cfg`
@@ -2624,6 +2726,71 @@ mod tests {
             ),
             "a cache within the ceiling must still seed as stale"
         );
+    }
+
+    #[test]
+    fn boot_seed_yields_a_circuit_synchronously_from_a_fresh_cache() {
+        // The boot connect is dispatched with no barrier on the updater's
+        // first pass, so a circuit published from that pass loses the race
+        // and the tunnel fails closed on NoCircuit with no retry (incident
+        // 2026-08-08, measured at under a millisecond). The seed must
+        // therefore be obtainable synchronously, before the daemon dials.
+        let (body, server_pins, root_pins) = minted_cache_body(100_000);
+        let seed = boot_seed_from(
+            Some(&body),
+            &server_pins,
+            &root_pins,
+            &mullvad_types::settings::WarrenMultiHopSettings::default(),
+            50_000,
+        )
+        .expect("a fresh signed cache must seed the boot circuit");
+
+        assert!(!seed.stale, "an unexpired body must not seed as stale");
+        assert_eq!(seed.directory.generation, 7);
+        assert!(
+            seed.circuit.is_some(),
+            "the seed must carry a dialable circuit, else the boot connect \
+             still reaches the tunnel with none"
+        );
+    }
+
+    #[test]
+    fn boot_seed_fails_closed_without_a_usable_cache() {
+        // No cache file, and an unsigned or corrupt one, must both yield
+        // nothing rather than a circuit the trust path never verified.
+        // The updater's live fetch is then the only source, exactly as
+        // before the seed existed.
+        let (_, server_pins, root_pins) = minted_cache_body(100_000);
+        let settings = mullvad_types::settings::WarrenMultiHopSettings::default();
+        assert!(
+            boot_seed_from(None, &server_pins, &root_pins, &settings, 50_000).is_none(),
+            "a missing cache file must seed nothing"
+        );
+        for bad in ["", "not json", "{}", r#"{"nodes":[]}"#] {
+            assert!(
+                boot_seed_from(Some(bad), &server_pins, &root_pins, &settings, 50_000).is_none(),
+                "untrusted cache body {bad:?} must seed nothing (fail-closed)"
+            );
+        }
+    }
+
+    #[test]
+    fn boot_seed_accepts_an_expired_but_authentic_cache() {
+        // Same rule as the updater's own cold-start seed: a machine that
+        // was merely switched off overnight is past the 6 h signed expiry,
+        // and booting with no circuit is what blocks the host.
+        let (body, server_pins, root_pins) = minted_cache_body(2_000);
+        let seed = boot_seed_from(
+            Some(&body),
+            &server_pins,
+            &root_pins,
+            &mullvad_types::settings::WarrenMultiHopSettings::default(),
+            50_000,
+        )
+        .expect("an expired but authentic cache must still seed");
+
+        assert!(seed.stale, "an expired body must be marked stale");
+        assert!(seed.circuit.is_some());
     }
 
     #[test]

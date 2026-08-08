@@ -1917,10 +1917,31 @@ impl Daemon {
             parameters_generator
                 .set_warren_drain_migration_tx(Some(warren_drain_migration_tx))
                 .await;
+            // Publish the cold-start circuit BEFORE `run()` can dispatch the
+            // boot connect. The updater's own first pass is asynchronous, so
+            // it lost that race by under a millisecond on a real upgrade and
+            // the tunnel started with no circuit, which fails closed on
+            // `NoCircuit` and parks the host blocked with no retry (incident
+            // 2026-08-08).
+            let warren_boot_seed = warren_multi_hop_directory::boot_seed(
+                &config.settings_dir,
+                &warren_server_pubkey
+                    .clone()
+                    .into_iter()
+                    .collect::<Vec<String>>(),
+                &warren_mh_root_mode,
+                &effective_warren_multi_hop(&settings),
+            );
+            if let Some(seed) = warren_boot_seed.as_ref() {
+                parameters_generator
+                    .set_warren_multi_hop(seed.circuit.clone())
+                    .await;
+            }
             warren_multi_hop_directory::spawn(warren_multi_hop_directory::UpdaterConfig {
                 api_url: warren_api_url.clone(),
                 server_pins: warren_server_pubkey.clone().into_iter().collect(),
                 root_mode: warren_mh_root_mode,
+                boot_seed: warren_boot_seed,
                 settings_rx: warren_mh_rx,
                 parameters_generator: parameters_generator.clone(),
                 request_reconnect,
@@ -2369,9 +2390,7 @@ impl Daemon {
                     );
                 }
 
-                if let ErrorStateCause::AuthFailed(_) = error_state.cause() {
-                    // If time is added outside of the app, no notifications
-                    // are received. So we must continually try to reconnect.
+                if reschedules_reconnect(error_state.cause()) {
                     self.schedule_reconnect(Duration::from_secs(60))
                 }
             }
@@ -5343,6 +5362,37 @@ fn oneshot_map<T1: Send + 'static, T2: Send + 'static>(
 /// the GUI POSTs it verbatim, so a reformat here would silently break
 /// signature verification. `sid` is validated to `^[0-9a-f]{32}$` upstream,
 /// so it needs no JSON escaping.
+/// Whether a blocking error state deserves a periodic reconnect.
+///
+/// Pure so the cause matrix is testable without a daemon. The blocked state is
+/// fail-closed and cancelable, so the cost of a retry is one dial per minute;
+/// the cost of not retrying is a user who stays dark until they think of
+/// clicking. Every cause whose condition can clear on its own therefore
+/// belongs here, and only those that exist precisely to stop retrying are
+/// excluded.
+#[must_use]
+const fn reschedules_reconnect(cause: &ErrorStateCause) -> bool {
+    match cause {
+        // Time added outside the app produces no notification.
+        ErrorStateCause::AuthFailed(_) => true,
+        // A start failure clears as soon as the missing input arrives (a
+        // multi-hop circuit published moments after the boot dial), and nothing
+        // else re-triggers it: the updater requests a reconnect only on a
+        // circuit CHANGE, so a circuit that was merely late never produces one.
+        ErrorStateCause::StartTunnelError => true,
+        // Parked deliberately: flapping stopped an uncancelable retry loop, and
+        // a pubkey mismatch waits on the user trusting the new key. Retrying
+        // either defeats the state.
+        ErrorStateCause::WarrenTunnelFlapping | ErrorStateCause::WarrenPubkeyMismatch { .. } => {
+            false
+        }
+        // `IsOffline` and a missing address family are revived by the
+        // connectivity edge in `ErrorState`, which is immediate; the rest need
+        // operator or user action a dial cannot supply.
+        _ => false,
+    }
+}
+
 fn forum_login_body(sid: &str) -> String {
     format!("{{\"sid\":\"{sid}\"}}")
 }
@@ -5455,5 +5505,53 @@ mod macos_split_tunnel_gate_tests {
             matches!(err, Error::MacosSplitTunnelUnsupported),
             "must be the explicit MacosSplitTunnelUnsupported error, got: {err:?}"
         );
+    }
+}
+
+#[cfg(test)]
+mod blocking_error_retry_tests {
+    use super::reschedules_reconnect;
+    use talpid_types::tunnel::ErrorStateCause;
+
+    #[test]
+    fn a_failed_tunnel_start_is_retried_on_a_timer() {
+        // `StartTunnelError` is where a non-recoverable start failure lands,
+        // and it has no recovery trigger of its own: the multi-hop updater
+        // only requests a reconnect when the circuit CHANGES, and the
+        // connectivity edge only revives `IsOffline`. A daemon that failed to
+        // start with no circuit and holds one a moment later therefore stayed
+        // blocked until a human clicked (incident 2026-08-08).
+        assert!(reschedules_reconnect(&ErrorStateCause::StartTunnelError));
+    }
+
+    #[test]
+    fn an_auth_failure_keeps_its_existing_retry() {
+        // Time added outside the app produces no notification, so this one
+        // has always needed the timer. Pinned so the new arm cannot drop it.
+        assert!(reschedules_reconnect(&ErrorStateCause::AuthFailed(None)));
+    }
+
+    #[test]
+    fn a_deliberate_park_is_never_retried() {
+        // Flapping parked here precisely to STOP an uncancelable retry loop,
+        // and a pubkey mismatch needs the user to trust the new key first.
+        // Retrying either would undo the reason the state exists.
+        assert!(!reschedules_reconnect(
+            &ErrorStateCause::WarrenTunnelFlapping
+        ));
+        assert!(!reschedules_reconnect(
+            &ErrorStateCause::WarrenPubkeyMismatch {
+                exit_id_hex: String::new(),
+                pinned: String::new(),
+                observed: String::new(),
+            }
+        ));
+    }
+
+    #[test]
+    fn an_offline_block_is_left_to_the_connectivity_edge() {
+        // `ErrorState` already reconnects this one on the online edge, which
+        // is immediate. A timer on top would only add a redundant dial.
+        assert!(!reschedules_reconnect(&ErrorStateCause::IsOffline));
     }
 }
