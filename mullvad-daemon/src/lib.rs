@@ -735,6 +735,11 @@ pub(crate) enum InternalDaemonEvent {
     ExcludedPathsEvent(ExcludedPathsUpdate, oneshot::Sender<Result<(), Error>>),
     /// A network leak was detected.
     LeakDetected(LeakInfo),
+    /// The window `prepare-restart` opened has expired with no shutdown, so
+    /// the lockdown it armed has outlived its installer and must go back to
+    /// what the settings say.
+    #[cfg(not(target_os = "android"))]
+    RestartLockdownDeadman,
     /// TOFU pubkey-pinning verify-hook event consumed by
     /// the daemon main loop. Routes pin inserts / bumps / mismatches /
     /// trust replacements / resets to the on-disk settings.json and
@@ -746,6 +751,30 @@ pub(crate) enum InternalDaemonEvent {
 pub(crate) enum ExcludedPathsUpdate {
     SetState(bool),
     SetPaths(HashSet<SplitApp>),
+}
+
+/// How long the daemon waits for the shutdown that `prepare-restart` promised
+/// before it puts the lockdown back to what the settings say.
+///
+/// The installer arms a lockdown in the daemon's memory and then kills it, so a
+/// daemon that is still alive well past that point is a daemon whose installer
+/// never finished. Measured on the 2026-08-08 macOS upgrade: preinstall at
+/// 11:54:29, new daemon up at 11:54:39, ten seconds end to end. Five minutes is
+/// two orders of margin over a slow installer on a slow disk, and still bounds
+/// how long a host can be blocked by an update that gave up.
+#[cfg(not(target_os = "android"))]
+const RESTART_LOCKDOWN_DEADMAN: std::time::Duration = std::time::Duration::from_secs(300);
+
+/// What the dead-man should do when its window expires: `Some(mode)` to put the
+/// lockdown back to `mode`, `None` to leave the daemon alone.
+///
+/// Reverting to the SETTING rather than to "off" is what makes this safe to fire
+/// unconditionally: it restores the user's own choice, so a user who enabled
+/// lockdown keeps it and a user who never did stops being blocked by an
+/// installer's leftover.
+#[cfg(not(target_os = "android"))]
+pub(crate) fn restart_lockdown_verdict(armed: bool, setting: bool) -> Option<bool> {
+    armed.then_some(setting)
 }
 
 impl From<TunnelStateTransition> for InternalDaemonEvent {
@@ -918,6 +947,11 @@ pub struct Daemon {
     exclude_pids: split_tunnel::PidManager,
     rx: mpsc::UnboundedReceiver<InternalDaemonEvent>,
     tx: DaemonEventSender,
+    /// Set when `prepare-restart` armed the temporary update lockdown, cleared
+    /// by the dead-man that puts it back. Without it the dead-man could not
+    /// tell an armed lockdown from a daemon that never had one.
+    #[cfg(not(target_os = "android"))]
+    restart_lockdown_armed: bool,
     reconnection_job: Option<AbortHandle>,
     management_interface: ManagementInterfaceServer,
     migration_complete: migrations::MigrationComplete,
@@ -2002,6 +2036,8 @@ impl Daemon {
             exclude_pids: split_tunneling_pid_manager,
             rx: internal_event_rx,
             tx: internal_event_tx,
+            #[cfg(not(target_os = "android"))]
+            restart_lockdown_armed: false,
             reconnection_job: None,
             management_interface,
             migration_complete,
@@ -2166,6 +2202,8 @@ impl Daemon {
                 log::warn!("{leak_info:?}");
                 self.handle_leak_event(leak_info)
             }
+            #[cfg(not(target_os = "android"))]
+            RestartLockdownDeadman => self.on_restart_lockdown_deadman(),
             WarrenPinUpdate(update) => self.handle_warren_pin_update(update).await,
         }
         should_stop
@@ -5034,6 +5072,30 @@ impl Daemon {
     ///
     /// - `shutdown`: If the daemon should shut down itself when after setting the secured target
     ///   state. set to `false` if the intention is to close the daemon process manually.
+    /// The restart window expired and this daemon is still running, so the
+    /// installer that armed the lockdown never came back for it. Put the
+    /// lockdown back to the setting and say so loudly: a host blocked with no
+    /// owner is the failure this exists to end.
+    #[cfg(not(target_os = "android"))]
+    fn on_restart_lockdown_deadman(&mut self) {
+        let setting = self.settings.settings().lockdown_mode;
+        let Some(restore) = restart_lockdown_verdict(self.restart_lockdown_armed, setting) else {
+            return;
+        };
+        self.restart_lockdown_armed = false;
+        log::warn!(
+            "The app update that armed the restart lockdown never shut this daemon down \
+             ({}s). Restoring lockdown_mode={restore} from the settings so the host is not \
+             left blocked by an installer that gave up.",
+            RESTART_LOCKDOWN_DEADMAN.as_secs()
+        );
+        let (tx, _rx) = oneshot::channel();
+        self.send_tunnel_command(TunnelCommand::LockdownMode(
+            LockdownMode::from(restore).persist(restore),
+            tx,
+        ));
+    }
+
     fn on_prepare_restart(&mut self, shutdown: bool) {
         // TODO: See if this can be made to also shut down the daemon
         //       without causing the service to be restarted.
@@ -5063,6 +5125,17 @@ impl Daemon {
                 LockdownMode::yes().persist(persist),
                 tx,
             ));
+            self.restart_lockdown_armed = true;
+            // Dead-man. This one dies with the daemon, which is exactly right
+            // for the case it covers: an installer that armed the lockdown and
+            // then failed WITHOUT killing us. The case where the daemon itself
+            // is gone cannot be covered from in here, and is what the detached
+            // guard the installers stage exists for.
+            let deadman_tx = self.tx.clone();
+            tokio::spawn(async move {
+                tokio::time::sleep(RESTART_LOCKDOWN_DEADMAN).await;
+                let _ = deadman_tx.send(InternalDaemonEvent::RestartLockdownDeadman);
+            });
         }
         self.target_state.lock();
 
@@ -5563,5 +5636,36 @@ mod blocking_error_retry_tests {
         // `ErrorState` already reconnects this one on the online edge, which
         // is immediate. A timer on top would only add a redundant dial.
         assert!(!reschedules_reconnect(&ErrorStateCause::IsOffline));
+    }
+}
+
+#[cfg(test)]
+mod restart_lockdown_deadman_tests {
+    use super::restart_lockdown_verdict;
+
+    /// The installer arms a lockdown in the daemon's memory and then kills it.
+    /// When the kill never comes (an installer that aborted after arming, a
+    /// package script that died), the daemon keeps blocking the host on a
+    /// decision no user made and no setting reflects. It must put the setting
+    /// back on its own.
+    #[test]
+    fn an_armed_lockdown_that_is_never_shut_down_is_reverted_to_the_setting() {
+        assert_eq!(restart_lockdown_verdict(true, false), Some(false));
+    }
+
+    /// A user who chose lockdown must keep it. Reverting to `settings` and not
+    /// to "off" is what makes the dead-man safe to fire unconditionally: it
+    /// restores the user's own choice, whatever it was.
+    #[test]
+    fn a_user_who_chose_lockdown_keeps_it_when_the_deadman_fires() {
+        assert_eq!(restart_lockdown_verdict(true, true), Some(true));
+    }
+
+    /// Nothing to undo if the arming never happened, and firing then would
+    /// re-apply a policy the daemon may have deliberately moved off.
+    #[test]
+    fn a_daemon_that_armed_nothing_is_left_alone() {
+        assert_eq!(restart_lockdown_verdict(false, false), None);
+        assert_eq!(restart_lockdown_verdict(false, true), None);
     }
 }
