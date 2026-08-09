@@ -22,7 +22,14 @@
 #>
 param(
     [ValidateSet('Install', 'Remove', 'Start', 'Stop', 'Restart', 'Status', 'Logs')]
-    [string]$Action = 'Status'
+    [string]$Action = 'Status',
+    # Product environment of the daemon you built. Decides the SCM service
+    # name: the daemon's orphan-generation firewall sweep reads the OTHER
+    # environments' service names to know what is installed, so a beta daemon
+    # registered under the prod name makes every daemon on the machine treat
+    # prod as installed and skip sweeping its leftovers.
+    [ValidateSet('prod', 'beta', 'staging')]
+    [string]$ProductEnv = 'beta'
 )
 $ErrorActionPreference = 'Stop'
 
@@ -31,7 +38,11 @@ $daemon  = Join-Path $repo 'target\debug\warren-daemon.exe'
 $resDir  = Join-Path $repo 'dist-assets'
 $logDir  = Join-Path $repo 'dev-logs'
 $logFile = Join-Path $logDir 'daemon.log'
-$svc     = 'WarrenVPN'
+$svc     = switch ($ProductEnv) {
+    'prod'    { 'WarrenVPN' }
+    'beta'    { 'WarrenVPNBeta' }
+    'staging' { 'WarrenVPNStaging' }
+}
 
 function Test-Admin {
     ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
@@ -41,7 +52,8 @@ function Test-Admin {
 function Invoke-Elevated($act) {
     Write-Host "Action '$act' needs admin; requesting elevation (UAC)..." -ForegroundColor Yellow
     Start-Process powershell -Verb RunAs -ArgumentList @(
-        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"", '-Action', $act
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', "`"$PSCommandPath`"",
+        '-Action', $act, '-ProductEnv', $ProductEnv
     ) -Wait
 }
 
