@@ -277,3 +277,34 @@ WinFw_ResetAllGenerations(
 	const uint32_t *salts,
 	uint32_t saltCount
 );
+
+//
+// SweepForeignGenerations:
+//
+// Startup sweep. Removes our WFP objects under the listed environment salts,
+// which the caller restricts to environments whose product is NOT installed
+// on this machine. Unlike ResetAllGenerations it leaves any live context (and
+// therefore this environment's own objects and active policy) untouched, so
+// it is safe to call while initialized, after this environment's own policy
+// is already in force.
+//
+// Why it exists: objects keyed for an environment with no installed product
+// have no owner left, and if they include a persistent block-all the machine
+// is walled by filters no running code can see. That shipped once: a beta
+// build carrying production-salted keys could not remove its predecessor's
+// kill switch, and every update walled the host until a human intervened.
+//
+// `removedObjects`, when non-null, receives the number of filters and
+// sublayers removed.
+//
+// Returns GENERAL_FAILURE if `salts` is null or `saltCount` is zero.
+//
+extern "C"
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_SweepForeignGenerations(
+	const uint32_t *salts,
+	uint32_t saltCount,
+	uint32_t *removedObjects
+);

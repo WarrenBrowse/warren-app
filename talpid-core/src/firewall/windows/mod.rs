@@ -118,11 +118,16 @@ const fn cleanup_policy(persist: bool) -> WinFwCleanupPolicy {
 
 impl Firewall {
     pub fn from_args(args: FirewallArguments) -> Result<Self, Error> {
-        if let InitialFirewallState::Blocked(allowed_endpoint) = args.initial_state {
+        let firewall = if let InitialFirewallState::Blocked(allowed_endpoint) = args.initial_state {
             Self::initialize_blocked(allowed_endpoint, args.allow_lan)
         } else {
             Self::new()
-        }
+        }?;
+        // Our own baseline (and, when starting secured, our blocked policy)
+        // is in force at this point, so removing orphaned foreign objects
+        // opens no unprotected window.
+        sweep_orphaned_foreign_generations();
+        Ok(firewall)
     }
 
     pub fn new() -> Result<Self, Error> {
@@ -318,6 +323,70 @@ impl Drop for Firewall {
 
 fn widestring_ip(ip: IpAddr) -> WideCString {
     WideCString::from_str_truncate(ip.to_string())
+}
+
+/// Remove Warren WFP objects keyed for product environments whose product is
+/// not installed on this machine.
+///
+/// A kill switch outlives the daemon that armed it and its WFP object keys
+/// are per-environment, so objects keyed for an environment with no installed
+/// product are orphans nothing else will ever remove; if they include a
+/// persistent block-all, the host is walled by filters every running build is
+/// blind to, while the app reports a healthy disconnected state. beta-v1.1.9
+/// shipped with production-salted keys and did exactly that on every update
+/// from 1.1.8. This sweep at firewall init is what makes the class
+/// self-healing instead of a support incident.
+///
+/// An environment whose service is registered keeps its objects: they are
+/// that daemon's live kill switch. When the SCM cannot answer, the
+/// environment is treated as installed, because wrongly sweeping disarms
+/// someone's kill switch while wrongly skipping only defers the sweep to the
+/// next daemon start.
+fn sweep_orphaned_foreign_generations() {
+    let orphan_salts =
+        warren_product_env::orphan_generation_salts(warren_product_env::CURRENT, |env| {
+            env_service_installed(env).unwrap_or(true)
+        });
+    if orphan_salts.is_empty() {
+        return;
+    }
+    match winfw::sweep_foreign_generations(&orphan_salts) {
+        Ok(0) => log::debug!("No orphaned foreign-environment firewall objects found"),
+        Ok(removed) => log::warn!(
+            "Removed {removed} firewall objects keyed for product environments that are \
+             not installed on this machine; they had no owner left and may have been \
+             blocking this host"
+        ),
+        Err(error) => log::error!(
+            "{}",
+            error.display_chain_with_msg(
+                "Failed to sweep orphaned foreign-environment firewall objects"
+            )
+        ),
+    }
+}
+
+/// Whether `env`'s daemon service is registered with the service control
+/// manager. `None` when the SCM could not answer.
+fn env_service_installed(env: warren_product_env::ProductEnv) -> Option<bool> {
+    use windows_service::service_manager::{ServiceManager, ServiceManagerAccess};
+
+    const ERROR_SERVICE_DOES_NOT_EXIST: i32 = 1060;
+
+    let manager =
+        ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT).ok()?;
+    match manager.open_service(
+        env.windows_service_name(),
+        windows_service::service::ServiceAccess::QUERY_STATUS,
+    ) {
+        Ok(_service) => Some(true),
+        Err(windows_service::Error::Winapi(io))
+            if io.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) =>
+        {
+            Some(false)
+        }
+        Err(_) => None,
+    }
 }
 
 // Convert `result` into an option and log the error, if any.

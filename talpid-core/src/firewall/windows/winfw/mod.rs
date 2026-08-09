@@ -90,6 +90,30 @@ pub(super) fn reset_all_generations() -> Result<(), FirewallPolicyError> {
     reset.into_result()
 }
 
+/// Remove WFP objects keyed for the given foreign environment salts, keeping
+/// the live context and this build's own objects. Returns how many filters
+/// and sublayers were removed.
+///
+/// The caller restricts `salts` to environments with no installed product:
+/// their objects have no owner left, and a persistent block-all among them
+/// walls the machine invisibly (a mis-salted winfw.dll shipped once and did
+/// exactly that on every update).
+pub(super) fn sweep_foreign_generations(salts: &[u32]) -> Result<u32, FirewallPolicyError> {
+    let mut removed: u32 = 0;
+    // SAFETY: `salts` is a non-empty, properly aligned slice of `u32` and
+    // `removed` a writable `u32`, both outliving the call, which only touches
+    // them for its duration. Safe to call while initialized: the sweep leaves
+    // the live context's own generation alone.
+    let sweep = unsafe {
+        WinFw_SweepForeignGenerations(
+            salts.as_ptr(),
+            u32::try_from(salts.len()).expect("the environment table is tiny"),
+            &mut removed,
+        )
+    };
+    sweep.into_result().map(|()| removed)
+}
+
 /// Apply blocking firewall rules Sets the underlying active policy to Blocked. Exceptions
 /// permitted through the firewall is defined by `winfw_settings` and `allowed_endpoint`. See
 /// the BlockAll class for more information.

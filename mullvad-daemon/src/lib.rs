@@ -214,12 +214,10 @@ pub mod service {
 
     // Per-environment service names so a beta daemon can be installed as a
     // Windows service next to the prod one without colliding on the SCM
-    // registration.
-    pub const SERVICE_NAME: &str = match warren_product_env::CURRENT {
-        ProductEnv::Prod => "WarrenVPN",
-        ProductEnv::Staging => "WarrenVPNStaging",
-        ProductEnv::Beta => "WarrenVPNBeta",
-    };
+    // registration. The name itself lives in warren-product-env: the
+    // orphan-generation firewall sweep needs every environment's name, not
+    // only the compiled one.
+    pub const SERVICE_NAME: &str = warren_product_env::CURRENT.windows_service_name();
     pub const SERVICE_DISPLAY_NAME: &str = match warren_product_env::CURRENT {
         ProductEnv::Prod => "Warren VPN Service",
         ProductEnv::Staging => "Warren VPN Staging Service",

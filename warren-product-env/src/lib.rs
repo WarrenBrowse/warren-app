@@ -131,6 +131,40 @@ impl ProductEnv {
             ProductEnv::Beta => 0x5BE7_A001,
         }
     }
+
+    /// Windows SCM service name of this environment's daemon, so two
+    /// installed environments never collide on the service registration, and
+    /// so any environment can ask whether another one is installed on the
+    /// machine.
+    #[must_use]
+    pub const fn windows_service_name(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "WarrenVPN",
+            ProductEnv::Staging => "WarrenVPNStaging",
+            ProductEnv::Beta => "WarrenVPNBeta",
+        }
+    }
+}
+
+/// WFP GUID salts of every environment other than `current` whose product is
+/// not installed on this machine, per `is_installed`.
+///
+/// Those are the generations whose firewall objects are orphans: a kill
+/// switch outlives the daemon that armed it, its object keys are
+/// per-environment, and no installed build answers for them, so nothing else
+/// will ever remove them. A daemon salted for another environment shipped
+/// once (beta-v1.1.9 carried production keys) and its persistent block-all
+/// walled the machine invisibly; sweeping orphan generations at startup is
+/// what makes that class self-healing. An environment that IS installed keeps
+/// its objects: they are that daemon's live kill switch, not garbage.
+pub fn orphan_generation_salts(
+    current: ProductEnv,
+    is_installed: impl Fn(ProductEnv) -> bool,
+) -> Vec<u32> {
+    ALL.iter()
+        .filter(|env| **env != current && !is_installed(**env))
+        .map(|env| env.guid_salt())
+        .collect()
 }
 
 /// Every environment this product has ever shipped, newest naming first.
@@ -201,6 +235,53 @@ pub const DISPLAY_NAME: &str = CURRENT.display_name();
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn windows_service_names_are_unique_per_environment() {
+        // The SCM registration is machine-wide, and the orphan-generation
+        // sweep uses these names to decide whether another environment is
+        // installed, so a shared or empty name breaks both.
+        let names = [
+            ProductEnv::Prod.windows_service_name(),
+            ProductEnv::Staging.windows_service_name(),
+            ProductEnv::Beta.windows_service_name(),
+        ];
+        assert_eq!(ProductEnv::Prod.windows_service_name(), "WarrenVPN");
+        for (i, a) in names.iter().enumerate() {
+            assert!(!a.is_empty());
+            for b in &names[i + 1..] {
+                assert_ne!(a, b, "two environments must never share a service name");
+            }
+        }
+    }
+
+    #[test]
+    fn orphan_salts_cover_exactly_the_uninstalled_other_environments() {
+        // Beta build, prod installed alongside, staging absent: only staging
+        // is an orphan generation. The current environment is never swept
+        // (its objects are this daemon's own), and neither is an installed
+        // one (its objects are that daemon's live kill switch).
+        let salts = orphan_generation_salts(ProductEnv::Beta, |env| env == ProductEnv::Prod);
+        assert_eq!(salts, vec![ProductEnv::Staging.guid_salt()]);
+    }
+
+    #[test]
+    fn orphan_salts_sweep_all_other_environments_when_nothing_else_is_installed() {
+        let salts = orphan_generation_salts(ProductEnv::Beta, |_| false);
+        assert_eq!(
+            salts,
+            vec![
+                ProductEnv::Prod.guid_salt(),
+                ProductEnv::Staging.guid_salt(),
+            ]
+        );
+    }
+
+    #[test]
+    fn orphan_salts_are_empty_when_every_other_environment_is_installed() {
+        let salts = orphan_generation_salts(ProductEnv::Prod, |_| true);
+        assert!(salts.is_empty());
+    }
 
     #[test]
     fn firewall_ids_are_unique_per_environment() {

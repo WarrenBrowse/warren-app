@@ -698,3 +698,57 @@ WinFw_ResetAllGenerations(
 		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}
 }
+
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_SweepForeignGenerations(
+	const uint32_t *salts,
+	uint32_t saltCount,
+	uint32_t *removedObjects
+)
+{
+	if (nullptr != removedObjects)
+	{
+		*removedObjects = 0;
+	}
+
+	if (nullptr == salts || 0 == saltCount)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+
+	try
+	{
+		//
+		// Unlike ResetAllGenerations this deliberately keeps `g_fwContext`
+		// alive: the salts name environments whose product is absent, so none
+		// of their objects can be referenced by our own context, and our
+		// policy staying in force is the point (the sweep runs after our own
+		// baseline is applied, so there is no unprotected window).
+		//
+		const std::vector<uint32_t> saltList(salts, salts + saltCount);
+
+		return ObjectPurger::Execute(
+			ObjectPurger::GetRemoveAllGenerationsFunctor(saltList, removedObjects))
+			? WINFW_POLICY_STATUS_SUCCESS
+			: WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (common::error::WindowsException &err)
+	{
+		return HandlePolicyException(err);
+	}
+	catch (std::exception &err)
+	{
+		if (nullptr != g_logSink)
+		{
+			g_logSink(MULLVAD_LOG_LEVEL_ERROR, err.what(), g_logSinkContext);
+		}
+
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (...)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+}

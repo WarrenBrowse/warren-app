@@ -23,7 +23,15 @@ public:
 	// an environment the machine no longer runs are invisible to the normal
 	// purge, so without this they can never be removed by the product.
 	//
-	static RemovalFunctor GetRemoveAllGenerationsFunctor(const std::vector<uint32_t> &salts);
+	// `removedObjects`, when non-null, receives the number of filters and
+	// sublayers that matched and were removed. The caller uses it to say out
+	// loud that the machine WAS carrying orphaned firewall state: a non-zero
+	// sweep at startup is the trace of a host that was (or was about to be)
+	// blocked by objects nothing else could remove.
+	//
+	static RemovalFunctor GetRemoveAllGenerationsFunctor(
+		const std::vector<uint32_t> &salts,
+		uint32_t *removedObjects = nullptr);
 
 	static bool Execute(RemovalFunctor f);
 };

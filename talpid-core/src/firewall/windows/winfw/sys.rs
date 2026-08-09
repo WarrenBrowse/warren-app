@@ -171,6 +171,20 @@ unsafe extern "system" {
     /// only reads them for the duration of the call.
     #[link_name = "WinFw_ResetAllGenerations"]
     pub fn WinFw_ResetAllGenerations(salts: *const u32, salt_count: u32) -> WinFwPolicyStatus;
+
+    /// Startup sweep of WFP objects keyed for environments whose product is
+    /// not installed, leaving the live context and this build's own objects
+    /// untouched.
+    ///
+    /// `salts` must point to `salt_count` readable `u32` values, and
+    /// `removed_objects`, when non-null, to a writable `u32`; the callee only
+    /// touches them for the duration of the call.
+    #[link_name = "WinFw_SweepForeignGenerations"]
+    pub fn WinFw_SweepForeignGenerations(
+        salts: *const u32,
+        salt_count: u32,
+        removed_objects: *mut u32,
+    ) -> WinFwPolicyStatus;
 }
 
 pub type LogSink = extern "system" fn(level: log::Level, msg: *const c_char, context: *mut c_void);

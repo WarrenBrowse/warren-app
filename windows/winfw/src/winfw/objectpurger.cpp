@@ -70,7 +70,9 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllFunctor()
 }
 
 //static
-ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(const std::vector<uint32_t> &salts)
+ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(
+	const std::vector<uint32_t> &salts,
+	uint32_t *removedObjects)
 {
 	//
 	// Both provider keys, rekeyed to every salt we are asked to sweep. The
@@ -85,7 +87,7 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(const 
 		providers.insert(WarrenGuidForSalt(MullvadGuids::ProviderPersistent(), salt));
 	}
 
-	return [providers = std::move(providers)](wfp::FilterEngine &engine)
+	return [providers = std::move(providers), removedObjects](wfp::FilterEngine &engine)
 	{
 		auto ours = [&providers](const auto &obj) -> bool
 		{
@@ -129,6 +131,12 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(const 
 		for (const auto &provider : providers)
 		{
 			wfp::ObjectDeleter::DeleteProvider(engine, provider);
+		}
+
+		if (nullptr != removedObjects)
+		{
+			*removedObjects = static_cast<uint32_t>(
+				filtersToRemove.size() + sublayersToRemove.size());
 		}
 	};
 }
