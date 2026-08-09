@@ -339,14 +339,13 @@ fn widestring_ip(ip: IpAddr) -> WideCString {
 ///
 /// An environment whose service is registered keeps its objects: they are
 /// that daemon's live kill switch. When the SCM cannot answer, the
-/// environment is treated as installed, because wrongly sweeping disarms
-/// someone's kill switch while wrongly skipping only defers the sweep to the
-/// next daemon start.
+/// environment is treated as installed; that fail-safe fold lives inside
+/// `orphan_generation_salts`, pinned by its own tests.
 fn sweep_orphaned_foreign_generations() {
-    let orphan_salts =
-        warren_product_env::orphan_generation_salts(warren_product_env::CURRENT, |env| {
-            env_service_installed(env).unwrap_or(true)
-        });
+    let orphan_salts = warren_product_env::orphan_generation_salts(
+        warren_product_env::CURRENT,
+        env_service_installed,
+    );
     if orphan_salts.is_empty() {
         return;
     }
@@ -370,8 +369,7 @@ fn sweep_orphaned_foreign_generations() {
 /// manager. `None` when the SCM could not answer.
 fn env_service_installed(env: warren_product_env::ProductEnv) -> Option<bool> {
     use windows_service::service_manager::{ServiceManager, ServiceManagerAccess};
-
-    const ERROR_SERVICE_DOES_NOT_EXIST: i32 = 1060;
+    use windows_sys::Win32::Foundation::ERROR_SERVICE_DOES_NOT_EXIST;
 
     let manager =
         ServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT).ok()?;
@@ -381,7 +379,7 @@ fn env_service_installed(env: warren_product_env::ProductEnv) -> Option<bool> {
     ) {
         Ok(_service) => Some(true),
         Err(windows_service::Error::Winapi(io))
-            if io.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) =>
+            if io.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST as i32) =>
         {
             Some(false)
         }

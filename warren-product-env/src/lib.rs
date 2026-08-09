@@ -157,12 +157,18 @@ impl ProductEnv {
 /// walled the machine invisibly; sweeping orphan generations at startup is
 /// what makes that class self-healing. An environment that IS installed keeps
 /// its objects: they are that daemon's live kill switch, not garbage.
+///
+/// `is_installed` answers `None` when it could not tell (an SCM query that
+/// errored, for example). An unanswerable environment counts as INSTALLED and
+/// is never swept: wrongly sweeping disarms a kill switch someone relies on,
+/// wrongly skipping only defers the sweep to the next daemon start. The fold
+/// lives here, next to its tests, so no caller can get its direction wrong.
 pub fn orphan_generation_salts(
     current: ProductEnv,
-    is_installed: impl Fn(ProductEnv) -> bool,
+    is_installed: impl Fn(ProductEnv) -> Option<bool>,
 ) -> Vec<u32> {
     ALL.iter()
-        .filter(|env| **env != current && !is_installed(**env))
+        .filter(|env| **env != current && !is_installed(**env).unwrap_or(true))
         .map(|env| env.guid_salt())
         .collect()
 }
@@ -261,13 +267,13 @@ mod tests {
         // is an orphan generation. The current environment is never swept
         // (its objects are this daemon's own), and neither is an installed
         // one (its objects are that daemon's live kill switch).
-        let salts = orphan_generation_salts(ProductEnv::Beta, |env| env == ProductEnv::Prod);
+        let salts = orphan_generation_salts(ProductEnv::Beta, |env| Some(env == ProductEnv::Prod));
         assert_eq!(salts, vec![ProductEnv::Staging.guid_salt()]);
     }
 
     #[test]
     fn orphan_salts_sweep_all_other_environments_when_nothing_else_is_installed() {
-        let salts = orphan_generation_salts(ProductEnv::Beta, |_| false);
+        let salts = orphan_generation_salts(ProductEnv::Beta, |_| Some(false));
         assert_eq!(
             salts,
             vec![
@@ -279,8 +285,26 @@ mod tests {
 
     #[test]
     fn orphan_salts_are_empty_when_every_other_environment_is_installed() {
-        let salts = orphan_generation_salts(ProductEnv::Prod, |_| true);
+        let salts = orphan_generation_salts(ProductEnv::Prod, |_| Some(true));
         assert!(salts.is_empty());
+    }
+
+    #[test]
+    fn an_environment_the_probe_cannot_answer_for_is_never_swept() {
+        // The fail-safe direction this whole mechanism leans on: a probe that
+        // errors (`None`) must count as installed. Sweeping on unknown would
+        // disarm a live kill switch on any machine whose SCM query fails;
+        // skipping only defers the sweep to the next daemon start.
+        let salts = orphan_generation_salts(ProductEnv::Beta, |_| None);
+        assert!(salts.is_empty());
+
+        // Mixed answers: prod unanswerable (kept), staging known absent
+        // (swept).
+        let salts = orphan_generation_salts(ProductEnv::Beta, |env| match env {
+            ProductEnv::Prod => None,
+            _ => Some(false),
+        });
+        assert_eq!(salts, vec![ProductEnv::Staging.guid_salt()]);
     }
 
     #[test]

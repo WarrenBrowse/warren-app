@@ -75,9 +75,11 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(
 	uint32_t *removedObjects)
 {
 	//
-	// Both provider keys, rekeyed to every salt we are asked to sweep. The
-	// current build's own keys are always included: WarrenGuidForSalt maps our
-	// compiled salt back onto itself when the requested salt equals it.
+	// Both provider keys, rekeyed to every salt we are asked to sweep, and
+	// ONLY those: recovery (ResetAllGenerations) passes every environment's
+	// salt including its own, while the startup sweep
+	// (SweepForeignGenerations) deliberately excludes the running build's
+	// salt so its own live objects are never touched.
 	//
 	std::unordered_set<GUID> providers;
 
