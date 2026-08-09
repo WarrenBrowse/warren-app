@@ -24,6 +24,17 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.10] - 2026-08-09
+### Fixed
+- Remove at startup any Warren firewall rules left on the machine by a product environment that is
+  no longer installed. The Windows 1.1.9 build was produced with the wrong internal firewall
+  identifiers, so the blocking rules its predecessor left in place during the update were invisible
+  to it and the computer stayed cut off from the internet, even with the VPN off, until a manual
+  repair. Machines updating from 1.1.9 heal themselves the first time the new version starts.
+- Verify the firewall component of every Windows build byte for byte before release, so a build
+  carrying another environment's firewall identifiers can never be published again.
+
+
 ## [1.1.9] - 2026-08-08
 ### Added
 - Offer a way into the community forum from the app header before you have a forum account. The

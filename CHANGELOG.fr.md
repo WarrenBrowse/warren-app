@@ -15,6 +15,18 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.10] - 2026-08-09
+### Corrigé
+- Retirer au démarrage les règles de pare-feu Warren laissées sur la machine par un environnement
+  produit qui n'est plus installé. La version Windows 1.1.9 avait été fabriquée avec de mauvais
+  identifiants internes de pare-feu : les règles de blocage posées par la version précédente
+  pendant la mise à jour lui étaient invisibles et l'ordinateur restait coupé d'internet, même VPN
+  éteint, jusqu'à une réparation manuelle. Les machines qui se mettent à jour depuis la 1.1.9 se
+  réparent seules au premier démarrage de la nouvelle version.
+- Vérifier octet par octet le composant pare-feu de chaque version Windows avant publication, pour
+  qu'une version portant les identifiants d'un autre environnement ne puisse plus jamais paraître.
+
+
 ## [1.1.9] - 2026-08-08
 ### Ajouté
 - Offrir un accès au forum communautaire depuis l'en-tête de l'application avant même d'avoir un

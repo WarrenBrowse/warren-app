@@ -14,6 +14,18 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.10] - 2026-08-09
+### Reparat
+- Elimină la pornire regulile de firewall Warren lăsate pe mașină de un mediu de produs care nu mai
+  este instalat. Versiunea 1.1.9 pentru Windows fusese construită cu identificatori interni de
+  firewall greșiți: regulile de blocare lăsate de versiunea precedentă în timpul actualizării îi
+  erau invizibile, iar calculatorul rămânea fără internet, chiar și cu VPN oprit, până la o
+  reparație manuală. Mașinile care se actualizează de la 1.1.9 se repară singure la prima pornire a
+  noii versiuni.
+- Verifică octet cu octet componenta de firewall a fiecărei versiuni Windows înainte de publicare,
+  astfel încât o versiune cu identificatorii altui mediu să nu mai poată fi publicată niciodată.
+
+
 ## [1.1.9] - 2026-08-08
 ### Adăugat
 - Un acces către forumul comunității din antetul aplicației, chiar înainte de a avea un cont pe
