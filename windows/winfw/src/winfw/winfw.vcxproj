@@ -201,6 +201,18 @@
     <OutDir>$(SolutionDir)\bin\$(Platform)-$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)\bin\temp\$(Platform)-$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <!--
+        C4651 means the precompiled header was built with a different set of
+        command-line defines than the current compile. WARREN_FW_GUID_SALT is
+        such a define, and a PCH carrying another environment's salt silently
+        bakes that environment's WFP object keys into the dll (this shipped as
+        beta-v1.1.9 with production keys). A salt mismatch must stop the build.
+      -->
+      <TreatSpecificWarningsAsErrors>4651;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
+    </ClCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>

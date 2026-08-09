@@ -631,6 +631,9 @@ jobs:
         with:
           rust-cache-targets: "true"
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          # Keyed into the Windows modules cache: the channel decides the WFP
+          # GUID salt, and a slot shared across channels ships the wrong keys.
+          product-env: ${{ needs.tag-guard.outputs.channel }}
 
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays

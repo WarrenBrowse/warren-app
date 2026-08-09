@@ -173,6 +173,11 @@ function clean_all {
     clean_solution "./windows/libshared"
     clean_solution "./windows/windows-libraries"
     clean_solution "./windows/libwfp"
+    # winfw is the solution the environment-change clean exists FOR: its
+    # intermediates carry the salted WFP object keys. Omitting it here shipped
+    # beta-v1.1.9 with production keys (the env-change guard in build.sh ran
+    # this clean and winfw survived it).
+    clean_solution "./windows/winfw"
 }
 
 function build {
@@ -182,10 +187,18 @@ function build {
         # were salted for, so stamp it: a daemon paired with a winfw.dll from
         # another environment arms its kill switch under object keys that
         # environment's teardown never sweeps.
+        #
+        # The stamp is advisory; the byte assertion below is the guard. It
+        # reads the salted provider GUID back off the produced dll, so stale
+        # intermediates surviving any reuse vector (CI cache restore, MSBuild
+        # up-to-date check, a PCH carrying another salt) fail the build here
+        # instead of shipping another environment's WFP keys.
         for mode in $CPP_BUILD_MODES; do
             for target in $CPP_BUILD_TARGETS; do
-                printf '%s\n' "${WARREN_PRODUCT_ENV:-prod}" \
-                    > "$(get_solution_output_path "./windows/winfw" "$target" "$mode")/.warren-product-env"
+                local outdir
+                outdir="$(get_solution_output_path "./windows/winfw" "$target" "$mode")"
+                printf '%s\n' "${WARREN_PRODUCT_ENV:-prod}" > "$outdir/.warren-product-env"
+                ./ci/verify-winfw-salt.sh "$outdir/winfw.dll" "${WARREN_PRODUCT_ENV:-prod}"
             done
         done
     fi

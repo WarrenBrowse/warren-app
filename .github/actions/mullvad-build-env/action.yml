@@ -20,6 +20,15 @@ inputs:
       will be cached as well.
     default: "false"
     required: false
+  product-env:
+    description: >-
+      Product environment (prod|beta|staging) the job builds for. Part of the
+      Windows modules cache key: the WFP object keys in winfw's intermediates
+      are salted per environment, so environments must never share a cache
+      slot. A prod-salted slot restored into the beta-v1.1.9 release shipped a
+      winfw.dll that could not remove the previous version's kill switch.
+    default: "prod"
+    required: false
   warren-core-token:
     description: >-
       Deprecated alias for engine-token, kept for back-compat with any call-site
@@ -322,7 +331,7 @@ runs:
       uses: actions/cache@v4
       with:
         path: ./windows/*/bin/
-        key: windows-modules-${{ steps.windows-modules-hash.outputs.hash }}
+        key: windows-modules-${{ inputs.product-env }}-${{ steps.windows-modules-hash.outputs.hash }}
 
     - name: Install msbuild
       if: runner.os == 'Windows'
