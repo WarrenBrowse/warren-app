@@ -15,6 +15,14 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [Non publié]
+### Ajouté
+- Ajouter la commande `warren-beta` sur Windows aussi. macOS et Linux installent déjà la ligne de
+  commande sous le nom propre à l'environnement, et Windows ne connaissait que `warren` : aucun nom
+  de commande unique ne marchait sur tous les systèmes. `warren` continue de fonctionner sur
+  Windows.
+
+
 ## [1.1.10] - 2026-08-09
 ### Corrigé
 - Retirer au démarrage les règles de pare-feu Warren laissées sur la machine par un environnement

@@ -196,6 +196,22 @@ function envInstallerScript() {
   return out;
 }
 
+// Windows is the one platform with no per-env CLI name: the exe ships as
+// warren.exe in every environment, while macOS and Linux install
+// warren-beta / warren-staging. Support instructions therefore could not name
+// one command that exists everywhere, and a user given the unix name typed it
+// on Windows where nothing answered. A non-prod Windows install ships this
+// shim next to the exe so the per-env name works there too; the plain
+// warren.exe stays, and prod stays untouched.
+function envWindowsCliShim() {
+  const out = buildAssets(
+    path.join(`env-assets-${productEnvName}`, 'windows', `warren${envSuffix}.cmd`),
+  );
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, '@echo off\r\n"%~dp0warren.exe" %*\r\n');
+  return out;
+}
+
 function envProblemReportLink() {
   if (productEnvName === 'prod') {
     return distAssets('linux/problem-report-link');
@@ -361,6 +377,7 @@ function newConfig() {
       icon: distAssets(`icon${productEnv.iconSuffix}.ico`),
       extraResources: [
         { from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren.exe')), to: '.' },
+        ...(productEnvName === 'prod' ? [] : [{ from: envWindowsCliShim(), to: '.' }]),
         {
           from: distAssets(path.join('${env.DIST_SUBDIR}', 'warren-problem-report.exe')),
           to: '.',

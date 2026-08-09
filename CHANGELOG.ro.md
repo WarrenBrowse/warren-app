@@ -14,6 +14,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [Nepublicat]
+### Adăugat
+- Adaugă comanda `warren-beta` și pe Windows. macOS și Linux instalează deja linia de comandă sub
+  numele propriu mediului, iar Windows cunoștea doar `warren`, așa că niciun nume de comandă nu
+  funcționa pe toate sistemele. `warren` continuă să funcționeze pe Windows.
+
+
 ## [1.1.10] - 2026-08-09
 ### Reparat
 - Elimină la pornire regulile de firewall Warren lăsate pe mașină de un mediu de produs care nu mai

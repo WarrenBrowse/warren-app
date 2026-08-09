@@ -22,6 +22,10 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Added
+- Add the `warren-beta` command on Windows too. macOS and Linux already install the command line
+  under the environment's own name, and Windows only knew plain `warren`, so no single command name
+  worked on every system. `warren` keeps working on Windows.
 
 
 ## [1.1.10] - 2026-08-09
