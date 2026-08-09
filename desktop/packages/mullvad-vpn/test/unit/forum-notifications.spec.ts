@@ -51,6 +51,30 @@ describe('reading the forum notification list', () => {
     }
   });
 
+  it('opens a group inbox summary, which points at no post', () => {
+    // A group message summary carries no topic, so the group's message list is
+    // the only thing it has to open. Without this shape the row rendered as a
+    // dead entry the reader could not click.
+    expect(
+      parseForumNotifications({
+        notifications: [{ ...row, path: '/u/gunak-sibuf-havon/messages/group/staff' }],
+      })[0].path,
+    ).toBe('/u/gunak-sibuf-havon/messages/group/staff');
+  });
+
+  it('refuses anything that only resembles a group inbox', () => {
+    for (const path of [
+      '/u/someone/messages/group/staff/../../admin',
+      '/u/someone/messages/group/staff/extra',
+      '/u/someone/messages/group/',
+      '/u/someone/messages',
+      '//evil.example/messages/group/staff',
+    ]) {
+      const [parsed] = parseForumNotifications({ notifications: [{ ...row, path }] });
+      expect(parsed.path, `must refuse ${path}`).toBeUndefined();
+    }
+  });
+
   it('keeps the two shapes the forum does produce', () => {
     expect(parseForumNotifications({ notifications: [{ ...row, path: '/t/86' }] })[0].path).toBe(
       '/t/86',

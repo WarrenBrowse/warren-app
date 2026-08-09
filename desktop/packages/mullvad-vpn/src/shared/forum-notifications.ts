@@ -51,15 +51,23 @@ export interface ForumNotification {
   title?: string;
   actor?: string;
   excerpt?: string;
-  // Forum-relative path of the post, e.g. `/t/86/4`. Absent when the
-  // notification points at no post (a badge award).
+  // Forum-relative path the row opens, e.g. `/t/86/4` for a post or
+  // `/u/<handle>/messages/group/staff` for a group inbox summary. Absent when
+  // the notification points at nothing openable.
   path?: string;
 }
 
 // A path is opened in the user's browser, so it is pinned to the exact
-// shape the forum produces rather than trusted: anything else could send
-// the user somewhere the app never meant to.
-const TOPIC_PATH_PATTERN = /^\/t\/\d+(\/\d+)?$/;
+// shapes the forum produces rather than trusted: anything else could send
+// the user somewhere the app never meant to. Both are anchored at each end and
+// allow no slash inside a segment, so neither can climb out of the forum.
+const FORUM_PATH_PATTERNS = [
+  // A post, or the topic when it is the first one.
+  /^\/t\/\d+(\/\d+)?$/,
+  // A group's message list: what a group inbox summary points at, being the
+  // one notification kind that opens something while carrying no topic.
+  /^\/u\/[\w.-]+\/messages\/group\/[\w.-]+$/,
+];
 
 /** Longest excerpt kept. The provider already caps it; this is the guard. */
 const MAX_EXCERPT = 400;
@@ -109,7 +117,8 @@ function parseOne(raw: unknown): ForumNotification | undefined {
     title: text(row['title'], MAX_LABEL),
     actor: text(row['actor'], MAX_LABEL),
     excerpt: text(row['excerpt'], MAX_EXCERPT),
-    path: typeof path === 'string' && TOPIC_PATH_PATTERN.test(path) ? path : undefined,
+    path:
+      typeof path === 'string' && FORUM_PATH_PATTERNS.some((p) => p.test(path)) ? path : undefined,
   };
 }
 
