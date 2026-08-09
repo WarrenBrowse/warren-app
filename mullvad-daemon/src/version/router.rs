@@ -854,6 +854,7 @@ mod no_updater_tests {
             version_event_sender,
             new_version_rx,
             version_request_channels: vec![],
+            version_check_deadline: None,
             #[cfg(in_app_upgrade)]
             app_upgrade_broadcast,
             #[cfg(in_app_upgrade)]
