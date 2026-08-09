@@ -33,6 +33,9 @@ Line wrap the file at 100 chars.                                              Th
   answered, and the download it gates, every update request and the background poll all waited on
   it until the app was restarted. The check now gives up after at most a minute and the update
   continues from the last known release information.
+- Acknowledge a pause of the update download in the update screen even when the download itself has
+  not started yet. Pausing at 0% cancelled the download without telling the screen, which kept
+  showing "Starting download..." until the app was restarted.
 
 
 ## [1.1.10] - 2026-08-09

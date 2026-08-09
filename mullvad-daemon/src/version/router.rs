@@ -673,8 +673,14 @@ where
         use mullvad_types::version::AppUpgradeEvent;
 
         // A download still waiting for its fresh manifest is cancelled by
-        // simply not starting it.
-        self.pending_download_after_refresh = false;
+        // simply not starting it, but the frontend must still hear the
+        // abort: no downloader exists yet to broadcast it, and a frontend
+        // stays on its optimistic "starting download" state forever if the
+        // cancellation happens in silence.
+        if self.pending_download_after_refresh {
+            self.pending_download_after_refresh = false;
+            let _ = self.app_upgrade_broadcast.send(AppUpgradeEvent::Aborted);
+        }
 
         match mem::replace(&mut self.state, State::NoVersion) {
             // If we're upgrading, emit an event if a version was received during the upgrade
@@ -1675,6 +1681,26 @@ mod test {
             matches!(version_router.state, State::HasVersion { .. }),
             "a cancelled download must not start, state was {:?}",
             version_router.state,
+        );
+    }
+
+    /// Cancelling a download that still waits for its fresh manifest must
+    /// tell the frontend. Nothing is downloading yet, so no downloader
+    /// exists to broadcast the abort, and a frontend that showed its
+    /// optimistic "starting download" state stays on it forever if the
+    /// router cancels in silence (seen live: topic 115, a user's pause
+    /// click at 0% froze the update screen until an app restart).
+    #[tokio::test(start_paused = true)]
+    async fn cancel_of_a_download_awaiting_its_manifest_notifies_the_frontend() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        let mut upgrade_events = version_router.app_upgrade_broadcast.subscribe();
+        version_router.on_new_version(get_new_stable_version_cache());
+        version_router.update_application();
+        version_router.cancel_upgrade();
+        assert_eq!(
+            upgrade_events.try_recv(),
+            Ok(AppUpgradeEvent::Aborted),
+            "the frontend must learn that the pending download was cancelled"
         );
     }
 

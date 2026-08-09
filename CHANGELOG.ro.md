@@ -24,6 +24,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   condiționează, orice cerere de actualizare și controlul periodic așteptau până la repornirea
   aplicației. Acum renunță după cel mult un minut, iar actualizarea continuă cu ultimele informații
   de versiune cunoscute.
+- Reflectă punerea în pauză a descărcării actualizării în ecranul de actualizare chiar și atunci
+  când descărcarea nu a început încă. O pauză la 0% anula descărcarea fără să anunțe ecranul, care
+  continua să afișeze „Se începe descărcarea...” până la repornirea aplicației.
 
 
 ## [1.1.10] - 2026-08-09

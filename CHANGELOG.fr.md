@@ -26,6 +26,10 @@ par l'application, gardez-le tel quel.
   conditionne, toute demande de mise à jour et le contrôle périodique attendaient jusqu'au
   redémarrage de l'application. Elle abandonne désormais au bout d'une minute au plus et la mise à
   jour continue avec les dernières informations de version connues.
+- Refléter la mise en pause du téléchargement de mise à jour dans l'écran de mise à jour même quand
+  le téléchargement n'a pas encore commencé. Une pause à 0 % annulait le téléchargement sans en
+  informer l'écran, qui continuait d'afficher « Démarrage du téléchargement… » jusqu'au redémarrage
+  de l'application.
 
 
 ## [1.1.10] - 2026-08-09
