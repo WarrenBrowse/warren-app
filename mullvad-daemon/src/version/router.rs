@@ -28,6 +28,11 @@ use std::mem;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
+/// How long the router waits for a triggered version check before treating it
+/// as failed. The metadata client bounds each fetch to well under this, so the
+/// deadline only fires when the poller itself is broken.
+const VERSION_CHECK_DEADLINE: std::time::Duration = std::time::Duration::from_secs(90);
+
 #[derive(Clone)]
 pub struct VersionRouterHandle {
     tx: mpsc::UnboundedSender<Message>,
@@ -114,6 +119,11 @@ struct VersionRouter<S = DaemonEventSender<AppVersionInfo>, D = DefaultDownloade
     new_version_rx: mpsc::UnboundedReceiver<VersionCheckResult>,
     /// Channels that receive responses to `get_latest_version`
     version_request_channels: Vec<oneshot::Sender<Result<AppVersionInfo>>>,
+    /// Backstop for a triggered check whose answer never comes back at all
+    /// (a wedged poller, as opposed to a failed fetch, which answers). While
+    /// armed, requesters or a deferred download are waiting; when it fires
+    /// they are served from the cache exactly like on a failed check.
+    version_check_deadline: Option<tokio::time::Instant>,
     /// An update request arrived and waits for the version check it
     /// triggered, so the download starts from a fresh manifest, never from a
     /// cache that a release published since would supersede.
@@ -255,6 +265,7 @@ pub(crate) fn spawn_version_router(
             version_event_sender,
             new_version_rx,
             version_request_channels: vec![],
+            version_check_deadline: None,
             #[cfg(in_app_upgrade)]
             pending_download_after_refresh: false,
             #[cfg(in_app_upgrade)]
@@ -287,6 +298,7 @@ where
         tokio::select! {
             // Received version event from `check`
             Some(check_result) = self.new_version_rx.next() => {
+                self.version_check_deadline = None;
                 match check_result {
                     Ok(new_version) => {
                         let AppVersionInfoEvent { app_version_info, is_new } = self.on_new_version(new_version);
@@ -298,6 +310,11 @@ where
                     }
                     Err(()) => self.on_failed_version_check(),
                 }
+            }
+            () = version_check_deadline_elapsed(&self.version_check_deadline) => {
+                log::warn!("The triggered version check never answered; serving the cached version state");
+                self.version_check_deadline = None;
+                self.on_failed_version_check();
             }
             res = wait_for_update(&mut self.state) => {
                 // If the download was successful, we send the new version, which contains the
@@ -442,6 +459,14 @@ where
         new_app_version_info
     }
 
+    /// Arm the check backstop unless an earlier one is already counting down.
+    fn arm_version_check_deadline(&mut self) {
+        if self.version_check_deadline.is_none() {
+            self.version_check_deadline =
+                Some(tokio::time::Instant::now() + VERSION_CHECK_DEADLINE);
+        }
+    }
+
     fn notify_version_requesters(&mut self, new_app_version_info: AppVersionInfo) {
         // Notify all requesters
         for tx in self.version_request_channels.drain(..) {
@@ -546,7 +571,10 @@ where
             .map_err(|_e| Error::VersionRouterClosed)
         {
             // Append to response channels
-            Ok(()) => self.version_request_channels.push(result_tx),
+            Ok(()) => {
+                self.arm_version_check_deadline();
+                self.version_request_channels.push(result_tx);
+            }
             Err(err) => result_tx
                 .send(Err(err))
                 .unwrap_or_else(|e| log::warn!("Failed to send version request result: {e:?}")),
@@ -577,6 +605,7 @@ where
                 }
                 if self.refresh_version_check_tx.unbounded_send(()).is_ok() {
                     self.pending_download_after_refresh = true;
+                    self.arm_version_check_deadline();
                 } else {
                     // The poller is gone, so no fresher manifest will ever
                     // arrive: the cache is all there is.
@@ -673,6 +702,15 @@ where
             self.state,
             State::HasVersion { .. } | State::NoVersion
         ));
+    }
+}
+
+/// Resolve when the armed version-check deadline passes; pend forever while
+/// none is armed, so it can sit in the router's select like [`wait_for_update`].
+async fn version_check_deadline_elapsed(deadline: &Option<tokio::time::Instant>) {
+    match deadline {
+        Some(deadline) => tokio::time::sleep_until(*deadline).await,
+        None => futures::future::pending().await,
     }
 }
 
@@ -997,6 +1035,7 @@ mod test {
                 version_event_sender,
                 new_version_rx,
                 version_request_channels: vec![],
+                version_check_deadline: None,
                 pending_download_after_refresh: false,
                 app_upgrade_broadcast,
                 refresh_version_check_tx,
@@ -1512,6 +1551,75 @@ mod test {
             ),
             other => panic!("State should be Downloading from the cache, was {other:?}"),
         }
+    }
+
+    /// A check that never answers at all (a wedged poller, not a failed
+    /// fetch) must not leave a deferred download waiting forever: past the
+    /// router's own deadline the download proceeds from the cache, exactly
+    /// as a failed check would. Without this backstop the GUI sits on
+    /// "Starting download..." at 0% until the daemon restarts.
+    #[tokio::test(start_paused = true)]
+    async fn deferred_download_starts_from_cache_when_the_check_never_answers() {
+        let (mut version_router, mut channels) = make_version_router::<SuccessfulAppDownloader>();
+        let cache = get_new_stable_version_cache();
+        version_router.on_new_version(cache.clone());
+        version_router.update_application();
+        channels
+            .refresh_version_check_rx
+            .try_recv()
+            .expect("Version check should be triggered");
+        // The poller never answers. The next step must resolve on the
+        // router's deadline instead of blocking forever (the outer bound
+        // only elapses if no deadline exists; time is paused).
+        tokio::time::timeout(
+            std::time::Duration::from_secs(600),
+            version_router.run_step(),
+        )
+        .await
+        .expect("the router must fall back to the cache when the check never answers");
+        match &version_router.state {
+            State::Downloading {
+                upgrading_to_version,
+                ..
+            } => assert_eq!(
+                upgrading_to_version.version,
+                cache.version_info.stable.version
+            ),
+            other => panic!("State should be Downloading from the cache, was {other:?}"),
+        }
+    }
+
+    /// A check that never answers must not leave a `get_latest_version`
+    /// requester hanging either: past the deadline it is answered from the
+    /// cache, like on a failed check.
+    #[tokio::test(start_paused = true)]
+    async fn version_request_is_answered_from_cache_when_the_check_never_answers() {
+        let (mut version_router, mut channels) = make_version_router::<SuccessfulAppDownloader>();
+        let cache = get_new_stable_version_cache();
+        version_router.on_new_version(cache.clone());
+        let (tx, mut rx) = oneshot::channel();
+        version_router.get_latest_version(tx);
+        channels
+            .refresh_version_check_rx
+            .try_recv()
+            .expect("Version check should be triggered");
+        tokio::time::timeout(
+            std::time::Duration::from_secs(600),
+            version_router.run_step(),
+        )
+        .await
+        .expect("the router must answer the requester when the check never answers");
+        let info = rx
+            .try_recv()
+            .expect("the requester must not be left hanging")
+            .expect("sender must not be dropped")
+            .expect("cached info answers as a success");
+        assert_eq!(
+            info.suggested_upgrade
+                .expect("the cache suggests an upgrade")
+                .version,
+            cache.version_info.stable.version
+        );
     }
 
     /// A failed check answers a pending `get_latest_version` from the cache

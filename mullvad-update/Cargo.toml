@@ -50,7 +50,7 @@ insta = { workspace = true }
 mockito = { workspace = true }
 proptest = { workspace = true }
 rand = { workspace = true }
-tokio = { workspace = true, features = ["fs", "macros", "test-util", "time"] }
+tokio = { workspace = true, features = ["fs", "macros", "net", "test-util", "time"] }
 
 [features]
 default = []

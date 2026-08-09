@@ -13,14 +13,19 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
-
-
-## [Non publié]
 ### Ajouté
 - Ajouter la commande `warren-beta` sur Windows aussi. macOS et Linux installent déjà la ligne de
   commande sous le nom propre à l'environnement, et Windows ne connaissait que `warren` : aucun nom
   de commande unique ne marchait sur tous les systèmes. `warren` continue de fonctionner sur
   Windows.
+
+### Corrigé
+- Borner dans le temps la vérification de version qui précède chaque mise à jour, pour que l'écran
+  de mise à jour ne puisse plus rester indéfiniment sur « Démarrage du téléchargement… » à 0 %.
+  Une vérification dont la connexion se figeait ne répondait jamais : le téléchargement qu'elle
+  conditionne, toute demande de mise à jour et le contrôle périodique attendaient jusqu'au
+  redémarrage de l'application. Elle abandonne désormais au bout d'une minute au plus et la mise à
+  jour continue avec les dernières informations de version connues.
 
 
 ## [1.1.10] - 2026-08-09

@@ -12,13 +12,18 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
-
-
-## [Nepublicat]
 ### Adăugat
 - Adaugă comanda `warren-beta` și pe Windows. macOS și Linux instalează deja linia de comandă sub
   numele propriu mediului, iar Windows cunoștea doar `warren`, așa că niciun nume de comandă nu
   funcționa pe toate sistemele. `warren` continuă să funcționeze pe Windows.
+
+### Reparat
+- Limitează în timp verificarea de versiune care precedă fiecare actualizare, astfel încât ecranul
+  de actualizare să nu mai poată rămâne blocat la nesfârșit pe „Se începe descărcarea...” la 0%.
+  O verificare a cărei conexiune îngheța nu răspundea niciodată: descărcarea pe care o
+  condiționează, orice cerere de actualizare și controlul periodic așteptau până la repornirea
+  aplicației. Acum renunță după cel mult un minut, iar actualizarea continuă cu ultimele informații
+  de versiune cunoscute.
 
 
 ## [1.1.10] - 2026-08-09

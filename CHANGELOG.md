@@ -27,6 +27,13 @@ Line wrap the file at 100 chars.                                              Th
   under the environment's own name, and Windows only knew plain `warren`, so no single command name
   worked on every system. `warren` keeps working on Windows.
 
+### Fixed
+- Give the version check that precedes every update a time limit, so the update screen can no
+  longer sit on "Starting download..." at 0% forever. A check whose connection stalled never
+  answered, and the download it gates, every update request and the background poll all waited on
+  it until the app was restarted. The check now gives up after at most a minute and the update
+  continues from the last known release information.
+
 
 ## [1.1.10] - 2026-08-09
 ### Fixed

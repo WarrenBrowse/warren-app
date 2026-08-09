@@ -109,6 +109,16 @@ impl HttpVersionInfoProvider {
     /// Maximum size of the GET response, in bytes
     const SIZE_LIMIT: usize = 1024 * 1024;
 
+    /// Bound on establishing the connection (DNS + TCP + TLS).
+    const CONNECT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(30);
+
+    /// Bound on the whole request. The version router defers in-app
+    /// downloads on this fetch and the poller runs it single-flight, so a
+    /// stalled connection with no deadline wedges the update flow and every
+    /// pending version request until the daemon restarts. The manifest is
+    /// tens of kilobytes; a minute is generous on any usable link.
+    const REQUEST_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(60);
+
     /// Retrieve version metadata for the given platform using reasonable defaults.
     ///
     /// By default, `pinned_certificate` will be set to the LE root certificate, and
@@ -222,7 +232,9 @@ impl HttpVersionInfoProvider {
         resolve: Option<(&'static str, IpAddr)>,
         dns_resolver: Option<Arc<dyn reqwest::dns::Resolve>>,
     ) -> anyhow::Result<Vec<u8>> {
-        let mut req_builder = reqwest::Client::builder();
+        let mut req_builder = reqwest::Client::builder()
+            .connect_timeout(Self::CONNECT_TIMEOUT)
+            .timeout(Self::REQUEST_TIMEOUT);
         req_builder = req_builder.min_tls_version(reqwest::tls::Version::TLS_1_3);
 
         if let Some(pinned_certificate) = pinned_certificate {
@@ -353,6 +365,35 @@ mod test {
 
         mock.assert();
         Ok(())
+    }
+
+    /// A metadata fetch against a host that accepts the connection and then
+    /// never answers must fail on its own. The version router defers in-app
+    /// downloads on this fetch and the background poller runs it
+    /// single-flight, so a fetch with no deadline wedges the whole update
+    /// flow forever (the GUI sits on "Starting download..." at 0%).
+    #[tokio::test(start_paused = true)]
+    async fn a_stalled_metadata_fetch_fails_instead_of_hanging() {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let addr = listener.local_addr().unwrap();
+        // Hold every accepted connection open without ever writing a byte.
+        let server = tokio::spawn(async move {
+            let mut connections = Vec::new();
+            while let Ok((stream, _)) = listener.accept().await {
+                connections.push(stream);
+            }
+        });
+
+        let url = format!("http://{addr}/windows.json");
+        let result = tokio::time::timeout(
+            std::time::Duration::from_secs(600),
+            HttpVersionInfoProvider::get(&url, None, None, None),
+        )
+        .await
+        .expect("the fetch must give up on its own, not hang past its deadline");
+        result.expect_err("a server that never answers cannot yield metadata");
+
+        server.abort();
     }
 
     /// Test HTTP version info provider
