@@ -827,6 +827,8 @@ mod no_updater_tests {
     use std::path::PathBuf;
 
     use super::{Message, State, VersionRouter};
+    #[cfg(not(target_os = "android"))]
+    use super::{VersionCache, VersionInfo};
 
     /// Regression: no version event should be sent to the daemon while the
     /// `new_version_rx` channel is empty (the updater has not produced a
@@ -877,6 +879,92 @@ mod no_updater_tests {
         assert!(
             !matches!(version_event_receiver.try_next(), Ok(Some(_))),
             "expected no version event before any metadata is received"
+        );
+    }
+
+    /// The deadline fallback is not download machinery: on platforms with no
+    /// in-app upgrade the router still defers `get_latest_version` answers on
+    /// the check it triggers, so a check that never answers at all must still
+    /// be answered from the cache once the router's deadline passes. This is
+    /// the variant of the never-answering-check tests that the automatic CI
+    /// executes: the in-app test module needs `in_app_upgrade`, which the
+    /// Linux gate never sets.
+    #[cfg(not(target_os = "android"))]
+    #[tokio::test(start_paused = true)]
+    async fn version_request_is_answered_from_cache_when_the_check_never_answers() {
+        use futures::channel::oneshot;
+        use std::ops::ControlFlow;
+        use std::time::SystemTime;
+
+        let (version_event_sender, _version_event_receiver) = unbounded::<AppVersionInfo>();
+        let (_daemon_tx, daemon_rx) = unbounded::<Message>();
+        // The poller side stays alive and silent: a triggered check that
+        // never answers.
+        let (refresh_version_check_tx, mut refresh_version_check_rx) = unbounded::<()>();
+        let (_new_version_tx, new_version_rx) = unbounded();
+
+        #[cfg(in_app_upgrade)]
+        let (app_upgrade_broadcast, _) = tokio::sync::broadcast::channel(10);
+
+        let mut version: mullvad_version::Version = mullvad_version::VERSION.parse().unwrap();
+        version.minor += 1;
+        let version_cache = VersionCache {
+            cache_version: version.clone(),
+            current_version_supported: true,
+            version_info: VersionInfo {
+                beta: None,
+                stable: mullvad_update::version::Metadata {
+                    version,
+                    urls: vec!["https://example.com".to_string()],
+                    size: 123456,
+                    changelog: String::new(),
+                    changelog_translations: Default::default(),
+                    sha256: [0; 32],
+                },
+            },
+            last_platform_header_check: SystemTime::now(),
+            metadata_version: 0,
+            etag: None,
+        };
+
+        let mut router = VersionRouter {
+            daemon_rx,
+            state: State::HasVersion { version_cache },
+            beta_program: false,
+            version_event_sender,
+            new_version_rx,
+            version_request_channels: vec![],
+            version_check_deadline: None,
+            #[cfg(in_app_upgrade)]
+            app_upgrade_broadcast,
+            #[cfg(in_app_upgrade)]
+            cache_dir: PathBuf::new(),
+            refresh_version_check_tx,
+            _phantom: std::marker::PhantomData::<()>,
+        };
+
+        let (tx, mut rx) = oneshot::channel();
+        router.get_latest_version(tx);
+        refresh_version_check_rx
+            .try_next()
+            .expect("a version check should be triggered");
+
+        // The check never answers. The next step must resolve on the router's
+        // deadline; with time paused, the outer bound elapses only if no
+        // deadline exists at all.
+        let step = tokio::time::timeout(std::time::Duration::from_secs(600), router.run_step())
+            .await
+            .expect("the router must answer the requester when the check never answers");
+        assert_eq!(step, ControlFlow::Continue(()));
+
+        let info = rx
+            .try_recv()
+            .expect("the requester must not be left hanging")
+            .expect("sender must not be dropped")
+            .expect("cached info answers as a success");
+        assert!(
+            info.suggested_upgrade.is_some(),
+            "the cache suggests an upgrade"
         );
     }
 }
@@ -1578,12 +1666,13 @@ mod test {
         // The poller never answers. The next step must resolve on the
         // router's deadline instead of blocking forever (the outer bound
         // only elapses if no deadline exists; time is paused).
-        tokio::time::timeout(
+        let step = tokio::time::timeout(
             std::time::Duration::from_secs(600),
             version_router.run_step(),
         )
         .await
         .expect("the router must fall back to the cache when the check never answers");
+        assert_eq!(step, ControlFlow::Continue(()));
         match &version_router.state {
             State::Downloading {
                 upgrading_to_version,
@@ -1610,12 +1699,13 @@ mod test {
             .refresh_version_check_rx
             .try_recv()
             .expect("Version check should be triggered");
-        tokio::time::timeout(
+        let step = tokio::time::timeout(
             std::time::Duration::from_secs(600),
             version_router.run_step(),
         )
         .await
         .expect("the router must answer the requester when the check never answers");
+        assert_eq!(step, ControlFlow::Continue(()));
         let info = rx
             .try_recv()
             .expect("the requester must not be left hanging")
