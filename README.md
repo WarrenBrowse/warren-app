@@ -2,6 +2,15 @@
 
 Welcome to the Warren VPN client app source code repository.
 
+Warren VPN is a fork of the [Mullvad VPN app](https://github.com/mullvad/mullvadvpn-app)
+(GPL-3.0, Mullvad VPN AB). This repository preserves the complete upstream git history, back to
+2016, with original authorship intact. It is standalone rather than a GitHub-native fork: the
+project started in a private repository, GitHub does not allow a private fork of a public
+repository, and a repository cannot join a fork network after creation. The `upstream` remote
+stays wired: security and correctness fixes in the platform layers (routing, DNS, firewall,
+split tunneling, leak checker) are cherry-picked from upstream, per
+[`docs/UPSTREAM-DETACH.md`](docs/UPSTREAM-DETACH.md).
+
 Warren VPN carries traffic over a **QUIC** tunnel and identifies its users by a non-custodial
 wallet. One Ed25519 key, derived from a BIP39 mnemonic that never leaves the device, authenticates
 the tunnel's TLS handshake to the exit and signs every request to the Warren backend, which serves
