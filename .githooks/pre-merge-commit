@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Chain the machine-local pre-merge-commit hook (e.g. the shared identity guard:
+# `git merge` does not run pre-commit, so merge commits need their own guard).
+# core.hooksPath points here (.githooks), which otherwise shadows the local
+# .git/hooks/pre-merge-commit so it would never run. Generic and per-machine: a
+# no-op when absent, and it keeps no identity hardcoded in this tracked file.
+set -euo pipefail
+
+_local_hook="$(git rev-parse --git-dir)/hooks/pre-merge-commit"
+if [ -x "$_local_hook" ] && [ "$_local_hook" != "$0" ]; then
+  "$_local_hook" "$@" || exit $?
+fi
+
+exit 0
