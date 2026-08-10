@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/warren-logo.svg" alt="Warren" width="130"/>
+</p>
+
 # Warren VPN desktop app
 
 Welcome to the Warren VPN client app source code repository.
