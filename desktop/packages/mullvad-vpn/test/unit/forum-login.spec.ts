@@ -4,6 +4,7 @@ import {
   findForumDeepLinkArg,
   parseForumHandle,
   parseForumLoginUrl,
+  PENDING_LOGIN_MAX_AGE_MS,
   PendingForumRequest,
 } from '../../src/main/forum-login';
 import { IForumLoginRequest } from '../../src/shared/forum-login';
@@ -88,40 +89,42 @@ describe('pending forum-login buffer (cold-start delivery)', () => {
   const t0 = 1_000_000;
 
   it('replays a buffered request to a renderer that subscribes later', () => {
-    const pending = new PendingForumRequest<IForumLoginRequest>();
+    const pending = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
     pending.set(request, t0);
     expect(pending.get(t0 + 5_000)).toEqual(request);
   });
 
   it('keeps the request across repeated reads so a window reload re-shows an unanswered prompt', () => {
-    const pending = new PendingForumRequest<IForumLoginRequest>();
+    const pending = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
     pending.set(request, t0);
     pending.get(t0 + 1_000);
     expect(pending.get(t0 + 2_000)).toEqual(request);
   });
 
   it('drops a request older than the server session lifetime instead of prompting for a doomed sid', () => {
-    const pending = new PendingForumRequest<IForumLoginRequest>();
+    const pending = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
     pending.set(request, t0);
-    expect(pending.get(t0 + 10 * 60 * 1000 + 1)).toBeUndefined();
+    expect(pending.get(t0 + PENDING_LOGIN_MAX_AGE_MS + 1)).toBeUndefined();
   });
 
   it('keeps only the newest link when the user clicks twice', () => {
-    const pending = new PendingForumRequest<IForumLoginRequest>();
+    const pending = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
     pending.set(request, t0);
     pending.set(later, t0 + 1_000);
     expect(pending.get(t0 + 2_000)).toEqual(later);
   });
 
   it('returns nothing once cleared by an approve or cancel', () => {
-    const pending = new PendingForumRequest<IForumLoginRequest>();
+    const pending = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
     pending.set(request, t0);
     pending.clear();
     expect(pending.get(t0 + 1_000)).toBeUndefined();
   });
 
   it('starts empty', () => {
-    expect(new PendingForumRequest<IForumLoginRequest>().get(t0)).toBeUndefined();
+    expect(
+      new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS).get(t0),
+    ).toBeUndefined();
   });
 });
 

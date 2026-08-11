@@ -5142,6 +5142,14 @@ msgid "The log file is too large to attach."
 msgstr "မှတ်တမ်းဖိုင်သည် ပူးတွဲရန် အရွယ်အစား ကြီးလွန်းပါသည်။"
 
 msgctxt "forum-attach"
+msgid "Your Warren account is not ready yet, so the logs cannot be signed. Finish setting up the app, then attach them from the forum page."
+msgstr "သင့် Warren အကောင့် အဆင်သင့် မဖြစ်သေးသဖြင့် မှတ်တမ်းများကို လက်မှတ်ထိုး၍ မရပါ။ အက်ပ်ကို စတင်သတ်မှတ်ခြင်း ပြီးအောင်လုပ်ပြီးမှ ဖိုရမ်စာမျက်နှာမှ ပူးတွဲပါ။"
+
+msgctxt "forum-attach"
+msgid "The Warren support service could not accept the report. Nothing is wrong on your side. Try again later, and say so on the forum if it keeps failing."
+msgstr "Warren အထောက်အပံ့ ဝန်ဆောင်မှုသည် အစီရင်ခံစာကို လက်မခံနိုင်ပါ။ သင့်ဘက်တွင် မှားယွင်းမှု မရှိပါ။ နောက်မှ ထပ်မံကြိုးစားပါ၊ ဆက်လက် မအောင်မြင်ပါက ဖိုရမ်တွင် အကြောင်းကြားပါ။"
+
+msgctxt "forum-attach"
 msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
 msgstr "မှတ်တမ်းများကို အမည်ဝှက်ထားပါသည်: ပိုက်ဆံအိတ်လိပ်စာများနှင့် ကိုယ်ရေးကိုယ်တာ အချက်အလက်များကို ဖျောက်ထားသည်။ ၎င်းတို့ကို Warren ပံ့ပိုးကူညီရေးဝန်ထမ်းများထံသို့ သီးသန့်ပေးပို့ပြီး ဖိုရမ်တွင် အများမြင်အောင် ဘယ်သောအခါမျှ မပေါ်ပါ။ အတည်မပြုမီ ပေးပို့မည့်အရာကို အတိအကျ ကြည့်ရှုနိုင်ပါသည်။"
 

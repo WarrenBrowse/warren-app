@@ -1,4 +1,11 @@
+import { status as grpcStatus } from '@grpc/grpc-js';
 import { describe, expect, it, vi } from 'vitest';
+
+const forumFetch = vi.hoisted(() => vi.fn());
+vi.mock('../../src/main/forum-login', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../../src/main/forum-login')>()),
+  getForumSession: () => ({ fetch: forumFetch }),
+}));
 
 import { DaemonRpc } from '../../src/main/daemon-rpc';
 import {
@@ -7,7 +14,11 @@ import {
   parseForumAttachUrl,
   resolveApprovedReport,
 } from '../../src/main/forum-attach';
-import { findForumDeepLinkArg, PendingForumRequest } from '../../src/main/forum-login';
+import {
+  findForumDeepLinkArg,
+  PENDING_ATTACH_MAX_AGE_MS,
+  PendingForumRequest,
+} from '../../src/main/forum-login';
 import { IForumAttachRequest } from '../../src/shared/forum-attach';
 
 const sid = 'a'.repeat(32);
@@ -93,7 +104,7 @@ describe('pending forum request buffer', () => {
   };
 
   it('keeps an unanswered request until cleared', () => {
-    const pending = new PendingForumRequest<IForumAttachRequest>();
+    const pending = new PendingForumRequest<IForumAttachRequest>(PENDING_ATTACH_MAX_AGE_MS);
     pending.set(request, 1000);
     expect(pending.get(2000)).toEqual(request);
     pending.clear();
@@ -101,9 +112,23 @@ describe('pending forum request buffer', () => {
   });
 
   it('expires a request buffered longer than the server session TTL', () => {
-    const pending = new PendingForumRequest<IForumAttachRequest>();
+    const pending = new PendingForumRequest<IForumAttachRequest>(PENDING_ATTACH_MAX_AGE_MS);
     pending.set(request, 1000);
-    expect(pending.get(1000 + 10 * 60 * 1000 + 1)).toBeUndefined();
+    expect(pending.get(1000 + PENDING_ATTACH_MAX_AGE_MS + 1)).toBeUndefined();
+  });
+
+  it('takes its max age from the caller, since login and attach sessions differ', () => {
+    // One shared constant mirrored neither: connect expires a login session
+    // after 5 minutes and an attach session after 30, so a single value both
+    // showed doomed login prompts and dropped attach requests still live
+    // server-side.
+    const shortLived = new PendingForumRequest<IForumAttachRequest>(5 * 60 * 1000);
+    shortLived.set(request, 0);
+    expect(shortLived.get(5 * 60 * 1000 + 1)).toBeUndefined();
+
+    const longLived = new PendingForumRequest<IForumAttachRequest>(30 * 60 * 1000);
+    longLived.set(request, 0);
+    expect(longLived.get(20 * 60 * 1000)).toEqual(request);
   });
 });
 
@@ -169,6 +194,53 @@ describe('approveForumAttach validation', () => {
     const result = await approveForumAttach({ ...request, topicId: -1 }, rpc, new Uint8Array(8));
     expect(result).toBe('error');
     expect(signForumAttachLogs).not.toHaveBeenCalled();
+  });
+});
+
+describe('approveForumAttach failure mapping', () => {
+  const request: IForumAttachRequest = {
+    sid,
+    host: 'connect.warrenbrowse.com',
+    topicId: 123,
+  };
+  const signature = {
+    pubkeySs58: 'x',
+    signatureHex: 'y',
+    timestamp: 1,
+    nonceHex: 'z',
+    body: '{}',
+  };
+  const daemonThatSigns = () =>
+    ({ signForumAttachLogs: vi.fn().mockResolvedValue(signature) }) as unknown as DaemonRpc;
+
+  it('names the missing identity instead of asking a first-run user to retry', async () => {
+    // The daemon answers FAILED_PRECONDITION for exactly one reason here: no
+    // Warren identity to sign with. "Try again in a moment" sends that user
+    // round a loop that time alone never closes.
+    const rpc = {
+      signForumAttachLogs: vi.fn().mockRejectedValue({ code: grpcStatus.FAILED_PRECONDITION }),
+    } as unknown as DaemonRpc;
+    expect(await approveForumAttach(request, rpc, new Uint8Array(8))).toBe('no-identity');
+    expect(forumFetch).not.toHaveBeenCalled();
+  });
+
+  it('maps a provider 5xx to a server failure, not to the reporter s machine', async () => {
+    forumFetch.mockResolvedValue({ status: 502, ok: false });
+    expect(await approveForumAttach(request, daemonThatSigns(), new Uint8Array(8))).toBe(
+      'server-error',
+    );
+  });
+
+  it('keeps a refused request generic', async () => {
+    forumFetch.mockResolvedValue({ status: 400, ok: false });
+    expect(await approveForumAttach(request, daemonThatSigns(), new Uint8Array(8))).toBe('error');
+  });
+
+  it('reports a delivered report as attached', async () => {
+    forumFetch.mockResolvedValue({ status: 200, ok: true });
+    expect(await approveForumAttach(request, daemonThatSigns(), new Uint8Array(8))).toBe(
+      'attached',
+    );
   });
 });
 

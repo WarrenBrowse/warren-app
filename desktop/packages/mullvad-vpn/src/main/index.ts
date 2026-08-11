@@ -79,6 +79,8 @@ import {
   findForumDeepLinkArg,
   FORUM_DEEP_LINK_SCHEME,
   parseForumLoginUrl,
+  PENDING_ATTACH_MAX_AGE_MS,
+  PENDING_LOGIN_MAX_AGE_MS,
   PendingForumRequest,
 } from './forum-login';
 import { fetchForumNotifications, markForumNotificationsSeen } from './forum-notifications';
@@ -188,13 +190,15 @@ class ApplicationMain
 
   private navigationHistory?: IHistoryObject;
 
-  private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>();
+  private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
   private forumIdentityStore = new SafeStorageForumIdentityStore();
   private forumActivityMonitor = new ForumActivityMonitor(this);
   // Last count the monitor published, replayed in the initial state: the
   // renderer boots after the first digest has already been matched.
   private forumUnread = 0;
-  private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>();
+  private pendingForumAttach = new PendingForumRequest<IForumAttachRequest>(
+    PENDING_ATTACH_MAX_AGE_MS,
+  );
 
   private purchaseFlow: PurchaseFlow;
   private purchaseFlowResumed = false;

@@ -147,10 +147,12 @@ export function parseForumIdentityResponse(body: unknown): ForumIdentity | undef
   return { handle, notifySlot: parseForumNotifySlot(body) ?? null };
 }
 
-// The connect provider expires a login/attach session 10 minutes after
-// creating it; a request buffered longer than that could only produce a
-// doomed signature.
-const PENDING_MAX_AGE_MS = 10 * 60 * 1000;
+// A request buffered past the life of the session it names could only produce
+// a doomed signature, and connect gives its two session kinds different lives:
+// 5 minutes for a login, 30 for an attach (the attach one covers a human
+// reading the consent prompt). One shared value was wrong for both.
+export const PENDING_LOGIN_MAX_AGE_MS = 5 * 60 * 1000;
+export const PENDING_ATTACH_MAX_AGE_MS = 30 * 60 * 1000;
 
 /**
  * Holds the latest unanswered forum request (login or attach-logs) so it
@@ -164,13 +166,15 @@ export class PendingForumRequest<T> {
   private request?: T;
   private receivedAt = 0;
 
+  public constructor(private readonly maxAgeMs: number) {}
+
   public set(request: T, now: number): void {
     this.request = request;
     this.receivedAt = now;
   }
 
   public get(now: number): T | undefined {
-    if (this.request && now - this.receivedAt > PENDING_MAX_AGE_MS) {
+    if (this.request && now - this.receivedAt > this.maxAgeMs) {
       this.clear();
     }
     return this.request;

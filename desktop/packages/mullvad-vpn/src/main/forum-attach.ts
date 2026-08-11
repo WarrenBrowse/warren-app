@@ -1,3 +1,5 @@
+import { status as grpcStatus } from '@grpc/grpc-js';
+
 import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
 import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
@@ -114,7 +116,13 @@ export async function approveForumAttach(
   try {
     signature = await daemonRpc.signForumAttachLogs(request.sid, request.topicId, logGz);
   } catch (error) {
-    log.error(`Forum attach: daemon could not sign (identity bootstrapped?): ${String(error)}`);
+    // The daemon answers FAILED_PRECONDITION for one reason on this call:
+    // there is no Warren identity to sign with yet.
+    if ((error as { code?: number }).code === grpcStatus.FAILED_PRECONDITION) {
+      log.info('Forum attach: no Warren identity yet, nothing to sign the report with');
+      return 'no-identity';
+    }
+    log.error(`Forum attach: daemon could not sign: ${String(error)}`);
     return 'error';
   }
 
@@ -143,6 +151,10 @@ export async function approveForumAttach(
         return 'too-large';
       default:
         break;
+    }
+    if (response.status >= 500) {
+      log.error(`Forum attach: provider failed on its own side, HTTP ${response.status}`);
+      return 'server-error';
     }
     if (!response.ok) {
       log.error(`Forum attach: provider returned HTTP ${response.status}`);

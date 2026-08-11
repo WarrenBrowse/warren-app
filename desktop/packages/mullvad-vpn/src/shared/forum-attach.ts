@@ -30,5 +30,14 @@ export type ForumAttachResult =
   | 'expired'
   // The gzipped report exceeds the size cap (client- or server-side).
   | 'too-large'
-  // Any other failure (no identity, network error, provider error).
+  // No Warren identity yet, so there is no key to sign the report with. A
+  // first-run user meets this before the account exists, and telling them to
+  // "try again in a moment" sends them round a loop that cannot close.
+  | 'no-identity'
+  // The provider accepted the request and failed on its own side (5xx). The
+  // reporter can do nothing about it and retrying now changes nothing, which
+  // the generic wording promised the opposite of: four such failures over
+  // three days read to the reporter as a fault of their machine.
+  | 'server-error'
+  // Any other failure (network error, refused request).
   | 'error';

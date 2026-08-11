@@ -49,6 +49,16 @@ function resultNotice(result: ForumAttachResult): string | undefined {
       );
     case 'too-large':
       return messages.pgettext('forum-attach', 'The log file is too large to attach.');
+    case 'no-identity':
+      return messages.pgettext(
+        'forum-attach',
+        'Your Warren account is not ready yet, so the logs cannot be signed. Finish setting up the app, then attach them from the forum page.',
+      );
+    case 'server-error':
+      return messages.pgettext(
+        'forum-attach',
+        'The Warren support service could not accept the report. Nothing is wrong on your side. Try again later, and say so on the forum if it keeps failing.',
+      );
     case 'error':
       return messages.pgettext(
         'forum-attach',

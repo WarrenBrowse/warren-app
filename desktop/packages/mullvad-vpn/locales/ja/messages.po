@@ -5139,6 +5139,14 @@ msgid "The log file is too large to attach."
 msgstr "ログファイルが大きすぎるため添付できません。"
 
 msgctxt "forum-attach"
+msgid "Your Warren account is not ready yet, so the logs cannot be signed. Finish setting up the app, then attach them from the forum page."
+msgstr "Warren アカウントの準備がまだできていないため、ログに署名できません。アプリの初期設定を完了してから、フォーラムのページから添付してください。"
+
+msgctxt "forum-attach"
+msgid "The Warren support service could not accept the report. Nothing is wrong on your side. Try again later, and say so on the forum if it keeps failing."
+msgstr "Warren サポートサービスがレポートを受け付けられませんでした。あなた側に問題はありません。しばらくしてから再度お試しいただき、続くようでしたらフォーラムでお知らせください。"
+
+msgctxt "forum-attach"
 msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
 msgstr "ログは匿名化されています。ウォレットアドレスや個人情報は伏せられます。ログは Warren サポートスタッフに非公開で送信され、フォーラム上に公開されることはありません。承認する前に、送信される内容を正確に確認できます。"
 
