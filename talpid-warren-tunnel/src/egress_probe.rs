@@ -41,8 +41,8 @@
 use std::time::Duration;
 
 pub(crate) use warrenguard_transport::egress_probe::{
-    EgressProbeConfig, EgressProbeIo, ProbeOutcome, TransportEvidence, jittered, probe_gateway_dns,
-    run_egress_probe,
+    EgressProbeConfig, EgressProbeIo, ExitEvidence, ProbeOutcome, TransportEvidence,
+    exit_evidence_from, jittered, probe_gateway_dns, run_egress_probe, transport_evidence_from,
 };
 
 /// Watch receiver over the supervisor's published session.
@@ -84,11 +84,41 @@ pub(crate) struct RealEgressProbeIo {
     /// The counter's value when the current failure streak began, so the
     /// evidence answers about THIS streak and not about the whole session.
     pub acks_at_streak_start: Option<u64>,
+    /// REAL downlink packet count, the counter only the exit can move. `None`
+    /// reads the live bundle off `client_rx`; a test scripts it.
+    pub real_rx: Option<std::sync::Arc<dyn Fn() -> Option<u64> + Send + Sync>>,
+    /// Its value when the current failure streak began.
+    pub real_rx_at_streak_start: Option<u64>,
 }
 
 impl RealEgressProbeIo {
     /// ACK frames the peer has sent us on the live session, or `None` when
     /// there is no session to read.
+    /// Decoded IP packets the exit forwarded to us, summed across every bonded
+    /// leg. Deliberately NOT a quinn frame counter: an armed exit pads its
+    /// downlink with dummies, so a frame counter advances over a tunnel
+    /// carrying no user traffic at all.
+    fn read_real_rx(&mut self) -> Option<u64> {
+        if let Some(scripted) = self.real_rx.as_ref() {
+            return scripted();
+        }
+        self.client_rx
+            .as_mut()?
+            .borrow_and_update()
+            .as_ref()
+            .map(|bundle| bundle.real_traffic_totals().1)
+    }
+
+    /// The path round trip the next probe will run on, so its schedule follows
+    /// a link whose queueing delay changes under load.
+    fn read_path_rtt(&mut self) -> Option<Duration> {
+        self.client_rx
+            .as_mut()?
+            .borrow_and_update()
+            .as_ref()
+            .map(|bundle| bundle.quinn_stats().path.rtt)
+    }
+
     fn read_acks(&mut self) -> Option<u64> {
         if let Some(scripted) = self.acks.as_ref() {
             return scripted();
@@ -120,7 +150,7 @@ impl EgressProbeIo for RealEgressProbeIo {
     }
 
     async fn probe(&mut self) -> ProbeOutcome {
-        probe_gateway_dns().await
+        probe_gateway_dns(self.read_path_rtt()).await
     }
 
     fn publish(&mut self, egress_dead: bool) {
@@ -139,6 +169,7 @@ impl EgressProbeIo for RealEgressProbeIo {
 
     fn mark_streak_start(&mut self) {
         self.acks_at_streak_start = self.read_acks();
+        self.real_rx_at_streak_start = self.read_real_rx();
     }
 
     /// Only the peer can acknowledge what it received from us, so a counter
@@ -146,11 +177,15 @@ impl EgressProbeIo for RealEgressProbeIo {
     /// nothing and the exit is not the suspect. `Unknown` when there is no
     /// session to read: absent evidence must not suppress a conviction.
     fn transport_evidence(&mut self) -> TransportEvidence {
-        match (self.acks_at_streak_start, self.read_acks()) {
-            (None, _) | (_, None) => TransportEvidence::Unknown,
-            (Some(before), Some(now)) if now > before => TransportEvidence::Progressing,
-            _ => TransportEvidence::Silent,
-        }
+        transport_evidence_from(self.acks_at_streak_start, self.read_acks())
+    }
+
+    /// An exit still delivering decoded IP packets is forwarding, whatever our
+    /// own query did. On a link whose uplink is saturated the query queues away
+    /// while the exit keeps delivering, and convicting there costs a fresh QUIC
+    /// epoch and every request in flight with it.
+    fn exit_evidence(&mut self) -> ExitEvidence {
+        exit_evidence_from(self.real_rx_at_streak_start, self.read_real_rx())
     }
 
     fn drain_active(&mut self) -> bool {
@@ -214,6 +249,8 @@ mod tests {
             // The peer acknowledges nothing for the whole run: a path stall.
             acks: Some(std::sync::Arc::new(|| Some(42))),
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
         };
         io.mark_streak_start();
         assert_eq!(
@@ -243,10 +280,76 @@ mod tests {
                 Some(reader.load(std::sync::atomic::Ordering::Relaxed))
             })),
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
         };
         io.mark_streak_start();
         acks.fetch_add(9, std::sync::atomic::Ordering::Relaxed);
         assert_eq!(io.transport_evidence(), TransportEvidence::Progressing);
+    }
+
+    /// A saturated uplink queues our own query away while the exit keeps
+    /// forwarding. Judged on the query alone the exit is convicted, the tunnel
+    /// is torn down and every request in flight dies with it, over a datapath
+    /// that was working. Measured on a member's line 2026-08-11: 16 such
+    /// convictions in 11 hours, each with megabytes delivered over the streak.
+    #[tokio::test]
+    async fn an_exit_still_delivering_is_never_convicted_however_the_query_fared() {
+        let delivered = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(1_000));
+        let read = delivered.clone();
+        let mut io = RealEgressProbeIo {
+            interval: Duration::from_secs(25),
+            startup_interval: Duration::from_secs(3),
+            client_rx: None,
+            verdict: None,
+            drain_rx: None,
+            drain_migrate: None,
+            pump_error_tx: None,
+            current_exit_id: [0; 16],
+            acks: None,
+            acks_at_streak_start: None,
+            real_rx: Some(std::sync::Arc::new(move || {
+                Some(read.load(std::sync::atomic::Ordering::Relaxed))
+            })),
+            real_rx_at_streak_start: None,
+        };
+
+        io.mark_streak_start();
+        assert_eq!(
+            io.exit_evidence(),
+            ExitEvidence::Quiet,
+            "nothing delivered yet over this streak"
+        );
+
+        delivered.fetch_add(1_500, std::sync::atomic::Ordering::Relaxed);
+        assert_eq!(
+            io.exit_evidence(),
+            ExitEvidence::Delivering,
+            "decoded IP packets only the exit can produce arrived over the \
+             streak, so the exit is forwarding whatever our query did"
+        );
+    }
+
+    /// Absent evidence must never read as observed silence, or a conviction
+    /// would be suppressed on a reading nobody took.
+    #[tokio::test]
+    async fn no_session_reports_unknown_exit_evidence() {
+        let mut io = RealEgressProbeIo {
+            interval: Duration::from_secs(25),
+            startup_interval: Duration::from_secs(3),
+            client_rx: None,
+            verdict: None,
+            drain_rx: None,
+            drain_migrate: None,
+            pump_error_tx: None,
+            current_exit_id: [0; 16],
+            acks: None,
+            acks_at_streak_start: None,
+            real_rx: Some(std::sync::Arc::new(|| None)),
+            real_rx_at_streak_start: None,
+        };
+        io.mark_streak_start();
+        assert_eq!(io.exit_evidence(), ExitEvidence::Unknown);
     }
 
     #[tokio::test]
@@ -266,6 +369,8 @@ mod tests {
             current_exit_id: [0; 16],
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
         };
         assert!(io.session_present(), "no watch defaults to session present");
         assert!(!io.drain_active(), "no drain channel => never draining");
@@ -291,6 +396,8 @@ mod tests {
             current_exit_id: [0; 16],
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
         };
         io.publish(true);
         io.publish(false);
@@ -312,6 +419,8 @@ mod tests {
             current_exit_id: [0; 16],
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
         };
         io.escalate_reconnect("exit not forwarding".to_owned());
         assert_eq!(

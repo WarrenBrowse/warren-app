@@ -2191,9 +2191,11 @@ impl WarrenTunnelMonitor {
                 // Connected and redials onto a fresh circuit.
                 pump_error_tx: Some(pump_error_tx.clone()),
                 current_exit_id: *cfg.exit.exit_id.as_bytes(),
-                // Production reads the ACK counter off `client_rx` above.
+                // Production reads both counters off `client_rx` above.
                 acks: None,
                 acks_at_streak_start: None,
+                real_rx: None,
+                real_rx_at_streak_start: None,
             };
             runtime.spawn(async move {
                 if !probe_cfg.enabled {

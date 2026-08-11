@@ -29,7 +29,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use tokio::sync::watch;
 use warrenguard_transport::egress_probe::{
-    EgressProbeIo, ProbeOutcome, TransportEvidence, jittered, probe_gateway_dns,
+    EgressProbeIo, ExitEvidence, ProbeOutcome, TransportEvidence, exit_evidence_from, jittered,
+    probe_gateway_dns, transport_evidence_from,
 };
 use warrenguard_transport::supervisor::ClientWatch;
 
@@ -110,11 +111,41 @@ pub(crate) struct AndroidEgressProbeIo {
     /// The counter's value when the current failure streak began, so the
     /// evidence answers about THIS streak and not about the whole session.
     pub acks_at_streak_start: Option<u64>,
+    /// REAL downlink packet count, the counter only the exit can move. `None`
+    /// reads the live bundle off `sessions`; a test scripts it.
+    pub real_rx: Option<AckFn>,
+    /// Its value when the current failure streak began.
+    pub real_rx_at_streak_start: Option<u64>,
 }
 
 impl AndroidEgressProbeIo {
     /// ACK frames the peer has sent us on the live session, or `None` when
     /// there is no session to read.
+    /// Decoded IP packets the exit forwarded to us, summed across every bonded
+    /// leg. Deliberately NOT a quinn frame counter: an armed exit pads its
+    /// downlink with dummies, so a frame counter advances over a tunnel
+    /// carrying no user traffic at all.
+    fn read_real_rx(&mut self) -> Option<u64> {
+        if let Some(scripted) = self.real_rx.as_ref() {
+            return scripted();
+        }
+        self.sessions
+            .as_mut()?
+            .borrow_and_update()
+            .as_ref()
+            .map(|bundle| bundle.real_traffic_totals().1)
+    }
+
+    /// The path round trip the next probe will run on, so its schedule follows
+    /// a link whose queueing delay changes under load.
+    fn read_path_rtt(&mut self) -> Option<std::time::Duration> {
+        self.sessions
+            .as_mut()?
+            .borrow_and_update()
+            .as_ref()
+            .map(|bundle| bundle.quinn_stats().path.rtt)
+    }
+
     fn read_acks(&mut self) -> Option<u64> {
         if let Some(scripted) = self.acks.as_ref() {
             return scripted();
@@ -148,7 +179,7 @@ impl EgressProbeIo for AndroidEgressProbeIo {
     async fn probe(&mut self) -> ProbeOutcome {
         match self.probe.as_ref() {
             Some(scripted) => scripted().await,
-            None => probe_gateway_dns().await,
+            None => probe_gateway_dns(self.read_path_rtt()).await,
         }
     }
 
@@ -182,6 +213,7 @@ impl EgressProbeIo for AndroidEgressProbeIo {
 
     fn mark_streak_start(&mut self) {
         self.acks_at_streak_start = self.read_acks();
+        self.real_rx_at_streak_start = self.read_real_rx();
     }
 
     /// Only the peer can acknowledge what it received from us, so a counter
@@ -189,11 +221,15 @@ impl EgressProbeIo for AndroidEgressProbeIo {
     /// nothing and the exit is not the suspect. `Unknown` when there is no
     /// session to read: absent evidence must not suppress a conviction.
     fn transport_evidence(&mut self) -> TransportEvidence {
-        match (self.acks_at_streak_start, self.read_acks()) {
-            (None, _) | (_, None) => TransportEvidence::Unknown,
-            (Some(before), Some(now)) if now > before => TransportEvidence::Progressing,
-            _ => TransportEvidence::Silent,
-        }
+        transport_evidence_from(self.acks_at_streak_start, self.read_acks())
+    }
+
+    /// An exit still delivering decoded IP packets is forwarding, whatever our
+    /// own query did. On a link whose uplink is saturated the query queues away
+    /// while the exit keeps delivering, and convicting there costs a fresh QUIC
+    /// epoch and every request in flight with it.
+    fn exit_evidence(&mut self) -> ExitEvidence {
+        exit_evidence_from(self.real_rx_at_streak_start, self.read_real_rx())
     }
 
     fn escalate_reconnect(&mut self, msg: String) {
@@ -255,6 +291,8 @@ mod tests {
             escalate: Some(escalate),
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
             probe: Some(Arc::new(move || {
                 let n = calls.fetch_add(1, Ordering::Relaxed);
                 let ok = *results
@@ -374,6 +412,36 @@ mod tests {
         );
     }
 
+    /// The same failure the desktop tunnel carries, and the reason this guard
+    /// exists on both: a saturated uplink queues our own query away while the
+    /// exit keeps forwarding, so judging on the query alone tears down a
+    /// working tunnel and kills every request in flight.
+    #[tokio::test(start_paused = true)]
+    async fn an_exit_still_delivering_is_never_convicted() {
+        let sink = Arc::new(Sink::default());
+        let (escalate, escalated) = watch::channel(false);
+        let delivered = Arc::new(AtomicUsize::new(1_000));
+        let read = Arc::clone(&delivered);
+        // Every probe fails, and the exit delivers more payload on each one.
+        let mut io = io_with(vec![false], &sink, escalate);
+        io.real_rx = Some(Arc::new(move || {
+            Some(read.fetch_add(1_500, Ordering::Relaxed) as u64)
+        }));
+
+        tokio::time::timeout(Duration::from_secs(600), run_egress_probe(&mut io, 3))
+            .await
+            .expect_err("a probe that never convicts must keep running");
+
+        assert!(
+            sink.seen().is_empty(),
+            "an exit delivering payload throughout must never be published dead"
+        );
+        assert!(
+            !*escalated.borrow(),
+            "and the session must never be ended over it"
+        );
+    }
+
     /// A redial window must not conflate two exits: the failover may land
     /// elsewhere, so the count restarts and the threshold is never reached.
     #[tokio::test(start_paused = true)]
@@ -404,6 +472,8 @@ mod tests {
             sessions: None,
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
             verdict: Some(Arc::new(move |dead| {
                 sink_cb.0.lock().expect("sink never poisoned").push(dead);
             })),
@@ -428,6 +498,8 @@ mod tests {
             sessions: None,
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
             verdict: None,
             escalate: Some(escalate),
             probe: None,
@@ -446,6 +518,8 @@ mod tests {
             sessions: None,
             acks: None,
             acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
             verdict: None,
             escalate: None,
             probe: None,
