@@ -1285,30 +1285,31 @@ impl WarrenTunnelMonitor {
         // the bind and defers the guard to the background, so the connect
         // never waits on a probe window.
         #[cfg(target_os = "macos")]
-        let (socket_bypass, carrier_probe_plan): (
+        let (socket_bypass, carrier_probe_plan, carrier_interface): (
             Option<warrenguard_tun_core::SocketBypass>,
             carrier_verdict_cache::CarrierProbePlan,
+            String,
         ) = {
             use carrier_verdict_cache::CarrierProbePlan;
             match runtime.block_on(discover_warren_carrier_network_macos(&args.route_manager)) {
-                Some((phys_ifindex, fingerprint)) => {
+                Some(net) => {
                     let plan = carrier_verdict_cache::plan_carrier_probe(
-                        fingerprint,
+                        net.fingerprint,
                         params.cache_dir.as_deref(),
                     );
                     let bypass = match &plan {
-                        CarrierProbePlan::SkipRouteOnly => {
+                        CarrierProbePlan::SkipRouteOnly(_) => {
                             log::info!(
                                 "Warren carrier egress guard: cached RouteOnly verdict for this \
                                  network; skipping the IP_BOUND_IF bind, using the /32 escape"
                             );
                             None
                         }
-                        _ => Some(warren_carrier_socket_bypass(phys_ifindex)),
+                        _ => Some(warren_carrier_socket_bypass(net.ifindex)),
                     };
-                    (bypass, plan)
+                    (bypass, plan, net.interface)
                 }
-                None => (None, CarrierProbePlan::NoBind),
+                None => (None, CarrierProbePlan::NoBind, String::from("unresolved")),
             }
         };
         #[cfg(target_os = "windows")]
@@ -1833,46 +1834,63 @@ impl WarrenTunnelMonitor {
         };
 
         // macOS carrier egress guard (the carrier-blackhole failure mode):
-        // now that the default route points at the TUN, VERIFY the
-        // `IP_BOUND_IF`-bound carrier actually egresses. The guard always
-        // runs AFTER `Up`, in the background, so the connect never waits on
-        // it: on a black-holing bind it self-heals to the `/32` escape
-        // within its adaptive window (a short dead-egress blip right after
-        // `Up`, once per network per verdict TTL) and records `RouteOnly`
-        // so the next connect skips the bind outright. A cached-RouteOnly
-        // network skipped the bind above and has nothing to verify. The
-        // dead-path escalation remains the backstop if a revert does not
-        // heal.
+        // now that the default route points at the TUN, VERIFY that the
+        // carrier actually egresses, in WHICHEVER configuration is live. The
+        // guard always runs AFTER `Up`, in the background, so the connect
+        // never waits on it: on a black-holing bind it self-heals to the `/32`
+        // escape within its adaptive window (a short dead-egress blip right
+        // after `Up`, once per network per verdict TTL) and records
+        // `RouteOnly` so the next connect skips the bind outright.
+        //
+        // A cached-RouteOnly network skipped the bind above, and it is
+        // verified all the same: a verdict that stops being measured stops
+        // being true. Skipping the guard there is what let a host whose `/32`
+        // escape was ALSO dead sit "Connected" over a carrier that reached
+        // nothing, across eleven reconnects and three exits, with no line in
+        // the log naming it (forum topic 125, 2026-08-12). The dead-path
+        // escalation is the backstop, never the diagnosis: it redials, which
+        // cannot fix an escape that does not egress.
         #[cfg(target_os = "macos")]
         {
             use carrier_verdict_cache::CarrierProbePlan;
-            match carrier_probe_plan {
-                CarrierProbePlan::Background(recorder) => {
+            let spawn_guard =
+                |verify_only: bool, recorder: carrier_verdict_cache::VerdictRecorder| {
                     let mut guard_io = carrier_egress_guard::RealEgressGuardIo {
                         client_rx: client_rx.clone(),
                         route_manager: args.route_manager.clone(),
                         carrier_ips: vec![relay_endpoint.ip()],
                         tun_iface: metadata.interface.clone(),
                     };
+                    let carrier_interface = carrier_interface.clone();
                     runtime.spawn(async move {
-                        let outcome =
-                            carrier_egress_guard::run_bootstrap_guard(&mut guard_io).await;
+                        let outcome = if verify_only {
+                            carrier_egress_guard::run_escape_verify_guard(&mut guard_io).await
+                        } else {
+                            carrier_egress_guard::run_bootstrap_guard(&mut guard_io).await
+                        };
                         log::info!(
                             "{TRACE_PREFIX} phase=carrier_egress_guard_background \
-                             outcome={outcome:?} (verified after Up)"
+                         outcome={outcome:?} (verified after Up)"
                         );
+                        carrier_egress_guard::log_guard_outcome(outcome, &carrier_interface);
                         recorder.record(outcome);
                     });
+                };
+            match carrier_probe_plan {
+                CarrierProbePlan::Background(recorder) => {
+                    spawn_guard(false, recorder);
                     log::info!(
                         "{TRACE_PREFIX} T6b={}ms phase=carrier_egress_guard \
                          outcome=DeferredToBackground",
                         start_t.elapsed().as_millis()
                     );
                 }
-                CarrierProbePlan::SkipRouteOnly => {
+                CarrierProbePlan::SkipRouteOnly(recorder) => {
+                    spawn_guard(true, recorder);
                     log::info!(
                         "{TRACE_PREFIX} T6b={}ms phase=carrier_egress_guard \
-                         outcome=CachedRouteOnly (bind skipped, /32 escape pre-installed)",
+                         outcome=CachedRouteOnly (bind skipped, /32 escape pre-installed, \
+                         escape verified after Up)",
                         start_t.elapsed().as_millis()
                     );
                 }
@@ -3096,9 +3114,21 @@ fn warren_carrier_socket_bypass(phys_ifindex: u32) -> warrenguard_tun_core::Sock
 /// the connect. This is the opposite of the Windows contract on purpose (a
 /// macOS fail-closed bind would blackhole all egress).
 #[cfg(target_os = "macos")]
+struct CarrierNetwork {
+    /// Index the `IP_BOUND_IF` bind is applied with.
+    ifindex: u32,
+    /// Interface NAME, carried so a dead-egress diagnosis can name it. A name
+    /// is not identity material; the gateway that completes the fingerprint
+    /// stays out of every log line.
+    interface: String,
+    /// Per-network key of the verdict cache.
+    fingerprint: String,
+}
+
+#[cfg(target_os = "macos")]
 async fn discover_warren_carrier_network_macos(
     route_manager: &talpid_routing::RouteManagerHandle,
-) -> Option<(u32, String)> {
+) -> Option<CarrierNetwork> {
     match route_manager.get_default_routes().await {
         Ok((Some(v4), _v6)) => {
             let idx = u32::from(v4.interface_index);
@@ -3111,7 +3141,11 @@ async fn discover_warren_carrier_network_macos(
             } else {
                 let fingerprint =
                     carrier_verdict_cache::network_fingerprint(&v4.interface, v4.router_ip);
-                Some((idx, fingerprint))
+                Some(CarrierNetwork {
+                    ifindex: idx,
+                    interface: v4.interface,
+                    fingerprint,
+                })
             }
         }
         Ok((None, _v6)) => {

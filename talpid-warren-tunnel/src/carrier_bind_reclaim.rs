@@ -64,16 +64,18 @@ pub(crate) enum ReclaimOutcome {
 
 /// The verdict a watchdog cycle may persist for the network it moved onto.
 ///
-/// `None` covers the two cases that are not evidence about the bind: no
-/// measurement was taken at all (the forced degradation), and a measurement
-/// that proved nothing. Both must leave the cache untouched so the next
-/// connect measures rather than replays a verdict nobody observed.
+/// `None` covers the three cases that are not evidence FOR a configuration: no
+/// measurement was taken at all (the forced degradation), a measurement that
+/// proved nothing, and one where the route escape black-holed as well. All
+/// three must leave the cache untouched so the next connect measures rather
+/// than replays a verdict nobody observed, and `RouteOnly` in particular is
+/// never written for a host that egresses through neither configuration.
 #[must_use]
 pub(crate) fn verdict_for(measurement: Option<GuardOutcome>) -> Option<CachedVerdict> {
     match measurement? {
         GuardOutcome::BypassConfirmed => Some(CachedVerdict::BindOk),
         GuardOutcome::RevertedToRoute => Some(CachedVerdict::RouteOnly),
-        GuardOutcome::Inconclusive => None,
+        GuardOutcome::EscapeAlsoDead | GuardOutcome::Inconclusive => None,
     }
 }
 
@@ -413,5 +415,13 @@ mod tests {
         // Writing RouteOnly for it made every later connect there pre-install
         // the /32 exception for the whole verdict TTL.
         assert_eq!(verdict_for(None), None);
+    }
+
+    #[test]
+    fn an_escape_that_black_holed_too_records_no_verdict() {
+        // The guard measured that the route escape carries no more than the
+        // bind did. That is evidence AGAINST both configurations, so it must
+        // not be written as a `RouteOnly` preference for one of them.
+        assert_eq!(verdict_for(Some(GuardOutcome::EscapeAlsoDead)), None);
     }
 }

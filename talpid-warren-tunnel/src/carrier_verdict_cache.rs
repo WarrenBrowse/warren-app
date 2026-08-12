@@ -12,7 +12,11 @@
 //! network fingerprint (interface + gateway) and replayed:
 //!
 //! - [`CachedVerdict::RouteOnly`] hit: skip the bind, pre-install the `/32`
-//!   escape; connect is instant and there is nothing to verify.
+//!   escape; the connect is instant and the escape is verified after `Up`
+//!   like any other configuration. It used to be trusted without measurement,
+//!   which disarmed the guard on precisely the hosts it had already fired on:
+//!   when the escape was dead too, the tunnel reported Connected over a
+//!   carrier that reached nothing and nothing in the log said so.
 //! - anything else (fresh [`CachedVerdict::BindOk`], miss, expired): keep
 //!   the bind and run the guard AFTER `Up`, in the background. The connect
 //!   never waits on the guard; on a black-holing network the background
@@ -86,8 +90,11 @@ pub(crate) enum CarrierProbePlan {
     /// and the cache.
     Background(VerdictRecorder),
     /// Fresh `RouteOnly`: the bind is skipped and the `/32` escape is
-    /// pre-installed; nothing to verify.
-    SkipRouteOnly,
+    /// pre-installed. The escape is still VERIFIED, because a verdict that
+    /// stops being measured stops being true: the fingerprint is interface
+    /// plus gateway, so it follows the host onto networks where the escape may
+    /// carry nothing.
+    SkipRouteOnly(VerdictRecorder),
     /// No default route to bind to: `/32` fallback, nothing to verify.
     NoBind,
 }
@@ -99,7 +106,9 @@ pub(crate) fn plan_carrier_probe(
 ) -> CarrierProbePlan {
     let cache = VerdictCache::load(verdict_dir);
     match cache.lookup(&fingerprint, now_unix()) {
-        Some(CachedVerdict::RouteOnly) => CarrierProbePlan::SkipRouteOnly,
+        Some(CachedVerdict::RouteOnly) => {
+            CarrierProbePlan::SkipRouteOnly(VerdictRecorder { cache, fingerprint })
+        }
         Some(CachedVerdict::BindOk) | None => {
             CarrierProbePlan::Background(VerdictRecorder { cache, fingerprint })
         }
@@ -117,6 +126,14 @@ impl VerdictRecorder {
         let verdict = match outcome {
             GuardOutcome::BypassConfirmed => CachedVerdict::BindOk,
             GuardOutcome::RevertedToRoute => CachedVerdict::RouteOnly,
+            // Neither configuration egresses. `RouteOnly` would be a lie that
+            // outlives the connect and skips the guard for a whole TTL, so the
+            // network is forgotten instead and the next connect measures from
+            // scratch, bind included.
+            GuardOutcome::EscapeAlsoDead => {
+                self.cache.forget(&self.fingerprint);
+                return;
+            }
             // No positive evidence either way: leave the cache alone so the
             // next connect probes again.
             GuardOutcome::Inconclusive => return,
@@ -210,6 +227,16 @@ impl VerdictCache {
             self.entries.truncate(MAX_ENTRIES);
         }
         self.persist();
+    }
+
+    /// Drop whatever is remembered for `fingerprint`, so the next lookup is a
+    /// miss and the caller measures instead of replaying.
+    pub(crate) fn forget(&mut self, fingerprint: &str) {
+        let before = self.entries.len();
+        self.entries.retain(|e| e.fingerprint != fingerprint);
+        if self.entries.len() != before {
+            self.persist();
+        }
     }
 
     fn persist(&self) {
@@ -335,7 +362,7 @@ mod tests {
 
         assert!(matches!(
             plan_carrier_probe(fp.clone(), Some(&dir)),
-            CarrierProbePlan::SkipRouteOnly
+            CarrierProbePlan::SkipRouteOnly(_)
         ));
 
         let mut cache = VerdictCache::load(Some(&dir));
@@ -357,6 +384,60 @@ mod tests {
         assert_eq!(
             VerdictCache::load(Some(&dir)).lookup("fp1", now_unix()),
             None
+        );
+    }
+
+    #[test]
+    fn an_escape_that_is_dead_too_is_forgotten_rather_than_recorded() {
+        // Caching `RouteOnly` for a host that egresses through neither
+        // configuration pins the dead one for a whole TTL and skips the guard
+        // on every later connect. Forgetting the network instead is what lets
+        // the next connect re-arm the bind and measure again.
+        let dir = tmp_dir("escape-dead");
+        let fp = "fp1".to_string();
+        let CarrierProbePlan::Background(recorder) = plan_carrier_probe(fp.clone(), Some(&dir))
+        else {
+            panic!("cache miss must keep the bind and verify in the background");
+        };
+        recorder.record(GuardOutcome::RevertedToRoute);
+        assert!(matches!(
+            plan_carrier_probe(fp.clone(), Some(&dir)),
+            CarrierProbePlan::SkipRouteOnly(_)
+        ));
+
+        let CarrierProbePlan::SkipRouteOnly(recorder) = plan_carrier_probe(fp.clone(), Some(&dir))
+        else {
+            panic!("a fresh RouteOnly verdict must skip the bind");
+        };
+        recorder.record(GuardOutcome::EscapeAlsoDead);
+
+        assert_eq!(VerdictCache::load(Some(&dir)).lookup(&fp, now_unix()), None);
+        assert!(
+            matches!(
+                plan_carrier_probe(fp, Some(&dir)),
+                CarrierProbePlan::Background(_)
+            ),
+            "the next connect must re-arm the bind instead of replaying a dead verdict"
+        );
+    }
+
+    #[test]
+    fn a_cached_route_only_network_still_gets_a_recorder_to_verify_with() {
+        // The verdict has to stay a measurement: a `SkipRouteOnly` plan that
+        // carried no recorder is exactly what disarmed the guard for good.
+        let dir = tmp_dir("route-only-recorder");
+        let mut cache = VerdictCache::load(Some(&dir));
+        cache.record("fp1", CachedVerdict::RouteOnly, now_unix());
+        let CarrierProbePlan::SkipRouteOnly(recorder) =
+            plan_carrier_probe("fp1".into(), Some(&dir))
+        else {
+            panic!("a fresh RouteOnly verdict must skip the bind");
+        };
+        recorder.record(GuardOutcome::RevertedToRoute);
+        assert_eq!(
+            VerdictCache::load(Some(&dir)).lookup("fp1", now_unix()),
+            Some(CachedVerdict::RouteOnly),
+            "a re-proved escape keeps its verdict"
         );
     }
 

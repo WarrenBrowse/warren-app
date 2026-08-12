@@ -156,9 +156,15 @@ pub(crate) enum GuardOutcome {
     /// Egress confirmed within the window: the bind stayed and no `/32` route
     /// was added (leak-free, the goal).
     BypassConfirmed,
-    /// The bound carrier looked dead: reverted to the `<carrier_ip>/32`
-    /// DefaultNode escape and unbound the socket.
+    /// The `<carrier_ip>/32` DefaultNode escape is the live configuration and
+    /// it egresses: either the bound carrier looked dead and the revert healed
+    /// it, or a cached-`RouteOnly` connect re-proved the escape.
     RevertedToRoute,
+    /// The escape carries no more than the bind did: this host egresses through
+    /// NEITHER configuration. Never a verdict to cache; the cache entry is
+    /// dropped so the next connect re-arms the bind instead of pinning a dead
+    /// configuration for a week.
+    EscapeAlsoDead,
     /// The window elapsed without confirmation but also without positive
     /// blackhole evidence (no session / no sends): left the bind untouched and
     /// deferred to the connect timeout / dead-path escalation.
@@ -183,11 +189,11 @@ pub(crate) trait EgressGuardIo {
     async fn revert_to_route(&mut self);
 }
 
-/// Run the bootstrap egress guard: burn one probe interval (so ACKs of
-/// pre-swap sends drain), take the decision baseline, then probe the freshly
-/// bound carrier until it is confirmed, declared dead (revert), or the window
-/// closes inconclusively.
-pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardOutcome {
+/// One verification phase over whatever carrier configuration is live: burn a
+/// probe interval (so ACKs of sends issued before the phase drain), take the
+/// decision baseline, then probe until egress is confirmed, declared dead, or
+/// the window closes with neither ([`EgressVerdict::Pending`]).
+async fn verify_egress_phase<I: EgressGuardIo>(io: &mut I) -> EgressVerdict {
     io.send_probe().await;
     tokio::time::sleep(PROBE_INTERVAL).await;
     let baseline = io.read_egress();
@@ -197,19 +203,78 @@ pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardOu
         tokio::time::sleep(PROBE_INTERVAL).await;
         let elapsed = tokio::time::Instant::now().saturating_duration_since(start);
         match assess_egress(baseline, io.read_egress(), elapsed) {
-            EgressVerdict::Confirmed => return GuardOutcome::BypassConfirmed,
-            EgressVerdict::Dead => {
-                io.revert_to_route().await;
-                return GuardOutcome::RevertedToRoute;
-            }
+            EgressVerdict::Confirmed => return EgressVerdict::Confirmed,
+            EgressVerdict::Dead => return EgressVerdict::Dead,
             EgressVerdict::Pending => {
                 if elapsed >= BOOTSTRAP_WINDOW {
-                    // Window elapsed with no confirmation and no blackhole
-                    // evidence: leave the bind, defer to other machinery.
-                    return GuardOutcome::Inconclusive;
+                    return EgressVerdict::Pending;
                 }
             }
         }
+    }
+}
+
+/// Run the bootstrap egress guard on a freshly bound carrier: verify the bind,
+/// and when it black-holes, revert to the `<carrier_ip>/32` escape and VERIFY
+/// THAT TOO.
+///
+/// The second phase is the whole point. A revert used to return
+/// [`GuardOutcome::RevertedToRoute`] the instant it was issued, so "we changed
+/// the configuration" was recorded as "the configuration works", and the
+/// cache then skipped this guard on every later connect. On a host where the
+/// escape is dead as well, that pinned a black-holed carrier for a verdict TTL
+/// with no line in the log naming it: the tunnel reported Connected, the
+/// liveness watch redialled every 15 s, and the only evidence left was on the
+/// exit, whose QUIC connection recorded zero datagrams received.
+pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardOutcome {
+    match verify_egress_phase(io).await {
+        EgressVerdict::Confirmed => GuardOutcome::BypassConfirmed,
+        EgressVerdict::Pending => GuardOutcome::Inconclusive,
+        EgressVerdict::Dead => {
+            io.revert_to_route().await;
+            match verify_egress_phase(io).await {
+                EgressVerdict::Dead => GuardOutcome::EscapeAlsoDead,
+                // Confirmed, or no positive evidence against the escape: the
+                // escape stays and stays cacheable. Absence of proof is not
+                // proof of a blackhole, and reverting the revert would only
+                // put back the configuration already measured dead.
+                _ => GuardOutcome::RevertedToRoute,
+            }
+        }
+    }
+}
+
+/// Verify the `<carrier_ip>/32` escape on a connect that skipped the bind
+/// because the cache already holds a `RouteOnly` verdict.
+///
+/// There is no bind to revert here, so the guard is pure measurement: it exists
+/// so a cached verdict stays a measurement rather than becoming a permanent
+/// assumption about a network the host may no longer be on (the fingerprint is
+/// interface plus gateway, which collides across networks by design).
+pub(crate) async fn run_escape_verify_guard<I: EgressGuardIo>(io: &mut I) -> GuardOutcome {
+    match verify_egress_phase(io).await {
+        EgressVerdict::Confirmed => GuardOutcome::RevertedToRoute,
+        EgressVerdict::Dead => GuardOutcome::EscapeAlsoDead,
+        EgressVerdict::Pending => GuardOutcome::Inconclusive,
+    }
+}
+
+/// Emit the one log line a problem report needs when a host egresses through
+/// neither carrier configuration.
+///
+/// `carrier_interface` is the name of the interface the IPv4 default route
+/// pointed at when the connect started. A name, never an address: it is the
+/// datum that separates "the physical NIC is black-holing" from "another
+/// tunnel owns the default route", and reading it off the exit was the only
+/// way to get it on 2026-08-12.
+pub(crate) fn log_guard_outcome(outcome: GuardOutcome, carrier_interface: &str) {
+    if outcome == GuardOutcome::EscapeAlsoDead {
+        log::warn!(
+            "Warren carrier egress guard: this host egresses through NEITHER the IP_BOUND_IF \
+             bind NOR the <carrier_ip>/32 DefaultNode escape (carrier interface {carrier_interface}). \
+             The tunnel is up over a carrier that reaches nothing, so no exit will answer. \
+             Dropping the cached verdict: the next connect re-arms the bind."
+        );
     }
 }
 
@@ -511,12 +576,15 @@ mod tests {
     // Driver tests over a scripted mock with paused time.
 
     struct MockIo {
-        /// Reading returned while the pre-baseline interval burns (leftover
-        /// ACKs of pre-swap sends may already be counted here).
-        baseline: EgressReading,
-        /// The reading returned on every sample AFTER the baseline sample.
-        post: EgressReading,
-        first_read_taken: bool,
+        /// `(baseline, steady)` readings for the phase that verifies the bind.
+        bind_phase: (EgressReading, EgressReading),
+        /// `(baseline, steady)` readings for the phase that verifies the `/32`
+        /// escape. Defaults to the bind phase's pair, i.e. "the revert changed
+        /// nothing", which is the shape a host where neither escape egresses
+        /// produces.
+        escape_phase: (EgressReading, EgressReading),
+        reverted: bool,
+        reads_in_phase: u32,
         probes_sent: u32,
         reverts: u32,
     }
@@ -524,32 +592,48 @@ mod tests {
     impl MockIo {
         fn new(baseline: EgressReading, post: EgressReading) -> Self {
             Self {
-                baseline,
-                post,
-                first_read_taken: false,
+                bind_phase: (baseline, post),
+                escape_phase: (baseline, post),
+                reverted: false,
+                reads_in_phase: 0,
                 probes_sent: 0,
                 reverts: 0,
             }
+        }
+
+        /// Scripts an escape that DOES carry traffic once installed.
+        fn escape_heals(mut self, baseline: EgressReading, post: EgressReading) -> Self {
+            self.escape_phase = (baseline, post);
+            self
         }
     }
 
     impl EgressGuardIo for MockIo {
         fn read_egress(&mut self) -> EgressReading {
-            // The driver reads once for the (post-burn) baseline, then again
-            // each probe iteration; the mock returns the post-swap reading for
-            // all reads after the first.
-            if self.first_read_taken {
-                self.post
+            // Each phase reads once for its (post-burn) baseline, then again
+            // on every probe iteration; the mock answers the first read of a
+            // phase with that phase's baseline and every later one with its
+            // steady reading.
+            let (baseline, steady) = if self.reverted {
+                self.escape_phase
             } else {
-                self.first_read_taken = true;
-                self.baseline
-            }
+                self.bind_phase
+            };
+            let reading = if self.reads_in_phase == 0 {
+                baseline
+            } else {
+                steady
+            };
+            self.reads_in_phase += 1;
+            reading
         }
         async fn send_probe(&mut self) {
             self.probes_sent += 1;
         }
         async fn revert_to_route(&mut self) {
             self.reverts += 1;
+            self.reverted = true;
+            self.reads_in_phase = 0;
         }
     }
 
@@ -567,8 +651,10 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn guard_reverts_to_the_route_when_the_carrier_blackholes() {
         // Post-baseline tx climbs but not one send is acknowledged for the
-        // whole adaptive window: the blackhole shape. Revert exactly once.
-        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
+        // whole adaptive window: the blackhole shape. Revert exactly once, and
+        // report `RevertedToRoute` only because the escape then egresses.
+        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5))
+            .escape_heals(reading(1, 400, 5), reading(1, 420, 9));
         let outcome = run_bootstrap_guard(&mut io).await;
         assert_eq!(outcome, GuardOutcome::RevertedToRoute);
         assert_eq!(io.reverts, 1, "a detected blackhole reverts exactly once");
@@ -579,13 +665,59 @@ mod tests {
     }
 
     #[tokio::test(start_paused = true)]
+    async fn guard_reports_the_escape_dead_when_the_revert_heals_nothing() {
+        // The bind black-holes AND the `<carrier_ip>/32` escape carries just as
+        // little. Recording `RouteOnly` here would pin a dead configuration for
+        // a week and disarm this guard on every later connect, which is how a
+        // beta host sat "Connected" with zero egress across eleven reconnects
+        // and three exits (forum topic 125, 2026-08-12). The revert stays (it
+        // is the safer of two dead configurations) but the outcome must say so.
+        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
+        let outcome = run_bootstrap_guard(&mut io).await;
+        assert_eq!(outcome, GuardOutcome::EscapeAlsoDead);
+        assert_eq!(io.reverts, 1, "the escape is installed, once, and verified");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn escape_verify_guard_reports_a_dead_escape_without_reverting() {
+        // The cached-RouteOnly path: the bind was never applied, so there is
+        // nothing to revert, but the escape still has to prove it egresses.
+        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
+        let outcome = run_escape_verify_guard(&mut io).await;
+        assert_eq!(outcome, GuardOutcome::EscapeAlsoDead);
+        assert_eq!(io.reverts, 0, "there is no bind to revert on this path");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn escape_verify_guard_confirms_an_escape_that_carries_traffic() {
+        // The ordinary cached-RouteOnly connect: the escape works, the cached
+        // verdict is still right, and no route is touched.
+        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 14, 7));
+        let outcome = run_escape_verify_guard(&mut io).await;
+        assert_eq!(outcome, GuardOutcome::RevertedToRoute);
+        assert_eq!(io.reverts, 0);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn escape_verify_guard_is_inconclusive_without_a_session_or_sends() {
+        // No session and no sends is not evidence against the escape, so the
+        // cached verdict must survive it untouched.
+        let mut io = MockIo::new(EgressReading::default(), EgressReading::default());
+        assert_eq!(
+            run_escape_verify_guard(&mut io).await,
+            GuardOutcome::Inconclusive
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
     async fn guard_ignores_acks_that_landed_during_the_burn_interval() {
         // On a reconnect, ACKs of the pre-swap
         // handshake land milliseconds after the swap. They arrive during the
         // burn interval, so they are already inside the baseline and must not
         // confirm; with the ack counter frozen after the baseline and sends
         // climbing, the guard must still detect the blackhole and revert.
-        let mut io = MockIo::new(reading(1, 10, 9), reading(1, 400, 9));
+        let mut io = MockIo::new(reading(1, 10, 9), reading(1, 400, 9))
+            .escape_heals(reading(1, 400, 9), reading(1, 420, 13));
         let outcome = run_bootstrap_guard(&mut io).await;
         assert_eq!(outcome, GuardOutcome::RevertedToRoute);
         assert_eq!(io.reverts, 1);
