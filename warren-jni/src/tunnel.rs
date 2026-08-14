@@ -639,6 +639,10 @@ fn spawn_egress_probe(
         // Production reads the ACK counter off the session watch above.
         acks: None,
         acks_at_streak_start: None,
+        // Same: the real downlink packet count comes off the live bundle. Only
+        // a test scripts it.
+        real_rx: None,
+        real_rx_at_streak_start: None,
     };
     Some(crate::supervised_session::AbortOnDrop::spawn(async move {
         run_egress_probe(&mut io, cfg.failure_threshold).await;

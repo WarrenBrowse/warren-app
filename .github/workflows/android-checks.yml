@@ -7,9 +7,9 @@
 # Android-only change therefore triggered nothing at all, which is how a
 # blocking network call on the UI thread reached main unnoticed.
 #
-# Scope is deliberately the JVM unit tests: they are the fast, hermetic
-# signal (~5 min, no emulator, no device). The instrumented and e2e suites
-# need a device runner and stay on the dispatch-only workflows.
+# Scope is the Rust cross-compile plus the JVM unit tests: the fast, hermetic
+# signal (no emulator, no device). The instrumented and e2e suites need a
+# device runner and stay on the dispatch-only workflows.
 #
 # `:test:arch` is excluded on purpose: it enforces inherited Mullvad naming
 # conventions (every test name carrying "ensure"/"should") that this fork
@@ -75,6 +75,22 @@ jobs:
         run: |
           rustup target add aarch64-linux-android armv7-linux-androideabi \
             i686-linux-android x86_64-linux-android
+
+      # The ONLY thing that ever compiles warren-jni's Android code.
+      # `warren-jni/src/tunnel.rs` is `#![cfg(all(target_os = "android", ...))]`,
+      # so the `cargo test -p warren-jni` in warren-checks compiles none of it on
+      # the desktop runner, and the JVM unit tests below need no native library.
+      # A struct field added on the desktop side therefore reached main
+      # uncompiled and only surfaced in the release job, where build-android
+      # blocks publish-release and took the whole release down with it
+      # (2026-08-14, beta-v1.1.13).
+      #
+      # Two ABIs out of the four the release builds: arm64 and arm cover both
+      # pointer widths, which is where a per-ABI break would live, at half the
+      # cost. A 32-bit-only x86 break would still reach the release job.
+      - name: Cross-compile the Rust JNI library (arm64 + arm)
+        working-directory: android
+        run: ./gradlew --no-daemon --stacktrace app:cargoBuildArm64 app:cargoBuildArm
 
       - name: Unit tests
         run: |
