@@ -92,6 +92,13 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = [
 ] }
 anyhow = "1"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# `ifaddrs::getifaddrs` + the interface flags behind the dual-homing
+# observation in `dual_homing.rs`: the default route names only ONE
+# interface, so seeing a second one on the same subnet needs the full
+# enumeration.
+nix = { workspace = true, features = ["net"] }
+
 [target.'cfg(windows)'.dependencies]
 # `AddressFamily` for the migration watchdog's default-route gate
 # (`talpid_routing::get_best_default_route` takes it on Windows).

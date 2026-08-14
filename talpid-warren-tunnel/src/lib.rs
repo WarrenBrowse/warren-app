@@ -205,6 +205,10 @@ mod carrier_verdict_cache;
 #[cfg(target_os = "macos")]
 mod carrier_bind_reclaim;
 mod drain_reactor;
+/// Connect-time observation of a host that reaches its default gateway's
+/// subnet through more than one interface, the shape behind a silent partial
+/// downlink loss. An indicator: it logs and takes no action.
+pub mod dual_homing;
 mod egress_probe;
 mod migration_watchdog;
 mod session_liveness;
@@ -3139,6 +3143,11 @@ async fn discover_warren_carrier_network_macos(
                 );
                 None
             } else {
+                // The default route names ONE interface, so a host that reaches
+                // the same LAN through a second one is invisible from here. The
+                // observation is emitted once per connect, next to the datum it
+                // qualifies.
+                crate::dual_homing::warn_if_dual_homed(v4.router_ip);
                 let fingerprint =
                     carrier_verdict_cache::network_fingerprint(&v4.interface, v4.router_ip);
                 Some(CarrierNetwork {
