@@ -163,3 +163,12 @@ jobs:
         working-directory: .
         shell: bash
         run: python3 ci/test_build_version_metadata.py
+
+      # The macOS pkg scripts only ever run inside a real install, so a wrong
+      # abort there is invisible until a user double-clicks the installer. It
+      # shipped once: every FIRST install failed. Gated on the release path
+      # because release.yml needs this suite green before it builds anything.
+      - name: macOS pkg preinstall behaviour
+        working-directory: .
+        shell: bash
+        run: scripts/ci/test-macos-pkg-preinstall.sh

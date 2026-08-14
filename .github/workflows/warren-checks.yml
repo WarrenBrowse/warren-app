@@ -50,6 +50,12 @@ on:
       # gates the file, so an edit touching only it reached main untested.
       - "ci/build-version-metadata.py"
       - "ci/test_build_version_metadata.py"
+      # The macOS installer scripts decide whether an install proceeds at all,
+      # and nothing else gated them: an abort that should not have happened is
+      # only visible to a user running the installer. Their behaviour test runs
+      # in this scope.
+      - "dist-assets/pkg-scripts/**"
+      - "scripts/ci/test-macos-pkg-preinstall.sh"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".warrenguard-version"

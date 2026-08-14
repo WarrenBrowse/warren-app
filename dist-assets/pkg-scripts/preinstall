@@ -14,34 +14,52 @@ if [[ $INSTALL_DIR == *"Warren VPN.app" ]]; then
     exit 0
 fi
 
-LOG_DIR=/var/log/warren-vpn
+# Same override the daemon honours (mullvad-paths::get_log_dir), so the test
+# harness can exercise this script without root and without writing to the
+# log directory of the install that is actually on the machine.
+LOG_DIR=${WARREN_LOG_DIR:-/var/log/warren-vpn}
 
-mkdir -p $LOG_DIR
-chmod 755 $LOG_DIR
-exec > $LOG_DIR/preinstall.log 2>&1
+mkdir -p "$LOG_DIR"
+chmod 755 "$LOG_DIR"
+exec > "$LOG_DIR/preinstall.log" 2>&1
 
 echo "Running preinstall at $(date)"
 
 SETUP="$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-setup"
 
-# Arm the detached update guard BEFORE anything is armed or removed. It stages
-# its own copy of warren-setup outside this bundle and registers an OS timer, so
-# a machine whose daemon never comes back resets its own firewall instead of
-# waiting for a human with a terminal. Runs as root: it writes a LaunchDaemon.
-# Not fatal: a machine that cannot schedule the guard is still better served by
-# an update that proceeds with the in-daemon dead-man than by no update at all.
-"$SETUP" arm-deadman || echo "Failed to arm the detached update guard"
+# The whole seal below belongs to an UPGRADE: it protects the host while the
+# old bundle is deleted and its daemon killed. A first install has neither, so
+# there is nothing to seal and $SETUP does not even exist, which the fatal
+# prepare-restart then read as "could not protect the host" and aborted every
+# fresh install. Linux guards the same block on the daemon being present
+# (dist-assets/linux/before-install.sh) and Windows runs it only on the upgrade
+# path (dist-assets/windows/installer.nsh).
+if [[ -x "$SETUP" ]]; then
+    # Arm the detached update guard BEFORE anything is armed or removed. It stages
+    # its own copy of warren-setup outside this bundle and registers an OS timer, so
+    # a machine whose daemon never comes back resets its own firewall instead of
+    # waiting for a human with a terminal. Runs as root: it writes a LaunchDaemon.
+    # Not fatal: a machine that cannot schedule the guard is still better served by
+    # an update that proceeds with the in-daemon dead-man than by no update at all.
+    "$SETUP" arm-deadman || echo "Failed to arm the detached update guard"
 
-# Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing warren-setup.
-#
-# FATAL since 2026-08-08, matching Windows: this is what seals the host for the
-# swap, and an installer that could not arm the protection must not go on to
-# delete the app and kill the daemon. Proceeding is how a user ends up with no
-# internet, no daemon and no app to click.
-if ! sudo -u nobody "$SETUP" prepare-restart &>/dev/null; then
-    echo "Failed to send 'prepare-restart' command to old warren-daemon; aborting the install"
-    "$SETUP" disarm-deadman || true
-    exit 1
+    # Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing warren-setup.
+    #
+    # FATAL since 2026-08-08, matching Windows: this is what seals the host for the
+    # swap, and an installer that could not arm the protection must not go on to
+    # delete the app and kill the daemon. Proceeding is how a user ends up with no
+    # internet, no daemon and no app to click.
+    PREPARE_RESTART_STATUS=0
+    sudo -u nobody "$SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
+
+    # 3 is warren-setup's DaemonNotRunning (mullvad-setup/src/main.rs): no daemon
+    # is left holding the host, which is the state the seal was reaching for, not
+    # a failure. Windows tolerates the same status (MVSETUP_DAEMON_NOT_RUNNING).
+    if [[ $PREPARE_RESTART_STATUS -ne 0 && $PREPARE_RESTART_STATUS -ne 3 ]]; then
+        echo "Failed to send 'prepare-restart' command to old warren-daemon; aborting the install"
+        "$SETUP" disarm-deadman || true
+        exit 1
+    fi
 fi
 
 # NOTE: This path must be kept in sync with the path defined
