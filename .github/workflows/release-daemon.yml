@@ -75,6 +75,10 @@ jobs:
       cli-tag: ${{ steps.resolve.outputs.cli-tag }}
       publish: ${{ steps.resolve.outputs.publish }}
     steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - id: resolve
         env:
           INPUT_CHANNEL: ${{ inputs.channel }}
@@ -123,6 +127,17 @@ jobs:
             echo "publish=$publish"
           } >> "$GITHUB_OUTPUT"
           echo "channel=$channel version=${version:-<none>} api=$api_url cli-tag=$cli_tag publish=$publish"
+
+      # Only on the standalone path: a run called by release.yml has already
+      # been through the same guard in its tag-guard job, on the same version.
+      # The two series share one version space, so this refuses both a
+      # regression and a number the app series already used.
+      - name: Refuse a version-regressing headless tag
+        if: inputs.version == '' && steps.resolve.outputs.publish == 'true'
+        run: |
+          git fetch --tags --force origin
+          bash ci/check-release-version.sh \
+            "${{ steps.resolve.outputs.channel }}" "${{ steps.resolve.outputs.version }}"
 
   linux:
     name: Linux x86_64 (.deb / .rpm / tarball)
