@@ -27,7 +27,6 @@ deb="${2:?missing input .deb}"
 output="${3:?missing output tarball}"
 
 image="${WARREN_NIX_IMAGE:-nixos/nix:latest}"
-store_volume="${WARREN_NIX_STORE_VOLUME:-warren-nix-store}"
 
 command -v docker > /dev/null || {
     echo "::error::docker is required to build the NixOS flake" >&2
@@ -47,6 +46,25 @@ flake_dir_name="${flake_dir_name%.tar.gz}"
 
 echo "Building the NixOS flake on $image (amd64)"
 docker pull --quiet --platform linux/amd64 "$image" > /dev/null
+
+# The /nix cache is keyed by the image it was seeded from, never by a fixed
+# name. In this image /etc/group and /etc/passwd are symlinks into
+# /nix/store/...-base-system/etc/, so mounting a /nix populated by an OLDER
+# image hides them: the `nixbld` group vanishes and nix refuses to build any
+# derivation ("the group 'nixbld' specified in 'build-users-group' does not
+# exist"), which reads as a broken nix rather than a stale cache. It took the
+# beta-v1.1.13 and beta-v1.1.14 releases down when `nixos/nix:latest` moved.
+# Docker seeds an empty named volume from the image, so a new key is a correct
+# store, at the cost of re-downloading the closure once.
+image_id="$(docker image inspect --format '{{.Id}}' "$image")"
+image_id="${image_id#sha256:}"
+store_volume="${WARREN_NIX_STORE_VOLUME:-warren-nix-store-$(printf '%s' "$image_id" | cut -c1-12)}"
+
+# Bound the disk: every superseded key holds a full nixpkgs closure. A volume
+# another job still holds refuses to be removed, which is the wanted safety.
+docker volume ls --quiet --filter 'name=warren-nix-store-' | grep -vFx "$store_volume" | while read -r stale; do
+    docker volume rm "$stale" > /dev/null 2>&1 && echo "removed superseded nix store $stale" || true
+done
 
 cid="$(docker create --platform linux/amd64 \
     --volume "$store_volume:/nix" \

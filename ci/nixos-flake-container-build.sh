@@ -22,6 +22,13 @@ fail() {
 
 step() { echo; echo "=== $* ==="; }
 
+# This image's /etc/group and /etc/passwd are symlinks into
+# /nix/store/...-base-system/etc/, so a /nix cache seeded by a DIFFERENT image
+# leaves them dangling. Nix then loses its `nixbld` group and fails minutes
+# later on "the group 'nixbld' ... does not exist", which accuses nix rather
+# than the cache. Name the real condition here, at once.
+[ -r /etc/group ] || fail "the container's /etc is unresolvable: the mounted /nix cache was seeded by a different image. Remove the nix store volume and re-run."
+
 deb="$(find "$WORK" -maxdepth 1 -name '*.deb' | head -1)"
 [ -n "$deb" ] || fail "no .deb was copied into the container"
 
