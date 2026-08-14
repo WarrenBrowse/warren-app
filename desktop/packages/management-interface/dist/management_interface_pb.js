@@ -8000,7 +8000,9 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.toObject = function(inc
     tunnelMetadata: (f = msg.getTunnelMetadata()) && proto.mullvad_daemon.management_interface.TunnelMetadata.toObject(includeInstance, f),
     daita: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
     tunnelType: jspb.Message.getFieldWithDefault(msg, 8, 0),
-    effectiveMtu: jspb.Message.getFieldWithDefault(msg, 9, 0)
+    effectiveMtu: jspb.Message.getFieldWithDefault(msg, 9, 0),
+    legsBonded: jspb.Message.getFieldWithDefault(msg, 10, 0),
+    legsDownlinkStalled: jspb.Message.getFieldWithDefault(msg, 11, 0)
   };
 
   if (includeInstance) {
@@ -8075,6 +8077,14 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.deserializeBinaryFromRe
     case 9:
       var value = /** @type {number} */ (reader.readUint32());
       msg.setEffectiveMtu(value);
+      break;
+    case 10:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setLegsBonded(value);
+      break;
+    case 11:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setLegsDownlinkStalled(value);
       break;
     default:
       reader.skipField();
@@ -8168,6 +8178,20 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.serializeBinaryToWriter
   if (f != null) {
     writer.writeUint32(
       9,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 10));
+  if (f != null) {
+    writer.writeUint32(
+      10,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 11));
+  if (f != null) {
+    writer.writeUint32(
+      11,
       f
     );
   }
@@ -8408,6 +8432,78 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearEffectiv
  */
 proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasEffectiveMtu = function() {
   return jspb.Message.getField(this, 9) != null;
+};
+
+
+/**
+ * optional uint32 legs_bonded = 10;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getLegsBonded = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setLegsBonded = function(value) {
+  return jspb.Message.setField(this, 10, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearLegsBonded = function() {
+  return jspb.Message.setField(this, 10, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasLegsBonded = function() {
+  return jspb.Message.getField(this, 10) != null;
+};
+
+
+/**
+ * optional uint32 legs_downlink_stalled = 11;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getLegsDownlinkStalled = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setLegsDownlinkStalled = function(value) {
+  return jspb.Message.setField(this, 11, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearLegsDownlinkStalled = function() {
+  return jspb.Message.setField(this, 11, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasLegsDownlinkStalled = function() {
+  return jspb.Message.getField(this, 11) != null;
 };
 
 
@@ -32304,7 +32400,8 @@ proto.mullvad_daemon.management_interface.FeatureIndicator = {
   DAITA_MULTIHOP: 15,
   ALLOW_EXTERNAL_DNS: 16,
   DAITA_UNAVAILABLE: 17,
-  REDUCED_MTU: 18
+  REDUCED_MTU: 18,
+  DEGRADED_BOND: 19
 };
 
 /**

@@ -829,6 +829,16 @@ export class TunnelEndpoint extends jspb.Message {
     getEffectiveMtu(): number | undefined;
     setEffectiveMtu(value: number): TunnelEndpoint;
 
+    hasLegsBonded(): boolean;
+    clearLegsBonded(): void;
+    getLegsBonded(): number | undefined;
+    setLegsBonded(value: number): TunnelEndpoint;
+
+    hasLegsDownlinkStalled(): boolean;
+    clearLegsDownlinkStalled(): void;
+    getLegsDownlinkStalled(): number | undefined;
+    setLegsDownlinkStalled(value: number): TunnelEndpoint;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): TunnelEndpoint.AsObject;
     static toObject(includeInstance: boolean, msg: TunnelEndpoint): TunnelEndpoint.AsObject;
@@ -850,6 +860,8 @@ export namespace TunnelEndpoint {
         daita: boolean,
         tunnelType: TunnelType,
         effectiveMtu?: number,
+        legsBonded?: number,
+        legsDownlinkStalled?: number,
     }
 }
 
@@ -4210,6 +4222,7 @@ export enum FeatureIndicator {
     ALLOW_EXTERNAL_DNS = 16,
     DAITA_UNAVAILABLE = 17,
     REDUCED_MTU = 18,
+    DEGRADED_BOND = 19,
 }
 
 export enum Ownership {

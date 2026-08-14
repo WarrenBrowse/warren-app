@@ -5,6 +5,7 @@ import { strings } from '../../../../../../../../../../shared/constants';
 import { FeatureIndicator } from '../../../../../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../../../../../shared/gettext';
 import { RoutePath } from '../../../../../../../../../../shared/routes';
+import { degradedBondIndicatorLabel } from '../../../../../../../../../features/degraded-bond/degraded-bond';
 import { reducedMtuIndicatorLabel } from '../../../../../../../../../features/reduced-mtu/reduced-mtu';
 import { TransitionType, useHistory } from '../../../../../../../../../lib/history';
 import { useSelector } from '../../../../../../../../../redux/store';
@@ -12,10 +13,13 @@ import { useSelector } from '../../../../../../../../../redux/store';
 export const useGetFeatureIndicator = () => {
   const history = useHistory();
   const tunnelState = useSelector((state) => state.connection.status);
-  const effectiveMtu =
+  const connectedEndpoint =
     tunnelState.state === 'connected' || tunnelState.state === 'connecting'
-      ? tunnelState.details?.endpoint.effectiveMtu
+      ? tunnelState.details?.endpoint
       : undefined;
+  const effectiveMtu = connectedEndpoint?.effectiveMtu;
+  const legsBonded = connectedEndpoint?.legsBonded;
+  const legsDownlinkStalled = connectedEndpoint?.legsDownlinkStalled;
 
   const gotoDaitaFeature = React.useCallback(() => {
     history.push(RoutePath.daitaSettings, {
@@ -175,6 +179,9 @@ export const useGetFeatureIndicator = () => {
     },
     [FeatureIndicator.reducedMtu]: {
       label: reducedMtuIndicatorLabel(effectiveMtu),
+    },
+    [FeatureIndicator.degradedBond]: {
+      label: degradedBondIndicatorLabel(legsDownlinkStalled, legsBonded),
     },
     [FeatureIndicator.daita]: { label: strings.daita, onClick: gotoEnableDaitaFeature },
     [FeatureIndicator.daitaMultihop]: {

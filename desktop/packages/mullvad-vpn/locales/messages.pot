@@ -1139,6 +1139,21 @@ msgctxt "connect-view"
 msgid "Could not refresh the beta access. Check your connection and try again."
 msgstr ""
 
+#. Feature indicator (warning) shown when part of the tunnel's parallel
+#. connections stopped receiving, so downlink capacity is reduced.
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr ""
+
+#. Feature indicator (warning) shown when part of the tunnel's parallel
+#. connections stopped receiving, so downlink capacity is reduced.
+#. Available placeholders:
+#. %(stalled)s - how many connections stopped receiving
+#. %(bonded)s - how many connections the tunnel uses in total
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr ""
+
 #. Button label for disconnecting from the VPN.
 msgctxt "connect-view"
 msgid "Disconnect"

@@ -377,6 +377,13 @@ function convertFromTunnelStateRelayInfo(
         ),
         obfuscationEndpoint: convertFromObfuscationInfo(state.tunnelEndpoint.obfuscation),
         effectiveMtu: state.tunnelEndpoint.effectiveMtu || undefined,
+        // A bundle width of 0 (or an older daemon that omits the field) means
+        // the tunnel was never sampled, so BOTH counts stay undefined. Once it
+        // was sampled, a stall count of 0 is a real measurement and is kept.
+        legsBonded: state.tunnelEndpoint.legsBonded || undefined,
+        legsDownlinkStalled: state.tunnelEndpoint.legsBonded
+          ? (state.tunnelEndpoint.legsDownlinkStalled ?? 0)
+          : undefined,
         entryEndpoint:
           state.tunnelEndpoint.entryEndpoint &&
           convertFromEntryEndpoint(state.tunnelEndpoint.entryEndpoint),
@@ -426,6 +433,8 @@ function convertFromFeatureIndicator(
       return FeatureIndicator.daitaMultihop;
     case grpcTypes.FeatureIndicator.REDUCED_MTU:
       return FeatureIndicator.reducedMtu;
+    case grpcTypes.FeatureIndicator.DEGRADED_BOND:
+      return FeatureIndicator.degradedBond;
     case grpcTypes.FeatureIndicator.DAITA_UNAVAILABLE:
       return FeatureIndicator.daitaUnavailable;
     case grpcTypes.FeatureIndicator.SHADOWSOCKS:

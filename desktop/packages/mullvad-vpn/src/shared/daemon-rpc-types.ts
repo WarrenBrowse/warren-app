@@ -187,6 +187,12 @@ export interface ITunnelEndpoint {
   entryEndpoint?: IEndpoint;
   daita: boolean;
   effectiveMtu?: number;
+  // How many transport legs the live tunnel bonds, and how many of those kept
+  // sending while receiving nothing back over the last sampling interval. Both
+  // are absent until the daemon has sampled the tunnel once; a defined
+  // `legsDownlinkStalled` of 0 means measured and healthy.
+  legsBonded?: number;
+  legsDownlinkStalled?: number;
   tunnelType: TunnelType;
 }
 
@@ -268,6 +274,9 @@ export enum FeatureIndicator {
   // below the TUN MTU (reduced-MTU underlay); the datapath adapts
   // automatically, this explains WHY throughput may differ.
   reducedMtu,
+  // Path-health warning: part of the tunnel's bonded transport legs stopped
+  // receiving, so downlink capacity is reduced on an otherwise up tunnel.
+  degradedBond,
   daita,
   daitaMultihop,
   quantumResistance,
