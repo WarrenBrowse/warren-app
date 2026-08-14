@@ -24,7 +24,7 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
-## [1.1.13] - 2026-08-14
+## [1.1.14] - 2026-08-14
 ### Fixed
 - [macOS] Install the app on a computer that never had it. Since 1.1.6 the installer refused every
   first installation with only "an error occurred while running the package scripts": a step that

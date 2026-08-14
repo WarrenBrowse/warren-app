@@ -14,7 +14,7 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
-## [1.1.13] - 2026-08-14
+## [1.1.14] - 2026-08-14
 ### Reparat
 - [macOS] Instalează aplicația pe un computer care nu a avut-o niciodată. Începând cu 1.1.6,
   programul de instalare refuza orice primă instalare cu singurul mesaj „a apărut o eroare la

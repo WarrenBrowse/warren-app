@@ -15,7 +15,7 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
-## [1.1.13] - 2026-08-14
+## [1.1.14] - 2026-08-14
 ### Corrigé
 - [macOS] Installer l'application sur un ordinateur qui ne l'a jamais eue. Depuis la 1.1.6,
   l'installateur refusait toute première installation avec pour seul message « une erreur s'est
