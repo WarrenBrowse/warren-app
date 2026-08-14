@@ -1,5 +1,35 @@
 import fs from 'fs';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import os from 'os';
+import path from 'path';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+
+// Building the packaging config resolves the product version by shelling out to
+// `cargo run --bin mullvad-version`. The icon paths under test do not depend on
+// that version, and the machines that run this suite are not all Rust machines
+// (the desktop CI job installs Node and nothing else), so the subprocess is
+// answered by a stand-in on PATH. A CommonJS `require` inside `distribution.cjs`
+// escapes module mocking, which is why the boundary is stubbed here rather than
+// with `vi.mock`.
+let stubBinDir: string | undefined;
+let realPath: string | undefined;
+
+beforeAll(() => {
+  if (process.platform === 'win32') {
+    return;
+  }
+  stubBinDir = fs.mkdtempSync(path.join(os.tmpdir(), 'warren-cargo-stub-'));
+  fs.writeFileSync(path.join(stubBinDir, 'cargo'), '#!/bin/sh\necho 1.0.0\n', { mode: 0o755 });
+  realPath = process.env.PATH;
+  process.env.PATH = `${stubBinDir}${path.delimiter}${realPath ?? ''}`;
+});
+
+afterAll(() => {
+  if (stubBinDir === undefined) {
+    return;
+  }
+  process.env.PATH = realPath;
+  fs.rmSync(stubBinDir, { recursive: true, force: true });
+});
 
 // The packaging config reads WARREN_PRODUCT_ENV once, at module load, so each
 // environment needs a fresh module instance.
