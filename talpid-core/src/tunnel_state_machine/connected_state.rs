@@ -67,9 +67,12 @@ fn grace_action(is_multi_hop: bool, grace_armed: bool, is_offline: bool) -> Grac
 /// The `TunnelEndpoint` published on the Connected transition.
 ///
 /// Unlike the Connecting transition (which can only echo the requested
-/// settings, negotiation has not happened yet), Connected overrides `daita`
-/// with the runtime truth carried by the tunnel monitor's metadata: a
-/// requested-but-ungranted defense must never be published as active.
+/// settings, negotiation has not happened yet), Connected overrides the fields
+/// the tunnel monitor MEASURES with its metadata: a requested-but-ungranted
+/// defense must never be published as active, and the path measurements
+/// (effective MTU, per-leg stall count) exist nowhere else. A mid-session
+/// metadata refresh re-enters here, which is how a later measurement reaches
+/// the published endpoint.
 fn connected_tunnel_endpoint(
     tunnel_parameters: &BackendParams,
     metadata: &TunnelMetadata,
@@ -78,6 +81,8 @@ fn connected_tunnel_endpoint(
         tunnel_interface: Some(metadata.interface.clone()),
         daita: metadata.daita_active,
         effective_mtu: metadata.effective_mtu,
+        legs_bonded: metadata.legs_bonded,
+        legs_downlink_stalled: metadata.legs_downlink_stalled,
         ..tunnel_parameters.get_tunnel_endpoint()
     }
 }
@@ -663,6 +668,8 @@ mod connected_endpoint_tests {
             ipv6_gateway: None,
             daita_active,
             effective_mtu: None,
+            legs_bonded: 0,
+            legs_downlink_stalled: 0,
         }
     }
 
@@ -695,6 +702,31 @@ mod connected_endpoint_tests {
     fn connected_endpoint_carries_the_tunnel_interface() {
         let endpoint = connected_tunnel_endpoint(&params(false), &metadata(false));
         assert_eq!(endpoint.tunnel_interface.as_deref(), Some("utun7"));
+    }
+
+    /// The per-leg stall count is runtime truth from the tunnel monitor, on the
+    /// same path as the effective MTU: a mid-session metadata refresh is what
+    /// surfaces (or clears) the degraded-bond indicator.
+    #[test]
+    fn connected_endpoint_carries_the_leg_counts_from_metadata() {
+        let endpoint = connected_tunnel_endpoint(&params(false), &metadata(false));
+        assert_eq!(
+            (endpoint.legs_bonded, endpoint.legs_downlink_stalled),
+            (0, 0),
+            "an unsampled tunnel publishes no leg measurement"
+        );
+
+        let sampled = TunnelMetadata {
+            legs_bonded: 8,
+            legs_downlink_stalled: 3,
+            ..metadata(false)
+        };
+        let endpoint = connected_tunnel_endpoint(&params(false), &sampled);
+        assert_eq!(
+            (endpoint.legs_bonded, endpoint.legs_downlink_stalled),
+            (8, 3),
+            "a sampled bundle width and stall count must reach the published endpoint"
+        );
     }
 
     /// The reduced-MTU verdict is runtime truth from the tunnel monitor: the

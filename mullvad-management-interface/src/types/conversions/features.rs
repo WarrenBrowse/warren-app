@@ -23,6 +23,7 @@ impl From<mullvad_types::features::FeatureIndicator> for proto::FeatureIndicator
             mullvad_types::features::FeatureIndicator::DaitaMultihop => DaitaMultihop,
             mullvad_types::features::FeatureIndicator::DaitaUnavailable => DaitaUnavailable,
             mullvad_types::features::FeatureIndicator::ReducedMtu => ReducedMtu,
+            mullvad_types::features::FeatureIndicator::DegradedBond => DegradedBond,
         }
     }
 }
@@ -49,6 +50,7 @@ impl From<proto::FeatureIndicator> for mullvad_types::features::FeatureIndicator
             proto::FeatureIndicator::DaitaMultihop => Self::DaitaMultihop,
             proto::FeatureIndicator::DaitaUnavailable => Self::DaitaUnavailable,
             proto::FeatureIndicator::ReducedMtu => Self::ReducedMtu,
+            proto::FeatureIndicator::DegradedBond => Self::DegradedBond,
         }
     }
 }

@@ -35,6 +35,8 @@ impl TunnelParameters {
         TunnelEndpoint {
             quantum_resistant: self.options.quantum_resistant,
             effective_mtu: None,
+            legs_bonded: 0,
+            legs_downlink_stalled: 0,
             endpoint: self
                 .connection
                 .get_exit_endpoint()

@@ -122,6 +122,16 @@ pub enum FeatureIndicator {
     /// this surfaces WHY throughput-sensitive traffic behaves differently.
     /// Runtime truth from `TunnelEndpoint::effective_mtu`, like DAITA.
     ReducedMtu,
+
+    /// At least one of the tunnel's bonded transport legs kept sending while
+    /// receiving nothing back, so part of the downlink capacity is gone while
+    /// the tunnel is otherwise up and reports Connected. Runtime truth from
+    /// `TunnelEndpoint::legs_downlink_stalled`.
+    ///
+    /// An indicator, never a guard: nothing acts on it, and exit-side idle
+    /// cover keeps a stalled leg's receive counter climbing, so its absence
+    /// is not a claim of health.
+    DegradedBond,
 }
 
 impl FeatureIndicator {
@@ -146,6 +156,7 @@ impl FeatureIndicator {
             FeatureIndicator::DaitaMultihop => "DAITA: Multihop",
             FeatureIndicator::DaitaUnavailable => "DAITA: not active on this server",
             FeatureIndicator::ReducedMtu => "Reduced MTU",
+            FeatureIndicator::DegradedBond => "Degraded Bond",
         }
     }
 }
@@ -236,6 +247,11 @@ pub fn compute_feature_indicators(
     // path measured below the TUN MTU, so presence IS the verdict.
     let reduced_mtu = endpoint.effective_mtu.is_some();
 
+    // Same shape: the tunnel monitor only publishes a non-zero count after it
+    // has measured one sampling interval, so the count IS the verdict and a
+    // settings recompute (which reuses the live endpoint) reproduces it.
+    let degraded_bond = endpoint.legs_downlink_stalled > 0;
+
     let protocol_features = vec![
         (split_tunneling, FeatureIndicator::SplitTunneling),
         (lan_sharing, FeatureIndicator::LanSharing),
@@ -259,6 +275,7 @@ pub fn compute_feature_indicators(
         #[cfg(daita)]
         (daita_unavailable, FeatureIndicator::DaitaUnavailable),
         (reduced_mtu, FeatureIndicator::ReducedMtu),
+        (degraded_bond, FeatureIndicator::DegradedBond),
     ];
 
     // use the booleans to filter into a list of only the active features
@@ -292,6 +309,8 @@ mod tests {
             tunnel_interface: Default::default(),
             daita: Default::default(),
             effective_mtu: Default::default(),
+            legs_bonded: Default::default(),
+            legs_downlink_stalled: Default::default(),
             tunnel_type: Default::default(),
         };
 
@@ -497,6 +516,7 @@ mod tests {
             FeatureIndicator::DaitaMultihop => {}
             FeatureIndicator::DaitaUnavailable => {}
             FeatureIndicator::ReducedMtu => {}
+            FeatureIndicator::DegradedBond => {}
         }
     }
 
@@ -513,6 +533,8 @@ mod tests {
             tunnel_interface: Default::default(),
             daita,
             effective_mtu: Default::default(),
+            legs_bonded: Default::default(),
+            legs_downlink_stalled: Default::default(),
             tunnel_type: Default::default(),
         }
     }
@@ -563,6 +585,8 @@ mod tests {
             tunnel_interface: Default::default(),
             daita: Default::default(),
             effective_mtu: None,
+            legs_bonded: Default::default(),
+            legs_downlink_stalled: Default::default(),
             tunnel_type: Default::default(),
         };
         assert!(
@@ -577,6 +601,51 @@ mod tests {
                 .active_features()
                 .any(|f| f == FeatureIndicator::ReducedMtu),
             "a reduced-path measurement must surface the indicator"
+        );
+    }
+
+    /// A stalled leg is runtime truth from the tunnel monitor, so it must
+    /// survive a settings-only recompute untouched: the recompute reuses the
+    /// live endpoint, which is where the count lives.
+    #[test]
+    fn degraded_bond_indicator_follows_the_endpoint_leg_measurement() {
+        let mut settings = Settings::default();
+        let mut endpoint = TunnelEndpoint {
+            endpoint: Endpoint {
+                address: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1)), 8080),
+                protocol: TransportProtocol::Udp,
+            },
+            quantum_resistant: Default::default(),
+            obfuscation: Default::default(),
+            entry_endpoint: Default::default(),
+            tunnel_interface: Default::default(),
+            daita: Default::default(),
+            effective_mtu: None,
+            legs_bonded: 8,
+            legs_downlink_stalled: 0,
+            tunnel_type: Default::default(),
+        };
+        let degraded = |settings: &Settings, endpoint: &TunnelEndpoint| {
+            compute_feature_indicators(settings, endpoint, false)
+                .active_features()
+                .any(|f| f == FeatureIndicator::DegradedBond)
+        };
+
+        assert!(
+            !degraded(&settings, &endpoint),
+            "a bundle where every leg still receives must show no indicator"
+        );
+
+        endpoint.legs_downlink_stalled = 1;
+        assert!(
+            degraded(&settings, &endpoint),
+            "one leg that sends into silence must surface the indicator"
+        );
+
+        settings.allow_lan = true;
+        assert!(
+            degraded(&settings, &endpoint),
+            "an unrelated settings edit must not erase a runtime measurement"
         );
     }
 

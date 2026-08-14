@@ -504,6 +504,14 @@ message TunnelEndpoint {
   // Largest inner packet the live tunnel can carry in one datagram, set only
   // when it measured below the TUN MTU (reduced-MTU underlay).
   optional uint32 effective_mtu = 9;
+  // Number of transport legs the live tunnel bonds. Optional so a client can
+  // tell "this daemon never sampled" from "the sample said zero".
+  optional uint32 legs_bonded = 10;
+  // How many of those legs kept sending while receiving nothing back over the
+  // last sampling interval. Present only alongside `legs_bonded`, and only an
+  // indicator: nothing in the datapath acts on it, and exit-side idle cover
+  // hides some stalls.
+  optional uint32 legs_downlink_stalled = 11;
 }
 
 message FeatureIndicators { repeated FeatureIndicator active_features = 1; }
@@ -532,6 +540,9 @@ enum FeatureIndicator {
   // The live tunnel measured an inner-packet budget below the TUN MTU
   // (reduced-MTU underlay); the datapath is adapting automatically.
   REDUCED_MTU = 18;
+  // At least one bonded transport leg kept sending while receiving nothing
+  // back, so part of the downlink capacity is gone on an otherwise up tunnel.
+  DEGRADED_BOND = 19;
 }
 
 message ObfuscationInfo {

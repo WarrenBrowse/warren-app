@@ -91,6 +91,14 @@ pub struct TunnelMetadata {
     /// default. Measured after DPLPMTUD settles, so the first `Up` always
     /// carries `None`; a later metadata refresh publishes the verdict.
     pub effective_mtu: Option<u16>,
+    /// Number of transport legs the tunnel currently bonds. `0` means no
+    /// measurement: the first `Up` carries it, as does any tunnel type that
+    /// does not bond. A later metadata refresh publishes the sampled width.
+    pub legs_bonded: u8,
+    /// How many of those legs kept sending while receiving nothing back over
+    /// the last sampling interval. Only meaningful alongside a non-zero
+    /// `legs_bonded`. An indicator: the datapath takes no action on it.
+    pub legs_downlink_stalled: u8,
 }
 
 impl TunnelMetadata {

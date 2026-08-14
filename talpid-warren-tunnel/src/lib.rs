@@ -210,6 +210,9 @@ mod drain_reactor;
 /// downlink loss. An indicator: it logs and takes no action.
 pub mod dual_homing;
 mod egress_probe;
+/// Classification of a bonded leg whose downlink went silent while its uplink
+/// kept sending. An indicator sampled post-connect, never a guard.
+pub mod leg_stall;
 mod migration_watchdog;
 mod session_liveness;
 mod session_placement;
@@ -1918,13 +1921,18 @@ impl WarrenTunnelMonitor {
             start_t.elapsed().as_millis()
         );
 
-        // Effective-MTU sampler. DPLPMTUD needs a few RTTs to settle, so
+        // Post-connect health sampler. DPLPMTUD needs a few RTTs to settle, so
         // sampling at Up would flag every network as reduced; the verdict
         // is measured 4 s post-Up and republished as a metadata refresh
         // only when it changes (quantized to 16-byte steps against
         // boundary flap). The pumps clamp MSS and reflect PMTUD on
         // reduced paths regardless; this only surfaces the state to the
         // UI as the ReducedMtu feature indicator.
+        //
+        // The same tick carries the per-leg downlink-stall count: a leg that
+        // keeps sending while nothing comes back leaves the tunnel Connected
+        // and merely slower, which is how half a bundle died unnoticed once.
+        // Both are indicators; neither takes any action on the datapath.
         {
             let mut sampler_hook = event_hook.clone();
             let mut sampler_rx = client_rx.clone();
@@ -1932,6 +1940,8 @@ impl WarrenTunnelMonitor {
             let tun_mtu = usize::from(tun_config.mtu);
             runtime.spawn(async move {
                 let mut last: Option<u16> = None;
+                let mut last_legs = (0u8, 0u8);
+                let mut previous_legs: Vec<leg_stall::LegDatagrams> = Vec::new();
                 tokio::time::sleep(std::time::Duration::from_secs(4)).await;
                 loop {
                     let bundle = sampler_rx.borrow().clone();
@@ -1939,10 +1949,29 @@ impl WarrenTunnelMonitor {
                         let inner = bundle.max_inner_payload();
                         let verdict = (inner < tun_mtu)
                             .then(|| u16::try_from(inner & !15).unwrap_or(u16::MAX));
-                        if verdict != last {
+                        let current_legs: Vec<leg_stall::LegDatagrams> = bundle
+                            .clone_connections()
+                            .iter()
+                            .map(|conn| {
+                                let stats = conn.stats();
+                                leg_stall::LegDatagrams {
+                                    tx: stats.udp_tx.datagrams,
+                                    rx: stats.udp_rx.datagrams,
+                                }
+                            })
+                            .collect();
+                        let legs = (
+                            u8::try_from(current_legs.len()).unwrap_or(u8::MAX),
+                            leg_stall::count_downlink_stalled(&previous_legs, &current_legs),
+                        );
+                        previous_legs = current_legs;
+                        if verdict != last || legs != last_legs {
                             last = verdict;
+                            last_legs = legs;
                             let mut refreshed = sampler_meta.clone();
                             refreshed.effective_mtu = verdict;
+                            refreshed.legs_bonded = legs.0;
+                            refreshed.legs_downlink_stalled = legs.1;
                             sampler_hook.on_event(TunnelEvent::Up(refreshed)).await;
                         }
                     }
@@ -3044,6 +3073,8 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig, daita_active: bool) -> T
         ipv6_gateway: config.ipv6_gateway,
         daita_active,
         effective_mtu: None,
+        legs_bonded: 0,
+        legs_downlink_stalled: 0,
     }
 }
 

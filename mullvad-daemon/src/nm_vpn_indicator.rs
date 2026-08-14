@@ -235,6 +235,8 @@ mod tests {
             #[cfg(daita)]
             daita: false,
             effective_mtu: None,
+            legs_bonded: 0,
+            legs_downlink_stalled: 0,
             tunnel_type: TunnelType::Warren,
         }
     }

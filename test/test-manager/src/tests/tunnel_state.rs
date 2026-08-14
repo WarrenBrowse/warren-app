@@ -357,6 +357,8 @@ pub async fn test_connected_state(
                     tunnel_interface: _,
                     daita: _,
                     effective_mtu: _,
+                    legs_bonded: _,
+                    legs_downlink_stalled: _,
                     tunnel_type: _,
                 },
             ..

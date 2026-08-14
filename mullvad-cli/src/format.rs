@@ -157,6 +157,8 @@ fn connection_information(
         .and_then(|endpoint| endpoint.tunnel_interface.clone());
     info.insert("Tunnel interface", tunnel_interface_fmt);
 
+    info.insert("Bonded legs", endpoint.and_then(format_bonded_legs));
+
     info.insert("Visible location", location.map(format_location));
     let features_fmt = feature_indicators
         .filter(|f| !f.is_empty())
@@ -195,6 +197,28 @@ fn print_connection_info(
             _ => {}
         }
     }
+}
+
+/// The bonded-legs row: how many transport legs the tunnel carries and how many
+/// of them stopped receiving.
+///
+/// `None` when the tunnel monitor has published no sample (`legs_bonded == 0`),
+/// so the row is absent rather than claiming a bundle of zero legs. The row
+/// states what was observed and leaves the conclusion out: a stalled leg costs
+/// downlink capacity, and exit-side idle cover can hide one, so "all receiving"
+/// is a reading, not a clean bill of health.
+fn format_bonded_legs(endpoint: &TunnelEndpoint) -> Option<String> {
+    if endpoint.legs_bonded == 0 {
+        return None;
+    }
+    Some(match endpoint.legs_downlink_stalled {
+        0 => format!("{} (all receiving)", endpoint.legs_bonded),
+        1 => format!("{} (1 receiving nothing back)", endpoint.legs_bonded),
+        stalled => format!(
+            "{} ({stalled} receiving nothing back)",
+            endpoint.legs_bonded
+        ),
+    })
 }
 
 pub fn format_location(location: &GeoIpLocation) -> String {
@@ -348,5 +372,56 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
         AuthFailed::Banned => BANNED_MSG,
         AuthFailed::BannedPortForwarding => BANNED_PF_MSG,
         AuthFailed::Unknown => UNKNOWN_MSG,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use talpid_types::net::{TransportProtocol, TunnelType};
+
+    fn endpoint(legs_bonded: u8, legs_downlink_stalled: u8) -> TunnelEndpoint {
+        TunnelEndpoint {
+            endpoint: Endpoint {
+                address: "198.51.100.1:443".parse().unwrap(),
+                protocol: TransportProtocol::Udp,
+            },
+            quantum_resistant: false,
+            obfuscation: None,
+            entry_endpoint: None,
+            tunnel_interface: None,
+            // `talpid-types` enables the `daita` cfg unconditionally, so the
+            // field always exists even where this crate does not set it.
+            daita: false,
+            effective_mtu: None,
+            legs_bonded,
+            legs_downlink_stalled,
+            tunnel_type: TunnelType::Warren,
+        }
+    }
+
+    #[test]
+    fn an_unsampled_tunnel_prints_no_bonded_legs_row() {
+        assert_eq!(format_bonded_legs(&endpoint(0, 0)), None);
+    }
+
+    #[test]
+    fn a_healthy_bundle_reports_its_width() {
+        assert_eq!(
+            format_bonded_legs(&endpoint(8, 0)).as_deref(),
+            Some("8 (all receiving)")
+        );
+    }
+
+    #[test]
+    fn a_stalled_leg_is_named_in_the_row() {
+        assert_eq!(
+            format_bonded_legs(&endpoint(8, 1)).as_deref(),
+            Some("8 (1 receiving nothing back)")
+        );
+        assert_eq!(
+            format_bonded_legs(&endpoint(8, 3)).as_deref(),
+            Some("8 (3 receiving nothing back)")
+        );
     }
 }

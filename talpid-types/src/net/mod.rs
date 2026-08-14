@@ -61,6 +61,16 @@ pub struct TunnelEndpoint {
     /// post-connect measurement settles, and on paths that fit the default.
     #[serde(default)]
     pub effective_mtu: Option<u16>,
+    /// Number of transport legs the live tunnel bonds, `0` when nothing has
+    /// been measured yet (the first `Up`, or a tunnel type that does not bond).
+    /// Runtime truth from the tunnel monitor, like `daita`.
+    #[serde(default)]
+    pub legs_bonded: u8,
+    /// How many of those legs kept sending while receiving nothing back over
+    /// the last sampling interval. An indicator, never a guard: the datapath
+    /// takes no action on it, and exit-side idle cover hides some stalls.
+    #[serde(default)]
+    pub legs_downlink_stalled: u8,
     /// The tunneling technology used for this endpoint.
     #[serde(default)]
     pub tunnel_type: TunnelType,
@@ -607,6 +617,8 @@ mod tests {
             #[cfg(daita)]
             daita: false,
             effective_mtu: None,
+            legs_bonded: 0,
+            legs_downlink_stalled: 0,
             tunnel_type,
         }
     }

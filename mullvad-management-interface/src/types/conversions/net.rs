@@ -20,6 +20,12 @@ impl From<talpid_types::net::TunnelEndpoint> for proto::TunnelEndpoint {
                 talpid_types::net::TunnelType::Warren => proto::TunnelType::Warren,
             }),
             effective_mtu: endpoint.effective_mtu.map(u32::from),
+            // `legs_bonded == 0` means the monitor never sampled this tunnel,
+            // so both counts stay absent on the wire and a reader can tell
+            // "no measurement" from "measured, nothing stalled".
+            legs_bonded: (endpoint.legs_bonded > 0).then(|| u32::from(endpoint.legs_bonded)),
+            legs_downlink_stalled: (endpoint.legs_bonded > 0)
+                .then(|| u32::from(endpoint.legs_downlink_stalled)),
         }
     }
 }
@@ -185,6 +191,12 @@ impl TryFrom<proto::TunnelEndpoint> for talpid_types::net::TunnelEndpoint {
             effective_mtu: endpoint
                 .effective_mtu
                 .map(|mtu| u16::try_from(mtu).unwrap_or(u16::MAX)),
+            legs_bonded: endpoint
+                .legs_bonded
+                .map_or(0, |legs| u8::try_from(legs).unwrap_or(u8::MAX)),
+            legs_downlink_stalled: endpoint
+                .legs_downlink_stalled
+                .map_or(0, |legs| u8::try_from(legs).unwrap_or(u8::MAX)),
             tunnel_type: match proto::TunnelType::try_from(endpoint.tunnel_type) {
                 Ok(proto::TunnelType::Warren) => talpid_types::net::TunnelType::Warren,
                 // Default to WireGuard for unknown or zero values (backward compat).
@@ -412,5 +424,70 @@ mod proxy {
                 )
             })
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use talpid_types::net as talpid_net;
+
+    fn endpoint(legs_bonded: u8, legs_downlink_stalled: u8) -> talpid_net::TunnelEndpoint {
+        talpid_net::TunnelEndpoint {
+            endpoint: talpid_net::Endpoint {
+                address: "198.51.100.1:443".parse().unwrap(),
+                protocol: talpid_net::TransportProtocol::Udp,
+            },
+            quantum_resistant: false,
+            obfuscation: None,
+            entry_endpoint: None,
+            tunnel_interface: None,
+            #[cfg(daita)]
+            daita: false,
+            effective_mtu: None,
+            legs_bonded,
+            legs_downlink_stalled,
+            tunnel_type: talpid_net::TunnelType::Warren,
+        }
+    }
+
+    #[test]
+    fn a_sampled_bundle_survives_the_proto_roundtrip() {
+        let original = endpoint(8, 3);
+        let restored =
+            talpid_net::TunnelEndpoint::try_from(proto::TunnelEndpoint::from(original.clone()))
+                .unwrap();
+        assert_eq!(restored, original);
+    }
+
+    /// The two counts are the observability payload, so the wire must carry a
+    /// measured "nothing is stalled" as such and never collapse it into the
+    /// "never measured" shape.
+    #[test]
+    fn a_healthy_bundle_is_sent_as_measured_rather_than_absent() {
+        let wire = proto::TunnelEndpoint::from(endpoint(8, 0));
+        assert_eq!(wire.legs_bonded, Some(8));
+        assert_eq!(wire.legs_downlink_stalled, Some(0));
+    }
+
+    #[test]
+    fn an_unsampled_tunnel_sends_no_leg_counts_at_all() {
+        let wire = proto::TunnelEndpoint::from(endpoint(0, 0));
+        assert_eq!(wire.legs_bonded, None);
+        assert_eq!(wire.legs_downlink_stalled, None);
+    }
+
+    /// An older daemon sends a `TunnelEndpoint` without either field; that must
+    /// decode as "no measurement", not as a decode error.
+    #[test]
+    fn an_endpoint_without_leg_counts_decodes_as_unsampled() {
+        let mut wire = proto::TunnelEndpoint::from(endpoint(8, 3));
+        wire.legs_bonded = None;
+        wire.legs_downlink_stalled = None;
+        let restored = talpid_net::TunnelEndpoint::try_from(wire).unwrap();
+        assert_eq!(
+            (restored.legs_bonded, restored.legs_downlink_stalled),
+            (0, 0)
+        );
     }
 }
