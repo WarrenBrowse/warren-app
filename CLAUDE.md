@@ -44,6 +44,25 @@ detekt regression, compare against that 174 with
 `./gradlew detekt --rerun-tasks`; a plain `detekt` prints nothing when
 up-to-date, which reads as a false clean.
 
+## Desktop unit tests run on a Node-only machine, and must stay that way
+
+`warren-tests.yml` runs the vitest suite (`npm run test -w mullvad-vpn`) on a
+runner that has Node and nothing else, and `desktop/.npmrc` carries
+`ignore-scripts=true`, so no install ever downloads the Electron binary. A spec
+that reaches a real Electron API or shells out to `cargo` therefore passes on
+your machine and fails there. `electron` is aliased to a stub in the `test`
+section of `vite.config.ts`, and `product-env-icons.spec.ts` answers the
+packaging config's `cargo run --bin mullvad-version` from a stand-in on `PATH`.
+Reproduce the CI conditions before pushing a new spec: hide
+`desktop/node_modules/electron/path.txt` and run with a `PATH` that has no
+cargo.
+
+The Playwright suites are a different story: `frontend.yml` and
+`desktop-e2e.yml` are dispatch-only in this fork, and `test/e2e/mocked` is red
+from `main.spec.ts` (it still asserts the Mullvad window title) with
+`maxFailures: 1` cutting the rest of the run. Run a single mocked spec with
+`npm run build:test && npx playwright test mocked/<name>`.
+
 ## Scenery art is generated, never hand-converted
 
 The connect screen of all three clients stacks three pre-registered full-frame
