@@ -20,9 +20,15 @@ use talpid_types::tunnel::TunnelStateTransition;
 // macOS dev breaking the multi-hop peer choice should find out locally, not on
 // the Linux runner. So they stay compiled on every platform rather than being
 // gated behind the same cfg as their only caller.
+//
+// Suppressing the resulting `dead_code` needs the cfg to name the exact build
+// where the lint fires, because `expect` is itself linted when nothing fires:
+// off Linux the function has no caller in the library, but the tests below do
+// call it, and the struct is never reported at all (the function that builds it
+// is the dead item rustc names). So only the function carries a suppression,
+// and only outside the test build.
 
 /// The tunnel as NetworkManager needs it described.
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TunnelDescription {
     /// Interface the engine created.
@@ -39,7 +45,10 @@ pub struct TunnelDescription {
 /// Only the connected state warrants a VPN connection. Connecting does not:
 /// the tunnel carries nothing yet, and a desktop claiming VPN protection
 /// before traffic flows through it would be saying something untrue.
-#[cfg_attr(not(target_os = "linux"), allow(dead_code))]
+#[cfg_attr(
+    all(not(target_os = "linux"), not(test)),
+    expect(dead_code, reason = "the NetworkManager indicator is Linux only")
+)]
 pub fn desired_indicator(transition: &TunnelStateTransition) -> Option<TunnelDescription> {
     let TunnelStateTransition::Connected(endpoint) = transition else {
         return None;
