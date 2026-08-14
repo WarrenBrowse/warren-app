@@ -1,9 +1,12 @@
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
 import { startup } from 'vite-plugin-electron';
 import electron from 'vite-plugin-electron/simple';
+// `vitest/config` rather than `vite`: same function, plus the `test` field
+// below. It has no effect on a build.
+import { defineConfig } from 'vitest/config';
 
 import { treeKillSync } from './vite-utils';
 
@@ -90,6 +93,13 @@ const viteConfig = defineConfig({
   },
   resolve: {
     dedupe: ['react', 'react-dom'],
+  },
+  test: {
+    // Unit tests never drive a real Electron: see the stub for why resolving
+    // the real module throws in a fresh checkout and in CI.
+    alias: {
+      electron: fileURLToPath(new URL('./test/unit/electron-stub.cjs', import.meta.url)),
+    },
   },
   plugins: [
     electron({
