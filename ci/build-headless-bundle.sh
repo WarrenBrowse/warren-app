@@ -252,8 +252,37 @@ case "$platform" in
         install -m 0644 "$cli_dir/windows/install-windows.ps1" "$stage/install-windows.ps1"
 
         write_bundle_info "$stage"
-        (cd "$OUT" && powershell -NoProfile -Command \
-            "Compress-Archive -Path '$name' -DestinationPath '${name}.zip' -Force")
+        # bsdtar, shipped as tar.exe since Windows 10 1803, writes the forward
+        # slashes the ZIP format specifies. PowerShell's Compress-Archive writes
+        # BACKSLASHES, which Explorer and 7-Zip tolerate but `unzip` refuses
+        # outright, so nobody can inspect the Windows bundle from a Linux or
+        # macOS machine, and any script that pipes through unzip breaks.
+        #
+        # The magic-byte check is not paranoia: Git Bash's own GNU tar also
+        # answers to `tar -a -cf out.zip`, does not know the zip format, and
+        # writes a plain TAR under a .zip name. That extracts to nothing on
+        # Windows while looking like a successful build.
+        (
+            cd "$OUT"
+            zipped=""
+            for candidate in /c/Windows/System32/tar.exe "$(command -v bsdtar 2> /dev/null)" tar; do
+                [ -n "$candidate" ] || continue
+                rm -f "${name}.zip"
+                "$candidate" -a -cf "${name}.zip" "$name" 2> /dev/null || continue
+                [ "$(head -c 2 "${name}.zip" 2> /dev/null)" = "PK" ] || continue
+                zipped="$candidate"
+                break
+            done
+            if [ -n "$zipped" ]; then
+                echo "zipped with $zipped"
+            else
+                echo "::warning::no bsdtar on this runner; falling back to Compress-Archive," \
+                    "whose backslash separators make the zip unreadable to unzip(1)"
+                rm -f "${name}.zip"
+                powershell -NoProfile -Command \
+                    "Compress-Archive -Path '$name' -DestinationPath '${name}.zip' -Force"
+            fi
+        )
         rm -rf "$stage"
         ;;
 
