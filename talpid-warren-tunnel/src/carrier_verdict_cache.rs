@@ -29,7 +29,11 @@
 //!
 //! Entries expire after [`VERDICT_TTL`] so a `RouteOnly` network re-earns the
 //! leak-free bind periodically instead of paying the `/32` ServerIP exception
-//! forever on a topology that may have been fixed.
+//! forever on a topology that may have been fixed. That expiry only happens
+//! because the post-`Up` escape verification of a REPLAYED verdict leaves the
+//! entry's timestamp alone: it measures the escape, not the bind, so renewing
+//! the entry from it would keep any weekly-used network pinned to the escape
+//! for good.
 //!
 //! The fingerprint is stored as a stable FNV-1a hash rather than the raw
 //! interface/address strings. This keeps casual reads of the cache file from
@@ -106,12 +110,16 @@ pub(crate) fn plan_carrier_probe(
 ) -> CarrierProbePlan {
     let cache = VerdictCache::load(verdict_dir);
     match cache.lookup(&fingerprint, now_unix()) {
-        Some(CachedVerdict::RouteOnly) => {
-            CarrierProbePlan::SkipRouteOnly(VerdictRecorder { cache, fingerprint })
-        }
-        Some(CachedVerdict::BindOk) | None => {
-            CarrierProbePlan::Background(VerdictRecorder { cache, fingerprint })
-        }
+        Some(CachedVerdict::RouteOnly) => CarrierProbePlan::SkipRouteOnly(VerdictRecorder {
+            cache,
+            fingerprint,
+            replayed_route_only: true,
+        }),
+        Some(CachedVerdict::BindOk) | None => CarrierProbePlan::Background(VerdictRecorder {
+            cache,
+            fingerprint,
+            replayed_route_only: false,
+        }),
     }
 }
 
@@ -119,12 +127,22 @@ pub(crate) fn plan_carrier_probe(
 pub(crate) struct VerdictRecorder {
     cache: VerdictCache,
     fingerprint: String,
+    /// The plan REPLAYED a cached `RouteOnly` verdict, so the guard that
+    /// follows measures the escape and never touches the bind.
+    replayed_route_only: bool,
 }
 
 impl VerdictRecorder {
     pub(crate) fn record(mut self, outcome: GuardOutcome) {
         let verdict = match outcome {
             GuardOutcome::BypassConfirmed => CachedVerdict::BindOk,
+            // A replayed plan re-proves the ESCAPE, which is no evidence about
+            // the bind, and [`VerdictCache::record`] re-stamps `recorded_unix`.
+            // Writing it back would push the expiry forward on every connect,
+            // so a network used at least once a week would never age out and
+            // the host would keep the wider `/32` escape forever. Leave the
+            // original entry alone and let it expire on schedule.
+            GuardOutcome::RevertedToRoute if self.replayed_route_only => return,
             GuardOutcome::RevertedToRoute => CachedVerdict::RouteOnly,
             // Neither configuration egresses. `RouteOnly` would be a lie that
             // outlives the connect and skips the guard for a whole TTL, so the
@@ -418,6 +436,54 @@ mod tests {
                 CarrierProbePlan::Background(_)
             ),
             "the next connect must re-arm the bind instead of replaying a dead verdict"
+        );
+    }
+
+    /// A `SkipRouteOnly` connect measures the ESCAPE, not the bind, so its
+    /// `RevertedToRoute` carries no news about the bind. Re-stamping the entry
+    /// from it pushes the expiry forward on every connect, and a network used
+    /// at least once a week then never ages out: the host keeps the wider `/32`
+    /// escape forever and the bind is never retried.
+    #[test]
+    fn a_replayed_route_only_verdict_keeps_its_original_age() {
+        let dir = tmp_dir("no-restamp");
+        let recorded = now_unix() - VERDICT_TTL.as_secs() + 30;
+        let mut cache = VerdictCache::load(Some(&dir));
+        cache.record("fp1", CachedVerdict::RouteOnly, recorded);
+
+        let CarrierProbePlan::SkipRouteOnly(recorder) =
+            plan_carrier_probe("fp1".into(), Some(&dir))
+        else {
+            panic!("a fresh RouteOnly verdict must skip the bind");
+        };
+        recorder.record(GuardOutcome::RevertedToRoute);
+
+        assert_eq!(
+            VerdictCache::load(Some(&dir)).lookup("fp1", now_unix() + 60),
+            None,
+            "a re-proved escape must not renew the entry, or it never expires"
+        );
+    }
+
+    /// The other half of the same rule: a `Background` plan DID measure the
+    /// bind, so its verdict is fresh evidence and must reset the clock.
+    #[test]
+    fn a_measured_bind_re_stamps_the_entry() {
+        let dir = tmp_dir("restamp");
+        let recorded = now_unix() - VERDICT_TTL.as_secs() + 30;
+        let mut cache = VerdictCache::load(Some(&dir));
+        cache.record("fp1", CachedVerdict::BindOk, recorded);
+
+        let CarrierProbePlan::Background(recorder) = plan_carrier_probe("fp1".into(), Some(&dir))
+        else {
+            panic!("a BindOk verdict must keep the bind and verify in the background");
+        };
+        recorder.record(GuardOutcome::RevertedToRoute);
+
+        assert_eq!(
+            VerdictCache::load(Some(&dir)).lookup("fp1", now_unix() + 60),
+            Some(CachedVerdict::RouteOnly),
+            "a fresh bind measurement must reset the entry's clock"
         );
     }
 
