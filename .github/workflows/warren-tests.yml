@@ -135,6 +135,14 @@ jobs:
       - name: ESLint (zero warnings)
         run: npm run lint
 
+      # The desktop unit suite existed but nothing ran it: `frontend.yml` is
+      # dispatch-only in this fork, so the only gate on the renderer and main
+      # process logic was type-check + lint, neither of which observes
+      # behaviour. It is a few seconds on top of an install this job already
+      # does.
+      - name: Unit tests (vitest)
+        run: npm run test
+
       # Type-checking and linting both pass on a renderer bundle that throws on
       # load: 1.1.5 shipped exactly that and no desktop window could paint. This
       # checks the built artifact, which is the only place the failure is
