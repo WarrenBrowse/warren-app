@@ -208,7 +208,7 @@ mod drain_reactor;
 /// Connect-time observation of a host that reaches its default gateway's
 /// subnet through more than one interface, the shape behind a silent partial
 /// downlink loss. An indicator: it logs and takes no action.
-mod dual_homing;
+pub mod dual_homing;
 mod egress_probe;
 /// Classification of a bonded leg whose downlink went silent while its uplink
 /// kept sending. An indicator sampled post-connect, never a guard.

@@ -53,8 +53,13 @@ fn same_subnet(a: Ipv4Addr, b: Ipv4Addr, netmask: Ipv4Addr) -> bool {
 /// A `/32` netmask is skipped: it describes a host route with no subnet to
 /// share, so every address would trivially "match" the gateway only when equal
 /// to it, and a point-to-point link would read as a second home.
+///
+/// Public although the only caller is macOS-side: this is the module's whole
+/// contract and the part worth testing, and CI runs the Rust suite on Linux
+/// only, where a crate-private version would be dead code rather than a tested
+/// one.
 #[must_use]
-pub(crate) fn uplinks_on_gateway_subnet(
+pub fn uplinks_on_gateway_subnet(
     addrs: &[(String, Ipv4Addr, Ipv4Addr)],
     gateway: Ipv4Addr,
 ) -> Vec<String> {
