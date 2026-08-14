@@ -4,7 +4,7 @@ import { LoginState } from '../../redux/account/reducers';
 export function getNavigationBase(
   connectedToDaemon: boolean,
   loginState: LoginState,
-  onboardingCompletedUnix?: number,
+  onboardingPending?: boolean,
 ): RoutePath {
   if (connectedToDaemon) {
     if (loginState.type === 'none' && loginState.deviceRevoked) {
@@ -20,13 +20,12 @@ export function getNavigationBase(
       return RoutePath.expired;
     } else if (loginState.type === 'ok' && loginState.expiredState === 'time_added') {
       return RoutePath.timeAdded;
-    } else if (loginState.type === 'ok' && onboardingCompletedUnix === undefined) {
-      // First launch on a freshly-logged-in account routes
-      // to the onboarding wizard. Once the user finishes (or skips)
-      // the wizard, `onboardingCompletedUnix` is persisted in
-      // `IGuiSettingsState`, and subsequent boots fall through to
-      // `RoutePath.main`. The wizard can also be replayed manually
-      // from Settings, which clears the field.
+    } else if (loginState.type === 'ok' && onboardingPending === true) {
+      // A wizard run is owed to this user: the account was just created
+      // here, or the wizard was replayed from Settings. Finishing or
+      // skipping it clears the flag in `IGuiSettingsState` and the boot
+      // falls through to `RoutePath.main`. An account restored from a
+      // recovery phrase never sets the flag, so it is never sent here.
       return RoutePath.onboardingWelcome;
     } else {
       return RoutePath.main;

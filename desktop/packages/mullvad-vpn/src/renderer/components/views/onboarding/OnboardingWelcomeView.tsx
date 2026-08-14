@@ -8,8 +8,8 @@ import { OnboardingLayout } from './components';
 
 // Welcome banner. Sets the tone "Warren VPN, no compromise
 // privacy" and routes the user into the wallet step.
-// First-launch detection (`onboardingCompletedUnix` undefined)
-// dispatches the user here from the boot route; users replaying the
+// A pending onboarding (`onboardingPending`, raised when an identity is
+// minted) dispatches the user here from the boot route; users replaying the
 // wizard from Settings land here too.
 export function OnboardingWelcomeView() {
   const { push } = useHistory();

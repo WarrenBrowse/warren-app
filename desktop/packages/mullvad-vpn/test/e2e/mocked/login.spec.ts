@@ -38,8 +38,8 @@ test.describe('Login view', () => {
   test.beforeAll(async () => {
     await startup();
     // The app boots a logged-in account into the onboarding wizard while
-    // `onboardingCompletedUnix` is unset, so declare it complete: these tests
-    // are about the logged-out login view, not about first-launch routing.
+    // `onboardingPending` is set, so clear it: these tests are about the
+    // logged-out login view, not about the wizard.
     await util.ipc.guiSettings[''].notify({
       preferredLocale: 'system',
       enableSystemNotifications: true,
@@ -51,7 +51,7 @@ test.describe('Login view', () => {
       changelogDisplayedForVersion: '',
       updateDismissedForVersion: '',
       animateMap: false,
-      onboardingCompletedUnix: Math.floor(START_DATE.getTime() / 1000),
+      onboardingPending: false,
     });
     await routes.main.waitForRoute();
   });

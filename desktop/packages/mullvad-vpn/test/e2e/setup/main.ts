@@ -145,6 +145,14 @@ class ApplicationMain {
       forumUnread: 0,
     }));
 
+    // The renderer holds no settings state of its own: it sends a change and
+    // waits for the broadcast to come back, so the onboarding gate only moves
+    // in the renderer once main has echoed it.
+    IpcMainEventChannel.guiSettings.handleSetOnboardingPending((pending) => {
+      this.guiSettings = { ...this.guiSettings, onboardingPending: pending };
+      IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
+    });
+
     IpcMainEventChannel.guiSettings.handleSetPreferredLocale((locale) => {
       this.updateCurrentLocale(locale);
       IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);

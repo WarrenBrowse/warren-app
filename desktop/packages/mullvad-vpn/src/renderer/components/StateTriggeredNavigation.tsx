@@ -11,16 +11,14 @@ export default function StateTriggeredNavigation() {
 
   const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
   const loginState = useSelector((state) => state.account.status);
-  const onboardingCompletedUnix = useSelector(
-    (state) => state.settings.guiSettings.onboardingCompletedUnix,
-  );
+  const onboardingPending = useSelector((state) => state.settings.guiSettings.onboardingPending);
 
   const prevPath = useRef<RoutePath>(
-    getNavigationBase(connectedToDaemon, loginState, onboardingCompletedUnix),
+    getNavigationBase(connectedToDaemon, loginState, onboardingPending),
   );
   const nextPath = useMemo(
-    () => getNavigationBase(connectedToDaemon, loginState, onboardingCompletedUnix),
-    [connectedToDaemon, loginState, onboardingCompletedUnix],
+    () => getNavigationBase(connectedToDaemon, loginState, onboardingPending),
+    [connectedToDaemon, loginState, onboardingPending],
   );
 
   const updatePath = useEffectEvent((nextPath: RoutePath) => {
@@ -49,7 +47,7 @@ export default function StateTriggeredNavigation() {
     // `getNavigationBase` return `expired`, then `timeAdded`, then
     // `onboardingWelcome`. Letting those drive navigation yanks the user out of
     // whatever step they are on and dumps them back on step 1 (welcome), so they
-    // can never reach the final step that persists `onboardingCompletedUnix` -
+    // can never reach the final step that clears `onboardingPending` -
     // an inescapable loop (observed on Windows). The wizard owns its forward
     // navigation (each view pushes the next and the final step routes to `main`),
     // so ignore these state-triggered redirects while the user is within it.

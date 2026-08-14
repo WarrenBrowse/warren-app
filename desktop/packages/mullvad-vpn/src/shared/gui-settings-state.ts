@@ -48,16 +48,15 @@ export interface IGuiSettingsState {
   // Tells the app whether or not to show the map in the main view.
   animateMap: boolean;
 
-  // Onboarding wizard: timestamp (Unix seconds) at which the
-  // wizard was last completed. `undefined` -> first launch, the
-  // wizard router intercepts the boot and shows the welcome step.
-  // `Some(ts)` -> wizard already gone through; the user can replay
-  // it from the Settings "Replay onboarding" CTA, which clears this
-  // field. The value lets future versions invalidate the existing
-  // completion (e.g., a new wallet model) without breaking the
-  // existing user base by simply bumping the cutoff in the renderer
-  // boot logic.
-  onboardingCompletedUnix?: number;
+  // Onboarding wizard: true while a wizard run is owed to the user.
+  // Set when the daemon confirms a freshly minted identity, and by the
+  // Settings "Replay onboarding" CTA; cleared when the wizard is
+  // finished or skipped. Persisted so a GUI restart in the middle of the
+  // wizard resumes it. The flag is opt-in on purpose: an identity
+  // restored from a recovery phrase already owns its wallet and its
+  // subscription, so the wizard has nothing to walk it through, and an
+  // absent flag (an install predating this setting) means no wizard.
+  onboardingPending?: boolean;
 
   // True between minting a fresh Warren identity and the user confirming
   // they backed up the recovery phrase. The in-session backup gate lives

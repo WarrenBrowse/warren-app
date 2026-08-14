@@ -22,6 +22,13 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Fixed
+- Stop offering the new-account setup wizard to a user who just restored an existing account from
+  their recovery phrase. That account already carries its wallet and its subscription, so the wizard
+  has nothing to set up. Applies to the desktop app and to iOS.
+- Stop bringing the setup wizard back once it has been finished or skipped. A couple of minutes
+  after the window is hidden the app returns to its starting view, and that starting view stayed the
+  wizard, so it reappeared every time the window was reopened.
 
 
 ## [1.1.14] - 2026-08-14

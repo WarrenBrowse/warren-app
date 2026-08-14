@@ -161,8 +161,8 @@ export default class Settings implements Readonly<ISettings> {
       this.guiSettings.animateMap = animateMap;
     });
 
-    IpcMainEventChannel.guiSettings.handleSetOnboardingCompletedUnix((ts: number | undefined) => {
-      this.guiSettings.onboardingCompletedUnix = ts;
+    IpcMainEventChannel.guiSettings.handleSetOnboardingPending((pending: boolean) => {
+      this.guiSettings.onboardingPending = pending;
     });
 
     IpcMainEventChannel.guiSettings.handleSetBackupPending((backupPending: boolean) => {

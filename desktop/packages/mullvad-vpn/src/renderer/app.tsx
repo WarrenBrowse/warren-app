@@ -333,7 +333,13 @@ export default class AppRenderer {
       this.reduxActions.userInterface.setMacOsScrollbarVisibility(visibility);
     });
 
-    IpcRendererEventChannel.navigation.listenReset(() => this.history.pop(true));
+    // Sent when the window has been hidden long enough that the user is done
+    // with wherever they were. Reset to the view the current state calls for,
+    // not to the bottom of the navigation stack: that stack keeps the route
+    // the app booted or transitioned into, so popping to it re-opened the
+    // onboarding wizard on every window reveal, forever, for anyone who had
+    // been routed through it once.
+    IpcRendererEventChannel.navigation.listenReset(() => this.resetNavigation());
 
     IpcRendererEventChannel.app.listenOpenRoute((route: RoutePath) => {
       this.history.push({
@@ -426,22 +432,14 @@ export default class AppRenderer {
       initialState.navigationHistory.lastAction = 'POP';
       this.history = History.fromSavedHistory(initialState.navigationHistory);
     } else {
-      const loginState = this.reduxStore.getState().account.status;
-      // Pass `onboardingCompletedUnix` so the initial history points
-      // at `/main` for a user who has already gone through the wizard.
-      // Without it, `getNavigationBase` always treats the boot as a
-      // first launch and lands on `onboardingWelcome`. The subsequent
+      // Pass the onboarding gate so the initial history points at `/main`
+      // for a user who owes no wizard run. Without it, `getNavigationBase`
+      // lands on `onboardingWelcome`, and the subsequent
       // `StateTriggeredNavigation` re-render computes `nextPath=/main`
       // but skips the navigation because `prevPath === nextPath`
       // (= no transition observed), so the user stays stuck on the
       // welcome screen even though the redux store says otherwise.
-      const onboardingCompletedUnix = initialState.guiSettings.onboardingCompletedUnix;
-      const navigationBase = getNavigationBase(
-        this.connectedToDaemon,
-        loginState,
-        onboardingCompletedUnix,
-      );
-      this.history = new History(navigationBase);
+      this.history = new History(this.navigationBase());
     }
 
     if (window.env.e2e) {
@@ -573,12 +571,11 @@ export default class AppRenderer {
   public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
-  // Onboarding wizard: persists the completion timestamp via
-  // the main-process GUI settings file. Pass `undefined` to clear it
-  // (replay flow). The renderer side is kept in sync through the
-  // existing `guiSettings.''` notifyRenderer broadcast.
-  public setOnboardingCompletedUnix = (ts: number | undefined): void =>
-    IpcRendererEventChannel.guiSettings.setOnboardingCompletedUnix(ts);
+  // Onboarding wizard: persists the gate via the main-process GUI settings
+  // file, so a GUI restart mid-wizard resumes it. The renderer side is kept
+  // in sync through the existing `guiSettings.''` notifyRenderer broadcast.
+  public setOnboardingPending = (pending: boolean): void =>
+    IpcRendererEventChannel.guiSettings.setOnboardingPending(pending);
   // Persists the backup gate across GUI restarts (see the field doc in
   // gui-settings-state.ts). The renderer redux store is kept in sync via
   // the `guiSettings.''` notifyRenderer broadcast.
@@ -860,6 +857,21 @@ export default class AppRenderer {
     IpcRendererEventChannel.navigation.setHistory(history);
   }
 
+  // The view the current state calls for, with no regard for where the user
+  // has navigated since.
+  private navigationBase(): RoutePath {
+    const state = this.reduxStore.getState();
+    return getNavigationBase(
+      this.connectedToDaemon,
+      state.account.status,
+      state.settings.guiSettings.onboardingPending,
+    );
+  }
+
+  private resetNavigation() {
+    this.history.reset(this.navigationBase());
+  }
+
   // If the installer has just been downloaded and verified we want to automatically
   // start the installer if the window is focused.
   private appUpgradeMaybeStartInstaller() {
@@ -1075,6 +1087,11 @@ export default class AppRenderer {
             // hold on the login screen until the user backs up their
             // recovery phrase (see `finishAccountBackup`).
             this.setBackupPending(true);
+            // The wizard walks a brand-new identity through its wallet, its
+            // subscription and its preferences, so it is owed here and only
+            // here. An identity restored from a recovery phrase already has
+            // all three and goes straight to the main view.
+            this.setOnboardingPending(true);
             reduxAccount.accountAwaitingBackup(pubkey);
             break;
         }
@@ -1083,11 +1100,16 @@ export default class AppRenderer {
       case 'logged out':
         this.loginScheduler.cancel();
         this.setBackupPending(false);
+        // A wizard owed to the identity being left behind is not owed to
+        // whatever identity logs in next: discarding a just-created account
+        // to restore an existing one must not carry the wizard over.
+        this.setOnboardingPending(false);
         reduxAccount.loggedOut();
         break;
       case 'revoked': {
         this.loginScheduler.cancel();
         this.setBackupPending(false);
+        this.setOnboardingPending(false);
         reduxAccount.deviceRevoked();
         break;
       }

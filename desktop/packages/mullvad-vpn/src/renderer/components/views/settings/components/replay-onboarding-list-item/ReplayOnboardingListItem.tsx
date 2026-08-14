@@ -8,20 +8,19 @@ import { SettingsListItem, SettingsListItemProps } from '../../../../settings-li
 
 export type ReplayOnboardingListItemProps = Omit<SettingsListItemProps, 'children'>;
 
-// Settings entry that clears `onboardingCompletedUnix` and
-// navigates back to the wizard's first step. Reachable from the
-// Settings home view so a user can re-run the wizard on demand.
-// The flag is cleared *before* the navigation so the redirect logic
-// in `getNavigationBase` would still send the user to the wizard
-// even if the navigation push race-loses with a redux store update.
+// Settings entry that raises the onboarding gate and navigates back to the
+// wizard's first step. Reachable from the Settings home view so a user can
+// re-run the wizard on demand. The flag is raised *before* the navigation so
+// the redirect logic in `getNavigationBase` would still send the user to the
+// wizard even if the navigation push race-loses with a redux store update.
 export function ReplayOnboardingListItem(props: ReplayOnboardingListItemProps) {
-  const { setOnboardingCompletedUnix } = useAppContext();
+  const { setOnboardingPending } = useAppContext();
   const history = useHistory();
 
   const handleReplay = React.useCallback(() => {
-    setOnboardingCompletedUnix(undefined);
+    setOnboardingPending(true);
     history.push(RoutePath.onboardingWelcome);
-  }, [setOnboardingCompletedUnix, history]);
+  }, [setOnboardingPending, history]);
 
   return (
     <SettingsListItem {...props}>

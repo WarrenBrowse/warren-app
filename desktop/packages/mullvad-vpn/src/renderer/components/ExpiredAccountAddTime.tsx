@@ -275,9 +275,7 @@ function useFinishedCallback() {
     (state) => state.account.status.type === 'ok' && state.account.status.method === 'new_account',
   );
   const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
-  const onboardingCompletedUnix = useSelector(
-    (state) => state.settings.guiSettings.onboardingCompletedUnix,
-  );
+  const onboardingPending = useSelector((state) => state.settings.guiSettings.onboardingPending);
 
   const callback = useCallback(() => {
     // Changes login method from "new_account" to "existing_account"
@@ -292,10 +290,10 @@ function useFinishedCallback() {
     const destination = getNavigationBase(
       connectedToDaemon,
       { type: 'ok', method: 'existing_account' },
-      onboardingCompletedUnix,
+      onboardingPending,
     );
     history.reset(destination, { transition: TransitionType.push });
-  }, [isNewAccount, accountSetupFinished, history, connectedToDaemon, onboardingCompletedUnix]);
+  }, [isNewAccount, accountSetupFinished, history, connectedToDaemon, onboardingPending]);
 
   return callback;
 }

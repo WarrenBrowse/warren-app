@@ -48,19 +48,20 @@ export function OnboardingLayout({
   allowSkip = true,
   showBackAction = true,
 }: OnboardingLayoutProps) {
-  const { push, pop } = useHistory();
-  const { setOnboardingCompletedUnix } = useAppContext();
-  // Skipping the wizard marks the onboarding as completed in
-  // `IGuiSettingsState` so the next boot does NOT route the user
-  // back to the welcome step. Without this side effect, every
-  // restart re-opens the wizard because `getNavigationBase` only
-  // unblocks `RoutePath.main` when `onboardingCompletedUnix` is set.
-  // The user can replay the wizard manually via
-  // Settings → "Replay onboarding" (which clears the timestamp).
+  const { pop, reset } = useHistory();
+  const { setOnboardingPending } = useAppContext();
+  // Skipping clears the onboarding gate in `IGuiSettingsState` so the next
+  // boot does NOT route the user back to the welcome step. The user can
+  // replay the wizard from Settings ("Replay onboarding").
+  // `reset` rather than `push`: the wizard is a boot destination, so it sits
+  // at the bottom of the navigation stack, and pushing the main view on top
+  // of it left the wizard as the stack root. Every navigation reset (the one
+  // fired two minutes after the window is hidden, and the one on system
+  // suspend) then popped the user right back into the wizard.
   const skip = React.useCallback(() => {
-    setOnboardingCompletedUnix(Math.floor(Date.now() / 1000));
-    push(RoutePath.main);
-  }, [setOnboardingCompletedUnix, push]);
+    setOnboardingPending(false);
+    reset(RoutePath.main);
+  }, [setOnboardingPending, reset]);
 
   const body = (
     <NavigationContainer>

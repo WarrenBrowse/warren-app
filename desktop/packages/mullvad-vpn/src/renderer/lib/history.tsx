@@ -155,6 +155,14 @@ export default class History {
   }
 
   private popImpl(n = 1): TransitionType | undefined {
+    // Popping zero entries is not a navigation. `pop(true)` asks for
+    // `this.index` steps, which is zero whenever the history already sits on
+    // its root, and computing a transition for that reads one entry past the
+    // top of the stack (`undefined.state`).
+    if (n < 1) {
+      return undefined;
+    }
+
     if (this.canGo(-n)) {
       const transition = this.getPopTransition(n);
 

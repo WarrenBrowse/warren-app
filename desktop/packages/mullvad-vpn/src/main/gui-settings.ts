@@ -17,7 +17,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   changelogDisplayedForVersion: 'string',
   updateDismissedForVersion: 'string',
   animateMap: 'boolean',
-  onboardingCompletedUnix: 'number',
+  onboardingPending: 'boolean',
   backupPending: 'boolean',
   pendingPurchases: 'Array<string>',
 };
@@ -34,6 +34,7 @@ const defaultSettings: IGuiSettingsState = {
   changelogDisplayedForVersion: '',
   updateDismissedForVersion: '',
   animateMap: true,
+  onboardingPending: false,
   backupPending: false,
   pendingPurchases: [],
 };
@@ -154,17 +155,16 @@ export default class GuiSettings {
     return this.stateValue.animateMap;
   }
 
-  // Onboarding-completion timestamp. `undefined` clears the
-  // flag so the wizard re-runs on next boot (Settings "Replay
-  // onboarding" CTA). The renderer-side AppRouter consults
-  // `onboardingCompletedUnix` via `getNavigationBase` and redirects
-  // to `RoutePath.onboardingWelcome` when it is unset.
-  set onboardingCompletedUnix(newValue: number | undefined) {
-    this.changeStateAndNotify({ ...this.stateValue, onboardingCompletedUnix: newValue });
+  // Onboarding gate. Set when an identity is minted and by the Settings
+  // "Replay onboarding" CTA, cleared when the wizard ends. The renderer
+  // consults it via `getNavigationBase`, which redirects to
+  // `RoutePath.onboardingWelcome` while it is true.
+  set onboardingPending(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, onboardingPending: newValue });
   }
 
-  get onboardingCompletedUnix(): number | undefined {
-    return this.stateValue.onboardingCompletedUnix;
+  get onboardingPending(): boolean {
+    return this.stateValue.onboardingPending ?? false;
   }
 
   // Persisted backup gate. Survives a GUI restart so a freshly minted,

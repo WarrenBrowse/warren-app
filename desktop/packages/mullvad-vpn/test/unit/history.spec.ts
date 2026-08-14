@@ -63,6 +63,28 @@ describe('History', () => {
     expect(history.length).to.equal(1);
   });
 
+  // The window-hide navigation reset fires `pop(true)` blindly, so it reaches
+  // a history that is already at its root every time the user leaves the app
+  // on the main view.
+  it('should stay on the root when popping everything from the root', () => {
+    const rooted = new History(BASE_PATH);
+
+    rooted.pop(true);
+
+    expect(rooted.location.pathname).to.equal(BASE_PATH);
+    expect(rooted.length).to.equal(1);
+  });
+
+  it('should not notify listeners when popping everything from the root', () => {
+    const rooted = new History(BASE_PATH);
+    const listener = vi.fn();
+    rooted.listen(listener);
+
+    rooted.pop(true);
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
   it('should reset entries with path', () => {
     history.reset(THIRD_PATH);
     expect(history.location.pathname).to.equal(THIRD_PATH);
