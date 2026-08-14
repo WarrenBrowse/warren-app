@@ -1560,6 +1560,9 @@ mod version_select_tests {
         Release {
             version: version(s),
             changelog: String::new(),
+            // The selector these tests exercise picks a version, never notes,
+            // so an untranslated release is all they need to stand for.
+            changelog_translations: std::collections::BTreeMap::new(),
             installers: Vec::new(),
             rollout: mullvad_update::version::rollout::Rollout::complete(),
         }
