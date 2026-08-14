@@ -13,6 +13,30 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+
+
+## [1.1.13] - 2026-08-14
+### Corrigé
+- [macOS] Installer l'application sur un ordinateur qui ne l'a jamais eue. Depuis la 1.1.6,
+  l'installateur refusait toute première installation avec pour seul message « une erreur s'est
+  produite pendant l'exécution des scripts du paquet » : une étape qui protège les mises à jour
+  cherchait la version précédente de l'application et interrompait l'installation faute de la
+  trouver. La mise à jour d'une installation existante n'a jamais été touchée.
+- [macOS] Rétablir l'accès à internet quand la connexion ne peut pas sortir de l'ordinateur par
+  l'interface réseau choisie par l'application. L'application retenait qu'une route de secours
+  avait été posée sans jamais vérifier qu'elle fonctionnait, et gardait ce verdict une semaine :
+  un ordinateur dont la route de secours était morte elle aussi restait « Connecté » sans rien
+  joindre, en se reconnectant toutes les 15 secondes.
+- Ne plus couper une connexion saine qui transporte encore du trafic. Le contrôle qui surveille un
+  serveur mort comptait ses échecs sur quelques secondes sans regarder les données qui arrivaient
+  encore : une connexion internet saturée suffisait à détruire un tunnel qui marchait et à tuer
+  toutes les requêtes en cours.
+- Dire ce qui a réellement échoué quand l'envoi des journaux au forum d'entraide ne passe pas.
+  Toutes les erreurs affichaient le même message « réessayez », y compris celles qu'un nouvel essai
+  ne peut pas corriger.
+
+
+## [1.1.11] - 2026-08-09
 ### Ajouté
 - Ajouter la commande `warren-beta` sur Windows aussi. macOS et Linux installent déjà la ligne de
   commande sous le nom propre à l'environnement, et Windows ne connaissait que `warren` : aucun nom

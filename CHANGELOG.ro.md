@@ -12,6 +12,30 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
+
+
+## [1.1.13] - 2026-08-14
+### Reparat
+- [macOS] Instalează aplicația pe un computer care nu a avut-o niciodată. Începând cu 1.1.6,
+  programul de instalare refuza orice primă instalare cu singurul mesaj „a apărut o eroare la
+  rularea scripturilor pachetului”: un pas care protejează actualizările căuta versiunea anterioară
+  a aplicației și oprea instalarea când nu o găsea. Actualizarea unei instalări existente nu a fost
+  niciodată afectată.
+- [macOS] Restabilește accesul la internet când conexiunea nu poate ieși din computer prin
+  interfața de rețea aleasă de aplicație. Aplicația reținea că o rută de rezervă fusese pusă fără
+  să verifice vreodată că funcționează și păstra acest verdict o săptămână: un computer a cărui
+  rută de rezervă era și ea moartă rămânea „Conectat” fără să ajungă nicăieri, reconectându-se la
+  fiecare 15 secunde.
+- Nu mai întrerupe o conexiune sănătoasă care încă transportă trafic. Verificarea care urmărește un
+  server mort își număra eșecurile pe câteva secunde fără să se uite la datele care încă soseau,
+  așa că o conexiune la internet saturată era de ajuns pentru a distruge un tunel funcțional și a
+  omorî toate cererile în curs.
+- Spune ce a eșuat cu adevărat când trimiterea jurnalelor către forumul de asistență nu reușește.
+  Toate erorile afișau același mesaj „încercați din nou”, inclusiv cele pe care o nouă încercare nu
+  le poate rezolva.
+
+
+## [1.1.11] - 2026-08-09
 ### Adăugat
 - Adaugă comanda `warren-beta` și pe Windows. macOS și Linux instalează deja linia de comandă sub
   numele propriu mediului, iar Windows cunoștea doar `warren`, așa că niciun nume de comandă nu

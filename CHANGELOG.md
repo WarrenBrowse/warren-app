@@ -22,6 +22,28 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+
+## [1.1.13] - 2026-08-14
+### Fixed
+- [macOS] Install the app on a computer that never had it. Since 1.1.6 the installer refused every
+  first installation with only "an error occurred while running the package scripts": a step that
+  protects an update was looking for the previous version of the app, and stopped the installation
+  when it could not find one. Updating an existing installation was never affected.
+- [macOS] Restore internet access when the connection cannot leave the computer through the network
+  interface the app picked. The app used to remember that a fallback route had been put in place
+  without ever checking that it worked, and kept that verdict for a week, so a computer whose
+  fallback was also dead stayed "Connected" while reaching nothing and reconnecting every 15
+  seconds.
+- Stop dropping a healthy connection that is still carrying traffic. The check that watches for a
+  dead server counted its failures over a few seconds without looking at the data still arriving,
+  so a saturated internet connection was enough to tear down a working tunnel and kill every
+  request in flight.
+- Say what actually went wrong when sending logs to the support forum fails. Every failure showed
+  the same "try again" message, including the ones that retrying cannot fix.
+
+
+## [1.1.11] - 2026-08-09
 ### Added
 - Add the `warren-beta` command on Windows too. macOS and Linux already install the command line
   under the environment's own name, and Windows only knew plain `warren`, so no single command name
