@@ -34,6 +34,9 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
+# `warren version` states the compiled environment and its API host without
+# needing a daemon to answer.
+warren-product-env = { path = "../warren-product-env" }
 tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread"] }
 
 [target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
