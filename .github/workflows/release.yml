@@ -202,6 +202,28 @@ jobs:
     uses: ./.github/workflows/warren-tests.yml
     secrets: inherit
 
+  # The headless client (daemon + CLI, no GUI) ships on the SAME tag as the
+  # app, always. It is the same daemon binary and the same version, so a CLI
+  # release that lags the app is a second, invisible version of Warren running
+  # on people's servers: warren-cli served a June build while the app shipped
+  # weekly, and by the time the production API host was retired that build
+  # pointed at a host answering 410.
+  #
+  # Coupling it here is what removes the "someone remembers to also tag
+  # daemon-vX" step. publish-release requires this job, so an app release
+  # cannot be published without its CLI counterpart. Cutting the CLI alone
+  # stays possible: push a `daemon-v*` / `daemon-beta-v*` tag, which triggers
+  # the same workflow directly.
+  release-headless:
+    name: Headless (daemon + CLI) release
+    needs: [tag-guard, tests]
+    uses: ./.github/workflows/release-daemon.yml
+    with:
+      channel: ${{ needs.tag-guard.outputs.channel }}
+      version: ${{ needs.tag-guard.outputs.version }}
+      api-url: ${{ needs.tag-guard.outputs.api-url }}
+    secrets: inherit
+
   build-macos:
     name: Build macOS DMG/PKG
     needs: [tag-guard, tests]
@@ -1051,6 +1073,7 @@ jobs:
       - build-windows
       - build-ios
       - build-android
+      - release-headless
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     timeout-minutes: 15
     # Publish as long as it's a tag and the desktop builds (macOS, Linux x86_64
@@ -1063,6 +1086,10 @@ jobs:
     # the artifact does not work; and shipping a release without any of the
     # three would quietly drop rows off the download page, which is exactly the
     # failure nobody notices until a user cannot find their build.
+    #
+    # release-headless gates it too: the headless client is the same daemon at
+    # the same version, and a release that ships one without the other leaves
+    # servers on an older Warren than every desktop.
     if: >-
       !cancelled() &&
       startsWith(github.ref, 'refs/tags/') &&
@@ -1072,7 +1099,8 @@ jobs:
       needs.build-linux-sysvinit.result == 'success' &&
       needs.build-nixos.result == 'success' &&
       needs.build-windows.result == 'success' &&
-      needs.build-android.result == 'success'
+      needs.build-android.result == 'success' &&
+      needs.release-headless.result == 'success'
     env:
       TAG_NAME: ${{ github.ref_name }}
       WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}

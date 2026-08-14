@@ -1,70 +1,159 @@
 ---
-# Warren VPN: HEADLESS (daemon + CLI) release pipeline
+# Warren VPN: HEADLESS (daemon + CLI) release pipeline.
 #
-# Produces the GUI-less artifacts consumed by the `warren-cli` distribution repo:
-#   - Linux x86_64: warren-vpn-daemon_<ver>_amd64.deb / _x86_64.rpm
-#   - Linux arm64:  warren-vpn-daemon_<ver>_arm64.deb / _aarch64.rpm
-#                   (both via build.sh --daemon-only, each on its native pool)
-#   - macOS:   warren-headless-macos-<arch>.tar.gz         (binaries + resources + launchd)
-#   - Windows: warren-headless-windows-x64.zip             (exes + resources + service script)
+# Produces every artifact the `warren-cli` distribution repo serves, and
+# publishes them there as a finished (non-draft) release:
 #
-# This complements the full GUI `release.yml`; it reuses the same self-hosted
-# runners and the `mullvad-build-env` composite action. Linux is the primary,
-# high-confidence target; macOS/Windows headless bundles are best-effort (the
-# Warren tunnel is not validated on Windows).
+#   Linux x86_64   warren-vpn-daemon[-<env>]_<ver>_amd64.deb / _x86_64.rpm
+#   Linux arm64    warren-vpn-daemon[-<env>]_<ver>_arm64.deb / _aarch64.rpm
+#   Linux generic  warren-headless[-<env>]-<ver>-linux-{x86_64,aarch64}.tar.gz
+#   macOS          warren-headless[-<env>]-<ver>-macos-universal.tar.gz
+#   Windows        warren-headless[-<env>]-<ver>-windows-x64.zip
+#   SHA256SUMS
 #
-# Trigger: push a `daemon-v*` tag, or run manually.
+# The generic Linux tarball is what makes "any Linux" true: the .deb and .rpm
+# reach Debian/Ubuntu and Fedora/RHEL/SUSE families, and the tarball covers
+# Arch, Void, Gentoo, Artix, Slackware and NixOS-outside-the-flake, wiring up
+# systemd, OpenRC or sysvinit depending on what the host actually runs. All of
+# it is glibc: a musl host (Alpine) is refused by the installer with a reason
+# rather than by the loader with an error nobody can read.
 #
-# Required secret: WARREN_CORE_RO_TOKEN (read access to the sibling repos:
-# warrenguard, warren-sdk-rs, warren-contract), same as release.yml.
+# TWO WAYS IN, one behaviour:
+#
+#   * called by release.yml on every app tag, so a new app version always
+#     ships a matching CLI. This is the normal path and it is not optional:
+#     release.yml's publish job requires this workflow to have succeeded.
+#   * a `daemon-v*` / `daemon-beta-v*` tag pushed on its own, to ship the CLI
+#     without cutting an app release.
+#
+# The channel comes from the tag shape in both cases (shared rule
+# 50-release-channels.md), and one run publishes exactly one channel.
+#
+# Required secrets:
+#   WARREN_CORE_RO_TOKEN       read access to the sibling repos, as release.yml
+#   WARREN_CLI_RELEASE_TOKEN   contents:write on WarrenBrowse/warren-cli
 
 name: release-daemon
 
 on:
+  workflow_call:
+    inputs:
+      channel:
+        description: "prod | beta, resolved by the caller's tag guard"
+        type: string
+        required: true
+      version:
+        description: "Release version without the channel prefix (e.g. 1.1.15)"
+        type: string
+        required: true
+      api-url:
+        description: "API host of the channel, for the baked exit list"
+        type: string
+        required: true
   push:
-    tags: ["daemon-v*"]
+    tags:
+      - "daemon-v*"
+      - "daemon-beta-v*"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  linux:
-    name: Linux .deb/.rpm (daemon-only)
+  # One place decides the channel, the version and the warren-cli tag, whether
+  # this run was called by release.yml or triggered by its own tag. Every job
+  # below reads these outputs and nothing re-derives them, so a called run and
+  # a standalone run cannot disagree about what they are building.
+  resolve:
+    name: Resolve channel and version
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
-    timeout-minutes: 60
+    timeout-minutes: 10
+    outputs:
+      channel: ${{ steps.resolve.outputs.channel }}
+      version: ${{ steps.resolve.outputs.version }}
+      api-url: ${{ steps.resolve.outputs.api-url }}
+      cli-tag: ${{ steps.resolve.outputs.cli-tag }}
+      publish: ${{ steps.resolve.outputs.publish }}
+    steps:
+      - id: resolve
+        env:
+          INPUT_CHANNEL: ${{ inputs.channel }}
+          INPUT_VERSION: ${{ inputs.version }}
+          INPUT_API_URL: ${{ inputs.api-url }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            channel="$INPUT_CHANNEL"
+            version="$INPUT_VERSION"
+            api_url="$INPUT_API_URL"
+          else
+            ref="${GITHUB_REF_NAME}"
+            case "$ref" in
+              daemon-beta-v*) channel=beta; version="${ref#daemon-beta-v}" ;;
+              daemon-v*)      channel=prod; version="${ref#daemon-v}" ;;
+              *)
+                # workflow_dispatch off a branch: build everything, publish
+                # nothing. The version is whatever the checkout says.
+                channel=prod; version="" ;;
+            esac
+            case "$channel" in
+              beta) api_url=https://api.beta.warrenbrowse.com ;;
+              *)    api_url=https://api.warrenbrowse.com ;;
+            esac
+          fi
+
+          # A version with a pre-release suffix (daemon-v1.2.3-rc1) keeps the
+          # -dev- suffix and is never published: it is a build to look at, not
+          # a release.
+          publish=false
+          if printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            publish=true
+          fi
+
+          case "$channel" in
+            beta) cli_tag="daemon-beta-v${version}" ;;
+            *)    cli_tag="daemon-v${version}" ;;
+          esac
+
+          {
+            echo "channel=$channel"
+            echo "version=$version"
+            echo "api-url=$api_url"
+            echo "cli-tag=$cli_tag"
+            echo "publish=$publish"
+          } >> "$GITHUB_OUTPUT"
+          echo "channel=$channel version=${version:-<none>} api=$api_url cli-tag=$cli_tag publish=$publish"
+
+  linux:
+    name: Linux x86_64 (.deb / .rpm / tarball)
+    needs: [resolve]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 90
     # clang avoids the intermittent gcc cc1 SIGSEGV under x86_64-Rosetta (same as release.yml).
     env:
       CC: clang
       CXX: clang++
+      WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
+      WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
       - uses: actions/checkout@v5
-      - name: Stamp clean release version (daemon-vX.Y.Z)
-        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
-        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
-        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
-        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
-        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            ver="${BASH_REMATCH[1]}"
-            echo "$ver" > dist-assets/desktop-product-version.txt
-            git tag -f "v$ver"
-            echo "stamped clean version v$ver (no -dev suffix)"
-          else
-            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
-          fi
+      - name: Stamp the release version
+        uses: ./.github/actions/stamp-headless-version
+        with:
+          version: ${{ needs.resolve.outputs.version }}
       - uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Checkout warren-cli (install assets)
+        uses: actions/checkout@v5
+        with:
+          repository: WarrenBrowse/warren-cli
+          path: warren-cli
+          token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
         with:
-          # The headless daemon has its own tag series and no channel split yet.
-          # The only network that exists is the beta one, so name it explicitly
-          # rather than inheriting a default.
-          warren-api-url: https://api.beta.warrenbrowse.com
+          warren-api-url: ${{ needs.resolve.outputs.api-url }}
       - name: Verify packaging deps
         # rpm is preinstalled on the runner; cargo-deb / cargo-generate-rpm are
         # NOT (the GUI release.sh packages via electron-builder, not cargo-deb),
@@ -91,19 +180,20 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p release-assets
-          cp dist/warren-vpn-daemon_* release-assets/
+          cp dist/warren-vpn-daemon* release-assets/
+          bash ci/build-headless-bundle.sh linux "${WARREN_VERSION:-0.0.0}" warren-cli
           ls -lh release-assets
       - name: Publish artifacts to the warren-cli release (draft)
-        # Publish to the public-facing distribution repo (warren-cli), not this
-        # one, so the public install one-liner only needs warren-cli to be public.
-        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
-        if: startsWith(github.ref, 'refs/tags/')
+        # Published to the public-facing distribution repo (warren-cli), not
+        # this one, so the public install one-liner only needs warren-cli to be
+        # public. The `finalise` job below flips the draft.
+        if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
           target_commitish: main
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
           files: release-assets/*
       - uses: actions/upload-artifact@v6
@@ -114,49 +204,40 @@ jobs:
           retention-days: 7
 
   linux-arm64:
-    name: Linux arm64 .deb/.rpm (daemon-only)
+    name: Linux arm64 (.deb / .rpm / tarball)
+    needs: [resolve]
     # Native aarch64 pool on the same Mac, so no Rosetta: no CC=clang against
     # the emulated gcc cc1 crash and no whole-build retry on a crash signature.
-    # scripts/install.sh already resolves warren-vpn-daemon_<ver>_arm64.deb and
-    # _aarch64.rpm, so this job is what makes the one-line installer work on an
-    # ARM server (Raspberry Pi, Ampere/Graviton instances).
+    # This job is what makes the one-line installer work on an ARM server
+    # (Raspberry Pi, Ampere/Graviton instances).
     runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       # Several arm64 runners share one 16-core Colima VM; same cap as
       # warren-tests.yml, for neighbourliness.
       CARGO_BUILD_JOBS: "6"
+      WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
+      WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
       - uses: actions/checkout@v5
-      - name: Stamp clean release version (daemon-vX.Y.Z)
-        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
-        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
-        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
-        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
-        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            ver="${BASH_REMATCH[1]}"
-            echo "$ver" > dist-assets/desktop-product-version.txt
-            git tag -f "v$ver"
-            echo "stamped clean version v$ver (no -dev suffix)"
-          else
-            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
-          fi
+      - name: Stamp the release version
+        uses: ./.github/actions/stamp-headless-version
+        with:
+          version: ${{ needs.resolve.outputs.version }}
       - uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Checkout warren-cli (install assets)
+        uses: actions/checkout@v5
+        with:
+          repository: WarrenBrowse/warren-cli
+          path: warren-cli
+          token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
       - name: Bake Warren exit list bootstrap
         uses: ./.github/actions/fetch-warren-relays
         with:
-          # The headless daemon has its own tag series and no channel split yet.
-          # The only network that exists is the beta one, so name it explicitly
-          # rather than inheriting a default.
-          warren-api-url: https://api.beta.warrenbrowse.com
+          warren-api-url: ${{ needs.resolve.outputs.api-url }}
       - name: Verify packaging deps
-        # rpm is preinstalled on the runner; cargo-deb / cargo-generate-rpm are
-        # NOT, so the daemon-only path installs them itself (user-level, no sudo).
         # They persist in the runner volume, so only a fresh volume pays for it.
         run: |
           rpm --version
@@ -170,7 +251,8 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p release-assets
-          cp dist/warren-vpn-daemon_* release-assets/
+          cp dist/warren-vpn-daemon* release-assets/
+          bash ci/build-headless-bundle.sh linux "${WARREN_VERSION:-0.0.0}" warren-cli
           ls -lh release-assets
       - name: Assert the packages really are arm64
         # cargo-deb and cargo-generate-rpm read the architecture from the build
@@ -179,20 +261,18 @@ jobs:
         # start, which is a much more expensive way to find out.
         run: |
           set -euo pipefail
-          ls release-assets/warren-vpn-daemon_*_arm64.deb >/dev/null
-          ls release-assets/warren-vpn-daemon_*_aarch64.rpm >/dev/null
+          ls release-assets/warren-vpn-daemon*_arm64.deb >/dev/null
+          ls release-assets/warren-vpn-daemon*_aarch64.rpm >/dev/null
+          ls release-assets/warren-headless*-linux-aarch64.tar.gz >/dev/null
           readelf -h "${CARGO_TARGET_DIR:-target}/release/warren-daemon" | grep -q AArch64
       - name: Publish artifacts to the warren-cli release (draft)
-        # Publish to the public-facing distribution repo (warren-cli), not this
-        # one, so the public install one-liner only needs warren-cli to be public.
-        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
-        if: startsWith(github.ref, 'refs/tags/')
+        if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
           target_commitish: main
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
           files: release-assets/*
       - uses: actions/upload-artifact@v6
@@ -203,27 +283,21 @@ jobs:
           retention-days: 7
 
   macos:
-    name: macOS headless bundle
+    name: macOS universal bundle
+    needs: [resolve]
     runs-on: [self-hosted, macOS, ARM64]
-    timeout-minutes: 30
+    # Two slices, so two compiles of the workspace. The x86_64 one has no warm
+    # cache on a runner that has only ever built the native arm64 half.
+    timeout-minutes: 120
+    env:
+      WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
+      WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
       - uses: actions/checkout@v5
-      - name: Stamp clean release version (daemon-vX.Y.Z)
-        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
-        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
-        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
-        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
-        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            ver="${BASH_REMATCH[1]}"
-            echo "$ver" > dist-assets/desktop-product-version.txt
-            git tag -f "v$ver"
-            echo "stamped clean version v$ver (no -dev suffix)"
-          else
-            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
-          fi
+      - name: Stamp the release version
+        uses: ./.github/actions/stamp-headless-version
+        with:
+          version: ${{ needs.resolve.outputs.version }}
       - uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
@@ -233,79 +307,77 @@ jobs:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
           token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
-      - name: Build daemon + CLI (release)
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ needs.resolve.outputs.api-url }}
+      - name: Build daemon + CLI (both architectures)
+        # Explicit targets for BOTH slices. The bundle this job used to produce
+        # was arm64-only, which no Intel Mac could run, and nothing said so
+        # until the binary refused to exec. x86_64-apple-darwin is installed by
+        # the build-env action.
         run: |
-          cargo build --release \
-            -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
-      - name: Assemble bundle
-        run: |
-          arch="$(uname -m)"   # arm64 / x86_64
-          out="warren-headless-macos-${arch}"
-          mkdir -p "$out/bin" "$out/resources"
-          cp target/release/warren target/release/warren-daemon \
-             target/release/warren-setup target/release/warren-problem-report "$out/bin/"
-          cp dist-assets/ca.crt "$out/resources/"
-          cp -R dist-assets/maybenot_machines "$out/resources/" 2>/dev/null || true
-          cp warren-cli/macos/com.warren.daemon.plist "$out/"
-          cp warren-cli/macos/install-macos.sh "$out/"
-          chmod +x "$out/install-macos.sh"
-          tar czf "${out}.tar.gz" "$out"
-          ls -lh "${out}.tar.gz"
+          for target in aarch64-apple-darwin x86_64-apple-darwin; do
+            cargo build --release --target "$target" \
+              -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
+          done
+      - name: Assemble the universal bundle
+        run: bash ci/build-headless-bundle.sh macos "${WARREN_VERSION:-0.0.0}" warren-cli
       - name: Publish artifacts to the warren-cli release (draft)
-        # Publish to the public-facing distribution repo (warren-cli), not this
-        # one, so the public install one-liner only needs warren-cli to be public.
-        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
-        if: startsWith(github.ref, 'refs/tags/')
+        if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
           target_commitish: main
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
-          files: warren-headless-macos-*.tar.gz
+          files: release-assets/*
       - uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: warren-headless-macos
-          path: warren-headless-macos-*.tar.gz
+          path: release-assets/*
           retention-days: 7
 
   windows:
-    name: Windows headless bundle (experimental)
+    name: Windows x64 bundle
+    needs: [resolve]
     runs-on: [self-hosted, Windows, macstudio-win]
-    timeout-minutes: 120
-    # Experimental: a bare `cargo build` misses the C lib search paths that
-    # build.sh exports (winfw etc.), so linking can fail (LNK1181). The Warren
-    # tunnel is untested on Windows anyway, so don't fail the whole release on it.
+    timeout-minutes: 140
+    # Non-blocking, for now. The Warren tunnel is not validated on Windows and
+    # this job has never had a green run producing a bundle that carries
+    # winfw.dll, so gating every app release on it would block releases on a
+    # path nobody has proven. Once it goes green on a release, move it into the
+    # `finalise` gate below with the other platforms.
     continue-on-error: true
+    env:
+      WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
+      WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
+      - name: Set git config for long paths
+        run: git config --system core.longpaths true
       - uses: actions/checkout@v5
-      - name: Stamp clean release version (daemon-vX.Y.Z)
-        # On a clean daemon-vX.Y.Z tag, drop the "-dev-<hash>" suffix: set the
-        # product version and create a LOCAL v<ver> tag at HEAD so mullvad-version
-        # sees HEAD == v<ver> and emits a clean version. The tag is never pushed,
-        # so the GUI release.yml (push: v*.*.*) is not triggered. RC/dev tags
-        # (daemon-vX.Y.Z-rc1) don't match and keep the -dev suffix.
-        shell: bash
-        run: |
-          if [[ "${GITHUB_REF_NAME:-}" =~ ^daemon-v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
-            ver="${BASH_REMATCH[1]}"
-            echo "$ver" > dist-assets/desktop-product-version.txt
-            git tag -f "v$ver"
-            echo "stamped clean version v$ver (no -dev suffix)"
-          else
-            echo "not a clean daemon-vX.Y.Z tag; keeping -dev version"
-          fi
+      - name: Stamp the release version
+        uses: ./.github/actions/stamp-headless-version
+        with:
+          version: ${{ needs.resolve.outputs.version }}
       - uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          # Keyed into the Windows modules cache: the channel decides the WFP
+          # GUID salt, and a slot shared across channels ships the wrong keys.
+          product-env: ${{ needs.resolve.outputs.channel }}
       - name: Checkout warren-cli (install assets)
         uses: actions/checkout@v5
         with:
           repository: WarrenBrowse/warren-cli
           path: warren-cli
           token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ needs.resolve.outputs.api-url }}
       - name: Build Windows C modules (winfw, Release)
         shell: bash
         # winfw must be built in Release: talpid-core links the release cargo
@@ -315,40 +387,180 @@ jobs:
           CPP_BUILD_MODES: Release
           CPP_BUILD_TARGETS: x64
         run: ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
+      - name: Verify the winfw WFP keys carry this channel's salt
+        shell: bash
+        # beta-v1.1.9 shipped a beta build whose winfw.dll carried PRODUCTION
+        # WFP keys, and every connected Windows host updating into it was walled
+        # by its predecessor's kill switch. The headless bundle ships the same
+        # dll, so it runs the same check on its own output.
+        run: |
+          bash ci/verify-winfw-salt.sh windows/winfw/bin/x64-Release/winfw.dll \
+            "${{ needs.resolve.outputs.channel }}"
       - name: Build daemon + CLI (release)
         shell: bash
         # The runner is Windows-on-ARM (macstudio-win); Warren ships x64 only, so
         # build the x86_64 target explicitly instead of the host default (arm64),
         # which would otherwise emit an aarch64 daemon into target/release.
-        run: cargo build --release --target x86_64-pc-windows-msvc -p mullvad-daemon -p mullvad-cli
-      - name: Assemble bundle
-        shell: bash
         run: |
-          out="warren-headless-windows-x64"
-          rel="target/x86_64-pc-windows-msvc/release"
-          mkdir -p "$out/bin" "$out/resources"
-          cp "$rel/warren.exe" "$rel/warren-daemon.exe" "$out/bin/"
-          cp dist-assets/ca.crt "$out/resources/"
-          cp -R dist-assets/maybenot_machines "$out/resources/" 2>/dev/null || true
-          cp warren-cli/windows/install-windows.ps1 "$out/"
-          powershell -Command "Compress-Archive -Path '$out' -DestinationPath '${out}.zip' -Force"
-          ls -lh "${out}.zip"
+          cargo build --release --target x86_64-pc-windows-msvc \
+            -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
+      - name: Assemble the bundle
+        shell: bash
+        run: bash ci/build-headless-bundle.sh windows "${WARREN_VERSION:-0.0.0}" warren-cli
       - name: Publish artifacts to the warren-cli release (draft)
-        # Publish to the public-facing distribution repo (warren-cli), not this
-        # one, so the public install one-liner only needs warren-cli to be public.
-        # WARREN_CLI_RELEASE_TOKEN: token with contents:write on warren-cli.
-        if: startsWith(github.ref, 'refs/tags/')
+        if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
         with:
           repository: WarrenBrowse/warren-cli
           token: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
           target_commitish: main
-          tag_name: ${{ github.ref_name }}
+          tag_name: ${{ needs.resolve.outputs.cli-tag }}
           draft: true
-          files: warren-headless-windows-x64.zip
+          files: release-assets/*
       - uses: actions/upload-artifact@v6
         continue-on-error: true
         with:
           name: warren-headless-windows
-          path: warren-headless-windows-x64.zip
+          path: release-assets/*
           retention-days: 7
+
+  finalise:
+    name: Publish the warren-cli release
+    needs: [resolve, linux, linux-arm64, macos, windows]
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 20
+    # A draft release is invisible to the install one-liner: its asset URLs
+    # answer 404 without a token, and the API does not list it. The pipeline
+    # left one behind on every run until now, which is why warren-cli served a
+    # release from June while the app shipped weekly.
+    #
+    # Windows is deliberately absent from this gate (see its `continue-on-error`
+    # above); the three platforms that ARE validated all have to succeed.
+    if: >-
+      !cancelled() &&
+      needs.resolve.outputs.publish == 'true' &&
+      needs.linux.result == 'success' &&
+      needs.linux-arm64.result == 'success' &&
+      needs.macos.result == 'success'
+    env:
+      GH_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+      CLI_REPO: WarrenBrowse/warren-cli
+      CLI_TAG: ${{ needs.resolve.outputs.cli-tag }}
+      WARREN_CHANNEL: ${{ needs.resolve.outputs.channel }}
+      WARREN_VERSION: ${{ needs.resolve.outputs.version }}
+      WINDOWS_RESULT: ${{ needs.windows.result }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Ensure gh CLI
+        # The self-hosted Rosetta runner does not ship it.
+        run: |
+          if command -v gh >/dev/null 2>&1; then echo "gh present: $(gh --version | head -1)"; exit 0; fi
+          ver=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
+                  | sed -nE 's/.*"tag_name": *"v?([0-9.]+)".*/\1/p' | head -1)
+          [ -n "$ver" ] || ver=2.62.0
+          curl -fsSL "https://github.com/cli/cli/releases/download/v${ver}/gh_${ver}_linux_amd64.tar.gz" -o /tmp/gh.tgz
+          tar -xzf /tmp/gh.tgz -C /tmp
+          echo "/tmp/gh_${ver}_linux_amd64/bin" >> "$GITHUB_PATH"
+
+      - name: Download what the build jobs published
+        run: |
+          mkdir -p release-files
+          gh release download "$CLI_TAG" --repo "$CLI_REPO" --dir release-files --pattern '*'
+          ls -lh release-files
+
+      # The set is asserted rather than assumed: a build job that succeeded
+      # while uploading nothing (a glob that matched no file, a rename) would
+      # otherwise publish a release with a hole in it, and the hole is only
+      # found by the user whose platform is missing.
+      - name: Assert every expected artifact is present
+        run: |
+          set -euo pipefail
+          if [ "$WARREN_CHANNEL" = prod ]; then tag=""; else tag="-$WARREN_CHANNEL"; fi
+          expected="
+          warren-vpn-daemon${tag}_${WARREN_VERSION}_amd64.deb
+          warren-vpn-daemon${tag}_${WARREN_VERSION}_x86_64.rpm
+          warren-vpn-daemon${tag}_${WARREN_VERSION}_arm64.deb
+          warren-vpn-daemon${tag}_${WARREN_VERSION}_aarch64.rpm
+          warren-headless${tag}-${WARREN_VERSION}-linux-x86_64.tar.gz
+          warren-headless${tag}-${WARREN_VERSION}-linux-aarch64.tar.gz
+          warren-headless${tag}-${WARREN_VERSION}-macos-universal.tar.gz
+          "
+          missing=""
+          for asset in $expected; do
+            [ -f "release-files/$asset" ] || missing="$missing $asset"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::the release is missing:$missing"
+            exit 1
+          fi
+          win="warren-headless${tag}-${WARREN_VERSION}-windows-x64.zip"
+          if [ -f "release-files/$win" ]; then
+            echo "Windows bundle present."
+          else
+            echo "::warning::no Windows bundle in this release (job result: $WINDOWS_RESULT)"
+          fi
+
+      - name: Compute SHA-256 checksums
+        # The installers verify against this, which is what catches a download
+        # truncated by a flaky link before it is unpacked as a corrupt package.
+        run: |
+          cd release-files
+          rm -f SHA256SUMS
+          shopt -s nullglob
+          files=(*)
+          sha256sum "${files[@]}" > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Publish it
+        run: |
+          set -euo pipefail
+          gh release upload "$CLI_TAG" release-files/SHA256SUMS --repo "$CLI_REPO" --clobber
+          notes="$RUNNER_TEMP/notes.md"
+          awk -v ver="$WARREN_VERSION" '
+            /^## /{ if (cap) exit; cap = index($0, "[" ver "]") > 0 }
+            cap { print }
+          ' CHANGELOG.md > "$notes" || true
+          if [ ! -s "$notes" ]; then
+            printf 'Warren headless (daemon + CLI) %s\n' "$WARREN_VERSION" > "$notes"
+          fi
+          installer="https://raw.githubusercontent.com/$CLI_REPO/main/scripts/install.sh"
+          if [ "$WARREN_CHANNEL" = prod ]; then run="sudo CHANNEL=prod sh"; else run="sudo sh"; fi
+          {
+            echo
+            echo '### Install (Linux and macOS)'
+            echo
+            echo '```sh'
+            echo "curl -fsSL $installer | $run"
+            echo '```'
+          } >> "$notes"
+
+          # A beta release never becomes the prod "latest": the two series are
+          # independent lines, and an installer resolving "latest" must not be
+          # handed the other channel's build.
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            title="Warren headless Beta $WARREN_VERSION"
+            prerelease=true
+            latest=false
+          else
+            title="Warren headless (daemon + CLI) $WARREN_VERSION"
+            prerelease=false
+            latest=true
+          fi
+          gh release edit "$CLI_TAG" --repo "$CLI_REPO" \
+            --title "$title" \
+            --notes-file "$notes" \
+            --draft=false \
+            --prerelease="$prerelease" \
+            --latest="$latest"
+
+      - name: Verify the release is really published
+        run: |
+          for _ in $(seq 1 10); do
+            if [ "$(gh release view "$CLI_TAG" --repo "$CLI_REPO" --json isDraft --jq .isDraft)" = "false" ]; then
+              echo "https://github.com/$CLI_REPO/releases/tag/$CLI_TAG is published"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::$CLI_TAG is still a draft; the install one-liner cannot see it"
+          exit 1

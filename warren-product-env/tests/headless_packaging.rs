@@ -69,10 +69,7 @@ fn conflicts(manifest: &str) -> (Vec<String>, Vec<String>) {
 /// connect until its first successful fetch from the API.
 #[test]
 fn the_headless_packages_ship_the_warren_exit_bootstrap() {
-    for header in [
-        "[package.metadata.deb]",
-        "[package.metadata.generate-rpm]",
-    ] {
+    for header in ["[package.metadata.deb]", "[package.metadata.generate-rpm]"] {
         let sources = asset_sources(table(MANIFEST, header));
         assert!(
             sources.contains(&"../build/warren-relays.json"),

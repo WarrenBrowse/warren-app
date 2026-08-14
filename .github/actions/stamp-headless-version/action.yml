@@ -1,0 +1,37 @@
+name: Stamp the headless release version
+description: >
+  Pin the version a headless build reports, when the ref that triggered it is
+  not a shape the shared build-env stamping recognises.
+
+  The daemon bakes its version at compile time from
+  dist-assets/desktop-product-version.txt, and appends "-dev-<hash>" unless a
+  release tag naming that same version sits at HEAD (mullvad-version/build.rs).
+  A `daemon-v*` / `daemon-beta-v*` tag is neither `v*` nor `beta-v*`, so a
+  standalone headless release would otherwise ship a version with a -dev
+  suffix, which the update check reads as a development build.
+
+  The local `v<version>` tag is never pushed, so this cannot trigger the GUI
+  release workflow. A run called from release.yml already carries the app's own
+  tag at HEAD and this is then a no-op that re-states the same version.
+
+inputs:
+  version:
+    description: "Release version without any channel prefix (e.g. 1.1.15). Empty for a dev build."
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        WARREN_STAMP_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+        ver="${WARREN_STAMP_VERSION:-}"
+        if ! printf '%s' "$ver" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "no clean version to stamp (got '${ver:-<empty>}'); keeping the -dev suffix"
+          exit 0
+        fi
+        printf '%s\n' "$ver" > dist-assets/desktop-product-version.txt
+        git tag -f "v$ver"
+        echo "stamped clean version $ver"
