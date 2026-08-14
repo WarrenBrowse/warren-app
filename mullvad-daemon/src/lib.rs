@@ -2655,7 +2655,7 @@ impl Daemon {
             GetAccountData(tx, account_number) => self.on_get_account_data(tx, account_number),
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
-            GetWarrenDiagnostics(tx) => self.on_get_warren_diagnostics(tx).await,
+            GetWarrenDiagnostics(tx) => self.on_get_warren_diagnostics(tx),
             SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
             SignForumNotifications(tx) => self.on_sign_forum_notifications(tx),
             SignForumNotificationsSeen(tx) => self.on_sign_forum_notifications_seen(tx),
@@ -3182,7 +3182,7 @@ impl Daemon {
     /// diagnostics command that perturbs the state it reports on is worse than
     /// no command, and the carrier verdict in particular must not be renewed by
     /// being read.
-    async fn on_get_warren_diagnostics(
+    fn on_get_warren_diagnostics(
         &self,
         tx: oneshot::Sender<mullvad_types::warren_diagnostics::WarrenDiagnostics>,
     ) {
@@ -3192,43 +3192,57 @@ impl Daemon {
             self.settings.settings().warren_n_connections,
         );
 
+        // macOS is the only platform with a carrier-bind guard to report on,
+        // and resolving the default route the verdict is keyed by is a round
+        // trip to the route manager. It runs off the daemon event loop: a
+        // diagnostics read must never be able to stall tunnel state handling.
         #[cfg(target_os = "macos")]
-        let (carrier_verdict, dual_homed_interfaces) = {
+        {
             use mullvad_types::warren_diagnostics::{CarrierVerdictKind, CarrierVerdictReport};
 
-            // The same cache directory the connect path hands the tunnel, so
-            // the doctor reads the file the guard actually writes.
-            let cache_dir = mullvad_paths::cache_dir().ok();
-            let observed = talpid_warren_tunnel::warren_carrier_diagnostics(
-                &self.warren_route_manager,
-                cache_dir.as_deref(),
-            )
-            .await;
-            let verdict = observed
-                .verdict
-                .map(|(kind, age_seconds)| CarrierVerdictReport {
-                    kind: match kind {
-                        talpid_warren_tunnel::CarrierBindVerdict::BindOk => {
-                            CarrierVerdictKind::BindOk
-                        }
-                        talpid_warren_tunnel::CarrierBindVerdict::RouteOnly => {
-                            CarrierVerdictKind::RouteOnly
-                        }
+            let route_manager = self.warren_route_manager.clone();
+            tokio::spawn(async move {
+                // The same cache directory the connect path hands the tunnel,
+                // so the doctor reads the file the guard actually writes.
+                let cache_dir = mullvad_paths::cache_dir().ok();
+                let observed = talpid_warren_tunnel::warren_carrier_diagnostics(
+                    &route_manager,
+                    cache_dir.as_deref(),
+                )
+                .await;
+                let carrier_verdict =
+                    observed
+                        .verdict
+                        .map(|(kind, age_seconds)| CarrierVerdictReport {
+                            kind: match kind {
+                                talpid_warren_tunnel::CarrierBindVerdict::BindOk => {
+                                    CarrierVerdictKind::BindOk
+                                }
+                                talpid_warren_tunnel::CarrierBindVerdict::RouteOnly => {
+                                    CarrierVerdictKind::RouteOnly
+                                }
+                            },
+                            age_seconds,
+                            ttl_seconds: observed.verdict_ttl_seconds,
+                        });
+                Self::oneshot_send(
+                    tx,
+                    WarrenDiagnostics {
+                        requested_n_connections,
+                        carrier_verdict,
+                        dual_homed_interfaces: observed.dual_homed_interfaces,
                     },
-                    age_seconds,
-                    ttl_seconds: observed.verdict_ttl_seconds,
-                });
-            (verdict, observed.dual_homed_interfaces)
-        };
+                    "get_warren_diagnostics",
+                );
+            });
+        }
         #[cfg(not(target_os = "macos"))]
-        let (carrier_verdict, dual_homed_interfaces) = (None, Vec::new());
-
         Self::oneshot_send(
             tx,
             WarrenDiagnostics {
                 requested_n_connections,
-                carrier_verdict,
-                dual_homed_interfaces,
+                carrier_verdict: None,
+                dual_homed_interfaces: Vec::new(),
             },
             "get_warren_diagnostics",
         );
