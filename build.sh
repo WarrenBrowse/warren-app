@@ -525,49 +525,11 @@ else
     mkdir -p "build"
 fi
 
-log_info "Writing placeholder relays.json..."
-# Warren never uses this Mullvad-format relay list to set up the tunnel: at
-# runtime the daemon fetches the live Warren exit list from GET {api_url}/v1/exits
-# (see mullvad-daemon/src/warren_relays_fetch.rs) into warren-relays.json, and the
-# GUI relay selector is built from that. The upstream Mullvad relay subsystem
-# still parses this file at boot, so it must exist and be a valid relay list.
-# We therefore write an empty list rather than querying the legacy Mullvad
-# `/app/v1/relays` endpoint, which the Warren backend does not serve (404).
-cat > build/relays.json <<'RELAYS_JSON'
-{
-  "locations": {},
-  "wireguard": {
-    "port_ranges": [],
-    "ipv4_gateway": "10.64.0.1",
-    "ipv6_gateway": "fd00::1",
-    "shadowsocks_port_ranges": [],
-    "relays": []
-  },
-  "bridge": {
-    "shadowsocks": [],
-    "relays": []
-  }
-}
-RELAYS_JSON
-
-# Warren bootstrap exit list. The CI "fetch-warren-relays" action writes a
-# freshly fetched + signature-verified `dist-assets/warren-relays.json`
-# before this script runs; we stage it into `build/` so it is packaged as a
-# client resource (alongside relays.json) and loaded by the daemon at boot
-# via `warren_relay_list_updater::load_bootstrap`. If the action was skipped
-# (local build / offline CI), we write an inert placeholder so packaging
-# always finds the file: it fails the daemon's signature pin check at load
-# and is ignored, and the daemon populates the list via its startup fetch.
-log_info "Staging warren-relays.json bootstrap..."
-if [[ -f dist-assets/warren-relays.json ]]; then
-    cp dist-assets/warren-relays.json build/warren-relays.json
-    log_info "Using baked warren-relays.json bootstrap ($(wc -c < build/warren-relays.json | tr -d ' ') bytes)"
-else
-    cat > build/warren-relays.json <<'WARREN_RELAYS_JSON'
-{"version":4,"relays":[],"generation":0,"signed_at":0,"expires_at":0,"server_pubkey_hex":"","signature_hex":""}
-WARREN_RELAYS_JSON
-    log_info "No baked warren-relays.json; wrote inert placeholder (daemon fetches the list at runtime)"
-fi
+# The two relay-list resources the daemon reads at boot. Shared with the
+# headless macOS/Windows bundles, which are assembled from a plain `cargo
+# build` and never reach this script, so the bytes live in one place.
+log_info "Staging the daemon relay-list resources..."
+bash ci/stage-daemon-resources.sh
 
 function build_daemon_packages {
     local pkg_success=0
@@ -593,8 +555,16 @@ function build_daemon_packages {
                 ;;
         esac
 
-        local deb_name="warren-vpn-daemon_${PRODUCT_VERSION}_${deb_arch}.deb"
-        local rpm_name="warren-vpn-daemon_${PRODUCT_VERSION}_${rpm_arch}.rpm"
+        # The package NAME stays warren-vpn-daemon in every environment: the
+        # headless build is one Warren daemon per machine (the manifest
+        # conflicts with every GUI package), so nothing has to co-install. The
+        # FILE name carries the environment, because an operator downloading a
+        # package has no other way to see which API host it will talk to, and
+        # picking the wrong one points a server at the wrong network.
+        local env_tag=""
+        [[ "$WARREN_PRODUCT_ENV" != "prod" ]] && env_tag="-${WARREN_PRODUCT_ENV}"
+        local deb_name="warren-vpn-daemon${env_tag}_${PRODUCT_VERSION}_${deb_arch}.deb"
+        local rpm_name="warren-vpn-daemon${env_tag}_${PRODUCT_VERSION}_${rpm_arch}.rpm"
         local deb_file="dist/${deb_name}"
         local rpm_file="dist/${rpm_name}"
 
