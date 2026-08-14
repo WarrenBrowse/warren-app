@@ -34,6 +34,9 @@ pub static FAKE_VERSION: LazyLock<VersionInfo> = LazyLock::new(|| VersionInfo {
         urls: vec!["https://mullvad.net/fakeapp".to_owned()],
         size: 1234,
         changelog: "a changelog".to_owned(),
+        // The downloader shows no release notes, so it never reads a
+        // translation; English is all the fixture needs to stand for.
+        changelog_translations: std::collections::BTreeMap::new(),
         sha256: [0u8; 32],
     },
     beta: None,

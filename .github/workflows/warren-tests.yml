@@ -61,6 +61,7 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli \
             -p talpid-warren-tunnel -p talpid-core \
             -p warren-jni -p warren-ios -p warren-forum -p mullvad-update \
+            -p mullvad-release \
             -- --check
 
       - name: install cargo-nextest
@@ -76,13 +77,21 @@ jobs:
         # cargo check warren-ios separately (cfg(target_os = "ios"), compile-only
         # on Linux). Native arm64: no Rosetta crash/deadlock retry needed; the
         # step timeout is the only backstop.
+        #
+        # mullvad-release consumes mullvad-update's release-metadata types but no
+        # other job ever compiled it, so a field added to `Release` broke it while
+        # main stayed green: it is the tool that signs and publishes the update
+        # manifests, and the breakage would have surfaced at the next release. It
+        # is platform-neutral and tiny (its deps are already built for
+        # mullvad-update here), so it joins the existing scope rather than getting
+        # a job of its own.
         timeout-minutes: 30
         run: |
           cargo nextest run --locked --profile warren-ci \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli \
             -p talpid-warren-tunnel -p talpid-core -p warren-jni \
-            -p mullvad-update
+            -p mullvad-update -p mullvad-release
           cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope
@@ -92,7 +101,9 @@ jobs:
         # that are not part of the Warren surface and carry their own upstream CI.
         timeout-minutes: 20
         run: |
-          for crate in mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core warren-jni mullvad-update; do
+          crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core"
+          crates="$crates warren-jni mullvad-update mullvad-release"
+          for crate in $crates; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
 

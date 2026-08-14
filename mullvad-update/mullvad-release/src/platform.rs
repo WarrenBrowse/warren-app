@@ -9,7 +9,7 @@ use mullvad_update::format::release::Release;
 use mullvad_update::format::response::{Response, SignedResponse};
 use mullvad_update::version::rollout::Rollout;
 use mullvad_update::version::{MIN_VERIFY_METADATA_VERSION, VersionInfo, VersionParameters};
-use std::{cmp::Ordering, fmt, path::PathBuf, str::FromStr};
+use std::{cmp::Ordering, collections::BTreeMap, fmt, path::PathBuf, str::FromStr};
 use strum::IntoEnumIterator;
 use tokio::{fs, io};
 
@@ -241,13 +241,7 @@ impl Platform {
             bail!("Version {version} already exists");
         }
 
-        // Make release
-        let new_release = Release {
-            changelog: changes.to_owned(),
-            version: version.clone(),
-            installers,
-            rollout,
-        };
+        let new_release = new_release(version, changes, installers, rollout);
 
         print_release_info(&new_release);
 
@@ -460,6 +454,30 @@ impl From<Platform> for MetaRepositoryPlatform {
     }
 }
 
+/// Build the release that `add_release` appends to a work manifest.
+///
+/// `changelog_translations` is empty because this tool has no translated notes
+/// to attach: it takes the release notes from the `changes.txt` of the GitHub
+/// tag, which is written in English only. An empty map is omitted on
+/// serialization, so the manifest bytes stay what they were before the field
+/// existed and a client reads `changelog`. Warren's localized notes come from
+/// the `CHANGELOG.<lang>.md` files and enter the manifest through
+/// `ci/build-version-metadata.py` instead.
+fn new_release(
+    version: &mullvad_version::Version,
+    changes: &str,
+    installers: Vec<Installer>,
+    rollout: Rollout,
+) -> Release {
+    Release {
+        changelog: changes.to_owned(),
+        version: version.clone(),
+        changelog_translations: BTreeMap::new(),
+        installers,
+        rollout,
+    }
+}
+
 /// Print release info:
 /// ```text
 /// Version: 2025.3 (arm, x86) (50%)
@@ -499,4 +517,72 @@ fn assert_same_architecture_versions<'a>(
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use mullvad_update::format::response::ResponseSignature;
+
+    fn translated_release() -> Release {
+        serde_json::from_value(serde_json::json!({
+            "version": "2025.1",
+            "changelog": "english notes",
+            "changelog_translations": { "fr": "notes en francais" },
+            "installers": [],
+        }))
+        .expect("a manifest release carrying translations must parse")
+    }
+
+    #[test]
+    fn added_release_omits_the_translations_field() {
+        let release = new_release(
+            &"2025.2".parse().unwrap(),
+            "english notes",
+            vec![],
+            Rollout::complete(),
+        );
+
+        let serialized = serde_json::to_value(&release).unwrap();
+        assert!(
+            serialized.get("changelog_translations").is_none(),
+            "the tool has only the English changes.txt, and an emitted empty map \
+             would change the signed bytes of every untranslated manifest"
+        );
+    }
+
+    #[test]
+    fn rewriting_a_work_manifest_preserves_existing_translations() {
+        // `add_release` reads the whole work manifest, appends to it and writes
+        // it back, so every release already in it is re-serialized from the
+        // parsed type. A release whose notes were translated by
+        // `ci/build-version-metadata.py` must come out of that rewrite intact.
+        let mut work = SignedResponse {
+            signatures: vec![ResponseSignature::Other {
+                keyid: "unsigned work file".to_owned(),
+                sig: String::new(),
+            }],
+            signed: Response {
+                metadata_version: 1,
+                metadata_expiry: chrono::Utc::now(),
+                minimum_supported_version: None,
+                releases: vec![translated_release()],
+            },
+        };
+
+        work.signed.releases.push(new_release(
+            &"2025.2".parse().unwrap(),
+            "english notes",
+            vec![],
+            Rollout::complete(),
+        ));
+
+        let rewritten = serde_json::to_value(&work).unwrap();
+        let releases = rewritten["signed"]["releases"].as_array().unwrap();
+        assert_eq!(
+            releases[0]["changelog_translations"]["fr"], "notes en francais",
+            "the rewrite dropped the translated notes of a release it did not touch"
+        );
+        assert_eq!(releases[1]["version"], "2025.2");
+    }
 }

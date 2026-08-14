@@ -1,0 +1,69 @@
+---
+# Warren: the installer-downloader's push/PR gate.
+#
+# The crate is `#![cfg(any(target_os = "windows", target_os = "macos"))]` down to
+# its test fixtures, so on the Linux runner that carries every other Warren gate
+# it compiles to nothing: listing it in `warren-tests.yml` would produce a step
+# that cannot fail. Nothing else built it either (`downloader.yml` is
+# dispatch-only in this fork and `release.yml` never invokes it), so a field
+# added to `mullvad_update::version::Metadata` broke its fixture and main stayed
+# green. A build surface that only a release exercises stays broken until that
+# release, which has already blocked one.
+#
+# Scope is one `cargo check --all-targets`: the crate has no Warren-specific
+# behaviour to assert here, and its size regression test is the real build in
+# `downloader.yml`. Paths are narrowed to the crate and the metadata types it
+# consumes, so the macOS pool is not woken by the daemon and desktop pushes that
+# `warren-checks.yml` covers.
+
+name: Installer downloader checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - warren-base
+    paths: &downloader_paths
+      - "installer-downloader/**"
+      # The release-metadata types the downloader reads to find an installer.
+      - "mullvad-update/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/installer-downloader-checks.yml"
+  pull_request:
+    branches:
+      - main
+      - warren-base
+    paths: *downloader_paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check-macos:
+    name: Installer downloader (cargo check)
+    # A host that compiles the crate at all. The same physical machine as the
+    # Linux pool, so this costs a job slot rather than a machine.
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 30
+    env:
+      CARGO_BUILD_JOBS: "6"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      # --all-targets so the test targets are compiled too: the fixture in
+      # tests/mock.rs is what constructs the release-metadata types, and the
+      # break this gate exists for was in that fixture, not in the product code.
+      - name: cargo check installer-downloader
+        timeout-minutes: 20
+        run: cargo check --locked --all-targets -p installer-downloader
