@@ -23,13 +23,13 @@
 
 /// Datagram counters for one bonded leg, sampled from `quinn`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct LegDatagrams {
+pub(crate) struct LegDatagrams {
     /// `udp_tx.datagrams`: datagrams the transport ISSUED on this leg. Climbs
     /// even when nothing reaches the wire, which is exactly what makes silence
     /// on `rx` meaningful.
-    pub tx: u64,
+    pub(crate) tx: u64,
     /// `udp_rx.datagrams`: datagrams that came back on this leg.
-    pub rx: u64,
+    pub(crate) rx: u64,
 }
 
 /// Sends a leg must have issued over one interval before a silent downlink
@@ -51,7 +51,7 @@ const MIN_TX_FOR_STALL: u64 = 10;
 /// longer be paired by index, and a fresh baseline has nothing to say about the
 /// interval that just elapsed.
 #[must_use]
-pub fn count_downlink_stalled(previous: &[LegDatagrams], current: &[LegDatagrams]) -> u8 {
+pub(crate) fn count_downlink_stalled(previous: &[LegDatagrams], current: &[LegDatagrams]) -> u8 {
     if previous.len() != current.len() {
         return 0;
     }
@@ -79,7 +79,7 @@ pub fn count_downlink_stalled(previous: &[LegDatagrams], current: &[LegDatagrams
 /// was at it. So a value has to be observed twice in a row before it is
 /// published, at the cost of one interval of latency.
 #[derive(Debug, Default)]
-pub struct DebouncedLegCounts {
+pub(crate) struct DebouncedLegCounts {
     published: (u8, u8),
     candidate: Option<(u8, u8)>,
 }
@@ -87,14 +87,14 @@ pub struct DebouncedLegCounts {
 impl DebouncedLegCounts {
     /// Counts currently published: `(legs bonded, legs downlink-stalled)`.
     #[must_use]
-    pub fn published(&self) -> (u8, u8) {
+    pub(crate) fn published(&self) -> (u8, u8) {
         self.published
     }
 
     /// Feed one interval's observation. Returns the new counts when they are
     /// confirmed and differ from what is published, and `None` when there is
     /// nothing new to say.
-    pub fn observe(&mut self, counts: (u8, u8)) -> Option<(u8, u8)> {
+    pub(crate) fn observe(&mut self, counts: (u8, u8)) -> Option<(u8, u8)> {
         if counts == self.published {
             self.candidate = None;
             return None;

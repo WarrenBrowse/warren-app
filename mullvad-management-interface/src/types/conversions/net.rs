@@ -194,8 +194,13 @@ impl TryFrom<proto::TunnelEndpoint> for talpid_types::net::TunnelEndpoint {
             legs_bonded: endpoint
                 .legs_bonded
                 .map_or(0, |legs| u8::try_from(legs).unwrap_or(u8::MAX)),
+            // A stall count without a bundle width describes no bundle at all.
+            // Taking it anyway would raise the degraded-bond indicator over a
+            // "not measured yet" leg row, so the pair is trusted together or
+            // not at all.
             legs_downlink_stalled: endpoint
-                .legs_downlink_stalled
+                .legs_bonded
+                .and(endpoint.legs_downlink_stalled)
                 .map_or(0, |legs| u8::try_from(legs).unwrap_or(u8::MAX)),
             tunnel_type: match proto::TunnelType::try_from(endpoint.tunnel_type) {
                 Ok(proto::TunnelType::Warren) => talpid_types::net::TunnelType::Warren,
@@ -475,6 +480,18 @@ mod tests {
         let wire = proto::TunnelEndpoint::from(endpoint(0, 0));
         assert_eq!(wire.legs_bonded, None);
         assert_eq!(wire.legs_downlink_stalled, None);
+    }
+
+    #[test]
+    fn a_stall_count_without_a_bundle_width_decodes_as_unsampled() {
+        let mut wire = proto::TunnelEndpoint::from(endpoint(8, 3));
+        wire.legs_bonded = None;
+        let restored = talpid_net::TunnelEndpoint::try_from(wire).unwrap();
+        assert_eq!(
+            (restored.legs_bonded, restored.legs_downlink_stalled),
+            (0, 0),
+            "a stall count is only meaningful next to the width it counts against"
+        );
     }
 
     /// An older daemon sends a `TunnelEndpoint` without either field; that must

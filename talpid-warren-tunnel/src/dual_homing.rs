@@ -54,7 +54,7 @@ fn same_subnet(a: Ipv4Addr, b: Ipv4Addr, netmask: Ipv4Addr) -> bool {
 /// share, so every address would trivially "match" the gateway only when equal
 /// to it, and a point-to-point link would read as a second home.
 #[must_use]
-pub fn uplinks_on_gateway_subnet(
+pub(crate) fn uplinks_on_gateway_subnet(
     addrs: &[(String, Ipv4Addr, Ipv4Addr)],
     gateway: Ipv4Addr,
 ) -> Vec<String> {
@@ -79,7 +79,7 @@ pub fn uplinks_on_gateway_subnet(
 /// reply.
 #[cfg(target_os = "macos")]
 #[must_use]
-pub fn enumerate_running_ipv4_uplinks() -> Vec<(String, Ipv4Addr, Ipv4Addr)> {
+pub(crate) fn enumerate_running_ipv4_uplinks() -> Vec<(String, Ipv4Addr, Ipv4Addr)> {
     use nix::net::if_::InterfaceFlags;
 
     let Ok(addrs) = nix::ifaddrs::getifaddrs() else {
@@ -101,7 +101,7 @@ pub fn enumerate_running_ipv4_uplinks() -> Vec<(String, Ipv4Addr, Ipv4Addr)> {
 /// report (single-homed, or an IPv6 default route this check does not cover).
 #[cfg(target_os = "macos")]
 #[must_use]
-pub fn observe_dual_homing(gateway: std::net::IpAddr) -> Vec<String> {
+pub(crate) fn observe_dual_homing(gateway: std::net::IpAddr) -> Vec<String> {
     let std::net::IpAddr::V4(gateway) = gateway else {
         return Vec::new();
     };
