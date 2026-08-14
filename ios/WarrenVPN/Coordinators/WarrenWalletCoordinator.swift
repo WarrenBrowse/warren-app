@@ -14,6 +14,7 @@
 import Routing
 import UIKit
 import WarrenLogging
+import WarrenSettings
 
 /// Entry points the coordinator can navigate to.
 public enum WarrenWalletEntryPoint {
@@ -118,6 +119,13 @@ extension WarrenWalletCoordinator: @preconcurrency WarrenWalletImportViewControl
         didImportMnemonic mnemonic: String
     ) {
         logger.info("Wallet imported + persisted to Keychain")
+        // A restored wallet already owns its identity and its subscription, so
+        // the onboarding wizard has nothing to walk it through. Without this,
+        // `nextWarrenRoutes` sends every import straight into the wizard for
+        // want of a completion flag, exactly as if the wallet had just been
+        // minted here.
+        let preferences = AppPreferences()
+        preferences.hasCompletedWarrenOnboarding = true
         finish(success: true)
     }
 
