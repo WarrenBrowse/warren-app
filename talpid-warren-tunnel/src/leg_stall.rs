@@ -67,6 +67,48 @@ pub fn count_downlink_stalled(previous: &[LegDatagrams], current: &[LegDatagrams
     u8::try_from(stalled).unwrap_or(u8::MAX)
 }
 
+/// Two-interval confirmation for the published leg counts.
+///
+/// # Why
+///
+/// Publishing a count means republishing the tunnel metadata, which re-enters
+/// the Connected transition; the daemon treats each of those as a new tunnel
+/// state, re-fetches the exit location and re-notifies every front end. A count
+/// that alternates between two values on consecutive ticks would do all of that
+/// every five seconds, and would flicker the indicator chip on and off while it
+/// was at it. So a value has to be observed twice in a row before it is
+/// published, at the cost of one interval of latency.
+#[derive(Debug, Default)]
+pub struct DebouncedLegCounts {
+    published: (u8, u8),
+    candidate: Option<(u8, u8)>,
+}
+
+impl DebouncedLegCounts {
+    /// Counts currently published: `(legs bonded, legs downlink-stalled)`.
+    #[must_use]
+    pub fn published(&self) -> (u8, u8) {
+        self.published
+    }
+
+    /// Feed one interval's observation. Returns the new counts when they are
+    /// confirmed and differ from what is published, and `None` when there is
+    /// nothing new to say.
+    pub fn observe(&mut self, counts: (u8, u8)) -> Option<(u8, u8)> {
+        if counts == self.published {
+            self.candidate = None;
+            return None;
+        }
+        if self.candidate == Some(counts) {
+            self.published = counts;
+            self.candidate = None;
+            return Some(counts);
+        }
+        self.candidate = Some(counts);
+        None
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -130,5 +172,49 @@ mod tests {
         let before = [leg(9_000, 8_000)];
         let after = [leg(12, 0)];
         assert_eq!(count_downlink_stalled(&before, &after), 0);
+    }
+
+    #[test]
+    fn a_count_is_published_once_a_second_interval_confirms_it() {
+        let mut counts = DebouncedLegCounts::default();
+        assert_eq!(counts.observe((8, 1)), None, "one interval is not evidence");
+        assert_eq!(counts.observe((8, 1)), Some((8, 1)));
+        assert_eq!(counts.published(), (8, 1));
+        assert_eq!(
+            counts.observe((8, 1)),
+            None,
+            "an unchanged count must not be republished"
+        );
+    }
+
+    #[test]
+    fn an_alternating_count_is_never_published() {
+        let mut counts = DebouncedLegCounts::default();
+        for _ in 0..10 {
+            assert_eq!(counts.observe((8, 1)), None);
+            assert_eq!(counts.observe((8, 0)), None);
+        }
+        assert_eq!(
+            counts.published(),
+            (0, 0),
+            "a value that never repeats must never reach the UI"
+        );
+    }
+
+    #[test]
+    fn returning_to_the_published_value_drops_the_pending_candidate() {
+        let mut counts = DebouncedLegCounts::default();
+        counts.observe((8, 0));
+        counts.observe((8, 0));
+        assert_eq!(counts.published(), (8, 0));
+
+        assert_eq!(counts.observe((8, 2)), None);
+        assert_eq!(counts.observe((8, 0)), None, "back to what is published");
+        assert_eq!(
+            counts.observe((8, 2)),
+            None,
+            "the earlier sighting must not count towards confirmation"
+        );
+        assert_eq!(counts.observe((8, 2)), Some((8, 2)));
     }
 }

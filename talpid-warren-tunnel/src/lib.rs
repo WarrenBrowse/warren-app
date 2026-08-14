@@ -1940,7 +1940,7 @@ impl WarrenTunnelMonitor {
             let tun_mtu = usize::from(tun_config.mtu);
             runtime.spawn(async move {
                 let mut last: Option<u16> = None;
-                let mut last_legs = (0u8, 0u8);
+                let mut legs_published = leg_stall::DebouncedLegCounts::default();
                 let mut previous_legs: Vec<leg_stall::LegDatagrams> = Vec::new();
                 tokio::time::sleep(std::time::Duration::from_secs(4)).await;
                 loop {
@@ -1965,13 +1965,14 @@ impl WarrenTunnelMonitor {
                             leg_stall::count_downlink_stalled(&previous_legs, &current_legs),
                         );
                         previous_legs = current_legs;
-                        if verdict != last || legs != last_legs {
+                        let legs_changed = legs_published.observe(legs).is_some();
+                        if verdict != last || legs_changed {
                             last = verdict;
-                            last_legs = legs;
+                            let (bonded, stalled) = legs_published.published();
                             let mut refreshed = sampler_meta.clone();
                             refreshed.effective_mtu = verdict;
-                            refreshed.legs_bonded = legs.0;
-                            refreshed.legs_downlink_stalled = legs.1;
+                            refreshed.legs_bonded = bonded;
+                            refreshed.legs_downlink_stalled = stalled;
                             sampler_hook.on_event(TunnelEvent::Up(refreshed)).await;
                         }
                     }
