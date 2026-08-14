@@ -591,6 +591,17 @@ function deserialize_mullvad_daemon_management_interface_WarrenCustomExitSetting
   return management_interface_pb.WarrenCustomExitSettings.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WarrenDiagnostics(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenDiagnostics)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenDiagnostics');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenDiagnostics(buffer_arg) {
+  return management_interface_pb.WarrenDiagnostics.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(arg) {
   if (!(arg instanceof management_interface_pb.WarrenMultiHopSettings)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenMultiHopSettings');
@@ -1035,6 +1046,20 @@ setWarrenMaxRateBps: {
     requestDeserialize: deserialize_google_protobuf_UInt64Value,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Read-only observations about the Warren datapath, for `warren doctor`.
+// Probes nothing, changes nothing, and carries no identity material: only
+// counts, a verdict kind with its age, and interface names.
+getWarrenDiagnostics: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenDiagnostics',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenDiagnostics,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenDiagnostics,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenDiagnostics,
   },
   // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
 // user back it up. Empty string if the identity has never been

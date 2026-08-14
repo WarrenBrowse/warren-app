@@ -39,6 +39,13 @@ enum Cli {
     #[clap(subcommand)]
     Dns(dns::Dns),
 
+    /// Report what the daemon observes about this connection: tunnel state,
+    /// path measurements, and the host conditions that silently degrade it.
+    ///
+    /// Probes nothing and changes nothing. Exits 0 when nothing was observed
+    /// to be wrong, 1 on a degradation, 2 when a probe could not be answered.
+    Doctor,
+
     /// Control the allow local network sharing setting
     #[clap(subcommand)]
     Lan(lan::Lan),
@@ -196,6 +203,7 @@ async fn main() -> Result<()> {
         Cli::BetaProgram(cmd) => cmd.handle().await,
         Cli::LockdownMode(cmd) => cmd.handle().await,
         Cli::Dns(cmd) => cmd.handle().await,
+        Cli::Doctor => doctor::run().await,
         Cli::Lan(cmd) => cmd.handle().await,
         Cli::AntiCensorship(cmd) => cmd.handle().await,
         Cli::ApiAccess(cmd) => cmd.handle().await,

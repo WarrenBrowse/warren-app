@@ -865,6 +865,63 @@ export namespace TunnelEndpoint {
     }
 }
 
+export class WarrenDiagnostics extends jspb.Message { 
+    getRequestedNConnections(): number;
+    setRequestedNConnections(value: number): WarrenDiagnostics;
+
+    hasCarrierVerdict(): boolean;
+    clearCarrierVerdict(): void;
+    getCarrierVerdict(): CarrierVerdict | undefined;
+    setCarrierVerdict(value?: CarrierVerdict): WarrenDiagnostics;
+    clearDualHomedInterfacesList(): void;
+    getDualHomedInterfacesList(): Array<string>;
+    setDualHomedInterfacesList(value: Array<string>): WarrenDiagnostics;
+    addDualHomedInterfaces(value: string, index?: number): string;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenDiagnostics.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenDiagnostics): WarrenDiagnostics.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenDiagnostics, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenDiagnostics;
+    static deserializeBinaryFromReader(message: WarrenDiagnostics, reader: jspb.BinaryReader): WarrenDiagnostics;
+}
+
+export namespace WarrenDiagnostics {
+    export type AsObject = {
+        requestedNConnections: number,
+        carrierVerdict?: CarrierVerdict.AsObject,
+        dualHomedInterfacesList: Array<string>,
+    }
+}
+
+export class CarrierVerdict extends jspb.Message { 
+    getKind(): CarrierVerdictKind;
+    setKind(value: CarrierVerdictKind): CarrierVerdict;
+    getAgeSeconds(): number;
+    setAgeSeconds(value: number): CarrierVerdict;
+    getTtlSeconds(): number;
+    setTtlSeconds(value: number): CarrierVerdict;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): CarrierVerdict.AsObject;
+    static toObject(includeInstance: boolean, msg: CarrierVerdict): CarrierVerdict.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: CarrierVerdict, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): CarrierVerdict;
+    static deserializeBinaryFromReader(message: CarrierVerdict, reader: jspb.BinaryReader): CarrierVerdict;
+}
+
+export namespace CarrierVerdict {
+    export type AsObject = {
+        kind: CarrierVerdictKind,
+        ageSeconds: number,
+        ttlSeconds: number,
+    }
+}
+
 export class FeatureIndicators extends jspb.Message { 
     clearActiveFeaturesList(): void;
     getActiveFeaturesList(): Array<FeatureIndicator>;
@@ -4200,6 +4257,11 @@ export enum AfterDisconnect {
 export enum TunnelType {
     WIREGUARD = 0,
     WARREN = 1,
+}
+
+export enum CarrierVerdictKind {
+    CARRIER_BIND_OK = 0,
+    CARRIER_ROUTE_ONLY = 1,
 }
 
 export enum FeatureIndicator {

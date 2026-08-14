@@ -3160,6 +3160,68 @@ struct CarrierNetwork {
     fingerprint: String,
 }
 
+/// What the carrier egress guard remembers about the bind on the network the
+/// host currently sits on.
+#[cfg(target_os = "macos")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CarrierBindVerdict {
+    /// The bound carrier socket egressed on this network.
+    BindOk,
+    /// The bind black-holed here, so the connect path pre-installs the
+    /// `<carrier_ip>/32` escape instead.
+    RouteOnly,
+}
+
+/// Read-only observations about the carrier path, for a diagnostics command.
+#[cfg(target_os = "macos")]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CarrierDiagnostics {
+    /// Cached bind verdict for the network the default route points at, with
+    /// how many seconds ago it was measured. `None` when the network is unknown
+    /// to the cache, its entry has expired, or there is no default route.
+    pub verdict: Option<(CarrierBindVerdict, u64)>,
+    /// Lifetime after which a cached verdict stops being replayed.
+    pub verdict_ttl_seconds: u64,
+    /// Names of the active non-tunnel interfaces sharing the default gateway's
+    /// subnet, when there are two or more. Names only: an address here would be
+    /// identity material.
+    pub dual_homed_interfaces: Vec<String>,
+}
+
+/// Collect the carrier observations without changing anything.
+///
+/// Nothing here probes the network, rewrites the verdict cache or touches the
+/// live tunnel: a diagnostics command that perturbs the state it reports on is
+/// worse than no command.
+#[cfg(target_os = "macos")]
+pub async fn warren_carrier_diagnostics(
+    route_manager: &talpid_routing::RouteManagerHandle,
+    cache_dir: Option<&std::path::Path>,
+) -> CarrierDiagnostics {
+    let ttl = carrier_verdict_cache::VERDICT_TTL.as_secs();
+    let Ok((Some(v4), _v6)) = route_manager.get_default_routes().await else {
+        return CarrierDiagnostics {
+            verdict: None,
+            verdict_ttl_seconds: ttl,
+            dual_homed_interfaces: Vec::new(),
+        };
+    };
+    let fingerprint = carrier_verdict_cache::network_fingerprint(&v4.interface, v4.router_ip);
+    let verdict =
+        carrier_verdict_cache::peek_verdict(&fingerprint, cache_dir).map(|(verdict, age)| {
+            let kind = match verdict {
+                carrier_verdict_cache::CachedVerdict::BindOk => CarrierBindVerdict::BindOk,
+                carrier_verdict_cache::CachedVerdict::RouteOnly => CarrierBindVerdict::RouteOnly,
+            };
+            (kind, age)
+        });
+    CarrierDiagnostics {
+        verdict,
+        verdict_ttl_seconds: ttl,
+        dual_homed_interfaces: dual_homing::observe_dual_homing(v4.router_ip),
+    }
+}
+
 #[cfg(target_os = "macos")]
 async fn discover_warren_carrier_network_macos(
     route_manager: &talpid_routing::RouteManagerHandle,

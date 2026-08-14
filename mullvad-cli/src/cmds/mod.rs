@@ -9,6 +9,7 @@ pub mod beta_program;
 pub mod custom_list;
 pub mod debug;
 pub mod dns;
+pub mod doctor;
 pub mod lan;
 pub mod lockdown;
 pub mod log;

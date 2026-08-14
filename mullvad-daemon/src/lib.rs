@@ -399,6 +399,12 @@ pub enum DaemonCommand {
     /// before the allocator recycles it once the GUI has serialized
     /// it onto the gRPC response.
     GetWarrenMnemonic(oneshot::Sender<Option<zeroize::Zeroizing<String>>>),
+    /// Read-only observations about the Warren datapath, for `warren doctor`.
+    /// Probes nothing and changes nothing: it reports the resolved connection
+    /// count, whatever carrier-bind verdict is already cached for the current
+    /// network, and whether the host holds two interfaces on the default
+    /// gateway's subnet.
+    GetWarrenDiagnostics(oneshot::Sender<mullvad_types::warren_diagnostics::WarrenDiagnostics>),
     /// Signs a community-forum login challenge (doc 55). Carries the
     /// deep-link `sid`; replies with the four X-Warren-* header values +
     /// the request body, or `None` if no identity is bootstrapped. The
@@ -992,6 +998,11 @@ pub struct Daemon {
     leak_checker: LeakChecker,
     /// Mirrors the tunnel into the desktop's own network indicator.
     nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator,
+    /// Kept so `GetWarrenDiagnostics` can resolve the current default route
+    /// without a tunnel: the carrier verdict is keyed by the network the route
+    /// points at, and the dual-homing check needs its gateway.
+    #[cfg(target_os = "macos")]
+    warren_route_manager: RouteManagerHandle,
     cache_dir: PathBuf,
     /// Kept to allow runtime reads of the BIP39 mnemonic
     /// (`<settings_dir>/warren_mnemonic.txt`) via the
@@ -2019,7 +2030,7 @@ impl Daemon {
         );
 
         let leak_checker = {
-            let mut leak_checker = LeakChecker::new(route_manager);
+            let mut leak_checker = LeakChecker::new(route_manager.clone());
             let internal_event_tx = internal_event_tx.clone();
             leak_checker.add_leak_callback(move |info| {
                 internal_event_tx
@@ -2063,6 +2074,8 @@ impl Daemon {
             location_handler,
             leak_checker,
             nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(),
+            #[cfg(target_os = "macos")]
+            warren_route_manager: route_manager,
             cache_dir: config.cache_dir,
             settings_dir: config.settings_dir,
             warren_status_cache,
@@ -2642,6 +2655,7 @@ impl Daemon {
             GetAccountData(tx, account_number) => self.on_get_account_data(tx, account_number),
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
+            GetWarrenDiagnostics(tx) => self.on_get_warren_diagnostics(tx).await,
             SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
             SignForumNotifications(tx) => self.on_sign_forum_notifications(tx),
             SignForumNotificationsSeen(tx) => self.on_sign_forum_notifications_seen(tx),
@@ -3160,6 +3174,64 @@ impl Daemon {
             mnemonic.is_some()
         );
         Self::oneshot_send(tx, mnemonic, "get_warren_mnemonic");
+    }
+
+    /// Answers `warren doctor` with what the daemon already knows.
+    ///
+    /// Deliberately inert: no probe, no reconnect, no cache write. A
+    /// diagnostics command that perturbs the state it reports on is worse than
+    /// no command, and the carrier verdict in particular must not be renewed by
+    /// being read.
+    async fn on_get_warren_diagnostics(
+        &self,
+        tx: oneshot::Sender<mullvad_types::warren_diagnostics::WarrenDiagnostics>,
+    ) {
+        use mullvad_types::warren_diagnostics::WarrenDiagnostics;
+
+        let requested_n_connections = crate::warren_tunnel_params::resolve_n_connections(
+            self.settings.settings().warren_n_connections,
+        );
+
+        #[cfg(target_os = "macos")]
+        let (carrier_verdict, dual_homed_interfaces) = {
+            use mullvad_types::warren_diagnostics::{CarrierVerdictKind, CarrierVerdictReport};
+
+            // The same cache directory the connect path hands the tunnel, so
+            // the doctor reads the file the guard actually writes.
+            let cache_dir = mullvad_paths::cache_dir().ok();
+            let observed = talpid_warren_tunnel::warren_carrier_diagnostics(
+                &self.warren_route_manager,
+                cache_dir.as_deref(),
+            )
+            .await;
+            let verdict = observed
+                .verdict
+                .map(|(kind, age_seconds)| CarrierVerdictReport {
+                    kind: match kind {
+                        talpid_warren_tunnel::CarrierBindVerdict::BindOk => {
+                            CarrierVerdictKind::BindOk
+                        }
+                        talpid_warren_tunnel::CarrierBindVerdict::RouteOnly => {
+                            CarrierVerdictKind::RouteOnly
+                        }
+                    },
+                    age_seconds,
+                    ttl_seconds: observed.verdict_ttl_seconds,
+                });
+            (verdict, observed.dual_homed_interfaces)
+        };
+        #[cfg(not(target_os = "macos"))]
+        let (carrier_verdict, dual_homed_interfaces) = (None, Vec::new());
+
+        Self::oneshot_send(
+            tx,
+            WarrenDiagnostics {
+                requested_n_connections,
+                carrier_verdict,
+                dual_homed_interfaces,
+            },
+            "get_warren_diagnostics",
+        );
     }
 
     /// Signs the community-forum login challenge for `sid` (doc 55).

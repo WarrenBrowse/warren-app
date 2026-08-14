@@ -123,6 +123,26 @@ pub(crate) fn plan_carrier_probe(
     }
 }
 
+/// What the cache remembers for `fingerprint` right now: the verdict and how
+/// many seconds ago it was recorded. `None` when nothing is stored for that
+/// network or the entry has aged past [`VERDICT_TTL`].
+///
+/// Strictly read-only, for the diagnostics surface. It must never renew, prune
+/// or rewrite an entry: an observation that changes what it observes would make
+/// the expiry unreachable all over again.
+pub(crate) fn peek_verdict(
+    fingerprint: &str,
+    verdict_dir: Option<&Path>,
+) -> Option<(CachedVerdict, u64)> {
+    let now = now_unix();
+    VerdictCache::load(verdict_dir)
+        .entries
+        .iter()
+        .find(|e| e.fingerprint == fingerprint)
+        .map(|e| (e.verdict, now.saturating_sub(e.recorded_unix)))
+        .filter(|(_, age)| *age < VERDICT_TTL.as_secs())
+}
+
 /// One-shot writer that maps a guard outcome back into the cache.
 pub(crate) struct VerdictRecorder {
     cache: VerdictCache,
@@ -505,6 +525,39 @@ mod tests {
             Some(CachedVerdict::RouteOnly),
             "a re-proved escape keeps its verdict"
         );
+    }
+
+    #[test]
+    fn peek_reports_the_verdict_with_its_age_and_never_touches_the_entry() {
+        let dir = tmp_dir("peek");
+        let recorded = now_unix() - 3_600;
+        let mut cache = VerdictCache::load(Some(&dir));
+        cache.record("fp1", CachedVerdict::RouteOnly, recorded);
+
+        let (verdict, age) = peek_verdict("fp1", Some(&dir)).expect("a fresh entry must be seen");
+        assert_eq!(verdict, CachedVerdict::RouteOnly);
+        assert!((3_600..3_610).contains(&age), "age was {age}");
+
+        peek_verdict("fp1", Some(&dir));
+        let (_, age_after) = peek_verdict("fp1", Some(&dir)).expect("still there");
+        assert!(
+            age_after >= 3_600,
+            "reading the cache must not renew the entry"
+        );
+    }
+
+    #[test]
+    fn peek_reports_nothing_for_an_unknown_or_expired_network() {
+        let dir = tmp_dir("peek-miss");
+        assert_eq!(peek_verdict("fp1", Some(&dir)), None);
+
+        let mut cache = VerdictCache::load(Some(&dir));
+        cache.record(
+            "fp1",
+            CachedVerdict::BindOk,
+            now_unix() - VERDICT_TTL.as_secs() - 1,
+        );
+        assert_eq!(peek_verdict("fp1", Some(&dir)), None);
     }
 
     #[test]

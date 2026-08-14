@@ -292,6 +292,16 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Read-only observations about the Warren datapath, for `warren doctor`.
+    /// The daemon probes nothing to answer it and changes no state.
+    pub async fn get_warren_diagnostics(
+        &mut self,
+    ) -> Result<mullvad_types::warren_diagnostics::WarrenDiagnostics> {
+        let diagnostics = self.0.get_warren_diagnostics(()).await?.into_inner();
+        mullvad_types::warren_diagnostics::WarrenDiagnostics::try_from(diagnostics)
+            .map_err(Error::InvalidResponse)
+    }
+
     /// Persisted `Settings::warren_max_rate_bps` client-side bandwidth
     /// ceiling in bits per second. `None` = unlimited (= 0 on the
     /// wire). Applied to a live tunnel without a reconnect.

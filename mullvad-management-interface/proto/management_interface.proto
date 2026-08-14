@@ -75,6 +75,10 @@ service ManagementService {
   // 0 = unset (unlimited). Applied to a live tunnel without a
   // reconnect.
   rpc SetWarrenMaxRateBps(google.protobuf.UInt64Value) returns (google.protobuf.Empty) {}
+  // Read-only observations about the Warren datapath, for `warren doctor`.
+  // Probes nothing, changes nothing, and carries no identity material: only
+  // counts, a verdict kind with its age, and interface names.
+  rpc GetWarrenDiagnostics(google.protobuf.Empty) returns (WarrenDiagnostics) {}
   // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
   // user back it up. Empty string if the identity has never been
   // bootstrapped (= legacy Mullvad mode or first boot before
@@ -512,6 +516,36 @@ message TunnelEndpoint {
   // indicator: nothing in the datapath acts on it, and exit-side idle cover
   // hides some stalls.
   optional uint32 legs_downlink_stalled = 11;
+}
+
+// Read-only datapath observations. See `mullvad_types::warren_diagnostics`.
+message WarrenDiagnostics {
+  // Parallel QUIC connections the NEXT connect will request (env var,
+  // persisted setting and compiled default already resolved).
+  uint32 requested_n_connections = 1;
+  // Carrier-bind verdict remembered for the network the default route points
+  // at. Absent where no such guard exists, or when nothing fresh is cached.
+  optional CarrierVerdict carrier_verdict = 2;
+  // Names of the active non-tunnel interfaces sharing the default gateway's
+  // subnet, sent only when two or more do. Names only: an address here would
+  // be identity material.
+  repeated string dual_homed_interfaces = 3;
+}
+
+message CarrierVerdict {
+  CarrierVerdictKind kind = 1;
+  // Seconds since the verdict was measured.
+  uint64 age_seconds = 2;
+  // Seconds after which it stops being replayed and the bind is re-measured.
+  uint64 ttl_seconds = 3;
+}
+
+enum CarrierVerdictKind {
+  // The bound carrier socket egressed: the leak-free configuration is in use.
+  CARRIER_BIND_OK = 0;
+  // The bind black-holed on this network, so connects install the wider
+  // <carrier_ip>/32 route exception instead.
+  CARRIER_ROUTE_ONLY = 1;
 }
 
 message FeatureIndicators { repeated FeatureIndicator active_features = 1; }

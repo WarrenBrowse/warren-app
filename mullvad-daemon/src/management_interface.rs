@@ -493,6 +493,17 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    async fn get_warren_diagnostics(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::WarrenDiagnostics> {
+        log::debug!("get_warren_diagnostics");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::GetWarrenDiagnostics(tx))?;
+        let diagnostics = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::WarrenDiagnostics::from(diagnostics)))
+    }
+
     async fn set_warren_max_rate_bps(&self, request: Request<u64>) -> ServiceResult<()> {
         let raw = request.into_inner();
         log::debug!("set_warren_max_rate_bps({raw})");
