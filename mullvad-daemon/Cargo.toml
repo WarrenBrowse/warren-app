@@ -45,7 +45,7 @@ assets = [
   # server whose first connect attempt races the fetch has nothing to pick.
   { source = "../build/warren-relays.json", dest = "opt/Warren VPN/resources/", mode = "644" },
   { source = "../build/shell-completions/warren.bash", dest = "usr/share/bash-completion/completions/warren", mode = "644" },
-  { source = "../build/shell-completions/_warren", dest = "usr/local/share/zsh/site-functions/_warren", mode = "644" },
+  { source = "../build/shell-completions/_warren", dest = "usr/share/zsh/site-functions/_warren", mode = "644" },
   { source = "../build/shell-completions/warren.fish", dest = "usr/share/fish/vendor_completions.d/warren.fish", mode = "644" },
   { source = "../CHANGELOG.md", dest = "opt/Warren VPN/resources/", mode = "644" },
 ]

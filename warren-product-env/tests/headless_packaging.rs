@@ -37,6 +37,21 @@ fn asset_sources(table_body: &str) -> Vec<&str> {
         .collect()
 }
 
+/// The `(source, dest)` of every entry of an `assets = [...]` array, with the
+/// destination normalised: cargo-deb writes it relative (`usr/bin/`) and
+/// cargo-generate-rpm absolute (`/usr/bin/`), for the same installed path.
+fn asset_pairs(table_body: &str) -> Vec<(&str, &str)> {
+    table_body
+        .lines()
+        .filter_map(|line| line.trim().strip_prefix("{ source = \""))
+        .filter_map(|rest| {
+            let (source, tail) = rest.split_once('"')?;
+            let dest = tail.split_once("dest = \"")?.1.split('"').next()?;
+            Some((source, dest.trim_start_matches('/')))
+        })
+        .collect()
+}
+
 /// Every package named on a `conflicts = [...]` line, or as a key of a
 /// `[...conflicts]` table (cargo-deb and cargo-generate-rpm spell it
 /// differently).
@@ -97,6 +112,42 @@ fn the_deb_and_the_rpm_package_the_same_files() {
         "the headless asset lists drifted: absent from the rpm {missing_from_rpm:?}, \
          absent from the deb {missing_from_deb:?}"
     );
+}
+
+/// Two packages of the same product that install the same file to different
+/// paths are two different products to anyone writing a support instruction, a
+/// doc, or the tarball installer that has to agree with both. It also hides a
+/// policy break: the Debian Policy reserves `/usr/local` for the local
+/// administrator, so a package writing there can overwrite what an admin put
+/// in it.
+#[test]
+fn the_deb_and_the_rpm_install_to_the_same_paths() {
+    let deb = asset_pairs(table(MANIFEST, "[package.metadata.deb]"));
+    let rpm = asset_pairs(table(MANIFEST, "[package.metadata.generate-rpm]"));
+
+    let mut divergent: Vec<String> = deb
+        .iter()
+        .filter_map(|(source, deb_dest)| {
+            let rpm_dest = rpm.iter().find(|(s, _)| s == source).map(|(_, d)| *d)?;
+            (rpm_dest != *deb_dest)
+                .then(|| format!("{source}: deb -> {deb_dest}, rpm -> {rpm_dest}"))
+        })
+        .collect();
+    divergent.sort();
+
+    assert!(
+        divergent.is_empty(),
+        "the two headless packages install the same file to different places:\n  {}",
+        divergent.join("\n  ")
+    );
+
+    for (source, dest) in deb.iter().chain(rpm.iter()) {
+        assert!(
+            !dest.starts_with("usr/local/"),
+            "{source} installs to /{dest}, which the Debian Policy reserves for the \
+             local administrator"
+        );
+    }
 }
 
 /// The headless package installs a daemon compiled for ONE environment, and
