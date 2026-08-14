@@ -360,12 +360,16 @@ jobs:
     needs: [resolve]
     runs-on: [self-hosted, Windows, macstudio-win]
     timeout-minutes: 140
-    # Non-blocking, for now. The Warren tunnel is not validated on Windows and
-    # this job has never had a green run producing a bundle that carries
-    # winfw.dll, so gating every app release on it would block releases on a
-    # path nobody has proven. Once it goes green on a release, move it into the
-    # `finalise` gate below with the other platforms.
-    continue-on-error: true
+    # Blocking, like every other platform, since daemon-beta-v1.1.15 (the first
+    # run to produce a complete bundle: winfw.dll, wintun.dll and the
+    # split-tunnel driver, with the WFP keys salt-verified). A release that
+    # advertises Windows and silently ships without its zip is the failure
+    # nobody notices until a user cannot find their build, which is the same
+    # reason the sysvinit and NixOS jobs gate the app release.
+    #
+    # The marginal risk is small: the GUI's own Windows job already gates every
+    # app release and runs on this same pool, so the two fail together far more
+    # often than apart.
     env:
       WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
       WARREN_VERSION: ${{ needs.resolve.outputs.version }}
@@ -449,14 +453,15 @@ jobs:
     # left one behind on every run until now, which is why warren-cli served a
     # release from June while the app shipped weekly.
     #
-    # Windows is deliberately absent from this gate (see its `continue-on-error`
-    # above); the three platforms that ARE validated all have to succeed.
+    # Every platform gates: a release is the whole artifact set or it is not a
+    # release.
     if: >-
       !cancelled() &&
       needs.resolve.outputs.publish == 'true' &&
       needs.linux.result == 'success' &&
       needs.linux-arm64.result == 'success' &&
-      needs.macos.result == 'success'
+      needs.macos.result == 'success' &&
+      needs.windows.result == 'success'
     env:
       GH_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
       CLI_REPO: WarrenBrowse/warren-cli
@@ -499,6 +504,7 @@ jobs:
           warren-headless${tag}-${WARREN_VERSION}-linux-x86_64.tar.gz
           warren-headless${tag}-${WARREN_VERSION}-linux-aarch64.tar.gz
           warren-headless${tag}-${WARREN_VERSION}-macos-universal.tar.gz
+          warren-headless${tag}-${WARREN_VERSION}-windows-x64.zip
           "
           missing=""
           for asset in $expected; do
@@ -508,12 +514,7 @@ jobs:
             echo "::error::the release is missing:$missing"
             exit 1
           fi
-          win="warren-headless${tag}-${WARREN_VERSION}-windows-x64.zip"
-          if [ -f "release-files/$win" ]; then
-            echo "Windows bundle present."
-          else
-            echo "::warning::no Windows bundle in this release (job result: $WINDOWS_RESULT)"
-          fi
+          echo "every expected artifact is present (windows job: $WINDOWS_RESULT)"
 
       - name: Compute SHA-256 checksums
         # The installers verify against this, which is what catches a download
