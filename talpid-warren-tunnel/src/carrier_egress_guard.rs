@@ -18,11 +18,21 @@
 //! route swap it runs a short bootstrap window and watches for proof that our
 //! own post-swap sends reach the peer. If proven, the bind is good and stays.
 //! If sends were issued but nothing was acknowledged within the window, the
-//! bound carrier is black-holing, so the guard records the network for the
-//! `<carrier_ip>/32` DefaultNode route AND unbinds the socket, exactly
-//! reproducing the pre-v1.7.0 config. The revert is the fail-safe net; the bind
+//! guard RECORDS the network for the `<carrier_ip>/32` DefaultNode escape so
+//! the NEXT connect pre-installs it, before the `0/0` redirect, and leaves the
+//! live session alone. It used to patch the session in place instead, and that
+//! patch was itself an outage (see [`GuardOutcome::BindBlackholed`]). The bind
 //! is kept only when confirmed working, never fail-closed (fail-closed here
 //! would take egress down).
+//!
+//! # What the counters cannot answer, and the probe that can
+//!
+//! A dead verdict says nothing came back. It cannot say whether anything left,
+//! because `sendmsg` returns `Ok` either way, and that is the fork deciding who
+//! owns the failure: a carrier routed back into its own tunnel is ours, a
+//! carrier that leaves and dies past the NIC is not. [`probe_carrier_routes`]
+//! settles it by asking the kernel the same route question the datapath asks,
+//! in both escape configurations, without emitting a packet.
 //!
 //! # Why ACK progress, not received bytes
 //!
