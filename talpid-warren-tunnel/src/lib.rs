@@ -2527,6 +2527,15 @@ impl WarrenTunnelMonitor {
         drop(nat_pmp_managers);
         if let Some(h) = nat_pmp_controller {
             h.abort();
+            // Wait for the abort to land. `abort()` alone only marks the task:
+            // its future, the managers it owns and the `Cancelled` each of them
+            // reports are dropped by a worker thread at an unspecified later
+            // instant, and a `Cancelled` arriving after the next tunnel's first
+            // `Mapped` deletes a live rule from the daemon's status. Bounded
+            // because this runs on the teardown path that restores the routes.
+            runtime.block_on(async {
+                let _ = tokio::time::timeout(std::time::Duration::from_secs(1), h).await;
+            });
         }
         let natpmp_ms = natpmp_t.elapsed().as_millis();
 
