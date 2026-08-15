@@ -14,6 +14,25 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.16] - 2026-08-15
+### Reparat
+- [macOS] Nu mai întrerupe o conexiune care funcționează, la o secundă și jumătate după ce se
+  stabilește. Aplicația verifică dacă traficul poate ieși din computer prin interfața de rețea pe
+  care a ales-o, iar acea verificare număra pachete la care celălalt capăt nu poate răspunde
+  niciodată, așa că declara moarte conexiuni sănătoase. Aplicația schimba apoi o rută și reconstruia
+  un socket sub tunelul în funcțiune ca să le repare, iar acea schimbare este cea care ucidea
+  traficul. Tunelul rămânea conectat fără să transporte nimic și se reconecta la fiecare 15 secunde.
+  Verificarea numără acum doar ceea ce poate primi un răspuns și se uită la toate conexiunile
+  tunelului, nu mai atinge niciodată un tunel în funcțiune, iar un computer care chiar are nevoie de
+  ruta de rezervă o primește înainte de pornirea tunelului, acolo unde funcționează.
+- Nu mai propune asistentul de creare a contului cuiva care tocmai a restaurat un cont existent din
+  fraza sa de recuperare. Acel cont are deja portofelul și abonamentul, deci asistentul nu are ce să
+  configureze. Valabil pentru aplicația de desktop și pentru iOS.
+- Nu mai aduce înapoi asistentul după ce a fost terminat sau sărit. La câteva minute după ce
+  fereastra este ascunsă, aplicația revine la vizualizarea de pornire, iar acea vizualizare rămânea
+  asistentul, care reapărea la fiecare redeschidere.
+
+
 ## [1.1.14] - 2026-08-14
 ### Reparat
 - [macOS] Instalează aplicația pe un computer care nu a avut-o niciodată. Începând cu 1.1.6,

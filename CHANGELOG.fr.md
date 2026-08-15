@@ -15,6 +15,26 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.16] - 2026-08-15
+### Corrigé
+- [macOS] Ne plus couper une connexion qui fonctionne, une seconde et demie après son
+  établissement. L'application vérifie que le trafic peut sortir de l'ordinateur par l'interface
+  réseau qu'elle a choisie, et ce contrôle comptait des paquets auxquels l'autre bout ne peut jamais
+  répondre, si bien qu'il déclarait mortes des connexions saines. L'application remplaçait alors une
+  route et recréait une socket sous le tunnel en cours pour les réparer, et c'est ce remplacement
+  qui tuait le trafic. Le tunnel restait connecté sans rien transporter et se reconnectait toutes
+  les 15 secondes. Le contrôle ne compte plus que ce à quoi l'autre bout peut répondre et regarde
+  toutes les connexions du tunnel, il ne touche plus jamais à un tunnel en cours, et un ordinateur
+  qui a réellement besoin de la route de secours la reçoit avant le démarrage du tunnel, là où elle
+  fonctionne.
+- Ne plus proposer l'assistant de création de compte à quelqu'un qui vient de restaurer un compte
+  existant depuis sa phrase de récupération. Ce compte porte déjà son portefeuille et son
+  abonnement, l'assistant n'a donc rien à configurer. Vaut pour l'application de bureau et pour iOS.
+- Ne plus faire revenir l'assistant une fois qu'il a été terminé ou passé. Quelques minutes après
+  la fermeture de la fenêtre, l'application revient à sa vue de départ, et cette vue de départ
+  restait l'assistant, qui réapparaissait donc à chaque réouverture.
+
+
 ## [1.1.14] - 2026-08-14
 ### Corrigé
 - [macOS] Installer l'application sur un ordinateur qui ne l'a jamais eue. Depuis la 1.1.6,

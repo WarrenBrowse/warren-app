@@ -22,7 +22,18 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+
+## [1.1.16] - 2026-08-15
 ### Fixed
+- [macOS] Stop cutting a working connection a second and a half after it comes up. The app checks
+  that traffic can leave the computer through the network interface it picked, and that check
+  counted packets which the other end can never answer, so it declared healthy connections dead. It
+  then swapped a route and rebuilt a socket underneath the running tunnel to repair them, and that
+  swap is what killed the traffic: connected, carrying nothing, reconnecting every 15 seconds. The
+  check now counts only what can be answered and looks at every connection of the tunnel, it never
+  touches a running tunnel, and a computer that really does need the fallback route gets it prepared
+  before the tunnel starts, where it works.
 - Stop offering the new-account setup wizard to a user who just restored an existing account from
   their recovery phrase. That account already carries its wallet and its subscription, so the wizard
   has nothing to set up. Applies to the desktop app and to iOS.
