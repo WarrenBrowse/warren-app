@@ -2526,16 +2526,7 @@ impl WarrenTunnelMonitor {
         let natpmp_t = Instant::now();
         drop(nat_pmp_managers);
         if let Some(h) = nat_pmp_controller {
-            h.abort();
-            // Wait for the abort to land. `abort()` alone only marks the task:
-            // its future, the managers it owns and the `Cancelled` each of them
-            // reports are dropped by a worker thread at an unspecified later
-            // instant, and a `Cancelled` arriving after the next tunnel's first
-            // `Mapped` deletes a live rule from the daemon's status. Bounded
-            // because this runs on the teardown path that restores the routes.
-            runtime.block_on(async {
-                let _ = tokio::time::timeout(std::time::Duration::from_secs(1), h).await;
-            });
+            await_controller_shutdown(&runtime, h);
         }
         let natpmp_ms = natpmp_t.elapsed().as_millis();
 
@@ -2990,6 +2981,32 @@ async fn run_nat_pmp_controller(
     }
     drop(managers);
 }
+
+/// Aborts the live-reconfig NAT-PMP controller and does not return until the
+/// abort has taken effect, so the rest of the teardown is ordered against
+/// everything the task owns.
+///
+/// `abort()` on its own only marks the task: its future, the managers inside it
+/// and the `Cancelled` each of them reports are dropped by a worker thread at
+/// an unspecified later instant. A `Cancelled` that lands after the NEXT
+/// tunnel's first `Mapped` deletes a live rule from the daemon's status, and
+/// nothing puts it back until the following renewal.
+///
+/// Bounded, because this runs on the teardown path that restores the routes and
+/// the firewall: the ordering is worth a wait, never a hang.
+fn await_controller_shutdown(
+    runtime: &tokio::runtime::Handle,
+    handle: tokio::task::JoinHandle<()>,
+) {
+    handle.abort();
+    runtime.block_on(async {
+        let _ = tokio::time::timeout(CONTROLLER_SHUTDOWN_BOUND, handle).await;
+    });
+}
+
+/// How long the teardown waits for the aborted NAT-PMP controller to release
+/// what it owns before giving up on the ordering.
+const CONTROLLER_SHUTDOWN_BOUND: std::time::Duration = std::time::Duration::from_secs(1);
 
 /// Decides whether ADR-0006 B2-lite idle cover is armed for this session.
 ///
@@ -4372,7 +4389,10 @@ mod tests {
     // tunnel reconnect.
     // ===================================================================
     use std::{
-        sync::{Arc, Mutex as StdMutex},
+        sync::{
+            Arc, Mutex as StdMutex,
+            atomic::{AtomicBool, Ordering},
+        },
         time::Duration,
     };
     use tokio::net::UdpSocket;
@@ -4720,6 +4740,50 @@ mod tests {
         );
 
         handle.abort();
+    }
+
+    #[test]
+    fn controller_shutdown_returns_only_once_the_aborted_task_released_its_state() {
+        // The teardown that runs this goes on to restore the routes and start
+        // the next tunnel epoch. Everything the controller owns (its managers,
+        // and the `Cancelled` each of them reports on drop) has to be gone
+        // before that: a `Cancelled` landing after the next tunnel's first
+        // `Mapped` deletes a live rule from the daemon's status.
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(1)
+            .enable_all()
+            .build()
+            .expect("runtime");
+
+        struct SlowRelease(Arc<AtomicBool>);
+        impl Drop for SlowRelease {
+            fn drop(&mut self) {
+                // A manager's drop is not instantaneous (it aborts tasks and
+                // calls the observer). Standing in for that work is what makes
+                // this test measure the wait rather than a lucky schedule.
+                std::thread::sleep(Duration::from_millis(50));
+                self.0.store(true, Ordering::SeqCst);
+            }
+        }
+
+        let released = Arc::new(AtomicBool::new(false));
+        let owned = SlowRelease(released.clone());
+        let (started_tx, started_rx) = std::sync::mpsc::channel();
+        let task = rt.spawn(async move {
+            let _owned = owned;
+            started_tx.send(()).expect("started");
+            // Parked forever, like the controller on its watch channel: only
+            // the abort can end it.
+            std::future::pending::<()>().await;
+        });
+        started_rx.recv().expect("the task never started");
+
+        await_controller_shutdown(rt.handle(), task);
+
+        assert!(
+            released.load(Ordering::SeqCst),
+            "teardown returned while the controller still owned its managers"
+        );
     }
 
     #[tokio::test]
