@@ -14,6 +14,22 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.17] - 2026-08-16
+### Modificat
+- [macOS] Încearcă un alt server de intrare când o conexiune nu transportă nimic, iar computerul a
+  fost scos din cauză. Când traficul nu mai ajunge la tunel, două lucruri pot explica asta:
+  computerul nu trimite, sau acel server anume nu poate fi atins din rețeaua folosită. Aplicația
+  trata doar prima situație și reîncerca la nesfârșit același server. Acum verifică dacă propriile
+  pachete chiar părăsesc computerul, iar când o fac cere un alt server de intrare în loc să repete
+  o încercare care nu poate reuși.
+### Reparat
+- [macOS] Consemnează ce a măsurat de fapt o conexiune eșuată. Când aplicația raportează că
+  traficul nu poate ieși din computer, raportul pe care îl atașează arată acum cât a trimis, cât
+  i-a revenit, câte conexiuni erau folosite și dacă sistemul ar scoate traficul propriu al
+  tunelului prin interfața de rețea sau l-ar trimite înapoi în tunel. Fără acestea, echipa de
+  suport nu putea deosebi un computer care nu mai trimite de o rețea care nu mai transportă, iar
+  persoana care raporta problema, cu atât mai puțin.
+
 ## [1.1.16] - 2026-08-15
 ### Reparat
 - [macOS] Nu mai lasă un computer fără rezolvare de nume după o deconectare. Când rula un alt VPN,

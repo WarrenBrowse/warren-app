@@ -145,6 +145,79 @@ fn dial_refusal_reaction_due(now_unix: u64, last_unix: u64) -> bool {
         && now_unix.saturating_sub(last_unix) >= WARREN_DIAL_REFUSAL_COOLDOWN.as_secs()
 }
 
+/// Whether a carrier the guard measured dead in BOTH escape configurations
+/// should cost this circuit its place.
+///
+/// The guard's evidence is per-DESTINATION: "we sent ack-eliciting frames
+/// toward this relay and nothing came back". Two things fit it and no counter
+/// separates them, this host egresses nothing, or this relay is unreachable
+/// from this network. The app has only ever answered the first (swap the bind
+/// for the `/32` escape, then swap back), so a host where both are dead
+/// oscillates between two configurations that cannot help for as long as the
+/// user leaves it connected: on the machine of forum topic 138, every ~30 s.
+///
+/// The route probe is what makes the second answer actionable. When it reports
+/// the carrier sourced OFF the tunnel, the packets leave this host and the
+/// remaining suspect is the destination, so the circuit is worth changing.
+/// When it reports the carrier nested in the tunnel, the fault is here and
+/// changing the circuit cannot fix it, so this returns `false` rather than
+/// churning the directory.
+// macOS-only like the guard whose verdict it reads: `carrier_egress_guard` is
+// gated the same way (the bind is an `IP_BOUND_IF` concern), so an ungated
+// signature here would name types that do not exist on the other targets.
+#[cfg(target_os = "macos")]
+#[must_use]
+fn dead_carrier_blames_the_circuit(
+    outcome: carrier_egress_guard::GuardOutcome,
+    routes: Option<carrier_egress_guard::CarrierRoutes>,
+) -> bool {
+    use carrier_egress_guard::{CarrierRoute, GuardOutcome};
+    // Only once BOTH escapes have been measured dead. `BindBlackholed` still
+    // has a remedy of its own (the next connect pre-installs the escape), and
+    // spending the circuit before trying it would waste the leak-free bind.
+    if outcome != GuardOutcome::EscapeAlsoDead {
+        return false;
+    }
+    routes.is_some_and(|r| r.bound == CarrierRoute::OffTunnel || r.plain == CarrierRoute::OffTunnel)
+}
+
+/// Act on [`dead_carrier_blames_the_circuit`]: ask the daemon to exclude this
+/// entry relay and retarget onto another circuit, through the same hook and
+/// the same process-wide cooldown a drained node's refusal uses (the two
+/// dispatch the same re-selection, and neither wants a second pass while the
+/// first is in flight).
+#[cfg(target_os = "macos")]
+async fn warren_react_to_dead_carrier(
+    outcome: carrier_egress_guard::GuardOutcome,
+    routes: Option<carrier_egress_guard::CarrierRoutes>,
+    relay_id: [u8; 16],
+    dial_refused: Option<WarrenDialRefused>,
+) {
+    if !dead_carrier_blames_the_circuit(outcome, routes) {
+        return;
+    }
+    let Some(hook) = dial_refused else {
+        return;
+    };
+    let now = warren_now_unix_secs();
+    let last = LAST_DIAL_REFUSAL_UNIX.load(std::sync::atomic::Ordering::Relaxed);
+    if !dial_refusal_reaction_due(now, last) {
+        return;
+    }
+    LAST_DIAL_REFUSAL_UNIX.store(now, std::sync::atomic::Ordering::Relaxed);
+    let retargeted = hook(WarrenRefusedHop::Entry(relay_id)).await;
+    log::warn!(
+        "Warren carrier egress guard: both escapes are dead while the route probe puts the \
+         carrier off-tunnel, so the packets leave this host and the circuit is the remaining \
+         suspect: retarget {}",
+        if retargeted {
+            "dispatched (the next attempt avoids this entry relay)"
+        } else {
+            "unavailable (no alternative circuit); staying on this one"
+        }
+    );
+}
+
 /// Re-export of the stable exit identifier from
 /// warrenguard-wire. Pubkey pinning keys its TOFU lookup
 /// on this 16-byte value so a legitimate Ed25519 rotation stays
@@ -1292,14 +1365,16 @@ impl WarrenTunnelMonitor {
         // the bind and defers the guard to the background, so the connect
         // never waits on a probe window.
         #[cfg(target_os = "macos")]
-        let (socket_bypass, carrier_probe_plan, carrier_interface): (
+        let (socket_bypass, carrier_probe_plan, carrier_interface, carrier_ifindex): (
             Option<warrenguard_tun_core::SocketBypass>,
             carrier_verdict_cache::CarrierProbePlan,
             String,
+            Option<u32>,
         ) = {
             use carrier_verdict_cache::CarrierProbePlan;
             match runtime.block_on(discover_warren_carrier_network_macos(&args.route_manager)) {
                 Some(net) => {
+                    let ifindex = net.ifindex;
                     let plan = carrier_verdict_cache::plan_carrier_probe(
                         net.fingerprint,
                         params.cache_dir.as_deref(),
@@ -1312,11 +1387,16 @@ impl WarrenTunnelMonitor {
                             );
                             None
                         }
-                        _ => Some(warren_carrier_socket_bypass(net.ifindex)),
+                        _ => Some(warren_carrier_socket_bypass(ifindex)),
                     };
-                    (bypass, plan, net.interface)
+                    (bypass, plan, net.interface, Some(ifindex))
                 }
-                None => (None, CarrierProbePlan::NoBind, String::from("unresolved")),
+                None => (
+                    None,
+                    CarrierProbePlan::NoBind,
+                    String::from("unresolved"),
+                    None,
+                ),
             }
         };
         #[cfg(target_os = "windows")]
@@ -1866,18 +1946,49 @@ impl WarrenTunnelMonitor {
                         client_rx: client_rx.clone(),
                     };
                     let carrier_interface = carrier_interface.clone();
+                    let relay_endpoint = cfg.relay.endpoint;
+                    let relay_id = cfg.relay.relay_id;
+                    let tun_ip = std::net::IpAddr::V4(tun_ip);
+                    let dial_refused = params.warren_dial_refused.clone();
                     runtime.spawn(async move {
-                        let outcome = if verify_only {
+                        let report = if verify_only {
                             carrier_egress_guard::run_escape_verify_guard(&mut guard_io).await
                         } else {
                             carrier_egress_guard::run_bootstrap_guard(&mut guard_io).await
                         };
+                        let outcome = report.outcome;
                         log::info!(
                             "{TRACE_PREFIX} phase=carrier_egress_guard_background \
                          outcome={outcome:?} (verified after Up)"
                         );
-                        carrier_egress_guard::log_guard_outcome(outcome, &carrier_interface);
+                        // Only worth its two syscalls on a verdict that needs
+                        // explaining; a confirmed carrier has already answered
+                        // the question the probe asks. And never without a real
+                        // interface index: index 0 is the UNSPECIFIED one, so
+                        // probing with it would silently measure an unbound
+                        // socket and report it as the bound configuration.
+                        // Unreachable in practice (an unresolved index yields
+                        // `NoBind`, which spawns no guard at all), stated here
+                        // because the failure it would cause is a wrong
+                        // diagnosis rather than an error.
+                        let routes = carrier_ifindex
+                            .filter(|_| {
+                                matches!(
+                                    outcome,
+                                    carrier_egress_guard::GuardOutcome::BindBlackholed
+                                        | carrier_egress_guard::GuardOutcome::EscapeAlsoDead
+                                )
+                            })
+                            .map(|ifindex| {
+                                carrier_egress_guard::probe_carrier_routes(
+                                    relay_endpoint,
+                                    ifindex,
+                                    tun_ip,
+                                )
+                            });
+                        carrier_egress_guard::log_guard_outcome(report, &carrier_interface, routes);
                         recorder.record(outcome);
+                        warren_react_to_dead_carrier(outcome, routes, relay_id, dial_refused).await;
                     });
                 };
             match carrier_probe_plan {
@@ -4060,6 +4171,73 @@ mod tests {
         };
         let ip = derive_multi_hop_tun_ip(&pubkey);
         assert_ne!(ip.octets()[3], 1, "must not land on the gateway slot");
+    }
+
+    /// A black-holed BIND is not yet grounds to spend the circuit: its own
+    /// remedy has not been tried, the next connect pre-installs the `/32`
+    /// escape, and burning the entry relay first would trade the leak-free
+    /// bind for nothing.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_blackholed_bind_alone_never_spends_the_circuit() {
+        use carrier_egress_guard::{CarrierRoute, CarrierRoutes, GuardOutcome};
+        assert!(!dead_carrier_blames_the_circuit(
+            GuardOutcome::BindBlackholed,
+            Some(CarrierRoutes {
+                bound: CarrierRoute::OffTunnel,
+                plain: CarrierRoute::OffTunnel,
+            }),
+        ));
+    }
+
+    /// Both escapes measured dead while the kernel sources the carrier OFF the
+    /// tunnel: the packets leave this host, so what loses them is beyond it and
+    /// the circuit is the one thing left to change.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn both_escapes_dead_over_an_off_tunnel_carrier_blames_the_circuit() {
+        use carrier_egress_guard::{CarrierRoute, CarrierRoutes, GuardOutcome};
+        assert!(dead_carrier_blames_the_circuit(
+            GuardOutcome::EscapeAlsoDead,
+            Some(CarrierRoutes {
+                bound: CarrierRoute::OffTunnel,
+                plain: CarrierRoute::Unroutable,
+            }),
+        ));
+    }
+
+    /// The opposite finding: the carrier is sourced from the tunnel's own
+    /// address, so it is swallowed HERE. Rotating the entry relay cannot fix a
+    /// packet that never leaves, and doing it anyway would churn the directory
+    /// on every reconnect of a host that is nesting.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_carrier_nested_in_the_tunnel_blames_this_host_not_the_circuit() {
+        use carrier_egress_guard::{CarrierRoute, CarrierRoutes, GuardOutcome};
+        assert!(!dead_carrier_blames_the_circuit(
+            GuardOutcome::EscapeAlsoDead,
+            Some(CarrierRoutes {
+                bound: CarrierRoute::Nested,
+                plain: CarrierRoute::Nested,
+            }),
+        ));
+    }
+
+    /// No probe, no accusation. An unmeasured route leaves both hypotheses
+    /// open, and the reaction exists precisely because the counters cannot
+    /// choose between them.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_unmeasured_route_never_spends_the_circuit() {
+        use carrier_egress_guard::GuardOutcome;
+        assert!(!dead_carrier_blames_the_circuit(
+            GuardOutcome::EscapeAlsoDead,
+            None
+        ));
+        assert!(!dead_carrier_blames_the_circuit(
+            GuardOutcome::BypassConfirmed,
+            None
+        ));
     }
 
     #[test]

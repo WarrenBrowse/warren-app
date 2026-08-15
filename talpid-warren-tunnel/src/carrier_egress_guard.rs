@@ -106,6 +106,11 @@ pub(crate) struct EgressReading {
     /// Smoothed path RTT, for the adaptive dead window. `Duration::ZERO` when
     /// no session is published.
     pub rtt: Duration,
+    /// Bonded legs the two counters were summed over. Diagnostic only, never
+    /// part of a verdict: a session that bonds one leg of eight is a different
+    /// failure from one that bonds none, and the verdict cannot tell them
+    /// apart because both sum the same way.
+    pub legs: usize,
 }
 
 /// Verdict of one [`assess_egress`] evaluation.
@@ -156,6 +161,7 @@ pub(crate) fn egress_reading_from(
         tx_datagrams,
         acks_rx,
         rtt,
+        legs: per_leg.len(),
     }
 }
 
@@ -255,7 +261,7 @@ pub(crate) trait EgressGuardIo {
 /// probe interval (so ACKs of sends issued before the phase drain), take the
 /// decision baseline, then probe until egress is confirmed, declared dead, or
 /// the window closes with neither ([`EgressVerdict::Pending`]).
-async fn verify_egress_phase<I: EgressGuardIo>(io: &mut I) -> EgressVerdict {
+async fn verify_egress_phase<I: EgressGuardIo>(io: &mut I) -> (EgressVerdict, GuardMeasurement) {
     io.send_probe().await;
     tokio::time::sleep(PROBE_INTERVAL).await;
     let baseline = io.read_egress();
@@ -264,15 +270,34 @@ async fn verify_egress_phase<I: EgressGuardIo>(io: &mut I) -> EgressVerdict {
         io.send_probe().await;
         tokio::time::sleep(PROBE_INTERVAL).await;
         let elapsed = tokio::time::Instant::now().saturating_duration_since(start);
-        match assess_egress(baseline, io.read_egress(), elapsed) {
-            EgressVerdict::Confirmed => return EgressVerdict::Confirmed,
-            EgressVerdict::Dead => return EgressVerdict::Dead,
+        let current = io.read_egress();
+        let measured = measurement_from(baseline, current);
+        match assess_egress(baseline, current, elapsed) {
+            EgressVerdict::Confirmed => return (EgressVerdict::Confirmed, measured),
+            EgressVerdict::Dead => return (EgressVerdict::Dead, measured),
             EgressVerdict::Pending => {
                 if elapsed >= BOOTSTRAP_WINDOW {
-                    return EgressVerdict::Pending;
+                    return (EgressVerdict::Pending, measured);
                 }
             }
         }
+    }
+}
+
+/// The deltas the verdict rests on, extracted so the log states the evidence
+/// rather than the conclusion alone. Deltas, not totals: the guard only ever
+/// judges what happened AFTER the route swap, and a total would invite a
+/// reader to compare it against pre-swap traffic that never entered the
+/// decision.
+pub(crate) fn measurement_from(
+    baseline: EgressReading,
+    current: EgressReading,
+) -> GuardMeasurement {
+    GuardMeasurement {
+        legs: current.legs,
+        sends: current.tx_datagrams.saturating_sub(baseline.tx_datagrams),
+        acks: current.acks_rx.saturating_sub(baseline.acks_rx),
+        rtt: current.rtt,
     }
 }
 
@@ -288,13 +313,18 @@ async fn verify_egress_phase<I: EgressGuardIo>(io: &mut I) -> EgressVerdict {
 /// with no line in the log naming it: the tunnel reported Connected, the
 /// liveness watch redialled every 15 s, and the only evidence left was on the
 /// exit, whose QUIC connection recorded zero datagrams received.
-pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardOutcome {
-    match verify_egress_phase(io).await {
+pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardReport {
+    let (verdict, measurement) = verify_egress_phase(io).await;
+    let outcome = match verdict {
         EgressVerdict::Confirmed => GuardOutcome::BypassConfirmed,
         EgressVerdict::Pending => GuardOutcome::Inconclusive,
         // Measured, recorded, and nothing else. See `GuardOutcome::BindBlackholed`
         // for why this path must not touch the live session.
         EgressVerdict::Dead => GuardOutcome::BindBlackholed,
+    };
+    GuardReport {
+        outcome,
+        measurement,
     }
 }
 
@@ -305,11 +335,136 @@ pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardOu
 /// so a cached verdict stays a measurement rather than becoming a permanent
 /// assumption about a network the host may no longer be on (the fingerprint is
 /// interface plus gateway, which collides across networks by design).
-pub(crate) async fn run_escape_verify_guard<I: EgressGuardIo>(io: &mut I) -> GuardOutcome {
-    match verify_egress_phase(io).await {
+pub(crate) async fn run_escape_verify_guard<I: EgressGuardIo>(io: &mut I) -> GuardReport {
+    let (verdict, measurement) = verify_egress_phase(io).await;
+    let outcome = match verdict {
         EgressVerdict::Confirmed => GuardOutcome::RevertedToRoute,
         EgressVerdict::Dead => GuardOutcome::EscapeAlsoDead,
         EgressVerdict::Pending => GuardOutcome::Inconclusive,
+    };
+    GuardReport {
+        outcome,
+        measurement,
+    }
+}
+
+/// Where the kernel would source the carrier socket, relative to the tunnel
+/// that carrier is supposed to stay out of.
+///
+/// The counters answer "did anything come back". They cannot answer "did the
+/// packet leave this host", and that is the question that decides who owns a
+/// dead carrier: a `Nested` reading is ours to fix, an `OffTunnel` one puts
+/// the loss beyond the host. Topic 138 spent two problem reports and two
+/// exit-side reads stuck on exactly that fork.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum CarrierRoute {
+    /// Sourced off the tunnel: the escape holds, a packet sent now leaves the
+    /// host, and whatever loses it is beyond this machine.
+    OffTunnel,
+    /// Sourced from the tunnel's own address: the carrier is routed into the
+    /// tunnel it carries, so every send is swallowed here. The self-nesting
+    /// blackhole this guard exists for.
+    Nested,
+    /// No usable route in this configuration: the lookup failed outright, or
+    /// it succeeded while leaving the source unspecified (which names no
+    /// interface and so proves nothing about egress).
+    Unroutable,
+}
+
+impl CarrierRoute {
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::OffTunnel => "off-tunnel",
+            Self::Nested => "nested-in-tunnel",
+            Self::Unroutable => "unroutable",
+        }
+    }
+}
+
+/// Classify one route probe against the tunnel's own address. `source` is the
+/// local address the kernel picked for the probe, `None` when the lookup
+/// failed.
+pub(crate) fn classify_carrier_route(source: Option<IpAddr>, tun_ip: IpAddr) -> CarrierRoute {
+    match source {
+        Some(src) if src.is_unspecified() => CarrierRoute::Unroutable,
+        Some(src) if src == tun_ip => CarrierRoute::Nested,
+        Some(_) => CarrierRoute::OffTunnel,
+        None => CarrierRoute::Unroutable,
+    }
+}
+
+/// The pair of route probes that separates a host-side blackhole from a loss
+/// beyond the host: the lookup as the datapath does it with the socket bind
+/// installed, and the same lookup without it (which is what the `/32` escape
+/// configuration relies on).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct CarrierRoutes {
+    /// With the `IP_BOUND_IF` bind installed on the probe socket.
+    pub bound: CarrierRoute,
+    /// Without it, so the routing table alone decides (the `/32` escape's
+    /// configuration).
+    pub plain: CarrierRoute,
+}
+
+/// What the guard measured on its way to a verdict. Every field is a count or
+/// a duration; nothing here identifies a network, a peer or a user.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) struct GuardMeasurement {
+    /// Bonded legs the final reading covered.
+    pub legs: usize,
+    /// Ack-eliciting frames issued since the baseline.
+    pub sends: u64,
+    /// ACK frames received since the baseline. Zero next to a non-zero
+    /// `sends` is the blackhole signature.
+    pub acks: u64,
+    /// Smoothed path RTT at the final reading.
+    pub rtt: Duration,
+}
+
+/// A verdict and the measurement behind it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct GuardReport {
+    pub outcome: GuardOutcome,
+    pub measurement: GuardMeasurement,
+}
+
+/// Ask the kernel where it would source the carrier socket, in BOTH escape
+/// configurations, and classify each answer against the tunnel's address.
+///
+/// Emits nothing: UDP `connect` performs the route lookup and stores the
+/// destination, it does not send. Cheap enough to run inside the guard's task
+/// (two socket syscalls) and worth far more than its cost, because it is the
+/// only reading that separates a carrier swallowed on this host from one lost
+/// past it, and the counters never can.
+#[cfg(target_os = "macos")]
+pub(crate) fn probe_carrier_routes(
+    relay: std::net::SocketAddr,
+    ifindex: u32,
+    tun_ip: IpAddr,
+) -> CarrierRoutes {
+    fn source_for(
+        relay: std::net::SocketAddr,
+        bypass: Option<warrenguard_tun_core::SocketBypass>,
+    ) -> Option<IpAddr> {
+        match warrenguard_route_split::local_ip::detect_local_ip_with_bypass(relay, bypass) {
+            Ok(local) => Some(local.ip()),
+            Err(e) => {
+                // The kind, never the error's own text and never the address:
+                // a route probe is a diagnostic, not a licence to print a peer.
+                log::debug!("carrier egress guard: route probe failed ({:?})", e.kind());
+                None
+            }
+        }
+    }
+    CarrierRoutes {
+        bound: classify_carrier_route(
+            source_for(
+                relay,
+                Some(warrenguard_tun_core::SocketBypass::BoundIf(ifindex)),
+            ),
+            tun_ip,
+        ),
+        plain: classify_carrier_route(source_for(relay, None), tun_ip),
     }
 }
 
@@ -321,11 +476,36 @@ pub(crate) async fn run_escape_verify_guard<I: EgressGuardIo>(io: &mut I) -> Gua
 /// datum that separates "the physical NIC is black-holing" from "another
 /// tunnel owns the default route", and reading it off the exit was the only
 /// way to get it on 2026-08-12.
-pub(crate) fn log_guard_outcome(outcome: GuardOutcome, carrier_interface: &str) {
-    match outcome {
+///
+/// The network's own fingerprint stays OUT of this line on purpose. It is an
+/// unkeyed hash of `interface|gateway` over a handful of plausible gateways,
+/// so publishing it, truncated or not, publishes the gateway. Which network a
+/// connect sat on is still answerable from the log without it: the cached
+/// verdict line names it per connect, and this line names the interface.
+pub(crate) fn log_guard_outcome(
+    report: GuardReport,
+    carrier_interface: &str,
+    routes: Option<CarrierRoutes>,
+) {
+    let GuardMeasurement {
+        legs,
+        sends,
+        acks,
+        rtt,
+    } = report.measurement;
+    let rtt_ms = rtt.as_millis();
+    let evidence = format!(
+        "carrier interface {carrier_interface}, legs={legs} sends={sends} \
+         acks={acks} rtt_ms={rtt_ms}, carrier route: {}",
+        match routes {
+            Some(r) => format!("bound={} plain={}", r.bound.as_str(), r.plain.as_str()),
+            None => String::from("unmeasured"),
+        }
+    );
+    match report.outcome {
         GuardOutcome::BindBlackholed => log::warn!(
             "Warren carrier egress guard: the IP_BOUND_IF-bound carrier egressed nothing within \
-             the bootstrap window (carrier interface {carrier_interface}). The live session is \
+             the bootstrap window ({evidence}). The live session is \
              left untouched on purpose: patching it (installing the <carrier_ip>/32 on top of \
              the tunnel default and rebinding the socket underneath) is itself an outage on some \
              networks. The escape is recorded for this network, so the next connect pre-installs \
@@ -333,7 +513,7 @@ pub(crate) fn log_guard_outcome(outcome: GuardOutcome, carrier_interface: &str) 
         ),
         GuardOutcome::EscapeAlsoDead => log::warn!(
             "Warren carrier egress guard: this host egresses through NEITHER the IP_BOUND_IF \
-             bind NOR the <carrier_ip>/32 DefaultNode escape (carrier interface {carrier_interface}), \
+             bind NOR the <carrier_ip>/32 DefaultNode escape ({evidence}), \
              and the escape was measured pre-installed, in the right order. The tunnel is up over \
              a carrier that reaches nothing, so no exit will answer. Dropping the cached verdict: \
              the next connect re-arms the bind."
@@ -474,6 +654,95 @@ mod tests {
         );
     }
 
+    /// The whole point of the route probe: a carrier sourced from the tunnel's
+    /// own address is being routed into the tunnel it carries, which is a
+    /// blackhole this host owns.
+    #[test]
+    fn a_carrier_sourced_from_the_tunnel_address_reads_as_nested() {
+        let tun: IpAddr = "10.66.0.18".parse().unwrap();
+        assert_eq!(classify_carrier_route(Some(tun), tun), CarrierRoute::Nested);
+    }
+
+    /// Any other source means the escape held and the packet left the host, so
+    /// whatever loses it afterwards is not this machine.
+    #[test]
+    fn a_carrier_sourced_off_the_tunnel_reads_as_off_tunnel() {
+        let tun: IpAddr = "10.66.0.18".parse().unwrap();
+        let carrier: IpAddr = "172.20.10.2".parse().unwrap();
+        assert_eq!(
+            classify_carrier_route(Some(carrier), tun),
+            CarrierRoute::OffTunnel
+        );
+    }
+
+    /// A failed lookup and a lookup that succeeded while leaving the source
+    /// unspecified are the same answer: no interface was named, so nothing was
+    /// proven about egress. Reading the unspecified case as `OffTunnel` would
+    /// clear this host of a blackhole it may well own.
+    #[test]
+    fn a_failed_or_unspecified_lookup_reads_as_unroutable() {
+        let tun: IpAddr = "10.66.0.18".parse().unwrap();
+        assert_eq!(classify_carrier_route(None, tun), CarrierRoute::Unroutable);
+        assert_eq!(
+            classify_carrier_route(Some("0.0.0.0".parse().unwrap()), tun),
+            CarrierRoute::Unroutable
+        );
+        assert_eq!(
+            classify_carrier_route(Some("::".parse().unwrap()), tun),
+            CarrierRoute::Unroutable
+        );
+    }
+
+    /// The log states what the verdict rested on, and the verdict rests on
+    /// POST-baseline deltas. Reporting totals would invite a reader to compare
+    /// the guard's evidence against pre-swap traffic that never entered the
+    /// decision, which is how the handshake's own ACKs get mistaken for proof
+    /// that the carrier still egresses.
+    #[test]
+    fn the_measurement_reports_post_baseline_deltas_not_totals() {
+        let baseline = EgressReading {
+            session_id: 7,
+            tx_datagrams: 100,
+            acks_rx: 40,
+            rtt: Duration::from_millis(25),
+            legs: 8,
+        };
+        let current = EgressReading {
+            session_id: 7,
+            tx_datagrams: 142,
+            acks_rx: 40,
+            rtt: Duration::from_millis(175),
+            legs: 8,
+        };
+
+        let got = measurement_from(baseline, current);
+
+        assert_eq!(got.sends, 42, "sends must be the post-baseline delta");
+        assert_eq!(got.acks, 0, "the blackhole signature is zero ACKs gained");
+        assert_eq!(got.rtt, Duration::from_millis(175));
+        assert_eq!(got.legs, 8);
+    }
+
+    /// A session that bonds one leg of eight and one that bonds all eight sum
+    /// their counters identically, so the verdict cannot tell them apart. The
+    /// leg count is the only field that can, and a problem report needs it: a
+    /// carrier that carries one leg is a different failure from a dead one.
+    #[test]
+    fn the_reading_carries_the_leg_count_it_summed_over() {
+        let leg = LegCounters {
+            ack_eliciting_tx: 5,
+            acks_rx: 1,
+        };
+        assert_eq!(
+            super::egress_reading_from(7, &[leg; 8], Duration::from_millis(25)).legs,
+            8
+        );
+        assert_eq!(
+            super::egress_reading_from(7, &[leg], Duration::from_millis(25)).legs,
+            1
+        );
+    }
+
     /// Pure-ACK traffic must never count as a send.
     ///
     /// The exit sends unsolicited DAITA and idle cover downlink, the client
@@ -556,6 +825,7 @@ mod tests {
             tx_datagrams,
             acks_rx,
             rtt: Duration::from_millis(25),
+            legs: 1,
         }
     }
 
@@ -709,7 +979,7 @@ mod tests {
         // Post-baseline acks advance on the same session: confirmed on the
         // first probe, no revert, the /32 leak is never added.
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 12, 6));
-        let outcome = run_bootstrap_guard(&mut io).await;
+        let outcome = run_bootstrap_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::BypassConfirmed);
         assert!(io.probes_sent >= 2, "one burn probe plus decision probes");
     }
@@ -723,7 +993,7 @@ mod tests {
         // 138 proved that patch is itself the outage, while the same escape
         // pre-installed at the next connect carries full-size datagrams.
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
-        let outcome = run_bootstrap_guard(&mut io).await;
+        let outcome = run_bootstrap_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::BindBlackholed);
         assert!(
             io.probes_sent >= 2,
@@ -736,7 +1006,7 @@ mod tests {
         // The cached-RouteOnly path: the bind was never applied, so there is
         // nothing to revert, but the escape still has to prove it egresses.
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
-        let outcome = run_escape_verify_guard(&mut io).await;
+        let outcome = run_escape_verify_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::EscapeAlsoDead);
     }
 
@@ -745,7 +1015,7 @@ mod tests {
         // The ordinary cached-RouteOnly connect: the escape works, the cached
         // verdict is still right, and no route is touched.
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 14, 7));
-        let outcome = run_escape_verify_guard(&mut io).await;
+        let outcome = run_escape_verify_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::RevertedToRoute);
     }
 
@@ -755,7 +1025,7 @@ mod tests {
         // cached verdict must survive it untouched.
         let mut io = MockIo::new(EgressReading::default(), EgressReading::default());
         assert_eq!(
-            run_escape_verify_guard(&mut io).await,
+            run_escape_verify_guard(&mut io).await.outcome,
             GuardOutcome::Inconclusive
         );
     }
@@ -768,7 +1038,7 @@ mod tests {
         // confirm; with the ack counter frozen after the baseline and sends
         // climbing, the guard must still detect the blackhole and revert.
         let mut io = MockIo::new(reading(1, 10, 9), reading(1, 400, 9));
-        let outcome = run_bootstrap_guard(&mut io).await;
+        let outcome = run_bootstrap_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::BindBlackholed);
     }
 
@@ -777,7 +1047,7 @@ mod tests {
         // No session the whole window (relay unreachable): no acks, no sends.
         // Do not revert, defer to the connect timeout / dead-path escalation.
         let mut io = MockIo::new(EgressReading::default(), EgressReading::default());
-        let outcome = run_bootstrap_guard(&mut io).await;
+        let outcome = run_bootstrap_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::Inconclusive);
     }
 }

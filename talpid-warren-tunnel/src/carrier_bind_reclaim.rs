@@ -226,7 +226,7 @@ mod real_io {
             let mut guard_io = RealEgressGuardIo {
                 client_rx: self.client_rx.clone(),
             };
-            run_bootstrap_guard(&mut guard_io).await
+            run_bootstrap_guard(&mut guard_io).await.outcome
         }
 
         async fn rebind_unbound(&mut self) {

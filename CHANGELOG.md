@@ -24,6 +24,21 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.17] - 2026-08-16
+### Changed
+- [macOS] Try another entry server when a connection carries nothing and the computer has been
+  cleared of causing it. When traffic stops reaching the tunnel, two things can explain it: the
+  computer is not sending, or that particular server cannot be reached from the network in use. The
+  app only ever tried the first, retrying the same server forever. It now checks whether its own
+  packets actually leave the computer, and when they do it asks for a different entry server instead
+  of repeating an attempt that cannot succeed.
+### Fixed
+- [macOS] Record what a failed connection actually measured. When the app reports that traffic
+  cannot leave the computer, the report it attaches now states how much it sent, how much came back,
+  how many connections were in use, and whether the system would route the tunnel's own traffic out
+  of the network interface or back into the tunnel. Without those, support could not tell a computer
+  that stops sending from a network that stops carrying, and neither could the person reporting it.
+
 ## [1.1.16] - 2026-08-15
 ### Fixed
 - [macOS] Stop leaving a computer with no name resolution after a disconnect. When another VPN was

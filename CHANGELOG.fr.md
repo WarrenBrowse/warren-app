@@ -15,6 +15,23 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.17] - 2026-08-16
+### Modifié
+- [macOS] Essayer un autre serveur d'entrée quand une connexion ne transporte rien et que
+  l'ordinateur a été mis hors de cause. Quand le trafic cesse d'atteindre le tunnel, deux choses
+  peuvent l'expliquer : l'ordinateur n'émet pas, ou ce serveur précis est injoignable depuis le
+  réseau utilisé. L'application ne traitait que la première, en réessayant indéfiniment le même
+  serveur. Elle vérifie maintenant si ses propres paquets quittent réellement l'ordinateur, et
+  quand c'est le cas elle demande un autre serveur d'entrée au lieu de répéter une tentative qui ne
+  peut pas aboutir.
+### Corrigé
+- [macOS] Consigner ce qu'une connexion en échec a réellement mesuré. Quand l'application signale
+  que le trafic ne peut pas quitter l'ordinateur, le rapport qu'elle joint indique désormais
+  combien elle a émis, combien lui est revenu, combien de connexions étaient utilisées, et si le
+  système ferait sortir le trafic du tunnel par l'interface réseau ou le renverrait dans le tunnel.
+  Sans cela, le support ne pouvait pas distinguer un ordinateur qui n'émet plus d'un réseau qui ne
+  transporte plus, et la personne qui signalait le problème non plus.
+
 ## [1.1.16] - 2026-08-15
 ### Corrigé
 - [macOS] Ne plus laisser un ordinateur sans résolution de noms après une déconnexion. Quand un
