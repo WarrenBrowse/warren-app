@@ -154,6 +154,11 @@ impl State {
 
         for (path, settings) in new_state {
             let old_entry = prev_state.remove(path);
+            // A resolver override is not a DNS configuration anyone can restore,
+            // so it never enters the backup (see `is_resolver_override`). Reading
+            // it as "no original" also makes the arm below keep a real original
+            // that a foreign daemon has since overwritten.
+            let settings = settings.as_ref().filter(|s| !is_resolver_override(s));
             match settings {
                 // If the service is using the desired addresses, don't save changes
                 Some(settings) if settings.server_addresses() == ignore_addresses => {
@@ -170,11 +175,10 @@ impl State {
                 // Otherwise, save the new settings
                 settings => {
                     let servers = settings
-                        .as_ref()
                         .map(|settings| settings.format_addresses())
                         .unwrap_or_default();
                     log::debug!("Saving DNS settings [{}] for {}", servers, path);
-                    modified_state.insert(path.to_owned(), settings.to_owned());
+                    modified_state.insert(path.to_owned(), settings.cloned());
                 }
             }
         }
@@ -447,6 +451,12 @@ impl super::DnsMonitorT for DnsMonitor {
 
     fn reset(&mut self) -> Result<()> {
         let result = self.state.lock().reset(&self.store);
+        // Reclaim any override still pointing at a dead resolver, whatever
+        // planted it. The startup sweep runs once per daemon start, and the
+        // daemon outlives every connect/disconnect cycle, so teardown is the
+        // only moment that can free a host already stranded by an older build
+        // or by a second VPN daemon that exited without restoring.
+        remove_stale_loopback_dns(&self.store);
         // Always nudge the resolver on teardown, even if restoring the store
         // entries reported an error: the goal is to leave the system with a
         // working resolver, not stranded on a dead in-tunnel one.
@@ -623,15 +633,10 @@ pub(crate) fn recover_after_crash() -> Result<()> {
 fn remove_stale_loopback_dns(store: &SCDynamicStore) {
     for (path, settings) in read_all_dns(store) {
         let Some(settings) = settings else { continue };
-        let addresses = settings.server_addresses();
-        let all_reclaimable_loopback = !addresses.is_empty()
-            && addresses
-                .iter()
-                .map(SocketAddr::ip)
-                .all(is_reclaimable_loopback);
-        if !all_reclaimable_loopback {
+        if !is_resolver_override(&settings) {
             continue;
         }
+        let addresses = settings.server_addresses();
         // Keep the override if ANY of its resolvers is still live: that is a
         // running resolver (ours or a coexisting daemon's), not a leftover.
         // Probe each resolver on its OWN port (parsed from the store, which can
@@ -691,6 +696,31 @@ fn loopback_resolver_is_live(addr: IpAddr, port: u16) -> bool {
         Err(e) if e.kind() == std::io::ErrorKind::AddrInUse => true,
         Err(_) => true,
     }
+}
+
+/// Whether a DNS reading is a VPN daemon's own resolver override rather than a
+/// DNS configuration that belongs to the user.
+///
+/// Our local resolver binds a random non-canonical `127/8` address (see
+/// `talpid_core::resolver`), and so does any coexisting VPN daemon's. Such an
+/// address is only reachable while the daemon that bound it is alive, so it
+/// must never be captured as the "original" to restore: the daemon that owns it
+/// exits, and the restore then points every network service at a corpse. That
+/// is a total, permanent loss of name resolution, because the `Setup:` keys we
+/// write are persistent user configuration which no DHCP lease, network change
+/// or reboot ever rewrites; only an explicit reconfiguration clears it.
+///
+/// Treating it as "no original" is also the accurate answer: removing the key
+/// returns the service to its DHCP-provided DNS, which is what the user had
+/// before any VPN touched it. A daemon still running when we drop its override
+/// re-applies it from its own store watcher.
+fn is_resolver_override(settings: &DnsSettings) -> bool {
+    let addresses = settings.server_addresses();
+    !addresses.is_empty()
+        && addresses
+            .iter()
+            .map(SocketAddr::ip)
+            .all(is_reclaimable_loopback)
 }
 
 /// Whether `ip` is a loopback address our local resolver may have bound,
@@ -949,6 +979,117 @@ mod test {
             ("State:/Network/Service/EN1/DNS".to_owned(), en1_original),
         ]);
         assert_eq!(merged_state, expected_state);
+    }
+
+    /// A reading that is only a non-canonical loopback address is some VPN
+    /// daemon's resolver override, never a user's DNS. Backing one up is how a
+    /// disconnect strands the host: the address dies with the daemon that owned
+    /// it, and `Setup:` keys are persistent user configuration that no DHCP
+    /// lease rewrites. It must be recorded as "no original" so `reset()`
+    /// removes the key and the service falls back to DHCP DNS.
+    #[test]
+    fn test_backup_never_captures_a_resolver_override() {
+        let prev_state = HashMap::new();
+        let new_state = HashMap::from([
+            (
+                "Setup:/Network/Service/EN0/DNS".to_owned(),
+                Some(DnsSettings::from_server_addresses(
+                    &["127.55.251.5".to_owned()],
+                    "en0".to_owned(),
+                    DNS_PORT,
+                )),
+            ),
+            (
+                "State:/Network/Service/EN0/DNS".to_owned(),
+                Some(DnsSettings::from_server_addresses(
+                    &["192.168.1.254".to_owned()],
+                    "en0".to_owned(),
+                    DNS_PORT,
+                )),
+            ),
+        ]);
+
+        let desired_addresses: BTreeSet<SocketAddr> = ["127.41.79.67:53".parse().unwrap()].into();
+
+        let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
+
+        assert_eq!(
+            merged_state.get("Setup:/Network/Service/EN0/DNS"),
+            Some(&None),
+            "a loopback resolver override must never become a restorable backup"
+        );
+        assert_eq!(
+            merged_state.get("State:/Network/Service/EN0/DNS"),
+            Some(&Some(DnsSettings::from_server_addresses(
+                &["192.168.1.254".to_owned()],
+                "en0".to_owned(),
+                DNS_PORT,
+            ))),
+            "a real DNS server must still be backed up"
+        );
+    }
+
+    /// The canonical localhost addresses are spared: a user-run resolver
+    /// (dnscrypt-proxy, Pi-hole) binds those, and our own resolver never does.
+    #[test]
+    fn test_backup_keeps_canonical_localhost() {
+        let prev_state = HashMap::new();
+        let new_state = HashMap::from([(
+            "Setup:/Network/Service/EN0/DNS".to_owned(),
+            Some(DnsSettings::from_server_addresses(
+                &["127.0.0.1".to_owned()],
+                "en0".to_owned(),
+                DNS_PORT,
+            )),
+        )]);
+
+        let desired_addresses: BTreeSet<SocketAddr> = ["127.41.79.67:53".parse().unwrap()].into();
+
+        let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
+
+        assert_eq!(
+            merged_state.get("Setup:/Network/Service/EN0/DNS"),
+            Some(&Some(DnsSettings::from_server_addresses(
+                &["127.0.0.1".to_owned()],
+                "en0".to_owned(),
+                DNS_PORT,
+            ))),
+            "a user-run resolver on canonical localhost must be preserved"
+        );
+    }
+
+    /// A resolver override appearing over an already-captured original must not
+    /// replace it: the real DNS stays the value `reset()` restores.
+    #[test]
+    fn test_resolver_override_does_not_clobber_a_captured_original() {
+        let original = Some(DnsSettings::from_server_addresses(
+            &["192.168.1.254".to_owned()],
+            "en0".to_owned(),
+            DNS_PORT,
+        ));
+        let prev_state = HashMap::from([(
+            "Setup:/Network/Service/EN0/DNS".to_owned(),
+            original.clone(),
+        )]);
+        // Another daemon planted its resolver over the service we already backed up.
+        let new_state = HashMap::from([(
+            "Setup:/Network/Service/EN0/DNS".to_owned(),
+            Some(DnsSettings::from_server_addresses(
+                &["127.30.203.97".to_owned()],
+                "en0".to_owned(),
+                DNS_PORT,
+            )),
+        )]);
+
+        let desired_addresses: BTreeSet<SocketAddr> = ["127.41.79.67:53".parse().unwrap()].into();
+
+        let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
+
+        assert_eq!(
+            merged_state.get("Setup:/Network/Service/EN0/DNS"),
+            Some(&original),
+            "the captured original must survive a foreign resolver override"
+        );
     }
 
     /// If DHCP provides an IP identical to our desired state, the tracked state will not reflect
