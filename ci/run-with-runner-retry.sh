@@ -39,12 +39,31 @@ ATTEMPTS="${WARREN_RETRY_ATTEMPTS:-3}"
 
 # Prints the retry strategy a failure log calls for: "clean", "plain", or
 # nothing at all when the failure is the code's own.
-warren_flake_class() { # warren_flake_class <logfile>
+warren_flake_class() { # warren_flake_class <logfile> [exit-code]
 	if grep -q "LNK1181" "$1"; then
 		echo clean
-	elif grep -qE "\(never executed\)|os error 267|The directory name is invalid|Device or resource busy" "$1"; then
-		echo plain
+		return
 	fi
+	if grep -qE "\(never executed\)|os error 267|The directory name is invalid|Device or resource busy" "$1"; then
+		echo plain
+		return
+	fi
+	# Rosetta crashes a rustc/cc1 mid-compile on a random crate. The crash IS
+	# in the log, so it classifies like any other signature.
+	if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" "$1"; then
+		echo plain
+		return
+	fi
+	# Last resort, and the only evidence a WEDGE ever leaves. When a crashed
+	# rustc becomes a zombie under Rosetta it never returns its GNU jobserver
+	# token, so cargo waits at 0 % CPU printing nothing at all; the zombie
+	# watchdog then SIGKILLs the subtree (137), or a `timeout` wrapper fires
+	# (124). There is no signature to grep because there is no output, which is
+	# exactly how the 1.1.16 release lost its first Linux build to a guard that
+	# only ever grepped. A kill poisons nothing on disk, so retry plain.
+	case "${2:-}" in
+		124 | 137) echo plain ;;
+	esac
 }
 
 # Sourced by the test, which wants the classifier and not a build.
@@ -65,8 +84,9 @@ while :; do
 	if "$@" 2>&1 | tee "$log"; then
 		exit 0
 	fi
+	rc=$?
 
-	class="$(warren_flake_class "$log")"
+	class="$(warren_flake_class "$log" "$rc")"
 	if [ -z "$class" ]; then
 		echo "::error title=Warren build::the failure carries no known runner signature; failing on attempt $attempt"
 		exit 1

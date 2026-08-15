@@ -344,24 +344,17 @@ jobs:
 
       - name: Build
         if: env.WARREN_CHANNEL == 'prod'
-        # rustc/cc1 intermittently SIGSEGV under the x86_64-Rosetta emulation on a
-        # random crate (e.g. idna_adapter, tikv-jemalloc-sys); it is not a real
-        # build error and succeeds on a re-run. Retry the whole build on a crash
-        # signature; real compile errors still fail immediately on the first pass.
-        run: |
-          # pipefail so `build.sh | tee` reports build.sh's exit code, not tee's:
-          # without it a failed build (e.g. ring/clang) looked green and the
-          # SIGSEGV-retry below never triggered.
-          set -o pipefail
-          for attempt in 1 2 3; do
-            if ./build.sh --optimize 2>&1 | tee /tmp/build-linux.log; then exit 0; fi
-            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux.log; then
-              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
-              continue
-            fi
-            exit 1
-          done
-          exit 1
+        # Two Rosetta failure modes, both infra, and the classifier in
+        # ci/run-with-runner-retry.sh tells them from a real compile error:
+        # rustc/cc1 SIGSEGVs mid-compile on a random crate (a signature in the
+        # log), or a zombie rustc keeps its jobserver token and cargo waits at
+        # 0 % CPU printing NOTHING until something kills it (no signature at
+        # all, only an exit code). The `timeout` is the backstop for a wedge the
+        # zombie watchdog does not catch; 2 attempts at 55 min fit the job's
+        # 130 min budget with a healthy build's headroom intact.
+        env:
+          WARREN_RETRY_ATTEMPTS: 2
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 55m ./build.sh --optimize
 
       - name: Stage release assets (harmonized names)
         if: env.WARREN_CHANNEL == 'prod'
@@ -369,22 +362,13 @@ jobs:
 
       # Beta channel: WARREN_PRODUCT_ENV=beta build (own package name
       # warren-vpn-beta, own unit names, artifacts WarrenVPN-Beta-*).
-      # Same Rosetta SIGSEGV retry discipline as the prod build above.
+      # Same runner-transient discipline as the prod build above.
       - name: Build beta
         if: env.WARREN_CHANNEL == 'beta'
         env:
           WARREN_PRODUCT_ENV: beta
-        run: |
-          set -o pipefail
-          for attempt in 1 2 3; do
-            if ./build.sh --optimize 2>&1 | tee /tmp/build-linux-beta.log; then exit 0; fi
-            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-linux-beta.log; then
-              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
-              continue
-            fi
-            exit 1
-          done
-          exit 1
+          WARREN_RETRY_ATTEMPTS: 2
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 55m ./build.sh --optimize
 
       - name: Stage beta release assets
         if: env.WARREN_CHANNEL == 'beta'

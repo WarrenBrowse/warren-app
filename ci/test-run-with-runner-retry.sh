@@ -24,12 +24,12 @@ export WARREN_RETRY_LIB
 failures=0
 checks=0
 
-expect() { # expect <description> <expected class> <log text>
+expect() { # expect <description> <expected class> <log text> [exit code]
 	checks=$((checks + 1))
 	local log actual
 	log="$(mktemp)"
 	printf '%s\n' "$3" > "$log"
-	actual="$(warren_flake_class "$log")"
+	actual="$(warren_flake_class "$log" "${4:-1}")"
 	rm -f "$log"
 	if [ "$actual" = "$2" ]; then
 		printf '  ok   %s\n' "$1"
@@ -54,6 +54,13 @@ Caused by:
 expect "the transient linker failure gets a clean first" clean \
 	"error: linking with \`link.exe\` failed: exit code: 1181
   = note: LINK : fatal error LNK1181: cannot open input file 'windows.0.52.0.lib'"
+
+expect "a rustc crash under Rosetta is a signature, not an exit code" plain \
+	"error: rustc interrupted by SIGSEGV, printing backtrace"
+expect "a build killed from outside leaves no signature to grep" plain "" 137
+expect "a build the timeout wrapper fired on" plain "" 124
+expect "a wedge that did manage to print something still retries" plain \
+	"Computing build version..." 137
 
 echo "real failures (must NOT retry)"
 expect "a compile error is the code's own" "" \
