@@ -62,7 +62,13 @@ store_volume="${WARREN_NIX_STORE_VOLUME:-warren-nix-store-$(printf '%s' "$image_
 
 # Bound the disk: every superseded key holds a full nixpkgs closure. A volume
 # another job still holds refuses to be removed, which is the wanted safety.
-docker volume ls --quiet --filter 'name=warren-nix-store-' | grep -vFx "$store_volume" | while read -r stale; do
+# `grep -vFx` exits 1 when it selects nothing, which under `set -euo pipefail`
+# killed this script with no output at all the first time the machine held no
+# superseded volume (beta-v1.1.16). Nothing to clean is the ordinary case, not
+# a failure.
+docker volume ls --quiet --filter 'name=warren-nix-store-' \
+    | { grep -vFx "$store_volume" || true; } \
+    | while read -r stale; do
     docker volume rm "$stale" > /dev/null 2>&1 && echo "removed superseded nix store $stale" || true
 done
 
