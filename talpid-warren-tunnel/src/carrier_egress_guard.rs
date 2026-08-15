@@ -541,11 +541,7 @@ mod tests {
 
         assert_eq!(got.tx_datagrams, 0, "pure-ACK traffic is not a send");
         assert_eq!(
-            assess_egress(
-                reading(7, 0, 0),
-                got,
-                Duration::from_secs(3)
-            ),
+            assess_egress(reading(7, 0, 0), got, Duration::from_secs(3)),
             EgressVerdict::Pending,
             "no ack-eliciting send means no positive blackhole evidence"
         );
