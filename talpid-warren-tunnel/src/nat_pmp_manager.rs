@@ -71,6 +71,13 @@ pub struct NatPmpManager {
     /// credential that rotated at an epoch boundary reaches the next renewal.
     /// Survives `reconfigure`: the rule keeps its slot when its port moves.
     credential: Option<CredentialProvider>,
+    /// Set from construction until the teardown has been reported, and the
+    /// only thing `cancel` may read to decide whether to report it. The two
+    /// task handles are not a liveness signal: `reconfigure` takes both to
+    /// `None` across the await that releases the old mapping, so a teardown
+    /// landing in that window would read an already-cancelled manager and
+    /// stay silent, leaving the daemon naming a public port the exit dropped.
+    live: bool,
 }
 
 impl NatPmpManager {
@@ -134,6 +141,7 @@ impl NatPmpManager {
             runtime: runtime.clone(),
             observer,
             credential,
+            live: true,
         }
     }
 
@@ -254,7 +262,6 @@ impl NatPmpManager {
     /// so `port-forward status` kept naming a public port the exit no
     /// longer routed.
     pub fn cancel(&mut self) {
-        let was_live = self.refresh_handle.is_some() || self.forward_handle.is_some();
         // Abort the forwarder BEFORE signalling the loop: past `abort()` the
         // forwarder cannot come back from its `recv().await`, so the loop's
         // `Cancelled` can never reach the observer as a second copy.
@@ -264,7 +271,8 @@ impl NatPmpManager {
         if let Some(mut h) = self.refresh_handle.take() {
             h.cancel();
         }
-        if was_live {
+        if self.live {
+            self.live = false;
             (self.observer)(NatPmpEvent::Cancelled);
         }
     }
@@ -279,9 +287,8 @@ impl NatPmpManager {
     ///
     /// Idempotent: a second call (or a call after `cancel`) is a
     /// no-op-ish - the lifetime=0 Map still fires but the exit
-    /// silently ignores requests for unknown mappings, and the
-    /// internal Option<…> fields are taken to None on first call so
-    /// later cancels do nothing.
+    /// silently ignores requests for unknown mappings, and the first
+    /// call clears the live flag so a later cancel reports nothing.
     pub async fn release(&mut self) {
         // Order mirrors `reconfigure`: forwarder first so the
         // refresh-loop's `Cancelled` event from `release()` does not
@@ -296,6 +303,10 @@ impl NatPmpManager {
         if let Some(mut h) = self.refresh_handle.take() {
             h.release().await;
         }
+        // Cleared only once the release returned: the caller reports this
+        // rule's `Cancelled` right after, and a teardown that interrupts the
+        // release must still report it from `Drop`.
+        self.live = false;
     }
 
     /// True iff the forwarder task has finished (either naturally,
@@ -344,6 +355,41 @@ mod tests {
                     internal_port: 22,
                     external_port,
                     lifetime_secs,
+                    rate_limit: None,
+                });
+                let _ = sock.send_to(&resp, peer).await;
+            }
+        });
+        addr
+    }
+
+    /// Stub that answers exactly one request and then goes silent while
+    /// keeping its socket bound (a closed port would answer the next datagram
+    /// with an ICMP error and cut the client's wait short). The `lifetime = 0`
+    /// release a reconfigure issues afterwards therefore stays unanswered for
+    /// the client's full per-leg bound (~750 ms), which is the window a
+    /// teardown has to land in for the case under test to exist.
+    async fn spawn_stub_answering_once(external_port: u16) -> SocketAddr {
+        let sock = UdpSocket::bind("127.0.0.1:0").await.expect("bind");
+        let addr = sock.local_addr().expect("addr");
+        tokio::spawn(async move {
+            let mut buf = [0u8; 64];
+            let mut answered = false;
+            loop {
+                let Ok((_, peer)) = sock.recv_from(&mut buf).await else {
+                    return;
+                };
+                if answered {
+                    continue;
+                }
+                answered = true;
+                let resp = serialize_response(&warrenguard_natpmp_protocol::Response::Map {
+                    proto: MapProto::Udp,
+                    result_code: ResultCode::Success,
+                    epoch_secs: 0,
+                    internal_port: 22,
+                    external_port,
+                    lifetime_secs: 60,
                     rate_limit: None,
                 });
                 let _ = sock.send_to(&resp, peer).await;
@@ -485,6 +531,67 @@ mod tests {
         assert!(
             matches!(events.last(), Some(NatPmpEvent::Cancelled)),
             "cancel must leave `Cancelled` as the observer's last word; events: {events:?}"
+        );
+    }
+
+    #[tokio::test]
+    async fn manager_dropped_mid_reconfigure_still_reports_cancelled() {
+        // `reconfigure` empties both task handles before it awaits the release
+        // of the old mapping, and that await is bounded by the client's ~750 ms
+        // per-leg timeout. A tunnel teardown aborts the controller task without
+        // waiting, so it can drop the manager inside that window. Deriving
+        // "was live" from the handles then reads an already-cancelled manager
+        // and reports nothing, and the daemon clears a rule on `Cancelled` and
+        // on nothing else: `port-forward status` keeps naming a public port the
+        // exit no longer routes for the whole disconnected period.
+        let server = spawn_stub_answering_once(52000).await;
+        let (observer, log) = collector();
+
+        let mut manager = NatPmpManager::start(
+            &tokio::runtime::Handle::current(),
+            server,
+            &cfg(26),
+            observer,
+        );
+
+        for _ in 0..50 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert!(
+            log.lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { .. })),
+            "no mapping observed before the swap; the stub never answered"
+        );
+
+        let mut swap = Box::pin(async move {
+            manager.reconfigure(&cfg(27)).await;
+            manager
+        });
+        assert!(
+            tokio::time::timeout(Duration::from_millis(200), &mut swap)
+                .await
+                .is_err(),
+            "the release answered; the window under test never opened"
+        );
+        // Dropping the in-flight future is what aborting the controller task
+        // does to a reconfigure caught mid-release: the borrow ends and the
+        // manager is dropped from inside the window.
+        drop(swap);
+
+        let events = log.lock().unwrap().clone();
+        assert!(
+            matches!(events.last(), Some(NatPmpEvent::Cancelled)),
+            "a teardown inside the reconfigure window must still report it; events: {events:?}"
         );
     }
 
