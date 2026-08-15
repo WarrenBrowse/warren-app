@@ -322,6 +322,30 @@ fn print_mappings(mappings: &[Mapping]) {
     }
 }
 
+/// One indented line describing a configured rule, as `port-forward get`
+/// lists it.
+///
+/// The shape is a parsed interface: the Warren container's
+/// `parse_forward_rules` (`warren-cli/docker/entrypoint.sh`) reads these
+/// lines to find the rules it must clear before installing its own. It
+/// selects a line by the ` internal ` and ` -> external ` separators and
+/// reads the head back as `<internal_port>/<PROTO>`. A cosmetic edit here
+/// strands stale rules in every container, so `settings_rule_line_*` pins
+/// the whole line byte for byte.
+fn settings_rule_line(r: &Rule) -> String {
+    let external = if r.suggested_external_port == 0 {
+        "auto".to_owned()
+    } else {
+        r.suggested_external_port.to_string()
+    };
+    format!(
+        "  {}/{} internal {} -> external {external}",
+        r.internal_port,
+        proto_label(r.protocol),
+        r.internal_port
+    )
+}
+
 /// Print the toggle, requested lifetime and the configured rule list.
 fn print_settings(settings: &NatPmpSettings) {
     println!(
@@ -335,17 +359,7 @@ fn print_settings(settings: &NatPmpSettings) {
     }
     println!("Rules:");
     for r in &settings.rules {
-        let external = if r.suggested_external_port == 0 {
-            "auto".to_owned()
-        } else {
-            r.suggested_external_port.to_string()
-        };
-        println!(
-            "  {}/{} internal {} -> external {external}",
-            r.internal_port,
-            proto_label(r.protocol),
-            r.internal_port
-        );
+        println!("{}", settings_rule_line(r));
     }
 }
 
@@ -397,6 +411,27 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(mapping_line(&m), "51820/UDP: MAPPED, public port 49152");
+    }
+
+    #[test]
+    fn settings_rule_line_pins_the_auto_external_shape() {
+        // Consumer: `parse_forward_rules` in warren-cli/docker/entrypoint.sh.
+        // It splits on " internal " and reads the head back as
+        // "<internal_port>/<PROTO>", so the separators, the slash and the
+        // "TCP+UDP" spelling are what the container's stale-rule cleanup
+        // depends on.
+        assert_eq!(
+            settings_rule_line(&make_rule(Protocol::Both, 6881, 0)),
+            "  6881/TCP+UDP internal 6881 -> external auto"
+        );
+    }
+
+    #[test]
+    fn settings_rule_line_pins_the_explicit_external_shape() {
+        assert_eq!(
+            settings_rule_line(&make_rule(Protocol::Tcp, 6881, 51413)),
+            "  6881/TCP internal 6881 -> external 51413"
+        );
     }
 
     #[test]
