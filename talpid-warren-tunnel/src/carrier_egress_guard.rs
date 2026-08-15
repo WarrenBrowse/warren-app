@@ -82,11 +82,23 @@ pub(crate) struct EgressReading {
     /// change to a new non-zero id proves a full QUIC handshake completed AFTER
     /// the route swap, which is impossible unless the carrier egressed.
     pub session_id: u64,
-    /// quinn `udp_tx.datagrams`: sends the transport ISSUED. Climbs even when
-    /// the packet never left the NIC (the blackhole artifact), so it proves
-    /// intent to send, never egress.
+    /// Ack-ELICITING sends the transport issued, summed over every bonded leg
+    /// (`frame_tx.datagram + frame_tx.ping`). Climbs even when the packet never
+    /// left the NIC (the blackhole artifact), so it proves intent to send,
+    /// never egress.
+    ///
+    /// It counts frames the peer OWES an answer for, never raw UDP packets:
+    /// `udp_tx.datagrams` also counts pure-ACK packets, which are not
+    /// ack-eliciting and so can never make [`Self::acks_rx`] move. Feeding the
+    /// dead-window rule with sends the peer cannot answer is what made this
+    /// guard call a healthy carrier black-holed on every connect under the
+    /// fleet's exit-side idle cover
+    /// (`incidents/2026-08-15-carrier-egress-guard-convicts-a-healthy-bind-on-every-connect.md`).
     pub tx_datagrams: u64,
-    /// quinn `frame_rx.acks`: ACK frames received from the peer. The peer only
+    /// quinn `frame_rx.acks` summed over every bonded leg: ACK frames received
+    /// from the peer. Summed because the probe round-robins over the whole
+    /// bundle and every leg shares the one physical carrier, so an ACK on any
+    /// leg proves that carrier egresses. The peer only
     /// generates an ACK in response to receiving our ack-eliciting packets, so
     /// progress here (past the post-swap baseline) is client-side proof of
     /// egress that unsolicited downlink traffic (DAITA dummies, idle cover)
@@ -109,6 +121,43 @@ pub(crate) enum EgressVerdict {
     /// acknowledged: the bound carrier is black-holing. Revert to the
     /// destination-route escape.
     Dead,
+}
+
+/// What one bonded leg contributes to a reading. Decoupled from the transport
+/// crate's quinn types (this crate does not depend on quinn) so the counter
+/// arithmetic stays unit-testable here; the seam maps quinn's fields onto it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub(crate) struct LegCounters {
+    /// Frames the peer OWES an answer for: DATAGRAM (what the probe emits) plus
+    /// PING. Never raw UDP packets: `udp_tx.datagrams` also counts pure-ACK
+    /// packets, which are not ack-eliciting and so can never move `acks_rx`.
+    pub ack_eliciting_tx: u64,
+    /// ACK frames received on this leg.
+    pub acks_rx: u64,
+}
+
+/// Build a reading by summing the bundle's legs.
+///
+/// Summed rather than read off the primary because the probe round-robins over
+/// the whole bundle and every leg carries the same physical carrier bind, so an
+/// ACK on any leg proves that carrier egresses.
+pub(crate) fn egress_reading_from(
+    session_id: u64,
+    per_leg: &[LegCounters],
+    rtt: Duration,
+) -> EgressReading {
+    let mut tx_datagrams = 0u64;
+    let mut acks_rx = 0u64;
+    for leg in per_leg {
+        tx_datagrams = tx_datagrams.saturating_add(leg.ack_eliciting_tx);
+        acks_rx = acks_rx.saturating_add(leg.acks_rx);
+    }
+    EgressReading {
+        session_id,
+        tx_datagrams,
+        acks_rx,
+        rtt,
+    }
 }
 
 /// Adaptive blackhole deadline for the measured `rtt`: [`DEAD_WINDOW_RTTS`]
@@ -370,13 +419,26 @@ mod real_io {
             // address for the very next session, but the wildcard bind gives
             // each session a fresh ephemeral port that disambiguates.
             let port = client.local_addr().map(|a| a.port()).unwrap_or(0);
-            let stats = client.quinn_stats();
-            EgressReading {
-                session_id: (Arc::as_ptr(&client) as u64) ^ (u64::from(port) << 47),
-                tx_datagrams: stats.udp_tx.datagrams,
-                acks_rx: stats.frame_rx.acks,
-                rtt: stats.path.rtt,
-            }
+            let session_id = (Arc::as_ptr(&client) as u64) ^ (u64::from(port) << 47);
+            // Every bonded leg, because `send_daita_padding` round-robins the
+            // probe over all of them: reading the primary alone left 7 of every
+            // 8 probes invisible to the measurement on the desktop default.
+            let per_leg: Vec<super::LegCounters> = client
+                .clients()
+                .iter()
+                .map(|leg| {
+                    let stats = leg.quinn_stats();
+                    super::LegCounters {
+                        ack_eliciting_tx: stats
+                            .frame_tx
+                            .datagram
+                            .saturating_add(stats.frame_tx.ping),
+                        acks_rx: stats.frame_rx.acks,
+                    }
+                })
+                .collect();
+            let rtt = client.quinn_stats().path.rtt;
+            super::egress_reading_from(session_id, &per_leg, rtt)
         }
 
         async fn send_probe(&mut self) {
@@ -454,6 +516,86 @@ mod tests {
                 ipnetwork::IpNetwork::from(carrier),
                 talpid_routing::NetNode::DefaultNode
             )]
+        );
+    }
+
+    /// Pure-ACK traffic must never count as a send.
+    ///
+    /// The exit sends unsolicited DAITA and idle cover downlink, the client
+    /// answers with ACK-only packets, and those are NOT ack-eliciting: the peer
+    /// has nothing to acknowledge, so `frame_rx.acks` cannot move however many
+    /// of them go out. Counting them as "sends issued" made the guard read an
+    /// idle healthy leg as a blackhole, on 37 connects out of 37 in the
+    /// 2026-08-15 field log (28 of them on a network that then carried
+    /// thousands of datagrams).
+    #[test]
+    fn ack_only_traffic_is_not_a_send() {
+        // 40 UDP packets went out, none of them ack-eliciting: the seam maps
+        // pure-ACK traffic to zero here, which is the whole point.
+        let ack_only = LegCounters {
+            ack_eliciting_tx: 0,
+            acks_rx: 0,
+        };
+
+        let got = super::egress_reading_from(7, &[ack_only], Duration::from_millis(25));
+
+        assert_eq!(got.tx_datagrams, 0, "pure-ACK traffic is not a send");
+        assert_eq!(
+            assess_egress(
+                reading(7, 0, 0),
+                got,
+                Duration::from_secs(3)
+            ),
+            EgressVerdict::Pending,
+            "no ack-eliciting send means no positive blackhole evidence"
+        );
+    }
+
+    /// What the guard actually probes with is a DATAGRAM frame, and a PING is
+    /// the other thing that can pull an ACK out of the peer.
+    #[test]
+    fn ack_eliciting_frames_are_the_sends() {
+        let leg = LegCounters {
+            ack_eliciting_tx: 5,
+            acks_rx: 0,
+        };
+
+        let got = super::egress_reading_from(7, &[leg], Duration::from_millis(25));
+
+        assert_eq!(got.tx_datagrams, 5);
+    }
+
+    /// The probe round-robins over every bonded leg
+    /// (`MultiHopBundle::send_daita_padding`), so the reading has to cover the
+    /// same set. Reading the primary alone made 7 of every 8 probes invisible
+    /// to the measurement on the desktop default of 8 legs.
+    #[test]
+    fn the_reading_covers_every_bonded_leg() {
+        let primary = LegCounters {
+            ack_eliciting_tx: 1,
+            acks_rx: 2,
+        };
+        let secondary = LegCounters {
+            ack_eliciting_tx: 4,
+            acks_rx: 9,
+        };
+
+        let got = super::egress_reading_from(7, &[primary, secondary], Duration::from_millis(25));
+
+        assert_eq!(got.tx_datagrams, 5, "sends sum over the bundle");
+        assert_eq!(got.acks_rx, 11, "acks sum over the bundle");
+    }
+
+    /// A leg that acknowledges anything proves the shared carrier egresses,
+    /// whichever leg it is: every leg carries the same `IP_BOUND_IF` bind.
+    #[test]
+    fn an_ack_on_any_leg_confirms_the_carrier() {
+        let baseline = reading(7, 0, 0);
+        let current = reading(7, 4, 1);
+
+        assert_eq!(
+            assess_egress(baseline, current, Duration::from_secs(2)),
+            EgressVerdict::Confirmed
         );
     }
 
