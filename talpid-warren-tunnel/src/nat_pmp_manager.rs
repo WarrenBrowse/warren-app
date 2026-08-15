@@ -364,11 +364,12 @@ mod tests {
     }
 
     /// Stub that answers exactly one request and then goes silent while
-    /// keeping its socket bound (a closed port would answer the next datagram
-    /// with an ICMP error and cut the client's wait short). The `lifetime = 0`
-    /// release a reconfigure issues afterwards therefore stays unanswered for
-    /// the client's full per-leg bound (~750 ms), which is the window a
-    /// teardown has to land in for the case under test to exist.
+    /// keeping its socket bound. Keeping it bound is load-bearing: dropping
+    /// the socket after the answer made the client's release return at once
+    /// instead of waiting out its bound, and the window under test never
+    /// opened. The `lifetime = 0` release a reconfigure issues therefore
+    /// stays unanswered for the client's full per-leg bound (~750 ms), which
+    /// is the window a teardown has to land in for this case to exist.
     async fn spawn_stub_answering_once(external_port: u16) -> SocketAddr {
         let sock = UdpSocket::bind("127.0.0.1:0").await.expect("bind");
         let addr = sock.local_addr().expect("addr");
