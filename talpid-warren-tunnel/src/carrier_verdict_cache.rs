@@ -164,10 +164,21 @@ impl VerdictRecorder {
             // original entry alone and let it expire on schedule.
             GuardOutcome::RevertedToRoute if self.replayed_route_only => return,
             GuardOutcome::RevertedToRoute => CachedVerdict::RouteOnly,
-            // Neither configuration egresses. `RouteOnly` would be a lie that
-            // outlives the connect and skips the guard for a whole TTL, so the
-            // network is forgotten instead and the next connect measures from
-            // scratch, bind included.
+            // The escape was measured AFTER the guard patched a live session:
+            // the `/32` went on top of the `0/0` redirect and the primary
+            // socket was rebound underneath. Topic 138 proved that patch is
+            // itself the outage (same hotspot, 14 s apart: pre-installed in the
+            // documented order the escape carried 1452-byte datagrams both
+            // ways, live-patched it carried none). So this outcome says nothing
+            // about the escape, and forgetting it TRAPS the host: every later
+            // connect re-arms the bind and re-applies the same harmful patch.
+            // Record `RouteOnly` so the next connect pre-installs the escape in
+            // the right order and finally measures it.
+            GuardOutcome::EscapeAlsoDead if !self.replayed_route_only => CachedVerdict::RouteOnly,
+            // The plan already REPLAYED `RouteOnly`, so the escape was measured
+            // in the correct order and genuinely carried nothing. That is real
+            // evidence against it: forget the network so the next connect
+            // re-arms the bind rather than replaying a verdict that failed.
             GuardOutcome::EscapeAlsoDead => {
                 self.cache.forget(&self.fingerprint);
                 return;
@@ -422,6 +433,39 @@ mod tests {
         assert_eq!(
             VerdictCache::load(Some(&dir)).lookup("fp1", now_unix()),
             None
+        );
+    }
+
+    /// An `EscapeAlsoDead` reached from an ARMED bind measured the escape only
+    /// AFTER the guard patched a live session (`/32` installed on top of the
+    /// `0/0` redirect, primary socket rebound underneath). Topic 138 proved
+    /// that patch is itself the outage: on the same hotspot, 14 s later, the
+    /// same escape pre-installed in the documented order carried 1452-byte
+    /// datagrams both ways. So that outcome is evidence about the PATCH, never
+    /// about the escape, and forgetting it traps the host: every later connect
+    /// re-arms the bind and re-applies the same harmful patch, forever.
+    #[test]
+    fn escape_also_dead_from_an_armed_bind_asks_for_the_escape_in_the_right_order() {
+        let dir = tmp_dir("escape-dead-armed");
+        let fp = "fp-armed".to_string();
+        let CarrierProbePlan::Background(recorder) = plan_carrier_probe(fp.clone(), Some(&dir))
+        else {
+            panic!("cache miss must keep the bind and verify in the background");
+        };
+
+        recorder.record(GuardOutcome::EscapeAlsoDead);
+
+        assert_eq!(
+            VerdictCache::load(Some(&dir)).lookup(&fp, now_unix()),
+            Some(CachedVerdict::RouteOnly),
+            "the escape has not been measured in the right order yet"
+        );
+        assert!(
+            matches!(
+                plan_carrier_probe(fp, Some(&dir)),
+                CarrierProbePlan::SkipRouteOnly(_)
+            ),
+            "the next connect must pre-install the escape instead of re-patching a live session"
         );
     }
 

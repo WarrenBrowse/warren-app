@@ -209,10 +209,12 @@ pub(crate) enum GuardOutcome {
     /// it egresses: either the bound carrier looked dead and the revert healed
     /// it, or a cached-`RouteOnly` connect re-proved the escape.
     RevertedToRoute,
-    /// The escape carries no more than the bind did: this host egresses through
-    /// NEITHER configuration. Never a verdict to cache; the cache entry is
-    /// dropped so the next connect re-arms the bind instead of pinning a dead
-    /// configuration for a week.
+    /// The escape carries no more than the bind did. Reached from an ARMED
+    /// bind this measures the LIVE PATCH the revert just applied, not the
+    /// escape (topic 138), so the cache asks for the escape pre-installed next
+    /// time; reached from a replayed `RouteOnly` plan the escape was measured
+    /// in the right order and the network is forgotten instead, so the next
+    /// connect re-arms the bind. See `VerdictRecorder::record`.
     EscapeAlsoDead,
     /// The window elapsed without confirmation but also without positive
     /// blackhole evidence (no session / no sends): left the bind untouched and
