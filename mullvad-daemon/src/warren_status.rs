@@ -519,8 +519,10 @@ impl WarrenStatusCache {
     /// - `RateLimited { retry_after_secs }` -> `RateLimited { .. }`
     ///   (UI blocks the port control and counts down; the loop retries).
     /// - `Failed { error, reason }` -> `Failed { .. }`.
-    /// - `Cancelled` -> `Disabled` (the user disabled the toggle, or
-    ///   the tunnel went down).
+    /// - `Cancelled` -> the rule is dropped from the list (the user
+    ///   disabled the toggle, removed the rule, or the tunnel went
+    ///   down). The list carries live mappings, so a rule with no
+    ///   mapping left keeps no row.
     pub fn record_nat_pmp_event(&self, id: NatPmpRuleId, event: NatPmpEvent) {
         let snapshot = {
             let mut inner = self
