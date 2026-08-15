@@ -405,7 +405,9 @@ jobs:
         env:
           CPP_BUILD_MODES: Release
           CPP_BUILD_TARGETS: x64
-        run: ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
+        run: |
+          bash ci/run-with-runner-retry.sh \
+            ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
       - name: Verify the winfw WFP keys carry this channel's salt
         shell: bash
         # beta-v1.1.9 shipped a beta build whose winfw.dll carried PRODUCTION
@@ -420,9 +422,15 @@ jobs:
         # The runner is Windows-on-ARM (macstudio-win); Warren ships x64 only, so
         # build the x86_64 target explicitly instead of the host default (arm64),
         # which would otherwise emit an aarch64 daemon into target/release.
+        #
+        # Through the retry wrapper because this job now gates the publish: the
+        # pool intermittently fails to SPAWN rustc, naming a dependency that
+        # never got a chance to be wrong, and a release must not die on that.
+        # A real compile error still fails on the first attempt.
         run: |
-          cargo build --release --target x86_64-pc-windows-msvc \
-            -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
+          bash ci/run-with-runner-retry.sh \
+            cargo build --release --target x86_64-pc-windows-msvc \
+              -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
       - name: Assemble the bundle
         shell: bash
         run: bash ci/build-headless-bundle.sh windows "${WARREN_VERSION:-0.0.0}" warren-cli
