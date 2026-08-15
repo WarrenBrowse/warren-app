@@ -13,7 +13,8 @@
 //!
 //! - [`NatPmpManager::start`] spawns the refresh loop + the forwarding
 //!   task and returns the manager.
-//! - [`NatPmpManager::cancel`] stops the loop and aborts the forwarder.
+//! - [`NatPmpManager::cancel`] stops the loop, aborts the forwarder and
+//!   reports `NatPmpEvent::Cancelled` to the observer itself.
 //!   Idempotent.
 //! - Dropping the manager calls `cancel` defensively, so a panicking
 //!   tunnel teardown cannot leak the spawned tasks.
@@ -241,13 +242,30 @@ impl NatPmpManager {
         self.forward_handle = Some(forward_handle);
     }
 
-    /// Stops the refresh loop and aborts the forwarder. Idempotent.
+    /// Stops the refresh loop, aborts the forwarder, and reports the
+    /// teardown to the observer. Idempotent: only the call that finds the
+    /// manager still live reports.
+    ///
+    /// The observer is the only path by which the daemon learns a mapping
+    /// is gone, and the refresh loop's own `Cancelled` cannot carry it: the
+    /// loop emits that event on its own task, after the cancel signal, and
+    /// the forwarder that would relay it dies here. Reporting from the loop
+    /// alone left the last `Mapped` outliving the tunnel that carried it,
+    /// so `port-forward status` kept naming a public port the exit no
+    /// longer routed.
     pub fn cancel(&mut self) {
+        let was_live = self.refresh_handle.is_some() || self.forward_handle.is_some();
+        // Abort the forwarder BEFORE signalling the loop: past `abort()` the
+        // forwarder cannot come back from its `recv().await`, so the loop's
+        // `Cancelled` can never reach the observer as a second copy.
+        if let Some(h) = self.forward_handle.take() {
+            h.abort();
+        }
         if let Some(mut h) = self.refresh_handle.take() {
             h.cancel();
         }
-        if let Some(h) = self.forward_handle.take() {
-            h.abort();
+        if was_live {
+            (self.observer)(NatPmpEvent::Cancelled);
         }
     }
 
@@ -396,7 +414,7 @@ mod tests {
     #[tokio::test]
     async fn manager_cancel_is_idempotent() {
         let server = spawn_stub(60, 50000).await;
-        let (observer, _log) = collector();
+        let (observer, log) = collector();
 
         let mut manager = NatPmpManager::start(
             &tokio::runtime::Handle::current(),
@@ -410,6 +428,64 @@ mod tests {
         manager.cancel();
         manager.cancel();
         assert!(manager.is_finished() || manager.forward_handle.is_none());
+        let cancelled = log
+            .lock()
+            .unwrap()
+            .iter()
+            .filter(|e| matches!(e, NatPmpEvent::Cancelled))
+            .count();
+        assert_eq!(
+            cancelled, 1,
+            "repeated cancels must report the teardown exactly once"
+        );
+    }
+
+    #[tokio::test]
+    async fn manager_cancel_reports_cancelled_to_the_observer() {
+        // The refresh loop emits `Cancelled` on its own task, and cancel
+        // aborts the forwarder that would carry it, so the event was lost.
+        // The daemon clears the rule from its status cache on `Cancelled`
+        // and on nothing else, so without this the last `Mapped` outlives
+        // the tunnel that carried the mapping: `port-forward status` keeps
+        // naming a public port the exit no longer routes.
+        let server = spawn_stub(60, 49500).await;
+        let (observer, log) = collector();
+
+        let mut manager = NatPmpManager::start(
+            &tokio::runtime::Handle::current(),
+            server,
+            &cfg(25),
+            observer,
+        );
+
+        // Observe the live mapping first, so the assertion below proves the
+        // teardown replaced a `Mapped` rather than firing on an empty rule.
+        for _ in 0..50 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert!(
+            log.lock()
+                .unwrap()
+                .iter()
+                .any(|e| matches!(e, NatPmpEvent::Mapped { .. })),
+            "no mapping observed before cancel; the stub never answered"
+        );
+
+        manager.cancel();
+
+        let events = log.lock().unwrap().clone();
+        assert!(
+            matches!(events.last(), Some(NatPmpEvent::Cancelled)),
+            "cancel must leave `Cancelled` as the observer's last word; events: {events:?}"
+        );
     }
 
     #[tokio::test]
