@@ -74,7 +74,9 @@ pub(crate) enum ReclaimOutcome {
 pub(crate) fn verdict_for(measurement: Option<GuardOutcome>) -> Option<CachedVerdict> {
     match measurement? {
         GuardOutcome::BypassConfirmed => Some(CachedVerdict::BindOk),
-        GuardOutcome::RevertedToRoute => Some(CachedVerdict::RouteOnly),
+        GuardOutcome::RevertedToRoute | GuardOutcome::BindBlackholed => {
+            Some(CachedVerdict::RouteOnly)
+        }
         GuardOutcome::EscapeAlsoDead | GuardOutcome::Inconclusive => None,
     }
 }
@@ -134,7 +136,6 @@ pub(crate) async fn run_bind_reclaim<I: ReclaimIo>(io: &mut I) -> ReclaimOutcome
 pub(crate) use real_io::RealReclaimIo;
 
 mod real_io {
-    use std::net::IpAddr;
     use std::path::PathBuf;
     use std::sync::Arc;
 
@@ -155,8 +156,6 @@ mod real_io {
     pub(crate) struct RealReclaimIo {
         client_rx: ClientWatch,
         route_manager: RouteManagerHandle,
-        carrier_ips: Vec<IpAddr>,
-        tun_iface: String,
         verdict_dir: Option<PathBuf>,
         /// Resolved on the cache lookup and reused for the write, so a
         /// measurement can never be attributed to a network other than the one
@@ -168,15 +167,11 @@ mod real_io {
         pub(crate) fn new(
             client_rx: ClientWatch,
             route_manager: RouteManagerHandle,
-            carrier_ips: Vec<IpAddr>,
-            tun_iface: String,
             verdict_dir: Option<PathBuf>,
         ) -> Self {
             Self {
                 client_rx,
                 route_manager,
-                carrier_ips,
-                tun_iface,
                 verdict_dir,
                 fingerprint: None,
             }
@@ -230,9 +225,6 @@ mod real_io {
         async fn verify_bind(&mut self) -> GuardOutcome {
             let mut guard_io = RealEgressGuardIo {
                 client_rx: self.client_rx.clone(),
-                route_manager: self.route_manager.clone(),
-                carrier_ips: self.carrier_ips.clone(),
-                tun_iface: self.tun_iface.clone(),
             };
             run_bootstrap_guard(&mut guard_io).await
         }

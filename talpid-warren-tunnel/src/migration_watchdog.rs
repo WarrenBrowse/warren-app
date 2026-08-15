@@ -250,8 +250,6 @@ impl MigrationIo for RealWatchdogIo {
         let mut io = crate::carrier_bind_reclaim::RealReclaimIo::new(
             self.client_rx.clone(),
             self.route_manager.clone(),
-            self.carrier_ips.clone(),
-            self.tun_iface.clone(),
             self.verdict_dir.clone(),
         );
         let outcome = crate::carrier_bind_reclaim::run_bind_reclaim(&mut io).await;

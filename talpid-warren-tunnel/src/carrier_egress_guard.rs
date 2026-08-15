@@ -18,7 +18,7 @@
 //! route swap it runs a short bootstrap window and watches for proof that our
 //! own post-swap sends reach the peer. If proven, the bind is good and stays.
 //! If sends were issued but nothing was acknowledged within the window, the
-//! bound carrier is black-holing, so the guard reverts to the proven-safe
+//! bound carrier is black-holing, so the guard records the network for the
 //! `<carrier_ip>/32` DefaultNode route AND unbinds the socket, exactly
 //! reproducing the pre-v1.7.0 config. The revert is the fail-safe net; the bind
 //! is kept only when confirmed working, never fail-closed (fail-closed here
@@ -43,7 +43,6 @@
 //! unit-testable with paused time, without touching a real socket or route
 //! table. The socket/route I/O is a thin seam ([`RealEgressGuardIo`]) whose
 //! true behavior is only observable under a privileged real-exit run.
-
 use std::net::IpAddr;
 use std::time::Duration;
 
@@ -206,15 +205,32 @@ pub(crate) enum GuardOutcome {
     /// was added (leak-free, the goal).
     BypassConfirmed,
     /// The `<carrier_ip>/32` DefaultNode escape is the live configuration and
-    /// it egresses: either the bound carrier looked dead and the revert healed
-    /// it, or a cached-`RouteOnly` connect re-proved the escape.
+    /// it egresses: a cached-`RouteOnly` connect re-proved the escape.
     RevertedToRoute,
-    /// The escape carries no more than the bind did. Reached from an ARMED
-    /// bind this measures the LIVE PATCH the revert just applied, not the
-    /// escape (topic 138), so the cache asks for the escape pre-installed next
-    /// time; reached from a replayed `RouteOnly` plan the escape was measured
-    /// in the right order and the network is forgotten instead, so the next
-    /// connect re-arms the bind. See `VerdictRecorder::record`.
+    /// The bound carrier black-holed. The guard does NOT touch the live
+    /// session: it records `RouteOnly` for the network so the NEXT connect
+    /// pre-installs the escape in the documented order, before the `0/0`
+    /// redirect, and lets the dead-path escalation end this session.
+    ///
+    /// The guard used to patch the session in place instead (install the `/32`
+    /// on top of the live `0/0` redirect, rebind the primary socket underneath
+    /// the running QUIC session). Forum topic 138 proved that patch is itself
+    /// an outage: on one iPhone Wi-Fi hotspot, 14 s apart, the patched session
+    /// carried zero datagrams in either direction while the same escape
+    /// pre-installed at connect carried 1452-byte datagrams both ways. The
+    /// ordering is what the 2026-07-13 design called for from the start (the
+    /// `/32` lands BEFORE the `0/0` redirect, zero self-nest window); the
+    /// revert was the one path that broke it.
+    ///
+    /// Trade accepted: a host whose bind really is black-holed now waits for a
+    /// reconnect instead of healing in place. That costs seconds on a host that
+    /// was already carrying nothing, and it removes a total outage on hosts
+    /// where the live patch is what breaks the datapath.
+    BindBlackholed,
+    /// A pre-installed `<carrier_ip>/32` escape carried nothing either. Only
+    /// reachable from [`run_escape_verify_guard`], so the escape was measured
+    /// in the documented order and this is real evidence against it: the
+    /// network is forgotten and the next connect re-arms the bind.
     EscapeAlsoDead,
     /// The window elapsed without confirmation but also without positive
     /// blackhole evidence (no session / no sends): left the bind untouched and
@@ -233,11 +249,6 @@ pub(crate) trait EgressGuardIo {
     /// [`assess_egress`] distinguish a blackhole (tx climbs, acks frozen) from
     /// a merely idle socket, and what elicits the ACKs that prove egress.
     async fn send_probe(&mut self);
-
-    /// Revert to the proven-safe escape: install the `<carrier_ip>/32`
-    /// DefaultNode route AND unbind the carrier socket (fresh wildcard rebind),
-    /// reproducing the pre-v1.7.0 config. Best-effort; logs its own failures.
-    async fn revert_to_route(&mut self);
 }
 
 /// One verification phase over whatever carrier configuration is live: burn a
@@ -281,17 +292,9 @@ pub(crate) async fn run_bootstrap_guard<I: EgressGuardIo>(io: &mut I) -> GuardOu
     match verify_egress_phase(io).await {
         EgressVerdict::Confirmed => GuardOutcome::BypassConfirmed,
         EgressVerdict::Pending => GuardOutcome::Inconclusive,
-        EgressVerdict::Dead => {
-            io.revert_to_route().await;
-            match verify_egress_phase(io).await {
-                EgressVerdict::Dead => GuardOutcome::EscapeAlsoDead,
-                // Confirmed, or no positive evidence against the escape: the
-                // escape stays and stays cacheable. Absence of proof is not
-                // proof of a blackhole, and reverting the revert would only
-                // put back the configuration already measured dead.
-                _ => GuardOutcome::RevertedToRoute,
-            }
-        }
+        // Measured, recorded, and nothing else. See `GuardOutcome::BindBlackholed`
+        // for why this path must not touch the live session.
+        EgressVerdict::Dead => GuardOutcome::BindBlackholed,
     }
 }
 
@@ -319,13 +322,25 @@ pub(crate) async fn run_escape_verify_guard<I: EgressGuardIo>(io: &mut I) -> Gua
 /// tunnel owns the default route", and reading it off the exit was the only
 /// way to get it on 2026-08-12.
 pub(crate) fn log_guard_outcome(outcome: GuardOutcome, carrier_interface: &str) {
-    if outcome == GuardOutcome::EscapeAlsoDead {
-        log::warn!(
+    match outcome {
+        GuardOutcome::BindBlackholed => log::warn!(
+            "Warren carrier egress guard: the IP_BOUND_IF-bound carrier egressed nothing within \
+             the bootstrap window (carrier interface {carrier_interface}). The live session is \
+             left untouched on purpose: patching it (installing the <carrier_ip>/32 on top of \
+             the tunnel default and rebinding the socket underneath) is itself an outage on some \
+             networks. The escape is recorded for this network, so the next connect pre-installs \
+             it before the tunnel default; the dead-path escalation ends this session."
+        ),
+        GuardOutcome::EscapeAlsoDead => log::warn!(
             "Warren carrier egress guard: this host egresses through NEITHER the IP_BOUND_IF \
-             bind NOR the <carrier_ip>/32 DefaultNode escape (carrier interface {carrier_interface}). \
-             The tunnel is up over a carrier that reaches nothing, so no exit will answer. \
-             Dropping the cached verdict: the next connect re-arms the bind."
-        );
+             bind NOR the <carrier_ip>/32 DefaultNode escape (carrier interface {carrier_interface}), \
+             and the escape was measured pre-installed, in the right order. The tunnel is up over \
+             a carrier that reaches nothing, so no exit will answer. Dropping the cached verdict: \
+             the next connect re-arms the bind."
+        ),
+        GuardOutcome::BypassConfirmed
+        | GuardOutcome::RevertedToRoute
+        | GuardOutcome::Inconclusive => {}
     }
 }
 
@@ -380,29 +395,15 @@ pub(crate) async fn install_carrier_route_escape(
 pub(crate) use real_io::RealEgressGuardIo;
 
 mod real_io {
-    use std::net::IpAddr;
     use std::sync::Arc;
-
-    use talpid_routing::RouteManagerHandle;
     use warrenguard_transport::bundle::MultiHopBundle;
 
     use super::{EgressGuardIo, EgressReading};
 
-    /// Watch receiver over the supervisor's published multi-hop session.
-    type ClientWatch = tokio::sync::watch::Receiver<Option<Arc<MultiHopBundle>>>;
-
     /// Production bindings for [`EgressGuardIo`] on the macOS multi-hop path.
     pub(crate) struct RealEgressGuardIo {
-        /// The supervisor's live session channel; read fresh each sample so a
-        /// mid-window redial is observed as a new session id.
-        pub client_rx: ClientWatch,
-        /// Handle used to install the `/32` DefaultNode escape on revert.
-        pub route_manager: RouteManagerHandle,
-        /// Carrier IPs to except with the `/32` route on revert (the relay
-        /// endpoint on multi-hop, the only UDP peer the client dials).
-        pub carrier_ips: Vec<IpAddr>,
-        /// TUN interface name, for the DefaultNode route set.
-        pub tun_iface: String,
+        /// Live multi-hop bundle, republished on every supervisor redial.
+        pub client_rx: tokio::sync::watch::Receiver<Option<Arc<MultiHopBundle>>>,
     }
 
     impl RealEgressGuardIo {
@@ -448,54 +449,6 @@ mod real_io {
                 && let Err(e) = client.send_daita_padding().await
             {
                 log::debug!("carrier egress guard: probe send failed: {e}");
-            }
-        }
-
-        async fn revert_to_route(&mut self) {
-            log::warn!(
-                "Warren carrier egress guard: the IP_BOUND_IF-bound carrier egressed nothing \
-                 within the bootstrap window (multi-interface blackhole shape); reverting to the \
-                 <carrier_ip>/32 DefaultNode route and unbinding the socket"
-            );
-            // Install the destination-keyed escape first so the fresh unbound
-            // socket has a route to the carrier the instant it is rebound
-            // (avoids a window where an unbound carrier self-nests into the TUN).
-            super::install_carrier_route_escape(
-                &self.route_manager,
-                &self.tun_iface,
-                &self.carrier_ips,
-            )
-            .await;
-            // Unbind the carrier: rebind the live session onto a fresh wildcard
-            // socket with NO IP_BOUND_IF, so the pre-v1.7.0 (unbound + /32)
-            // config is reproduced exactly. Reapplying the bind here is what
-            // would keep the blackhole, so the fresh socket is deliberately
-            // left unscoped.
-            let Some(client) = self.current_client() else {
-                return;
-            };
-            let bind: std::net::SocketAddr = match client.local_addr() {
-                Ok(std::net::SocketAddr::V6(_)) => (std::net::Ipv6Addr::UNSPECIFIED, 0).into(),
-                _ => (std::net::Ipv4Addr::UNSPECIFIED, 0).into(),
-            };
-            match std::net::UdpSocket::bind(bind) {
-                Ok(sock) => {
-                    if let Err(e) = client.rebind(sock) {
-                        log::warn!(
-                            "Warren carrier egress guard: unbind rebind failed: {e}. \
-                             Dead-path escalation remains the backstop."
-                        );
-                    } else {
-                        log::info!(
-                            "Warren carrier egress guard: reverted to the /32 route and unbound \
-                             the carrier; datapath should self-heal"
-                        );
-                    }
-                }
-                Err(e) => log::warn!(
-                    "Warren carrier egress guard: fresh unbound socket bind failed: {e}. \
-                     Dead-path escalation remains the backstop."
-                ),
             }
         }
     }
@@ -716,49 +669,28 @@ mod tests {
     // Driver tests over a scripted mock with paused time.
 
     struct MockIo {
-        /// `(baseline, steady)` readings for the phase that verifies the bind.
+        /// `(baseline, steady)` readings for the single verification phase.
         bind_phase: (EgressReading, EgressReading),
-        /// `(baseline, steady)` readings for the phase that verifies the `/32`
-        /// escape. Defaults to the bind phase's pair, i.e. "the revert changed
-        /// nothing", which is the shape a host where neither escape egresses
-        /// produces.
-        escape_phase: (EgressReading, EgressReading),
-        reverted: bool,
         reads_in_phase: u32,
         probes_sent: u32,
-        reverts: u32,
     }
 
     impl MockIo {
         fn new(baseline: EgressReading, post: EgressReading) -> Self {
             Self {
                 bind_phase: (baseline, post),
-                escape_phase: (baseline, post),
-                reverted: false,
                 reads_in_phase: 0,
                 probes_sent: 0,
-                reverts: 0,
             }
-        }
-
-        /// Scripts an escape that DOES carry traffic once installed.
-        fn escape_heals(mut self, baseline: EgressReading, post: EgressReading) -> Self {
-            self.escape_phase = (baseline, post);
-            self
         }
     }
 
     impl EgressGuardIo for MockIo {
         fn read_egress(&mut self) -> EgressReading {
-            // Each phase reads once for its (post-burn) baseline, then again
-            // on every probe iteration; the mock answers the first read of a
-            // phase with that phase's baseline and every later one with its
-            // steady reading.
-            let (baseline, steady) = if self.reverted {
-                self.escape_phase
-            } else {
-                self.bind_phase
-            };
+            // The phase reads once for its (post-burn) baseline, then again on
+            // every probe iteration; the mock answers the first read with the
+            // baseline and every later one with the steady reading.
+            let (baseline, steady) = self.bind_phase;
             let reading = if self.reads_in_phase == 0 {
                 baseline
             } else {
@@ -770,11 +702,6 @@ mod tests {
         async fn send_probe(&mut self) {
             self.probes_sent += 1;
         }
-        async fn revert_to_route(&mut self) {
-            self.reverts += 1;
-            self.reverted = true;
-            self.reads_in_phase = 0;
-        }
     }
 
     #[tokio::test(start_paused = true)]
@@ -784,38 +711,24 @@ mod tests {
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 12, 6));
         let outcome = run_bootstrap_guard(&mut io).await;
         assert_eq!(outcome, GuardOutcome::BypassConfirmed);
-        assert_eq!(io.reverts, 0, "confirmed egress must never revert");
         assert!(io.probes_sent >= 2, "one burn probe plus decision probes");
     }
 
     #[tokio::test(start_paused = true)]
-    async fn guard_reverts_to_the_route_when_the_carrier_blackholes() {
+    async fn guard_records_the_blackhole_without_touching_the_live_session() {
         // Post-baseline tx climbs but not one send is acknowledged for the
-        // whole adaptive window: the blackhole shape. Revert exactly once, and
-        // report `RevertedToRoute` only because the escape then egresses.
-        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5))
-            .escape_heals(reading(1, 400, 5), reading(1, 420, 9));
+        // whole adaptive window: the blackhole shape. The guard reports it and
+        // stops. It must NOT install the `/32` on top of the live `0/0`
+        // redirect nor rebind the socket underneath the session: forum topic
+        // 138 proved that patch is itself the outage, while the same escape
+        // pre-installed at the next connect carries full-size datagrams.
+        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
         let outcome = run_bootstrap_guard(&mut io).await;
-        assert_eq!(outcome, GuardOutcome::RevertedToRoute);
-        assert_eq!(io.reverts, 1, "a detected blackhole reverts exactly once");
+        assert_eq!(outcome, GuardOutcome::BindBlackholed);
         assert!(
             io.probes_sent >= 2,
             "the guard must actively probe so tx can climb"
         );
-    }
-
-    #[tokio::test(start_paused = true)]
-    async fn guard_reports_the_escape_dead_when_the_revert_heals_nothing() {
-        // The bind black-holes AND the `<carrier_ip>/32` escape carries just as
-        // little. Recording `RouteOnly` here would pin a dead configuration for
-        // a week and disarm this guard on every later connect, which is how a
-        // beta host sat "Connected" with zero egress across eleven reconnects
-        // and three exits (forum topic 125, 2026-08-12). The revert stays (it
-        // is the safer of two dead configurations) but the outcome must say so.
-        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
-        let outcome = run_bootstrap_guard(&mut io).await;
-        assert_eq!(outcome, GuardOutcome::EscapeAlsoDead);
-        assert_eq!(io.reverts, 1, "the escape is installed, once, and verified");
     }
 
     #[tokio::test(start_paused = true)]
@@ -825,7 +738,6 @@ mod tests {
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 400, 5));
         let outcome = run_escape_verify_guard(&mut io).await;
         assert_eq!(outcome, GuardOutcome::EscapeAlsoDead);
-        assert_eq!(io.reverts, 0, "there is no bind to revert on this path");
     }
 
     #[tokio::test(start_paused = true)]
@@ -835,7 +747,6 @@ mod tests {
         let mut io = MockIo::new(reading(1, 10, 5), reading(1, 14, 7));
         let outcome = run_escape_verify_guard(&mut io).await;
         assert_eq!(outcome, GuardOutcome::RevertedToRoute);
-        assert_eq!(io.reverts, 0);
     }
 
     #[tokio::test(start_paused = true)]
@@ -856,11 +767,9 @@ mod tests {
         // burn interval, so they are already inside the baseline and must not
         // confirm; with the ack counter frozen after the baseline and sends
         // climbing, the guard must still detect the blackhole and revert.
-        let mut io = MockIo::new(reading(1, 10, 9), reading(1, 400, 9))
-            .escape_heals(reading(1, 400, 9), reading(1, 420, 13));
+        let mut io = MockIo::new(reading(1, 10, 9), reading(1, 400, 9));
         let outcome = run_bootstrap_guard(&mut io).await;
-        assert_eq!(outcome, GuardOutcome::RevertedToRoute);
-        assert_eq!(io.reverts, 1);
+        assert_eq!(outcome, GuardOutcome::BindBlackholed);
     }
 
     #[tokio::test(start_paused = true)]
@@ -870,6 +779,5 @@ mod tests {
         let mut io = MockIo::new(EgressReading::default(), EgressReading::default());
         let outcome = run_bootstrap_guard(&mut io).await;
         assert_eq!(outcome, GuardOutcome::Inconclusive);
-        assert_eq!(io.reverts, 0, "no blackhole evidence must not revert");
     }
 }

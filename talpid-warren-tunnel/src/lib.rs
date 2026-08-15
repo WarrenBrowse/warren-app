@@ -1864,9 +1864,6 @@ impl WarrenTunnelMonitor {
                 |verify_only: bool, recorder: carrier_verdict_cache::VerdictRecorder| {
                     let mut guard_io = carrier_egress_guard::RealEgressGuardIo {
                         client_rx: client_rx.clone(),
-                        route_manager: args.route_manager.clone(),
-                        carrier_ips: vec![relay_endpoint.ip()],
-                        tun_iface: metadata.interface.clone(),
                     };
                     let carrier_interface = carrier_interface.clone();
                     runtime.spawn(async move {
