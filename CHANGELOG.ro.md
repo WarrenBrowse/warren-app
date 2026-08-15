@@ -16,6 +16,14 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [1.1.16] - 2026-08-15
 ### Reparat
+- [macOS] Nu mai lasă un computer fără rezolvare de nume după o deconectare. Când rula un alt VPN,
+  aplicația putea înregistra adresa rezolverului privat al acelui VPN ca setare DNS originală a
+  computerului, apoi o restabilea la deconectare. Acea adresă moare odată cu programul care o
+  deținea, iar setarea în care era scrisă este o configurație de utilizator permanentă pe care
+  nicio schimbare de rețea și nicio repornire nu o rescrie, așa că computerul rămânea îndreptat
+  spre nimic până la o reconfigurare manuală a DNS-ului. Aplicația recunoaște acum o astfel de
+  adresă ca fiind suprascrierea unui VPN, nu o mai înregistrează niciodată ca setare originală și
+  o șterge pe cea rămasă, indiferent ce program a lăsat-o.
 - [macOS] Nu mai întrerupe o conexiune care funcționează, la o secundă și jumătate după ce se
   stabilește. Aplicația verifică dacă traficul poate ieși din computer prin interfața de rețea pe
   care a ales-o, iar acea verificare număra pachete la care celălalt capăt nu poate răspunde

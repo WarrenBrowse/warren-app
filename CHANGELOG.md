@@ -26,6 +26,13 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [1.1.16] - 2026-08-15
 ### Fixed
+- [macOS] Stop leaving a computer with no name resolution after a disconnect. When another VPN was
+  running, the app could record that VPN's private resolver address as the computer's original DNS
+  setting, then restore it on disconnect. That address dies with the program that owned it, and the
+  setting it was written into is permanent user configuration that no network change or reboot ever
+  rewrites, so the computer was left pointing at nothing until someone reconfigured DNS by hand. The
+  app now recognises such an address as a VPN's own override, never records it as an original, and
+  clears any stale one it finds, whichever program left it.
 - [macOS] Stop cutting a working connection a second and a half after it comes up. The app checks
   that traffic can leave the computer through the network interface it picked, and that check
   counted packets which the other end can never answer, so it declared healthy connections dead. It

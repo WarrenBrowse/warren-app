@@ -17,6 +17,15 @@ par l'application, gardez-le tel quel.
 
 ## [1.1.16] - 2026-08-15
 ### Corrigé
+- [macOS] Ne plus laisser un ordinateur sans résolution de noms après une déconnexion. Quand un
+  autre VPN tournait, l'application pouvait enregistrer l'adresse du résolveur privé de ce VPN comme
+  le réglage DNS d'origine de l'ordinateur, puis le restaurer à la déconnexion. Cette adresse meurt
+  avec le programme qui la détenait, et le réglage dans lequel elle était écrite est une
+  configuration utilisateur permanente qu'aucun changement de réseau ni redémarrage ne réécrit,
+  si bien que l'ordinateur pointait vers le vide jusqu'à une reconfiguration manuelle du DNS.
+  L'application reconnaît désormais une telle adresse comme la surcharge d'un VPN, ne l'enregistre
+  jamais comme un réglage d'origine, et efface celles qu'elle trouve, quel que soit le programme
+  qui les a laissées.
 - [macOS] Ne plus couper une connexion qui fonctionne, une seconde et demie après son
   établissement. L'application vérifie que le trafic peut sortir de l'ordinateur par l'interface
   réseau qu'elle a choisie, et ce contrôle comptait des paquets auxquels l'autre bout ne peut jamais
