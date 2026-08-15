@@ -28,7 +28,7 @@ use crate::warren_query_from_settings::relay_settings_to_warren_query;
 use crate::warren_relay_list_view::country_centroid_for;
 use crate::warren_relay_selector::DaemonWarrenRelaySelector;
 use crate::warren_sdk_client::SharedWarrenSeed;
-use crate::warren_status::WarrenStatusCache;
+use crate::warren_status::{NatPmpRequestOrigin, WarrenStatusCache};
 use crate::warren_tunnel_params::{self, AssembleError};
 
 #[derive(thiserror::Error, Debug)]
@@ -1369,9 +1369,15 @@ impl ParametersGenerator {
         // request_map happen asynchronously after the watch push,
         // so without this pre-set the UI briefly shows the stale
         // `disabled` cache value).
+        //
+        // `NewTunnel` because this runs once per tunnel epoch: whatever
+        // grant the previous tunnel held died with its session on the
+        // exit, so every rule waits for this tunnel's own answer.
         if let Some(cfg) = params.nat_pmp.as_ref().filter(|cfg| cfg.enabled) {
             let ids: Vec<_> = cfg.effective_rules().iter().map(|r| r.id()).collect();
-            inner.warren_status_cache.set_nat_pmp_requesting(&ids);
+            inner
+                .warren_status_cache
+                .set_nat_pmp_requesting(&ids, NatPmpRequestOrigin::NewTunnel);
         }
         // Cache the selected exit's geo so `get_last_location` can
         // surface it on the connecting / connected tunnel state.

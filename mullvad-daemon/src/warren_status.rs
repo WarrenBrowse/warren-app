@@ -89,6 +89,23 @@ pub struct NatPmpMappingSnapshot {
     pub state: NatPmpStateSnapshot,
 }
 
+/// Why the daemon is reconciling the NAT-PMP rule list, which decides
+/// what a rule already in `Mapped` becomes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NatPmpRequestOrigin {
+    /// The user edited the port-forwarding settings on a live tunnel.
+    /// A rule that is already `Mapped` keeps its grant: the exit still
+    /// holds it, and flipping it to `Requesting` because an unrelated
+    /// rule moved shows the UI a flicker that describes nothing.
+    SettingsChanged,
+    /// A tunnel is starting, so every rule is being requested again.
+    /// The exit allocates per session and never carries a mapping over,
+    /// so a `Mapped` left from the previous tunnel names a public port
+    /// that now forwards nowhere; only the new tunnel's own grant may
+    /// put a rule back into `Mapped`.
+    NewTunnel,
+}
+
 /// Forensic payload pushed to the UI when the
 /// TOFU verify hook refuses a connect. All fields are operator
 /// metadata (`exit_id` and the Ed25519 pubkeys are public via the
@@ -555,12 +572,13 @@ impl WarrenStatusCache {
     }
 
     /// Reconcile the NAT-PMP mapping list against the rules the user now
-    /// wants active: drop mappings whose rule disappeared, and pre-set
-    /// any newly-added rule to `Requesting` so the UI reflects the
+    /// wants active: drop mappings whose rule disappeared, and set any
+    /// rule with no live state to `Requesting` so the UI reflects the
     /// in-flight state immediately (before the manager's first event).
-    /// Existing mappings (e.g. already `Mapped`) keep their state to
-    /// avoid a flicker when an unrelated rule changes.
-    pub fn set_nat_pmp_requesting(&self, rules: &[NatPmpRuleId]) {
+    ///
+    /// What happens to a rule that is already `Mapped` depends on
+    /// `origin`; see [`NatPmpRequestOrigin`].
+    pub fn set_nat_pmp_requesting(&self, rules: &[NatPmpRuleId], origin: NatPmpRequestOrigin) {
         let snapshot = {
             let mut inner = self
                 .state
@@ -569,10 +587,17 @@ impl WarrenStatusCache {
             let wanted: std::collections::HashSet<NatPmpRuleId> = rules.iter().copied().collect();
             inner.nat_pmp.retain(|id, _| wanted.contains(id));
             for id in rules {
-                inner
-                    .nat_pmp
-                    .entry(*id)
-                    .or_insert(NatPmpStateSnapshot::Requesting);
+                match origin {
+                    NatPmpRequestOrigin::SettingsChanged => {
+                        inner
+                            .nat_pmp
+                            .entry(*id)
+                            .or_insert(NatPmpStateSnapshot::Requesting);
+                    }
+                    NatPmpRequestOrigin::NewTunnel => {
+                        inner.nat_pmp.insert(*id, NatPmpStateSnapshot::Requesting);
+                    }
+                }
             }
             Self::snapshot_of(&inner)
         };
@@ -1226,7 +1251,7 @@ mod tests {
     #[test]
     fn set_nat_pmp_requesting_then_mapped_round_trip() {
         let cache = WarrenStatusCache::new();
-        cache.set_nat_pmp_requesting(&[rule(22)]);
+        cache.set_nat_pmp_requesting(&[rule(22)], NatPmpRequestOrigin::SettingsChanged);
         assert_eq!(only_state(&cache), NatPmpStateSnapshot::Requesting);
         cache.record_nat_pmp_event(
             rule(22),
@@ -1260,7 +1285,7 @@ mod tests {
             },
         );
         // Reconcile to a set that drops rule 22 and adds rule 8080.
-        cache.set_nat_pmp_requesting(&[rule(8080)]);
+        cache.set_nat_pmp_requesting(&[rule(8080)], NatPmpRequestOrigin::SettingsChanged);
         let mappings = cache.snapshot().nat_pmp_mappings;
         assert_eq!(mappings.len(), 1);
         assert_eq!(mappings[0].internal_port, 8080);
@@ -1280,11 +1305,30 @@ mod tests {
             },
         );
         // Re-asserting the same rule set must NOT flip 22 back to Requesting.
-        cache.set_nat_pmp_requesting(&[rule(22)]);
+        cache.set_nat_pmp_requesting(&[rule(22)], NatPmpRequestOrigin::SettingsChanged);
         assert!(matches!(
             only_state(&cache),
             NatPmpStateSnapshot::Mapped { .. }
         ));
+    }
+
+    #[test]
+    fn set_nat_pmp_requesting_on_a_new_tunnel_drops_a_stale_mapped() {
+        let cache = WarrenStatusCache::new();
+        cache.record_nat_pmp_event(
+            rule(22),
+            NatPmpEvent::Mapped {
+                external_port: 60000,
+                lifetime_secs: 60,
+                attempts_remaining: Some(5),
+                window_reset_secs: 0,
+            },
+        );
+        // The exit allocates per session, so the previous tunnel's grant is
+        // gone whatever the client last heard: the new tunnel's own answer
+        // is the only thing that may put the rule back into `Mapped`.
+        cache.set_nat_pmp_requesting(&[rule(22)], NatPmpRequestOrigin::NewTunnel);
+        assert_eq!(only_state(&cache), NatPmpStateSnapshot::Requesting);
     }
 
     #[test]

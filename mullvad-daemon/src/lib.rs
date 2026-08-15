@@ -4327,8 +4327,10 @@ impl Daemon {
             // The eventual `Mapped` / `Failed` event from the manager
             // (when on) overrides this pre-set value.
             if new_value_for_gen.enabled {
-                self.warren_status_cache
-                    .set_nat_pmp_requesting(&nat_pmp_rule_ids);
+                self.warren_status_cache.set_nat_pmp_requesting(
+                    &nat_pmp_rule_ids,
+                    crate::warren_status::NatPmpRequestOrigin::SettingsChanged,
+                );
             } else {
                 self.warren_status_cache.set_nat_pmp_disabled();
             }
