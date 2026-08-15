@@ -98,11 +98,11 @@ pub enum NatPmpRequestOrigin {
     /// holds it, and flipping it to `Requesting` because an unrelated
     /// rule moved shows the UI a flicker that describes nothing.
     SettingsChanged,
-    /// A tunnel is starting, so every rule is being requested again.
-    /// The exit allocates per session and never carries a mapping over,
-    /// so a `Mapped` left from the previous tunnel names a public port
-    /// that now forwards nowhere; only the new tunnel's own grant may
-    /// put a rule back into `Mapped`.
+    /// A tunnel is starting, so every rule is being requested again. A
+    /// grant the previous tunnel held is unverifiable from here: the
+    /// session is new, and usually the exit and the assigned inner
+    /// address are too. Only this tunnel's own answer may put a rule
+    /// back into `Mapped`.
     NewTunnel,
 }
 

@@ -1370,9 +1370,10 @@ impl ParametersGenerator {
         // so without this pre-set the UI briefly shows the stale
         // `disabled` cache value).
         //
-        // `NewTunnel` because this runs once per tunnel epoch: whatever
-        // grant the previous tunnel held died with its session on the
-        // exit, so every rule waits for this tunnel's own answer.
+        // `NewTunnel` because this runs once per tunnel epoch: no grant
+        // from the previous tunnel is verifiable here (new session,
+        // usually a new exit and a new inner address), so every rule
+        // waits for this tunnel's own answer.
         if let Some(cfg) = params.nat_pmp.as_ref().filter(|cfg| cfg.enabled) {
             let ids: Vec<_> = cfg.effective_rules().iter().map(|r| r.id()).collect();
             inner
