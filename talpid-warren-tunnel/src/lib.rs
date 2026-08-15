@@ -4712,4 +4712,95 @@ mod tests {
 
         handle.abort();
     }
+
+    #[tokio::test]
+    async fn controller_reports_exactly_one_cancelled_for_a_removed_rule() {
+        // Removing a rule is the one path where the controller reports the
+        // teardown itself, and the manager it releases stays silent because
+        // the release cleared its live flag. Both halves are load-bearing and
+        // neither is local to one function: with no event the daemon keeps a
+        // dead public port in `port-forward status`, with two the second one
+        // deletes whatever row the rule holds by then.
+        let server = spawn_lifetime_echo_stub().await;
+        let (observer, log) = collector_observer();
+        let mut cfg = natpmp_cfg(60);
+        cfg.rules = vec![
+            NatPmpRule {
+                protocol: NatPmpProto::Udp,
+                suggested_external_port: 0,
+                internal_port: 22,
+                sticky_suggestion: false,
+            },
+            NatPmpRule {
+                protocol: NatPmpProto::Udp,
+                suggested_external_port: 0,
+                internal_port: 23,
+                sticky_suggestion: false,
+            },
+        ];
+        let doomed = cfg.rules[1].id();
+        let (tx, rx) = tokio::sync::watch::channel(Some(cfg.clone()));
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            Some(cfg.clone()),
+            rx,
+            None,
+        ));
+
+        // Removing a rule that never mapped would prove nothing, so wait for
+        // the doomed one to be live first.
+        for _ in 0..100 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|(id, e)| *id == doomed && matches!(e, NatPmpEvent::Mapped { .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        assert!(
+            log.lock()
+                .unwrap()
+                .iter()
+                .any(|(id, e)| *id == doomed && matches!(e, NatPmpEvent::Mapped { .. })),
+            "the removed rule never mapped; the stub never answered it"
+        );
+
+        let mut smaller = cfg.clone();
+        smaller.rules.truncate(1);
+        tx.send(Some(smaller)).expect("watch send");
+
+        for _ in 0..100 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|(id, e)| *id == doomed && matches!(e, NatPmpEvent::Cancelled))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        // Let a duplicate land before counting: a second report would come
+        // from the manager's own drop, one poll after the release returns.
+        tokio::time::sleep(Duration::from_millis(100)).await;
+        let snapshot = log.lock().unwrap().clone();
+        handle.abort();
+
+        let cancelled = snapshot
+            .iter()
+            .filter(|(id, e)| *id == doomed && matches!(e, NatPmpEvent::Cancelled))
+            .count();
+        assert_eq!(
+            cancelled, 1,
+            "a removed rule must report its teardown exactly once; events: {snapshot:?}"
+        );
+    }
 }
