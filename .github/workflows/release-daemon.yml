@@ -173,25 +173,29 @@ jobs:
         # rpm is preinstalled on the runner; cargo-deb / cargo-generate-rpm are
         # NOT (the GUI release.sh packages via electron-builder, not cargo-deb),
         # so the daemon-only path must install them itself (user-level, no sudo).
+        #
+        # Through the retry wrapper because these two `cargo install` calls
+        # compile Rust under Rosetta exactly like the build below, and so hit
+        # the same jobserver wedge: beta-v1.1.17 lost its first attempt here,
+        # 18 minutes at 0 % CPU until the zombie watchdog SIGKILLed cargo
+        # (`zwatch: WEDGE ... 17 stale zombies, cpu 0.37%`), which the step saw
+        # as a bare 137 with no retry and no signature in the log. The wrapper
+        # classifies 124/137 as a wedge and retries; `timeout` bounds it at 15
+        # minutes so a wedge costs that instead of the watchdog's own delay.
         run: |
           rpm --version
-          cargo deb --version          >/dev/null 2>&1 || cargo install cargo-deb --locked
-          cargo generate-rpm --version >/dev/null 2>&1 || cargo install cargo-generate-rpm --locked
+          cargo deb --version >/dev/null 2>&1 \
+            || bash ci/run-with-runner-retry.sh timeout -k 60s 15m cargo install cargo-deb --locked
+          cargo generate-rpm --version >/dev/null 2>&1 \
+            || bash ci/run-with-runner-retry.sh timeout -k 60s 15m cargo install cargo-generate-rpm --locked
       - name: Build daemon-only packages
-        # Retry on the Rosetta compiler-crash signature (not a real build error).
-        # pipefail so a real build.sh failure fails the step (without it the pipe
-        # returns tee's exit code and masks the error).
-        run: |
-          set -o pipefail
-          for attempt in 1 2 3; do
-            if ./build.sh --daemon-only --optimize 2>&1 | tee /tmp/build-daemon.log; then exit 0; fi
-            if grep -qE "SIGSEGV|signal: 11|signal: 4|signal: 6|Illegal instruction|internal compiler error: Segmentation" /tmp/build-daemon.log; then
-              echo "::warning::compiler crashed under Rosetta (attempt $attempt/3); retrying"
-              continue
-            fi
-            exit 1
-          done
-          exit 1
+        # Through the same wrapper as every other Rosetta build step. Its
+        # classifier covers the crash signature this step used to grep for by
+        # hand AND the wedge that leaves no signature at all (124/137), which
+        # the hand-rolled loop could not see; it is unit-tested, the loop was
+        # not. `timeout` so a wedge is bounded by us rather than by the
+        # watchdog.
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 40m ./build.sh --daemon-only --optimize
       - name: Collect artifacts
         run: |
           mkdir -p release-assets
