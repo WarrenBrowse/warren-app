@@ -503,5 +503,7 @@
     <string name="forum_login_result_approved">ลงชื่อเข้าใช้ฟอรัม Warren แล้ว</string>
     <string name="forum_login_result_subscription_required">การเข้าถึงฟอรัมต้องมีการสมัครสมาชิก Warren กระเป๋าเงินนี้ไม่เคยสมัครสมาชิกมาก่อน</string>
     <string name="forum_login_result_wallet_not_ready">ตั้งค่ากระเป๋าเงิน Warren ของคุณก่อน</string>
+    <string name="forum_login_result_clock_skew">การลงชื่อเข้าใช้ถูกปฏิเสธ นาฬิกาของอุปกรณ์นี้คลาดเคลื่อนเกินหนึ่งนาที เปิดใช้วันที่และเวลาอัตโนมัติ แล้วลองอีกครั้ง</string>
+    <string name="forum_login_result_expired">คำขอลงชื่อเข้าใช้นี้หมดอายุแล้ว เริ่มใหม่จากหน้าเบราว์เซอร์</string>
     <string name="forum_login_result_failure">เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่</string>
 </resources>

@@ -506,5 +506,7 @@
     <string name="forum_login_result_approved">Sesión iniciada en el foro de Warren.</string>
     <string name="forum_login_result_subscription_required">El acceso al foro requiere una suscripción a Warren. Este monedero nunca se ha suscrito.</string>
     <string name="forum_login_result_wallet_not_ready">Configura primero tu monedero de Warren.</string>
+    <string name="forum_login_result_clock_skew">Inicio de sesión rechazado: el reloj de este dispositivo está desfasado más de un minuto. Activa la fecha y hora automáticas y vuelve a intentarlo.</string>
+    <string name="forum_login_result_expired">Esta solicitud de inicio de sesión ha caducado. Vuelve a empezar desde la página del navegador.</string>
     <string name="forum_login_result_failure">Error al iniciar sesión. Inténtalo de nuevo en un momento.</string>
 </resources>

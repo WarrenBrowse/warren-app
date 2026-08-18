@@ -22,6 +22,13 @@ sealed interface WarrenForumLoginOutcome {
     /** The wallet has never subscribed to Warren; forum access is refused. */
     data object SubscriptionRequired : WarrenForumLoginOutcome
 
+    /**
+     * The provider refused the signature because this device's clock is off by
+     * more than its accepted window. The one failure the user repairs
+     * themselves, so it must not collapse into the generic message.
+     */
+    data object ClockSkew : WarrenForumLoginOutcome
+
     /** No wallet on device: the user must set one up before signing in. */
     data object WalletNotReady : WarrenForumLoginOutcome
 
@@ -98,6 +105,7 @@ internal fun parseForumLoginOutcome(rawJson: String): WarrenForumLoginOutcome =
         } else {
             when (root["error"]?.jsonPrimitive?.content) {
                 "subscription-required" -> WarrenForumLoginOutcome.SubscriptionRequired
+                "clock-skew" -> WarrenForumLoginOutcome.ClockSkew
                 else -> WarrenForumLoginOutcome.Failure("sign-in failed")
             }
         }

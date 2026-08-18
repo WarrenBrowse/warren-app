@@ -518,5 +518,7 @@
     <string name="forum_login_result_approved">تم تسجيل الدخول إلى منتدى Warren.</string>
     <string name="forum_login_result_subscription_required">يتطلب الوصول إلى المنتدى اشتراكاً في Warren. لم تشترك هذه المحفظة قط.</string>
     <string name="forum_login_result_wallet_not_ready">أنشئ محفظة Warren الخاصة بك أولاً.</string>
+    <string name="forum_login_result_clock_skew">تعذّر تسجيل الدخول: ساعة هذا الجهاز منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين ثم حاول مجددًا.</string>
+    <string name="forum_login_result_expired">انتهت صلاحية طلب تسجيل الدخول هذا. ابدأ من جديد من صفحة المتصفح.</string>
     <string name="forum_login_result_failure">فشل تسجيل الدخول. يُرجى المحاولة مرة أخرى بعد قليل.</string>
 </resources>

@@ -506,5 +506,7 @@
     <string name="forum_login_result_approved">به انجمن Warren وارد شدید.</string>
     <string name="forum_login_result_subscription_required">دسترسی به انجمن نیازمند اشتراک Warren است. این کیف پول هرگز اشتراک نداشته است.</string>
     <string name="forum_login_result_wallet_not_ready">ابتدا کیف پول Warren خود را بسازید.</string>
+    <string name="forum_login_result_clock_skew">ورود رد شد: ساعت این دستگاه بیش از یک دقیقه خطا دارد. تاریخ و ساعت خودکار را فعال کنید و دوباره تلاش کنید.</string>
+    <string name="forum_login_result_expired">این درخواست ورود منقضی شده است. از صفحه مرورگر دوباره شروع کنید.</string>
     <string name="forum_login_result_failure">ورود ناموفق بود. لطفاً کمی بعد دوباره تلاش کنید.</string>
 </resources>

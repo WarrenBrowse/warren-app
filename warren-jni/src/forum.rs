@@ -8,7 +8,7 @@
 
 pub use warren_forum::{
     ForumLoginOutcome, ForumRequestError, SignedForumRequest, build_cancel_url, envelope,
-    is_allowed_connect_host, is_valid_sid, outcome_for_status,
+    is_allowed_connect_host, is_valid_sid, outcome_for_response,
 };
 
 /// Build the signed forum-login request for `sid` against `host`, deriving the

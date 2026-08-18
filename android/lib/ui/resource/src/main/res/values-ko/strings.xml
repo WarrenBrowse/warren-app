@@ -503,5 +503,7 @@
     <string name="forum_login_result_approved">Warren 포럼에 로그인했습니다.</string>
     <string name="forum_login_result_subscription_required">포럼을 이용하려면 Warren 구독이 필요합니다. 이 지갑은 구독한 적이 없습니다.</string>
     <string name="forum_login_result_wallet_not_ready">먼저 Warren 지갑을 설정하세요.</string>
+    <string name="forum_login_result_clock_skew">로그인이 거부되었습니다. 이 기기의 시계가 1분 이상 어긋나 있습니다. 날짜 및 시간 자동 설정을 켜고 다시 시도하세요.</string>
+    <string name="forum_login_result_expired">이 로그인 요청이 만료되었습니다. 브라우저 페이지에서 다시 시작하세요.</string>
     <string name="forum_login_result_failure">로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.</string>
 </resources>

@@ -415,7 +415,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequ
 /// other signed JNI call). `host` is checked against a hard allowlist so a
 /// hostile deep link cannot redirect the signed request. Returns `{"ok":true}`
 /// on acceptance, `{"ok":false,"error":"subscription-required"}` when the wallet
-/// has never subscribed (HTTP 403), or `{"ok":false,"error":"error"}`. The
+/// has never subscribed (HTTP 403), `{"ok":false,"error":"clock-skew"}` when the
+/// provider refused the signature for a device clock outside its accepted
+/// window, or `{"ok":false,"error":"error"}`. The
 /// mnemonic, sid, signature and nonce are never logged.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLogin<'local>(
@@ -465,7 +467,7 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> crate::forum::ForumLogi
         use_sni: true,
     };
     match runtime.block_on(ReqwestTransport::new().execute(request)) {
-        Ok(response) => crate::forum::outcome_for_status(response.status),
+        Ok(response) => crate::forum::outcome_for_response(response.status, &response.body),
         Err(_) => {
             log::warn!("forumLogin: transport error");
             ForumLoginOutcome::Failed
@@ -477,7 +479,7 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> crate::forum::ForumLogi
 /// (`POST /v1/session/<sid>/cancel`) so the waiting browser page unblocks
 /// instead of polling to timeout. Unsigned (no wallet material); mirrors the
 /// desktop `cancelForumLogin`. Failures are ignored: the server session expires
-/// on its own in 10 minutes.
+/// on its own in 5 minutes.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLoginCancel<'local>(
     env: JNIEnv<'local>,

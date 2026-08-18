@@ -506,5 +506,7 @@
     <string name="forum_login_result_approved">Logget ind på Warren-forummet.</string>
     <string name="forum_login_result_subscription_required">Adgang til forummet kræver et Warren-abonnement. Denne wallet har aldrig haft et abonnement.</string>
     <string name="forum_login_result_wallet_not_ready">Opret din Warren-tegnebog først.</string>
+    <string name="forum_login_result_clock_skew">Login afvist: enhedens ur er mere end et minut forkert. Slå automatisk dato og tid til, og prøv igen.</string>
+    <string name="forum_login_result_expired">Denne loginanmodning er udløbet. Start forfra fra browsersiden.</string>
     <string name="forum_login_result_failure">Login mislykkedes. Prøv igen om et øjeblik.</string>
 </resources>

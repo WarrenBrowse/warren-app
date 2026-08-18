@@ -506,5 +506,7 @@
     <string name="forum_login_result_approved">Connecté au forum Warren.</string>
     <string name="forum_login_result_subscription_required">L\'accès au forum nécessite un abonnement Warren. Ce portefeuille n\'a jamais souscrit.</string>
     <string name="forum_login_result_wallet_not_ready">Configurez d\'abord votre portefeuille Warren.</string>
+    <string name="forum_login_result_clock_skew">Connexion refusée : l\'horloge de cet appareil est décalée de plus d\'une minute. Activez la date et l\'heure automatiques, puis réessayez.</string>
+    <string name="forum_login_result_expired">Cette demande de connexion a expiré. Recommencez depuis la page du navigateur.</string>
     <string name="forum_login_result_failure">Échec de la connexion. Veuillez réessayer dans un instant.</string>
 </resources>

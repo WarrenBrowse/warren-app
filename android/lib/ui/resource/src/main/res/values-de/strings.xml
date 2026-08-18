@@ -506,5 +506,7 @@
     <string name="forum_login_result_approved">Im Warren-Forum angemeldet.</string>
     <string name="forum_login_result_subscription_required">Der Forumzugang erfordert ein Warren-Abo. Dieses Wallet hatte noch nie ein Abo.</string>
     <string name="forum_login_result_wallet_not_ready">Richte zuerst deine Warren-Wallet ein.</string>
+    <string name="forum_login_result_clock_skew">Anmeldung abgelehnt: Die Uhr dieses Geräts geht um mehr als eine Minute falsch. Aktivieren Sie die automatische Datums- und Uhrzeiteinstellung und versuchen Sie es erneut.</string>
+    <string name="forum_login_result_expired">Diese Anmeldeanfrage ist abgelaufen. Beginnen Sie erneut auf der Browserseite.</string>
     <string name="forum_login_result_failure">Anmeldung fehlgeschlagen. Bitte versuche es gleich noch einmal.</string>
 </resources>

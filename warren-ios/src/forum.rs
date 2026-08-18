@@ -12,7 +12,7 @@ pub use warren_forum::{ForumRequestError, SignedForumRequest};
 // validators are not re-exported: the shared builders already validate
 // internally and no iOS caller consumes them directly.
 #[cfg(target_os = "ios")]
-pub use warren_forum::{ForumLoginOutcome, build_cancel_url, envelope, outcome_for_status};
+pub use warren_forum::{ForumLoginOutcome, build_cancel_url, envelope, outcome_for_response};
 use warren_identity::WarrenIdentity;
 
 /// Build the signed forum-login request for `sid` against `host`, signing with

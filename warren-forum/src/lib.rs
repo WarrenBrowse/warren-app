@@ -116,34 +116,48 @@ pub fn build_signed_request(
     })
 }
 
-/// Coarse outcome of a forum-login attempt, matching the desktop's three
-/// results. Kotlin / Swift map [`Self::SubscriptionRequired`] to a "subscription
-/// required" message and everything else to a generic failure.
+/// Coarse outcome of a forum-login attempt. Kotlin / Swift map
+/// [`Self::SubscriptionRequired`] and [`Self::ClockSkew`] to their own messages
+/// and everything else to a generic failure.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ForumLoginOutcome {
     /// The provider accepted the signature (the browser completes the login).
     Approved,
     /// The wallet has never subscribed to Warren; forum access is refused (403).
     SubscriptionRequired,
+    /// The device clock is outside the provider's accepted window, so the
+    /// signature was refused (401 + connect's `clock_skew` token). The one
+    /// failure the user can repair themselves.
+    ClockSkew,
     /// Any other failure (bad request, provider error, transport error).
     Failed,
 }
 
-/// Map an HTTP status to the outcome: 2xx approved, 403 subscription-required,
-/// anything else failed. Byte-for-byte the contract the desktop
-/// `approveForumLogin` uses.
+/// Connect's machine-readable 401 body for a clock outside the window. Frozen
+/// wire detail: warren-connect pins the same bytes in its sso_flow test.
+const CLOCK_SKEW_BODY_TOKEN: &[u8] = br#""error":"clock_skew""#;
+
+/// Map an HTTP response to the outcome: 2xx approved, 403
+/// subscription-required, 401 carrying connect's `clock_skew` token a clock
+/// skew, anything else failed.
 #[must_use]
-pub fn outcome_for_status(status: u16) -> ForumLoginOutcome {
+pub fn outcome_for_response(status: u16, body: &[u8]) -> ForumLoginOutcome {
     match status {
         200..=299 => ForumLoginOutcome::Approved,
         403 => ForumLoginOutcome::SubscriptionRequired,
+        401 if body
+            .windows(CLOCK_SKEW_BODY_TOKEN.len())
+            .any(|w| w == CLOCK_SKEW_BODY_TOKEN) =>
+        {
+            ForumLoginOutcome::ClockSkew
+        }
         _ => ForumLoginOutcome::Failed,
     }
 }
 
 /// The JSON envelope returned across the FFI for `outcome`. A fixed string (no
-/// serde) so both platforms decode the same three shapes; never carries any
-/// request context.
+/// serde) so both platforms decode the same shapes; never carries any request
+/// context.
 #[must_use]
 pub fn envelope(outcome: ForumLoginOutcome) -> &'static str {
     match outcome {
@@ -151,6 +165,7 @@ pub fn envelope(outcome: ForumLoginOutcome) -> &'static str {
         ForumLoginOutcome::SubscriptionRequired => {
             r#"{"ok":false,"error":"subscription-required"}"#
         }
+        ForumLoginOutcome::ClockSkew => r#"{"ok":false,"error":"clock-skew"}"#,
         ForumLoginOutcome::Failed => r#"{"ok":false,"error":"error"}"#,
     }
 }
@@ -274,14 +289,40 @@ mod tests {
 
     #[test]
     fn status_maps_to_the_desktop_outcomes() {
-        assert_eq!(outcome_for_status(200), ForumLoginOutcome::Approved);
-        assert_eq!(outcome_for_status(204), ForumLoginOutcome::Approved);
+        assert_eq!(outcome_for_response(200, b""), ForumLoginOutcome::Approved);
+        assert_eq!(outcome_for_response(204, b""), ForumLoginOutcome::Approved);
         assert_eq!(
-            outcome_for_status(403),
+            outcome_for_response(403, b""),
             ForumLoginOutcome::SubscriptionRequired
         );
-        assert_eq!(outcome_for_status(401), ForumLoginOutcome::Failed);
-        assert_eq!(outcome_for_status(500), ForumLoginOutcome::Failed);
+        assert_eq!(outcome_for_response(401, b""), ForumLoginOutcome::Failed);
+        assert_eq!(outcome_for_response(500, b""), ForumLoginOutcome::Failed);
+    }
+
+    #[test]
+    fn a_401_carrying_the_clock_token_is_a_clock_skew() {
+        // The one 401 the user can repair themselves: connect names it with a
+        // frozen JSON token (its sso_flow test pins the same bytes) so the app
+        // can say "fix your clock" instead of "try again in a moment", which
+        // was the dead end every 2026-08-18 reporter hit.
+        assert_eq!(
+            outcome_for_response(401, br#"{"error":"clock_skew"}"#),
+            ForumLoginOutcome::ClockSkew
+        );
+        // The token decides, not the 401: any other body stays generic.
+        assert_eq!(
+            outcome_for_response(401, b"timestamp outside accepted window"),
+            ForumLoginOutcome::Failed
+        );
+        // And the 401 decides too: the token on another status means nothing.
+        assert_eq!(
+            outcome_for_response(500, br#"{"error":"clock_skew"}"#),
+            ForumLoginOutcome::Failed
+        );
+        assert_eq!(
+            outcome_for_response(200, br#"{"error":"clock_skew"}"#),
+            ForumLoginOutcome::Approved
+        );
     }
 
     #[test]
@@ -290,6 +331,10 @@ mod tests {
         assert_eq!(
             envelope(ForumLoginOutcome::SubscriptionRequired),
             r#"{"ok":false,"error":"subscription-required"}"#
+        );
+        assert_eq!(
+            envelope(ForumLoginOutcome::ClockSkew),
+            r#"{"ok":false,"error":"clock-skew"}"#
         );
         assert_eq!(
             envelope(ForumLoginOutcome::Failed),

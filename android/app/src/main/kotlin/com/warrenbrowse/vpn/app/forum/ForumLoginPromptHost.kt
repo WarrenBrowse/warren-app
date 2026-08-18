@@ -33,7 +33,7 @@ import org.koin.compose.koinInject
  * here. Observes [ForumLoginController.pending]; when a `warren://forum-login`
  * link has been captured it shows the prompt, and on approval runs
  * [WarrenForumLoginUseCase] (which signs + POSTs in Rust). Declining just
- * dismisses the prompt (the server session expires on its own in 10 minutes).
+ * dismisses the prompt (the server session expires on its own in 5 minutes).
  *
  * A failure keeps the prompt open with the reason inline. Clearing it instead
  * discarded the captured link, so recovering from a transient failure meant
@@ -55,6 +55,8 @@ fun ForumLoginPromptHost() {
     val subscriptionRequiredMessage =
         stringResource(R.string.forum_login_result_subscription_required)
     val walletNotReadyMessage = stringResource(R.string.forum_login_result_wallet_not_ready)
+    val clockSkewMessage = stringResource(R.string.forum_login_result_clock_skew)
+    val expiredMessage = stringResource(R.string.forum_login_result_expired)
     val failureMessage = stringResource(R.string.forum_login_result_failure)
 
     // Declining notifies the provider so the waiting browser page unblocks
@@ -118,7 +120,11 @@ fun ForumLoginPromptHost() {
                         { WarrenCircularProgressIndicatorSmall() }
                     } else null,
                 onClick = {
-                    if (!busy) {
+                    if (!busy && controller.isStale()) {
+                        // The server session died while the prompt sat here;
+                        // signing now can only fail on a dead sid.
+                        failure = expiredMessage
+                    } else if (!busy) {
                         // Keep the request pending (dialog stays) until the call
                         // returns, so this composable does not leave composition
                         // and cancel the coroutine mid-flight.
@@ -138,13 +144,13 @@ fun ForumLoginPromptHost() {
                                 else -> {
                                     busy = false
                                     failure =
-                                        when (outcome) {
-                                            is WarrenForumLoginOutcome.SubscriptionRequired ->
-                                                subscriptionRequiredMessage
-                                            is WarrenForumLoginOutcome.WalletNotReady ->
-                                                walletNotReadyMessage
-                                            else -> failureMessage
-                                        }
+                                        failureMessageFor(
+                                            outcome = outcome,
+                                            subscriptionRequired = subscriptionRequiredMessage,
+                                            walletNotReady = walletNotReadyMessage,
+                                            clockSkew = clockSkewMessage,
+                                            generic = failureMessage,
+                                        )
                                 }
                             }
                         }
@@ -159,3 +165,18 @@ fun ForumLoginPromptHost() {
         },
     )
 }
+
+/** The inline error for a non-approved outcome; pure so it stays unit-mappable. */
+internal fun failureMessageFor(
+    outcome: WarrenForumLoginOutcome,
+    subscriptionRequired: String,
+    walletNotReady: String,
+    clockSkew: String,
+    generic: String,
+): String =
+    when (outcome) {
+        is WarrenForumLoginOutcome.SubscriptionRequired -> subscriptionRequired
+        is WarrenForumLoginOutcome.WalletNotReady -> walletNotReady
+        is WarrenForumLoginOutcome.ClockSkew -> clockSkew
+        else -> generic
+    }
