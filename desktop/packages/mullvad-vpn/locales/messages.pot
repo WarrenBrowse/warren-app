@@ -1631,6 +1631,10 @@ msgid "Sign-in failed. Please try again in a moment."
 msgstr ""
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr ""
+
+msgctxt "forum-login"
 msgid "Signing, please wait."
 msgstr ""
 
