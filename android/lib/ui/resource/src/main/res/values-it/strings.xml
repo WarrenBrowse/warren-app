@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Accesso al forum Warren eseguito.</string>
     <string name="forum_login_result_subscription_required">L\'accesso al forum richiede un abbonamento Warren. Questo portafoglio non ha mai sottoscritto un abbonamento.</string>
     <string name="forum_login_result_wallet_not_ready">Configura prima il tuo wallet Warren.</string>
-    <string name="forum_login_result_clock_skew">Accesso rifiutato: l\'orologio di questo dispositivo è sfasato di oltre un minuto. Attiva data e ora automatiche e riprova.</string>
+    <string name="forum_login_result_clock_skew">Accesso rifiutato: l\'orologio di questo dispositivo è sfasato di oltre un minuto. Attiva data e ora automatiche e ricomincia dalla pagina del browser.</string>
     <string name="forum_login_result_expired">Questa richiesta di accesso è scaduta. Ricomincia dalla pagina del browser.</string>
     <string name="forum_login_result_failure">Accesso non riuscito. Riprova tra un momento.</string>
 </resources>

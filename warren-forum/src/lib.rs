@@ -134,7 +134,8 @@ pub enum ForumLoginOutcome {
 }
 
 /// Connect's machine-readable 401 body for a clock outside the window. Frozen
-/// wire detail: warren-connect pins the same bytes in its sso_flow test.
+/// wire detail: warren-connect's sso_flow test asserts the exact response bytes
+/// `{"error":"clock_skew"}`, which is what this substring rides on.
 const CLOCK_SKEW_BODY_TOKEN: &[u8] = br#""error":"clock_skew""#;
 
 /// Map an HTTP response to the outcome: 2xx approved, 403
@@ -302,7 +303,7 @@ mod tests {
     #[test]
     fn a_401_carrying_the_clock_token_is_a_clock_skew() {
         // The one 401 the user can repair themselves: connect names it with a
-        // frozen JSON token (its sso_flow test pins the same bytes) so the app
+        // frozen JSON token (its sso_flow test pins the exact bytes) so the app
         // can say "fix your clock" instead of "try again in a moment", which
         // was the dead end every 2026-08-18 reporter hit.
         assert_eq!(

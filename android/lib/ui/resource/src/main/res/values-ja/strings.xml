@@ -503,7 +503,7 @@
     <string name="forum_login_result_approved">Warren フォーラムにサインインしました。</string>
     <string name="forum_login_result_subscription_required">フォーラムを利用するには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。</string>
     <string name="forum_login_result_wallet_not_ready">まず Warren ウォレットを設定してください。</string>
-    <string name="forum_login_result_clock_skew">サインインが拒否されました。この端末の時計が1分以上ずれています。日付と時刻の自動設定を有効にして、もう一度お試しください。</string>
+    <string name="forum_login_result_clock_skew">サインインが拒否されました。この端末の時計が1分以上ずれています。日付と時刻の自動設定を有効にして、ブラウザのページからやり直してください。</string>
     <string name="forum_login_result_expired">このサインイン要求は期限切れです。ブラウザのページからやり直してください。</string>
     <string name="forum_login_result_failure">サインインに失敗しました。しばらくしてからもう一度お試しください。</string>
 </resources>

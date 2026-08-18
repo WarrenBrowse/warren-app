@@ -503,7 +503,7 @@
     <string name="forum_login_result_approved">Warren ဖိုရမ်သို့ ဝင်ရောက်ပြီးပါပြီ။</string>
     <string name="forum_login_result_subscription_required">ဖိုရမ်ကို အသုံးပြုရန် Warren subscription လိုအပ်ပါသည်။ ဤပိုက်ဆံအိတ်သည် တစ်ခါမျှ subscription မဝယ်ယူဖူးပါ။</string>
     <string name="forum_login_result_wallet_not_ready">သင့် Warren ပိုက်ဆံအိတ်ကို ဦးစွာ ဖန်တီးပါ။</string>
-    <string name="forum_login_result_clock_skew">လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ထပ်စမ်းကြည့်ပါ။</string>
+    <string name="forum_login_result_clock_skew">လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။</string>
     <string name="forum_login_result_expired">ဤဝင်ရောက်မှုတောင်းဆိုချက် သက်တမ်းကုန်သွားပါပြီ။ ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။</string>
     <string name="forum_login_result_failure">ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ ခဏအကြာတွင် ထပ်မံကြိုးစားပါ။</string>
 </resources>

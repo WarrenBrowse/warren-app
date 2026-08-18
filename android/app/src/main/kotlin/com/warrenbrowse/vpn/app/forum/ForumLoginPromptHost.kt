@@ -50,6 +50,10 @@ fun ForumLoginPromptHost() {
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
     var failure by remember { mutableStateOf<String?>(null) }
+    // Set once the provider has closed the door on this sid (it cancels the
+    // session on a clock-skew or subscription refusal), so Approve is disarmed:
+    // a retry can only answer "unknown session" and land on the generic message.
+    var terminal by remember { mutableStateOf(false) }
 
     val approvedMessage = stringResource(R.string.forum_login_result_approved)
     val subscriptionRequiredMessage =
@@ -60,10 +64,11 @@ fun ForumLoginPromptHost() {
     val failureMessage = stringResource(R.string.forum_login_result_failure)
 
     // Declining notifies the provider so the waiting browser page unblocks
-    // (mirrors the desktop), then dismisses the prompt.
+    // (mirrors the desktop), then dismisses the prompt. After a terminal
+    // refusal the provider already knows; only the prompt is left to close.
     val onDecline = {
         if (!busy) {
-            useCase.cancel(link)
+            if (!terminal) useCase.cancel(link)
             controller.clear()
         }
     }
@@ -112,7 +117,7 @@ fun ForumLoginPromptHost() {
         confirmButton = {
             PrimaryButton(
                 text = stringResource(R.string.forum_login_approve),
-                isEnabled = !busy,
+                isEnabled = !busy && !terminal,
                 // Beside the label rather than in place of it: the action stays
                 // named while the signature is in flight.
                 leadingIcon =
@@ -143,6 +148,7 @@ fun ForumLoginPromptHost() {
                                 }
                                 else -> {
                                     busy = false
+                                    terminal = isTerminalOutcome(outcome)
                                     failure =
                                         failureMessageFor(
                                             outcome = outcome,
@@ -165,6 +171,14 @@ fun ForumLoginPromptHost() {
         },
     )
 }
+
+/**
+ * True when the provider has cancelled the session behind this outcome, so the
+ * same sid cannot be approved any more whatever the user changes on the device.
+ */
+internal fun isTerminalOutcome(outcome: WarrenForumLoginOutcome): Boolean =
+    outcome is WarrenForumLoginOutcome.ClockSkew ||
+        outcome is WarrenForumLoginOutcome.SubscriptionRequired
 
 /** The inline error for a non-approved outcome; pure so it stays unit-mappable. */
 internal fun failureMessageFor(

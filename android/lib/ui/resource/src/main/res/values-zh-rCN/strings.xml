@@ -503,7 +503,7 @@
     <string name="forum_login_result_approved">已登录 Warren 论坛。</string>
     <string name="forum_login_result_subscription_required">访问论坛需要 Warren 订阅。此钱包从未订阅过。</string>
     <string name="forum_login_result_wallet_not_ready">请先设置你的 Warren 钱包。</string>
-    <string name="forum_login_result_clock_skew">登录被拒绝：此设备的时钟偏差超过一分钟。请开启自动设置日期和时间，然后重试。</string>
+    <string name="forum_login_result_clock_skew">登录被拒绝：此设备的时钟偏差超过一分钟。请开启自动设置日期和时间，然后从浏览器页面重新开始。</string>
     <string name="forum_login_result_expired">此登录请求已过期。请从浏览器页面重新开始。</string>
     <string name="forum_login_result_failure">登录失败。请稍后重试。</string>
 </resources>

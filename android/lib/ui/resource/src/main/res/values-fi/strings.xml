@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Kirjauduttu Warren-foorumille.</string>
     <string name="forum_login_result_subscription_required">Foorumin käyttö edellyttää Warren-tilausta. Tällä lompakolla ei ole koskaan ollut tilausta.</string>
     <string name="forum_login_result_wallet_not_ready">Luo ensin Warren-lompakkosi.</string>
-    <string name="forum_login_result_clock_skew">Kirjautuminen hylättiin: laitteen kello on yli minuutin väärässä. Ota automaattinen päivämäärä ja aika käyttöön ja yritä uudelleen.</string>
+    <string name="forum_login_result_clock_skew">Kirjautuminen hylättiin: laitteen kello on yli minuutin väärässä. Ota automaattinen päivämäärä ja aika käyttöön ja aloita alusta selaimen sivulta.</string>
     <string name="forum_login_result_expired">Tämä kirjautumispyyntö on vanhentunut. Aloita alusta selaimen sivulta.</string>
     <string name="forum_login_result_failure">Kirjautuminen epäonnistui. Yritä hetken kuluttua uudelleen.</string>
 </resources>

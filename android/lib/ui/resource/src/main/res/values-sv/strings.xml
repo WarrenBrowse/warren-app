@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Inloggad på Warren-forumet.</string>
     <string name="forum_login_result_subscription_required">Åtkomst till forumet kräver en Warren-prenumeration. Den här plånboken har aldrig haft en prenumeration.</string>
     <string name="forum_login_result_wallet_not_ready">Skapa din Warren-plånbok först.</string>
-    <string name="forum_login_result_clock_skew">Inloggning nekad: enhetens klocka går mer än en minut fel. Aktivera automatiskt datum och tid och försök igen.</string>
+    <string name="forum_login_result_clock_skew">Inloggning nekad: enhetens klocka går mer än en minut fel. Aktivera automatiskt datum och tid och börja om från webbläsarsidan.</string>
     <string name="forum_login_result_expired">Denna inloggningsbegäran har gått ut. Börja om från webbläsarsidan.</string>
     <string name="forum_login_result_failure">Inloggningen misslyckades. Försök igen om en stund.</string>
 </resources>

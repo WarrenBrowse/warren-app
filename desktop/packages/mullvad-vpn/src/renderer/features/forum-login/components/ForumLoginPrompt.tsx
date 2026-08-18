@@ -87,7 +87,7 @@ export function ForumLoginPrompt() {
       setNotice(
         messages.pgettext(
           'forum-login',
-          "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then try again.",
+          "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
         ),
       );
     } else {

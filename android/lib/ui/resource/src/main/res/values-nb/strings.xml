@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Logget inn på Warren-forumet.</string>
     <string name="forum_login_result_subscription_required">Tilgang til forumet krever et Warren-abonnement. Denne lommeboken har aldri hatt et abonnement.</string>
     <string name="forum_login_result_wallet_not_ready">Opprett Warren-lommeboken din først.</string>
-    <string name="forum_login_result_clock_skew">Pålogging avvist: klokken på denne enheten er mer enn ett minutt feil. Slå på automatisk dato og klokkeslett, og prøv igjen.</string>
+    <string name="forum_login_result_clock_skew">Pålogging avvist: klokken på denne enheten er mer enn ett minutt feil. Slå på automatisk dato og klokkeslett, og start på nytt fra nettlesersiden.</string>
     <string name="forum_login_result_expired">Denne påloggingsforespørselen er utløpt. Start på nytt fra nettlesersiden.</string>
     <string name="forum_login_result_failure">Innloggingen mislyktes. Prøv igjen om et øyeblikk.</string>
 </resources>

@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Warren forumunda oturum açıldı.</string>
     <string name="forum_login_result_subscription_required">Foruma erişim için Warren aboneliği gerekir. Bu cüzdan hiç abone olmamış.</string>
     <string name="forum_login_result_wallet_not_ready">Önce Warren cüzdanınızı oluşturun.</string>
-    <string name="forum_login_result_clock_skew">Oturum açma reddedildi: bu cihazın saati bir dakikadan fazla sapmış. Otomatik tarih ve saati açın, sonra yeniden deneyin.</string>
+    <string name="forum_login_result_clock_skew">Oturum açma reddedildi: bu cihazın saati bir dakikadan fazla sapmış. Otomatik tarih ve saati açın, sonra tarayıcı sayfasından yeniden başlayın.</string>
     <string name="forum_login_result_expired">Bu oturum açma isteğinin süresi doldu. Tarayıcı sayfasından yeniden başlayın.</string>
     <string name="forum_login_result_failure">Giriş başarısız oldu. Lütfen birazdan tekrar deneyin.</string>
 </resources>

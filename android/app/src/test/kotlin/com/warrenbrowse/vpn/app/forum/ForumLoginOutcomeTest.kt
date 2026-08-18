@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.app.forum
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -51,8 +52,28 @@ class ForumLoginOutcomeTest {
             failureMessageFor(WarrenForumLoginOutcome.ClockSkew, "sub", "wallet", "fix-clock", "generic"),
         )
         assertEquals(
+            "sub",
+            failureMessageFor(WarrenForumLoginOutcome.SubscriptionRequired, "sub", "wallet", "fix-clock", "generic"),
+        )
+        assertEquals(
+            "wallet",
+            failureMessageFor(WarrenForumLoginOutcome.WalletNotReady, "sub", "wallet", "fix-clock", "generic"),
+        )
+        assertEquals(
             "generic",
             failureMessageFor(WarrenForumLoginOutcome.Failure("x"), "sub", "wallet", "fix-clock", "generic"),
         )
+    }
+
+    @Test
+    fun a_clock_skew_refusal_ends_the_pending_link() {
+        // The provider cancels the session on the skewed attempt, so a retry on
+        // the same sid can only answer "unknown session". Keeping Approve live
+        // would walk the user, who just fixed the clock as told, straight back
+        // into the generic dead end.
+        assertTrue(isTerminalOutcome(WarrenForumLoginOutcome.ClockSkew))
+        assertTrue(isTerminalOutcome(WarrenForumLoginOutcome.SubscriptionRequired))
+        assertFalse(isTerminalOutcome(WarrenForumLoginOutcome.WalletNotReady))
+        assertFalse(isTerminalOutcome(WarrenForumLoginOutcome.Failure("transient")))
     }
 }

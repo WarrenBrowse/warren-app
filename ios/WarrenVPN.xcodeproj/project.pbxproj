@@ -28,6 +28,7 @@
 		014E8C302F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		014E8C312F294FB000837D0A /* relays-test-data.json in Resources */ = {isa = PBXBuildFile; fileRef = 014E8C2F2F294FB000837D0A /* relays-test-data.json */; };
 		016EE03A2F850C5A0035B25C /* WireGuardKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0392F850C5A0035B25C /* WireGuardKeyTests.swift */; };
+		7E1F0A2B2F9B1C0100D1E5A2 /* WarrenForumLoginOutcomeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E1F0A2A2F9B1C0100D1E5A1 /* WarrenForumLoginOutcomeTests.swift */; };
 		016EE0422F8540B00035B25C /* IPAddressRange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0412F8540B00035B25C /* IPAddressRange.swift */; };
 		016EE0442F8640B00035B25C /* DaitaConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE0432F8640B00035B25C /* DaitaConfiguration.swift */; };
 		01B2FF862D70B914004AED35 /* WarrenRustRuntime.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A992DA1D2C24709F00DE7CE5 /* WarrenRustRuntime.framework */; };
@@ -1561,6 +1562,7 @@
 		014E8C2F2F294FB000837D0A /* relays-test-data.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "relays-test-data.json"; sourceTree = "<group>"; };
 		016EE0372F850C0E0035B25C /* WireGuardKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuardKey.swift; sourceTree = "<group>"; };
 		016EE0392F850C5A0035B25C /* WireGuardKeyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuardKeyTests.swift; sourceTree = "<group>"; };
+		7E1F0A2A2F9B1C0100D1E5A1 /* WarrenForumLoginOutcomeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WarrenForumLoginOutcomeTests.swift; sourceTree = "<group>"; };
 		016EE03B2F8524EB0035B25C /* WireGuardKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WireGuardKey.swift; sourceTree = "<group>"; };
 		016EE0412F8540B00035B25C /* IPAddressRange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IPAddressRange.swift; sourceTree = "<group>"; };
 		016EE0432F8640B00035B25C /* DaitaConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DaitaConfiguration.swift; sourceTree = "<group>"; };
@@ -4610,6 +4612,7 @@
 				585A02EA2A4B285800C6CAFF /* UDPConnection.swift */,
 				585A02E82A4B283000C6CAFF /* UnsafeListener.swift */,
 				016EE0392F850C5A0035B25C /* WireGuardKeyTests.swift */,
+				7E1F0A2A2F9B1C0100D1E5A1 /* WarrenForumLoginOutcomeTests.swift */,
 			);
 			path = WarrenRustRuntimeTests;
 			sourceTree = "<group>";
@@ -6877,6 +6880,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				016EE03A2F850C5A0035B25C /* WireGuardKeyTests.swift in Sources */,
+				7E1F0A2B2F9B1C0100D1E5A2 /* WarrenForumLoginOutcomeTests.swift in Sources */,
 				A9D9A4CF2C36D54E004088DD /* TCPConnection.swift in Sources */,
 				A9D9A4CC2C36D54E004088DD /* UnsafeListener.swift in Sources */,
 				A9D9A4CD2C36D54E004088DD /* UDPConnection.swift in Sources */,

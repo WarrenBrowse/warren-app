@@ -339,6 +339,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
             message = NSLocalizedString(
                 "Forum access requires a Warren subscription. This wallet has never subscribed.",
                 comment: "Forum login refused, no subscription")
+        case .clockSkew:
+            message = NSLocalizedString(
+                "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
+                comment: "Forum login refused, device clock outside the accepted window")
         case .failed:
             message = NSLocalizedString(
                 "Sign in failed. Please try again in a moment.", comment: "Forum login failed")

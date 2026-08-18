@@ -55,6 +55,9 @@ public enum WarrenForumLoginOutcome: Equatable {
     case approved
     /// The wallet has never subscribed to Warren; forum access is refused (403).
     case subscriptionRequired
+    /// The provider refused the signature because this device's clock is off by
+    /// more than its accepted window. The one failure the user repairs themselves.
+    case clockSkew
     /// Any other failure (bad input, provider error, transport error).
     case failed
 }
@@ -197,17 +200,29 @@ public enum WarrenAccountClient {
                 }
             }
         }
-        // The FFI envelope is {"ok":true} / {"ok":false,"error":"subscription-
-        // required"|"error"} (no `status` field), so it parses as .okVoid on
-        // success and .failure(.transport(message)) otherwise.
-        switch parseEnvelope(raw) {
-        case .success(.okVoid):
-            return .approved
-        case let .success(.failure(error)):
-            if case let .transport(message) = error, message == "subscription-required" {
-                return .subscriptionRequired
-            }
+        guard let raw else { return .failed }
+        defer { warren_wallet_free_mnemonic(raw) }
+        return forumLoginOutcome(fromEnvelope: String(cString: raw))
+    }
+
+    /// Maps the `warren_forum_login` JSON envelope to an outcome. The envelope
+    /// is `{"ok":true}` or `{"ok":false,"error":"subscription-required"|
+    /// "clock-skew"|"error"}`, single-sourced in the Rust `warren-forum` crate.
+    /// Pure so the mapping is unit-tested off-device.
+    static func forumLoginOutcome(fromEnvelope envelope: String?) -> WarrenForumLoginOutcome {
+        guard let envelope,
+              let data = envelope.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return .failed
+        }
+        if object["ok"] as? Bool == true {
+            return .approved
+        }
+        switch object["error"] as? String {
+        case "subscription-required":
+            return .subscriptionRequired
+        case "clock-skew":
+            return .clockSkew
         default:
             return .failed
         }
@@ -217,7 +232,7 @@ public enum WarrenAccountClient {
     /// for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser page
     /// unblocks instead of polling to timeout. Unsigned (no wallet material);
     /// mirrors the desktop `cancelForumLogin`. Blocking, run off the main
-    /// thread; failures are ignored (the server session expires in 10 min).
+    /// thread; failures are ignored (the server session expires in 5 min).
     public static func forumLoginCancel(sid: String, host: String) {
         sid.withCString { sidPtr in
             host.withCString { hostPtr in

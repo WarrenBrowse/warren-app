@@ -512,7 +512,7 @@
     <string name="forum_login_result_approved">Zalogowano na forum Warren.</string>
     <string name="forum_login_result_subscription_required">Dostęp do forum wymaga subskrypcji Warren. Ten portfel nigdy nie miał subskrypcji.</string>
     <string name="forum_login_result_wallet_not_ready">Najpierw skonfiguruj portfel Warren.</string>
-    <string name="forum_login_result_clock_skew">Logowanie odrzucone: zegar tego urządzenia różni się o ponad minutę. Włącz automatyczną datę i godzinę, a następnie spróbuj ponownie.</string>
+    <string name="forum_login_result_clock_skew">Logowanie odrzucone: zegar tego urządzenia różni się o ponad minutę. Włącz automatyczną datę i godzinę, a następnie zacznij od nowa na stronie przeglądarki.</string>
     <string name="forum_login_result_expired">To żądanie logowania wygasło. Zacznij od nowa na stronie przeglądarki.</string>
     <string name="forum_login_result_failure">Logowanie nie powiodło się. Spróbuj ponownie za chwilę.</string>
 </resources>

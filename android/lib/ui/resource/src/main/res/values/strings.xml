@@ -541,7 +541,7 @@
     <string name="forum_login_result_approved">Signed in to the Warren forum.</string>
     <string name="forum_login_result_subscription_required">Forum access requires a Warren subscription. This wallet has never subscribed.</string>
     <string name="forum_login_result_wallet_not_ready">Set up your Warren wallet first.</string>
-    <string name="forum_login_result_clock_skew">Sign-in refused: this device\'s clock is off by more than a minute. Enable automatic date and time, then try again.</string>
+    <string name="forum_login_result_clock_skew">Sign-in refused: this device\'s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.</string>
     <string name="forum_login_result_expired">This sign-in request has expired. Start again from the browser page.</string>
     <string name="forum_login_result_failure">Sign-in failed. Please try again in a moment.</string>
 </resources>

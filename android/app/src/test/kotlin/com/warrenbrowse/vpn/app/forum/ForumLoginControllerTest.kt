@@ -42,9 +42,13 @@ class ForumLoginControllerTest {
 
     @Test
     fun clearing_leaves_nothing_pending_and_nothing_stale() {
-        val controller = ForumLoginController { 0L }
+        var now = 1_000_000L
+        val controller = ForumLoginController { now }
         controller.request(link)
         controller.clear()
+        // Past the TTL with nothing pending: stale must still be false, or the
+        // prompt host would show an "expired" error for a link it no longer has.
+        now += ForumLoginController.PENDING_LINK_TTL_MILLIS + 1
         assertNull(controller.pending.value)
         assertFalse(controller.isStale())
     }

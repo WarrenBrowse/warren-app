@@ -513,7 +513,7 @@
     <string name="forum_login_result_approved">V-ați conectat la forumul Warren.</string>
     <string name="forum_login_result_subscription_required">Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată un abonament.</string>
     <string name="forum_login_result_wallet_not_ready">Configurați mai întâi portofelul Warren.</string>
-    <string name="forum_login_result_clock_skew">Autentificare refuzată: ceasul acestui dispozitiv este decalat cu mai mult de un minut. Activează data și ora automate, apoi încearcă din nou.</string>
+    <string name="forum_login_result_clock_skew">Autentificare refuzată: ceasul acestui dispozitiv este decalat cu mai mult de un minut. Activează data și ora automate, apoi reia de la pagina din browser.</string>
     <string name="forum_login_result_expired">Această cerere de autentificare a expirat. Reia de la pagina din browser.</string>
     <string name="forum_login_result_failure">Autentificarea a eșuat. Te rugăm să încerci din nou peste un moment.</string>
 </resources>

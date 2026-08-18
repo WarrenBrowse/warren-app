@@ -512,7 +512,7 @@
     <string name="forum_login_result_approved">Виконано вхід на форум Warren.</string>
     <string name="forum_login_result_subscription_required">Доступ до форуму потребує підписки Warren. З цього гаманця підписку ніколи не оформлювали.</string>
     <string name="forum_login_result_wallet_not_ready">Спочатку створіть гаманець Warren.</string>
-    <string name="forum_login_result_clock_skew">Вхід відхилено: годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час, потім спробуйте знову.</string>
+    <string name="forum_login_result_clock_skew">Вхід відхилено: годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час, потім почніть знову зі сторінки браузера.</string>
     <string name="forum_login_result_expired">Цей запит на вхід прострочено. Почніть знову зі сторінки браузера.</string>
     <string name="forum_login_result_failure">Не вдалося увійти. Повторіть спробу за мить.</string>
 </resources>

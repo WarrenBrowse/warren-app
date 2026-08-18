@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Ingelogd op het Warren-forum.</string>
     <string name="forum_login_result_subscription_required">Toegang tot het forum vereist een Warren-abonnement. Deze wallet heeft nooit een abonnement gehad.</string>
     <string name="forum_login_result_wallet_not_ready">Stel eerst je Warren-wallet in.</string>
-    <string name="forum_login_result_clock_skew">Aanmelding geweigerd: de klok van dit apparaat wijkt meer dan een minuut af. Schakel automatische datum en tijd in en probeer het opnieuw.</string>
+    <string name="forum_login_result_clock_skew">Aanmelding geweigerd: de klok van dit apparaat wijkt meer dan een minuut af. Schakel automatische datum en tijd in en begin opnieuw vanaf de browserpagina.</string>
     <string name="forum_login_result_expired">Dit aanmeldverzoek is verlopen. Begin opnieuw vanaf de browserpagina.</string>
     <string name="forum_login_result_failure">Aanmelden mislukt. Probeer het zo meteen opnieuw.</string>
 </resources>

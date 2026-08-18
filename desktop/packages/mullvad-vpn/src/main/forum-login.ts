@@ -188,8 +188,9 @@ export class PendingForumRequest<T> {
 
 /**
  * Maps the provider's HTTP response to the login result. The clock_skew token
- * is a frozen wire detail (warren-connect pins the exact bytes in its sso_flow
- * test) and is only honored on a 401, where it is the auth verifier speaking.
+ * is a frozen wire detail (warren-connect's sso_flow test asserts the exact
+ * response bytes `{"error":"clock_skew"}`) and is only honored on a 401, where
+ * it is the auth verifier speaking.
  */
 export function resultForProviderResponse(status: number, bodyText: string): ForumLoginResult {
   if (status >= 200 && status < 300) {

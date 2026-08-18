@@ -503,7 +503,7 @@
     <string name="forum_login_result_approved">已登入 Warren 論壇。</string>
     <string name="forum_login_result_subscription_required">存取論壇需要 Warren 訂閱。此錢包從未訂閱過。</string>
     <string name="forum_login_result_wallet_not_ready">請先設定您的 Warren 錢包。</string>
-    <string name="forum_login_result_clock_skew">登入遭拒：此裝置的時鐘偏差超過一分鐘。請開啟自動設定日期與時間，然後再試一次。</string>
+    <string name="forum_login_result_clock_skew">登入遭拒：此裝置的時鐘偏差超過一分鐘。請開啟自動設定日期與時間，然後從瀏覽器頁面重新開始。</string>
     <string name="forum_login_result_expired">此登入要求已過期。請從瀏覽器頁面重新開始。</string>
     <string name="forum_login_result_failure">登入失敗。請稍後再試。</string>
 </resources>

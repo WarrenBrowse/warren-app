@@ -512,7 +512,7 @@
     <string name="forum_login_result_approved">Выполнен вход на форум Warren.</string>
     <string name="forum_login_result_subscription_required">Доступ к форуму требует подписки Warren. С этого кошелька подписка никогда не оформлялась.</string>
     <string name="forum_login_result_wallet_not_ready">Сначала создайте кошелёк Warren.</string>
-    <string name="forum_login_result_clock_skew">Вход отклонён: часы этого устройства расходятся более чем на минуту. Включите автоматическую дату и время, затем попробуйте снова.</string>
+    <string name="forum_login_result_clock_skew">Вход отклонён: часы этого устройства расходятся более чем на минуту. Включите автоматическую дату и время, затем начните заново со страницы браузера.</string>
     <string name="forum_login_result_expired">Этот запрос на вход истёк. Начните заново со страницы браузера.</string>
     <string name="forum_login_result_failure">Не удалось войти. Повторите попытку через мгновение.</string>
 </resources>

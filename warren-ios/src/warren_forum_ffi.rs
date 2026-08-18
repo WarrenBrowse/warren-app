@@ -12,7 +12,7 @@
 //! `warren_wallet_free_mnemonic` (type-agnostic: it reclaims any `CString` this
 //! crate produces). Envelope shapes match Android's `WarrenJni.forumLogin`:
 //! `{"ok":true}` / `{"ok":false,"error":"subscription-required"}` /
-//! `{"ok":false,"error":"error"}`.
+//! `{"ok":false,"error":"clock-skew"}` / `{"ok":false,"error":"error"}`.
 //!
 //! Blocking: `block_on`s the shared iOS tokio runtime; the Swift facade invokes
 //! it off the main thread.

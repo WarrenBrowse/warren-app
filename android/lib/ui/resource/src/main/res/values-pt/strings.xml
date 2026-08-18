@@ -506,7 +506,7 @@
     <string name="forum_login_result_approved">Sessão iniciada no fórum Warren.</string>
     <string name="forum_login_result_subscription_required">O acesso ao fórum requer uma subscrição Warren. Esta carteira nunca teve uma subscrição.</string>
     <string name="forum_login_result_wallet_not_ready">Configure primeiro a sua carteira Warren.</string>
-    <string name="forum_login_result_clock_skew">Início de sessão recusado: o relógio deste dispositivo está desacertado em mais de um minuto. Ative a data e hora automáticas e tente novamente.</string>
+    <string name="forum_login_result_clock_skew">Início de sessão recusado: o relógio deste dispositivo está desacertado em mais de um minuto. Ative a data e hora automáticas e recomece a partir da página do navegador.</string>
     <string name="forum_login_result_expired">Este pedido de início de sessão expirou. Recomece a partir da página do navegador.</string>
     <string name="forum_login_result_failure">Falha no início de sessão. Tente novamente dentro de momentos.</string>
 </resources>
