@@ -186,6 +186,24 @@ export class PendingForumRequest<T> {
   }
 }
 
+/**
+ * Maps the provider's HTTP response to the login result. The clock_skew token
+ * is a frozen wire detail (warren-connect pins the exact bytes in its sso_flow
+ * test) and is only honored on a 401, where it is the auth verifier speaking.
+ */
+export function resultForProviderResponse(status: number, bodyText: string): ForumLoginResult {
+  if (status >= 200 && status < 300) {
+    return 'approved';
+  }
+  if (status === 403) {
+    return 'subscription-required';
+  }
+  if (status === 401 && bodyText.includes('"error":"clock_skew"')) {
+    return 'clock-skew';
+  }
+  return 'error';
+}
+
 /** Outcome of an approved login, plus the identity the provider echoed back. */
 export interface ApprovedForumLogin {
   result: ForumLoginResult;
@@ -228,13 +246,20 @@ export async function approveForumLogin(
       },
       body: signature.body,
     });
-    if (response.status === 403) {
+    const bodyText = await response.text().catch(() => '');
+    const result = resultForProviderResponse(response.status, bodyText);
+    if (result === 'subscription-required') {
       log.info('Forum login: refused (wallet has never subscribed)');
-      return { result: 'subscription-required' };
+      return { result };
     }
-    if (!response.ok) {
+    if (result === 'clock-skew') {
+      // A duration-class cause, no identity material: safe to name in the log.
+      log.info("Forum login: refused (this machine's clock is outside the accepted window)");
+      return { result };
+    }
+    if (result === 'error') {
       log.error(`Forum login: provider returned HTTP ${response.status}`);
-      return { result: 'error' };
+      return { result };
     }
     log.info('Forum login: signed challenge accepted by the provider');
     // A malformed body must not fail a login the provider already accepted:
@@ -242,7 +267,7 @@ export async function approveForumLogin(
     // while the login itself is done.
     let identity: ForumIdentity | undefined;
     try {
-      identity = parseForumIdentityResponse(await response.json());
+      identity = parseForumIdentityResponse(JSON.parse(bodyText));
     } catch {
       identity = undefined;
     }

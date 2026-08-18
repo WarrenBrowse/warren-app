@@ -83,6 +83,13 @@ export function ForumLoginPrompt() {
           'Forum access requires a Warren subscription. This wallet has never subscribed.',
         ),
       );
+    } else if (result === 'clock-skew') {
+      setNotice(
+        messages.pgettext(
+          'forum-login',
+          "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then try again.",
+        ),
+      );
     } else {
       setNotice(messages.pgettext('forum-login', 'Sign-in failed. Please try again in a moment.'));
     }

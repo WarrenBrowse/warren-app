@@ -6,6 +6,7 @@ import {
   parseForumLoginUrl,
   PENDING_LOGIN_MAX_AGE_MS,
   PendingForumRequest,
+  resultForProviderResponse,
 } from '../../src/main/forum-login';
 import { IForumLoginRequest } from '../../src/shared/forum-login';
 
@@ -149,5 +150,26 @@ describe('forum handle returned by an approved login', () => {
     expect(parseForumHandle(undefined)).toBeUndefined();
     expect(parseForumHandle(null)).toBeUndefined();
     expect(parseForumHandle('lusab-babad-dovok')).toBeUndefined();
+  });
+});
+
+describe('provider response mapping', () => {
+  it('maps a 401 carrying the clock_skew token to clock-skew', () => {
+    // The one failure the user can repair themselves: connect answers the
+    // frozen token {"error":"clock_skew"} (pinned in its sso_flow test) and
+    // the prompt must say "fix your clock", not "try again in a moment",
+    // which is the dead end every 2026-08-18 reporter hit.
+    expect(resultForProviderResponse(401, '{"error":"clock_skew"}')).toBe('clock-skew');
+  });
+
+  it('keeps any other 401 and any other status generic', () => {
+    expect(resultForProviderResponse(401, 'timestamp outside accepted window')).toBe('error');
+    expect(resultForProviderResponse(500, '{"error":"clock_skew"}')).toBe('error');
+  });
+
+  it('maps 403 to subscription-required and 2xx to approved', () => {
+    expect(resultForProviderResponse(403, '')).toBe('subscription-required');
+    expect(resultForProviderResponse(200, '')).toBe('approved');
+    expect(resultForProviderResponse(204, '')).toBe('approved');
   });
 });

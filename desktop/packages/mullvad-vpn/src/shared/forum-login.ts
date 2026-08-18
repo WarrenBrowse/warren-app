@@ -20,5 +20,8 @@ export type ForumLoginResult =
   | 'approved'
   // The wallet has never subscribed to Warren; forum access is refused.
   | 'subscription-required'
+  // The provider refused the signature because this machine's clock is off by
+  // more than its accepted window. The one failure the user repairs themselves.
+  | 'clock-skew'
   // Any other failure (no identity, network error, provider error).
   | 'error';
