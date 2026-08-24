@@ -32,6 +32,11 @@ on:
       - "mullvad-update/**"
       - "talpid-warren-tunnel/**"
       - "talpid-core/**"
+      # Owns the host's DNS while a tunnel is up, and has twice taken it
+      # down (a dead resolver restored on disconnect, then a write loop on
+      # a coexisting VPN's service). It was in no gate at all, so both
+      # changes reached main with zero Rust checks run.
+      - "talpid-dns/**"
       - "warren-jni/**"
       - "warren-ios/**"
       # The iOS endpoint xcconfig is drift-gated against the product anchors by
