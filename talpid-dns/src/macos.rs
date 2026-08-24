@@ -43,10 +43,6 @@ pub enum Error {
     #[error("Failed to initialize dynamic store")]
     DynamicStoreInitError,
 
-    /// Failed to obtain name for interface
-    #[error("Failed to obtain interface name")]
-    GetInterfaceNameError,
-
     /// Failed to load interface config
     #[error("Failed to load interface config at path {0}")]
     LoadInterfaceConfigError(String),
@@ -284,6 +280,12 @@ impl DnsSettings {
     }
 
     /// Get DNS settings for a given service path. Returns `None` If the path does not exist.
+    ///
+    /// The interface name is best-effort: a service that has none still yields
+    /// its DNS settings. Failing the whole load on the name is what made us
+    /// unable to read our own write back on a NetworkExtension VPN service, so
+    /// `apply_desired_state` rewrote that service every burst period for as
+    /// long as the tunnel was up (see `InterfaceSettings::device_name`).
     pub fn load<S: Into<CFString>>(store: &SCDynamicStore, path: S) -> Result<Self> {
         let cf_path = path.into();
 
@@ -292,8 +294,10 @@ impl DnsSettings {
             .and_then(CFPropertyList::downcast_into::<CFDictionary>)
             .ok_or(Error::LoadDnsConfigError(cf_path.to_string()))?;
 
-        let name =
-            InterfaceSettings::load_from_dns_key(store, cf_path.to_string())?.interface_name()?;
+        let name = InterfaceSettings::load_from_dns_key(store, cf_path.to_string())
+            .ok()
+            .and_then(|interface| interface.device_name())
+            .unwrap_or_default();
 
         Ok(DnsSettings { dict, name })
     }
@@ -383,13 +387,21 @@ impl InterfaceSettings {
         ))
     }
 
-    pub fn interface_name(&self) -> Result<String> {
+    /// The BSD device name of the service's interface, when it has one.
+    ///
+    /// A NetworkExtension VPN service (Tailscale, a coexisting VPN app)
+    /// publishes `Type` and `SubType` and no `DeviceName`, so `None` is a
+    /// normal reading for a service that is perfectly configured. Reporting it
+    /// as an error made `DnsSettings::load` fail for that service, and the
+    /// caller reads a failure as "this service has no DNS settings": we then
+    /// never recognised the addresses we had just written there, and rewrote
+    /// them on every store notification, forever.
+    pub fn device_name(&self) -> Option<String> {
         self.0
             .find(unsafe { kSCPropNetInterfaceDeviceName }.to_void())
             .map(|str_pointer| unsafe { CFType::wrap_under_get_rule(*str_pointer) })
             .and_then(|string| string.downcast::<CFString>())
             .map(|cf_string| cf_string.to_string())
-            .ok_or(Error::GetInterfaceNameError)
     }
 }
 
@@ -733,11 +745,19 @@ fn is_reclaimable_loopback(ip: IpAddr) -> bool {
 
 #[cfg(test)]
 mod test {
-    use super::{DNS_PORT, DnsSettings, State, loopback_resolver_is_live};
+    use super::{DNS_PORT, DnsSettings, InterfaceSettings, State, loopback_resolver_is_live};
     use std::{
         collections::{BTreeSet, HashMap},
         net::SocketAddr,
         net::{IpAddr, Ipv4Addr, UdpSocket},
+    };
+    use system_configuration::{
+        core_foundation::{
+            base::{TCFType, ToVoid},
+            dictionary::CFMutableDictionary,
+            string::CFString,
+        },
+        sys::schema_definitions::kSCPropNetInterfaceDeviceName,
     };
 
     #[test]
@@ -1129,5 +1149,52 @@ mod test {
         let merged_state = State::merge_states(&new_state, prev_state, desired_addresses);
 
         assert_eq!(merged_state, expect_state);
+    }
+
+    /// Build a service `Interface` dictionary the way a NetworkExtension VPN
+    /// service publishes it: a type and a subtype, and no device name.
+    fn vpn_service_interface() -> InterfaceSettings {
+        let mut dict = CFMutableDictionary::new();
+        let type_key = CFString::new("Type");
+        let type_value = CFString::new("VPN");
+        dict.add(&type_key.to_void(), &type_value.to_void());
+        let subtype_key = CFString::new("SubType");
+        let subtype_value = CFString::new("io.tailscale.ipn.macsys");
+        dict.add(&subtype_key.to_void(), &subtype_value.to_void());
+        InterfaceSettings(dict.to_immutable())
+    }
+
+    /// Build a service `Interface` dictionary the way a physical service
+    /// publishes it: carrying the BSD device name.
+    fn physical_service_interface(device: &str) -> InterfaceSettings {
+        let mut dict = CFMutableDictionary::new();
+        let key = unsafe { CFString::wrap_under_get_rule(kSCPropNetInterfaceDeviceName) };
+        let value = CFString::new(device);
+        dict.add(&key.to_void(), &value.to_void());
+        InterfaceSettings(dict.to_immutable())
+    }
+
+    /// Regression: a NetworkExtension VPN service (Tailscale, a coexisting VPN
+    /// app) has no `DeviceName`, and treating that as a failure made
+    /// `DnsSettings::load` return `Err` for the whole service. `read_all_dns`
+    /// then read our own DNS write back as `None`, `apply_desired_state` never
+    /// recognised its own value, and it rewrote the key every burst period for
+    /// as long as the tunnel was up: about two writes a second, forever.
+    #[test]
+    fn a_vpn_service_interface_reports_no_device_name() {
+        assert_eq!(
+            vpn_service_interface().device_name(),
+            None,
+            "a service with no DeviceName must read as absent, never as an error"
+        );
+    }
+
+    /// The absent name must not cost us the name we can read.
+    #[test]
+    fn a_physical_service_interface_reports_its_device_name() {
+        assert_eq!(
+            physical_service_interface("en0").device_name().as_deref(),
+            Some("en0")
+        );
     }
 }
