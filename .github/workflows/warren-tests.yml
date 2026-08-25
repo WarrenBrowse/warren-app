@@ -107,6 +107,32 @@ jobs:
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
 
+  talpid-dns-macos:
+    name: talpid-dns on macOS (cargo test)
+    # talpid-dns picks its implementation by target, so on the Linux job above
+    # the macOS DNS monitor compiles nowhere: it owns the host's resolver while
+    # a tunnel is up and has stranded a Mac without DNS three times, each time
+    # with its macOS tests never having run in CI. This job runs exactly that
+    # crate on a macOS runner, and the reusable scope puts it in the release
+    # gate as well.
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 30
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: cargo test talpid-dns (macOS implementation)
+        timeout-minutes: 20
+        run: cargo test --locked -p talpid-dns
+
+      - name: cargo clippy talpid-dns (macOS implementation)
+        timeout-minutes: 10
+        run: cargo clippy --no-deps --locked -p talpid-dns --all-targets -- -D warnings
+
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
     runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
