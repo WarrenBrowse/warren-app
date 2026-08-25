@@ -182,6 +182,24 @@ runs:
           echo "rustup present: $(rustup --version 2>/dev/null | head -1)"
           exit 0
         fi
+        # Installed but not on the job's PATH: the Windows runner service does
+        # not carry %USERPROFILE%\.cargo\bin, so every job read as "missing" and
+        # reinstalled. Two Windows jobs of one release run (the MSI build and
+        # the headless bundle) then raced on the copy into ~/.cargo/bin and the
+        # second failed with "used by another process" (beta-v1.1.20, first
+        # attempt). Reusing the install is also what makes this step race-free.
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          cargo_bin="$USERPROFILE\\.cargo\\bin"
+          if [ -f "$USERPROFILE/.cargo/bin/rustup.exe" ]; then
+            echo "rustup installed at $cargo_bin but not on PATH: adding it"
+            echo "$cargo_bin" >> "$GITHUB_PATH"
+            exit 0
+          fi
+        elif [ -x "$HOME/.cargo/bin/rustup" ]; then
+          echo "rustup installed at $HOME/.cargo/bin but not on PATH: adding it"
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          exit 0
+        fi
         # Swatinem/rust-cache's cache-bin deletes ~/.cargo/bin/rustup on the
         # persistent self-hosted runners (see the Setup Rust cache step). cache-bin
         # is false here, but a runner can already be missing rustup from an earlier
@@ -191,7 +209,16 @@ runs:
         echo "::warning::rustup not found on this runner; reinstalling for the job"
         if [ "$RUNNER_OS" = "Windows" ]; then
           curl -sSfL https://win.rustup.rs/x86_64 -o "$RUNNER_TEMP/rustup-init.exe"
-          "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --no-modify-path --profile minimal
+          # A concurrent job on the same runner host can hold rustup.exe open
+          # while it installs; wait it out rather than fail the release.
+          for attempt in 1 2 3 4 5; do
+            if "$RUNNER_TEMP/rustup-init.exe" -y --default-toolchain none --no-modify-path --profile minimal; then
+              break
+            fi
+            [ "$attempt" = 5 ] && exit 1
+            echo "rustup-init failed (attempt $attempt), retrying in 30 s"
+            sleep 30
+          done
           printf '%s\\.cargo\\bin\n' "$USERPROFILE" >> "$GITHUB_PATH"
         else
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \
