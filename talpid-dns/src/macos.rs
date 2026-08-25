@@ -103,8 +103,13 @@ impl State {
             }
             Some(old_settings) => {
                 if new_settings.server_addresses() != old_settings.server_addresses() {
+                    let orphans = self.orphans_in(&HashMap::new(), |key| key_exists(store, key));
                     for service_path in self.backup.keys() {
-                        new_settings.save(store, service_path.as_str())?;
+                        let Some(action) = plan_apply(service_path, None, &new_settings, &orphans)
+                        else {
+                            continue;
+                        };
+                        perform(store, service_path, action)?;
                     }
                     self.dns_settings = Some(new_settings);
                 }
@@ -118,7 +123,7 @@ impl State {
     /// desired state to any services to which it has not already been applied.
     fn update_and_apply_state(&mut self, store: &SCDynamicStore) {
         let actual_state = read_all_dns(store);
-        let orphans = self.orphans_in(store, &actual_state);
+        let orphans = self.orphans_in(&actual_state, |key| key_exists(store, key));
         self.update_backup_state(&actual_state, &orphans);
         self.apply_desired_state(store, &actual_state, &orphans);
     }
@@ -129,12 +134,15 @@ impl State {
     /// its service is down.
     fn orphans_in(
         &self,
-        store: &SCDynamicStore,
         actual_state: &HashMap<ServicePath, Option<DnsSettings>>,
+        key_exists: impl Fn(&str) -> bool,
     ) -> BTreeSet<ServicePath> {
-        orphan_state_keys(actual_state.keys().chain(self.backup.keys()), |key| {
-            store.get(CFString::new(key)).is_some()
-        })
+        let candidates: BTreeSet<&str> = actual_state
+            .keys()
+            .chain(self.backup.keys())
+            .map(String::as_str)
+            .collect();
+        orphan_state_keys(candidates, key_exists)
     }
 
     /// Store changes to the DNS config, ignoring any changes that we have applied. The operation is
@@ -178,7 +186,9 @@ impl State {
             let old_entry = prev_state.remove(path);
             // A resolver override is not a DNS configuration anyone can restore,
             // so it never enters the backup (see `is_resolver_override`), and
-            // neither does an orphan `State:` key (see `orphan_state_keys`).
+            // neither does an orphan `State:` key as a new original (see
+            // `orphan_state_keys`; one captured while its service was up is
+            // retained by the arm below, and `plan_restore` decides at reset).
             // Reading them as "no original" also makes the arm below keep a
             // real original that a foreign daemon has since overwritten.
             let settings = settings
@@ -251,17 +261,24 @@ impl State {
         log::trace!("Restoring DNS settings to: {:#?}", self.backup);
 
         let actual_state = read_all_dns(store);
-        let orphans = self.orphans_in(store, &actual_state);
+        let orphans = self.orphans_in(&actual_state, |key| key_exists(store, key));
         self.update_backup_state(&actual_state, &orphans);
         self.dns_settings.take();
 
         let old_backup = std::mem::take(&mut self.backup);
 
+        // One service failing must not cost the others their restore: the
+        // invariant of this whole file is that the host is never left without
+        // a resolver, so every entry is attempted and the first error reported.
+        let mut first_error = None;
         for (service_path, settings) in old_backup {
             let action = plan_restore(&service_path, settings, &orphans);
-            perform(store, &service_path, action)?;
+            if let Err(e) = perform(store, &service_path, action) {
+                log::error!("Failed restoring DNS for {service_path}: {e}");
+                first_error.get_or_insert(e);
+            }
         }
-        Ok(())
+        first_error.map_or(Ok(()), Err)
     }
 }
 
@@ -312,6 +329,10 @@ fn plan_restore(
         }
         None => StoreAction::Remove,
     }
+}
+
+fn key_exists(store: &SCDynamicStore, key: &str) -> bool {
+    store.get(CFString::new(key)).is_some()
 }
 
 fn perform(store: &SCDynamicStore, path: &str, action: StoreAction) -> Result<()> {
@@ -701,9 +722,10 @@ fn state_to_setup_path(state_path: &str) -> Option<String> {
     }
 }
 
-/// Repair DNS left pointing at a dead local resolver by an unclean daemon
-/// exit, without constructing a monitor. The monitor runs the same repair at
-/// startup; this entry point exists for `warren-setup reset-firewall`, the
+/// Repair every DNS entry nothing answers behind (a dead local resolver from
+/// an unclean daemon exit, an orphan key of a stopped VPN service), without
+/// constructing a monitor. The monitor runs the same repair at startup and at
+/// teardown; this entry point exists for `warren-setup reset-firewall`, the
 /// out-of-band rescue used when the daemon cannot come back up at all.
 pub(crate) fn recover_after_crash() -> Result<()> {
     let store = SCDynamicStoreBuilder::new("warren-dns-recovery").build();
@@ -712,12 +734,12 @@ pub(crate) fn recover_after_crash() -> Result<()> {
     Ok(())
 }
 
-/// Remove every DNS entry nothing answers behind: a stale loopback override
+/// Remove the DNS entries known to answer nothing: a stale loopback override
 /// (below) and any orphan `State:` key (see `orphan_state_keys`), whichever
 /// daemon or build left it. Runs at daemon start and at every teardown.
 fn remove_dead_dns_entries(store: &SCDynamicStore) {
     let all = read_all_dns(store);
-    for path in orphan_state_keys(all.keys(), |key| store.get(CFString::new(key)).is_some()) {
+    for path in orphan_state_keys(all.keys(), |key| key_exists(store, key)) {
         log::warn!(
             "Removing orphan DNS key {path}: its service publishes no address, \
              so nothing routes to the resolver it names"
@@ -731,15 +753,21 @@ fn remove_dead_dns_entries(store: &SCDynamicStore) {
 
 /// The `State:` DNS keys among `paths` behind which no live service stands.
 ///
-/// A service that is up publishes its addresses under
+/// A network service that is up publishes its addresses under
 /// `State:/Network/Service/<id>/IPv4` or `/IPv6`; those keys are what configd
 /// ranks, and they go with the service. Its `/DNS` key does not always go
 /// with it: a stopped NetworkExtension VPN (Tailscale) leaves one behind, and
 /// so did our own restore, which wrote the retained original back into it on
 /// every disconnect. Such a key carries a resolver nothing routes to, and a
 /// `SearchOrder` in it outranks the primary service, so configd makes it the
-/// host's first resolver. `Setup:` keys mirror the preferences and are never
-/// orphans.
+/// host's first resolver.
+///
+/// The verdict is limited to configured network services, those with a
+/// `Setup:/Network/Service/<id>` entry: a `State:` DNS key with no service
+/// definition behind it is a resolver published on its own (an encrypted-DNS
+/// profile is the expected shape) and owns no address by construction, so it
+/// is spared. Removal is destructive and the unknown reads as live. `Setup:`
+/// keys mirror the preferences and are never orphans.
 fn orphan_state_keys(
     paths: impl IntoIterator<Item = impl AsRef<str>>,
     key_exists: impl Fn(&str) -> bool,
@@ -747,23 +775,32 @@ fn orphan_state_keys(
     paths
         .into_iter()
         .filter(|path| {
-            state_service_address_keys(path.as_ref())
-                .is_some_and(|keys| !keys.iter().any(|key| key_exists(key)))
+            state_service_keys(path.as_ref()).is_some_and(|keys| {
+                key_exists(&keys.definition) && !keys.addresses.iter().any(|key| key_exists(key))
+            })
         })
         .map(|path| path.as_ref().to_owned())
         .collect()
 }
 
-/// The address-state keys of the service owning a `State:` DNS key, `None`
-/// for any other path.
-fn state_service_address_keys(dns_path: &str) -> Option<[String; 2]> {
+/// The store keys that tell whether the service owning a `State:` DNS key is
+/// configured and up, `None` for any other path.
+struct ServiceKeys {
+    definition: String,
+    addresses: [String; 2],
+}
+
+fn state_service_keys(dns_path: &str) -> Option<ServiceKeys> {
     let id = dns_path
         .strip_prefix("State:/Network/Service/")?
         .strip_suffix("/DNS")?;
-    Some([
-        format!("State:/Network/Service/{id}/IPv4"),
-        format!("State:/Network/Service/{id}/IPv6"),
-    ])
+    Some(ServiceKeys {
+        definition: format!("Setup:/Network/Service/{id}"),
+        addresses: [
+            format!("State:/Network/Service/{id}/IPv4"),
+            format!("State:/Network/Service/{id}/IPv6"),
+        ],
+    })
 }
 
 /// Remove any DNS override left behind by a previous, unclean daemon exit
@@ -816,8 +853,8 @@ fn remove_stale_loopback_dns(
             "Removing stale loopback DNS override at {path} \
              (leftover from a previous unclean daemon exit)"
         );
-        if !store.remove(CFString::new(&path)) {
-            log::error!("Failed to remove stale DNS override at {path}");
+        if let Err(e) = remove_dns_key(store, &path) {
+            log::error!("Failed to remove stale DNS override at {path}: {e}");
         }
     }
 }
@@ -898,7 +935,7 @@ fn is_reclaimable_loopback(ip: IpAddr) -> bool {
 mod test {
     use super::{
         DNS_PORT, DnsSettings, InterfaceSettings, State, StoreAction, loopback_resolver_is_live,
-        orphan_state_keys, plan_apply, plan_restore,
+        orphan_state_keys, plan_apply, plan_restore, remove_dns_key,
     };
     use std::{
         collections::{BTreeSet, HashMap},
@@ -911,6 +948,7 @@ mod test {
             dictionary::CFMutableDictionary,
             string::CFString,
         },
+        dynamic_store::SCDynamicStoreBuilder,
         sys::schema_definitions::kSCPropNetInterfaceDeviceName,
     };
 
@@ -1313,12 +1351,13 @@ mod test {
         assert_eq!(merged_state, expect_state);
     }
 
-    /// A service that is up publishes its addresses under
-    /// `State:/Network/Service/<id>/IPv4` or `/IPv6`. A `State:` DNS key with
-    /// neither behind it names a resolver nothing routes to. `Setup:` keys are
-    /// a mirror of the preferences and are never orphans.
+    /// A configured network service that is up publishes its addresses under
+    /// `State:/Network/Service/<id>/IPv4` or `/IPv6`. A `State:` DNS key of a
+    /// configured service with neither behind it names a resolver nothing
+    /// routes to. `Setup:` keys are a mirror of the preferences and are never
+    /// orphans.
     #[test]
-    fn orphan_state_keys_are_those_whose_service_publishes_no_address_state() {
+    fn orphan_state_keys_are_those_whose_configured_service_publishes_no_address() {
         let paths = [
             "State:/Network/Service/WIFI/DNS".to_owned(),
             "State:/Network/Service/V6ONLY/DNS".to_owned(),
@@ -1326,8 +1365,11 @@ mod test {
             "Setup:/Network/Service/TAILSCALE/DNS".to_owned(),
         ];
         let published = BTreeSet::from([
+            "Setup:/Network/Service/WIFI",
             "State:/Network/Service/WIFI/IPv4",
+            "Setup:/Network/Service/V6ONLY",
             "State:/Network/Service/V6ONLY/IPv6",
+            "Setup:/Network/Service/TAILSCALE",
         ]);
 
         let orphans = orphan_state_keys(paths.iter(), |key| published.contains(key));
@@ -1335,8 +1377,21 @@ mod test {
         assert_eq!(
             orphans,
             BTreeSet::from(["State:/Network/Service/TAILSCALE/DNS".to_owned()]),
-            "only the State key of a service with no IPv4 and no IPv6 state is an orphan"
+            "only the State key of a configured service with no IPv4 and no IPv6 state is an orphan"
         );
+    }
+
+    /// A `State:` DNS key with no service definition behind it is a resolver
+    /// published on its own (an encrypted-DNS profile has that shape) and owns
+    /// no address by construction. Removing it would silently downgrade the
+    /// user's resolver, so it reads as live.
+    #[test]
+    fn a_dns_key_without_a_service_definition_is_spared() {
+        let paths = ["State:/Network/Service/DOH-PROFILE/DNS".to_owned()];
+
+        let orphans = orphan_state_keys(paths.iter(), |_| false);
+
+        assert!(orphans.is_empty(), "no service definition means no verdict");
     }
 
     /// Regression: a stopped NetworkExtension VPN (Tailscale) leaves its
@@ -1444,13 +1499,57 @@ mod test {
                 &orphans
             ),
             StoreAction::Write(original),
-            "a Setup key restores whatever the service state is"
+            "a path outside the orphan set restores"
         );
         assert_eq!(
             plan_restore(&tailscale, None, &BTreeSet::new()),
             StoreAction::Remove,
             "no original means the key is removed"
         );
+    }
+
+    /// The key that vanished mid-tunnel is retained in the backup and absent
+    /// from the snapshot, so the liveness verdict must cover the backup too:
+    /// that retained original is exactly the one `reset()` must not write back.
+    #[test]
+    fn a_retained_backup_of_a_stopped_service_is_an_orphan() {
+        let tailscale = "State:/Network/Service/TAILSCALE/DNS".to_owned();
+        let mut state = State::new();
+        state.backup.insert(
+            tailscale.clone(),
+            Some(DnsSettings::from_server_addresses(
+                &["100.100.100.100".to_owned()],
+                String::new(),
+                DNS_PORT,
+            )),
+        );
+        let snapshot_without_it = HashMap::new();
+
+        let configured = |key: &str| key == "Setup:/Network/Service/TAILSCALE";
+
+        assert_eq!(
+            state.orphans_in(&snapshot_without_it, configured),
+            BTreeSet::from([tailscale.clone()]),
+            "a backup-only path whose configured service publishes no address is an orphan"
+        );
+        assert!(
+            state
+                .orphans_in(&snapshot_without_it, |key| configured(key)
+                    || key.ends_with("/IPv4"))
+                .is_empty(),
+            "the same path is live once its service publishes an address"
+        );
+    }
+
+    /// A retained backup of a vanished service has no key to remove, and the
+    /// restore must treat that as done rather than abort the remaining
+    /// services on it.
+    #[test]
+    fn removing_an_absent_key_is_not_an_error() {
+        let store = SCDynamicStoreBuilder::new("talpid-dns-test").build();
+        let absent = "State:/Network/Service/TALPID-DNS-TEST-ABSENT/DNS";
+
+        assert!(matches!(remove_dns_key(&store, absent), Ok(())));
     }
 
     /// Build a service `Interface` dictionary the way a NetworkExtension VPN
