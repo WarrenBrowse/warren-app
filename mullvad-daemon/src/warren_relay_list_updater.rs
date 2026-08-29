@@ -794,6 +794,12 @@ mod tests {
                 exit_id: ExitId::from_bytes([seed; 16]),
                 cover_domain: None,
                 tcp_fallback: None,
+                last_seen_unix: None,
+                stale: None,
+                provider: None,
+                virt: None,
+                city_code: None,
+                node_index: None,
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
