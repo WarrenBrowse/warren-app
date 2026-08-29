@@ -199,6 +199,22 @@ struct InnerParametersGenerator {
     /// excludes the previously failed pubkey. `None` on the very
     /// first attempt after a daemon boot.
     warren_last_exit_pubkey: Option<warren_discovery_core::warren_types::WarrenPubkey>,
+    /// The exit whose datapath this client last PROVED alive, stamped by the
+    /// `on_path_rtt` observer (an RTT sample only exists if packets came
+    /// back). Consulted when relay selection finds no candidate at all.
+    ///
+    /// The roster is authoritative about policy, not about reachability: an
+    /// exit leaves `GET /v1/exits` merely by missing heartbeats. On
+    /// 2026-08-29 a stalled API host expired the whole fleet's heartbeats
+    /// while every node was serving traffic, the client cached a list without
+    /// its pinned country's only exit, and the next reconnect had nothing to
+    /// select: `NoMatchingRelay` put the kill switch in `Blocked. Blocking
+    /// LAN.` with no self-recovery. This is the memory that lets the client
+    /// prefer what it measured over what it was told.
+    ///
+    /// Shared behind a mutex because the stamp comes from the tunnel's
+    /// observer callback while the read happens on the parameters path.
+    warren_last_good_exit: Arc<std::sync::Mutex<Option<warren_tunnel_params::LastGoodExit>>>,
     /// ADR 36 drain avoid-set: multi-hop exit ids that signalled an in-band
     /// maintenance drain, each with the unix second it was recorded. The
     /// drain reactor (in `talpid-warren-tunnel`) records the current exit via
@@ -409,6 +425,7 @@ impl ParametersGenerator {
             warren_n_connections: None,
             warren_custom_exit: mullvad_types::settings::WarrenCustomExitSettings::default(),
             warren_last_exit_pubkey: None,
+            warren_last_good_exit: Arc::new(std::sync::Mutex::new(None)),
             warren_exit_down_budget: crate::warren_report_budget::ExitDownReportBudget::new(),
             warren_drained_exits: Vec::new(),
             warren_entry_rtt: Arc::new(std::sync::Mutex::new(
@@ -930,6 +947,20 @@ impl ParametersGenerator {
         // a consistent value within this call.
         let custom_exit = inner.warren_custom_exit.clone();
         let last_pubkey = inner.warren_last_exit_pubkey;
+        // Cloned before the assemble consumes them, so the last-known-good
+        // fallback below can rebuild parameters without re-running selection.
+        let fallback_inputs = (
+            signing_key.clone(),
+            multi_hop.clone(),
+            nat_pmp.clone(),
+            bypass_cidrs.clone(),
+        );
+        let last_good_slot = Arc::clone(&inner.warren_last_good_exit);
+        let drained_now = inner
+            .warren_drained_exits
+            .iter()
+            .map(|(id, _)| *id)
+            .collect::<Vec<_>>();
         // A custom exit never enters the failover pool: there is only the
         // one hand-entered node, so retrying it is correct, not a failover.
         let is_failover = !custom_exit.is_active() && retry_attempt > 0 && last_pubkey.is_some();
@@ -961,7 +992,58 @@ impl ParametersGenerator {
                 bypass_cidrs,
             )
         };
-        let mut params = assemble_result?;
+        // Ground truth outranks the roster when the roster has nothing left.
+        // `NoRelayMatch` means selection found no candidate, which is a claim
+        // about a LIST, not about the network. If this client proved an exit
+        // alive moments ago and no drain directive contradicts it, redial that
+        // exit instead of failing into the blocking error state, where the
+        // kill switch takes the whole host down and every recovery fetch runs
+        // through the fence it needs to cross (2026-08-29).
+        //
+        // Deliberately symmetric with `assemble_failover_for_attempt`, which
+        // already retries the same exit rather than stranding the user when no
+        // alternative exists.
+        let mut params = match assemble_result {
+            Ok(params) => params,
+            Err(e) => {
+                // Only an empty candidate set is eligible for the fallback: a
+                // malformed custom exit is the user's own misconfiguration and
+                // must keep surfacing, not be papered over with an old exit.
+                let usable = matches!(
+                    &e,
+                    warren_tunnel_params::AssembleError::Selector(
+                        warren_discovery_core::SelectorError::NoRelayMatch
+                    )
+                )
+                .then(|| {
+                    last_good_slot.lock().ok().and_then(|slot| {
+                        slot.as_ref()
+                            .filter(|lg| lg.is_usable(warren_now_unix_secs(), &drained_now))
+                            .cloned()
+                    })
+                })
+                .flatten();
+                let Some(last_good) = usable else {
+                    return Err(e.into());
+                };
+                let (key, multi_hop, nat_pmp, bypass_cidrs) = fallback_inputs;
+                log::warn!(
+                    "Warren: no exit matched the current roster, but this client proved {}/{} \
+                     alive {}s ago; redialing it rather than failing closed (a roster that lost \
+                     an exit must not wall a user who can reach it)",
+                    last_good.country_code,
+                    last_good.city,
+                    warren_now_unix_secs().saturating_sub(last_good.proven_at_unix),
+                );
+                warren_tunnel_params::assemble_from_last_good(
+                    &last_good,
+                    key,
+                    multi_hop,
+                    nat_pmp,
+                    bypass_cidrs,
+                )
+            }
+        };
         // v7 anonymous admission (default, warren-core doc 64): when the daemon has an API
         // URL and a real wallet seed, present Privacy Pass tokens so the exit
         // admits without learning the account pubkey. On token exhaustion or a
@@ -1255,9 +1337,30 @@ impl ParametersGenerator {
         // path-aware selection the directory updater snapshots. Sync and
         // lock-brief.
         let rtt_store = inner.warren_entry_rtt.clone();
+        // Stamp the last-known-good exit from the same observer. An RTT
+        // sample exists only because packets came back, so it is a direct
+        // proof of life for the exit we are dialing right now, which is
+        // exactly the evidence the roster cannot contradict. Built here (the
+        // params are final) and refreshed on every sample, so the stored
+        // proof always carries the age of the most recent one.
+        let last_good_store = Arc::clone(&inner.warren_last_good_exit);
+        let proven = warren_tunnel_params::LastGoodExit {
+            exit_addr: params.exit_addr.clone(),
+            exit_id: params.exit_id,
+            country_code: params.country_code.clone(),
+            city: params.city.clone(),
+            alpn_protocols: params.alpn_protocols.clone(),
+            proven_at_unix: 0,
+        };
         params.on_path_rtt = Some(Arc::new(move |relay_pubkey: [u8; 32], rtt_ms: u32| {
+            let now = warren_now_unix_secs();
             if let Ok(mut cache) = rtt_store.lock() {
-                cache.record(relay_pubkey, rtt_ms, warren_now_unix_secs());
+                cache.record(relay_pubkey, rtt_ms, now);
+            }
+            if let Ok(mut slot) = last_good_store.lock() {
+                let mut fresh = proven.clone();
+                fresh.proven_at_unix = now;
+                *slot = Some(fresh);
             }
         }));
         // ADR 36: wire the drain avoid-set callback. When the multi-hop drain

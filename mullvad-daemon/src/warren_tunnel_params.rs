@@ -37,6 +37,133 @@ pub enum AssembleError {
     CustomExit(String),
 }
 
+/// An exit whose datapath this client PROVED alive, with the unix second
+/// of the proof.
+///
+/// The roster is authoritative about policy (drained, decommissioned,
+/// revoked). It is not authoritative about reachability: an exit leaves
+/// `GET /v1/exits` merely by missing heartbeats, and on 2026-08-29 a
+/// stalled API host expired the whole fleet's heartbeats while every node
+/// was serving traffic normally. A client holding a live tunnel to one of
+/// those exits has strictly better evidence than the list it just
+/// fetched, and throwing that evidence away is what turned a backend
+/// hiccup into a host-wide kill-switch block.
+#[derive(Debug, Clone)]
+pub struct LastGoodExit {
+    /// Dial address plus the exit's Ed25519 identity.
+    pub exit_addr: WarrenExitAddr,
+    /// Stable 16-byte exit id (the TOFU pin key, and the drain-set key).
+    pub exit_id: ExitId,
+    /// ISO 3166-1 alpha-2 of the exit, for the UI and the query echo.
+    pub country_code: String,
+    /// City of the exit.
+    pub city: String,
+    /// ALPN tokens this exit was dialed with.
+    pub alpn_protocols: Vec<Vec<u8>>,
+    /// Unix second at which the datapath last proved itself alive.
+    pub proven_at_unix: u64,
+}
+
+/// How long a liveness proof stays usable as a fallback.
+///
+/// Sized against what it is for, not against comfort: the 2026-08-29
+/// selection failure landed 34 seconds after the tunnel last carried
+/// traffic. Ten minutes absorbs that class with room to spare while still
+/// expiring on its own, so a genuinely decommissioned exit cannot be
+/// redialed forever by a client that never restarts.
+pub const LAST_GOOD_MAX_AGE_SECS: u64 = 600;
+
+/// Whether a proven-alive exit may be redialed after selection found
+/// nothing.
+///
+/// Two independent reasons to refuse, and both matter:
+///
+/// - **The proof went stale.** Liveness is a perishable observation. Past
+///   [`LAST_GOOD_MAX_AGE_SECS`] we no longer know anything the roster does
+///   not, so we defer to the roster.
+/// - **A policy signal says stop.** A drained exit announces itself in
+///   band (ADR 36) and the daemon records it in its avoid-set. Policy
+///   ALWAYS outranks ground truth: "I can still reach it" is not a reason
+///   to keep using a node the operator is draining.
+///
+/// Revocation needs no clause here: a revoked exit fails the TOFU pin or
+/// the handshake, so the redial fails on its own and the normal retry
+/// path takes over.
+#[must_use]
+pub fn last_good_is_usable(
+    proven_at_unix: u64,
+    exit_id: &ExitId,
+    now_unix: u64,
+    drained_exit_ids: &[[u8; 16]],
+) -> bool {
+    let age = now_unix.saturating_sub(proven_at_unix);
+    if age > LAST_GOOD_MAX_AGE_SECS {
+        return false;
+    }
+    !drained_exit_ids.contains(exit_id.as_bytes())
+}
+
+impl LastGoodExit {
+    /// [`last_good_is_usable`] against this record's own fields.
+    #[must_use]
+    pub fn is_usable(&self, now_unix: u64, drained_exit_ids: &[[u8; 16]]) -> bool {
+        last_good_is_usable(
+            self.proven_at_unix,
+            &self.exit_id,
+            now_unix,
+            drained_exit_ids,
+        )
+    }
+}
+
+/// Rebuilds tunnel parameters from a [`LastGoodExit`], for the case where
+/// the roster yielded no candidate at all but this client can see that the
+/// exit it was just using works.
+///
+/// Deliberately symmetric with the failover fallback in
+/// [`assemble_failover_for_attempt`], which already retries the same exit
+/// rather than stranding the user in a blocking error state when no
+/// alternative exists. The reasoning is identical one level up: a roster
+/// that lost an exit must not wall a user who can see that exit working.
+#[must_use]
+pub fn assemble_from_last_good(
+    last_good: &LastGoodExit,
+    signing_key: SigningKey,
+    multi_hop: Option<MultiHopConfig>,
+    nat_pmp: Option<NatPmpConfig>,
+    bypass_cidrs: Vec<BypassCidr>,
+) -> WarrenTunnelParameters {
+    WarrenTunnelParameters {
+        exit_addr: last_good.exit_addr.clone(),
+        exit_id: last_good.exit_id,
+        country_code: last_good.country_code.clone(),
+        city: last_good.city.clone(),
+        signing_key,
+        n_connections: DEFAULT_N_CONNECTIONS,
+        features: DEFAULT_FEATURES,
+        alpn_protocols: last_good.alpn_protocols.clone(),
+        multi_hop,
+        on_reconnect: None,
+        on_path_rtt: None,
+        on_exit_draining: None,
+        on_egress_verdict: None,
+        warren_register_migrate_handle: None,
+        warren_drain_migrate: None,
+        warren_dial_refused: None,
+        warren_pre_swap_check: None,
+        warren_on_overlap_swapped: None,
+        nat_pmp,
+        nat_pmp_observer: None,
+        nat_pmp_control_rx: None,
+        max_rate_control_rx: None,
+        bypass_cidrs,
+        enable_daita: false,
+        session_token_provider: None,
+        port_entitlement_provider: None,
+        cache_dir: mullvad_paths::cache_dir().ok(),
+    }
+}
+
 /// Number of parallel QUIC connections. `8` captures ~95% of the
 /// multi-conn benefit (the throughput curve plateaus around N=8, cf.
 /// warren-core `bench/scripts/m3e-multi-conn-sweep.sh` and the
@@ -1256,5 +1383,57 @@ mod tests {
         };
         let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
         assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
+    }
+
+    // ---- last-known-good fallback (2026-08-29: a stalled API expired the
+    // whole fleet's heartbeats while every exit was serving traffic, and the
+    // client threw away its own proof of life in favour of the empty roster).
+
+    const E: ExitId = ExitId::from_bytes([0x5a; 16]);
+    const OTHER: [u8; 16] = [0x11; 16];
+
+    #[test]
+    fn a_fresh_liveness_proof_is_usable_when_nothing_was_drained() {
+        assert!(
+            last_good_is_usable(1_000, &E, 1_034, &[]),
+            "34 s after the tunnel carried traffic (the real 08-29 gap) the \
+             proof must still count"
+        );
+    }
+
+    #[test]
+    fn the_proof_expires_so_a_decommissioned_exit_is_not_redialed_forever() {
+        assert!(
+            last_good_is_usable(1_000, &E, 1_000 + LAST_GOOD_MAX_AGE_SECS, &[]),
+            "exactly at the bound is still usable"
+        );
+        assert!(
+            !last_good_is_usable(1_000, &E, 1_000 + LAST_GOOD_MAX_AGE_SECS + 1, &[]),
+            "one second past the bound we know nothing the roster does not"
+        );
+    }
+
+    /// Policy outranks ground truth. "I can still reach it" is not a reason to
+    /// keep using a node the operator is draining, so a drained exit is refused
+    /// even with a proof measured this very second.
+    #[test]
+    fn a_drained_exit_is_refused_even_with_a_proof_taken_now() {
+        assert!(
+            !last_good_is_usable(1_000, &E, 1_000, &[*E.as_bytes()]),
+            "the drain avoid-set must veto the fallback"
+        );
+        assert!(
+            last_good_is_usable(1_000, &E, 1_000, &[OTHER]),
+            "a drain on a DIFFERENT exit must not veto this one"
+        );
+    }
+
+    /// A clock that jumps backwards must not read as a proof from the future
+    /// that never expires. `saturating_sub` makes the age 0, which is fresh,
+    /// and that is the safe direction: the bound still applies once the clock
+    /// catches up, and the drain veto is unaffected.
+    #[test]
+    fn a_backwards_clock_does_not_produce_a_negative_age() {
+        assert!(last_good_is_usable(2_000, &E, 1_000, &[]));
     }
 }
