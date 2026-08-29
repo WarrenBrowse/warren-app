@@ -247,6 +247,10 @@ struct InnerParametersGenerator {
     /// suppressed (e.g. the user has not configured warren_api_url
     /// or the daemon runs in pure Mullvad mode).
     warren_api_url: Option<String>,
+    /// Local cap on those exit-down reports, so a client flapping in a
+    /// failover loop does not flood the operator feed with copies of
+    /// its own outage.
+    warren_exit_down_budget: crate::warren_report_budget::ExitDownReportBudget,
     /// HTTP transport for the subscription ask, built on first use and kept so
     /// the connection pool survives between asks. Built lazily because the
     /// address-cache resolver it picks up is installed after the daemon boots.
@@ -405,6 +409,7 @@ impl ParametersGenerator {
             warren_n_connections: None,
             warren_custom_exit: mullvad_types::settings::WarrenCustomExitSettings::default(),
             warren_last_exit_pubkey: None,
+            warren_exit_down_budget: crate::warren_report_budget::ExitDownReportBudget::new(),
             warren_drained_exits: Vec::new(),
             warren_entry_rtt: Arc::new(std::sync::Mutex::new(
                 warren_discovery_core::RttCache::new(),
@@ -1137,9 +1142,21 @@ impl ParametersGenerator {
         // section): the server does not log who reported. If the
         // POST fails (network down, server outage), the failover
         // path is NOT affected - we just lose one telemetry point.
+        //
+        // The report rides a local token bucket: a client flapping in
+        // a failover loop would otherwise report every lap and flood
+        // the operator feed with copies of its own outage, drowning
+        // the signal a real exit outage produces.
         if is_failover {
             inner.warren_status_cache.record_failover();
-            if let (Some(api_url), Some(seed), Some(excluded)) = (
+            let report_allowed = inner
+                .warren_exit_down_budget
+                .try_acquire(std::time::Instant::now());
+            if !report_allowed {
+                log::debug!("exit-down report suppressed by the local budget (telemetry only)");
+            }
+            if let (true, Some(api_url), Some(seed), Some(excluded)) = (
+                report_allowed,
                 inner.warren_api_url.clone(),
                 inner.warren_identity_seed.clone(),
                 last_pubkey,

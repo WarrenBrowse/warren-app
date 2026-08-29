@@ -108,6 +108,9 @@ pub mod warren_relay_selector;
 /// from Settings + env var. Testable pure function extracted from
 /// `Daemon::start`.
 mod warren_remote_config;
+/// Token bucket capping the exit-down incident reports a flapping
+/// client sends, so one local outage cannot flood the operator feed.
+mod warren_report_budget;
 mod warren_sdk_client;
 /// Loads or generates the user's BIP39 mnemonic from
 /// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
