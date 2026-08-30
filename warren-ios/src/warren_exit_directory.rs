@@ -248,10 +248,9 @@ mod tests {
             tcp_fallback: None,
             last_seen_unix: None,
             stale: None,
+            name: None,
             provider: None,
             virt: None,
-            city_code: None,
-            node_index: None,
         }
     }
 

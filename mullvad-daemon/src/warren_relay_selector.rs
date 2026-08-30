@@ -413,10 +413,9 @@ mod tests {
                 tcp_fallback: None,
                 last_seen_unix: None,
                 stale: None,
+                name: None,
                 provider: None,
                 virt: None,
-                city_code: None,
-                node_index: None,
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
@@ -480,10 +479,9 @@ mod tests {
                 tcp_fallback: None,
                 last_seen_unix: None,
                 stale: None,
+                name: None,
                 provider: None,
                 virt: None,
-                city_code: None,
-                node_index: None,
                 location: JsonLocation {
                     country: "se".to_owned(),
                     city: "Stockholm".to_owned(),
