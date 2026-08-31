@@ -251,6 +251,11 @@ mod tests {
             name: None,
             provider: None,
             virt: None,
+            asn: None,
+            attestation_hex: None,
+            relay_descriptor: None,
+            exit_descriptor: None,
+            edge_cert_sha256: None,
         }
     }
 
