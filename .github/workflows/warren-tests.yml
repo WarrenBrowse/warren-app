@@ -60,8 +60,8 @@ jobs:
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns \
-            -p warren-jni -p warren-ios -p warren-forum -p mullvad-update \
-            -p mullvad-release \
+            -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
+            -p mullvad-update -p mullvad-release \
             -- --check
 
       - name: install cargo-nextest
@@ -85,12 +85,20 @@ jobs:
         # is platform-neutral and tiny (its deps are already built for
         # mullvad-update here), so it joins the existing scope rather than getting
         # a job of its own.
+        #
+        # warren-forum and warren-product-env are pure host-side Rust (the forum
+        # request builder shared by the Android and iOS FFI crates, and the
+        # compile-time product environment), each with its own unit suite. They
+        # sat in the workspace and in the fmt scope while nothing ran their
+        # tests: warren-jni only compiles them, so a broken forum test (the size
+        # cap, the outcome envelopes) stayed green here. Same for clippy below.
         timeout-minutes: 30
         run: |
           cargo nextest run --locked --profile warren-ci \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p warren-jni \
+            -p warren-forum -p warren-product-env \
             -p mullvad-update -p mullvad-release
           cargo check --locked -p warren-ios
 
@@ -102,7 +110,8 @@ jobs:
         timeout-minutes: 20
         run: |
           crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns"
-          crates="$crates warren-jni mullvad-update mullvad-release"
+          crates="$crates warren-jni warren-forum warren-product-env"
+          crates="$crates mullvad-update mullvad-release"
           for crate in $crates; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done

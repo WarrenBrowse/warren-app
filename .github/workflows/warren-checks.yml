@@ -39,6 +39,11 @@ on:
       - "talpid-dns/**"
       - "warren-jni/**"
       - "warren-ios/**"
+      # Both are tested and linted in the Warren test scope (the forum request
+      # builder shared by the mobile FFI crates, and the product environment),
+      # so an edit touching only them must run it.
+      - "warren-forum/**"
+      - "warren-product-env/**"
       # The iOS endpoint xcconfig is drift-gated against the product anchors by
       # a mullvad-daemon test, so an edit here must run the Warren test scope.
       - "ios/Configurations/**"
