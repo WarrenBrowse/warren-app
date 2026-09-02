@@ -395,8 +395,10 @@ pub enum ReportOutcome {
     Created {
         /// The forum topic id.
         topic_id: u64,
-        /// Public topic URL.
-        topic_url: String,
+        /// The public topic URL the broker returned. The crate names no forum
+        /// host of its own, so a body without one leaves this empty and the
+        /// UI shows the topic without a link.
+        topic_url: Option<String>,
         /// The forum identity, when the body carried one.
         identity: Option<ForumIdentity>,
         /// `attached`, `partial` or `none`.
@@ -434,10 +436,8 @@ pub fn report_outcome_for_response(status: u16, body: &[u8]) -> ReportOutcome {
                         .as_ref()
                         .and_then(|v| v.get("topic_url"))
                         .and_then(serde_json::Value::as_str)
-                        .map_or_else(
-                            || format!("https://forum.warrenbrowse.com/t/{topic_id}"),
-                            str::to_owned,
-                        );
+                        .filter(|url| url.starts_with("https://"))
+                        .map(str::to_owned);
                     let logs = value
                         .as_ref()
                         .and_then(|v| v.get("logs"))
@@ -478,10 +478,12 @@ pub fn report_envelope(outcome: &ReportOutcome) -> String {
             let mut map = serde_json::Map::new();
             map.insert("ok".into(), serde_json::Value::Bool(true));
             map.insert("topic_id".into(), serde_json::Value::from(*topic_id));
-            map.insert(
-                "topic_url".into(),
-                serde_json::Value::String(topic_url.clone()),
-            );
+            if let Some(topic_url) = topic_url {
+                map.insert(
+                    "topic_url".into(),
+                    serde_json::Value::String(topic_url.clone()),
+                );
+            }
             map.insert("logs".into(), serde_json::Value::String(logs.clone()));
             if let Some(identity) = identity {
                 map.insert(
@@ -898,7 +900,7 @@ mod tests {
             created,
             ReportOutcome::Created {
                 topic_id: 142,
-                topic_url: "https://forum.warrenbrowse.com/t/142".into(),
+                topic_url: Some("https://forum.warrenbrowse.com/t/142".into()),
                 identity: Some(ForumIdentity {
                     handle: "lusab-babad-dovok".into(),
                     notify_slot: Some(7),
@@ -950,6 +952,43 @@ mod tests {
         assert_eq!(
             report_envelope(&ReportOutcome::Failed(FailReason::Transport)),
             r#"{"ok":false,"error":"error","reason":"transport"}"#
+        );
+    }
+
+    #[test]
+    fn a_created_body_without_a_topic_url_names_no_host_of_its_own() {
+        let outcome = report_outcome_for_response(
+            201,
+            br#"{"status":"created","topic_id":142,"logs":"none"}"#,
+        );
+        match &outcome {
+            ReportOutcome::Created {
+                topic_id,
+                topic_url,
+                ..
+            } => {
+                assert_eq!(*topic_id, 142);
+                assert_eq!(*topic_url, None);
+            }
+            other => panic!("{other:?}"),
+        }
+        let envelope = report_envelope(&outcome);
+        assert!(!envelope.contains("topic_url"), "{envelope}");
+        assert!(!envelope.contains("warrenbrowse"), "{envelope}");
+        // A non-https value is not a link the UI may open.
+        let odd = report_outcome_for_response(
+            201,
+            br#"{"status":"created","topic_id":1,"topic_url":"javascript:alert(1)","logs":"none"}"#,
+        );
+        assert!(
+            matches!(
+                odd,
+                ReportOutcome::Created {
+                    topic_url: None,
+                    ..
+                }
+            ),
+            "{odd:?}"
         );
     }
 }
