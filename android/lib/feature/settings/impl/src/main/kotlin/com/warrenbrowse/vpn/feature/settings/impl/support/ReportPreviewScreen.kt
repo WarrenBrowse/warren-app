@@ -18,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +33,7 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /** Largest slice of the report shown; the file itself is sent whole. */
@@ -48,6 +50,7 @@ private const val PREVIEW_MAX_CHARS = 400_000
 @Composable
 fun ReportPreview(navigator: Navigator, path: String) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val shareTitle = stringResource(R.string.report_problem_share)
     var text by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(path) {
@@ -74,8 +77,16 @@ fun ReportPreview(navigator: Navigator, path: String) {
             }
         },
         actions = {
+            // The share copies the report (up to tens of MB) before the sheet
+            // opens, so the copy runs off the main thread.
             IconButton(
-                onClick = { context.startActivity(reportShareIntent(context, path, shareTitle)) },
+                onClick = {
+                    scope.launch {
+                        val intent =
+                            withContext(Dispatchers.IO) { reportShareIntent(context, path, shareTitle) }
+                        context.startActivity(intent)
+                    }
+                },
                 enabled = text != null,
             ) {
                 Icon(imageVector = Icons.Rounded.Share, contentDescription = shareTitle)
