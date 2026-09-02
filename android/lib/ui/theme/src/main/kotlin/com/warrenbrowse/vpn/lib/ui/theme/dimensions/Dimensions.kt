@@ -24,6 +24,16 @@ data class Dimensions(
     val circularProgressBarSmallStrokeWidth: Dp = 4.dp,
     val connectButtonExtraPadding: Dp = 4.dp,
     val connectionCardMaxWidth: Dp = 480.dp,
+    // Desktop FeatureIndicator: 2 x 8 padding, 5 px between badges.
+    val chipVerticalPadding: Dp = 2.dp,
+    val chipStackGap: Dp = 5.dp,
+    // Desktop AppMainFooter: 7 x 16.
+    val footerVerticalPadding: Dp = 7.dp,
+    // Desktop NotificationBanner: radius 14, 2 px status edge, 10 12 10 16 padding.
+    val notificationBannerRadius: Dp = 14.dp,
+    val notificationBannerEdge: Dp = 2.dp,
+    val notificationBannerVerticalPadding: Dp = 10.dp,
+    val notificationBannerElevation: Dp = 8.dp,
     // Desktop DialogPopup: radius 12 on the darkBlue container.
     val dialogCornerRadius: Dp = 12.dp,
     // Desktop ConnectionPanel: 14 px vertical, 16 px horizontal.
@@ -54,7 +64,7 @@ data class Dimensions(
     val mediumSpacer: Dp = 16.dp,
     val miniPadding: Dp = 4.dp,
     val multihopSelectorPanelRadius: Dp = 16.dp,
-    val notificationBannerEndPadding: Dp = 8.dp,
+    val notificationBannerEndPadding: Dp = 12.dp,
     val notificationBannerStartPadding: Dp = 16.dp,
     val notificationEndIconPadding: Dp = 4.dp,
     // This is according to the design, should be updated in the design to standard size

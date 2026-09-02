@@ -1,15 +1,20 @@
 package com.warrenbrowse.vpn.lib.ui.designsystem
 
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Surface
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import com.warrenbrowse.vpn.lib.ui.designsystem.preview.PreviewColumn
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha40
 import com.warrenbrowse.vpn.lib.ui.theme.shape.chipShape
 
 @Preview
@@ -18,44 +23,44 @@ private fun PreviewWarrenFeatureChip() {
     PreviewColumn {
         WarrenFeatureChip(text = "DAITA", onClick = {})
         WarrenFeatureChip(text = "Local Network Sharing", onClick = {})
+        WarrenFeatureChip(text = "Port forwarding blocked", onClick = {}, isError = true)
     }
 }
 
+/**
+ * A feature badge above the connection card (desktop FeatureIndicator): a
+ * 22 dp pill, 2 x 8 padding, 12/600 label, radius 8, `blue10` fill with the
+ * `blue` hairline; the error variant (a port forward the exit refused) is the
+ * red fill at 40 % with the red hairline. The visual is small on purpose, so
+ * the touch target is widened to the platform minimum around it.
+ */
 @Composable
 fun WarrenFeatureChip(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLowest,
-    borderColor: Color = MaterialTheme.colorScheme.primary,
-    labelColor: Color = MaterialTheme.colorScheme.onPrimary,
-    iconColor: Color = MaterialTheme.colorScheme.onPrimary,
+    isError: Boolean = false,
 ) {
-    FilterChip(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.chipShape,
-        colors =
-            FilterChipDefaults.filterChipColors(
-                containerColor = containerColor,
-                disabledLabelColor = labelColor,
-                labelColor = labelColor,
-                iconColor = iconColor,
-            ),
-        border =
-            FilterChipDefaults.filterChipBorder(
-                borderColor = borderColor,
-                enabled = true,
-                selected = false,
-            ),
-        selected = false,
+    val containerColor =
+        if (isError) MaterialTheme.colorScheme.error.copy(alpha = Alpha40)
+        else MaterialTheme.colorScheme.surfaceContainerLowest
+    val borderColor =
+        if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+    Surface(
         onClick = onClick,
-        label = {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },
-    )
+        modifier = modifier.minimumInteractiveComponentSize(),
+        shape = MaterialTheme.shapes.chipShape,
+        color = containerColor,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        border = BorderStroke(1.dp, borderColor),
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier =
+                Modifier.padding(horizontal = Dimens.smallPadding, vertical = Dimens.chipVerticalPadding),
+        )
+    }
 }

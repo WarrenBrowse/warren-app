@@ -90,7 +90,7 @@ fun NavigationListItem(
                 if (trailingText != null) {
                     Text(
                         text = trailingText,
-                        style = MaterialTheme.typography.labelLarge,
+                        style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(end = Dimens.smallPadding),
                     )

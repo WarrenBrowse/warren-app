@@ -43,11 +43,18 @@ import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_ACTION_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG
 import androidx.compose.ui.unit.dp
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.animation.core.tween
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
 private const val NOTIFICATION_CARD_ALPHA = 0.6f
+private const val NOTIFICATION_MOTION_MILLIS = 250
 
 @Composable
 fun AnimatedNotificationBanner(
@@ -82,8 +89,9 @@ fun AnimatedNotificationBanner(
         // own slot: it can never ride over the transparent header above it.
         modifier = modifier.clipToBounds().onFocusChanged { notificationHasFocus.value = it.hasFocus },
         visible = isVisible,
-        enter = slideInVertically(initialOffsetY = { -it }),
-        exit = slideOutVertically(targetOffsetY = { -it }),
+        // Desktop NotificationBanner: a 250 ms translate, not a spring.
+        enter = slideInVertically(tween(NOTIFICATION_MOTION_MILLIS), initialOffsetY = { -it }),
+        exit = slideOutVertically(tween(NOTIFICATION_MOTION_MILLIS), targetOffsetY = { -it }),
     ) {
         val visibleNotification = notification ?: previous
         if (visibleNotification != null)
@@ -109,19 +117,29 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
     val (title, message, statusLevel, action) = notificationBannerData
     // Floating dark rounded card over the backdrop (desktop NotificationBanner),
     // instead of an edge-to-edge opaque bar.
-    val shape = RoundedCornerShape(Dimens.mediumPadding)
+    val shape = RoundedCornerShape(Dimens.notificationBannerRadius)
+    val edgeColor = statusLevel.accent()
+    val edge = Dimens.notificationBannerEdge
     ConstraintLayout(
         modifier =
             modifier
                 .padding(horizontal = Dimens.mediumPadding, vertical = Dimens.tinyPadding)
+                .shadow(Dimens.notificationBannerElevation, shape, clip = false)
                 .clip(shape)
                 .background(color = Color.Black.copy(alpha = NOTIFICATION_CARD_ALPHA))
                 .border(width = 1.dp, color = Color.White.copy(alpha = 0.2f), shape = shape)
+                // The status colour as a top edge, the desktop's accent line.
+                .drawBehind {
+                    drawRect(
+                        color = edgeColor,
+                        size = Size(size.width, edge.toPx()),
+                    )
+                }
                 .padding(
                     start = Dimens.notificationBannerStartPadding,
                     end = Dimens.notificationBannerEndPadding,
-                    top = Dimens.smallPadding,
-                    bottom = Dimens.smallPadding,
+                    top = Dimens.notificationBannerVerticalPadding,
+                    bottom = Dimens.notificationBannerVerticalPadding,
                 )
                 .animateContentSize()
                 // A banner appearing is news a screen-reader user must get:
@@ -170,7 +188,8 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
                         width = Dimension.fillToConstraints
                     }
                     .padding(start = Dimens.smallPadding),
-            style = MaterialTheme.typography.labelLarge,
+            // Desktop tinyText: 12/18 semibold.
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             color = MaterialTheme.colorScheme.onSurface,
             // Two lines: a title that interpolates an app name, and long
             // translations of the version banners, do not fit one. The card
@@ -210,8 +229,9 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
                                 it
                             }
                         },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
+                // Desktop: 12 at 60 % white.
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
+                style = MaterialTheme.typography.labelMedium,
             )
         }
         action?.let {
@@ -231,20 +251,20 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
 }
 
 @Composable
+private fun StatusLevel.accent(): Color =
+    when (this) {
+        StatusLevel.Error -> MaterialTheme.colorScheme.error
+        StatusLevel.Warning -> MaterialTheme.colorScheme.warning
+        StatusLevel.Info -> MaterialTheme.colorScheme.positive
+        StatusLevel.None -> Color.Transparent
+    }
+
+@Composable
 private fun NotificationDot(statusLevel: StatusLevel, modifier: Modifier) {
     Box(
         modifier =
             modifier
-                .background(
-                    color =
-                        when (statusLevel) {
-                            StatusLevel.Error -> MaterialTheme.colorScheme.error
-                            StatusLevel.Warning -> MaterialTheme.colorScheme.warning
-                            StatusLevel.Info -> MaterialTheme.colorScheme.positive
-                            StatusLevel.None -> Color.Transparent
-                        },
-                    shape = CircleShape,
-                )
+                .background(color = statusLevel.accent(), shape = CircleShape)
                 .size(Dimens.notificationStatusIconSize)
     )
 }

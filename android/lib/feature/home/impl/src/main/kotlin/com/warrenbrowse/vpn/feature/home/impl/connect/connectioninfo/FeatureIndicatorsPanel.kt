@@ -10,10 +10,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -60,9 +61,11 @@ fun AlwaysExpandedFeatureIndicators(
             natPmpStatus = natPmpStatus,
         )
 
-    FlowRow(
+    // Desktop stacks the badges in a left-aligned column, 5 px apart.
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
+        verticalArrangement = Arrangement.spacedBy(Dimens.chipStackGap),
+        horizontalAlignment = Alignment.Start,
     ) {
         chips.forEach { chip ->
             val sharedTransitionScope = LocalSharedTransitionScope.current
@@ -72,6 +75,7 @@ fun AlwaysExpandedFeatureIndicators(
                 WarrenFeatureChip(
                     text = chip.label,
                     onClick = { onNavigateToFeature(chip.indicator) },
+                    isError = chip.isError,
                     modifier =
                         if (this@with != null && animatedVisibilityScope != null) {
                             Modifier.sharedBounds(
@@ -101,7 +105,11 @@ fun AlwaysExpandedFeatureIndicators(
 }
 
 /** One rendered chip: the feature it navigates to, and the text it carries. */
-private data class FeatureChip(val indicator: FeatureIndicator, val label: String)
+private data class FeatureChip(
+    val indicator: FeatureIndicator,
+    val label: String,
+    val isError: Boolean = false,
+)
 
 /**
  * The engine's indicators plus the two the engine cannot report on its own: a
@@ -152,7 +160,7 @@ private fun featureChips(
     // a request the exit refused would otherwise be invisible on this screen.
     if (natPmpEnabled && FeatureIndicator.PORT_FORWARDING !in features) {
         natPmpFailureLabel(natPmpStatus)?.let { label ->
-            chips.add(FeatureChip(FeatureIndicator.PORT_FORWARDING, label))
+            chips.add(FeatureChip(FeatureIndicator.PORT_FORWARDING, label, isError = true))
         }
     }
 

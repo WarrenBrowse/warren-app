@@ -85,6 +85,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.warrenbrowse.vpn.lib.ui.theme.color.positive
+import kotlinx.coroutines.delay
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.background
+import androidx.compose.material.icons.rounded.Check
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -870,6 +875,9 @@ private fun Content(
     }
 }
 
+/** Desktop AppMainHeaderPubKey: the check shows for two seconds after a copy. */
+private const val FOOTER_COPIED_MILLIS = 2_000L
+
 /**
  * Bottom footer strip over the scenery, mirroring the desktop AppMainFooter:
  * the short account pubkey (copyable, monospace) on the left and the remaining
@@ -882,42 +890,64 @@ private fun WarrenMainFooter(
     onCopyPubkey: (() -> Unit)?,
     timeLeft: String?,
 ) {
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .padding(horizontal = Dimens.mediumPadding, vertical = Dimens.smallPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (shortPubkey != null) {
-            Text(
-                text = shortPubkey,
-                style = MaterialTheme.typography.labelMedium,
-                fontFamily = FontFamily.Monospace,
-                color = Color.White.copy(alpha = Alpha80),
-                maxLines = 1,
-            )
-            if (onCopyPubkey != null) {
-                IconButton(
-                    onClick = onCopyPubkey,
-                    modifier = Modifier.size(Dimens.mediumPadding * 2),
-                ) {
-                    Icon(
-                        imageVector = Icons.Rounded.ContentCopy,
-                        contentDescription = stringResource(R.string.copy),
-                        tint = Color.White.copy(alpha = Alpha80),
-                        modifier = Modifier.size(Dimens.mediumPadding),
-                    )
+    // Desktop AppMainFooter: a 60 % black band with a top hairline, 7 x 16
+    // padding; the copy icon turns into a green check for two seconds.
+    var copied by remember { mutableStateOf(false) }
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(FOOTER_COPIED_MILLIS)
+            copied = false
+        }
+    }
+    Column(modifier = Modifier.fillMaxWidth().background(Color.Black.copy(alpha = Alpha60))) {
+        HorizontalDivider(thickness = 1.dp, color = Color.White.copy(alpha = Alpha20))
+        Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(
+                        horizontal = Dimens.mediumPadding,
+                        vertical = Dimens.footerVerticalPadding,
+                    ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            if (shortPubkey != null) {
+                Text(
+                    text = shortPubkey,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontFamily = FontFamily.Monospace,
+                    color = Color.White.copy(alpha = Alpha80),
+                    maxLines = 1,
+                )
+                if (onCopyPubkey != null) {
+                    IconButton(
+                        onClick = {
+                            onCopyPubkey()
+                            copied = true
+                        },
+                        modifier = Modifier.size(Dimens.mediumPadding * 2),
+                    ) {
+                        Icon(
+                            imageVector =
+                                if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                            contentDescription = stringResource(R.string.copy),
+                            tint =
+                                if (copied) MaterialTheme.colorScheme.positive
+                                else Color.White.copy(alpha = Alpha80),
+                            modifier = Modifier.size(Dimens.mediumPadding),
+                        )
+                    }
                 }
             }
-        }
-        Spacer(modifier = Modifier.weight(1f))
-        if (timeLeft != null) {
-            Text(
-                text = timeLeft,
-                style = MaterialTheme.typography.labelMedium,
-                color = Color.White.copy(alpha = Alpha80),
-                maxLines = 1,
-            )
+            Spacer(modifier = Modifier.weight(1f))
+            if (timeLeft != null) {
+                Text(
+                    text = timeLeft,
+                    style =
+                        MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Color.White.copy(alpha = Alpha80),
+                    maxLines = 1,
+                )
+            }
         }
     }
 }
