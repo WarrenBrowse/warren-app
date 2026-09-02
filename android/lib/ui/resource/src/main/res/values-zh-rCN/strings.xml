@@ -554,6 +554,7 @@
     <string name="report_problem_error_clock">此设备的时钟偏差超过一分钟。请开启自动日期和时间，然后重新发送。</string>
     <string name="report_problem_error_rate_limited">此钱包目前发送的报告过多，请稍后再试。</string>
     <string name="report_problem_error_too_large">日志过大，无法发送。</string>
+    <string name="report_problem_error_upload_timeout">在此连接上发送日志耗时过长。</string>
     <string name="report_problem_send_without_logs">不带日志发送</string>
     <string name="report_problem_error_invalid">部分字段未被接受。请检查描述后重试。</string>
     <string name="report_problem_error_server">论坛目前无法接收报告，请稍后再试。</string>

@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">Bu cihazın saati bir dakikadan fazla sapmış. Otomatik tarih ve saati etkinleştirip yeniden gönderin.</string>
     <string name="report_problem_error_rate_limited">Bu cüzdandan şimdilik çok fazla rapor gönderildi. Lütfen daha sonra tekrar deneyin.</string>
     <string name="report_problem_error_too_large">Günlükler gönderilemeyecek kadar büyük.</string>
+    <string name="report_problem_error_upload_timeout">Günlüklerin gönderilmesi bu bağlantıda çok uzun sürdü.</string>
     <string name="report_problem_send_without_logs">Günlükler olmadan gönder</string>
     <string name="report_problem_error_invalid">Bazı alanlar kabul edilemedi. Açıklamayı kontrol edip tekrar deneyin.</string>
     <string name="report_problem_error_server">Forum raporu şu anda alamadı. Lütfen daha sonra tekrar deneyin.</string>

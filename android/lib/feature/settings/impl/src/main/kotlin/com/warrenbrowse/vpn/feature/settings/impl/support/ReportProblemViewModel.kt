@@ -71,16 +71,17 @@ class ReportProblemViewModel(private val reporter: WarrenSupportReporter) : View
     }
 
     /**
-     * Collects the report so the user can read it (the desktop "View the logs"),
-     * or so a send goes out with the freshest one. Returns through [onReady]
-     * with the file to show.
+     * Collects the report so the user can read it (the desktop "View the
+     * logs"). Returns through [onReady] with the file to show. Nothing leaves
+     * the device for it: the live probes are taken by the send's own
+     * collection, not here.
      */
     fun collect(onReady: (CollectedReport) -> Unit = {}) {
         if (_state.value.collecting) return
         _state.update { it.copy(collecting = true, collectFailed = false) }
         viewModelScope.launch {
             val previous = _state.value.collected
-            val result = reporter.collect()
+            val result = reporter.collect(forSend = false)
             result.fold(
                 onSuccess = { report ->
                     previous?.let(reporter::discard)
@@ -112,10 +113,11 @@ class ReportProblemViewModel(private val reporter: WarrenSupportReporter) : View
         _state.update { it.copy(sending = true, outcome = null) }
         viewModelScope.launch {
             // A send with logs always collects afresh: the report should describe
-            // the moment of the send, not the moment the screen was opened.
+            // the moment of the send, not the moment the screen was opened, and
+            // this is the one collection that probes the network.
             val report =
                 if (s.includeLogs) {
-                    reporter.collect().getOrNull().also { fresh ->
+                    reporter.collect(forSend = true).getOrNull().also { fresh ->
                         if (fresh != null) s.collected?.let(reporter::discard)
                     }
                 } else {

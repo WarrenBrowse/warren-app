@@ -563,6 +563,7 @@
     <string name="report_problem_error_clock">Годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час і надішліть знову.</string>
     <string name="report_problem_error_rate_limited">Забагато звітів із цього гаманця наразі. Спробуйте пізніше.</string>
     <string name="report_problem_error_too_large">Журнали завеликі для надсилання.</string>
+    <string name="report_problem_error_upload_timeout">Надсилання журналів через це з’єднання тривало надто довго.</string>
     <string name="report_problem_send_without_logs">Надіслати без журналів</string>
     <string name="report_problem_error_invalid">Деякі поля не прийнято. Перевірте опис і спробуйте знову.</string>
     <string name="report_problem_error_server">Форум зараз не зміг прийняти звіт. Спробуйте пізніше.</string>

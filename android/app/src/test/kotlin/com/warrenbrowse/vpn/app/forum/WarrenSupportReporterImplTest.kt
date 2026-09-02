@@ -77,7 +77,7 @@ class WarrenSupportReporterImplTest {
         journal.record(ForumEvent.LOGIN_DEFERRED, JournalField.Class("connecting"))
         val jni = FakeJniBridge()
 
-        reporter(dir, jni, journal).collect().getOrThrow()
+        reporter(dir, jni, journal).collect(forSend = false).getOrThrow()
 
         val metadata = jni.collectedMetadata.single()
         assertTrue(metadata.contains("\"last-forum-login\":\"transport\""), metadata)
@@ -87,9 +87,38 @@ class WarrenSupportReporterImplTest {
     fun the_report_header_says_none_before_any_sign_in(@TempDir dir: File) = runTest {
         val jni = FakeJniBridge()
 
-        reporter(dir, jni).collect().getOrThrow()
+        reporter(dir, jni).collect(forSend = false).getOrThrow()
 
         assertTrue(jni.collectedMetadata.single().contains("\"last-forum-login\":\"none\""))
+    }
+
+    @Test
+    fun whether_the_collection_is_for_a_send_reaches_the_collector(@TempDir dir: File) = runTest {
+        // The Rust collector runs the network probes on that flag alone.
+        val jni = FakeJniBridge()
+
+        reporter(dir, jni).collect(forSend = false).getOrThrow()
+        reporter(dir, jni).collect(forSend = true).getOrThrow()
+
+        assertEquals(listOf(false, true), jni.collectedForSend)
+    }
+
+    @Test
+    fun a_collection_prunes_the_stale_files_of_the_report_directory_and_keeps_the_fresh_ones(
+        @TempDir dir: File
+    ) = runTest {
+        val reports = File(dir, WarrenSupportReporterImpl.REPORT_DIR).apply { mkdirs() }
+        val sharedLongAgo =
+            File(reports, "shared-warren-report-old.log").apply {
+                writeText("shared")
+                setLastModified(System.currentTimeMillis() - 2 * WarrenSupportReporterImpl.STALE_REPORT_MILLIS)
+            }
+        val sharedJustNow = File(reports, "shared-warren-report-new.log").apply { writeText("shared") }
+
+        reporter(dir).collect(forSend = false).getOrThrow()
+
+        assertFalse(sharedLongAgo.exists(), "an hour-old share copy is pruned")
+        assertTrue(sharedJustNow.exists(), "a copy a receiver may still be reading is kept")
     }
 
     @Test
@@ -103,7 +132,7 @@ class WarrenSupportReporterImplTest {
                     tunnel = WarrenConnectedInfo.Failed("exit 203.0.113.7:443 refused"),
                     stateText = "Failed: exit 203.0.113.7:443 refused",
                 )
-                .collect()
+                .collect(forSend = false)
                 .getOrThrow()
 
             val metadata = jni.collectedMetadata.single()
@@ -132,7 +161,7 @@ class WarrenSupportReporterImplTest {
                         ),
                     stateText = "Connected (mimicry, port 41231)",
                 )
-                .collect()
+                .collect(forSend = false)
                 .getOrThrow()
 
             val metadata = jni.collectedMetadata.single()
@@ -156,7 +185,7 @@ class WarrenSupportReporterImplTest {
         val journal = RecordingJournal()
         val jni = FakeJniBridge(collectAnswer = { """{"ok":false,"error":"report unreadable: NotFound"}""" })
 
-        val result = reporter(dir, jni, journal).collect()
+        val result = reporter(dir, jni, journal).collect(forSend = false)
 
         assertTrue(result.isFailure)
         assertEquals(

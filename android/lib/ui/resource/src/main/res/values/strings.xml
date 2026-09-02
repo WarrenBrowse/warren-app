@@ -592,6 +592,7 @@
     <string name="report_problem_error_clock">This device\'s clock is off by more than a minute. Enable automatic date and time, then send again.</string>
     <string name="report_problem_error_rate_limited">Too many reports from this wallet for now. Please try again later.</string>
     <string name="report_problem_error_too_large">The logs are too large to send.</string>
+    <string name="report_problem_error_upload_timeout">Sending the logs took too long on this connection.</string>
     <string name="report_problem_send_without_logs">Send without the logs</string>
     <string name="report_problem_error_invalid">Some fields could not be accepted. Check the description and try again.</string>
     <string name="report_problem_error_server">The forum could not take the report right now. Please try again later.</string>

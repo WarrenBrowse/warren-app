@@ -84,7 +84,7 @@ class WarrenSupportReporterImpl(
         return verdict
     }
 
-    override suspend fun collect(): Result<CollectedReport> =
+    override suspend fun collect(forSend: Boolean): Result<CollectedReport> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val wallet = walletRepository.state.value
@@ -111,9 +111,17 @@ class WarrenSupportReporterImpl(
                 val redactJson = buildJsonArray(listOfNotNull(pubkey))
                 // Its own directory: the share sheet's FileProvider serves this
                 // directory and nothing else in the cache.
-                val output =
-                    File(File(context.cacheDir, REPORT_DIR).apply { mkdirs() }, "warren-report-${UUID.randomUUID()}.log")
-                val raw = jni.collectProblemReport(metadataJson, redactJson, appLogDir.absolutePath, output.absolutePath)
+                val reports = File(context.cacheDir, REPORT_DIR).apply { mkdirs() }
+                pruneStaleReports(reports)
+                val output = File(reports, "warren-report-${UUID.randomUUID()}.log")
+                val raw =
+                    jni.collectProblemReport(
+                        metadataJson,
+                        redactJson,
+                        appLogDir.absolutePath,
+                        output.absolutePath,
+                        forSend,
+                    )
                 val root = Json.parseToJsonElement(raw).jsonObject
                 if (root["ok"]?.jsonPrimitive?.boolean != true) {
                     val reason = root["error"]?.jsonPrimitive?.content ?: "unknown"
@@ -194,6 +202,22 @@ class WarrenSupportReporterImpl(
         }
     }
 
+    /**
+     * Deletes what an earlier run left in the report directory: the copies the
+     * share sheet was handed (which a receiver may read long after the screen
+     * is gone, so they are never deleted with the report they came from) and
+     * the reports of a process killed before its screen discarded them. An
+     * hour is long enough for any share target to have read its copy.
+     */
+    private fun pruneStaleReports(reports: File) {
+        val cutoff = System.currentTimeMillis() - STALE_REPORT_MILLIS
+        reports.listFiles()?.filter { it.isFile && it.lastModified() < cutoff }?.forEach { stale ->
+            if (!stale.delete()) {
+                Logger.w("WarrenSupportReporter: could not delete a stale report")
+            }
+        }
+    }
+
     /** The connect contract's body, without the log field Rust adds. */
     private fun reportJson(form: ReportForm): String {
         val fields =
@@ -225,6 +249,12 @@ class WarrenSupportReporterImpl(
          * derivation as `warren_forum::MAX_LOG_GZ_BYTES` and the desktop's.
          */
         const val MAX_LOG_GZ_BYTES = 16_000_000 / 4 * 3
+
+        /** How long a file in the report directory outlives its screen. */
+        const val STALE_REPORT_MILLIS = 60L * 60L * 1000L
+
+        /** The cache subdirectory the collected reports live in: `res/xml/report_paths.xml` exposes it and nothing else. */
+        const val REPORT_DIR = "reports"
     }
 }
 
@@ -261,6 +291,7 @@ internal fun reportOutcomeClass(outcome: ReportSubmitOutcome): String =
         ReportSubmitOutcome.ClockSkew -> "clock-skew"
         ReportSubmitOutcome.RateLimited -> "rate-limited"
         ReportSubmitOutcome.TooLarge -> "too-large"
+        ReportSubmitOutcome.UploadTimedOut -> "upload-timeout"
         ReportSubmitOutcome.Invalid -> "invalid"
         ReportSubmitOutcome.ServerError -> "server-error"
         ReportSubmitOutcome.WalletNotReady -> "wallet-absent"
@@ -279,7 +310,7 @@ internal fun parseReportOutcome(rawJson: String): ReportSubmitOutcome =
             val handle = root["handle"]?.jsonPrimitive?.content
             ReportSubmitOutcome.Created(
                 topicId = root["topic_id"]?.jsonPrimitive?.long ?: 0L,
-                topicUrl = root["topic_url"]?.jsonPrimitive?.content ?: "",
+                topicUrl = forumTopicUrlOrEmpty(root["topic_url"]?.jsonPrimitive?.content),
                 identity =
                     handle?.let {
                         ForumIdentity(handle = it, notifySlot = root["notify_slot"]?.jsonPrimitive?.int)
@@ -295,15 +326,28 @@ internal fun parseReportOutcome(rawJson: String): ReportSubmitOutcome =
                 "invalid" -> ReportSubmitOutcome.Invalid
                 "server-error" -> ReportSubmitOutcome.ServerError
                 else ->
-                    ReportSubmitOutcome.Failure(
-                        root["reason"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
-                            ?: "unknown"
-                    )
+                    when (val reason = root["reason"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }) {
+                        "upload-timeout" -> ReportSubmitOutcome.UploadTimedOut
+                        else -> ReportSubmitOutcome.Failure(reason ?: "unknown")
+                    }
             }
         }
     } catch (e: Exception) {
         ReportSubmitOutcome.Failure("invalid-envelope")
     }
 
-/** The cache subdirectory the collected reports live in, the one the share provider exposes. */
-private const val REPORT_DIR = "reports"
+/** The forum's host: the only origin a topic link the broker returns is opened on. */
+internal const val FORUM_HOST = "forum.warrenbrowse.com"
+
+/**
+ * The topic URL the broker returned, kept only when it points at the forum
+ * over https; anything else becomes the empty string and the screen shows the
+ * topic without a link. The value comes off the wire, and the screen opens it
+ * in the browser on one tap as a link the app vouched for.
+ */
+internal fun forumTopicUrlOrEmpty(url: String?): String {
+    if (url.isNullOrEmpty()) return ""
+    val parsed = runCatching { java.net.URI(url) }.getOrNull() ?: return ""
+    val onForum = parsed.scheme == "https" && parsed.host == FORUM_HOST && parsed.userInfo == null
+    return if (onForum) url else ""
+}

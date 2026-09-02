@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">Tämän laitteen kello on yli minuutin väärässä. Ota automaattinen päivämäärä ja aika käyttöön ja lähetä uudelleen.</string>
     <string name="report_problem_error_rate_limited">Liikaa raportteja tästä lompakosta juuri nyt. Yritä myöhemmin uudelleen.</string>
     <string name="report_problem_error_too_large">Lokit ovat liian suuria lähetettäviksi.</string>
+    <string name="report_problem_error_upload_timeout">Lokien lähettäminen kesti liian pitkään tällä yhteydellä.</string>
     <string name="report_problem_send_without_logs">Lähetä ilman lokeja</string>
     <string name="report_problem_error_invalid">Joitakin kenttiä ei voitu hyväksyä. Tarkista kuvaus ja yritä uudelleen.</string>
     <string name="report_problem_error_server">Foorumi ei voinut ottaa raporttia vastaan juuri nyt. Yritä myöhemmin uudelleen.</string>

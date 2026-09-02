@@ -554,6 +554,7 @@
     <string name="report_problem_error_clock">นาฬิกาของอุปกรณ์นี้คลาดเคลื่อนเกินหนึ่งนาที เปิดวันที่และเวลาอัตโนมัติ แล้วส่งอีกครั้ง</string>
     <string name="report_problem_error_rate_limited">มีรายงานจากกระเป๋าเงินนี้มากเกินไปในตอนนี้ โปรดลองอีกครั้งภายหลัง</string>
     <string name="report_problem_error_too_large">บันทึกมีขนาดใหญ่เกินกว่าจะส่งได้</string>
+    <string name="report_problem_error_upload_timeout">การส่งบันทึกใช้เวลานานเกินไปบนการเชื่อมต่อนี้</string>
     <string name="report_problem_send_without_logs">ส่งโดยไม่มีบันทึก</string>
     <string name="report_problem_error_invalid">บางช่องไม่ได้รับการยอมรับ ตรวจสอบคำอธิบายแล้วลองอีกครั้ง</string>
     <string name="report_problem_error_server">ฟอรัมไม่สามารถรับรายงานได้ในขณะนี้ โปรดลองอีกครั้งภายหลัง</string>

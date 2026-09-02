@@ -9,12 +9,14 @@
 //! address, no nonce, no body), and the mnemonic lives in a `Zeroizing`
 //! buffer for the duration of one call.
 
+use std::time::Duration;
+
 use jnix::{
     FromJava, JnixEnv,
     jni::{
         JNIEnv,
         objects::{JClass, JString},
-        sys::{jbyteArray, jstring},
+        sys::{jboolean, jbyteArray, jstring},
     },
 };
 use warren_api::{HttpRequest, HttpResponse, HttpTransport, Method, TransportError};
@@ -69,6 +71,30 @@ async fn get_dated(
         })
         .await?;
     Ok((response, None))
+}
+
+/// A POST under a total deadline sized by the caller: the report upload,
+/// whose body can run to megabytes, must not die in the mint's 15 s.
+#[cfg(feature = "tunnel")]
+async fn post_within(
+    transport: &ForumTransport,
+    request: HttpRequest,
+    total: Duration,
+) -> Result<HttpResponse, TransportError> {
+    transport
+        .execute_dated_within(request, total)
+        .await
+        .map(|(response, _)| response)
+}
+
+/// The SDK client carries its own fixed 15 s; this arm ships in no build.
+#[cfg(not(feature = "tunnel"))]
+async fn post_within(
+    transport: &ForumTransport,
+    request: HttpRequest,
+    _total: Duration,
+) -> Result<HttpResponse, TransportError> {
+    transport.execute(request).await
 }
 
 /// What the preflight of a login learnt.
@@ -235,16 +261,12 @@ fn outcome_class(outcome: &ForumLoginOutcome) -> &'static str {
     }
 }
 
-/// The transport failure class. The SDK's error strings are address-free by
-/// construction, so the class is what they say.
+/// The transport failure class, the same table the report probes read, so
+/// the log of a login and the probe block of the report it leads to name a
+/// refused protect or a resolver failure in the same word. The transports'
+/// phrases are address-free by construction.
 fn transport_class(err: &TransportError) -> &'static str {
-    match err {
-        TransportError::Connect(_) => "connect",
-        TransportError::Io(msg) if msg.contains("timed out") => "timeout",
-        TransportError::Io(msg) if msg.contains("protect") => "protect-refused",
-        TransportError::Io(_) => "io",
-        _ => "other",
-    }
+    crate::probes::class_of(err)
 }
 
 /// Best-effort: tell the connect provider the user declined the forum login
@@ -372,8 +394,9 @@ fn forum_report(mnemonic: &str, report_json: &str, log_gz: Option<&[u8]>) -> Rep
         body: signed.body,
         use_sni: true,
     };
+    let deadline = forum::upload_deadline(bytes);
     let started = std::time::Instant::now();
-    match runtime.block_on(transport.execute(request)) {
+    match runtime.block_on(post_within(&transport, request, deadline)) {
         Ok(response) => {
             let outcome = forum::report_outcome_for_response(response.status, &response.body);
             log::info!(
@@ -386,12 +409,19 @@ fn forum_report(mnemonic: &str, report_json: &str, log_gz: Option<&[u8]>) -> Rep
             outcome
         }
         Err(err) => {
+            let class = transport_class(&err);
             log::warn!(
-                "forumReport: transport error ({}) after {} ms",
-                transport_class(&err),
-                started.elapsed().as_millis()
+                "forumReport: transport error ({class}) after {} ms of a {} s deadline for a {bytes} byte body",
+                started.elapsed().as_millis(),
+                deadline.as_secs()
             );
-            ReportOutcome::Failed(FailReason::Transport)
+            // A deadline run out WITH logs attached is the uplink, not the
+            // network: the UI offers the resend without them.
+            if log_gz.is_some() && class == "read-timeout" {
+                ReportOutcome::Failed(FailReason::UploadTimeout)
+            } else {
+                ReportOutcome::Failed(FailReason::Transport)
+            }
         }
     }
 }
@@ -414,8 +444,11 @@ fn report_class(outcome: &ReportOutcome) -> &'static str {
 /// `metadata_json` is one JSON object of the platform facts Kotlin read;
 /// `redact_json` a JSON array of strings to redact (the wallet address);
 /// `app_log_dir` the Kotlin log directory. The Rust log directory is the one
-/// `initLogger` writes. Returns `{"ok":true,"bytes":N}` or
-/// `{"ok":false,"error":"<class>"}`.
+/// `initLogger` writes. `for_send` says the report is about to be sent: only
+/// then do the live network probes run, one of them on a socket that bypasses
+/// the TUN; a report collected to be read ("View the logs") reaches no host
+/// and records the probe keys as `not-run`. Returns `{"ok":true,"bytes":N}`
+/// or `{"ok":false,"error":"<class>"}`.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_collectProblemReport<'local>(
     env: JNIEnv<'local>,
@@ -424,13 +457,20 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_collectProblemRep
     redact_json: JString<'local>,
     app_log_dir: JString<'local>,
     output_path: JString<'local>,
+    for_send: jboolean,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
     let metadata_json = String::from_java(&jnix_env, metadata_json);
     let redact_json = String::from_java(&jnix_env, redact_json);
     let app_log_dir = std::path::PathBuf::from(String::from_java(&jnix_env, app_log_dir));
     let output_path = std::path::PathBuf::from(String::from_java(&jnix_env, output_path));
-    let result = collect(&metadata_json, &redact_json, &app_log_dir, &output_path);
+    let result = collect(
+        &metadata_json,
+        &redact_json,
+        &app_log_dir,
+        &output_path,
+        for_send != 0,
+    );
     let json = crate::report::collect_envelope(&result);
     match jnix_env.new_string(json) {
         Ok(s) => s.into_inner() as jstring,
@@ -443,6 +483,7 @@ fn collect(
     redact_json: &str,
     app_log_dir: &std::path::Path,
     output_path: &std::path::Path,
+    for_send: bool,
 ) -> Result<u64, String> {
     let mut metadata = crate::report::parse_metadata(metadata_json)?;
     let redact = crate::report::parse_redact_strings(redact_json);
@@ -453,23 +494,33 @@ fn collect(
         return Err("initLogger must run first".to_owned());
     };
     let started = std::time::Instant::now();
-    // The live legs, measured now rather than at send time: a report about a
-    // sign-in that never left the device must show which path was closed
-    // while it was closed.
-    let device_now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    metadata.extend(runtime.block_on(crate::probes::run(
-        &crate::probes::ProbeTargets::production(),
-        &forum_transport(),
-        &warren_api::reqwest_transport::ReqwestTransport::new(),
-        device_now,
-    )));
-    log::info!(
-        "collectProblemReport: probes done in {} ms",
-        started.elapsed().as_millis()
-    );
+    if for_send {
+        // The live legs, measured at the send: the report describes the
+        // network the POST that follows it will cross.
+        let device_now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0);
+        // `try_new`, never `new`: this is an `extern "system"` frame, and a
+        // panic here would unwind out of it and take the process down where
+        // the collector already has an error channel.
+        let default = warren_api::reqwest_transport::ReqwestTransport::try_new().ok();
+        if default.is_none() {
+            log::warn!("collectProblemReport: default client unavailable, its legs are skipped");
+        }
+        metadata.extend(runtime.block_on(crate::probes::run(
+            &crate::probes::ProbeTargets::production(),
+            &forum_transport(),
+            default.as_ref(),
+            device_now,
+        )));
+        log::info!(
+            "collectProblemReport: probes done in {} ms",
+            started.elapsed().as_millis()
+        );
+    } else {
+        metadata.extend(crate::probes::not_run());
+    }
     let result = crate::report::collect(metadata, redact, &rust_log_dir, app_log_dir, output_path);
     match &result {
         Ok(bytes) => log::info!(

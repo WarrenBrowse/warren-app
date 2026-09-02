@@ -554,6 +554,7 @@
     <string name="report_problem_error_clock">ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ အလိုအလျောက် ရက်စွဲနှင့် အချိန်ကို ဖွင့်ပြီး ပြန်ပို့ပါ။</string>
     <string name="report_problem_error_rate_limited">ဤပိုက်ဆံအိတ်မှ အစီရင်ခံစာများ လောလောဆယ် များလွန်းနေသည်။ နောက်မှ ထပ်ကြိုးစားပါ။</string>
     <string name="report_problem_error_too_large">မှတ်တမ်းများ ကြီးလွန်း၍ ပေးပို့၍ မရပါ။</string>
+    <string name="report_problem_error_upload_timeout">ဤချိတ်ဆက်မှုတွင် မှတ်တမ်းများ ပေးပို့ရန် အချိန်ကြာလွန်းပါသည်။</string>
     <string name="report_problem_send_without_logs">မှတ်တမ်းများ မပါဘဲ ပေးပို့ရန်</string>
     <string name="report_problem_error_invalid">အချို့အကွက်များကို လက်မခံနိုင်ပါ။ ဖော်ပြချက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။</string>
     <string name="report_problem_error_server">ဖိုရမ်က အစီရင်ခံစာကို ယခု လက်ခံ၍ မရပါ။ နောက်မှ ထပ်ကြိုးစားပါ။</string>

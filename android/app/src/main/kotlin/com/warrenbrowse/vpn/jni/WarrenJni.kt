@@ -144,15 +144,17 @@ object WarrenJni {
      * Collect the redacted problem report into `outputPath` with the shared
      * desktop collector: Rust log files, the Kotlin log directory, a logcat
      * dump, plus the `metadataJson` facts in the header and the strings of
-     * `redactJson` redacted. Returns `{"ok":true,"bytes":N}` or
-     * `{"ok":false,"error":..}`. Reads files and runs `logcat`: invoke off the
-     * main thread.
+     * `redactJson` redacted. `forSend` runs the live network probes, which a
+     * report collected only to be read must not (`WarrenJniBridge`). Returns
+     * `{"ok":true,"bytes":N}` or `{"ok":false,"error":..}`. Reads files and
+     * runs `logcat`: invoke off the main thread.
      */
     external fun collectProblemReport(
         metadataJson: String,
         redactJson: String,
         appLogDir: String,
         outputPath: String,
+        forSend: Boolean,
     ): String
 
     // -- Tunnel lifecycle --------------------------------------------------

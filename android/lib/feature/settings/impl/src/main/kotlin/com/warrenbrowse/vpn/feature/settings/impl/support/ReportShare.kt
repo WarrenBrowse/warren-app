@@ -22,6 +22,25 @@ internal const val REPORT_MIME_TYPE = "text/plain"
 internal fun reportProviderAuthority(packageName: String): String =
     packageName + REPORT_PROVIDER_SUFFIX
 
+/** The name prefix of the copies handed to the share sheet. */
+internal const val SHARED_REPORT_PREFIX = "shared-"
+
+/**
+ * The file the share sheet is actually handed: a copy of the report next to
+ * it, named `shared-<report>`. The report itself belongs to the screen, which
+ * deletes it when the logs are toggled off, when a send collects afresh or
+ * when the screen goes away, while a receiver that resolves the content URI
+ * lazily (a messenger, a file manager) may read it well after any of those.
+ * The copy is nobody's to delete on the spot; the reporter prunes the report
+ * directory of hour-old files at its next collection.
+ */
+internal fun sharedCopyOf(path: String): File {
+    val report = File(path)
+    val copy = File(report.parentFile, SHARED_REPORT_PREFIX + report.name)
+    report.copyTo(copy, overwrite = true)
+    return copy
+}
+
 /**
  * The share sheet for a collected report: the last-resort way for the logs to
  * leave the device when the connect broker itself is unreachable. The receiver
@@ -33,7 +52,7 @@ internal fun reportShareIntent(context: Context, path: String, chooserTitle: Str
         FileProvider.getUriForFile(
             context,
             reportProviderAuthority(context.packageName),
-            File(path),
+            sharedCopyOf(path),
         )
     val send =
         Intent(Intent.ACTION_SEND).apply {

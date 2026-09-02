@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">O relógio deste dispositivo está desfasado mais de um minuto. Ativa a data e hora automáticas e envia de novo.</string>
     <string name="report_problem_error_rate_limited">Demasiados relatórios desta carteira por agora. Tenta novamente mais tarde.</string>
     <string name="report_problem_error_too_large">Os registos são demasiado grandes para enviar.</string>
+    <string name="report_problem_error_upload_timeout">O envio dos registos demorou demasiado nesta ligação.</string>
     <string name="report_problem_send_without_logs">Enviar sem os registos</string>
     <string name="report_problem_error_invalid">Alguns campos não foram aceites. Verifica a descrição e tenta novamente.</string>
     <string name="report_problem_error_server">O fórum não conseguiu receber o relatório agora. Tenta novamente mais tarde.</string>

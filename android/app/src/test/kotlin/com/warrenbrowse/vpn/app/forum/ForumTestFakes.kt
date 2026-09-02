@@ -109,6 +109,7 @@ internal class FakeJniBridge(
     var cancelCalls = 0
     var reportCalls = 0
     val collectedMetadata = mutableListOf<String>()
+    val collectedForSend = mutableListOf<Boolean>()
 
     override fun generateMnemonic(): String = error("unused")
 
@@ -139,8 +140,10 @@ internal class FakeJniBridge(
         redactJson: String,
         appLogDir: String,
         outputPath: String,
+        forSend: Boolean,
     ): String {
         collectedMetadata += metadataJson
+        collectedForSend += forSend
         return collectAnswer()
     }
 }

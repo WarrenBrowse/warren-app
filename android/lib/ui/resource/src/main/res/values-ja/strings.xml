@@ -554,6 +554,7 @@
     <string name="report_problem_error_clock">この端末の時計が1分以上ずれています。日付と時刻の自動設定を有効にしてから、もう一度送信してください。</string>
     <string name="report_problem_error_rate_limited">このウォレットからのレポートが現在多すぎます。しばらくしてからもう一度お試しください。</string>
     <string name="report_problem_error_too_large">ログが大きすぎて送信できません。</string>
+    <string name="report_problem_error_upload_timeout">この接続ではログの送信に時間がかかりすぎました。</string>
     <string name="report_problem_send_without_logs">ログなしで送信</string>
     <string name="report_problem_error_invalid">受け付けられない項目があります。説明を確認して、もう一度お試しください。</string>
     <string name="report_problem_error_server">フォーラムが現在レポートを受け付けられませんでした。しばらくしてからもう一度お試しください。</string>

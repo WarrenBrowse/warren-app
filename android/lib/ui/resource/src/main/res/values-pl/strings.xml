@@ -563,6 +563,7 @@
     <string name="report_problem_error_clock">Zegar tego urządzenia jest przesunięty o ponad minutę. Włącz automatyczną datę i godzinę, a następnie wyślij ponownie.</string>
     <string name="report_problem_error_rate_limited">Zbyt wiele raportów z tego portfela na razie. Spróbuj ponownie później.</string>
     <string name="report_problem_error_too_large">Dzienniki są zbyt duże, aby je wysłać.</string>
+    <string name="report_problem_error_upload_timeout">Wysyłanie dzienników przez to połączenie trwało zbyt długo.</string>
     <string name="report_problem_send_without_logs">Wyślij bez dzienników</string>
     <string name="report_problem_error_invalid">Niektóre pola nie zostały przyjęte. Sprawdź opis i spróbuj ponownie.</string>
     <string name="report_problem_error_server">Forum nie mogło teraz przyjąć raportu. Spróbuj ponownie później.</string>

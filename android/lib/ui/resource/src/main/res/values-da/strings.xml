@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">Enhedens ur er mere end et minut forkert. Slå automatisk dato og tid til, og send igen.</string>
     <string name="report_problem_error_rate_limited">For mange rapporter fra denne tegnebog lige nu. Prøv igen senere.</string>
     <string name="report_problem_error_too_large">Logfilerne er for store til at blive sendt.</string>
+    <string name="report_problem_error_upload_timeout">Det tog for lang tid at sende logfilerne over denne forbindelse.</string>
     <string name="report_problem_send_without_logs">Send uden logfilerne</string>
     <string name="report_problem_error_invalid">Nogle felter kunne ikke accepteres. Tjek beskrivelsen, og prøv igen.</string>
     <string name="report_problem_error_server">Forummet kunne ikke modtage rapporten lige nu. Prøv igen senere.</string>

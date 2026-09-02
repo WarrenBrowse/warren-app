@@ -563,6 +563,7 @@
     <string name="report_problem_error_clock">Часы этого устройства отклоняются более чем на минуту. Включите автоматическую дату и время и отправьте снова.</string>
     <string name="report_problem_error_rate_limited">Слишком много отчётов с этого кошелька за раз. Повторите попытку позже.</string>
     <string name="report_problem_error_too_large">Журналы слишком велики для отправки.</string>
+    <string name="report_problem_error_upload_timeout">Отправка журналов по этому соединению заняла слишком много времени.</string>
     <string name="report_problem_send_without_logs">Отправить без журналов</string>
     <string name="report_problem_error_invalid">Некоторые поля не приняты. Проверьте описание и попробуйте снова.</string>
     <string name="report_problem_error_server">Форум сейчас не смог принять отчёт. Повторите попытку позже.</string>

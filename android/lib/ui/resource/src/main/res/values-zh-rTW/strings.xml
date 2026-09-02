@@ -554,6 +554,7 @@
     <string name="report_problem_error_clock">此裝置的時鐘偏差超過一分鐘。請開啟自動日期和時間，然後重新傳送。</string>
     <string name="report_problem_error_rate_limited">此錢包目前傳送的報告過多，請稍後再試。</string>
     <string name="report_problem_error_too_large">記錄檔過大，無法傳送。</string>
+    <string name="report_problem_error_upload_timeout">在此連線上傳送記錄檔耗時過長。</string>
     <string name="report_problem_send_without_logs">不含記錄檔傳送</string>
     <string name="report_problem_error_invalid">部分欄位未被接受。請檢查描述後重試。</string>
     <string name="report_problem_error_server">論壇目前無法接收報告，請稍後再試。</string>

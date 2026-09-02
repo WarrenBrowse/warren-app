@@ -39,5 +39,6 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         redactJson: String,
         appLogDir: String,
         outputPath: String,
-    ): String = WarrenJni.collectProblemReport(metadataJson, redactJson, appLogDir, outputPath)
+        forSend: Boolean,
+    ): String = WarrenJni.collectProblemReport(metadataJson, redactJson, appLogDir, outputPath, forSend)
 }

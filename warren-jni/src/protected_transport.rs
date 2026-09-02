@@ -91,19 +91,22 @@ impl ProtectedTransport {
             .map_err(|_| TransportError::Connect("resolve failed".to_owned()))?
             .collect();
 
-        // The failure kept is the last address's, named by class only (the
-        // report probes read it; no address ever rides along).
+        // The failure kept is the most specific one across the candidate
+        // addresses, named by class only (the report probes read it; no
+        // address ever rides along).
         let mut stream = None;
         let mut failure = TransportError::Connect("connection failed".to_owned());
         for addr in addrs {
-            match tokio::time::timeout(CONNECT_TIMEOUT, self.connect_protected(addr)).await {
-                Ok(Ok(s)) => {
-                    stream = Some(s);
-                    break;
-                }
-                Ok(Err(err)) => failure = err,
-                Err(_) => failure = TransportError::Connect("connect timed out".to_owned()),
-            }
+            let attempt =
+                match tokio::time::timeout(CONNECT_TIMEOUT, self.connect_protected(addr)).await {
+                    Ok(Ok(s)) => {
+                        stream = Some(s);
+                        break;
+                    }
+                    Ok(Err(err)) => err,
+                    Err(_) => TransportError::Connect("connect timed out".to_owned()),
+                };
+            failure = more_specific(failure, attempt);
         }
         let Some(stream) = stream else {
             return Err(failure);
@@ -159,6 +162,32 @@ impl ProtectedTransport {
     }
 }
 
+/// Of two candidate addresses' failures, the one that says more about the
+/// host. A refusal, a TLS failure or a refused protect proves the path was
+/// there; a connect timeout, that a route exists; `network unreachable` only
+/// that this address family has no route, the usual dual-stack noise when
+/// the AAAA record is tried on a v4-only network. Keeping the last failure
+/// let that noise overwrite a refusal in the very fact the probes report.
+/// Ties keep the earlier one.
+fn more_specific(current: TransportError, next: TransportError) -> TransportError {
+    fn rank(err: &TransportError) -> u8 {
+        match err {
+            TransportError::Connect(msg) => match msg.as_str() {
+                "connection refused" | "tls handshake failed" | "socket protect refused" => 0,
+                "connect timed out" => 1,
+                "network unreachable" => 2,
+                _ => 3,
+            },
+            _ => 3,
+        }
+    }
+    if rank(&next) < rank(&current) {
+        next
+    } else {
+        current
+    }
+}
+
 /// The class of a failed TCP connect, from the io error kind alone: a fixed
 /// phrase per kind, never the address or the OS text.
 fn connect_class(err: &std::io::Error) -> &'static str {
@@ -189,7 +218,21 @@ impl ProtectedTransport {
         &self,
         request: HttpRequest,
     ) -> Result<(HttpResponse, Option<String>), TransportError> {
-        tokio::time::timeout(TOTAL_TIMEOUT, self.execute_inner(request))
+        self.execute_dated_within(request, TOTAL_TIMEOUT).await
+    }
+
+    /// [`Self::execute_dated`] under a caller-chosen total deadline. The
+    /// default 15 s is the mint's, sized for a request of a few hundred
+    /// bytes; it also covers the body upload, so a report carrying
+    /// megabytes of logs on a slow uplink died in it as a generic transport
+    /// failure after the data was spent. The report path sizes its own bound
+    /// to the body it sends.
+    pub(crate) async fn execute_dated_within(
+        &self,
+        request: HttpRequest,
+        total: Duration,
+    ) -> Result<(HttpResponse, Option<String>), TransportError> {
+        tokio::time::timeout(total, self.execute_inner(request))
             .await
             .map_err(|_| TransportError::Io("request timed out".to_owned()))?
     }
@@ -323,6 +366,21 @@ pub(crate) mod loopback {
         serve_many(listener, response, 1).await
     }
 
+    /// `serve_one` that reads the request, waits `delay`, then answers: a
+    /// server slow enough to run a client deadline out.
+    pub(crate) async fn serve_one_after(
+        listener: TcpListener,
+        delay: std::time::Duration,
+        response: String,
+    ) -> Vec<u8> {
+        let (mut stream, _) = listener.accept().await.expect("accept");
+        let captured = read_request(&mut stream).await;
+        tokio::time::sleep(delay).await;
+        stream.write_all(response.as_bytes()).await.expect("write");
+        stream.flush().await.expect("flush");
+        captured
+    }
+
     /// `serve_one` for `count` successive connections; returns the last
     /// request captured.
     pub(crate) async fn serve_many(
@@ -339,6 +397,14 @@ pub(crate) mod loopback {
 
     async fn serve_accepted(listener: &TcpListener, response: &str) -> Vec<u8> {
         let (mut stream, _) = listener.accept().await.expect("accept");
+        let captured = read_request(&mut stream).await;
+        stream.write_all(response.as_bytes()).await.expect("write");
+        stream.flush().await.expect("flush");
+        captured
+    }
+
+    /// One HTTP/1.1 request, head plus its content-length body.
+    async fn read_request(stream: &mut tokio::net::TcpStream) -> Vec<u8> {
         let mut captured = Vec::new();
         let mut buf = [0u8; 4096];
         loop {
@@ -360,8 +426,6 @@ pub(crate) mod loopback {
                 break;
             }
         }
-        stream.write_all(response.as_bytes()).await.expect("write");
-        stream.flush().await.expect("flush");
         captured
     }
 }
@@ -500,6 +564,107 @@ mod tests {
             .expect("a served status is a response, whatever its code");
         assert_eq!(response.status, 503);
         server.await.expect("server");
+    }
+
+    #[tokio::test]
+    async fn the_caller_deadline_bounds_the_whole_exchange_and_the_default_does_not_apply() {
+        // A server that answers 300 ms after reading the request: a 100 ms
+        // deadline runs out as "request timed out", a 3 s one gets the answer.
+        let delay = std::time::Duration::from_millis(300);
+        let transport = ProtectedTransport::with_protect(Arc::new(|_| true));
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let server = tokio::spawn(super::loopback::serve_one_after(
+            listener,
+            delay,
+            CANNED_OK.to_owned(),
+        ));
+        let err = transport
+            .execute_dated_within(
+                get(format!("http://127.0.0.1:{}/v1/forum/report", addr.port())),
+                std::time::Duration::from_millis(100),
+            )
+            .await
+            .expect_err("100 ms must run out on a 300 ms server");
+        assert!(
+            matches!(&err, TransportError::Io(msg) if msg == "request timed out"),
+            "got {err:?}"
+        );
+        server.abort();
+
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let server = tokio::spawn(super::loopback::serve_one_after(
+            listener,
+            delay,
+            CANNED_OK.to_owned(),
+        ));
+        let (response, _) = transport
+            .execute_dated_within(
+                get(format!("http://127.0.0.1:{}/v1/forum/report", addr.port())),
+                std::time::Duration::from_secs(3),
+            )
+            .await
+            .expect("3 s covers a 300 ms server");
+        assert_eq!(response.status, 200);
+        server.await.expect("server");
+    }
+
+    #[test]
+    fn a_refusal_outranks_the_unreachable_noise_of_the_other_address_family() {
+        use super::more_specific;
+        let connect = |msg: &str| TransportError::Connect(msg.to_owned());
+        let phrase = |err: TransportError| match err {
+            TransportError::Connect(msg) => msg,
+            other => panic!("expected a Connect error, got {other:?}"),
+        };
+        // A then AAAA on a v4-only network: refused, then unreachable.
+        assert_eq!(
+            phrase(more_specific(
+                connect("connection refused"),
+                connect("network unreachable")
+            )),
+            "connection refused"
+        );
+        // AAAA first: the later refusal still wins.
+        assert_eq!(
+            phrase(more_specific(
+                connect("network unreachable"),
+                connect("connection refused")
+            )),
+            "connection refused"
+        );
+        assert_eq!(
+            phrase(more_specific(
+                connect("connection failed"),
+                connect("connect timed out")
+            )),
+            "connect timed out"
+        );
+        assert_eq!(
+            phrase(more_specific(
+                connect("connect timed out"),
+                connect("network unreachable")
+            )),
+            "connect timed out"
+        );
+        // The initial placeholder never beats a real attempt.
+        assert_eq!(
+            phrase(more_specific(
+                connect("connection failed"),
+                connect("network unreachable")
+            )),
+            "network unreachable"
+        );
+        // A tie keeps the first.
+        assert_eq!(
+            phrase(more_specific(
+                connect("connection refused"),
+                connect("tls handshake failed")
+            )),
+            "connection refused"
+        );
     }
 
     #[tokio::test]

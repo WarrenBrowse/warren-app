@@ -569,6 +569,7 @@
     <string name="report_problem_error_clock">ساعة هذا الجهاز منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين، ثم أرسل مجددًا.</string>
     <string name="report_problem_error_rate_limited">تقارير كثيرة جدًا من هذه المحفظة حاليًا. يرجى المحاولة لاحقًا.</string>
     <string name="report_problem_error_too_large">السجلات كبيرة جدًا بحيث يتعذر إرسالها.</string>
+    <string name="report_problem_error_upload_timeout">استغرق إرسال السجلات وقتًا طويلاً جدًا على هذا الاتصال.</string>
     <string name="report_problem_send_without_logs">إرسال بدون السجلات</string>
     <string name="report_problem_error_invalid">تعذر قبول بعض الحقول. تحقق من الوصف وحاول مجددًا.</string>
     <string name="report_problem_error_server">تعذر على المنتدى استلام التقرير الآن. يرجى المحاولة لاحقًا.</string>

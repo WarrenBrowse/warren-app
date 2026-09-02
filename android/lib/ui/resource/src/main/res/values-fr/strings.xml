@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">L\'horloge de cet appareil est décalée de plus d\'une minute. Activez la date et l\'heure automatiques, puis renvoyez.</string>
     <string name="report_problem_error_rate_limited">Trop de rapports depuis ce portefeuille pour le moment. Réessayez plus tard.</string>
     <string name="report_problem_error_too_large">Les journaux sont trop volumineux pour être envoyés.</string>
+    <string name="report_problem_error_upload_timeout">L\'envoi des journaux a pris trop de temps sur cette connexion.</string>
     <string name="report_problem_send_without_logs">Envoyer sans les journaux</string>
     <string name="report_problem_error_invalid">Certains champs n\'ont pas été acceptés. Vérifiez la description et réessayez.</string>
     <string name="report_problem_error_server">Le forum n\'a pas pu prendre le rapport pour le moment. Réessayez plus tard.</string>

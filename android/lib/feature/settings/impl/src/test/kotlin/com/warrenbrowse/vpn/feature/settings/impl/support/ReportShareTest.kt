@@ -1,8 +1,11 @@
 package com.warrenbrowse.vpn.feature.settings.impl.support
 
+import java.io.File
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 
 class ReportShareTest {
 
@@ -22,7 +25,17 @@ class ReportShareTest {
     }
 
     @Test
-    fun `a shared report is offered as plain text`() {
-        assertEquals("text/plain", REPORT_MIME_TYPE)
+    fun `the share sheet is handed a copy that outlives the report the screen deletes`(
+        @TempDir dir: File
+    ) {
+        val report = File(dir, "warren-report-1.log").apply { writeText("redacted report") }
+
+        val shared = sharedCopyOf(report.absolutePath)
+
+        assertEquals(File(dir, "shared-warren-report-1.log"), shared)
+        assertEquals("redacted report", shared.readText())
+        // The screen discarding the report must leave the receiver's file.
+        assertTrue(report.delete())
+        assertTrue(shared.exists())
     }
 }

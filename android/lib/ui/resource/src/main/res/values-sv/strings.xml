@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">Enhetens klocka avviker mer än en minut. Aktivera automatisk datum och tid och skicka igen.</string>
     <string name="report_problem_error_rate_limited">För många rapporter från den här plånboken just nu. Försök igen senare.</string>
     <string name="report_problem_error_too_large">Loggarna är för stora för att skickas.</string>
+    <string name="report_problem_error_upload_timeout">Det tog för lång tid att skicka loggarna över den här anslutningen.</string>
     <string name="report_problem_send_without_logs">Skicka utan loggarna</string>
     <string name="report_problem_error_invalid">Vissa fält kunde inte godtas. Kontrollera beskrivningen och försök igen.</string>
     <string name="report_problem_error_server">Forumet kunde inte ta emot rapporten just nu. Försök igen senare.</string>

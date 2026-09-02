@@ -90,13 +90,18 @@ interface WarrenJniBridge {
      * files, the Kotlin log directory [appLogDir], a logcat dump, and the
      * [metadataJson] facts (one JSON object) in the header, with every string
      * of [redactJson] (a JSON array) redacted on top of the collector's own
-     * rules. Returns `{"ok":true,"bytes":N}` or `{"ok":false,"error":..}`.
-     * Reads files and runs `logcat`: invoke off the main thread.
+     * rules. [forSend] says the report is about to be sent: only then do the
+     * live network probes run (one of them on a socket that bypasses the
+     * TUN); a report collected to be read reaches no host and records the
+     * probe keys as `not-run`. Returns `{"ok":true,"bytes":N}` or
+     * `{"ok":false,"error":..}`. Reads files and runs `logcat`: invoke off
+     * the main thread.
      */
     fun collectProblemReport(
         metadataJson: String,
         redactJson: String,
         appLogDir: String,
         outputPath: String,
+        forSend: Boolean,
     ): String
 }

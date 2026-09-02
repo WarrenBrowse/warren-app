@@ -7,12 +7,29 @@
 //! derives the Ed25519 key from the wallet mnemonic and delegates. The network
 //! POST that consumes the request is Android-gated in `android_jni`.
 
+use std::time::Duration;
+
 pub use warren_forum::{
     FailReason, ForumIdentity, ForumLoginOutcome, ForumRequestError, ReportOutcome,
     SignedForumRequest, build_cancel_url, build_status_url, clock_offset_secs, connect_host,
     envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code, outcome_for_response,
     report_envelope, report_outcome_for_response, timestamp_with_offset,
 };
+
+/// The total deadline of a report upload, from the body it sends: 20 s for
+/// the exchange itself plus 10 s per MiB of body. The forum transport's
+/// default 15 s is the token mint's, sized for a few hundred bytes, and it
+/// covered the upload too, so a report with a few MiB of logs on a slow
+/// mobile uplink (the network a report is filed from) died in it as a generic
+/// transport failure after the data was spent. 10 s per MiB is a floor of
+/// about 0.8 Mbit/s; a no-log report keeps roughly the mint's own bound, a
+/// report at the log cap gets three minutes.
+#[must_use]
+pub fn upload_deadline(body_len: usize) -> Duration {
+    const MIB: usize = 1024 * 1024;
+    let mib = u64::try_from(body_len.div_ceil(MIB)).unwrap_or(u64::MAX);
+    Duration::from_secs(20u64.saturating_add(10u64.saturating_mul(mib)))
+}
 
 /// Build the signed forum-login request for `sid` against `host`, deriving the
 /// signing key from the wallet `mnemonic` (the Android secret-store shape; iOS
@@ -90,6 +107,18 @@ mod tests {
         let names: Vec<&str> = req.headers.iter().map(|(n, _)| n.as_str()).collect();
         assert!(names.contains(&"X-Warren-Sig"));
         assert!(names.contains(&"Content-Type"));
+    }
+
+    #[test]
+    fn the_upload_deadline_grows_with_the_body() {
+        // A bodyless request keeps close to the mint's 15 s; every MiB, or
+        // part of one, buys 10 s; the 16 MB body of a report at the log cap
+        // gets three minutes rather than the 15 s that could never carry it.
+        assert_eq!(upload_deadline(0), Duration::from_secs(20));
+        assert_eq!(upload_deadline(1), Duration::from_secs(30));
+        assert_eq!(upload_deadline(1024 * 1024), Duration::from_secs(30));
+        assert_eq!(upload_deadline(1024 * 1024 + 1), Duration::from_secs(40));
+        assert_eq!(upload_deadline(16 * 1024 * 1024), Duration::from_secs(180));
     }
 
     #[test]

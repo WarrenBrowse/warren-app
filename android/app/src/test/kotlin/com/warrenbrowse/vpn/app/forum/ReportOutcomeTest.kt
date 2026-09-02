@@ -39,7 +39,29 @@ class ReportOutcomeTest {
             ReportSubmitOutcome.Failure("http-418"),
             parseReportOutcome("""{"ok":false,"error":"error","reason":"http-418"}"""),
         )
+        // The one `reason` with its own screen: the resend-without-logs offer.
+        val timedOut = parseReportOutcome("""{"ok":false,"error":"error","reason":"upload-timeout"}""")
+        assertEquals(ReportSubmitOutcome.UploadTimedOut, timedOut)
+        assertEquals("upload-timeout", reportOutcomeClass(timedOut))
         assertTrue(parseReportOutcome("nope") is ReportSubmitOutcome.Failure)
+    }
+
+    @Test
+    fun a_topic_url_off_the_forum_host_is_dropped_and_the_topic_shown_without_a_link() {
+        fun urlOf(topicUrl: String) =
+            (parseReportOutcome("""{"ok":true,"topic_id":1,"topic_url":"$topicUrl","logs":"none"}""")
+                    as ReportSubmitOutcome.Created)
+                .topicUrl
+        assertEquals("https://forum.warrenbrowse.com/t/1", urlOf("https://forum.warrenbrowse.com/t/1"))
+        // The screen opens the value in the browser on one tap, as a link the
+        // app vouched for: a broker answer must not be able to steer it.
+        assertEquals("", urlOf("https://evil.example/t/1"))
+        assertEquals("", urlOf("https://forum.warrenbrowse.com.evil.example/t/1"))
+        assertEquals("", urlOf("http://forum.warrenbrowse.com/t/1"))
+        assertEquals("", urlOf("https://forum.warrenbrowse.com@evil.example/t/1"))
+        assertEquals("", urlOf("intent://forum.warrenbrowse.com/t/1"))
+        assertEquals("", forumTopicUrlOrEmpty(null))
+        assertEquals("", forumTopicUrlOrEmpty("not a url at all ://"))
     }
 
     @Test

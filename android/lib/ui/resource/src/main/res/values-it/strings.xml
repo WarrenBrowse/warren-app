@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">L\'orologio di questo dispositivo è sfasato di oltre un minuto. Attiva data e ora automatiche, poi invia di nuovo.</string>
     <string name="report_problem_error_rate_limited">Troppi rapporti da questo portafoglio per ora. Riprova più tardi.</string>
     <string name="report_problem_error_too_large">I log sono troppo grandi per essere inviati.</string>
+    <string name="report_problem_error_upload_timeout">L\'invio dei log ha richiesto troppo tempo su questa connessione.</string>
     <string name="report_problem_send_without_logs">Invia senza i log</string>
     <string name="report_problem_error_invalid">Alcuni campi non sono stati accettati. Controlla la descrizione e riprova.</string>
     <string name="report_problem_error_server">Il forum non ha potuto ricevere il rapporto in questo momento. Riprova più tardi.</string>

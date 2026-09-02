@@ -564,6 +564,7 @@
     <string name="report_problem_error_clock">Ceasul acestui dispozitiv este decalat cu mai mult de un minut. Activează data și ora automate, apoi trimite din nou.</string>
     <string name="report_problem_error_rate_limited">Prea multe rapoarte de la acest portofel deocamdată. Încearcă din nou mai târziu.</string>
     <string name="report_problem_error_too_large">Jurnalele sunt prea mari pentru a fi trimise.</string>
+    <string name="report_problem_error_upload_timeout">Trimiterea jurnalelor a durat prea mult pe această conexiune.</string>
     <string name="report_problem_send_without_logs">Trimite fără jurnale</string>
     <string name="report_problem_error_invalid">Unele câmpuri nu au putut fi acceptate. Verifică descrierea și încearcă din nou.</string>
     <string name="report_problem_error_server">Forumul nu a putut prelua raportul acum. Încearcă din nou mai târziu.</string>

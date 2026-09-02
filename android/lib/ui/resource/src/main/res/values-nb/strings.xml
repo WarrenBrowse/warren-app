@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">Klokken på denne enheten avviker med mer enn ett minutt. Slå på automatisk dato og klokkeslett, og send på nytt.</string>
     <string name="report_problem_error_rate_limited">For mange rapporter fra denne lommeboken akkurat nå. Prøv igjen senere.</string>
     <string name="report_problem_error_too_large">Loggene er for store til å sendes.</string>
+    <string name="report_problem_error_upload_timeout">Det tok for lang tid å sende loggene over denne tilkoblingen.</string>
     <string name="report_problem_send_without_logs">Send uten loggene</string>
     <string name="report_problem_error_invalid">Noen felt kunne ikke godtas. Sjekk beskrivelsen og prøv igjen.</string>
     <string name="report_problem_error_server">Forumet kunne ikke ta imot rapporten akkurat nå. Prøv igjen senere.</string>

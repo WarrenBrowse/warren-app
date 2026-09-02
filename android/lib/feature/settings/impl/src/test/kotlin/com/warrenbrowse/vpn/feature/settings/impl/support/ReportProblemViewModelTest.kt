@@ -28,6 +28,7 @@ class ReportProblemViewModelTest {
         private val outcome: ReportSubmitOutcome = created,
     ) : WarrenSupportReporter {
         var collects = 0
+        val collectedForSend = mutableListOf<Boolean>()
         var submits = 0
         val submitted = mutableListOf<CollectedReport?>()
         val discarded = mutableListOf<CollectedReport>()
@@ -37,8 +38,9 @@ class ReportProblemViewModelTest {
 
         override fun preflight(): ForumPreflight = verdict
 
-        override suspend fun collect(): Result<CollectedReport> {
+        override suspend fun collect(forSend: Boolean): Result<CollectedReport> {
             collects++
+            collectedForSend += forSend
             return Result.success(CollectedReport(File("report-$collects"), collects.toLong()))
         }
 
@@ -91,6 +93,22 @@ class ReportProblemViewModelTest {
     }
 
     @Test
+    fun only_the_send_collects_with_the_network_probes() = runTest {
+        // "View the logs" is a local action: its collection must reach no host,
+        // so the probes (one of them on a socket that bypasses the TUN) are
+        // taken by the send's own collection alone.
+        val reporter = FakeReporter(ForumPreflight.Proceed)
+        val viewModel = ReportProblemViewModel(reporter)
+        filledIn(viewModel)
+
+        viewModel.collect()
+        assertEquals(listOf(false), reporter.collectedForSend)
+
+        viewModel.send()
+        assertEquals(listOf(false, true), reporter.collectedForSend)
+    }
+
+    @Test
     fun every_outcome_of_a_send_lands_in_the_state_with_the_send_over_and_the_logs_dropped() =
         runTest {
             val outcomes =
@@ -101,6 +119,7 @@ class ReportProblemViewModelTest {
                     ReportSubmitOutcome.ClockSkew,
                     ReportSubmitOutcome.RateLimited,
                     ReportSubmitOutcome.TooLarge,
+                    ReportSubmitOutcome.UploadTimedOut,
                     ReportSubmitOutcome.Invalid,
                     ReportSubmitOutcome.ServerError,
                     ReportSubmitOutcome.WalletNotReady,

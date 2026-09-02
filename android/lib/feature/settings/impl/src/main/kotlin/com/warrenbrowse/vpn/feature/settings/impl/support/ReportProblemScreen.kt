@@ -272,6 +272,12 @@ private fun ReportOutcomeNotice(
                     Text(stringResource(R.string.report_problem_send_without_logs))
                 }
             }
+        ReportSubmitOutcome.UploadTimedOut ->
+            ErrorNotice(stringResource(R.string.report_problem_error_upload_timeout)) {
+                WarrenTextButton(onClick = onSendWithoutLogs) {
+                    Text(stringResource(R.string.report_problem_send_without_logs))
+                }
+            }
         ReportSubmitOutcome.Invalid -> ErrorNotice(stringResource(R.string.report_problem_error_invalid))
         ReportSubmitOutcome.ServerError -> ErrorNotice(stringResource(R.string.report_problem_error_server))
         ReportSubmitOutcome.WalletNotReady -> ErrorNotice(stringResource(R.string.forum_login_result_wallet_not_ready))

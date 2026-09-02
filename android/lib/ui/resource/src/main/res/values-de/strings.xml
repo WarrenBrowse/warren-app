@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">Die Uhr dieses Geräts weicht um mehr als eine Minute ab. Aktiviere die automatische Datums- und Zeiteinstellung und sende erneut.</string>
     <string name="report_problem_error_rate_limited">Zu viele Berichte von dieser Wallet im Moment. Bitte versuche es später erneut.</string>
     <string name="report_problem_error_too_large">Die Protokolle sind zu groß zum Senden.</string>
+    <string name="report_problem_error_upload_timeout">Das Senden der Protokolle hat über diese Verbindung zu lange gedauert.</string>
     <string name="report_problem_send_without_logs">Ohne die Protokolle senden</string>
     <string name="report_problem_error_invalid">Einige Felder wurden nicht akzeptiert. Prüfe die Beschreibung und versuche es erneut.</string>
     <string name="report_problem_error_server">Das Forum konnte den Bericht gerade nicht annehmen. Bitte versuche es später erneut.</string>

@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">De klok van dit apparaat wijkt meer dan een minuut af. Zet automatische datum en tijd aan en verstuur opnieuw.</string>
     <string name="report_problem_error_rate_limited">Te veel rapporten van deze wallet op dit moment. Probeer het later opnieuw.</string>
     <string name="report_problem_error_too_large">De logboeken zijn te groot om te versturen.</string>
+    <string name="report_problem_error_upload_timeout">Het versturen van de logboeken duurde te lang via deze verbinding.</string>
     <string name="report_problem_send_without_logs">Versturen zonder de logboeken</string>
     <string name="report_problem_error_invalid">Sommige velden werden niet geaccepteerd. Controleer de beschrijving en probeer het opnieuw.</string>
     <string name="report_problem_error_server">Het forum kon het rapport nu niet aannemen. Probeer het later opnieuw.</string>

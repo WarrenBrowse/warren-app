@@ -52,6 +52,12 @@ sealed interface ReportSubmitOutcome {
     /** The logs are over a size cap: send without them. */
     data object TooLarge : ReportSubmitOutcome
 
+    /**
+     * The upload of the logs ran past its body-sized deadline: this uplink is
+     * too slow for them. Send without them, or share the file another way.
+     */
+    data object UploadTimedOut : ReportSubmitOutcome
+
     /** A field is outside its caps: fix the form. */
     data object Invalid : ReportSubmitOutcome
 
@@ -84,8 +90,14 @@ interface WarrenSupportReporter {
      */
     fun preflight(): ForumPreflight
 
-    /** Collects the redacted report into a temporary file the user may read. */
-    suspend fun collect(): Result<CollectedReport>
+    /**
+     * Collects the redacted report into a temporary file the user may read.
+     * [forSend] says the report is about to be sent: only then are the live
+     * network probes taken, because one of them leaves the device on a socket
+     * that bypasses the TUN, and a report collected only to be read must reach
+     * no host.
+     */
+    suspend fun collect(forSend: Boolean): Result<CollectedReport>
 
     /** Signs and sends the report, with the collected logs when given. */
     suspend fun submit(form: ReportForm, report: CollectedReport?): ReportSubmitOutcome

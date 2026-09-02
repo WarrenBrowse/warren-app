@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">El reloj de este dispositivo está desfasado más de un minuto. Activa la fecha y hora automáticas y vuelve a enviar.</string>
     <string name="report_problem_error_rate_limited">Demasiados informes desde este monedero por ahora. Inténtalo de nuevo más tarde.</string>
     <string name="report_problem_error_too_large">Los registros son demasiado grandes para enviarlos.</string>
+    <string name="report_problem_error_upload_timeout">El envío de los registros tardó demasiado con esta conexión.</string>
     <string name="report_problem_send_without_logs">Enviar sin los registros</string>
     <string name="report_problem_error_invalid">Algunos campos no se aceptaron. Revisa la descripción e inténtalo de nuevo.</string>
     <string name="report_problem_error_server">El foro no pudo recibir el informe ahora mismo. Inténtalo de nuevo más tarde.</string>

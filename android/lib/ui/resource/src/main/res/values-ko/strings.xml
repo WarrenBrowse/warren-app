@@ -554,6 +554,7 @@
     <string name="report_problem_error_clock">이 기기의 시계가 1분 이상 어긋나 있습니다. 자동 날짜 및 시간을 켠 다음 다시 보내세요.</string>
     <string name="report_problem_error_rate_limited">현재 이 지갑에서 보낸 보고서가 너무 많습니다. 나중에 다시 시도하세요.</string>
     <string name="report_problem_error_too_large">로그가 너무 커서 보낼 수 없습니다.</string>
+    <string name="report_problem_error_upload_timeout">이 연결에서는 로그를 보내는 데 시간이 너무 오래 걸렸습니다.</string>
     <string name="report_problem_send_without_logs">로그 없이 보내기</string>
     <string name="report_problem_error_invalid">일부 항목이 허용되지 않았습니다. 설명을 확인하고 다시 시도하세요.</string>
     <string name="report_problem_error_server">포럼이 지금 보고서를 받을 수 없습니다. 나중에 다시 시도하세요.</string>

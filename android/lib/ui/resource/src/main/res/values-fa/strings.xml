@@ -557,6 +557,7 @@
     <string name="report_problem_error_clock">ساعت این دستگاه بیش از یک دقیقه اختلاف دارد. تاریخ و ساعت خودکار را فعال کنید و دوباره بفرستید.</string>
     <string name="report_problem_error_rate_limited">فعلاً گزارش‌های زیادی از این کیف پول فرستاده شده است. لطفاً بعداً دوباره تلاش کنید.</string>
     <string name="report_problem_error_too_large">گزارش‌ها برای ارسال بیش از حد بزرگ‌اند.</string>
+    <string name="report_problem_error_upload_timeout">ارسال گزارش‌ها روی این اتصال بیش از حد طول کشید.</string>
     <string name="report_problem_send_without_logs">ارسال بدون گزارش‌ها</string>
     <string name="report_problem_error_invalid">برخی فیلدها پذیرفته نشدند. شرح را بررسی کنید و دوباره تلاش کنید.</string>
     <string name="report_problem_error_server">انجمن اکنون نتوانست گزارش را بپذیرد. لطفاً بعداً دوباره تلاش کنید.</string>
