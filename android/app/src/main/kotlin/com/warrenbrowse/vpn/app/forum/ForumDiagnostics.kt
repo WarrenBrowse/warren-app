@@ -1,34 +1,20 @@
 package com.warrenbrowse.vpn.app.forum
 
-import android.app.ActivityManager
-import android.app.usage.UsageStatsManager
-import android.content.Context
-import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
-import android.net.Uri
-import android.os.Build
-import android.os.PowerManager
-import android.os.SystemClock
 import android.provider.Settings
-import android.webkit.WebView
 import com.warrenbrowse.vpn.BuildConfig
-import java.time.Instant
-import java.util.Locale
-import java.util.TimeZone
 
 /**
  * The platform facts a problem report needs to explain a forum sign-in that
- * never reached the broker, read with the Android APIs only Kotlin has. Each
- * fact is read on its own and a failure records `unreadable`, so one ROM
- * without a setting never costs the rest of the header.
+ * never reached the broker, read through [ForumPlatformReads]. Each fact is
+ * read on its own and a failure records `unreadable`, so one ROM without a
+ * setting never costs the rest of the header.
  *
  * Every value here is safe by construction (the header block is not
- * redacted): no address, no SSID, no sid, no handle. Only classes,
- * settings, package names and versions.
+ * redacted): no address, no SSID, no sid, no handle. Only classes, settings,
+ * counts, package names and versions.
  */
-class ForumDiagnostics(private val context: Context) : ForumFacts {
+class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
 
     override fun collect(
         tunnelState: String,
@@ -39,7 +25,7 @@ class ForumDiagnostics(private val context: Context) : ForumFacts {
         fun put(key: String, read: () -> String?) {
             facts[key] =
                 try {
-                    read() ?: "none"
+                    read() ?: NONE
                 } catch (e: Exception) {
                     "unreadable:${e.javaClass.simpleName}"
                 }
@@ -49,70 +35,60 @@ class ForumDiagnostics(private val context: Context) : ForumFacts {
         put("report-schema") { "android/1" }
         put("warren-product-env") { BuildConfig.FLAVOR }
         put("android-application-id") { BuildConfig.APPLICATION_ID }
-        put("android-build-type") { "${BuildConfig.BUILD_TYPE} versionCode=${BuildConfig.VERSION_CODE}" }
-        put("deep-link-scheme") { BuildConfig.DEEP_LINK_SCHEME }
-        put("installer-package") {
-            val pm = context.packageManager
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                pm.getInstallSourceInfo(context.packageName).installingPackageName ?: "unknown"
-            } else {
-                @Suppress("DEPRECATION")
-                pm.getInstallerPackageName(context.packageName) ?: "unknown"
-            }
+        put("android-build-type") {
+            "${BuildConfig.BUILD_TYPE} versionCode=${BuildConfig.VERSION_CODE}"
         }
+        put("deep-link-scheme") { BuildConfig.DEEP_LINK_SCHEME }
+        put("installer-package") { reads.installerPackage() ?: "unknown" }
 
         // Device, ROM and Google services.
         put("android-fingerprint") {
-            "${Build.FINGERPRINT} display=${Build.DISPLAY} patch=${Build.VERSION.SECURITY_PATCH}"
+            val build = reads.build()
+            "${build.fingerprint} display=${build.display} patch=${build.securityPatch}"
         }
         put("android-rom") { romVerdict() }
         put("gms") { gmsVerdict() }
         put("webview-package") {
-            val pkg = WebView.getCurrentWebViewPackage()
-            if (pkg == null) "none" else "${pkg.packageName} ${pkg.versionName}"
+            reads.webViewPackage()?.let { "${it.packageName} ${it.versionName}" }
         }
 
         // Clock.
-        put("time-now-utc") { Instant.now().toString() }
+        put("time-now-utc") { reads.now().toString() }
         put("time-zone") {
-            val tz = TimeZone.getDefault()
-            "${tz.id} offset=${tz.rawOffset / 60_000}min"
+            val tz = reads.timeZone()
+            "${tz.id} offset=${tz.rawOffset / MS_PER_MINUTE}min"
         }
         put("time-auto") {
-            val auto = Settings.Global.getInt(context.contentResolver, Settings.Global.AUTO_TIME, -1)
-            val zone =
-                Settings.Global.getInt(context.contentResolver, Settings.Global.AUTO_TIME_ZONE, -1)
+            val auto = reads.globalSettingInt(Settings.Global.AUTO_TIME)
+            val zone = reads.globalSettingInt(Settings.Global.AUTO_TIME_ZONE)
             "auto_time=${auto.settingWord()} auto_time_zone=${zone.settingWord()}"
         }
         put("uptime") {
-            "elapsed=${SystemClock.elapsedRealtime() / 1000}s" +
-                " process_age=${(SystemClock.elapsedRealtime() - android.os.Process.getStartElapsedRealtime()) / 1000}s"
+            val elapsed = reads.elapsedRealtimeMs()
+            "elapsed=${elapsed / MS_PER_SECOND}s" +
+                " process_age=${(elapsed - reads.processStartElapsedMs()) / MS_PER_SECOND}s"
         }
-        put("locale") { Locale.getDefault().toLanguageTag() }
+        put("locale") { reads.locale().toLanguageTag() }
 
         // Deep-link routing.
         put("deep-link-handlers") { deepLinkHandlers() }
         put("deep-link-resolved") { deepLinkResolved() }
         put("default-browser") { defaultBrowser() }
-        put("last-forum-login") { lastLoginClass ?: "none" }
+        put("last-forum-login") { lastLoginClass ?: NONE }
 
         // Background and power restrictions.
         put("battery-optimisation") {
-            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-            "ignoring=${pm.isIgnoringBatteryOptimizations(context.packageName)}" +
-                " power_save=${pm.isPowerSaveMode} idle=${pm.isDeviceIdleMode}"
+            val power = reads.power()
+            "ignoring=${power.ignoringBatteryOptimisations}" +
+                " power_save=${power.powerSave} idle=${power.deviceIdle}"
         }
         put("background-restricted") {
-            val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            "${am.isBackgroundRestricted} low_ram=${am.isLowRamDevice}"
+            val background = reads.background()
+            "${background.restricted} low_ram=${background.lowRam}"
         }
-        put("standby-bucket") {
-            val usm = context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
-            usm.appStandbyBucket.toString()
-        }
+        put("standby-bucket") { reads.standbyBucket().toString() }
         put("data-saver") {
-            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            when (cm.restrictBackgroundStatus) {
+            when (reads.restrictBackgroundStatus()) {
                 ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED -> "off"
                 ConnectivityManager.RESTRICT_BACKGROUND_STATUS_WHITELISTED -> "on-whitelisted"
                 ConnectivityManager.RESTRICT_BACKGROUND_STATUS_ENABLED -> "on"
@@ -122,25 +98,27 @@ class ForumDiagnostics(private val context: Context) : ForumFacts {
 
         // VPN and tunnel.
         put("tunnel-state") { tunnelState }
-        put("vpn-service-prepared") {
-            (android.net.VpnService.prepare(context) == null).toString()
-        }
+        put("vpn-service-prepared") { reads.vpnServicePrepared().toString() }
         put("always-on") {
-            val app = Settings.Secure.getString(context.contentResolver, "always_on_vpn_app")
-            val lockdown =
-                Settings.Secure.getInt(context.contentResolver, "always_on_vpn_lockdown", -1)
-            val ours = app == context.packageName
-            "app=${if (app == null) "none" else if (ours) "this" else "other"} lockdown=${lockdown.settingWord()}"
+            val app = reads.secureSettingString("always_on_vpn_app")
+            val lockdown = reads.secureSettingInt("always_on_vpn_lockdown")
+            val word =
+                when (app) {
+                    null -> NONE
+                    reads.packageName -> "this"
+                    else -> "other"
+                }
+            "app=$word lockdown=${lockdown.settingWord()}"
         }
-        put("other-vpn") { otherVpnPresent() }
+        put("other-vpn") {
+            val activeIsVpn = reads.activeNetwork()?.transports?.contains(NetworkTransport.VPN) == true
+            "active_is_vpn=$activeIsVpn"
+        }
 
         // Network.
         put("network") { activeNetwork() }
         put("private-dns") { privateDns() }
-        put("airplane-mode") {
-            Settings.Global.getInt(context.contentResolver, Settings.Global.AIRPLANE_MODE_ON, -1)
-                .settingWord()
-        }
+        put("airplane-mode") { reads.globalSettingInt(Settings.Global.AIRPLANE_MODE_ON).settingWord() }
 
         // Wallet.
         put("wallet") { walletState }
@@ -155,139 +133,96 @@ class ForumDiagnostics(private val context: Context) : ForumFacts {
         }
 
     private fun romVerdict(): String {
-        val lineage = prop("ro.lineage.version") ?: prop("ro.lineage.build.version")
-        val eos =
-            listOf("foundation.e.apps", "foundation.e.browser", "foundation.e.blisslauncher").any {
-                installed(it)
-            }
+        val build = reads.build()
+        val lineage =
+            reads.systemProperty("ro.lineage.version")
+                ?: reads.systemProperty("ro.lineage.build.version")
+        val eos = E_OS_PACKAGES.any { reads.installedPackage(it) != null }
         val verdict =
             when {
                 eos -> "e-os"
                 lineage != null -> "lineage"
-                installed("app.grapheneos.apps") -> "graphene"
-                Build.TAGS?.contains("release-keys") == true -> "stock"
+                reads.installedPackage(GRAPHENE_APPS) != null -> "graphene"
+                build.tags?.contains("release-keys") == true -> "stock"
                 else -> "other"
             }
-        return "$verdict tags=${Build.TAGS} type=${Build.TYPE} lineage=${lineage ?: "none"}"
+        return "$verdict tags=${build.tags} type=${build.type} lineage=${lineage ?: NONE}"
     }
 
     private fun gmsVerdict(): String {
-        val gms = installed("com.google.android.gms")
-        val microg = installed("org.microg.gms") || installed("com.mgoogle.android.gms")
-        val vending = installed("com.android.vending")
-        val version =
-            try {
-                context.packageManager.getPackageInfo("com.google.android.gms", 0).versionName
-            } catch (e: PackageManager.NameNotFoundException) {
-                null
-            }
+        val gms = reads.installedPackage(GMS)
+        val microg = MICROG_PACKAGES.any { reads.installedPackage(it) != null }
+        val vending = reads.installedPackage(VENDING) != null
+        val version = gms?.versionName
         val kind =
             when {
                 microg -> "microg"
-                gms && (version?.startsWith("0.") == true) -> "microg"
-                gms -> "google"
-                else -> "none"
+                gms != null && version?.startsWith("0.") == true -> "microg"
+                gms != null -> "google"
+                else -> NONE
             }
-        return "$kind vending=$vending version=${version ?: "none"}"
+        return "$kind vending=$vending version=${version ?: NONE}"
     }
 
-    private fun sampleLink(): Intent =
-        Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse(
-                "${BuildConfig.DEEP_LINK_SCHEME}://forum-login?sid=00000000000000000000000000000000&host=connect.warrenbrowse.com"
-            ),
-        ).addCategory(Intent.CATEGORY_BROWSABLE)
-
     private fun deepLinkHandlers(): String {
-        val pm = context.packageManager
-        val handlers =
-            pm.queryIntentActivities(sampleLink(), PackageManager.MATCH_DEFAULT_ONLY)
-                .map { it.activityInfo.packageName }
-        val ours = context.packageName in handlers
+        val handlers = reads.deepLinkHandlers(probeLink())
+        val ours = reads.packageName in handlers
         return "ours=$ours count=${handlers.size} ${handlers.joinToString(",")}"
     }
 
-    private fun deepLinkResolved(): String {
-        val resolved = sampleLink().resolveActivity(context.packageManager)
-        return when (resolved?.packageName) {
-            null -> "none"
-            context.packageName -> "this"
+    private fun deepLinkResolved(): String =
+        when (reads.deepLinkResolvedPackage(probeLink())) {
+            null -> NONE
+            reads.packageName -> "this"
             "android" -> "chooser"
             else -> "other"
         }
-    }
 
     private fun defaultBrowser(): String {
-        val probe = Intent(Intent.ACTION_VIEW, Uri.parse("https://forum.warrenbrowse.com/"))
-        val resolved =
-            context.packageManager.resolveActivity(probe, PackageManager.MATCH_DEFAULT_ONLY)
-        val pkg = resolved?.activityInfo?.packageName ?: return "none"
-        val version =
-            try {
-                context.packageManager.getPackageInfo(pkg, 0).versionName
-            } catch (e: PackageManager.NameNotFoundException) {
-                null
-            }
+        val pkg = reads.defaultBrowserPackage(BROWSER_PROBE_URL) ?: return NONE
+        val version = reads.installedPackage(pkg)?.versionName
         return "$pkg ${version ?: ""}".trim()
     }
 
-    private fun otherVpnPresent(): String {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val active = cm.activeNetwork?.let(cm::getNetworkCapabilities)
-        val activeIsVpn = active?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
-        return "active_is_vpn=$activeIsVpn"
-    }
-
+    /** Counts and classes only: the addresses and the resolvers stay on the device. */
     private fun activeNetwork(): String {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = cm.activeNetwork ?: return "none"
-        val caps = cm.getNetworkCapabilities(network) ?: return "no-capabilities"
+        val network = reads.activeNetwork() ?: return NONE
         val transports =
-            listOf(
-                    NetworkCapabilities.TRANSPORT_WIFI to "wifi",
-                    NetworkCapabilities.TRANSPORT_CELLULAR to "cellular",
-                    NetworkCapabilities.TRANSPORT_ETHERNET to "ethernet",
-                    NetworkCapabilities.TRANSPORT_VPN to "vpn",
-                )
-                .filter { caps.hasTransport(it.first) }
-                .joinToString("+") { it.second }
-        val flags =
-            listOf(
-                    NetworkCapabilities.NET_CAPABILITY_VALIDATED to "validated",
-                    NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL to "captive",
-                    NetworkCapabilities.NET_CAPABILITY_NOT_METERED to "unmetered",
-                    NetworkCapabilities.NET_CAPABILITY_INTERNET to "internet",
-                )
-                .filter { caps.hasCapability(it.first) }
-                .joinToString(",") { it.second }
-        val props = cm.getLinkProperties(network)
-        val v4 = props?.linkAddresses?.count { it.address is java.net.Inet4Address } ?: 0
-        val v6 = props?.linkAddresses?.count { it.address is java.net.Inet6Address } ?: 0
-        return "$transports [$flags] mtu=${props?.mtu ?: 0} v4=$v4 v6=$v6 dns=${props?.dnsServers?.size ?: 0}"
+            NetworkTransport.entries.filter { it in network.transports }.joinToString("+") { it.word }
+        val flags = NetworkFlag.entries.filter { it in network.flags }.joinToString(",") { it.word }
+        val v4 = network.linkAddresses.count { ':' !in it }
+        val v6 = network.linkAddresses.size - v4
+        return "$transports [$flags] mtu=${network.mtu} v4=$v4 v6=$v6 dns=${network.dnsServers.size}"
     }
 
     private fun privateDns(): String {
-        val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val props = cm.activeNetwork?.let(cm::getLinkProperties) ?: return "no-network"
-        val mode = Settings.Global.getString(context.contentResolver, "private_dns_mode") ?: "unset"
-        return "active=${props.isPrivateDnsActive} mode=$mode named=${props.privateDnsServerName != null}"
+        val network = reads.activeNetwork() ?: return "no-network"
+        val mode = reads.globalSettingString("private_dns_mode") ?: "unset"
+        return "active=${network.privateDnsActive} mode=$mode" +
+            " named=${network.privateDnsServerName != null}"
     }
 
-    private fun installed(pkg: String): Boolean =
-        try {
-            context.packageManager.getPackageInfo(pkg, 0)
-            true
-        } catch (e: PackageManager.NameNotFoundException) {
-            false
-        }
+    companion object {
+        private const val NONE = "none"
+        private const val MS_PER_MINUTE = 60_000
+        private const val MS_PER_SECOND = 1000
+        private const val GMS = "com.google.android.gms"
+        private const val VENDING = "com.android.vending"
+        private const val GRAPHENE_APPS = "app.grapheneos.apps"
+        private val E_OS_PACKAGES =
+            listOf("foundation.e.apps", "foundation.e.browser", "foundation.e.blisslauncher")
+        private val MICROG_PACKAGES = listOf("org.microg.gms", "com.mgoogle.android.gms")
+        private const val BROWSER_PROBE_URL = "https://forum.warrenbrowse.com/"
 
-    private fun prop(name: String): String? =
-        try {
-            val cls = Class.forName("android.os.SystemProperties")
-            val get = cls.getMethod("get", String::class.java)
-            (get.invoke(null, name) as? String)?.takeIf { it.isNotBlank() }
-        } catch (e: Exception) {
-            null
-        }
+        /**
+         * The session id the deep-link probe carries: a placeholder, so the
+         * intent resolution the header asks the system for never names a live
+         * session (the resolver logs the URI it was asked about).
+         */
+        const val PROBE_SID = "00000000000000000000000000000000"
+
+        /** The link the header asks the system to resolve, shaped as a real sign-in link. */
+        fun probeLink(): String =
+            "${BuildConfig.DEEP_LINK_SCHEME}://forum-login?sid=$PROBE_SID&host=connect.warrenbrowse.com"
+    }
 }

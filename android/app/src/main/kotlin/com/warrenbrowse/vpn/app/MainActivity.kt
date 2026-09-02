@@ -19,7 +19,10 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
-import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
+import com.warrenbrowse.vpn.app.forum.ForumEvent
+import com.warrenbrowse.vpn.app.forum.ForumJournal
+import com.warrenbrowse.vpn.app.forum.JournalField
+import com.warrenbrowse.vpn.app.forum.LinkSource
 import com.warrenbrowse.vpn.app.forum.ForumLinkVerdict
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.ForumLoginPromptHost
@@ -60,7 +63,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
     private val forumLoginController by inject<ForumLoginController>()
-    private val forumEventsJournal by inject<ForumEventsJournal>()
+    private val forumEventsJournal by inject<ForumJournal>()
 
     private fun dispatchWarrenConnect() {
         // Route the post-VPN-profile-grant connect (and the already-prepared
@@ -173,17 +176,18 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
         when (val verdict = classifyForumLoginLink(intent.dataString)) {
             is ForumLinkVerdict.Accepted -> {
                 forumEventsJournal.record(
-                    "link.received",
-                    "verdict" to "accepted",
-                    "cross_device" to verdict.link.crossDevice.toString(),
-                    "cold_start" to coldStart.toString(),
-                    "referrer" to (referrer?.host ?: "none"),
+                    ForumEvent.LINK_RECEIVED,
+                    JournalField.Verdict("accepted"),
+                    JournalField.Source(LinkSource.DEEP_LINK),
+                    JournalField.CrossDevice(verdict.link.crossDevice),
+                    JournalField.ColdStart(coldStart),
+                    JournalField.Referrer(referrer?.host),
                 )
                 forumLoginController.request(verdict.link)
             }
             is ForumLinkVerdict.Rejected -> {
                 Logger.w("Ignoring a deep link the forum flow does not accept: ${verdict.reason}")
-                forumEventsJournal.record("link.received", "verdict" to verdict.reason)
+                forumEventsJournal.record(ForumEvent.LINK_RECEIVED, JournalField.Verdict(verdict.reason))
             }
         }
     }

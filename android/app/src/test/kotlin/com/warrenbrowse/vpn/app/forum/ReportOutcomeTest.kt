@@ -48,8 +48,8 @@ class ReportOutcomeTest {
             ForumEventsJournal.format(
                 Instant.parse("2026-09-02T18:07:05Z"),
                 3,
-                "login.result",
-                listOf("class" to "transport", "elapsed_ms" to "5012"),
+                ForumEvent.LOGIN_RESULT,
+                listOf(JournalField.Class("transport"), JournalField.ElapsedMs(5012)),
             )
         assertEquals(
             """{"seq":3,"at":"2026-09-02T18:07:05Z","event":"login.result","class":"transport","elapsed_ms":"5012"}""",

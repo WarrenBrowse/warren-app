@@ -38,9 +38,12 @@ The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
   header from Kotlin.
 - Android Kotlin (`app/forum/`): the deep-link classification (rejections are
   logged by class, never by value), the consent prompt, the events journal
-  (`android_app_logs/warren-events.log`, one JSON line per step, class only),
-  the platform diagnostics (`ForumDiagnostics`), the report submitter; the
-  screens live in `lib/feature/settings/impl/support/`.
+  (`android_app_logs/warren-events.log`, one JSON line per step; its fields
+  are the typed `JournalField`s, so a line has no place for a sid or a
+  handle), the platform diagnostics (`ForumDiagnostics`, a fact table over
+  the `ForumPlatformReads` seam whose device reads live in
+  `AndroidForumPlatformReads` and whose JVM tests use a fake), the report
+  submitter; the screens live in `lib/feature/settings/impl/support/`.
 - Desktop: `desktop/packages/mullvad-vpn/src/main/forum-*.ts` plus the daemon
   `SignForum*` RPCs; see the files' headers.
 

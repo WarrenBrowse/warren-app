@@ -37,12 +37,13 @@ the UI thread reached main.
 
 Two suites are excluded on purpose, so do not "fix" the workflow by adding them:
 `:test:arch` enforces inherited Mullvad test-naming conventions this fork never
-adopted (205 of 330 existing names violate them), and `detekt` reports 174
-pre-existing findings against an empty baseline. Gating either today paints main
+adopted (205 of 330 existing names violate them), and `detekt` reports a pile of
+pre-existing findings against an empty baseline (197 weighted issues on
+2026-09-03; the count moves with every lot). Gating either today paints main
 red for reasons unrelated to the change under review. To check you introduced no
-detekt regression, compare against that 174 with
-`./gradlew detekt --rerun-tasks`; a plain `detekt` prints nothing when
-up-to-date, which reads as a false clean.
+detekt regression, run `./gradlew detekt --rerun-tasks` once before your change
+and once after, and compare the two weighted counts; a plain `detekt` prints
+nothing when up-to-date, which reads as a false clean.
 
 ## Desktop unit tests run on a Node-only machine, and must stay that way
 

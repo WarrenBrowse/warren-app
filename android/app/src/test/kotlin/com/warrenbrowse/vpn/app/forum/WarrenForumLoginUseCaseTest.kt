@@ -37,7 +37,7 @@ class WarrenForumLoginUseCaseTest {
         assertEquals(WarrenForumLoginOutcome.Deferred("connecting"), outcome)
         assertEquals(0, jni.loginCalls)
         assertEquals(0, wallet.mnemonicReads)
-        assertEquals("connecting", journal.lastClassOf("login.deferred"))
+        assertEquals("connecting", journal.lastClassOf(ForumEvent.LOGIN_DEFERRED))
         // The prompt must stay armed: the user retries once the tunnel settles.
         assertFalse(isTerminalOutcome(outcome))
     }

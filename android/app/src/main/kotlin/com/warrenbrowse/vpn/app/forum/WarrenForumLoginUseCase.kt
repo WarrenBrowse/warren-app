@@ -75,7 +75,7 @@ sealed interface WarrenForumLoginOutcome {
 class WarrenForumLoginUseCase(
     private val walletRepository: WalletRepository,
     private val forumIdentityRepository: ForumIdentityRepository,
-    private val journal: ForumEventsJournal,
+    private val journal: ForumJournal,
     private val jni: WarrenJniBridge,
     private val tunnelState: WarrenTunnelStateProvider,
 ) {
@@ -87,7 +87,7 @@ class WarrenForumLoginUseCase(
     suspend fun signIn(link: ForumLoginLink): WarrenForumLoginOutcome {
         if (walletRepository.state.value is WalletState.Absent) {
             Logger.w("WarrenForumLoginUseCase: no wallet on device")
-            journal.record("login.result", "class" to "wallet-absent")
+            journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("wallet-absent"))
             return WarrenForumLoginOutcome.WalletNotReady
         }
 
@@ -95,7 +95,7 @@ class WarrenForumLoginUseCase(
         val preflight = ForumPreflight.of(tunnelState.connectedInfo.value)
         if (preflight is ForumPreflight.Defer) {
             Logger.w("WarrenForumLoginUseCase: deferred, tunnel ${preflight.tunnelClass}")
-            journal.record("login.deferred", "class" to preflight.tunnelClass)
+            journal.record(ForumEvent.LOGIN_DEFERRED, JournalField.Class(preflight.tunnelClass))
             return WarrenForumLoginOutcome.Deferred(preflight.tunnelClass)
         }
 
@@ -103,26 +103,26 @@ class WarrenForumLoginUseCase(
             walletRepository.readMnemonic()
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenForumLoginUseCase: mnemonic read failed" }
-            journal.record("login.result", "class" to "wallet-read")
+            journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("wallet-read"))
             return WarrenForumLoginOutcome.Failure("wallet-read")
         }
 
         val started = System.currentTimeMillis()
-        journal.record("login.signing", "cross_device" to link.crossDevice.toString())
+        journal.record(ForumEvent.LOGIN_SIGNING, JournalField.CrossDevice(link.crossDevice))
         return withContext(Dispatchers.IO) {
             mnemonic.use { m ->
                 val rawJson = try {
                     jni.forumLogin(m.phrase, link.sid, link.host)
                 } catch (e: Exception) {
                     Logger.e(throwable = e) { "WarrenJniBridge.forumLogin threw" }
-                    journal.record("login.result", "class" to "jni")
+                    journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("jni"))
                     return@use WarrenForumLoginOutcome.Failure("jni")
                 }
                 val outcome = parseForumLoginOutcome(rawJson)
                 journal.record(
-                    "login.result",
-                    "class" to outcomeClass(outcome),
-                    "elapsed_ms" to (System.currentTimeMillis() - started).toString(),
+                    ForumEvent.LOGIN_RESULT,
+                    JournalField.Class(outcomeClass(outcome)),
+                    JournalField.ElapsedMs(System.currentTimeMillis() - started),
                 )
                 if (outcome is WarrenForumLoginOutcome.Approved) {
                     outcome.identity?.let(forumIdentityRepository::save)
@@ -140,7 +140,7 @@ class WarrenForumLoginUseCase(
      * when the consent prompt leaves composition; nothing to report back.
      */
     fun cancel(link: ForumLoginLink) {
-        journal.record("login.declined")
+        journal.record(ForumEvent.LOGIN_DECLINED)
         cancelScope.launch {
             try {
                 jni.forumLoginCancel(link.sid, link.host)

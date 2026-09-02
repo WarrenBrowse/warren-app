@@ -31,9 +31,6 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 
-/** Largest gzip the app agrees to send; tracks the desktop's `MAX_LOG_GZ_BYTES`. */
-private const val MAX_LOG_GZ_BYTES = 12 * 1024 * 1024
-
 /**
  * The platform facts of the report header, keyed as the header renders them.
  * [ForumDiagnostics] is the production reader; a test supplies the map, since
@@ -41,6 +38,23 @@ private const val MAX_LOG_GZ_BYTES = 12 * 1024 * 1024
  */
 fun interface ForumFacts {
     fun collect(tunnelState: String, walletState: String, lastLoginClass: String?): Map<String, String>
+}
+
+/**
+ * Compresses the collected report for the wire. Gzip in production; a test
+ * supplies the size it wants to see refused or accepted at the cap.
+ */
+fun interface LogCompressor {
+    fun compress(file: File): ByteArray
+}
+
+/** Gzip, streamed from the report file. */
+object GzipLogCompressor : LogCompressor {
+    override fun compress(file: File): ByteArray {
+        val out = ByteArrayOutputStream()
+        GZIPOutputStream(out).use { gz -> file.inputStream().use { it.copyTo(gz) } }
+        return out.toByteArray()
+    }
 }
 
 /**
@@ -55,15 +69,16 @@ class WarrenSupportReporterImpl(
     private val walletRepository: WalletRepository,
     private val forumIdentityRepository: ForumIdentityRepository,
     private val tunnelState: WarrenTunnelStateProvider,
-    private val journal: ForumEventsJournal,
+    private val journal: ForumJournal,
     private val appLogDir: File,
-    private val facts: ForumFacts = ForumDiagnostics(context),
+    private val facts: ForumFacts = ForumDiagnostics(AndroidForumPlatformReads(context)),
+    private val compressor: LogCompressor = GzipLogCompressor,
 ) : WarrenSupportReporter {
 
     override fun preflight(): ForumPreflight {
         val verdict = ForumPreflight.of(tunnelState.connectedInfo.value)
         if (verdict is ForumPreflight.Defer) {
-            journal.record("report.deferred", "class" to verdict.tunnelClass)
+            journal.record(ForumEvent.REPORT_DEFERRED, JournalField.Class(verdict.tunnelClass))
         }
         return verdict
     }
@@ -88,7 +103,7 @@ class WarrenSupportReporterImpl(
                     facts.collect(
                         tunnelState = tunnelState.state.value.substringBefore(':').ifBlank { "unknown" },
                         walletState = walletWord,
-                        lastLoginClass = journal.lastClassOf("login.result"),
+                        lastLoginClass = journal.lastClassOf(ForumEvent.LOGIN_RESULT),
                     )
                 val metadataJson =
                     JsonObject(metadata.mapValues { JsonPrimitive(it.value) }).toString()
@@ -98,59 +113,69 @@ class WarrenSupportReporterImpl(
                 val root = Json.parseToJsonElement(raw).jsonObject
                 if (root["ok"]?.jsonPrimitive?.boolean != true) {
                     val reason = root["error"]?.jsonPrimitive?.content ?: "unknown"
-                    journal.record("report.collect", "class" to "failed", "reason" to reason)
+                    journal.record(
+                        ForumEvent.REPORT_COLLECT,
+                        JournalField.Class("failed"),
+                        JournalField.Reason(collectReasonToken(reason)),
+                    )
                     error("collect failed: $reason")
                 }
                 val bytes = root["bytes"]?.jsonPrimitive?.long ?: output.length()
-                journal.record("report.collect", "class" to "ok", "bytes" to bytes.toString())
+                journal.record(ForumEvent.REPORT_COLLECT, JournalField.Class("ok"), JournalField.Bytes(bytes))
                 CollectedReport(file = output, bytes = bytes)
             }
         }
 
     override suspend fun submit(form: ReportForm, report: CollectedReport?): ReportSubmitOutcome {
         if (walletRepository.state.value is WalletState.Absent) {
-            journal.record("report.submit", "class" to "wallet-absent")
+            journal.record(ForumEvent.REPORT_SUBMIT, JournalField.Class("wallet-absent"))
             return ReportSubmitOutcome.WalletNotReady
+        }
+        // The logs are sized before the wallet is touched: a refusal at the cap
+        // reads nothing and reaches nothing.
+        val logGz =
+            try {
+                withContext(Dispatchers.IO) { report?.let { compressor.compress(it.file) } }
+            } catch (e: Exception) {
+                Logger.w(throwable = e) { "WarrenSupportReporter: gzip failed" }
+                journal.record(ForumEvent.REPORT_SUBMIT, JournalField.Class("gzip"))
+                return ReportSubmitOutcome.Failure("gzip")
+            }
+        if (logGz != null && logGz.size > MAX_LOG_GZ_BYTES) {
+            journal.record(
+                ForumEvent.REPORT_SUBMIT,
+                JournalField.Class("too-large"),
+                JournalField.GzBytes(logGz.size.toLong()),
+            )
+            return ReportSubmitOutcome.TooLarge
         }
         val mnemonic =
             try {
                 walletRepository.readMnemonic()
             } catch (e: Exception) {
                 Logger.e(throwable = e) { "WarrenSupportReporter: mnemonic read failed" }
-                journal.record("report.submit", "class" to "wallet-read")
+                journal.record(ForumEvent.REPORT_SUBMIT, JournalField.Class("wallet-read"))
                 return ReportSubmitOutcome.Failure("wallet-read")
             }
         return withContext(Dispatchers.IO) {
-            val gz =
-                try {
-                    report?.let { gzip(it.file) }
-                } catch (e: Exception) {
-                    Logger.w(throwable = e) { "WarrenSupportReporter: gzip failed" }
-                    journal.record("report.submit", "class" to "gzip")
-                    return@withContext ReportSubmitOutcome.Failure("gzip")
-                }
-            if (gz != null && gz.size > MAX_LOG_GZ_BYTES) {
-                journal.record("report.submit", "class" to "too-large", "gz_bytes" to gz.size.toString())
-                return@withContext ReportSubmitOutcome.TooLarge
-            }
             val started = System.currentTimeMillis()
             val outcome =
                 mnemonic.use { m ->
                     val raw =
                         try {
-                            jni.forumReport(m.phrase, reportJson(form), gz)
+                            jni.forumReport(m.phrase, reportJson(form), logGz)
                         } catch (e: Exception) {
                             Logger.e(throwable = e) { "WarrenJni.forumReport threw" }
-                            journal.record("report.submit", "class" to "jni")
+                            journal.record(ForumEvent.REPORT_SUBMIT, JournalField.Class("jni"))
                             return@use ReportSubmitOutcome.Failure("jni")
                         }
                     parseReportOutcome(raw)
                 }
             journal.record(
-                "report.submit",
-                "class" to reportOutcomeClass(outcome),
-                "elapsed_ms" to (System.currentTimeMillis() - started).toString(),
-                "with_logs" to (gz != null).toString(),
+                ForumEvent.REPORT_SUBMIT,
+                JournalField.Class(reportOutcomeClass(outcome)),
+                JournalField.ElapsedMs(System.currentTimeMillis() - started),
+                JournalField.WithLogs(logGz != null),
             )
             if (outcome is ReportSubmitOutcome.Created) {
                 outcome.identity?.let(forumIdentityRepository::save)
@@ -185,15 +210,21 @@ class WarrenSupportReporterImpl(
         return JsonObject(fields).toString()
     }
 
-    private fun gzip(file: File): ByteArray {
-        val out = ByteArrayOutputStream()
-        GZIPOutputStream(out).use { gz -> file.inputStream().use { it.copyTo(gz) } }
-        return out.toByteArray()
-    }
-
     private fun buildJsonArray(items: List<String>): String =
         kotlinx.serialization.json.JsonArray(items.map { JsonPrimitive(it) }).toString()
+
+    companion object {
+        /** Largest gzip the app agrees to send; tracks the desktop's `MAX_LOG_GZ_BYTES`. */
+        const val MAX_LOG_GZ_BYTES = 12 * 1024 * 1024
+    }
 }
+
+/**
+ * The io error kind of a collector failure as a journal token: the Rust
+ * envelope says `<step>: <Kind>`, and the step is already the class.
+ */
+internal fun collectReasonToken(reason: String): String =
+    reason.substringAfterLast(':').trim().lowercase().ifEmpty { "unknown" }
 
 /** The coarse class of an outcome, for the log and the journal. */
 internal fun reportOutcomeClass(outcome: ReportSubmitOutcome): String =

@@ -18,7 +18,11 @@ import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
+import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
+import com.warrenbrowse.vpn.app.forum.ForumJournal
+import com.warrenbrowse.vpn.app.forum.JournalField
+import com.warrenbrowse.vpn.app.forum.LinkSource
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
@@ -168,7 +172,7 @@ val appModule = module {
     } withOptions {
         createdAtStart()
     }
-    single {
+    single<ForumJournal> {
         ForumEventsJournal(
             logDir = androidContext().filesDir.resolve(KERMIT_FILE_LOG_DIR_NAME),
             scope = get<ApplicationScope>(),
@@ -186,9 +190,13 @@ val appModule = module {
     // The sign-in code typed by hand lands on the same consent prompt.
     single<ForumSignInRequests> {
         val controller = get<ForumLoginController>()
-        val journal = get<ForumEventsJournal>()
+        val journal = get<ForumJournal>()
         ForumSignInRequests { sid ->
-            journal.record("link.received", "verdict" to "accepted", "source" to "typed-code")
+            journal.record(
+                ForumEvent.LINK_RECEIVED,
+                JournalField.Verdict("accepted"),
+                JournalField.Source(LinkSource.TYPED_CODE),
+            )
             controller.request(forumLoginLinkFromCode(sid))
         }
     }
