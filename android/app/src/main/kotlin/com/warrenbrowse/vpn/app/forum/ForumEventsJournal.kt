@@ -7,8 +7,12 @@ import java.util.concurrent.Executors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * The forum flows' event journal: one JSON line per step of every sign-in
@@ -40,6 +44,26 @@ class ForumEventsJournal(private val logDir: File, private val scope: CoroutineS
         }
     }
 
+    /**
+     * The `class` of the last journaled [event], or null when none was
+     * journaled. Sequenced behind the pending writes on the journal's own
+     * thread, so a record followed by a readback sees the record. The report
+     * header reads the last `login.result` this way: the staff read the header
+     * before the logs, and what the last sign-in attempt said is its most
+     * useful line.
+     */
+    suspend fun lastClassOf(event: String): String? =
+        withContext(dispatcher) {
+            val file = File(logDir, FILE_NAME)
+            if (!file.isFile) return@withContext null
+            try {
+                file.useLines { lines -> lines.mapNotNull { classOf(it, event) }.lastOrNull() }
+            } catch (e: Exception) {
+                Logger.w(throwable = e) { "forum events journal read failed" }
+                null
+            }
+        }
+
     /** Keeps the newest half of the file: the history that matters is recent. */
     private fun truncateHead(file: File) {
         val lines = file.readLines()
@@ -66,5 +90,22 @@ class ForumEventsJournal(private val logDir: File, private val scope: CoroutineS
             for ((key, value) in fields) entries[key] = JsonPrimitive(value)
             return JsonObject(entries).toString()
         }
+
+        /**
+         * The `class` of one journal line when it is an [event] line, else
+         * null. A line that does not parse (a process killed mid-write) is
+         * skipped rather than failing the readback.
+         */
+        fun classOf(line: String, event: String): String? =
+            try {
+                val entry = Json.parseToJsonElement(line).jsonObject
+                if (entry["event"]?.jsonPrimitive?.content == event) {
+                    entry["class"]?.jsonPrimitive?.content
+                } else {
+                    null
+                }
+            } catch (e: Exception) {
+                null
+            }
     }
 }

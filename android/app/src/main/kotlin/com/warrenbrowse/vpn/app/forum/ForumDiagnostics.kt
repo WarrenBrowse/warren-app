@@ -28,9 +28,13 @@ import java.util.TimeZone
  * redacted): no address, no SSID, no sid, no handle. Only classes,
  * settings, package names and versions.
  */
-class ForumDiagnostics(private val context: Context) {
+class ForumDiagnostics(private val context: Context) : ForumFacts {
 
-    fun collect(tunnelState: String, walletState: String, lastLoginClass: String?): Map<String, String> {
+    override fun collect(
+        tunnelState: String,
+        walletState: String,
+        lastLoginClass: String?,
+    ): Map<String, String> {
         val facts = linkedMapOf<String, String>()
         fun put(key: String, read: () -> String?) {
             facts[key] =

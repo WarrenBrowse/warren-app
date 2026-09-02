@@ -34,6 +34,15 @@ import kotlinx.serialization.json.long
 private const val MAX_LOG_GZ_BYTES = 12 * 1024 * 1024
 
 /**
+ * The platform facts of the report header, keyed as the header renders them.
+ * [ForumDiagnostics] is the production reader; a test supplies the map, since
+ * the readers need a device.
+ */
+fun interface ForumFacts {
+    fun collect(tunnelState: String, walletState: String, lastLoginClass: String?): Map<String, String>
+}
+
+/**
  * The production [WarrenSupportReporter]: collects the redacted report through
  * the shared Rust collector (platform facts read here, everything else read
  * and redacted in Rust), then signs and sends it through `WarrenJni.forumReport`
@@ -47,9 +56,8 @@ class WarrenSupportReporterImpl(
     private val tunnelState: WarrenTunnelStateProvider,
     private val journal: ForumEventsJournal,
     private val appLogDir: File,
+    private val facts: ForumFacts = ForumDiagnostics(context),
 ) : WarrenSupportReporter {
-
-    private val diagnostics = ForumDiagnostics(context)
 
     override suspend fun collect(): Result<CollectedReport> =
         withContext(Dispatchers.IO) {
@@ -68,10 +76,10 @@ class WarrenSupportReporterImpl(
                         else -> "absent"
                     }
                 val metadata =
-                    diagnostics.collect(
+                    facts.collect(
                         tunnelState = tunnelState.state.value.substringBefore(':').ifBlank { "unknown" },
                         walletState = walletWord,
-                        lastLoginClass = null,
+                        lastLoginClass = journal.lastClassOf("login.result"),
                     )
                 val metadataJson =
                     JsonObject(metadata.mapValues { JsonPrimitive(it.value) }).toString()
