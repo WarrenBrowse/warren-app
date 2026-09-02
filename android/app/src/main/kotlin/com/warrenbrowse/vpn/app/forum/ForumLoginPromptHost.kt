@@ -12,10 +12,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -50,12 +48,10 @@ fun ForumLoginPromptHost() {
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var busy by remember { mutableStateOf(false) }
-    var failure by remember { mutableStateOf<String?>(null) }
-    // Set once the provider has closed the door on this sid (it cancels the
-    // session on a clock-skew or subscription refusal), so Approve is disarmed:
-    // a retry can only answer "unknown session" and land on the generic message.
-    var terminal by remember { mutableStateOf(false) }
+    // Keyed on the link's sid inside: a link replacing another while the
+    // prompt is open starts clean instead of inheriting a disarmed Approve.
+    val state = remember { ForumLoginPromptState() }
+    state.bind(link)
 
     val approvedMessage = stringResource(R.string.forum_login_result_approved)
     val subscriptionRequiredMessage =
@@ -70,8 +66,8 @@ fun ForumLoginPromptHost() {
     // (mirrors the desktop), then dismisses the prompt. After a terminal
     // refusal the provider already knows; only the prompt is left to close.
     val onDecline = {
-        if (!busy) {
-            if (!terminal) useCase.cancel(link)
+        if (!state.busy) {
+            if (!state.terminal) useCase.cancel(link)
             controller.clear()
         }
     }
@@ -100,7 +96,7 @@ fun ForumLoginPromptHost() {
                         else R.string.forum_login_body_second
                     )
                 )
-                failure?.let { reason ->
+                state.failure?.let { reason ->
                     Text(
                         text = reason,
                         color = MaterialTheme.colorScheme.error,
@@ -108,7 +104,7 @@ fun ForumLoginPromptHost() {
                             Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
                     )
                 }
-                if (busy) {
+                if (state.busy) {
                     Text(
                         text = stringResource(R.string.forum_login_signing),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -120,24 +116,23 @@ fun ForumLoginPromptHost() {
         confirmButton = {
             PrimaryButton(
                 text = stringResource(R.string.forum_login_approve),
-                isEnabled = !busy && !terminal,
+                isEnabled = !state.busy && !state.terminal,
                 // Beside the label rather than in place of it: the action stays
                 // named while the signature is in flight.
                 leadingIcon =
-                    if (busy) {
+                    if (state.busy) {
                         { WarrenCircularProgressIndicatorSmall() }
                     } else null,
                 onClick = {
-                    if (!busy && controller.isStale()) {
+                    if (!state.busy && controller.isStale()) {
                         // The server session died while the prompt sat here;
                         // signing now can only fail on a dead sid.
-                        failure = expiredMessage
-                    } else if (!busy) {
+                        state.fail(expiredMessage)
+                    } else if (!state.busy) {
                         // Keep the request pending (dialog stays) until the call
                         // returns, so this composable does not leave composition
                         // and cancel the coroutine mid-flight.
-                        busy = true
-                        failure = null
+                        state.begin()
                         scope.launch {
                             when (val outcome = useCase.signIn(link)) {
                                 is WarrenForumLoginOutcome.Approved -> {
@@ -154,10 +149,9 @@ fun ForumLoginPromptHost() {
                                     // to it, as the desktop hides its window.
                                     (context as? Activity)?.moveTaskToBack(true)
                                 }
-                                else -> {
-                                    busy = false
-                                    terminal = isTerminalOutcome(outcome)
-                                    failure =
+                                else ->
+                                    state.settle(
+                                        outcome,
                                         failureMessageFor(
                                             outcome = outcome,
                                             subscriptionRequired = subscriptionRequiredMessage,
@@ -166,8 +160,8 @@ fun ForumLoginPromptHost() {
                                             expired = expiredMessage,
                                             tunnelBusy = tunnelBusyMessage,
                                             generic = failureMessage,
-                                        )
-                                }
+                                        ),
+                                    )
                             }
                         }
                     }
@@ -179,7 +173,7 @@ fun ForumLoginPromptHost() {
             // off the dialog surface, which left "Cancel" invisible.
             TextButton(
                 onClick = onDecline,
-                enabled = !busy,
+                enabled = !state.busy,
                 colors =
                     ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.onSurface,
