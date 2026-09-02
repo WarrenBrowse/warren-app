@@ -31,7 +31,7 @@ use crate::forum::{self, FailReason, ForumLoginOutcome, ForumRequestError, Repor
 #[cfg(feature = "tunnel")]
 type ForumTransport = crate::protected_transport::ProtectedTransport;
 #[cfg(not(feature = "tunnel"))]
-type ForumTransport = warren_api::ReqwestTransport;
+type ForumTransport = warren_api::reqwest_transport::ReqwestTransport;
 
 fn forum_transport() -> ForumTransport {
     ForumTransport::new()
@@ -444,12 +444,32 @@ fn collect(
     app_log_dir: &std::path::Path,
     output_path: &std::path::Path,
 ) -> Result<u64, String> {
-    let metadata = crate::report::parse_metadata(metadata_json)?;
+    let mut metadata = crate::report::parse_metadata(metadata_json)?;
     let redact = crate::report::parse_redact_strings(redact_json);
     let Some(rust_log_dir) = crate::android_jni::rust_log_dir() else {
         return Err("initLogger must run first".to_owned());
     };
+    let Some(runtime) = crate::android_jni::runtime() else {
+        return Err("initLogger must run first".to_owned());
+    };
     let started = std::time::Instant::now();
+    // The live legs, measured now rather than at send time: a report about a
+    // sign-in that never left the device must show which path was closed
+    // while it was closed.
+    let device_now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    metadata.extend(runtime.block_on(crate::probes::run(
+        &crate::probes::ProbeTargets::production(),
+        &forum_transport(),
+        &warren_api::reqwest_transport::ReqwestTransport::new(),
+        device_now,
+    )));
+    log::info!(
+        "collectProblemReport: probes done in {} ms",
+        started.elapsed().as_millis()
+    );
     let result = crate::report::collect(metadata, redact, &rust_log_dir, app_log_dir, output_path);
     match &result {
         Ok(bytes) => log::info!(

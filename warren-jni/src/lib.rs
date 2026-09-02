@@ -85,6 +85,12 @@ mod token_provider;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod protected_transport;
 
+/// Live network probes recorded into a problem report (the connect host
+/// through the protected and the plain path, the resolver, the API), and the
+/// clock offset they measure.
+#[cfg(any(test, target_os = "android"))]
+mod probes;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

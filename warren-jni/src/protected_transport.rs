@@ -69,7 +69,7 @@ impl ProtectedTransport {
         Self::with_protect(protect)
     }
 
-    fn with_protect(protect: ProtectFn) -> Self {
+    pub(crate) fn with_protect(protect: ProtectFn) -> Self {
         Self {
             tls: Arc::new(tls_config(true)),
             tls_no_sni: Arc::new(tls_config(false)),
@@ -88,20 +88,25 @@ impl ProtectedTransport {
         // of the primary host looks like, so it must drive the host fallback.
         let addrs: Vec<SocketAddr> = tokio::net::lookup_host((url.host.as_str(), url.port))
             .await
-            .map_err(|_| TransportError::Connect("connection failed".to_owned()))?
+            .map_err(|_| TransportError::Connect("resolve failed".to_owned()))?
             .collect();
 
+        // The failure kept is the last address's, named by class only (the
+        // report probes read it; no address ever rides along).
         let mut stream = None;
+        let mut failure = TransportError::Connect("connection failed".to_owned());
         for addr in addrs {
-            if let Ok(Ok(s)) =
-                tokio::time::timeout(CONNECT_TIMEOUT, self.connect_protected(addr)).await
-            {
-                stream = Some(s);
-                break;
+            match tokio::time::timeout(CONNECT_TIMEOUT, self.connect_protected(addr)).await {
+                Ok(Ok(s)) => {
+                    stream = Some(s);
+                    break;
+                }
+                Ok(Err(err)) => failure = err,
+                Err(_) => failure = TransportError::Connect("connect timed out".to_owned()),
             }
         }
         let Some(stream) = stream else {
-            return Err(TransportError::Connect("connection failed".to_owned()));
+            return Err(failure);
         };
 
         if url.tls {
@@ -117,7 +122,7 @@ impl ProtectedTransport {
             let tls_stream = TlsConnector::from(config)
                 .connect(server_name, stream)
                 .await
-                .map_err(|_| TransportError::Connect("connection failed".to_owned()))?;
+                .map_err(|_| TransportError::Connect("tls handshake failed".to_owned()))?;
             h1_roundtrip(tls_stream, &url, request).await
         } else {
             h1_roundtrip(stream, &url, request).await
@@ -145,12 +150,24 @@ impl ProtectedTransport {
         if !protected {
             // Fail closed: an unprotected socket would loop into the TUN (or
             // leak around it); never egress on one.
-            return Err(TransportError::Io("socket protect refused".to_owned()));
+            return Err(TransportError::Connect("socket protect refused".to_owned()));
         }
         socket
             .connect(addr)
             .await
-            .map_err(|_| TransportError::Connect("connection failed".to_owned()))
+            .map_err(|err| TransportError::Connect(connect_class(&err).to_owned()))
+    }
+}
+
+/// The class of a failed TCP connect, from the io error kind alone: a fixed
+/// phrase per kind, never the address or the OS text.
+fn connect_class(err: &std::io::Error) -> &'static str {
+    use std::io::ErrorKind;
+    match err.kind() {
+        ErrorKind::ConnectionRefused => "connection refused",
+        ErrorKind::TimedOut => "connect timed out",
+        ErrorKind::NetworkUnreachable | ErrorKind::HostUnreachable => "network unreachable",
+        _ => "connection failed",
     }
 }
 
@@ -293,32 +310,34 @@ where
     Ok((HttpResponse { status, body }, date))
 }
 
+/// Loopback HTTP/1.1 servers for the host tests of this transport and of the
+/// report probes: one canned answer per accepted connection.
 #[cfg(test)]
-mod tests {
-    use std::sync::Arc;
-    use std::sync::atomic::{AtomicI32, AtomicUsize, Ordering};
-
+pub(crate) mod loopback {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     use tokio::net::TcpListener;
-    use warren_api::transport::{HttpRequest, HttpTransport, Method, TransportError};
-
-    use super::{ProtectFn, ProtectedTransport};
-
-    const CANNED_OK: &str = "HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nhi";
-
-    fn get(url: String) -> HttpRequest {
-        HttpRequest {
-            method: Method::Get,
-            url,
-            headers: Vec::new(),
-            body: Vec::new(),
-            use_sni: true,
-        }
-    }
 
     /// Reads one HTTP/1.1 request (head + content-length body) then answers
     /// with `response`; returns the captured raw request bytes.
-    async fn serve_one(listener: TcpListener, response: &str) -> Vec<u8> {
+    pub(crate) async fn serve_one(listener: TcpListener, response: String) -> Vec<u8> {
+        serve_many(listener, response, 1).await
+    }
+
+    /// `serve_one` for `count` successive connections; returns the last
+    /// request captured.
+    pub(crate) async fn serve_many(
+        listener: TcpListener,
+        response: String,
+        count: usize,
+    ) -> Vec<u8> {
+        let mut captured = Vec::new();
+        for _ in 0..count {
+            captured = serve_accepted(&listener, &response).await;
+        }
+        captured
+    }
+
+    async fn serve_accepted(listener: &TcpListener, response: &str) -> Vec<u8> {
         let (mut stream, _) = listener.accept().await.expect("accept");
         let mut captured = Vec::new();
         let mut buf = [0u8; 4096];
@@ -345,12 +364,36 @@ mod tests {
         stream.flush().await.expect("flush");
         captured
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicI32, AtomicUsize, Ordering};
+
+    use tokio::net::TcpListener;
+    use warren_api::transport::{HttpRequest, HttpTransport, Method, TransportError};
+
+    use super::loopback::serve_one;
+    use super::{ProtectFn, ProtectedTransport};
+
+    const CANNED_OK: &str = "HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nhi";
+
+    fn get(url: String) -> HttpRequest {
+        HttpRequest {
+            method: Method::Get,
+            url,
+            headers: Vec::new(),
+            body: Vec::new(),
+            use_sni: true,
+        }
+    }
 
     #[tokio::test]
     async fn a_get_round_trips_and_the_protector_saw_the_socket_fd() {
         let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
         let addr = listener.local_addr().expect("addr");
-        let server = tokio::spawn(serve_one(listener, CANNED_OK));
+        let server = tokio::spawn(serve_one(listener, CANNED_OK.to_owned()));
 
         let protected_fd = Arc::new(AtomicI32::new(-1));
         let seen = protected_fd.clone();
@@ -414,7 +457,7 @@ mod tests {
     async fn a_post_carries_method_host_headers_and_body() {
         let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
         let addr = listener.local_addr().expect("addr");
-        let server = tokio::spawn(serve_one(listener, CANNED_OK));
+        let server = tokio::spawn(serve_one(listener, CANNED_OK.to_owned()));
 
         let transport = ProtectedTransport::with_protect(Arc::new(|_| true));
         let request = HttpRequest {
@@ -446,7 +489,8 @@ mod tests {
         let addr = listener.local_addr().expect("addr");
         let server = tokio::spawn(serve_one(
             listener,
-            "HTTP/1.1 503 Service Unavailable\r\ncontent-length: 0\r\nconnection: close\r\n\r\n",
+            "HTTP/1.1 503 Service Unavailable\r\ncontent-length: 0\r\nconnection: close\r\n\r\n"
+                .to_owned(),
         ));
 
         let transport = ProtectedTransport::with_protect(Arc::new(|_| true));
