@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Raporttia valmistellaan, odota hetki.</string>
     <string name="report_problem_collect_failed">Lokeja ei voitu kerätä. Voit silti lähettää kuvauksen.</string>
     <string name="report_problem_preview_title">Lähetettävät lokit</string>
+    <string name="report_problem_share">Jaa lokit</string>
     <string name="report_problem_send">Lähetä raportti</string>
     <string name="report_problem_sending">Lähetetään, odota hetki.</string>
     <string name="report_problem_created_with_logs">Raporttisi on foorumilla ja lokisi ovat saapuneet tukitiimille.</string>

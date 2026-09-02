@@ -27,6 +27,8 @@ dependencies {
     implementation(projects.lib.ui.designsystem)
     implementation(projects.lib.ui.theme)
     implementation(libs.androidx.fragment)
+    // FileProvider behind the report share sheet.
+    implementation(libs.androidx.ktx)
 
     implementation(libs.koin.compose)
     implementation(libs.arrow)

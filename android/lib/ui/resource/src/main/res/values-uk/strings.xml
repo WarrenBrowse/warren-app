@@ -550,6 +550,7 @@
     <string name="report_problem_collecting">Підготовка звіту, зачекайте.</string>
     <string name="report_problem_collect_failed">Не вдалося зібрати журнали. Ви все одно можете надіслати опис.</string>
     <string name="report_problem_preview_title">Журнали до надсилання</string>
+    <string name="report_problem_share">Поділитися журналами</string>
     <string name="report_problem_send">Надіслати звіт</string>
     <string name="report_problem_sending">Надсилання, зачекайте.</string>
     <string name="report_problem_created_with_logs">Ваш звіт на форумі, а журнали дійшли до команди підтримки.</string>

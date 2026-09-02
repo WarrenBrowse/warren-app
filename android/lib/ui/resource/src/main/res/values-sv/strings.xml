@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Rapporten förbereds, vänta.</string>
     <string name="report_problem_collect_failed">Loggarna kunde inte samlas in. Du kan ändå skicka beskrivningen.</string>
     <string name="report_problem_preview_title">Loggar som skickas</string>
+    <string name="report_problem_share">Dela loggarna</string>
     <string name="report_problem_send">Skicka rapporten</string>
     <string name="report_problem_sending">Skickar, vänta.</string>
     <string name="report_problem_created_with_logs">Din rapport finns på forumet och dina loggar har nått supportteamet.</string>

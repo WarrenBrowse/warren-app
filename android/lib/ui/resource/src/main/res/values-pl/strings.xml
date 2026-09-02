@@ -550,6 +550,7 @@
     <string name="report_problem_collecting">Przygotowywanie raportu, proszę czekać.</string>
     <string name="report_problem_collect_failed">Nie udało się zebrać dzienników. Nadal możesz wysłać opis.</string>
     <string name="report_problem_preview_title">Dzienniki do wysłania</string>
+    <string name="report_problem_share">Udostępnij logi</string>
     <string name="report_problem_send">Wyślij raport</string>
     <string name="report_problem_sending">Wysyłanie, proszę czekać.</string>
     <string name="report_problem_created_with_logs">Twój raport jest na forum, a dzienniki dotarły do zespołu wsparcia.</string>

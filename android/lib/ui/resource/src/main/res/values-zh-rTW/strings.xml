@@ -541,6 +541,7 @@
     <string name="report_problem_collecting">正在準備報告，請稍候。</string>
     <string name="report_problem_collect_failed">無法收集記錄檔。您仍然可以傳送描述。</string>
     <string name="report_problem_preview_title">將要傳送的記錄檔</string>
+    <string name="report_problem_share">分享日誌</string>
     <string name="report_problem_send">傳送報告</string>
     <string name="report_problem_sending">正在傳送，請稍候。</string>
     <string name="report_problem_created_with_logs">您的報告已發布到論壇，記錄檔已送達支援團隊。</string>

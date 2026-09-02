@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Rapor hazırlanıyor, lütfen bekleyin.</string>
     <string name="report_problem_collect_failed">Günlükler toplanamadı. Yine de açıklamayı gönderebilirsiniz.</string>
     <string name="report_problem_preview_title">Gönderilecek günlükler</string>
+    <string name="report_problem_share">Günlükleri paylaş</string>
     <string name="report_problem_send">Raporu gönder</string>
     <string name="report_problem_sending">Gönderiliyor, lütfen bekleyin.</string>
     <string name="report_problem_created_with_logs">Raporunuz forumda ve günlükleriniz destek ekibine ulaştı.</string>

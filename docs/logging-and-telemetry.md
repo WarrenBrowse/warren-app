@@ -24,9 +24,21 @@ if the user/a developer would like to investigate the crash.
 ### Problem reports
 
 Generating a problem report is opt-in and manual. The app never uploads any logs
-or crash dumps anywhere by itself. A user generates a report explicitly by going
-to Settings -> Report a problem or by using the `warren-problem-report` CLI tool
-(desktop only), then attaches the redacted file to a thread on the community forum.
+or crash dumps anywhere by itself. A user generates a report explicitly:
+
+* Desktop: Settings, Report a problem, or the `warren-problem-report` CLI tool,
+  then attaches the redacted file to a thread on the community forum (the
+  forum's paperclip flow, `docs/warren-forum-login.md`).
+* Android: Settings, Report a problem. The form mirrors the forum's bug report;
+  "View the logs" shows the exact redacted file, which the user can also hand
+  to any app through the system share sheet, and Send posts the topic and the
+  file to the support team through the wallet-signed `POST /v1/forum/report`
+  of the connect broker (no browser involved). The report is collected at the
+  moment the user asks for it and carries, besides the platform facts, the
+  live probes of the moment: the connect host through the VpnService-protected
+  socket and through the plain client, the resolver, the API, and the clock
+  offset against the broker (`probe-*`, `clock-offset*` keys). The values are
+  classes and durations, never addresses.
 
 The logs collected for problem reports are redacted before the user shares them,
 and the user always has the option to see exactly what information is included.
@@ -40,8 +52,9 @@ The following is redacted:
 * IPs and MAC addresses.
 * V4 UUIDs. This includes account and device IDs, and network interface GUIDs on Windows.
 
-Problem reports are not transmitted by the app: the user shares the redacted file
-themselves.
+On desktop the report is not transmitted by the app: the user shares the
+redacted file themselves. On Android the user chooses between the in-app send
+and the share sheet; nothing leaves the device without that tap.
 
 
 ## Telemetry (version check)

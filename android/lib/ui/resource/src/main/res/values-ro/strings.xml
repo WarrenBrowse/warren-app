@@ -551,6 +551,7 @@
     <string name="report_problem_collecting">Se pregătește raportul, te rugăm să aștepți.</string>
     <string name="report_problem_collect_failed">Jurnalele nu au putut fi colectate. Poți totuși trimite descrierea.</string>
     <string name="report_problem_preview_title">Jurnale de trimis</string>
+    <string name="report_problem_share">Partajează jurnalele</string>
     <string name="report_problem_send">Trimite raportul</string>
     <string name="report_problem_sending">Se trimite, te rugăm să aștepți.</string>
     <string name="report_problem_created_with_logs">Raportul tău este pe forum și jurnalele tale au ajuns la echipa de suport.</string>

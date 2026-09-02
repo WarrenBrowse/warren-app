@@ -579,6 +579,7 @@
     <string name="report_problem_collecting">Preparing the report, please wait.</string>
     <string name="report_problem_collect_failed">The logs could not be collected. You can still send the description.</string>
     <string name="report_problem_preview_title">Logs to be sent</string>
+    <string name="report_problem_share">Share the logs</string>
     <string name="report_problem_send">Send the report</string>
     <string name="report_problem_sending">Sending, please wait.</string>
     <string name="report_problem_created_with_logs">Your report is on the forum and your logs reached the support team.</string>

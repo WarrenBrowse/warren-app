@@ -541,6 +541,7 @@
     <string name="report_problem_collecting">보고서를 준비하는 중입니다. 잠시 기다려 주세요.</string>
     <string name="report_problem_collect_failed">로그를 수집할 수 없습니다. 설명만 보낼 수는 있습니다.</string>
     <string name="report_problem_preview_title">전송될 로그</string>
+    <string name="report_problem_share">로그 공유</string>
     <string name="report_problem_send">보고서 보내기</string>
     <string name="report_problem_sending">전송 중입니다. 잠시 기다려 주세요.</string>
     <string name="report_problem_created_with_logs">보고서가 포럼에 올라갔고 로그가 지원팀에 전달되었습니다.</string>

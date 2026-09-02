@@ -541,6 +541,7 @@
     <string name="report_problem_collecting">正在准备报告，请稍候。</string>
     <string name="report_problem_collect_failed">无法收集日志。您仍然可以发送描述。</string>
     <string name="report_problem_preview_title">将要发送的日志</string>
+    <string name="report_problem_share">分享日志</string>
     <string name="report_problem_send">发送报告</string>
     <string name="report_problem_sending">正在发送，请稍候。</string>
     <string name="report_problem_created_with_logs">您的报告已发布到论坛，日志已送达支持团队。</string>

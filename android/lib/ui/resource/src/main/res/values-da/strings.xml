@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Rapporten forberedes, vent venligst.</string>
     <string name="report_problem_collect_failed">Logfilerne kunne ikke indsamles. Du kan stadig sende beskrivelsen.</string>
     <string name="report_problem_preview_title">Logfiler der sendes</string>
+    <string name="report_problem_share">Del logfilerne</string>
     <string name="report_problem_send">Send rapporten</string>
     <string name="report_problem_sending">Sender, vent venligst.</string>
     <string name="report_problem_created_with_logs">Din rapport er på forummet, og dine logfiler er nået frem til supportteamet.</string>

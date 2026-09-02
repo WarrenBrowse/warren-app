@@ -108,7 +108,10 @@ class WarrenSupportReporterImpl(
                 val metadataJson =
                     JsonObject(metadata.mapValues { JsonPrimitive(it.value) }).toString()
                 val redactJson = buildJsonArray(listOfNotNull(pubkey))
-                val output = File(context.cacheDir, "warren-report-${UUID.randomUUID()}.log")
+                // Its own directory: the share sheet's FileProvider serves this
+                // directory and nothing else in the cache.
+                val output =
+                    File(File(context.cacheDir, REPORT_DIR).apply { mkdirs() }, "warren-report-${UUID.randomUUID()}.log")
                 val raw = jni.collectProblemReport(metadataJson, redactJson, appLogDir.absolutePath, output.absolutePath)
                 val root = Json.parseToJsonElement(raw).jsonObject
                 if (root["ok"]?.jsonPrimitive?.boolean != true) {
@@ -277,3 +280,6 @@ internal fun parseReportOutcome(rawJson: String): ReportSubmitOutcome =
     } catch (e: Exception) {
         ReportSubmitOutcome.Failure("invalid-envelope")
     }
+
+/** The cache subdirectory the collected reports live in, the one the share provider exposes. */
+private const val REPORT_DIR = "reports"

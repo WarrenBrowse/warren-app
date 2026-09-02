@@ -541,6 +541,7 @@
     <string name="report_problem_collecting">กำลังเตรียมรายงาน โปรดรอ</string>
     <string name="report_problem_collect_failed">ไม่สามารถรวบรวมบันทึกได้ คุณยังส่งคำอธิบายได้</string>
     <string name="report_problem_preview_title">บันทึกที่จะส่ง</string>
+    <string name="report_problem_share">แชร์บันทึก</string>
     <string name="report_problem_send">ส่งรายงาน</string>
     <string name="report_problem_sending">กำลังส่ง โปรดรอสักครู่</string>
     <string name="report_problem_created_with_logs">รายงานของคุณอยู่บนฟอรัมแล้ว และบันทึกของคุณถึงทีมสนับสนุนแล้ว</string>

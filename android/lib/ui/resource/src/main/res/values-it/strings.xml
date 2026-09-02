@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Preparazione del rapporto, attendi.</string>
     <string name="report_problem_collect_failed">Impossibile raccogliere i log. Puoi comunque inviare la descrizione.</string>
     <string name="report_problem_preview_title">Log da inviare</string>
+    <string name="report_problem_share">Condividi i log</string>
     <string name="report_problem_send">Invia il rapporto</string>
     <string name="report_problem_sending">Invio in corso, attendi.</string>
     <string name="report_problem_created_with_logs">Il tuo rapporto è sul forum e i tuoi log sono arrivati al team di supporto.</string>

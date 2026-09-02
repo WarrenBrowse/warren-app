@@ -102,6 +102,29 @@ network transports and validation, private DNS mode, wallet state, and the
 class of the last sign-in result read back from the events journal. Never an
 address, a sid, a handle or an SSID.
 
+The Rust side adds the live legs, measured at collection time
+(`warren-jni/src/probes.rs`, bounded to 6 s, run concurrently):
+
+| key | what it says |
+|---|---|
+| `probe-connect-protected` | the connect host's `/healthz` through the VpnService-protected socket: `ok-<ms>ms`, `http-<n>`, `connect-refused`, `connect-timeout`, `connect-unreachable`, `dns-failed`, `tls-failed`, `protect-refused`, `read-timeout` |
+| `probe-connect-default` | the same route through the SDK's plain client (the leg a TUN between states swallows): `ok-<ms>ms`, `http-<n>`, `connect-failed`, `read-timeout`, `io-failed` |
+| `probe-dns-connect` | the system resolver on the connect host: `ok-<addresses>-<ms>ms`, `dns-failed`, `dns-timeout` |
+| `probe-api` | the API's public `/v1/network` through the plain client, same classes as the default leg |
+| `clock-offset`, `clock-offset-source` | server minus device seconds from the first dated answer, and which leg (`protected`, `default`) supplied it; `unknown` / `none` when nothing answered |
+
+Read together with `tunnel-state`: a protected `ok` next to a default
+`read-timeout` while the tunnel is `Connecting` is the black-holed plain path;
+`dns-failed` on every leg with the tunnel `Blocking` is the kill switch with no
+resolver; a large `clock-offset` with `time-auto` off is the 2026-08-18 class.
+
+When connect itself is unreachable, "View the logs" offers the system share
+sheet: the redacted file leaves the device by any channel the user picks
+(mail, a messenger, a file manager), so the report can still reach the forum
+by hand. The `FileProvider` behind it serves the report directory only, under
+an authority derived from the running package (each product environment has
+its own application id).
+
 ## Reading a failed attempt
 
 - Device: `adb logcat -s WarrenJni:V` for the live run;

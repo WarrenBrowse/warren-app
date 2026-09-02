@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">A preparar o relatório, aguarda.</string>
     <string name="report_problem_collect_failed">Não foi possível recolher os registos. Podes enviar a descrição na mesma.</string>
     <string name="report_problem_preview_title">Registos a enviar</string>
+    <string name="report_problem_share">Compartilhar os registros</string>
     <string name="report_problem_send">Enviar o relatório</string>
     <string name="report_problem_sending">A enviar, aguarde.</string>
     <string name="report_problem_created_with_logs">O teu relatório está no fórum e os teus registos chegaram à equipa de suporte.</string>

@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Der Bericht wird vorbereitet, bitte warten.</string>
     <string name="report_problem_collect_failed">Die Protokolle konnten nicht gesammelt werden. Du kannst die Beschreibung trotzdem senden.</string>
     <string name="report_problem_preview_title">Zu sendende Protokolle</string>
+    <string name="report_problem_share">Protokolle teilen</string>
     <string name="report_problem_send">Bericht senden</string>
     <string name="report_problem_sending">Wird gesendet, bitte warten.</string>
     <string name="report_problem_created_with_logs">Dein Bericht ist im Forum und deine Protokolle haben das Support-Team erreicht.</string>

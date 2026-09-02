@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Preparando el informe, espera un momento.</string>
     <string name="report_problem_collect_failed">No se pudieron recopilar los registros. Aun así puedes enviar la descripción.</string>
     <string name="report_problem_preview_title">Registros que se enviarán</string>
+    <string name="report_problem_share">Compartir los registros</string>
     <string name="report_problem_send">Enviar el informe</string>
     <string name="report_problem_sending">Enviando, espera un momento.</string>
     <string name="report_problem_created_with_logs">Tu informe está en el foro y tus registros llegaron al equipo de soporte.</string>

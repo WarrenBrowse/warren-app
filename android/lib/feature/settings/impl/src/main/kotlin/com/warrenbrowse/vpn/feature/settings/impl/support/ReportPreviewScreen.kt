@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,6 +20,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.lifecycle.compose.dropUnlessResumed
@@ -35,11 +40,15 @@ private const val PREVIEW_MAX_CHARS = 400_000
 /**
  * The exact redacted report about to be sent, so the user can check what
  * leaves the device (the desktop "View the logs"). Read-only; the send stays
- * on the form behind it.
+ * on the form behind it. The share action is the last resort when the broker
+ * itself cannot be reached: the same file, handed to whatever app the user
+ * picks.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportPreview(navigator: Navigator, path: String) {
+    val context = LocalContext.current
+    val shareTitle = stringResource(R.string.report_problem_share)
     var text by remember { mutableStateOf<String?>(null) }
     LaunchedEffect(path) {
         text =
@@ -62,6 +71,14 @@ fun ReportPreview(navigator: Navigator, path: String) {
         navigationIcon = {
             unlessIsDetail {
                 NavigateBackIconButton(onNavigateBack = dropUnlessResumed { navigator.goBack() })
+            }
+        },
+        actions = {
+            IconButton(
+                onClick = { context.startActivity(reportShareIntent(context, path, shareTitle)) },
+                enabled = text != null,
+            ) {
+                Icon(imageVector = Icons.Rounded.Share, contentDescription = shareTitle)
             }
         },
     ) { modifier ->

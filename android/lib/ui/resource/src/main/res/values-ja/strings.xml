@@ -541,6 +541,7 @@
     <string name="report_problem_collecting">レポートを準備しています。お待ちください。</string>
     <string name="report_problem_collect_failed">ログを収集できませんでした。説明だけでも送信できます。</string>
     <string name="report_problem_preview_title">送信されるログ</string>
+    <string name="report_problem_share">ログを共有</string>
     <string name="report_problem_send">レポートを送信</string>
     <string name="report_problem_sending">送信しています。しばらくお待ちください。</string>
     <string name="report_problem_created_with_logs">レポートがフォーラムに投稿され、ログはサポートチームに届きました。</string>

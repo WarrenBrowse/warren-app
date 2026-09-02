@@ -168,5 +168,19 @@
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
+
+        <!-- Serves the collected problem reports (and only them) to the app the
+             user picks in the share sheet, one read grant per file. The
+             authority follows the application id so the three product
+             environments can be installed side by side. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.reports"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/report_paths" />
+        </provider>
     </application>
 </manifest>

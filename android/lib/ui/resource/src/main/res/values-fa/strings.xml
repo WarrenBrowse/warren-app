@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">در حال آماده‌سازی گزارش، لطفاً صبر کنید.</string>
     <string name="report_problem_collect_failed">گزارش‌ها جمع‌آوری نشدند. همچنان می‌توانید شرح مشکل را بفرستید.</string>
     <string name="report_problem_preview_title">گزارش‌هایی که فرستاده می‌شوند</string>
+    <string name="report_problem_share">هم‌رسانی گزارش‌ها</string>
     <string name="report_problem_send">ارسال گزارش</string>
     <string name="report_problem_sending">در حال ارسال، لطفاً صبر کنید.</string>
     <string name="report_problem_created_with_logs">گزارش شما در انجمن است و گزارش‌های فنی شما به تیم پشتیبانی رسید.</string>

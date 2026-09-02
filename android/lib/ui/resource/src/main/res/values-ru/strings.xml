@@ -550,6 +550,7 @@
     <string name="report_problem_collecting">Подготовка отчёта, подождите.</string>
     <string name="report_problem_collect_failed">Не удалось собрать журналы. Вы всё равно можете отправить описание.</string>
     <string name="report_problem_preview_title">Журналы к отправке</string>
+    <string name="report_problem_share">Поделиться журналами</string>
     <string name="report_problem_send">Отправить отчёт</string>
     <string name="report_problem_sending">Отправка, подождите.</string>
     <string name="report_problem_created_with_logs">Ваш отчёт на форуме, а журналы дошли до команды поддержки.</string>

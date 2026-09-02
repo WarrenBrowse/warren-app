@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Het rapport wordt voorbereid, even geduld.</string>
     <string name="report_problem_collect_failed">De logboeken konden niet worden verzameld. Je kunt de beschrijving toch versturen.</string>
     <string name="report_problem_preview_title">Te versturen logboeken</string>
+    <string name="report_problem_share">Logboeken delen</string>
     <string name="report_problem_send">Rapport versturen</string>
     <string name="report_problem_sending">Bezig met verzenden, even geduld.</string>
     <string name="report_problem_created_with_logs">Je rapport staat op het forum en je logboeken zijn bij het supportteam aangekomen.</string>

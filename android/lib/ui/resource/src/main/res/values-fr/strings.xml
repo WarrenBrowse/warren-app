@@ -544,6 +544,7 @@
     <string name="report_problem_collecting">Préparation du rapport, veuillez patienter.</string>
     <string name="report_problem_collect_failed">Les journaux n\'ont pas pu être collectés. Vous pouvez tout de même envoyer la description.</string>
     <string name="report_problem_preview_title">Journaux à envoyer</string>
+    <string name="report_problem_share">Partager les traces</string>
     <string name="report_problem_send">Envoyer le rapport</string>
     <string name="report_problem_sending">Envoi en cours, veuillez patienter.</string>
     <string name="report_problem_created_with_logs">Votre rapport est sur le forum et vos journaux sont parvenus à l\'équipe support.</string>

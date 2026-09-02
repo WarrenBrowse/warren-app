@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the collected problem reports are shareable; see ReportShare.kt. -->
+<paths>
+    <cache-path name="reports" path="reports/" />
+</paths>

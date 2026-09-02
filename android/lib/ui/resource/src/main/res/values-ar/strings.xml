@@ -556,6 +556,7 @@
     <string name="report_problem_collecting">جارٍ تحضير التقرير، يرجى الانتظار.</string>
     <string name="report_problem_collect_failed">تعذر جمع السجلات. لا يزال بإمكانك إرسال الوصف.</string>
     <string name="report_problem_preview_title">السجلات التي سيتم إرسالها</string>
+    <string name="report_problem_share">مشاركة السجلات</string>
     <string name="report_problem_send">إرسال التقرير</string>
     <string name="report_problem_sending">جارٍ الإرسال، يُرجى الانتظار.</string>
     <string name="report_problem_created_with_logs">تقريرك على المنتدى ووصلت سجلاتك إلى فريق الدعم.</string>

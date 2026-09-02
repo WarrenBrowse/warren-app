@@ -541,6 +541,7 @@
     <string name="report_problem_collecting">အစီရင်ခံစာ ပြင်ဆင်နေသည်၊ ခဏစောင့်ပါ။</string>
     <string name="report_problem_collect_failed">မှတ်တမ်းများ စုဆောင်း၍ မရပါ။ ဖော်ပြချက်ကိုတော့ ပေးပို့နိုင်ပါသေးသည်။</string>
     <string name="report_problem_preview_title">ပေးပို့မည့် မှတ်တမ်းများ</string>
+    <string name="report_problem_share">မှတ်တမ်းများကို မျှဝေရန်</string>
     <string name="report_problem_send">အစီရင်ခံစာ ပေးပို့ရန်</string>
     <string name="report_problem_sending">ပို့နေသည်၊ ခေတ္တစောင့်ပါ။</string>
     <string name="report_problem_created_with_logs">သင့်အစီရင်ခံစာ ဖိုရမ်ပေါ် ရောက်ပြီး သင့်မှတ်တမ်းများ ပံ့ပိုးမှုအဖွဲ့ထံ ရောက်သွားပါပြီ။</string>
