@@ -159,6 +159,17 @@ function transformEnvAssetText(text) {
         /\$FISH_COMPLETIONS_DIR\/warren\.fish/g,
         `$FISH_COMPLETIONS_DIR/warren${envSuffix}.fish`,
       )
+      // The uninstaller spells those same destinations out in full. A link left
+      // behind points into a bundle that is gone, and every new zsh then prints
+      // a compinit error for it.
+      .replace(
+        /\/zsh\/site-functions\/_warren(?![-\w])/g,
+        `/zsh/site-functions/_warren${envSuffix}`,
+      )
+      .replace(
+        /\/fish\/vendor_completions\.d\/warren\.fish/g,
+        `/fish/vendor_completions.d/warren${envSuffix}.fish`,
+      )
   );
 }
 
@@ -343,7 +354,7 @@ function newConfig() {
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-problem-report')), to: '.' },
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-daemon')), to: '.' },
         { from: distAssets(path.join('${env.BINARIES_PATH}', 'warren-setup')), to: '.' },
-        { from: distAssets('uninstall_macos.sh'), to: './uninstall.sh' },
+        { from: envAsset('uninstall_macos.sh'), to: './uninstall.sh' },
         { from: buildAssets('shell-completions/_warren'), to: '.' },
         { from: buildAssets('shell-completions/warren.fish'), to: '.' },
       ],
