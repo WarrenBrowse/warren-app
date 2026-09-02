@@ -23,6 +23,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.border
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
@@ -42,23 +48,49 @@ private const val BPS_PER_MBPS = 1_000_000L
  * printing the cap-unknown one first swapped the line under the user's
  * eyes a second into every cold start.
  */
+/**
+ * Where the badge sits (desktop BetaBadge): [Overlay] is the glass pill over
+ * the scenery on the home screen, left aligned and only as wide as its line;
+ * [Row] is the full-width settings row on a charcoal screen.
+ */
+enum class BetaBadgeVariant {
+    Overlay,
+    Row,
+}
+
 @Composable
-fun BetaBadge(capBps: Long?, capResolved: Boolean, modifier: Modifier = Modifier) {
+fun BetaBadge(
+    capBps: Long?,
+    capResolved: Boolean,
+    modifier: Modifier = Modifier,
+    variant: BetaBadgeVariant = BetaBadgeVariant.Row,
+) {
     var dialogVisible by remember { mutableStateOf(false) }
     val capMbps = capBps?.let { (it / BPS_PER_MBPS).toInt() }?.takeIf { it > 0 }
 
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(12.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable { dialogVisible = true }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
+    val container =
+        when (variant) {
+            BetaBadgeVariant.Overlay -> {
+                val shape = RoundedCornerShape(14.dp)
+                Modifier.wrapContentWidth()
+                    .clip(shape)
+                    .background(Color.Black.copy(alpha = Alpha60))
+                    .border(1.dp, Color.White.copy(alpha = Alpha20), shape)
+                    .clickable { dialogVisible = true }
+                    .padding(horizontal = 12.dp, vertical = 6.dp)
+            }
+            BetaBadgeVariant.Row ->
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                    .clickable { dialogVisible = true }
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+        }
+    Row(modifier = modifier.then(container), verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.beta_badge_label),
-            style = MaterialTheme.typography.labelMedium,
+            // Desktop labelTinySemiBold: 12/600.
+            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             // Desktop chip: brand ocre with charcoal text. The Material
             // `tertiary` role resolves to the deepest neutral in this scheme,
             // which painted the chip near-black.
@@ -75,8 +107,9 @@ fun BetaBadge(capBps: Long?, capResolved: Boolean, modifier: Modifier = Modifier
                 } else {
                     stringResource(R.string.beta_badge_line)
                 },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                // Desktop footnoteMini: the smallest semibold at 60 % white.
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
                 modifier = Modifier.padding(start = 10.dp),
             )
         }

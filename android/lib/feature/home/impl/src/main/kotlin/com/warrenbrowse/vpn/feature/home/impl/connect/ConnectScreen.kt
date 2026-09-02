@@ -152,6 +152,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
 import com.warrenbrowse.vpn.lib.ui.component.BetaBadge
+import com.warrenbrowse.vpn.lib.ui.component.BetaBadgeVariant
 import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
@@ -819,6 +820,7 @@ private fun Content(
                         BetaBadge(
                             capBps = betaCapBps,
                             capResolved = betaCapResolved,
+                            variant = BetaBadgeVariant.Overlay,
                             modifier =
                                 Modifier.padding(
                                     horizontal = Dimens.mediumPadding,

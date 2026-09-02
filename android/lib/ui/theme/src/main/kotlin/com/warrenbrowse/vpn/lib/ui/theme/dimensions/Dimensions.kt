@@ -102,8 +102,9 @@ data class Dimensions(
     val switchLocationRetryMinWidth: Dp = 40.dp,
     val thinBorderWidth: Dp = 1.dp,
     val tinyPadding: Dp = 4.dp,
-    val topBarActionIconSize: Dp = 30.dp,
-    val topBarLockupHeight: Dp = 40.dp,
+    // Desktop MainHeader: 32 px icons, 48 px lockup.
+    val topBarActionIconSize: Dp = 32.dp,
+    val topBarLockupHeight: Dp = 48.dp,
     val tvDrawerHeaderStartPadding: Dp = 12.dp,
     val tvDrawerHeaderWithFocusStartPadding: Dp = 16.dp,
     val tvDrawerHorizontalPadding: Dp = 12.dp,
