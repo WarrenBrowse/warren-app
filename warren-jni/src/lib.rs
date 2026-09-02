@@ -20,6 +20,9 @@ pub mod product;
 // validation + outcome mapping (host-testable); the network POST that consumes
 // it is Android-gated in `android_jni`.
 pub mod forum;
+// Problem-report collection for the in-app bug report (Android arm of the
+// shared collector; the metadata/redaction inputs are host-tested).
+pub mod report;
 
 // Tunnel session status contract (`redial::SessionStatus`) published to
 // Kotlin via `getTunnelStatus`.
@@ -84,6 +87,16 @@ mod protected_transport;
 
 #[cfg(target_os = "android")]
 mod android_jni;
+
+// The forum flows' JNI exports (login, cancel, report, collection), split
+// from the datapath bridge so the forum surface reads as one module.
+#[cfg(target_os = "android")]
+mod forum_android;
+
+// The Rust log file and the logcat tee behind `initLogger`; the rotation
+// and the line format are host-tested.
+#[cfg(any(test, target_os = "android"))]
+mod rust_log;
 
 // ---------------------------------------------------------------------------
 // Security fix tests (host-runnable, no JNI required)

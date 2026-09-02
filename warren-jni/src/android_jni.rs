@@ -78,6 +78,20 @@ pub enum Error {
 /// JNI entry points.
 static RUNTIME: OnceLock<tokio::runtime::Runtime> = OnceLock::new();
 
+/// The shared runtime, once `initLogger` created it.
+pub(crate) fn runtime() -> Option<&'static tokio::runtime::Runtime> {
+    RUNTIME.get()
+}
+
+/// Where `initLogger` put the Rust log files, once it ran: the problem
+/// report collector reads them from there.
+static RUST_LOG_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// The Rust log directory, once `initLogger` ran.
+pub(crate) fn rust_log_dir() -> Option<PathBuf> {
+    RUST_LOG_DIR.get().cloned()
+}
+
 /// Active tunnel handle. Populated by `connectTunnel`, cleared by
 /// `disconnectTunnel`. Only one tunnel at a time on Android (parity with
 /// upstream VpnService model).
@@ -246,17 +260,33 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
     log::info!("Warren JNI logger initialised in {}", files_dir.display());
 }
 
-fn init_log_file(_log_dir: &Path) -> Result<(), String> {
-    // Bridge the `log` crate to logcat. Once initialised, `log::info!`
-    // from any Rust dep (warren-identity, warren-tunnel once enabled,
-    // etc.) shows up under `adb logcat -s WarrenJni:V`. The
-    // `init_once` form is idempotent so JNI callers can re-trigger
-    // `initLogger` (e.g. after a process restart) without panicking.
-    android_logger::init_once(
+fn init_log_file(files_dir: &Path) -> Result<(), String> {
+    // Every Rust record goes to logcat (debug and up, tag `WarrenJni`, the
+    // `adb logcat -s WarrenJni:V` view) AND to a rotating file under the app's
+    // files dir (info and up), which is what a problem report can carry: a
+    // reboot empties logcat, and the failure a user reports usually happened
+    // before they thought of reporting it. Idempotent: a second call keeps
+    // the first logger (a process has one), so re-triggering `initLogger`
+    // after a service restart never panics.
+    // A second call (the VPN service after the application, or a process
+    // that re-triggers the init) must touch nothing: opening the sink again
+    // would rotate the live file out from under the logger already writing it.
+    if RUST_LOG_DIR.get().is_some() {
+        return Ok(());
+    }
+    let dir = files_dir.join(crate::rust_log::RUST_LOG_DIR_NAME);
+    let sink = crate::rust_log::FileSink::open(&dir)
+        .map_err(|e| format!("rust log file: {:?}", e.kind()))?;
+    let logcat = android_logger::AndroidLogger::new(
         android_logger::Config::default()
             .with_max_level(log::LevelFilter::Debug)
             .with_tag("WarrenJni"),
     );
+    let tee = crate::rust_log::Tee { logcat, file: sink };
+    if log::set_boxed_logger(Box::new(tee)).is_ok() {
+        log::set_max_level(log::LevelFilter::Debug);
+    }
+    let _ = RUST_LOG_DIR.set(dir);
     Ok(())
 }
 
@@ -403,114 +433,6 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequ
         }
     };
     new_byte_array_from(&env, &sig)
-}
-
-/// Sign and submit a forum-login challenge for `sid` to the connect `host`
-/// (`POST /v1/forum/login`).
-///
-/// Mirrors the desktop daemon's SignForumLogin plus its POST: only the opaque
-/// `sid` and the connect `host` cross the boundary. The mnemonic derives the
-/// signing key for this call and is not retained; the wallet signature never
-/// surfaces to Kotlin because the request is signed AND sent here (like every
-/// other signed JNI call). `host` is checked against a hard allowlist so a
-/// hostile deep link cannot redirect the signed request. Returns `{"ok":true}`
-/// on acceptance, `{"ok":false,"error":"subscription-required"}` when the wallet
-/// has never subscribed (HTTP 403), `{"ok":false,"error":"clock-skew"}` when the
-/// provider refused the signature for a device clock outside its accepted
-/// window, or `{"ok":false,"error":"error"}`. The
-/// mnemonic, sid, signature and nonce are never logged.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLogin<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    mnemonic: JString<'local>,
-    sid: JString<'local>,
-    host: JString<'local>,
-) -> jstring {
-    let jnix_env = JnixEnv::from(env);
-    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
-    let sid = String::from_java(&jnix_env, sid);
-    let host = String::from_java(&jnix_env, host);
-    let outcome = forum_login(&phrase, &sid, &host);
-    let json = crate::forum::envelope(outcome);
-    match jnix_env.new_string(json) {
-        Ok(s) => s.into_inner() as jstring,
-        Err(_) => std::ptr::null_mut(),
-    }
-}
-
-/// Drive the signed forum-login POST: build the signed request (host allowlist +
-/// wire bytes, all in `crate::forum`), execute it on the shared runtime through
-/// the reqwest transport, and map the HTTP status to an outcome. Never logs any
-/// request material; a failure to build or send collapses to `Failed`.
-fn forum_login(mnemonic: &str, sid: &str, host: &str) -> crate::forum::ForumLoginOutcome {
-    use crate::forum::ForumLoginOutcome;
-    use warren_api::{HttpRequest, HttpTransport, Method, ReqwestTransport};
-
-    let Some(runtime) = RUNTIME.get() else {
-        log::warn!("forumLogin: initLogger must run first");
-        return ForumLoginOutcome::Failed;
-    };
-    let signed = match crate::forum::build_signed_request(mnemonic, sid, host) {
-        Ok(req) => req,
-        Err(_) => {
-            // No values: the cause could otherwise echo sid/host/mnemonic state.
-            log::warn!("forumLogin: could not build signed request");
-            return ForumLoginOutcome::Failed;
-        }
-    };
-    let request = HttpRequest {
-        method: Method::Post,
-        url: signed.url,
-        headers: signed.headers,
-        body: signed.body,
-        use_sni: true,
-    };
-    match runtime.block_on(ReqwestTransport::new().execute(request)) {
-        Ok(response) => crate::forum::outcome_for_response(response.status, &response.body),
-        Err(_) => {
-            log::warn!("forumLogin: transport error");
-            ForumLoginOutcome::Failed
-        }
-    }
-}
-
-/// Best-effort: tell the connect provider the user declined the forum login
-/// (`POST /v1/session/<sid>/cancel`) so the waiting browser page unblocks
-/// instead of polling to timeout. Unsigned (no wallet material); mirrors the
-/// desktop `cancelForumLogin`. Failures are ignored: the server session expires
-/// on its own in 5 minutes.
-#[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLoginCancel<'local>(
-    env: JNIEnv<'local>,
-    _class: JClass<'local>,
-    sid: JString<'local>,
-    host: JString<'local>,
-) {
-    let jnix_env = JnixEnv::from(env);
-    let sid = String::from_java(&jnix_env, sid);
-    let host = String::from_java(&jnix_env, host);
-    forum_cancel(&sid, &host);
-}
-
-fn forum_cancel(sid: &str, host: &str) {
-    use warren_api::{HttpRequest, HttpTransport, Method, ReqwestTransport};
-
-    let Some(url) = crate::forum::build_cancel_url(sid, host) else {
-        return;
-    };
-    let Some(runtime) = RUNTIME.get() else {
-        return;
-    };
-    let request = HttpRequest {
-        method: Method::Post,
-        url,
-        headers: Vec::new(),
-        body: Vec::new(),
-        use_sni: true,
-    };
-    // Best-effort: a failed cancel just means the browser polls to timeout.
-    let _ = runtime.block_on(ReqwestTransport::new().execute(request));
 }
 
 /// Allocate a Java `byte[]` and copy `bytes` into it. Returns a null pointer

@@ -16,6 +16,14 @@ warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
 # 16 bytes of OS entropy for the request nonce (the one call site that mints its
 # own nonce; the warren-api client nonces internally for every other call).
 getrandom = "0.2"
+# The in-app report body is assembled and serialised once here, so the signed
+# bytes are the sent bytes; the identity an approved login returns is read the
+# same way on both platforms.
+serde_json = { workspace = true }
+base64 = "0.22"
+# The connect host's `Date` header is the trusted clock a skewed device
+# corrects itself against before signing.
+httpdate = "1"
 
 [dev-dependencies]
 # Wire-parity test: reconstruct the SHA-256 body hash and verify the signature

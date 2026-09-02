@@ -77,7 +77,10 @@ impl ProtectedTransport {
         }
     }
 
-    async fn execute_inner(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+    async fn execute_inner(
+        &self,
+        request: HttpRequest,
+    ) -> Result<(HttpResponse, Option<String>), TransportError> {
         let url = parse_url(&request.url)
             .ok_or_else(|| TransportError::Io("unsupported request url".to_owned()))?;
 
@@ -153,6 +156,22 @@ impl ProtectedTransport {
 
 impl HttpTransport for ProtectedTransport {
     async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+        self.execute_dated(request)
+            .await
+            .map(|(response, _)| response)
+    }
+}
+
+impl ProtectedTransport {
+    /// [`HttpTransport::execute`] that also hands back the response's `Date`
+    /// header, the trusted clock the forum flows correct a skewed device
+    /// against. The SDK's response type carries no headers, so the one
+    /// header that matters is read here, where the HTTP/1.1 exchange is
+    /// visible.
+    pub(crate) async fn execute_dated(
+        &self,
+        request: HttpRequest,
+    ) -> Result<(HttpResponse, Option<String>), TransportError> {
         tokio::time::timeout(TOTAL_TIMEOUT, self.execute_inner(request))
             .await
             .map_err(|_| TransportError::Io("request timed out".to_owned()))?
@@ -224,7 +243,7 @@ async fn h1_roundtrip<S>(
     stream: S,
     url: &ParsedUrl,
     request: HttpRequest,
-) -> Result<HttpResponse, TransportError>
+) -> Result<(HttpResponse, Option<String>), TransportError>
 where
     S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {
@@ -259,6 +278,11 @@ where
 
     let response = sender.send_request(req).await.map_err(io_err)?;
     let status = response.status().as_u16();
+    let date = response
+        .headers()
+        .get(hyper::header::DATE)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_owned);
     let body = response
         .into_body()
         .collect()
@@ -266,7 +290,7 @@ where
         .map_err(io_err)?
         .to_bytes()
         .to_vec();
-    Ok(HttpResponse { status, body })
+    Ok((HttpResponse { status, body }, date))
 }
 
 #[cfg(test)]

@@ -64,6 +64,14 @@ hyper = { version = "1", features = ["client", "http1"] }
 hyper-util = { workspace = true, features = ["tokio"] }
 tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "logging", "tls12"] }
 webpki-roots = { workspace = true }
+serde_json = { workspace = true }
+# The engine logs through `tracing`; the `log` bridge is what lets the JNI
+# file sink (and logcat) see those events. It was only ever enabled
+# transitively through quinn's default features, which a feature trim would
+# have silently switched off: pinned here on purpose.
+tracing = { version = "0.1", features = ["log"] }
+# Timestamps of the Rust log file, in the daemon's own line format.
+chrono = { workspace = true, features = ["clock"] }
 
 [dev-dependencies]
 # Canonical product anchors for the `product` module's drift gate.
@@ -132,6 +140,9 @@ mullvad-version = { path = "../mullvad-version" }
 # Platform metadata still useful for ApiEndpoint user-agent strings; kept from upstream.
 talpid-platform-metadata = { path = "../talpid-platform-metadata" }
 talpid-types = { path = "../talpid-types" }
+# The desktop's redacted problem-report collector, whose Android arm reads
+# the app log directory, the Rust log directory and a logcat dump.
+mullvad-problem-report = { path = "../mullvad-problem-report" }
 
 # Quinn tunnel + multi-hop + NAT-PMP are wired behind the `tunnel` feature.
 # The client transport ships an `AndroidTun` PacketDevice impl (cf.

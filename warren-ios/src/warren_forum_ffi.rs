@@ -26,7 +26,7 @@ use warren_api::{HttpRequest, HttpTransport, Method, ReqwestTransport};
 use warren_identity::WarrenIdentity;
 use zeroize::Zeroizing;
 
-use crate::forum::{self, ForumLoginOutcome};
+use crate::forum::{self, FailReason, ForumLoginOutcome};
 
 const SEED_LEN: usize = 32;
 
@@ -63,10 +63,10 @@ unsafe fn cstr_to_string(p: *const c_char) -> Option<String> {
 }
 
 /// Allocates the JSON envelope `CString` for `outcome`. `forum::envelope`
-/// returns a fixed `&'static str` with no interior NUL, so this never fails in
-/// practice.
+/// builds JSON from fixed tokens and a proquint handle, so it never carries an
+/// interior NUL and this never fails in practice.
 fn envelope_cstring(outcome: ForumLoginOutcome) -> *mut c_char {
-    match CString::new(forum::envelope(outcome)) {
+    match CString::new(forum::envelope(&outcome)) {
         Ok(c) => c.into_raw(),
         Err(_) => std::ptr::null_mut(),
     }
@@ -98,17 +98,17 @@ pub unsafe extern "C" fn warren_forum_login(
             unsafe { cstr_to_string(sid) },
             unsafe { cstr_to_string(host) },
         ) else {
-            return envelope_cstring(ForumLoginOutcome::Failed);
+            return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build));
         };
 
         let identity = WarrenIdentity::from_seed(&seed);
         let signed = match forum::build_signed_request(&identity, &sid, &host) {
             Ok(req) => req,
-            Err(_) => return envelope_cstring(ForumLoginOutcome::Failed),
+            Err(_) => return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build)),
         };
         let handle = match crate::warren_ios_runtime() {
             Ok(handle) => handle,
-            Err(_) => return envelope_cstring(ForumLoginOutcome::Failed),
+            Err(_) => return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Runtime)),
         };
 
         let request = HttpRequest {
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn warren_forum_login(
         };
         let outcome = match handle.block_on(ReqwestTransport::new().execute(request)) {
             Ok(response) => forum::outcome_for_response(response.status, &response.body),
-            Err(_) => ForumLoginOutcome::Failed,
+            Err(_) => ForumLoginOutcome::Failed(FailReason::Transport),
         };
         envelope_cstring(outcome)
     })

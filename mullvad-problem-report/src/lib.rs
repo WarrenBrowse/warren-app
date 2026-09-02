@@ -290,6 +290,7 @@ fn list_logs(
 // GUI logs.
 /// The platform whose log layout to resolve. Explicit so every arm is
 /// reachable from a test on any host.
+#[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum TargetOs {
     Linux,
@@ -298,6 +299,7 @@ enum TargetOs {
     Other,
 }
 
+#[cfg(not(target_os = "android"))]
 impl TargetOs {
     const HOST: Self = if cfg!(target_os = "linux") {
         Self::Linux
@@ -322,6 +324,7 @@ impl TargetOs {
 ///
 /// Built from explicit inputs rather than read straight from the environment so
 /// the resolution is testable without touching the machine's real env.
+#[cfg(not(target_os = "android"))]
 #[derive(Debug, Default, Clone)]
 struct FrontendLogDirs {
     home: Option<PathBuf>,
@@ -330,6 +333,7 @@ struct FrontendLogDirs {
     roaming_app_data: Option<PathBuf>,
 }
 
+#[cfg(not(target_os = "android"))]
 impl FrontendLogDirs {
     fn from_env() -> Self {
         Self {
@@ -524,6 +528,7 @@ impl ProblemReport {
     /// Adds an informational block. Unlike [`Self::add_error`] this does not
     /// describe a failure: some states (a frontend that never wrote a log) are
     /// normal, and dressing them as errors sends staff chasing a non-problem.
+    #[cfg(not(target_os = "android"))]
     pub fn add_note(&mut self, title: &'static str, body: &str) {
         let redacted = self.redact(body);
         self.logs.push((title.to_string(), redacted));

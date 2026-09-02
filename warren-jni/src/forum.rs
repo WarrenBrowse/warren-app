@@ -1,4 +1,5 @@
-//! Community-forum wallet login (`POST /v1/forum/login`, doc 55), Android side.
+//! Community-forum wallet login (`POST /v1/forum/login`, doc 55) and in-app
+//! bug report (`POST /v1/forum/report`), Android side.
 //!
 //! The wire bytes, deep-link validation, cancel URL, and outcome mapping are
 //! single-sourced in the shared [`warren_forum`] crate (host-tested there and
@@ -7,14 +8,15 @@
 //! POST that consumes the request is Android-gated in `android_jni`.
 
 pub use warren_forum::{
-    ForumLoginOutcome, ForumRequestError, SignedForumRequest, build_cancel_url, envelope,
-    is_allowed_connect_host, is_valid_sid, outcome_for_response,
+    FailReason, ForumIdentity, ForumLoginOutcome, ForumRequestError, ReportOutcome,
+    SignedForumRequest, build_cancel_url, build_status_url, clock_offset_secs, connect_host,
+    envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code, outcome_for_response,
+    report_envelope, report_outcome_for_response, timestamp_with_offset,
 };
 
 /// Build the signed forum-login request for `sid` against `host`, deriving the
 /// signing key from the wallet `mnemonic` (the Android secret-store shape; iOS
-/// passes a seed-derived key instead). Delegates the wire construction to
-/// [`warren_forum::build_signed_request`].
+/// passes a seed-derived key instead), stamped with the device clock.
 ///
 /// # Errors
 ///
@@ -28,6 +30,44 @@ pub fn build_signed_request(
     let key = crate::wallet::signing_key_from_mnemonic(mnemonic)
         .map_err(|_| ForumRequestError::Invalid)?;
     warren_forum::build_signed_request(&key, sid, host)
+}
+
+/// [`build_signed_request`] with an explicit timestamp: the device clock
+/// corrected by the offset measured against the connect host.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the mnemonic is malformed, the host is not
+/// allowlisted, or the `sid` / RNG is unusable.
+pub fn build_signed_request_at(
+    mnemonic: &str,
+    sid: &str,
+    host: &str,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    let key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|_| ForumRequestError::Invalid)?;
+    warren_forum::build_signed_request_at(&key, sid, host, timestamp)
+}
+
+/// Build the signed in-app report request from the wallet `mnemonic`, the
+/// report fields (one JSON object, see
+/// [`warren_forum::build_signed_report_request`]) and the optional gzipped
+/// redacted problem report.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the mnemonic is malformed, the report is
+/// not a JSON object, or the RNG is unusable.
+pub fn build_signed_report_request(
+    mnemonic: &str,
+    report_json: &str,
+    log_gz: Option<&[u8]>,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    let key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|_| ForumRequestError::Invalid)?;
+    warren_forum::build_signed_report_request(&key, report_json, log_gz, timestamp)
 }
 
 #[cfg(test)]
@@ -55,6 +95,35 @@ mod tests {
     fn build_signed_request_rejects_a_non_allowlisted_host() {
         assert_eq!(
             build_signed_request(PHRASE, SID, "evil.example.com"),
+            Err(ForumRequestError::Invalid)
+        );
+    }
+
+    #[test]
+    fn a_corrected_timestamp_is_the_one_stamped() {
+        let req = build_signed_request_at(PHRASE, SID, "connect.warrenbrowse.com", 1_800_000_000)
+            .expect("builds");
+        let stamp = req
+            .headers
+            .iter()
+            .find(|(n, _)| n == "X-Warren-Timestamp")
+            .map(|(_, v)| v.as_str());
+        assert_eq!(stamp, Some("1800000000"));
+    }
+
+    #[test]
+    fn build_signed_report_request_from_a_mnemonic_targets_the_report_route() {
+        let req = build_signed_report_request(
+            PHRASE,
+            r#"{"platform":"android","area":"other","frequency":"once","what_happened":"Long enough to pass the caps."}"#,
+            Some(b"gz"),
+            1_800_000_000,
+        )
+        .expect("a valid mnemonic + report must build a request");
+        assert_eq!(req.url, "https://connect.warrenbrowse.com/v1/forum/report");
+        assert!(req.body.windows(12).any(|w| w == b"\"log_gz_b64\""));
+        assert_eq!(
+            build_signed_report_request("not a mnemonic", "{}", None, 1),
             Err(ForumRequestError::Invalid)
         );
     }
