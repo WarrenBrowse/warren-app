@@ -92,10 +92,15 @@ trap 'rm -f "$log"' EXIT
 
 attempt=1
 while :; do
-	if "$@" 2>&1 | tee "$log"; then
+	# The command's OWN status, not the pipeline's and not an `if`'s: after
+	# `if cmd | tee; then ...; fi` falls through, `$?` is the if's, which is 0,
+	# so the exit-code arm of the classifier (a silent 137 or 124) never saw
+	# a real code and every wedge died on its first attempt.
+	"$@" 2>&1 | tee "$log"
+	rc=${PIPESTATUS[0]}
+	if [ "$rc" -eq 0 ]; then
 		exit 0
 	fi
-	rc=$?
 
 	class="$(warren_flake_class "$log" "$rc")"
 	if [ -z "$class" ]; then
