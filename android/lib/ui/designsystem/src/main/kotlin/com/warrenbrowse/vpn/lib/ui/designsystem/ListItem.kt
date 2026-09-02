@@ -37,6 +37,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.selected
@@ -190,7 +191,7 @@ fun WarrenListItem(
                     ) {
                         ProvideContentColorTextStyle(
                             colors.headlineColor(isEnabled, isSelected),
-                            MaterialTheme.typography.titleMedium,
+                            ListTokens.labelStyle(),
                         ) {
                             leadingContent(this)
                         }
@@ -200,7 +201,7 @@ fun WarrenListItem(
                 Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
                     ProvideContentColorTextStyle(
                         colors.headlineColor(isEnabled, isSelected),
-                        MaterialTheme.typography.titleMedium,
+                        ListTokens.labelStyle(),
                     ) {
                         content(this)
                     }
@@ -217,7 +218,7 @@ fun WarrenListItem(
                 ) {
                     ProvideContentColorTextStyle(
                         colors.trailingIconColor,
-                        MaterialTheme.typography.titleMedium,
+                        MaterialTheme.typography.bodyMedium,
                     ) {
                         trailingContent(this)
                     }
@@ -286,9 +287,15 @@ object ListItemDefaults {
 object ListTokens {
     const val ListItemDisabledLabelTextOpacity = AlphaInactive
 
-    val listItemMinHeight = 56.dp
+    // Desktop ListItem: 48 px rows with a 14/600 label; 48 dp is still a
+    // full touch target.
+    val listItemMinHeight = 48.dp
     val listItemButtonWidth = 56.dp
     val listItemPaddingStart = 16.dp
+
+    @Composable
+    fun labelStyle(): TextStyle =
+        MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
     val listItemRoundedCornerSize = 16.dp
 }
 

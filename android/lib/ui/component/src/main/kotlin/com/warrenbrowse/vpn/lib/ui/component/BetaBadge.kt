@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -90,7 +90,7 @@ fun BetaBadge(capBps: Long?, capResolved: Boolean, modifier: Modifier = Modifier
 @Composable
 private fun BetaInfoDialog(capMbps: Int?, onDismiss: () -> Unit) {
     val uriHandler = LocalUriHandler.current
-    AlertDialog(
+    WarrenAlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(text = stringResource(R.string.beta_dialog_title)) },
         text = {

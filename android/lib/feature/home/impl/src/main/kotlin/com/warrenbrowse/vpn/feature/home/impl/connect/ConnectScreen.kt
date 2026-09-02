@@ -159,6 +159,7 @@ import com.warrenbrowse.vpn.lib.ui.tag.SHUFFLE_BUTTON_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import com.warrenbrowse.vpn.lib.ui.util.visible
@@ -1023,7 +1024,13 @@ private fun ConnectionCard(
         colors = CardDefaults.cardColors(containerColor = containerColor.value),
         border = BorderStroke(1.dp, Color.White.copy(alpha = Alpha20)),
     ) {
-        Column(modifier = Modifier.padding(all = Dimens.mediumPadding)) {
+        Column(
+            modifier =
+                Modifier.padding(
+                    vertical = Dimens.connectionCardVerticalPadding,
+                    horizontal = Dimens.mediumPadding,
+                )
+        ) {
             ConnectionCardHeader(state, state.location, expanded) { expanded = !expanded }
 
             // The body is available in exactly the states that offer the
@@ -1165,7 +1172,12 @@ private fun ConnectionCardHeader(
                     modifier =
                         Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding).marqueeLine(),
                     text = location.asString(),
-                    style = MaterialTheme.typography.titleLarge,
+                    // Desktop Location: 18/24 semibold.
+                    style =
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
+                        ),
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                 )
@@ -1175,8 +1187,9 @@ private fun ConnectionCardHeader(
                         Text(
                             modifier = Modifier.fillMaxWidth().marqueeLine(),
                             text = it,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            // Desktop Hostname: 14/20 at 60 % white.
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
                             maxLines = 1,
                         )
                     }

@@ -22,12 +22,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
 
 @Preview
 @Composable
@@ -113,21 +114,28 @@ fun ConnectionStatusText(
             tint = accent,
             modifier = Modifier.padding(top = 2.dp).size(28.dp),
         )
-        Column(modifier = Modifier.padding(start = Dimens.smallPadding)) {
+        Column(modifier = Modifier.padding(start = Dimens.connectionStatusGap)) {
             Text(
                 text = stringResource(id = copy.title),
                 // The lifted tint, not the fill: the saturated accent reads at
                 // about 3.5:1 on the card at this size (desktop rule).
                 color = phase.titleColor(),
-                style = MaterialTheme.typography.titleLarge,
+                // Desktop ConnectionStatus: 19/22 semibold.
+                style =
+                    MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 22.sp),
                 maxLines = 1,
                 modifier = Modifier.marqueeLine(),
             )
             copy.subtitle?.let { subtitle ->
                 Text(
                     text = stringResource(id = subtitle),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-                    style = MaterialTheme.typography.bodyMedium,
+                    // Desktop: 13/18 at 80 % white.
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha80),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 13.sp,
+                            lineHeight = 18.sp,
+                        ),
                     maxLines = 1,
                     modifier = Modifier.marqueeLine(),
                 )

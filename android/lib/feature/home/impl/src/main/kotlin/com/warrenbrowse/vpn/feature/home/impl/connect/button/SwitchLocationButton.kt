@@ -113,8 +113,9 @@ fun SwitchLocationButton(
                 // Offset to compensate for the side button.
                 Text(
                     text = text,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    // The button label style, the same 14/600 as every button.
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     modifier =

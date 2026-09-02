@@ -24,6 +24,12 @@ data class Dimensions(
     val circularProgressBarSmallStrokeWidth: Dp = 4.dp,
     val connectButtonExtraPadding: Dp = 4.dp,
     val connectionCardMaxWidth: Dp = 480.dp,
+    // Desktop DialogPopup: radius 12 on the darkBlue container.
+    val dialogCornerRadius: Dp = 12.dp,
+    // Desktop ConnectionPanel: 14 px vertical, 16 px horizontal.
+    val connectionCardVerticalPadding: Dp = 14.dp,
+    // Desktop ConnectionStatus: 12 px between the eye and the text.
+    val connectionStatusGap: Dp = 12.dp,
     val deleteIconSize: Dp = 24.dp,
     val dialogIconHeight: Dp = 48.dp,
     val fabSpacing: Dp = 16.dp, // Copied from the private val FabSpacing in Scaffold.kt
@@ -59,7 +65,7 @@ data class Dimensions(
     val privacyPolicyIconSize: Dp = 16.dp,
     val problemReportTextFieldMinHeight: Dp = 220.dp,
     val reconnectButtonMinInteractiveComponentSize: Dp = 40.dp,
-    val reconnectButtonDivider: Dp = 2.dp,
+    val reconnectButtonDivider: Dp = 1.dp,
     val relayCirclePadding: Dp = 5.dp,
     val relayCircleSize: Dp = 16.dp,
     val relayItemCornerRadius: Dp = 16.dp,
@@ -83,7 +89,7 @@ data class Dimensions(
     // Required to get the logo to look visually correct
     val splashLogoTextHeight: Dp = 18.dp,
     val switchIconSize: Dp = 24.dp,
-    val switchLocationRetryMinWidth: Dp = 48.dp,
+    val switchLocationRetryMinWidth: Dp = 40.dp,
     val thinBorderWidth: Dp = 1.dp,
     val tinyPadding: Dp = 4.dp,
     val topBarActionIconSize: Dp = 30.dp,

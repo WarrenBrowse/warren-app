@@ -5,7 +5,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -15,6 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.Shape
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.DialogWindowProvider
@@ -23,7 +26,8 @@ import androidx.compose.ui.window.DialogWindowProvider
 // with the scrim fading on the same clock.
 private const val DIALOG_TRANSITION_MILLIS = 250
 private const val DIALOG_INITIAL_SCALE = 0.9f
-private const val DIALOG_SCRIM_DIM = 0.32f
+// Desktop DialogPopup scrim: blackAlpha50.
+private const val DIALOG_SCRIM_DIM = 0.5f
 
 /**
  * The app's alert dialog: a Material3 [AlertDialog] that scales and fades in
@@ -44,7 +48,8 @@ fun WarrenAlertDialog(
     icon: (@Composable () -> Unit)? = null,
     title: (@Composable () -> Unit)? = null,
     text: (@Composable () -> Unit)? = null,
-    containerColor: Color = AlertDialogDefaults.containerColor,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    shape: Shape = RoundedCornerShape(Dimens.dialogCornerRadius),
     properties: DialogProperties = DialogProperties(),
 ) {
     val visibleState = remember { MutableTransitionState(false) }
@@ -87,6 +92,7 @@ fun WarrenAlertDialog(
         title = title,
         text = text,
         containerColor = containerColor,
+        shape = shape,
         properties = properties,
         modifier = modifier.scale(scale).alpha(alpha),
     )

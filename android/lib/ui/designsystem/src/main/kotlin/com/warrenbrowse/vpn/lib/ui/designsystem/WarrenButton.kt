@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -28,7 +29,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha40
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaInvisible
 import com.warrenbrowse.vpn.lib.ui.theme.color.errorDisabled
@@ -97,7 +97,7 @@ fun NegativeButton(
         ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.error,
             contentColor = MaterialTheme.colorScheme.onError,
-            disabledContentColor = MaterialTheme.colorScheme.onError.copy(alpha = Alpha20),
+            disabledContentColor = MaterialTheme.colorScheme.onError.copy(alpha = Alpha40),
             disabledContainerColor = MaterialTheme.colorScheme.errorDisabled,
         ),
     isEnabled: Boolean = true,
@@ -126,7 +126,7 @@ fun VariantButton(
         ButtonDefaults.buttonColors(
             containerColor = background,
             contentColor = MaterialTheme.colorScheme.onTertiary,
-            disabledContentColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = Alpha20),
+            disabledContentColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = Alpha40),
             disabledContainerColor = MaterialTheme.colorScheme.tertiaryDisabled,
         ),
     isEnabled: Boolean = true,
@@ -153,7 +153,7 @@ fun PrimaryButton(
         ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha20),
+            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha40),
             disabledContainerColor = MaterialTheme.colorScheme.primaryDisabled,
         ),
     isEnabled: Boolean = true,
@@ -183,7 +183,7 @@ fun PrimaryTextButton(
     colors: ButtonColors =
         ButtonDefaults.textButtonColors(
             contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha20),
+            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha40),
         ),
     textDecoration: TextDecoration = TextDecoration.None,
     isEnabled: Boolean = true,
@@ -225,7 +225,7 @@ fun NegativeOutlinedButton(
     colors: ButtonColors =
         ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.onError,
-            disabledContentColor = MaterialTheme.colorScheme.onError.copy(alpha = Alpha20),
+            disabledContentColor = MaterialTheme.colorScheme.onError.copy(alpha = Alpha40),
         ),
     border: BorderStroke =
         BorderStroke(
@@ -311,7 +311,7 @@ fun SmallPrimaryButton(
         ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
-            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha20),
+            disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = Alpha40),
             disabledContainerColor = MaterialTheme.colorScheme.primaryDisabled,
         ),
 ) {
@@ -349,7 +349,8 @@ private fun RowScope.BaseButtonContent(
         Text(
             text = text,
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.titleMedium,
+            // Desktop ButtonText: 14/600 on every variant.
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
             textDecoration = textDecoration,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -48,7 +48,8 @@ internal object PaletteTokens {
     val Black = Color(0xFF000000)
 
     // Disabled container colors: desaturated neutral / accent variants.
-    val DisabledContainerPrimary = Color(0xFF424140)
+    // Desktop blue40 for the disabled primary fill.
+    val DisabledContainerPrimary = Color(0xFF383735)
     val DisabledContainerTertiary = Color(0xFF3A5630) // olive 40
     val DisabledContainerDestructive = Color(0xFF64322C) // terracotta 40
 }
