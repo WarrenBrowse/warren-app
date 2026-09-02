@@ -21,10 +21,16 @@ class ForumLoginController(
     /** The pending consent request, or null when there is none to show. */
     val pending: StateFlow<ForumLoginLink?> = _pending.asStateFlow()
 
+    private var seenAny = false
+
     fun request(link: ForumLoginLink) {
         requestedAtMillis = nowMillis()
+        seenAny = true
         _pending.value = link
     }
+
+    /** Whether any link reached this process yet (the cold-start marker). */
+    fun hasSeenAnyLink(): Boolean = seenAny
 
     /**
      * True when the pending link outlived the connect login session (300 s,

@@ -81,4 +81,32 @@ class ForumLoginLinkTest {
             assertEquals(false, parse("$good$suffix")?.crossDevice, "suffix: $suffix")
         }
     }
+
+    @Test
+    fun a_rejected_link_names_its_class_never_its_values() {
+        // The class is the fact a report needs to show a broker/app drift
+        // (a prod scheme reaching a beta install); the sid must never be in it.
+        val sid = "0123456789abcdef0123456789abcdef"
+        fun reason(url: String?) =
+            (classifyForumLoginLink(url, expectedScheme = "warren-beta") as ForumLinkVerdict.Rejected).reason
+        assertEquals("wrong-scheme:warren", reason("warren://forum-login?sid=$sid&host=connect.warrenbrowse.com"))
+        assertEquals("wrong-action", reason("warren-beta://attach-logs?sid=$sid&host=connect.warrenbrowse.com"))
+        assertEquals("missing-sid", reason("warren-beta://forum-login?host=connect.warrenbrowse.com"))
+        assertEquals("bad-sid-shape", reason("warren-beta://forum-login?sid=ABC&host=connect.warrenbrowse.com"))
+        assertEquals("host-not-allowlisted", reason("warren-beta://forum-login?sid=$sid&host=evil.example.com"))
+        assertEquals("no-data", reason(null))
+        assertEquals("not-a-uri", reason("::not a uri::"))
+        val accepted =
+            classifyForumLoginLink(
+                "warren-beta://forum-login?sid=$sid&host=connect.warrenbrowse.com",
+                expectedScheme = "warren-beta",
+            ) as ForumLinkVerdict.Accepted
+        assertEquals(ForumLoginLink(sid, "connect.warrenbrowse.com"), accepted.link)
+    }
+
+    @Test
+    fun a_typed_code_stands_for_the_same_device_link_on_the_allowlisted_host() {
+        val sid = "0123456789abcdef0123456789abcdef"
+        assertEquals(ForumLoginLink(sid, "connect.warrenbrowse.com", crossDevice = false), forumLoginLinkFromCode(sid))
+    }
 }

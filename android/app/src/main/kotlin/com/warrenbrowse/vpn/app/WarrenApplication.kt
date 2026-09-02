@@ -18,6 +18,7 @@ import com.warrenbrowse.vpn.app.util.FileLogWriter
 import com.warrenbrowse.vpn.di.ApplicationScope
 import com.warrenbrowse.vpn.di.KERMIT_FILE_LOG_DIR_NAME
 import com.warrenbrowse.vpn.di.appModule
+import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import org.koin.android.ext.android.getKoin
@@ -34,6 +35,15 @@ class WarrenApplication : Application() {
         Logger.setTag(LOG_TAG)
         if (!BuildConfig.DEBUG) {
             Logger.setMinSeverity(Severity.Info)
+        }
+        // The Rust runtime and its log file exist from the first instant of
+        // the process, not from the first VPN service: a forum deep link that
+        // cold-starts the app signs through that runtime, and the failure it
+        // may meet is written to a file the user can send.
+        try {
+            WarrenJni.initLogger(filesDir.absolutePath)
+        } catch (e: RuntimeException) {
+            Logger.e(throwable = e) { "Rust logger init failed" }
         }
         if (BuildConfig.DEBUG) {
             // Improve compose stack traces

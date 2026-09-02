@@ -59,6 +59,7 @@ import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
@@ -101,6 +102,8 @@ import org.koin.compose.koinInject
 fun WarrenWalletSettings(navigator: Navigator) {
     val activity = LocalContext.current as FragmentActivity
     val walletRepository = koinInject<WalletRepository>()
+    val forumIdentityRepository = koinInject<ForumIdentityRepository>()
+    val forumIdentity by forumIdentityRepository.identity.collectAsStateWithLifecycle()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val cachedExpiry by settings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
@@ -217,6 +220,9 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     )
                 }
                 PubkeyCard(pubkey = pubkey, onCopy = { copyToClipboard(pubkey, null) })
+                // Desktop "Forum name" row: shown once a sign-in or a report
+                // taught the app the handle this wallet posts under.
+                forumIdentity?.let { ForumHandleCard(handle = it.handle) }
             }
 
             viewError?.let { msg ->
@@ -472,6 +478,23 @@ private fun PubkeyCard(pubkey: String, onCopy: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/** Desktop `ForumHandleRow`: the anonymous name this wallet posts under. */
+@Composable
+private fun ForumHandleCard(handle: String) {
+    AccountCard {
+        Text(
+            text = stringResource(R.string.account_forum_name_label),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = handle,
+            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+            modifier = Modifier.padding(top = Dimens.tinyPadding),
+        )
     }
 }
 

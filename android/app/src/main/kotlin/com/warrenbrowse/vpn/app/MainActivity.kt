@@ -19,9 +19,11 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
+import com.warrenbrowse.vpn.app.forum.ForumLinkVerdict
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.ForumLoginPromptHost
-import com.warrenbrowse.vpn.app.forum.parseForumLoginLink
+import com.warrenbrowse.vpn.app.forum.classifyForumLoginLink
 import com.warrenbrowse.vpn.di.uiModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
@@ -58,6 +60,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
     private val forumLoginController by inject<ForumLoginController>()
+    private val forumEventsJournal by inject<ForumEventsJournal>()
 
     private fun dispatchWarrenConnect() {
         // Route the post-VPN-profile-grant connect (and the already-prepared
@@ -153,12 +156,35 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
                     intent.getApiEndpointConfigurationExtras()
                 )
             KEY_REQUEST_VPN_PROFILE -> handleRequestVpnProfileIntent()
-            Intent.ACTION_VIEW ->
-                // A `warren://forum-login` deep link: validate + stash it; the
-                // consent prompt (never a silent sign-in) reads it and signs on
-                // approval. A non-forum ACTION_VIEW parses to null and is ignored.
-                parseForumLoginLink(intent.dataString)?.let(forumLoginController::request)
+            Intent.ACTION_VIEW -> handleForumDeepLink(intent)
             else -> Logger.w("Unhandled intent action: $action")
+        }
+    }
+
+    /**
+     * A `warren://forum-login` deep link: validate + stash it; the consent
+     * prompt (never a silent sign-in) reads it and signs on approval. A
+     * rejected link is logged by class (scheme, action, sid shape, host), never
+     * by value: the class is the fact a report needs to show a broker/app
+     * drift, and it used to be dropped in silence.
+     */
+    private fun handleForumDeepLink(intent: Intent) {
+        val coldStart = !forumLoginController.hasSeenAnyLink()
+        when (val verdict = classifyForumLoginLink(intent.dataString)) {
+            is ForumLinkVerdict.Accepted -> {
+                forumEventsJournal.record(
+                    "link.received",
+                    "verdict" to "accepted",
+                    "cross_device" to verdict.link.crossDevice.toString(),
+                    "cold_start" to coldStart.toString(),
+                    "referrer" to (referrer?.host ?: "none"),
+                )
+                forumLoginController.request(verdict.link)
+            }
+            is ForumLinkVerdict.Rejected -> {
+                Logger.w("Ignoring a deep link the forum flow does not accept: ${verdict.reason}")
+                forumEventsJournal.record("link.received", "verdict" to verdict.reason)
+            }
         }
     }
 
@@ -176,6 +202,13 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private fun ComponentActivity.intents() =
         callbackFlow<Intent> {
             send(intent)
+            // The launching intent is consumed once. A rotation or a low-memory
+            // recreation re-delivers it otherwise, and a `forum-login` link that
+            // was already approved (or expired) came back as a fresh prompt whose
+            // approval could only meet "unknown session".
+            if (intent.action == Intent.ACTION_VIEW) {
+                setIntent(Intent(Intent.ACTION_MAIN))
+            }
 
             val listener = Consumer<Intent> { intent -> trySend(intent) }
 

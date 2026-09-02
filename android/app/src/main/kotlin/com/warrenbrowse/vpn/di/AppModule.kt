@@ -18,8 +18,15 @@ import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
+import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
+import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
+import com.warrenbrowse.vpn.app.forum.forumLoginLinkFromCode
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
+import com.warrenbrowse.vpn.lib.repository.SharedPreferencesForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
 import com.warrenbrowse.vpn.app.network.WarrenNetworkInfoUseCase
@@ -148,7 +155,40 @@ val appModule = module {
     // Community-forum wallet login (doc 55): the deep-link consent controller and
     // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.
     single { ForumLoginController() }
-    single { WarrenForumLoginUseCase(walletRepository = get()) }
+    single<ForumIdentityRepository> { SharedPreferencesForumIdentityRepository(androidContext()) }
+    single {
+        ForumEventsJournal(
+            logDir = androidContext().filesDir.resolve(KERMIT_FILE_LOG_DIR_NAME),
+            scope = get<ApplicationScope>(),
+        )
+    }
+    single {
+        WarrenForumLoginUseCase(
+            walletRepository = get(),
+            forumIdentityRepository = get(),
+            journal = get(),
+        )
+    }
+    // The sign-in code typed by hand lands on the same consent prompt.
+    single<ForumSignInRequests> {
+        val controller = get<ForumLoginController>()
+        val journal = get<ForumEventsJournal>()
+        ForumSignInRequests { sid ->
+            journal.record("link.received", "verdict" to "accepted", "source" to "typed-code")
+            controller.request(forumLoginLinkFromCode(sid))
+        }
+    }
+    single<WarrenSupportReporter> {
+        WarrenSupportReporterImpl(
+            context = androidContext(),
+            jni = get(),
+            walletRepository = get(),
+            forumIdentityRepository = get(),
+            tunnelState = get(),
+            journal = get(),
+            appLogDir = androidContext().filesDir.resolve(KERMIT_FILE_LOG_DIR_NAME),
+        )
+    }
 
     single { LocaleRepository(get()) }
     // TODO Move these back to UiModule when fixDisableBug is removed

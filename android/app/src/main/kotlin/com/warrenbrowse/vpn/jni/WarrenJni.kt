@@ -85,11 +85,20 @@ object WarrenJni {
      * checked against a hard allowlist in Rust so a hostile deep link cannot
      * redirect the signed request.
      *
-     * Returns a JSON string:
-     *   - `{"ok":true}` when the provider accepted the login
+     * Before signing, Rust reads the session's status once: the `Date` of that
+     * answer corrects a device clock the server would otherwise refuse, and a
+     * session already gone is reported without spending a signature.
+     *
+     * Returns a JSON string (`warren_forum::envelope`):
+     *   - `{"ok":true}` when the provider accepted the login, with `handle`
+     *     and `notify_slot` when the body carried the forum identity
      *   - `{"ok":false,"error":"subscription-required"}` when the wallet has
      *     never subscribed (HTTP 403)
-     *   - `{"ok":false,"error":"error"}` on any other failure
+     *   - `{"ok":false,"error":"clock-skew"}` when the provider refused the
+     *     signature for a device clock outside its window
+     *   - `{"ok":false,"error":"expired"}` when the session is gone
+     *   - `{"ok":false,"error":"error","reason":"<class>"}` on any other
+     *     failure (`runtime`, `build`, `transport`, `http-<status>`)
      *
      * Blocks on a network POST, so it must be invoked off the main thread.
      * Never log the mnemonic or the sid (no-log).
@@ -107,13 +116,44 @@ object WarrenJni {
      * Best-effort notify the connect `host` that the user declined the forum
      * login for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser
      * page unblocks instead of polling to timeout. Unsigned (no wallet
-     * material); failures are ignored (the server session expires in 10 min).
+     * material); failures are ignored (the server session expires in 5 min).
      * Blocks on a network POST, so it must be invoked off the main thread.
      */
     external fun forumLoginCancel(
         sid: String,
         host: String,
     )
+
+    /**
+     * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust:
+     * `reportJson` is one JSON object with the connect contract's field names,
+     * `logGz` the gzipped redacted problem report or null. The body is
+     * serialised once in Rust, signed, and sent; only the form and the gzip
+     * cross the boundary. Returns the envelope of
+     * `warren_forum::report_envelope` (`{"ok":true,"topic_id":..,"topic_url":..,
+     * "logs":..,"handle":..,"notify_slot":..}` or `{"ok":false,"error":..}`).
+     * Blocks on a network POST, so it must be invoked off the main thread.
+     */
+    external fun forumReport(
+        mnemonic: String,
+        reportJson: String,
+        logGz: ByteArray?,
+    ): String
+
+    /**
+     * Collect the redacted problem report into `outputPath` with the shared
+     * desktop collector: Rust log files, the Kotlin log directory, a logcat
+     * dump, plus the `metadataJson` facts in the header and the strings of
+     * `redactJson` redacted. Returns `{"ok":true,"bytes":N}` or
+     * `{"ok":false,"error":..}`. Reads files and runs `logcat`: invoke off the
+     * main thread.
+     */
+    external fun collectProblemReport(
+        metadataJson: String,
+        redactJson: String,
+        appLogDir: String,
+        outputPath: String,
+    ): String
 
     // -- Tunnel lifecycle --------------------------------------------------
 

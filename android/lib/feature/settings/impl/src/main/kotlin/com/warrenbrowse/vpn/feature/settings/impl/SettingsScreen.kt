@@ -36,6 +36,8 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenDaitaSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.ForumSignInCodeNavKey
+import com.warrenbrowse.vpn.feature.settings.api.ReportProblemNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
@@ -140,6 +142,10 @@ fun Settings(navigator: Navigator) {
             },
         onWalletClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenWalletSettingsNavKey) },
+        onReportProblemClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ReportProblemNavKey) },
+        onForumSignInCodeClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ForumSignInCodeNavKey) },
         onBackClick = dropUnlessResumed { navigator.goBackUntil(SettingsNavKey, inclusive = true) },
     )
 }
@@ -160,6 +166,8 @@ fun SettingsScreen(
     onNotificationSettingsCellClick: () -> Unit,
     onLanguageClick: (() -> Unit)? = null,
     onWalletClick: () -> Unit = {},
+    onReportProblemClick: () -> Unit = {},
+    onForumSignInCodeClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(id = R.string.settings),
@@ -196,6 +204,8 @@ fun SettingsScreen(
                         onNotificationSettingsCellClick = onNotificationSettingsCellClick,
                         onLanguageClick = onLanguageClick,
                         onWalletClick = onWalletClick,
+                        onReportProblemClick = onReportProblemClick,
+                        onForumSignInCodeClick = onForumSignInCodeClick,
                     )
                 }
             }
@@ -217,6 +227,8 @@ private fun LazyListScope.content(
     onNotificationSettingsCellClick: () -> Unit,
     onLanguageClick: (() -> Unit)? = null,
     onWalletClick: () -> Unit = {},
+    onReportProblemClick: () -> Unit = {},
+    onForumSignInCodeClick: () -> Unit = {},
 ) {
     if (showBetaBadge) {
         item {
@@ -289,6 +301,13 @@ private fun LazyListScope.content(
     // use, Refund policy. Privacy policy is a Warren-specific extra and stays
     // last so the shared rows keep their desktop positions.
     itemWithDivider { CommunityForum() }
+
+    // The two doors that need no browser round trip: file a report with the
+    // logs straight from the app, and finish a forum sign-in from the code
+    // the approval page shows when the deep link went nowhere.
+    itemWithDivider { ReportProblem(onReportProblemClick) }
+
+    itemWithDivider { ForumSignInCode(onForumSignInCodeClick) }
 
     if (!state.isPlayBuild) {
         itemWithDivider { FaqAndGuides() }
@@ -415,6 +434,26 @@ private fun CommunityForum() {
         title = label,
         onClick = openForum,
         position = Position.Top,
+    )
+}
+
+@Composable
+private fun ReportProblem(onClick: () -> Unit) {
+    NavigationListItem(
+        title = stringResource(id = R.string.report_problem),
+        subtitle = stringResource(id = R.string.report_problem_row_subtitle),
+        onClick = onClick,
+        position = Position.Middle,
+    )
+}
+
+@Composable
+private fun ForumSignInCode(onClick: () -> Unit) {
+    NavigationListItem(
+        title = stringResource(id = R.string.forum_sign_in_code),
+        subtitle = stringResource(id = R.string.forum_sign_in_code_row_subtitle),
+        onClick = onClick,
+        position = Position.Middle,
     )
 }
 

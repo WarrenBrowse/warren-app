@@ -2,7 +2,9 @@ package com.warrenbrowse.vpn.app.forum
 
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -11,13 +13,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.int
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/** The result of a forum-login attempt, mirroring the desktop's three outcomes. */
+/** The result of a forum-login attempt, mirroring the desktop's outcomes. */
 sealed interface WarrenForumLoginOutcome {
-    /** The provider accepted the signature; the browser completes the login. */
-    data object Approved : WarrenForumLoginOutcome
+    /**
+     * The provider accepted the signature; the browser completes the login.
+     * Carries the forum identity when the provider handed one back.
+     */
+    data class Approved(val identity: ForumIdentity?) : WarrenForumLoginOutcome
 
     /** The wallet has never subscribed to Warren; forum access is refused. */
     data object SubscriptionRequired : WarrenForumLoginOutcome
@@ -29,10 +35,17 @@ sealed interface WarrenForumLoginOutcome {
      */
     data object ClockSkew : WarrenForumLoginOutcome
 
+    /** The browser session is gone: expired, cancelled or already consumed. */
+    data object Expired : WarrenForumLoginOutcome
+
     /** No wallet on device: the user must set one up before signing in. */
     data object WalletNotReady : WarrenForumLoginOutcome
 
-    /** Any other failure (bad request, provider error, transport error). */
+    /**
+     * Any other failure, with its class (`transport`, `build`, `runtime`,
+     * `http-<status>`, `wallet-read`, `jni`). Rendered generically; the class
+     * goes to the log and the events journal, where a report can carry it.
+     */
     data class Failure(val reason: String) : WarrenForumLoginOutcome
 }
 
@@ -41,11 +54,18 @@ sealed interface WarrenForumLoginOutcome {
  *
  * Mirrors [WarrenSubscriptionUseCase]: require a wallet, read the mnemonic
  * silently (routine signing, no prompt), then hand it to `WarrenJni.forumLogin`,
- * which signs AND POSTs `/v1/forum/login` inside Rust (the wallet signature
- * never surfaces here). Only the opaque `sid` and the allowlisted `host` are
- * passed across. Must be called only after the user approves the consent prompt.
+ * which preflights the session, signs AND POSTs `/v1/forum/login` inside Rust
+ * (the wallet signature never surfaces here). Only the opaque `sid` and the
+ * allowlisted `host` are passed across. Must be called only after the user
+ * approves the consent prompt. An approved login records the identity the
+ * provider returned, which is what the account page and the activity badge
+ * read.
  */
-class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
+class WarrenForumLoginUseCase(
+    private val walletRepository: WalletRepository,
+    private val forumIdentityRepository: ForumIdentityRepository,
+    private val journal: ForumEventsJournal,
+) {
 
     // Fire-and-forget scope for the cancel notify so it survives the consent
     // prompt being dismissed (a composition scope would cancel it mid-flight).
@@ -54,6 +74,7 @@ class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
     suspend fun signIn(link: ForumLoginLink): WarrenForumLoginOutcome {
         if (walletRepository.state.value is WalletState.Absent) {
             Logger.w("WarrenForumLoginUseCase: no wallet on device")
+            journal.record("login.result", "class" to "wallet-absent")
             return WarrenForumLoginOutcome.WalletNotReady
         }
 
@@ -61,18 +82,33 @@ class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
             walletRepository.readMnemonic()
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenForumLoginUseCase: mnemonic read failed" }
-            return WarrenForumLoginOutcome.Failure(e.message ?: "wallet read failed")
+            journal.record("login.result", "class" to "wallet-read")
+            return WarrenForumLoginOutcome.Failure("wallet-read")
         }
 
+        val started = System.currentTimeMillis()
+        journal.record("login.signing", "cross_device" to link.crossDevice.toString())
         return withContext(Dispatchers.IO) {
             mnemonic.use { m ->
                 val rawJson = try {
                     WarrenJni.forumLogin(m.phrase, link.sid, link.host)
                 } catch (e: Exception) {
                     Logger.e(throwable = e) { "WarrenJni.forumLogin threw" }
-                    return@use WarrenForumLoginOutcome.Failure(e.message ?: "JNI forumLogin threw")
+                    journal.record("login.result", "class" to "jni")
+                    return@use WarrenForumLoginOutcome.Failure("jni")
                 }
-                parseForumLoginOutcome(rawJson)
+                val outcome = parseForumLoginOutcome(rawJson)
+                journal.record(
+                    "login.result",
+                    "class" to outcomeClass(outcome),
+                    "elapsed_ms" to (System.currentTimeMillis() - started).toString(),
+                )
+                if (outcome is WarrenForumLoginOutcome.Approved) {
+                    outcome.identity?.let(forumIdentityRepository::save)
+                } else {
+                    Logger.w("WarrenForumLoginUseCase: sign-in not approved: ${outcomeClass(outcome)}")
+                }
+                outcome
             }
         }
     }
@@ -83,6 +119,7 @@ class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
      * when the consent prompt leaves composition; nothing to report back.
      */
     fun cancel(link: ForumLoginLink) {
+        journal.record("login.declined")
         cancelScope.launch {
             try {
                 WarrenJni.forumLoginCancel(link.sid, link.host)
@@ -93,22 +130,44 @@ class WarrenForumLoginUseCase(private val walletRepository: WalletRepository) {
     }
 }
 
+/** The coarse class of an outcome, for the log and the journal. */
+internal fun outcomeClass(outcome: WarrenForumLoginOutcome): String =
+    when (outcome) {
+        is WarrenForumLoginOutcome.Approved ->
+            if (outcome.identity != null) "approved-with-identity" else "approved"
+        WarrenForumLoginOutcome.SubscriptionRequired -> "subscription-required"
+        WarrenForumLoginOutcome.ClockSkew -> "clock-skew"
+        WarrenForumLoginOutcome.Expired -> "expired"
+        WarrenForumLoginOutcome.WalletNotReady -> "wallet-absent"
+        is WarrenForumLoginOutcome.Failure -> outcome.reason
+    }
+
 /**
  * Map the `{"ok":..}` JNI envelope to an outcome. Pure (no JNI, no I/O) so it is
- * unit-testable off-device. Never surfaces the raw error string to the user.
+ * unit-testable off-device. Never surfaces the raw error string to the user:
+ * the `reason` of a failure is a fixed class token, kept for the log only.
  */
 internal fun parseForumLoginOutcome(rawJson: String): WarrenForumLoginOutcome =
     try {
         val root = Json.parseToJsonElement(rawJson).jsonObject
         if (root["ok"]?.jsonPrimitive?.boolean == true) {
-            WarrenForumLoginOutcome.Approved
+            val handle = root["handle"]?.jsonPrimitive?.content
+            val slot = root["notify_slot"]?.jsonPrimitive?.int
+            WarrenForumLoginOutcome.Approved(
+                identity = handle?.let { ForumIdentity(handle = it, notifySlot = slot) }
+            )
         } else {
             when (root["error"]?.jsonPrimitive?.content) {
                 "subscription-required" -> WarrenForumLoginOutcome.SubscriptionRequired
                 "clock-skew" -> WarrenForumLoginOutcome.ClockSkew
-                else -> WarrenForumLoginOutcome.Failure("sign-in failed")
+                "expired" -> WarrenForumLoginOutcome.Expired
+                else ->
+                    WarrenForumLoginOutcome.Failure(
+                        root["reason"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }
+                            ?: "unknown"
+                    )
             }
         }
     } catch (e: Exception) {
-        WarrenForumLoginOutcome.Failure("invalid JNI response: ${e.message}")
+        WarrenForumLoginOutcome.Failure("invalid-envelope")
     }

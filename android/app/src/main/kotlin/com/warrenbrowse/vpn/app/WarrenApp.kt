@@ -71,6 +71,7 @@ import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenPortForwardin
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenTunnelSettingsEntry
 import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
+import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenSupportEntries
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
@@ -234,6 +235,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         outOfTimeEntry(nav3)
         privacyDisclaimerEntry(nav3)
         settingsEntry(nav3)
+        warrenSupportEntries(nav3)
         splashEntry(nav3)
         splitTunnelingEntry(nav3)
     }

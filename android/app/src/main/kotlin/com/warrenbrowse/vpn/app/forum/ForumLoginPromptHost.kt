@@ -1,9 +1,11 @@
 package com.warrenbrowse.vpn.app.forum
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -145,6 +147,11 @@ fun ForumLoginPromptHost() {
                                             Toast.LENGTH_LONG,
                                         )
                                         .show()
+                                    // The browser page is what completes the
+                                    // login, and it only re-polls once it is
+                                    // visible again: hand the foreground back
+                                    // to it, as the desktop hides its window.
+                                    (context as? Activity)?.moveTaskToBack(true)
                                 }
                                 else -> {
                                     busy = false
@@ -155,6 +162,7 @@ fun ForumLoginPromptHost() {
                                             subscriptionRequired = subscriptionRequiredMessage,
                                             walletNotReady = walletNotReadyMessage,
                                             clockSkew = clockSkewMessage,
+                                            expired = expiredMessage,
                                             generic = failureMessage,
                                         )
                                 }
@@ -165,7 +173,18 @@ fun ForumLoginPromptHost() {
             )
         },
         dismissButton = {
-            TextButton(onClick = onDecline, enabled = !busy) {
+            // Explicit colours: the theme's primary is a charcoal one shade
+            // off the dialog surface, which left "Cancel" invisible.
+            TextButton(
+                onClick = onDecline,
+                enabled = !busy,
+                colors =
+                    ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        disabledContentColor =
+                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                    ),
+            ) {
                 Text(stringResource(R.string.forum_login_cancel))
             }
         },
@@ -178,7 +197,8 @@ fun ForumLoginPromptHost() {
  */
 internal fun isTerminalOutcome(outcome: WarrenForumLoginOutcome): Boolean =
     outcome is WarrenForumLoginOutcome.ClockSkew ||
-        outcome is WarrenForumLoginOutcome.SubscriptionRequired
+        outcome is WarrenForumLoginOutcome.SubscriptionRequired ||
+        outcome is WarrenForumLoginOutcome.Expired
 
 /** The inline error for a non-approved outcome; pure so it stays unit-mappable. */
 internal fun failureMessageFor(
@@ -186,11 +206,13 @@ internal fun failureMessageFor(
     subscriptionRequired: String,
     walletNotReady: String,
     clockSkew: String,
+    expired: String,
     generic: String,
 ): String =
     when (outcome) {
         is WarrenForumLoginOutcome.SubscriptionRequired -> subscriptionRequired
         is WarrenForumLoginOutcome.WalletNotReady -> walletNotReady
         is WarrenForumLoginOutcome.ClockSkew -> clockSkew
+        is WarrenForumLoginOutcome.Expired -> expired
         else -> generic
     }

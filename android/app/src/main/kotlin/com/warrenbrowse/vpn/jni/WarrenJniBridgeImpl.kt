@@ -25,4 +25,14 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         WarrenJni.latestAvailableVersion(currentVersion).ifEmpty { null }
 
     override fun fetchNetworkInfo(): String = WarrenJni.fetchNetworkInfo()
+
+    override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
+        WarrenJni.forumReport(mnemonic, reportJson, logGz)
+
+    override fun collectProblemReport(
+        metadataJson: String,
+        redactJson: String,
+        appLogDir: String,
+        outputPath: String,
+    ): String = WarrenJni.collectProblemReport(metadataJson, redactJson, appLogDir, outputPath)
 }

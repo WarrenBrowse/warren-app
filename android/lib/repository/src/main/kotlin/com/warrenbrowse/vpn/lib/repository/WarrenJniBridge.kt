@@ -59,4 +59,28 @@ interface WarrenJniBridge {
      * callers must invoke it off the main thread.
      */
     fun fetchNetworkInfo(): String
+
+    /**
+     * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust.
+     * [reportJson] is one JSON object with the connect contract's field names;
+     * [logGz] the gzipped redacted problem report, or null to file the report
+     * without logs. Returns the JSON envelope of `warren_forum::report_envelope`.
+     * Blocks on a network POST: invoke off the main thread.
+     */
+    fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String
+
+    /**
+     * Collect the redacted problem report into [outputPath]: the Rust log
+     * files, the Kotlin log directory [appLogDir], a logcat dump, and the
+     * [metadataJson] facts (one JSON object) in the header, with every string
+     * of [redactJson] (a JSON array) redacted on top of the collector's own
+     * rules. Returns `{"ok":true,"bytes":N}` or `{"ok":false,"error":..}`.
+     * Reads files and runs `logcat`: invoke off the main thread.
+     */
+    fun collectProblemReport(
+        metadataJson: String,
+        redactJson: String,
+        appLogDir: String,
+        outputPath: String,
+    ): String
 }
