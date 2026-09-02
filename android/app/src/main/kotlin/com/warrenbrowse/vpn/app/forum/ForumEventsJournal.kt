@@ -4,6 +4,7 @@ import co.touchlab.kermit.Logger
 import java.io.File
 import java.time.Instant
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
@@ -147,10 +148,13 @@ interface ForumJournal {
 class ForumEventsJournal(private val logDir: File, private val scope: CoroutineScope) :
     ForumJournal {
     private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
-    private var sequence = 0L
+    // Drawn on the caller's thread: the main thread (a deep link, a preflight)
+    // and the IO dispatcher (a sign-in, a submit) record concurrently, and the
+    // staff order the attempts by this number.
+    private val sequence = AtomicLong(0)
 
     override fun record(event: ForumEvent, vararg fields: JournalField) {
-        val line = format(Instant.now(), sequence++, event, fields.toList())
+        val line = format(Instant.now(), sequence.getAndIncrement(), event, fields.toList())
         Logger.i("forum: ${event.token} ${fields.joinToString(" ") { "${it.key}=${it.value}" }}")
         scope.launch(dispatcher) {
             try {

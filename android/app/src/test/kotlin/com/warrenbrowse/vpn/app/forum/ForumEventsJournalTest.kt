@@ -4,9 +4,15 @@ import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.repository.ReportSubmitOutcome
 import java.io.File
 import java.time.Instant
+import java.util.concurrent.CountDownLatch
+import kotlin.concurrent.thread
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -33,6 +39,36 @@ class ForumEventsJournalTest {
 
         assertEquals("expired", journal.lastClassOf(ForumEvent.LOGIN_RESULT))
         assertEquals("connecting", journal.lastClassOf(ForumEvent.LOGIN_DEFERRED))
+    }
+
+    @Test
+    fun lines_recorded_from_many_threads_at_once_carry_distinct_consecutive_sequence_numbers(
+        @TempDir dir: File
+    ) = runTest {
+        // A submit on IO and a deep link on main journal at the same time; the
+        // staff order the attempts by `seq`, so two lines must never share one.
+        val journal = journal(dir)
+        val threads = 8
+        val perThread = 200
+        val start = CountDownLatch(1)
+        val workers =
+            List(threads) {
+                thread {
+                    start.await()
+                    repeat(perThread) { journal.record(ForumEvent.LINK_RECEIVED, JournalField.Verdict("ok")) }
+                }
+            }
+        start.countDown()
+        workers.forEach { it.join() }
+        // Sequenced behind every pending write on the journal's own thread.
+        journal.lastClassOf(ForumEvent.LINK_RECEIVED)
+
+        val seqs =
+            File(dir, ForumEventsJournal.FILE_NAME).readLines().map {
+                Json.parseToJsonElement(it).jsonObject["seq"]!!.jsonPrimitive.long
+            }
+        assertEquals(threads * perThread, seqs.size)
+        assertEquals((0L until (threads * perThread).toLong()).toList(), seqs.sorted())
     }
 
     @Test
