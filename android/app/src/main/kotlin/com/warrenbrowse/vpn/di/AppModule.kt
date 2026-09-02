@@ -24,6 +24,7 @@ import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
 import com.warrenbrowse.vpn.app.forum.forumLoginLinkFromCode
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
 import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
 import com.warrenbrowse.vpn.lib.repository.SharedPreferencesForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
@@ -156,6 +157,17 @@ val appModule = module {
     // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.
     single { ForumLoginController() }
     single<ForumIdentityRepository> { SharedPreferencesForumIdentityRepository(androidContext()) }
+    // Erasing the wallet erases the forum name learnt under it.
+    single {
+        ForumIdentityWalletBinding(
+                wallet = get(),
+                forumIdentity = get(),
+                scope = get<ApplicationScope>(),
+            )
+            .also { it.start() }
+    } withOptions {
+        createdAtStart()
+    }
     single {
         ForumEventsJournal(
             logDir = androidContext().filesDir.resolve(KERMIT_FILE_LOG_DIR_NAME),
