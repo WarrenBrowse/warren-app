@@ -15,7 +15,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -171,7 +171,7 @@ fun ReportProblem(navigator: Navigator) {
 
             if (state.includeLogs) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(
+                    WarrenTextButton(
                         onClick = {
                             viewModel.collect { report ->
                                 navigator.navigate(ReportPreviewNavKey(report.file.absolutePath))
@@ -252,7 +252,7 @@ private fun ReportOutcomeNotice(
                     )
                 }
                 if (outcome.topicUrl.isNotEmpty()) {
-                    TextButton(onClick = { onOpenTopic(outcome.topicUrl) }) {
+                    WarrenTextButton(onClick = { onOpenTopic(outcome.topicUrl) }) {
                         Text(stringResource(R.string.report_problem_open_topic))
                     }
                 }
@@ -260,7 +260,7 @@ private fun ReportOutcomeNotice(
         }
         ReportSubmitOutcome.SubscriptionRequired ->
             ErrorNotice(stringResource(R.string.report_problem_error_subscription)) {
-                TextButton(onClick = onOpenHelpForm) {
+                WarrenTextButton(onClick = onOpenHelpForm) {
                     Text(stringResource(R.string.report_problem_open_help_form))
                 }
             }
@@ -268,7 +268,7 @@ private fun ReportOutcomeNotice(
         ReportSubmitOutcome.RateLimited -> ErrorNotice(stringResource(R.string.report_problem_error_rate_limited))
         ReportSubmitOutcome.TooLarge ->
             ErrorNotice(stringResource(R.string.report_problem_error_too_large)) {
-                TextButton(onClick = onSendWithoutLogs) {
+                WarrenTextButton(onClick = onSendWithoutLogs) {
                     Text(stringResource(R.string.report_problem_send_without_logs))
                 }
             }

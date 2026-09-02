@@ -27,7 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -277,7 +277,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
 
                 // Rare and destructive: a ghost red link kept visually apart
                 // from the everyday actions above (desktop LogoutButton).
-                TextButton(
+                WarrenTextButton(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error,

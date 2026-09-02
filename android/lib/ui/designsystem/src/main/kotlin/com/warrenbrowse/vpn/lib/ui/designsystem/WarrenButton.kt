@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
+import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha40
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaInvisible
 import com.warrenbrowse.vpn.lib.ui.theme.color.errorDisabled
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
@@ -367,4 +368,34 @@ private fun RowScope.BaseButtonContent(
                 leadingIcon()
             }
     }
+}
+
+/**
+ * A text button readable on this palette. Material's `TextButton` colours its
+ * label with `colorScheme.primary`, which here is the charcoal of the raised
+ * cells (`#4A4846`): on a dialog or a card it is one shade off the surface and
+ * the label vanishes (the forum consent prompt's Cancel did, literally). Every
+ * text action uses this instead, with the surface's own foreground.
+ */
+@Composable
+fun WarrenTextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: ButtonColors =
+        ButtonDefaults.textButtonColors(
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha40),
+        ),
+    contentPadding: PaddingValues = ButtonDefaults.TextButtonContentPadding,
+    content: @Composable RowScope.() -> Unit,
+) {
+    TextButton(
+        onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        colors = colors,
+        contentPadding = contentPadding,
+        content = content,
+    )
 }

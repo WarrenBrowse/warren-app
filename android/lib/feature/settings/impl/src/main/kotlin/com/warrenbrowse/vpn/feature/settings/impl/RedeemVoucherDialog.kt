@@ -15,7 +15,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -103,7 +103,7 @@ fun RedeemVoucherDialog(onDismiss: () -> Unit) {
                 )
             },
             confirmButton = {
-                TextButton(onClick = onDismiss) { Text(stringResource(R.string.got_it)) }
+                WarrenTextButton(onClick = onDismiss) { Text(stringResource(R.string.got_it)) }
             },
         )
         return
@@ -194,13 +194,13 @@ fun RedeemVoucherDialog(onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(
+            WarrenTextButton(
                 enabled = isCompleteVoucher(input) && !submitting,
                 onClick = submit,
             ) { Text(stringResource(R.string.voucher_redeem)) }
         },
         dismissButton = {
-            TextButton(enabled = !submitting, onClick = onDismiss) {
+            WarrenTextButton(enabled = !submitting, onClick = onDismiss) {
                 Text(stringResource(R.string.cancel))
             }
         },

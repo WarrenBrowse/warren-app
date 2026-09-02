@@ -18,7 +18,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -286,7 +286,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
             title = { Text(stringResource(R.string.out_of_time_disconnect_dialog_title)) },
             text = { Text(stringResource(R.string.out_of_time_disconnect_dialog_message)) },
             confirmButton = {
-                TextButton(
+                WarrenTextButton(
                     onClick = {
                         showDisconnectAndBuy = false
                         scope.launch {
@@ -301,7 +301,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
                 ) { Text(stringResource(R.string.out_of_time_disconnect_dialog_confirm)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDisconnectAndBuy = false }) {
+                WarrenTextButton(onClick = { showDisconnectAndBuy = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },

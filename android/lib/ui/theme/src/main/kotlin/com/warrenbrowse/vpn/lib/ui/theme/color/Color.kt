@@ -36,6 +36,18 @@ val ColorScheme.warning: Color
 val ColorScheme.pending: Color
     @Composable get() = PaletteTokens.Orange
 
+// Lifted tints of the three accents for text at title size (desktop
+// `greenText` / `orangeText` / `redText`): the fills stay saturated, the
+// title needs the contrast.
+val ColorScheme.positiveText: Color
+    @Composable get() = PaletteTokens.GreenText
+
+val ColorScheme.pendingText: Color
+    @Composable get() = PaletteTokens.OrangeText
+
+val ColorScheme.errorText: Color
+    @Composable get() = PaletteTokens.RedText
+
 // Disabled colors for buttons
 val ColorScheme.tertiaryDisabled: Color
     @Composable get() = PaletteTokens.DisabledContainerTertiary

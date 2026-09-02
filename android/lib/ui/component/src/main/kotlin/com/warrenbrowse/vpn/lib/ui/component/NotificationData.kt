@@ -7,7 +7,7 @@ import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -309,7 +309,7 @@ private fun ErrorState.errorLinkAction(): NotificationAction? {
                 message = steps,
                 onDismiss = { troubleshootShown = false },
                 dismissButton = {
-                    TextButton(
+                    WarrenTextButton(
                         onClick = {
                             troubleshootShown = false
                             openForum()

@@ -19,7 +19,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -347,7 +347,7 @@ fun WarrenVpnSettings(navigator: Navigator) {
                 }
             },
             confirmButton = {
-                TextButton(
+                WarrenTextButton(
                     onClick = {
                         resetPinsCount = repo.resetExitKeyPins()
                         confirmResetPins = false
@@ -360,7 +360,7 @@ fun WarrenVpnSettings(navigator: Navigator) {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { confirmResetPins = false }) {
+                WarrenTextButton(onClick = { confirmResetPins = false }) {
                     Text(stringResource(R.string.cancel))
                 }
             },
@@ -373,7 +373,7 @@ fun WarrenVpnSettings(navigator: Navigator) {
             title = { Text(stringResource(R.string.tunnel_reset_pinned_keys_done_title)) },
             text = { Text(stringResource(R.string.tunnel_reset_pinned_keys_done_body, count)) },
             confirmButton = {
-                TextButton(onClick = { resetPinsCount = null }) {
+                WarrenTextButton(onClick = { resetPinsCount = null }) {
                     Text(stringResource(R.string.got_it))
                 }
             },

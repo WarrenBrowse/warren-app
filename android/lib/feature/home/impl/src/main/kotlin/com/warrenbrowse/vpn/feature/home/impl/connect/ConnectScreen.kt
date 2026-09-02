@@ -1,5 +1,9 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
+import androidx.core.view.WindowCompat
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
 import android.content.res.Resources
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -652,6 +656,17 @@ fun ConnectScreen(
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit = {},
 ) {
+    // The header paints its own glyphs black over the pale scenery sky; the
+    // OS status bar right above it must follow (desktop header tone "dark"),
+    // or a white clock sits on the same sky. Restored to the app-wide light
+    // glyphs when the screen leaves composition.
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.isAppearanceLightStatusBars = true
+        onDispose { controller?.isAppearanceLightStatusBars = false }
+    }
     val contentFocusRequester = remember { FocusRequester() }
 
     val content =

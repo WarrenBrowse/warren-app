@@ -40,7 +40,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -554,7 +554,7 @@ private fun EmptyCatalogue(onRetry: () -> Unit) {
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
-        TextButton(onClick = onRetry) { Text(stringResource(R.string.retry)) }
+        WarrenTextButton(onClick = onRetry) { Text(stringResource(R.string.retry)) }
     }
 }
 
@@ -577,7 +577,7 @@ private fun NoSearchResult(term: String, onClear: () -> Unit) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
         )
-        TextButton(onClick = onClear) {
+        WarrenTextButton(onClick = onClear) {
             Text(stringResource(R.string.location_clear_search))
         }
     }
@@ -641,7 +641,7 @@ private fun LazyItemScope.PickerRowContent(
                 ListHeader(
                     content = { Text(stringResource(R.string.location_recents)) },
                     actions = {
-                        TextButton(onClick = onClearRecents) {
+                        WarrenTextButton(onClick = onClearRecents) {
                             Text(stringResource(R.string.location_clear))
                         }
                     },
@@ -671,10 +671,10 @@ private fun LazyItemScope.PickerRowContent(
                 ListHeader(
                     content = { Text(row.name) },
                     actions = {
-                        TextButton(onClick = { onRenameList(row.name) }) {
+                        WarrenTextButton(onClick = { onRenameList(row.name) }) {
                             Text(stringResource(R.string.location_rename_list))
                         }
-                        TextButton(onClick = { onDeleteList(row.name) }) {
+                        WarrenTextButton(onClick = { onDeleteList(row.name) }) {
                             Text(stringResource(R.string.location_delete_list))
                         }
                     },
@@ -1046,7 +1046,7 @@ private fun AddToListDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
                 listNames.forEach { name ->
-                    TextButton(
+                    WarrenTextButton(
                         onClick = { onPick(name) },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(name) }
@@ -1061,13 +1061,13 @@ private fun AddToListDialog(
             }
         },
         confirmButton = {
-            TextButton(
+            WarrenTextButton(
                 enabled = newName.isNotBlank(),
                 onClick = { onPick(newName.trim()) },
             ) { Text(stringResource(R.string.location_create_and_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            WarrenTextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
 }
@@ -1093,13 +1093,13 @@ private fun RenameListDialog(
             )
         },
         confirmButton = {
-            TextButton(
+            WarrenTextButton(
                 enabled = name.isNotBlank() && name.trim() != currentName,
                 onClick = { onRename(name.trim()) },
             ) { Text(stringResource(R.string.location_rename_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            WarrenTextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         },
     )
 }

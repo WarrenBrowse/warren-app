@@ -116,7 +116,9 @@ fun ConnectionStatusText(
         Column(modifier = Modifier.padding(start = Dimens.smallPadding)) {
             Text(
                 text = stringResource(id = copy.title),
-                color = accent,
+                // The lifted tint, not the fill: the saturated accent reads at
+                // about 3.5:1 on the card at this size (desktop rule).
+                color = phase.titleColor(),
                 style = MaterialTheme.typography.titleLarge,
                 maxLines = 1,
                 modifier = Modifier.marqueeLine(),

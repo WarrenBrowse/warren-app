@@ -23,6 +23,14 @@ internal object PaletteTokens {
     // desktop tri-state (distinct from both terracotta and ocre).
     val Orange = Color(0xFFE07A28)
 
+    // Lifted tints of the three phase accents, for the connect-card title
+    // only: the saturated accents land near 3.5:1 on the card at title size,
+    // these are built for 4.5:1 (desktop `redText` / `greenText` /
+    // `orangeText`). The fills keep the saturated accents.
+    val RedText = Color(0xFFE98E7A)
+    val GreenText = Color(0xFF96C474)
+    val OrangeText = Color(0xFFF0A360)
+
     // Brand warm accents (Bula), used sparingly.
     val Nose = Color(0xFFE8C896) // soft apricot
     val Fur = Color(0xFFD09640) // ocre / beige, Bula's fur

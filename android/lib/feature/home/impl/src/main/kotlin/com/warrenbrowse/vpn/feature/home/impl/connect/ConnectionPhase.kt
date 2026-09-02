@@ -8,6 +8,9 @@ import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.color.pending
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
+import com.warrenbrowse.vpn.lib.ui.theme.color.positiveText
+import com.warrenbrowse.vpn.lib.ui.theme.color.pendingText
+import com.warrenbrowse.vpn.lib.ui.theme.color.errorText
 
 /**
  * The five presentation phases of the connection, mirroring the desktop
@@ -54,6 +57,21 @@ fun ConnectionPhase.accentColor(): Color =
         ConnectionPhase.Connecting,
         ConnectionPhase.Interrupted -> MaterialTheme.colorScheme.pending
         ConnectionPhase.Exposed -> MaterialTheme.colorScheme.error
+        ConnectionPhase.Blocked -> MaterialTheme.colorScheme.onSurface
+    }
+
+/**
+ * The colour of the status TITLE, as opposed to the fills: the lifted tints
+ * built for 4.5:1 on the card at title size (desktop
+ * `getPhaseTitleColorName`), white for the neutral blocked phase.
+ */
+@Composable
+fun ConnectionPhase.titleColor(): Color =
+    when (this) {
+        ConnectionPhase.Protected -> MaterialTheme.colorScheme.positiveText
+        ConnectionPhase.Connecting,
+        ConnectionPhase.Interrupted -> MaterialTheme.colorScheme.pendingText
+        ConnectionPhase.Exposed -> MaterialTheme.colorScheme.errorText
         ConnectionPhase.Blocked -> MaterialTheme.colorScheme.onSurface
     }
 

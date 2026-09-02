@@ -11,7 +11,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -59,10 +59,13 @@ fun BetaBadge(capBps: Long?, capResolved: Boolean, modifier: Modifier = Modifier
         Text(
             text = stringResource(R.string.beta_badge_label),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onTertiary,
+            // Desktop chip: brand ocre with charcoal text. The Material
+            // `tertiary` role resolves to the deepest neutral in this scheme,
+            // which painted the chip near-black.
+            color = MaterialTheme.colorScheme.surface,
             modifier = Modifier
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.tertiary)
+                .background(MaterialTheme.colorScheme.warning)
                 .padding(horizontal = 8.dp, vertical = 2.dp),
         )
         if (capResolved) {
@@ -115,7 +118,7 @@ private fun BetaInfoDialog(capMbps: Int?, onDismiss: () -> Unit) {
                 // palette is a NEUTRAL SURFACE grey (PaletteTokens.Blue), not an
                 // accent, so the default rendered both labels a shade away from
                 // the dialog surface and left them all but invisible.
-                TextButton(
+                WarrenTextButton(
                     onClick = { uriHandler.openUri(FORUM_URL) },
                     colors =
                         ButtonDefaults.textButtonColors(
@@ -127,7 +130,7 @@ private fun BetaInfoDialog(capMbps: Int?, onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(
+            WarrenTextButton(
                 onClick = onDismiss,
                 colors =
                     ButtonDefaults.textButtonColors(
