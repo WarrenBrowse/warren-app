@@ -105,21 +105,37 @@ network transports and validation, private DNS mode, wallet state, and the
 class of the last sign-in result read back from the events journal. Never an
 address, a sid, a handle or an SSID.
 
-The Rust side adds the live legs, measured at collection time
-(`warren-jni/src/probes.rs`, bounded to 6 s, run concurrently):
+The Rust side adds the live legs when the report is collected for a send
+(`warren-jni/src/probes.rs`, each bounded to 6 s). A report collected for
+"View the logs" reaches no host and records every probe key as `not-run`. The
+protected leg, the API leg and the resolver run together; the default leg on
+the connect host runs only after the protected one failed (`skipped`
+otherwise), so the broker never sees the device address and the exit address
+in the same instant.
 
 | key | what it says |
 |---|---|
 | `probe-connect-protected` | the connect host's `/healthz` through the VpnService-protected socket: `ok-<ms>ms`, `http-<n>`, `connect-refused`, `connect-timeout`, `connect-unreachable`, `dns-failed`, `tls-failed`, `protect-refused`, `read-timeout` |
-| `probe-connect-default` | the same route through the SDK's plain client (the leg a TUN between states swallows): `ok-<ms>ms`, `http-<n>`, `connect-failed`, `read-timeout`, `io-failed` |
+| `probe-connect-default` | the same route through the SDK's plain client, after a protected failure only: `ok-<ms>ms`, `http-<n>`, `connect-failed`, `read-timeout`, `io-failed`; `skipped` while the protected leg answered, `unavailable` when the client could not be built |
 | `probe-dns-connect` | the system resolver on the connect host: `ok-<addresses>-<ms>ms`, `dns-failed`, `dns-timeout` |
 | `probe-api` | the API's public `/v1/network` through the plain client, same classes as the default leg |
 | `clock-offset`, `clock-offset-source` | server minus device seconds from the first dated answer, and which leg (`protected`, `default`) supplied it; `unknown` / `none` when nothing answered |
 
-Read together with `tunnel-state`: a protected `ok` next to a default
-`read-timeout` while the tunnel is `Connecting` is the black-holed plain path;
-`dns-failed` on every leg with the tunnel `Blocking` is the kill switch with no
-resolver; a large `clock-offset` with `time-auto` off is the 2026-08-18 class.
+Read together with `tunnel-state`. A send only leaves while the tunnel is
+`Connected`, `Disconnected` or `Failed` (the preflight defers the other states
+before anything is collected), so those are the only states a submitted report
+carries: a protected `ok` next to an API `read-timeout` while `Connected` is a
+tunnel that passes nothing; `dns-failed` on the protected leg while
+`Disconnected` or `Failed` is a resolver the device itself has lost; a large
+`clock-offset` with `time-auto` off is the 2026-08-18 class. The deferred
+states (`Connecting`, `Reconnecting`, `Disconnecting`, `Blocking`) appear in
+the journal only (`login.deferred`, `report.deferred`, with the class), and in
+a report shared by hand from "View the logs", whose probes read `not-run`.
+
+The report POST rides a deadline sized to its body (20 s plus 10 s per MiB,
+`warren_jni::forum::upload_deadline`), not the mint's 15 s: when it runs out
+with logs attached the outcome is `upload-timeout`, and the screen offers the
+resend without the logs.
 
 When connect itself is unreachable, "View the logs" offers the system share
 sheet: the redacted file leaves the device by any channel the user picks

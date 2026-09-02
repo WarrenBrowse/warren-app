@@ -34,11 +34,13 @@ or crash dumps anywhere by itself. A user generates a report explicitly:
   to any app through the system share sheet, and Send posts the topic and the
   file to the support team through the wallet-signed `POST /v1/forum/report`
   of the connect broker (no browser involved). The report is collected at the
-  moment the user asks for it and carries, besides the platform facts, the
-  live probes of the moment: the connect host through the VpnService-protected
-  socket and through the plain client, the resolver, the API, and the clock
-  offset against the broker (`probe-*`, `clock-offset*` keys). The values are
-  classes and durations, never addresses.
+  moment the user asks for it. A report collected for Send also carries the
+  live probes of that moment: the connect host through the VpnService-protected
+  socket (and through the plain client only if the protected one failed), the
+  resolver, the API, and the clock offset against the broker (`probe-*`,
+  `clock-offset*` keys). The values are classes and durations, never
+  addresses. A report collected for "View the logs" runs no probe (the keys
+  read `not-run`): nothing reaches any host for a report the user only reads.
 
 The logs collected for problem reports are redacted before the user shares them,
 and the user always has the option to see exactly what information is included.
@@ -54,7 +56,10 @@ The following is redacted:
 
 On desktop the report is not transmitted by the app: the user shares the
 redacted file themselves. On Android the user chooses between the in-app send
-and the share sheet; nothing leaves the device without that tap.
+and the share sheet; nothing leaves the device without that tap. The tap on
+Send is also what runs the probes above: they reach the connect host and the
+API, from the device's own address on the protected leg, and are taken right
+before the wallet-signed POST to the same connect host.
 
 
 ## Telemetry (version check)
