@@ -75,8 +75,7 @@ android {
 androidComponents {
     beforeVariants { variantBuilder ->
         variantBuilder.enable =
-            Variant(variantBuilder.buildType, variantBuilder.productFlavors)
-                .matches(prodDebug)
+            Variant(variantBuilder.buildType, variantBuilder.productFlavors).matches(prodDebug)
     }
 }
 

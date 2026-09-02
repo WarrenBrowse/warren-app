@@ -1,8 +1,8 @@
 package com.warrenbrowse.vpn.detekt.extensions
 
+import com.warrenbrowse.vpn.detekt.extensions.rules.ScreenAndDialogNamedArguments
 import io.gitlab.arturbosch.detekt.api.Config
 import io.gitlab.arturbosch.detekt.test.lint
-import com.warrenbrowse.vpn.detekt.extensions.rules.ScreenAndDialogNamedArguments
 import org.junit.jupiter.api.Test
 
 class ScreenAndDialogNamedArgumentsTest {

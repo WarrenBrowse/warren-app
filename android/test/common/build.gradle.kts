@@ -39,9 +39,7 @@ android {
     // dead on Warren). Keep INFRASTRUCTURE.PROD for the baseline profile module.
     flavorDimensions += FlavorDimensions.INFRASTRUCTURE
 
-    productFlavors {
-        create(Flavors.PROD) { dimension = FlavorDimensions.INFRASTRUCTURE }
-    }
+    productFlavors { create(Flavors.PROD) { dimension = FlavorDimensions.INFRASTRUCTURE } }
 }
 
 androidComponents {
