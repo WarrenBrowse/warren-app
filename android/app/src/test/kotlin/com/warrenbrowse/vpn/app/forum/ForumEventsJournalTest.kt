@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.app.forum
 
 import java.io.File
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.runTest
@@ -34,10 +35,10 @@ class ForumEventsJournalTest {
 
     @Test
     fun a_corrupt_line_never_stops_the_readback(@TempDir dir: File) = runTest {
-        val journal = journal(dir)
-        journal.record("login.result", "class" to "clock-skew")
         // A truncated tail is what a process killed mid-write leaves behind.
-        File(dir, ForumEventsJournal.FILE_NAME).appendText("{\"seq\":9,\"event\":\"login.res")
-        assertEquals("clock-skew", journal.lastClassOf("login.result"))
+        val good = ForumEventsJournal.format(Instant.parse("2026-09-02T18:07:05Z"), 0, "login.result", listOf("class" to "clock-skew"))
+        File(dir, ForumEventsJournal.FILE_NAME).writeText(good + "\n{\"seq\":1,\"event\":\"login.res")
+
+        assertEquals("clock-skew", journal(dir).lastClassOf("login.result"))
     }
 }
