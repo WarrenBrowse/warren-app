@@ -20,7 +20,7 @@ use jnix::{
 use warren_api::{HttpRequest, HttpResponse, HttpTransport, Method, TransportError};
 use zeroize::Zeroizing;
 
-use crate::forum::{self, FailReason, ForumLoginOutcome, ReportOutcome};
+use crate::forum::{self, FailReason, ForumLoginOutcome, ForumRequestError, ReportOutcome};
 
 /// The transport the forum requests ride: the VpnService-protected one when
 /// the crate carries it, so the request never black-holes into a TUN that is
@@ -355,7 +355,11 @@ fn forum_report(mnemonic: &str, report_json: &str, log_gz: Option<&[u8]>) -> Rep
     let signed = match forum::build_signed_report_request(mnemonic, report_json, log_gz, timestamp)
     {
         Ok(req) => req,
-        Err(_) => {
+        Err(ForumRequestError::LogTooLarge) => {
+            log::warn!("forumReport: log over the size cap, not sent");
+            return ReportOutcome::TooLarge;
+        }
+        Err(ForumRequestError::Invalid) => {
             log::warn!("forumReport: could not build signed request");
             return ReportOutcome::Failed(FailReason::Build);
         }

@@ -95,14 +95,22 @@ pub struct SignedForumRequest {
     pub body: Vec<u8>,
 }
 
-/// Failure building a signed request. Deliberately opaque (one variant): the
-/// caller maps it to the generic `Failed` outcome, and no cause with identity
-/// material is ever surfaced or logged.
+/// Largest gzipped report a signed request carries, the desktop's
+/// `MAX_LOG_GZ_BYTES` and the broker's cap: over it the broker answers 413,
+/// so the request is refused here before a 16 MiB body is signed and sent.
+pub const MAX_LOG_GZ_BYTES: usize = 12 * 1024 * 1024;
+
+/// Failure building a signed request. Deliberately coarse: the caller maps it
+/// to an outcome, and no cause with identity material is ever surfaced or
+/// logged.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ForumRequestError {
     /// The host was not allowlisted, the sid was malformed, the report was
     /// not a JSON object, or the RNG / clock was unusable.
     Invalid,
+    /// The gzipped report is over [`MAX_LOG_GZ_BYTES`]: the broker would
+    /// refuse it (413), so the caller reports `TooLarge` without a round trip.
+    LogTooLarge,
 }
 
 /// Build the signed forum-login request for `sid` against `host`, signing with
@@ -160,7 +168,8 @@ pub fn build_signed_request_at(
 /// # Errors
 ///
 /// [`ForumRequestError::Invalid`] if `report_json` is not a JSON object, if it
-/// already carries a `log_gz_b64` field, or if the OS RNG is unavailable.
+/// already carries a `log_gz_b64` field, or if the OS RNG is unavailable;
+/// [`ForumRequestError::LogTooLarge`] if `log_gz` is over [`MAX_LOG_GZ_BYTES`].
 pub fn build_signed_report_request(
     signing_key: &SigningKey,
     report_json: &str,
@@ -173,6 +182,9 @@ pub fn build_signed_report_request(
         return Err(ForumRequestError::Invalid);
     }
     if let Some(gz) = log_gz {
+        if gz.len() > MAX_LOG_GZ_BYTES {
+            return Err(ForumRequestError::LogTooLarge);
+        }
         let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, gz);
         report.insert("log_gz_b64".to_owned(), serde_json::Value::String(b64));
     }
@@ -714,6 +726,35 @@ mod tests {
             Err(ForumRequestError::Invalid),
             "the log rides in exactly one field, the one this crate fills"
         );
+    }
+
+    #[test]
+    fn report_request_refuses_a_log_over_the_size_cap_before_signing() {
+        // The broker's 413 is a round trip away with 12 MiB of body; the
+        // Kotlin side guards too, and this is the leg every FFI shares.
+        let over = vec![0u8; MAX_LOG_GZ_BYTES + 1];
+        assert_eq!(
+            build_signed_report_request(
+                &signing_key(),
+                r#"{"platform":"android"}"#,
+                Some(&over),
+                1
+            ),
+            Err(ForumRequestError::LogTooLarge)
+        );
+    }
+
+    #[test]
+    fn report_request_accepts_a_log_exactly_at_the_size_cap() {
+        let at_cap = vec![0u8; MAX_LOG_GZ_BYTES];
+        let req = build_signed_report_request(
+            &signing_key(),
+            r#"{"platform":"android"}"#,
+            Some(&at_cap),
+            1,
+        )
+        .expect("the cap is inclusive");
+        assert!(req.body.len() > MAX_LOG_GZ_BYTES);
     }
 
     #[test]

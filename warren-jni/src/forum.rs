@@ -58,7 +58,8 @@ pub fn build_signed_request_at(
 /// # Errors
 ///
 /// [`ForumRequestError::Invalid`] if the mnemonic is malformed, the report is
-/// not a JSON object, or the RNG is unusable.
+/// not a JSON object, or the RNG is unusable; [`ForumRequestError::LogTooLarge`]
+/// if `log_gz` is over `warren_forum::MAX_LOG_GZ_BYTES`.
 pub fn build_signed_report_request(
     mnemonic: &str,
     report_json: &str,
