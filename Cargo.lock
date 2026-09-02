@@ -6771,8 +6771,11 @@ dependencies = [
 name = "warren-forum"
 version = "0.0.0"
 dependencies = [
+ "base64",
  "getrandom 0.2.17",
  "hex",
+ "httpdate",
+ "serde_json",
  "sha2",
  "warren-identity",
 ]
@@ -6844,6 +6847,7 @@ dependencies = [
  "android_logger",
  "bip39",
  "bytes",
+ "chrono",
  "data-encoding",
  "ed25519-dalek",
  "hex",
@@ -6853,6 +6857,7 @@ dependencies = [
  "jnix",
  "log",
  "log-panics",
+ "mullvad-problem-report",
  "mullvad-update",
  "mullvad-version",
  "parking_lot",
@@ -6866,6 +6871,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tokio-rustls",
+ "tracing",
  "warren-api",
  "warren-contract",
  "warren-discovery-core",
