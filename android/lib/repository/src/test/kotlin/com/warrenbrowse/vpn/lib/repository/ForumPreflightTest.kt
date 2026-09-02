@@ -9,6 +9,16 @@ class ForumPreflightTest {
     @Test
     fun a_settled_tunnel_lets_a_forum_request_leave() {
         assertEquals(ForumPreflight.Proceed, ForumPreflight.of(WarrenConnectedInfo.Disconnected))
+        // Failed is terminal and released: the TUN is closed and the physical
+        // resolver answers, and it is the state most worth reporting from.
+        assertEquals(
+            ForumPreflight.Proceed,
+            ForumPreflight.of(WarrenConnectedInfo.Failed("exit 203.0.113.7:443 refused")),
+        )
+        assertEquals(
+            ForumPreflight.Proceed,
+            ForumPreflight.of(WarrenConnectedInfo.Failed("subscription expired", expired = true)),
+        )
         assertEquals(
             ForumPreflight.Proceed,
             ForumPreflight.of(
@@ -41,7 +51,6 @@ class ForumPreflightTest {
             ForumPreflight.Defer("reconnecting"),
             ForumPreflight.of(WarrenConnectedInfo.Disconnecting(reconnecting = true)),
         )
-        assertEquals(ForumPreflight.Defer("failed"), ForumPreflight.of(WarrenConnectedInfo.Failed("x")))
         assertEquals(ForumPreflight.Defer("blocking"), ForumPreflight.of(WarrenConnectedInfo.Blocking("x")))
     }
 

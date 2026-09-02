@@ -64,10 +64,12 @@ The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
    POST bypasses the TUN, but the connect host name goes through the system
    resolver, which a tunnel coming up leaves timing out and a kill switch
    holding leaves with no server at all. Connecting, reconnecting,
-   disconnecting, failed and blocking defer the attempt with its own message
-   and keep the prompt open for a retry (`login.deferred` in the journal, the
-   state class only); connected and disconnected proceed: the mnemonic is
-   read silently and handed to `WarrenJni.forumLogin`.
+   disconnecting and blocking defer the attempt with its own message and keep
+   the prompt open for a retry (`login.deferred` in the journal, the state
+   class only); connected, disconnected and failed proceed (a failed tunnel
+   has released traffic, the TUN closed and the physical resolver back, and
+   it is the state most worth reporting from): the mnemonic is read silently
+   and handed to `WarrenJni.forumLogin`.
 4. Rust reads `GET /v1/session/{sid}/status` once: a 404 is reported as
    `expired` without spending a signature; the `Date` header corrects a device
    clock outside the server's 60 s window (the 2026-08-18 class) before the
