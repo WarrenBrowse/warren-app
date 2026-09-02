@@ -12,6 +12,7 @@ import com.warrenbrowse.vpn.lib.repository.ForumPreflight
 import com.warrenbrowse.vpn.lib.repository.ReportForm
 import com.warrenbrowse.vpn.lib.repository.ReportSubmitOutcome
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
@@ -101,7 +102,7 @@ class WarrenSupportReporterImpl(
                     }
                 val metadata =
                     facts.collect(
-                        tunnelState = tunnelState.state.value.substringBefore(':').ifBlank { "unknown" },
+                        tunnelState = tunnelStateWord(tunnelState.connectedInfo.value),
                         walletState = walletWord,
                         lastLoginClass = journal.lastClassOf(ForumEvent.LOGIN_RESULT),
                     )
@@ -226,6 +227,24 @@ class WarrenSupportReporterImpl(
         const val MAX_LOG_GZ_BYTES = 16_000_000 / 4 * 3
     }
 }
+
+/**
+ * The header's `tunnel-state` word, from the typed projection. The display
+ * string (`WarrenTunnelStateProvider.state`) is not consumed: its Connected
+ * shape carries the NAT-PMP port the exit assigned, which a wallet-signed
+ * report must never pair with the wallet, and its Failed shape carries the
+ * engine reason.
+ */
+internal fun tunnelStateWord(info: WarrenConnectedInfo): String =
+    when (info) {
+        WarrenConnectedInfo.Disconnected -> "Disconnected"
+        is WarrenConnectedInfo.Connecting -> "Connecting"
+        is WarrenConnectedInfo.Reconnecting -> "Reconnecting"
+        is WarrenConnectedInfo.Disconnecting -> "Disconnecting"
+        is WarrenConnectedInfo.Connected -> "Connected"
+        is WarrenConnectedInfo.Failed -> "Failed"
+        is WarrenConnectedInfo.Blocking -> "Blocking"
+    }
 
 /**
  * The io error kind of a collector failure as a journal token: the Rust

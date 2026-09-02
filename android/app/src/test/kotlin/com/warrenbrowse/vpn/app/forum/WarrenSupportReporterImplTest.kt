@@ -97,12 +97,59 @@ class WarrenSupportReporterImplTest {
         runTest {
             val jni = FakeJniBridge()
 
-            reporter(dir, jni, stateText = "Failed: exit 203.0.113.7:443 refused").collect().getOrThrow()
+            reporter(
+                    dir,
+                    jni,
+                    tunnel = WarrenConnectedInfo.Failed("exit 203.0.113.7:443 refused"),
+                    stateText = "Failed: exit 203.0.113.7:443 refused",
+                )
+                .collect()
+                .getOrThrow()
 
             val metadata = jni.collectedMetadata.single()
             assertTrue(metadata.contains("\"tunnel-state\":\"Failed\""), metadata)
             assertFalse(metadata.contains("203.0.113.7"), metadata)
         }
+
+    @Test
+    fun the_report_header_never_carries_the_forwarded_port_of_a_connected_tunnel(@TempDir dir: File) =
+        runTest {
+            // The display string has no colon in its Connected shape, so a cut
+            // at the colon kept the whole "Connected (mimicry, port 41231)":
+            // the port the exit assigned, in a report the wallet signs.
+            val jni = FakeJniBridge()
+
+            reporter(
+                    dir,
+                    jni,
+                    tunnel =
+                        WarrenConnectedInfo.Connected(
+                            exitEndpointHost = "203.0.113.7:443",
+                            entryEndpointHost = null,
+                            multiHop = false,
+                            daita = false,
+                            assignedNatPmpPort = 41231,
+                        ),
+                    stateText = "Connected (mimicry, port 41231)",
+                )
+                .collect()
+                .getOrThrow()
+
+            val metadata = jni.collectedMetadata.single()
+            assertTrue(metadata.contains("\"tunnel-state\":\"Connected\""), metadata)
+            assertFalse(metadata.contains("41231"), metadata)
+            assertFalse(metadata.contains("mimicry"), metadata)
+        }
+
+    @Test
+    fun every_tunnel_state_maps_to_one_capitalised_word() {
+        val connecting = WarrenConnectedInfo.Connecting(exitEndpointHost = "203.0.113.7:443")
+        assertEquals("Disconnected", tunnelStateWord(WarrenConnectedInfo.Disconnected))
+        assertEquals("Connecting", tunnelStateWord(connecting))
+        assertEquals("Reconnecting", tunnelStateWord(WarrenConnectedInfo.Reconnecting()))
+        assertEquals("Disconnecting", tunnelStateWord(WarrenConnectedInfo.Disconnecting(reconnecting = true)))
+        assertEquals("Blocking", tunnelStateWord(WarrenConnectedInfo.Blocking("exit 203.0.113.7 refused")))
+    }
 
     @Test
     fun a_collector_failure_journals_the_step_and_the_io_kind_only(@TempDir dir: File) = runTest {
