@@ -301,6 +301,10 @@ pub enum FailReason {
     /// The request never got an HTTP answer (DNS, connect, TLS, timeout, or a
     /// tunnel that swallowed it).
     Transport,
+    /// A report carrying logs ran past its body-sized upload deadline: the
+    /// uplink is too slow for this body, so the caller offers a resend
+    /// without the logs (or the share sheet) instead of a generic failure.
+    UploadTimeout,
     /// The provider answered with a status the outcome table does not name.
     Http(u16),
 }
@@ -313,6 +317,7 @@ impl FailReason {
             FailReason::Runtime => "runtime".to_owned(),
             FailReason::Build => "build".to_owned(),
             FailReason::Transport => "transport".to_owned(),
+            FailReason::UploadTimeout => "upload-timeout".to_owned(),
             FailReason::Http(status) => format!("http-{status}"),
         }
     }
@@ -426,6 +431,35 @@ pub enum ReportOutcome {
     Failed(FailReason),
 }
 
+/// The registrable domain the broker's public surfaces live under, derived
+/// from the allowlisted connect host so this crate still names no forum host
+/// of its own.
+fn trusted_domain() -> &'static str {
+    ALLOWED_CONNECT_HOST
+        .split_once('.')
+        .map_or(ALLOWED_CONNECT_HOST, |(_, rest)| rest)
+}
+
+/// True iff `url` is an https URL whose authority is a plain host under the
+/// trusted domain: no userinfo (`host@evil`), no port, no look-alike suffix.
+/// The UI opens the topic URL with one tap as a link the app vouched for, so
+/// a broker answer steered to a foreign origin must not become that link.
+fn is_trusted_topic_url(url: &str) -> bool {
+    let Some(rest) = url.strip_prefix("https://") else {
+        return false;
+    };
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or("");
+    if authority.is_empty() || authority.contains('@') || authority.contains(':') {
+        return false;
+    }
+    let host = authority.to_ascii_lowercase();
+    let domain = trusted_domain();
+    host == domain
+        || host
+            .strip_suffix(domain)
+            .is_some_and(|prefix| prefix.ends_with('.') && prefix.len() > 1)
+}
+
 /// Map the provider's answer to the report outcome.
 #[must_use]
 pub fn report_outcome_for_response(status: u16, body: &[u8]) -> ReportOutcome {
@@ -442,7 +476,7 @@ pub fn report_outcome_for_response(status: u16, body: &[u8]) -> ReportOutcome {
                         .as_ref()
                         .and_then(|v| v.get("topic_url"))
                         .and_then(serde_json::Value::as_str)
-                        .filter(|url| url.starts_with("https://"))
+                        .filter(|url| is_trusted_topic_url(url))
                         .map(str::to_owned);
                     let logs = value
                         .as_ref()
@@ -991,6 +1025,48 @@ mod tests {
             report_envelope(&ReportOutcome::Failed(FailReason::Transport)),
             r#"{"ok":false,"error":"error","reason":"transport"}"#
         );
+        assert_eq!(
+            report_envelope(&ReportOutcome::Failed(FailReason::UploadTimeout)),
+            r#"{"ok":false,"error":"error","reason":"upload-timeout"}"#,
+            "the Kotlin side keys its resend-without-logs offer on this token"
+        );
+    }
+
+    #[test]
+    fn a_topic_url_off_the_forum_domain_is_not_a_link() {
+        // The UI opens the URL with one tap as a link the app vouched for, so
+        // a broker answer steered to a foreign origin must lose its link: the
+        // topic id still shows, the button does not.
+        let created = |url: &str| {
+            report_outcome_for_response(
+                201,
+                format!(r#"{{"status":"created","topic_id":1,"topic_url":"{url}","logs":"none"}}"#)
+                    .as_bytes(),
+            )
+        };
+        let link_of = |outcome: ReportOutcome| match outcome {
+            ReportOutcome::Created { topic_url, .. } => topic_url,
+            other => panic!("{other:?}"),
+        };
+        assert_eq!(
+            link_of(created("https://forum.warrenbrowse.com/t/1")).as_deref(),
+            Some("https://forum.warrenbrowse.com/t/1")
+        );
+        assert_eq!(
+            link_of(created("https://Forum.WarrenBrowse.com/t/1?u=2#post_3")).as_deref(),
+            Some("https://Forum.WarrenBrowse.com/t/1?u=2#post_3")
+        );
+        for foreign in [
+            "https://evil.example/t/1",
+            "https://forum.warrenbrowse.com@evil.example/t/1",
+            "https://forum.warrenbrowse.com.evil.example/t/1",
+            "https://evilwarrenbrowse.com/t/1",
+            "https://forum.warrenbrowse.com:8443/t/1",
+            "https:///t/1",
+            "http://forum.warrenbrowse.com/t/1",
+        ] {
+            assert_eq!(link_of(created(foreign)), None, "{foreign}");
+        }
     }
 
     #[test]
