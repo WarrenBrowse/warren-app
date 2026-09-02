@@ -275,6 +275,7 @@ private fun ReportOutcomeNotice(
         ReportSubmitOutcome.Invalid -> ErrorNotice(stringResource(R.string.report_problem_error_invalid))
         ReportSubmitOutcome.ServerError -> ErrorNotice(stringResource(R.string.report_problem_error_server))
         ReportSubmitOutcome.WalletNotReady -> ErrorNotice(stringResource(R.string.forum_login_result_wallet_not_ready))
+        is ReportSubmitOutcome.Deferred -> ErrorNotice(stringResource(R.string.forum_tunnel_busy))
         is ReportSubmitOutcome.Failure -> ErrorNotice(stringResource(R.string.report_problem_error_generic))
     }
 }

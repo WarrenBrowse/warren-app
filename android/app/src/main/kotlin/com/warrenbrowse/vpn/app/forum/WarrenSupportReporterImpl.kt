@@ -8,6 +8,7 @@ import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.CollectedReport
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumPreflight
 import com.warrenbrowse.vpn.lib.repository.ReportForm
 import com.warrenbrowse.vpn.lib.repository.ReportSubmitOutcome
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
@@ -58,6 +59,14 @@ class WarrenSupportReporterImpl(
     private val appLogDir: File,
     private val facts: ForumFacts = ForumDiagnostics(context),
 ) : WarrenSupportReporter {
+
+    override fun preflight(): ForumPreflight {
+        val verdict = ForumPreflight.of(tunnelState.connectedInfo.value)
+        if (verdict is ForumPreflight.Defer) {
+            journal.record("report.deferred", "class" to verdict.tunnelClass)
+        }
+        return verdict
+    }
 
     override suspend fun collect(): Result<CollectedReport> =
         withContext(Dispatchers.IO) {
@@ -197,6 +206,7 @@ internal fun reportOutcomeClass(outcome: ReportSubmitOutcome): String =
         ReportSubmitOutcome.Invalid -> "invalid"
         ReportSubmitOutcome.ServerError -> "server-error"
         ReportSubmitOutcome.WalletNotReady -> "wallet-absent"
+        is ReportSubmitOutcome.Deferred -> "deferred-${outcome.tunnelClass}"
         is ReportSubmitOutcome.Failure -> outcome.reason
     }
 

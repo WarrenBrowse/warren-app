@@ -516,6 +516,7 @@
     <string name="forum_login_result_clock_skew">Autentificare refuzată: ceasul acestui dispozitiv este decalat cu mai mult de un minut. Activează data și ora automate, apoi reia de la pagina din browser.</string>
     <string name="forum_login_result_expired">Această cerere de autentificare a expirat. Reia de la pagina din browser.</string>
     <string name="forum_login_result_failure">Autentificarea a eșuat. Te rugăm să încerci din nou peste un moment.</string>
+    <string name="forum_tunnel_busy">VPN-ul se conectează sau este blocat. Așteaptă să se conecteze, sau deconectează-l, apoi încearcă din nou.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Autentifică-te pe forum cu un cod</string>

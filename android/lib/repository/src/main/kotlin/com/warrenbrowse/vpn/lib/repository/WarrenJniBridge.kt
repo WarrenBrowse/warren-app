@@ -61,6 +61,22 @@ interface WarrenJniBridge {
     fun fetchNetworkInfo(): String
 
     /**
+     * Sign and submit the community-forum login for [sid] against the
+     * allowlisted connect [host] in Rust (`POST /v1/forum/login`); the wallet
+     * signature never surfaces here. Returns the JSON envelope of
+     * `warren_forum::envelope`. Blocks on a network POST: invoke off the main
+     * thread. Never log the mnemonic or the sid.
+     */
+    fun forumLogin(mnemonic: String, sid: String, host: String): String
+
+    /**
+     * Best-effort notify the connect [host] that the user declined the login
+     * for [sid], so the waiting browser page unblocks. Unsigned; failures are
+     * ignored. Blocks on a network POST: invoke off the main thread.
+     */
+    fun forumLoginCancel(sid: String, host: String)
+
+    /**
      * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust.
      * [reportJson] is one JSON object with the connect contract's field names;
      * [logGz] the gzipped redacted problem report, or null to file the report

@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Connexion refusée : l\'horloge de cet appareil est décalée de plus d\'une minute. Activez la date et l\'heure automatiques, puis recommencez depuis la page du navigateur.</string>
     <string name="forum_login_result_expired">Cette demande de connexion a expiré. Recommencez depuis la page du navigateur.</string>
     <string name="forum_login_result_failure">Échec de la connexion. Veuillez réessayer dans un instant.</string>
+    <string name="forum_tunnel_busy">Le VPN est en cours de connexion ou bloqué. Attendez qu\'il soit connecté, ou déconnectez-le, puis réessayez.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Se connecter au forum avec un code</string>

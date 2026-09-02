@@ -515,6 +515,7 @@
     <string name="forum_login_result_clock_skew">Logowanie odrzucone: zegar tego urządzenia różni się o ponad minutę. Włącz automatyczną datę i godzinę, a następnie zacznij od nowa na stronie przeglądarki.</string>
     <string name="forum_login_result_expired">To żądanie logowania wygasło. Zacznij od nowa na stronie przeglądarki.</string>
     <string name="forum_login_result_failure">Logowanie nie powiodło się. Spróbuj ponownie za chwilę.</string>
+    <string name="forum_tunnel_busy">VPN łączy się lub jest zablokowany. Poczekaj, aż się połączy, albo rozłącz go, a następnie spróbuj ponownie.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Zaloguj się na forum za pomocą kodu</string>

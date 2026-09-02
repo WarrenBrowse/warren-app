@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Anmeldung abgelehnt: Die Uhr dieses Geräts geht um mehr als eine Minute falsch. Aktivieren Sie die automatische Datums- und Uhrzeiteinstellung und beginnen Sie erneut auf der Browserseite.</string>
     <string name="forum_login_result_expired">Diese Anmeldeanfrage ist abgelaufen. Beginnen Sie erneut auf der Browserseite.</string>
     <string name="forum_login_result_failure">Anmeldung fehlgeschlagen. Bitte versuche es gleich noch einmal.</string>
+    <string name="forum_tunnel_busy">Das VPN verbindet sich gerade oder ist blockiert. Warte, bis es verbunden ist, oder trenne es, und versuche es dann erneut.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Mit einem Code im Forum anmelden</string>

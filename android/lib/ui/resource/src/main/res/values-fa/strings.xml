@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">ورود رد شد: ساعت این دستگاه بیش از یک دقیقه خطا دارد. تاریخ و ساعت خودکار را فعال کنید و از صفحه مرورگر دوباره شروع کنید.</string>
     <string name="forum_login_result_expired">این درخواست ورود منقضی شده است. از صفحه مرورگر دوباره شروع کنید.</string>
     <string name="forum_login_result_failure">ورود ناموفق بود. لطفاً کمی بعد دوباره تلاش کنید.</string>
+    <string name="forum_tunnel_busy">VPN در حال اتصال یا مسدود است. صبر کنید تا متصل شود، یا آن را قطع کنید، سپس دوباره تلاش کنید.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">ورود به انجمن با کد</string>

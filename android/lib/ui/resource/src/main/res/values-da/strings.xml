@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Login afvist: enhedens ur er mere end et minut forkert. Slå automatisk dato og tid til, og start forfra fra browsersiden.</string>
     <string name="forum_login_result_expired">Denne loginanmodning er udløbet. Start forfra fra browsersiden.</string>
     <string name="forum_login_result_failure">Login mislykkedes. Prøv igen om et øjeblik.</string>
+    <string name="forum_tunnel_busy">VPN\'en er ved at oprette forbindelse eller er blokeret. Vent, til den er forbundet, eller afbryd den, og prøv igen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Log ind på forummet med en kode</string>

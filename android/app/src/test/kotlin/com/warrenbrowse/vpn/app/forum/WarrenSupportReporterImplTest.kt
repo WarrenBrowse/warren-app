@@ -1,19 +1,27 @@
 package com.warrenbrowse.vpn.app.forum
 
 import android.content.Context
+import com.warrenbrowse.vpn.lib.repository.ForumPreflight
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import io.mockk.every
 import io.mockk.mockk
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
 class WarrenSupportReporterImplTest {
 
-    private fun reporter(dir: File, jni: FakeJniBridge, journal: ForumEventsJournal): WarrenSupportReporterImpl {
+    private fun reporter(
+        dir: File,
+        jni: FakeJniBridge,
+        journal: ForumEventsJournal,
+        tunnel: WarrenConnectedInfo = WarrenConnectedInfo.Disconnected,
+    ): WarrenSupportReporterImpl {
         val context = mockk<Context>(relaxed = true)
         every { context.cacheDir } returns dir
         return WarrenSupportReporterImpl(
@@ -21,7 +29,7 @@ class WarrenSupportReporterImplTest {
             jni = jni,
             walletRepository = FakeWalletRepository(),
             forumIdentityRepository = FakeForumIdentityRepository(),
-            tunnelState = FakeTunnelStateProvider(),
+            tunnelState = FakeTunnelStateProvider(tunnel),
             journal = journal,
             appLogDir = dir,
             // The one header line under test, read the way ForumDiagnostics
@@ -50,5 +58,23 @@ class WarrenSupportReporterImplTest {
         reporter(dir, jni, journal).collect().getOrThrow()
 
         assertTrue(jni.collectedMetadata.single().contains("\"last-forum-login\":\"none\""))
+    }
+
+    @Test
+    fun a_report_while_the_kill_switch_holds_is_deferred_and_journaled(@TempDir dir: File) = runTest {
+        val journal = ForumEventsJournal(dir, CoroutineScope(SupervisorJob()))
+        val reporter = reporter(dir, FakeJniBridge(), journal, WarrenConnectedInfo.Blocking("held"))
+
+        assertEquals(ForumPreflight.Defer("blocking"), reporter.preflight())
+        assertEquals("blocking", journal.lastClassOf("report.deferred"))
+    }
+
+    @Test
+    fun a_settled_tunnel_journals_nothing_at_preflight(@TempDir dir: File) = runTest {
+        val journal = ForumEventsJournal(dir, CoroutineScope(SupervisorJob()))
+        val reporter = reporter(dir, FakeJniBridge(), journal, WarrenConnectedInfo.Disconnected)
+
+        assertEquals(ForumPreflight.Proceed, reporter.preflight())
+        assertEquals(null, journal.lastClassOf("report.deferred"))
     }
 }

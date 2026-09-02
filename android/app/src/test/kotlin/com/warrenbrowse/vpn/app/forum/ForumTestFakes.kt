@@ -69,9 +69,12 @@ internal class FakeTunnelStateProvider(initial: WarrenConnectedInfo = WarrenConn
  * the point of most tests here is that a call did or did not cross into Rust.
  */
 internal class FakeJniBridge(
+    private val loginAnswer: () -> String = { """{"ok":true}""" },
     private val reportAnswer: () -> String = { """{"ok":true,"topic_id":1,"topic_url":"","logs":"none"}""" },
     private val collectAnswer: () -> String = { """{"ok":true,"bytes":7}""" },
 ) : WarrenJniBridge {
+    var loginCalls = 0
+    var cancelCalls = 0
     var reportCalls = 0
     val collectedMetadata = mutableListOf<String>()
 
@@ -84,6 +87,15 @@ internal class FakeJniBridge(
     override fun latestAvailableVersion(currentVersion: String): String? = error("unused")
 
     override fun fetchNetworkInfo(): String = error("unused")
+
+    override fun forumLogin(mnemonic: String, sid: String, host: String): String {
+        loginCalls++
+        return loginAnswer()
+    }
+
+    override fun forumLoginCancel(sid: String, host: String) {
+        cancelCalls++
+    }
 
     override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String {
         reportCalls++

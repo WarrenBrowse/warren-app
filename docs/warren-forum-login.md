@@ -56,8 +56,15 @@ The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
    forum with a code", which raises the same consent prompt.
 2. `MainActivity` classifies the link and stashes it; the launching intent is
    consumed once (a recreated activity must not re-prompt for a consumed sid).
-3. The consent prompt is explicit; Approve reads the mnemonic silently and
-   calls `WarrenJni.forumLogin`.
+3. The consent prompt is explicit. Approve first reads the tunnel state
+   (`ForumPreflight` in `lib/repository`, shared with the report): the forum
+   POST bypasses the TUN, but the connect host name goes through the system
+   resolver, which a tunnel coming up leaves timing out and a kill switch
+   holding leaves with no server at all. Connecting, reconnecting,
+   disconnecting, failed and blocking defer the attempt with its own message
+   and keep the prompt open for a retry (`login.deferred` in the journal, the
+   state class only); connected and disconnected proceed: the mnemonic is
+   read silently and handed to `WarrenJni.forumLogin`.
 4. Rust reads `GET /v1/session/{sid}/status` once: a 404 is reported as
    `expired` without spending a signature; the `Date` header corrects a device
    clock outside the server's 60 s window (the 2026-08-18 class) before the
@@ -74,8 +81,10 @@ report filed afterwards explains a failure without a second round trip.
 
 Settings, "Report a problem" mirrors the forum's "Report a bug" form (area,
 what happened, steps, frequency). "Include technical logs" is on by default and
-"View the logs" shows the exact file about to be sent. Send collects a fresh
-report, gzips it (12 MiB cap, the desktop's), signs and POSTs it. The broker
+"View the logs" shows the exact file about to be sent. Send runs the same
+tunnel-state preflight as the sign-in before collecting anything
+(`report.deferred`, the form left intact), then collects a fresh report, gzips
+it (12 MiB cap, the desktop's), signs and POSTs it. The broker
 creates the wallet's forum account when needed, opens the topic under the
 handle, tags the platform, and delivers the logs to the staff like the
 paperclip flow. Outcomes: created (with the topic link), never paid (routes to
@@ -86,7 +95,8 @@ What the report header carries, all safe by construction: app build and
 scheme, installer, ROM and GMS/microG verdict, auto-time and clock, the
 packages that handle the deep link and the one that resolves it, the default
 browser, battery and background restrictions, tunnel and VPN service state,
-network transports and validation, private DNS mode, wallet state. Never an
+network transports and validation, private DNS mode, wallet state, and the
+class of the last sign-in result read back from the events journal. Never an
 address, a sid, a handle or an SSID.
 
 ## Reading a failed attempt

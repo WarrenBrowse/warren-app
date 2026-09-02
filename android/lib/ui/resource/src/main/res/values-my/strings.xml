@@ -506,6 +506,7 @@
     <string name="forum_login_result_clock_skew">လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။</string>
     <string name="forum_login_result_expired">ဤဝင်ရောက်မှုတောင်းဆိုချက် သက်တမ်းကုန်သွားပါပြီ။ ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။</string>
     <string name="forum_login_result_failure">ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ ခဏအကြာတွင် ထပ်မံကြိုးစားပါ။</string>
+    <string name="forum_tunnel_busy">VPN သည် ချိတ်ဆက်နေဆဲ သို့မဟုတ် ပိတ်ဆို့ထားသည်။ ချိတ်ဆက်ပြီးသည်အထိ စောင့်ပါ၊ သို့မဟုတ် ချိတ်ဆက်မှုကို ဖြုတ်ပြီး ထပ်မံကြိုးစားပါ။</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">ကုဒ်ဖြင့် ဖိုရမ်သို့ ဝင်ရောက်ရန်</string>

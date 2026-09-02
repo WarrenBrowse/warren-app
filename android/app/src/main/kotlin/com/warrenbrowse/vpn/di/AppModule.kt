@@ -167,6 +167,8 @@ val appModule = module {
             walletRepository = get(),
             forumIdentityRepository = get(),
             journal = get(),
+            jni = get(),
+            tunnelState = get(),
         )
     }
     // The sign-in code typed by hand lands on the same consent prompt.

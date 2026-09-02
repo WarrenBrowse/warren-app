@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.feature.settings.impl.support
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.warrenbrowse.vpn.lib.repository.CollectedReport
+import com.warrenbrowse.vpn.lib.repository.ForumPreflight
 import com.warrenbrowse.vpn.lib.repository.ReportArea
 import com.warrenbrowse.vpn.lib.repository.ReportForm
 import com.warrenbrowse.vpn.lib.repository.ReportFrequency
@@ -101,6 +102,13 @@ class ReportProblemViewModel(private val reporter: WarrenSupportReporter) : View
                 whatHappened = s.whatHappened.trim(),
                 steps = s.steps.trim().ifEmpty { null },
             )
+        // Before anything is collected: a tunnel between states cannot reach
+        // the broker, and the user is told so with the form left intact.
+        val preflight = reporter.preflight()
+        if (preflight is ForumPreflight.Defer) {
+            _state.update { it.copy(outcome = ReportSubmitOutcome.Deferred(preflight.tunnelClass)) }
+            return
+        }
         _state.update { it.copy(sending = true, outcome = null) }
         viewModelScope.launch {
             // A send with logs always collects afresh: the report should describe

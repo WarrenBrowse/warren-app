@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Inloggning nekad: enhetens klocka går mer än en minut fel. Aktivera automatiskt datum och tid och börja om från webbläsarsidan.</string>
     <string name="forum_login_result_expired">Denna inloggningsbegäran har gått ut. Börja om från webbläsarsidan.</string>
     <string name="forum_login_result_failure">Inloggningen misslyckades. Försök igen om en stund.</string>
+    <string name="forum_tunnel_busy">VPN-anslutningen håller på att upprättas eller är blockerad. Vänta tills den är ansluten, eller koppla från den, och försök sedan igen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Logga in på forumet med en kod</string>

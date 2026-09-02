@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Pålogging avvist: klokken på denne enheten er mer enn ett minutt feil. Slå på automatisk dato og klokkeslett, og start på nytt fra nettlesersiden.</string>
     <string name="forum_login_result_expired">Denne påloggingsforespørselen er utløpt. Start på nytt fra nettlesersiden.</string>
     <string name="forum_login_result_failure">Innloggingen mislyktes. Prøv igjen om et øyeblikk.</string>
+    <string name="forum_tunnel_busy">VPN-et kobler til eller er blokkert. Vent til det er tilkoblet, eller koble det fra, og prøv igjen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Logg inn på forumet med en kode</string>

@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Accesso rifiutato: l\'orologio di questo dispositivo è sfasato di oltre un minuto. Attiva data e ora automatiche e ricomincia dalla pagina del browser.</string>
     <string name="forum_login_result_expired">Questa richiesta di accesso è scaduta. Ricomincia dalla pagina del browser.</string>
     <string name="forum_login_result_failure">Accesso non riuscito. Riprova tra un momento.</string>
+    <string name="forum_tunnel_busy">La VPN si sta connettendo o è bloccata. Attendi che si connetta, oppure disconnettila, poi riprova.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Accedi al forum con un codice</string>

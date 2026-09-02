@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Aanmelding geweigerd: de klok van dit apparaat wijkt meer dan een minuut af. Schakel automatische datum en tijd in en begin opnieuw vanaf de browserpagina.</string>
     <string name="forum_login_result_expired">Dit aanmeldverzoek is verlopen. Begin opnieuw vanaf de browserpagina.</string>
     <string name="forum_login_result_failure">Aanmelden mislukt. Probeer het zo meteen opnieuw.</string>
+    <string name="forum_tunnel_busy">De VPN maakt verbinding of is geblokkeerd. Wacht tot de verbinding er is, of verbreek de verbinding, en probeer het dan opnieuw.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Aanmelden bij het forum met een code</string>

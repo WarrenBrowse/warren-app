@@ -61,6 +61,13 @@ sealed interface ReportSubmitOutcome {
     /** No wallet on device: nothing to sign with. */
     data object WalletNotReady : ReportSubmitOutcome
 
+    /**
+     * Not sent: the tunnel is between states ([ForumPreflight]), so the
+     * connect host could not be resolved. Nothing was collected; the form is
+     * intact and the user retries once the tunnel is connected or off.
+     */
+    data class Deferred(val tunnelClass: String) : ReportSubmitOutcome
+
     /** Anything else, with its class (`transport`, `build`, `http-502`, ...). */
     data class Failure(val reason: String) : ReportSubmitOutcome
 }
@@ -71,6 +78,12 @@ sealed interface ReportSubmitOutcome {
  * wallet and the platform readers); the feature screens see only this seam.
  */
 interface WarrenSupportReporter {
+    /**
+     * Whether a send may leave now, from the live tunnel state. Read before
+     * collecting: a deferred send must cost nothing and change nothing.
+     */
+    fun preflight(): ForumPreflight
+
     /** Collects the redacted report into a temporary file the user may read. */
     suspend fun collect(): Result<CollectedReport>
 

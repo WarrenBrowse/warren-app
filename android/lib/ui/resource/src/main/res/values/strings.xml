@@ -544,6 +544,7 @@
     <string name="forum_login_result_clock_skew">Sign-in refused: this device\'s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.</string>
     <string name="forum_login_result_expired">This sign-in request has expired. Start again from the browser page.</string>
     <string name="forum_login_result_failure">Sign-in failed. Please try again in a moment.</string>
+    <string name="forum_tunnel_busy">The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Sign in to the forum with a code</string>

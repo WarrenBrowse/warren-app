@@ -1,11 +1,13 @@
 package com.warrenbrowse.vpn.app.forum
 
 import co.touchlab.kermit.Logger
-import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumPreflight
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -42,6 +44,14 @@ sealed interface WarrenForumLoginOutcome {
     data object WalletNotReady : WarrenForumLoginOutcome
 
     /**
+     * Not attempted: the tunnel is between states ([ForumPreflight]), so the
+     * connect host could not be resolved. Nothing was signed and the session
+     * is untouched; the prompt stays open for a retry once the tunnel is
+     * connected or off.
+     */
+    data class Deferred(val tunnelClass: String) : WarrenForumLoginOutcome
+
+    /**
      * Any other failure, with its class (`transport`, `build`, `runtime`,
      * `http-<status>`, `wallet-read`, `jni`). Rendered generically; the class
      * goes to the log and the events journal, where a report can carry it.
@@ -52,19 +62,22 @@ sealed interface WarrenForumLoginOutcome {
 /**
  * Signs a community-forum login challenge and submits it (warren-core doc 55).
  *
- * Mirrors [WarrenSubscriptionUseCase]: require a wallet, read the mnemonic
- * silently (routine signing, no prompt), then hand it to `WarrenJni.forumLogin`,
- * which preflights the session, signs AND POSTs `/v1/forum/login` inside Rust
- * (the wallet signature never surfaces here). Only the opaque `sid` and the
- * allowlisted `host` are passed across. Must be called only after the user
- * approves the consent prompt. An approved login records the identity the
- * provider returned, which is what the account page and the activity badge
- * read.
+ * Mirrors [WarrenSubscriptionUseCase]: require a wallet, check the tunnel is
+ * in a state the connect host can be resolved in ([ForumPreflight]), read the
+ * mnemonic silently (routine signing, no prompt), then hand it to
+ * [WarrenJniBridge.forumLogin], which preflights the session, signs AND POSTs
+ * `/v1/forum/login` inside Rust (the wallet signature never surfaces here).
+ * Only the opaque `sid` and the allowlisted `host` are passed across. Must be
+ * called only after the user approves the consent prompt. An approved login
+ * records the identity the provider returned, which is what the account page
+ * and the activity badge read.
  */
 class WarrenForumLoginUseCase(
     private val walletRepository: WalletRepository,
     private val forumIdentityRepository: ForumIdentityRepository,
     private val journal: ForumEventsJournal,
+    private val jni: WarrenJniBridge,
+    private val tunnelState: WarrenTunnelStateProvider,
 ) {
 
     // Fire-and-forget scope for the cancel notify so it survives the consent
@@ -76,6 +89,14 @@ class WarrenForumLoginUseCase(
             Logger.w("WarrenForumLoginUseCase: no wallet on device")
             journal.record("login.result", "class" to "wallet-absent")
             return WarrenForumLoginOutcome.WalletNotReady
+        }
+
+        // Before the mnemonic is read: a deferred attempt must touch nothing.
+        val preflight = ForumPreflight.of(tunnelState.connectedInfo.value)
+        if (preflight is ForumPreflight.Defer) {
+            Logger.w("WarrenForumLoginUseCase: deferred, tunnel ${preflight.tunnelClass}")
+            journal.record("login.deferred", "class" to preflight.tunnelClass)
+            return WarrenForumLoginOutcome.Deferred(preflight.tunnelClass)
         }
 
         val mnemonic = try {
@@ -91,9 +112,9 @@ class WarrenForumLoginUseCase(
         return withContext(Dispatchers.IO) {
             mnemonic.use { m ->
                 val rawJson = try {
-                    WarrenJni.forumLogin(m.phrase, link.sid, link.host)
+                    jni.forumLogin(m.phrase, link.sid, link.host)
                 } catch (e: Exception) {
-                    Logger.e(throwable = e) { "WarrenJni.forumLogin threw" }
+                    Logger.e(throwable = e) { "WarrenJniBridge.forumLogin threw" }
                     journal.record("login.result", "class" to "jni")
                     return@use WarrenForumLoginOutcome.Failure("jni")
                 }
@@ -122,9 +143,9 @@ class WarrenForumLoginUseCase(
         journal.record("login.declined")
         cancelScope.launch {
             try {
-                WarrenJni.forumLoginCancel(link.sid, link.host)
+                jni.forumLoginCancel(link.sid, link.host)
             } catch (e: Exception) {
-                Logger.w(throwable = e) { "WarrenJni.forumLoginCancel threw" }
+                Logger.w(throwable = e) { "WarrenJniBridge.forumLoginCancel threw" }
             }
         }
     }
@@ -139,6 +160,7 @@ internal fun outcomeClass(outcome: WarrenForumLoginOutcome): String =
         WarrenForumLoginOutcome.ClockSkew -> "clock-skew"
         WarrenForumLoginOutcome.Expired -> "expired"
         WarrenForumLoginOutcome.WalletNotReady -> "wallet-absent"
+        is WarrenForumLoginOutcome.Deferred -> "deferred-${outcome.tunnelClass}"
         is WarrenForumLoginOutcome.Failure -> outcome.reason
     }
 

@@ -506,6 +506,7 @@
     <string name="forum_login_result_clock_skew">サインインが拒否されました。この端末の時計が1分以上ずれています。日付と時刻の自動設定を有効にして、ブラウザのページからやり直してください。</string>
     <string name="forum_login_result_expired">このサインイン要求は期限切れです。ブラウザのページからやり直してください。</string>
     <string name="forum_login_result_failure">サインインに失敗しました。しばらくしてからもう一度お試しください。</string>
+    <string name="forum_tunnel_busy">VPNは接続中またはブロック中です。接続されるまで待つか、切断してから、もう一度お試しください。</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">コードでフォーラムにサインイン</string>

@@ -63,6 +63,7 @@ fun ForumLoginPromptHost() {
     val walletNotReadyMessage = stringResource(R.string.forum_login_result_wallet_not_ready)
     val clockSkewMessage = stringResource(R.string.forum_login_result_clock_skew)
     val expiredMessage = stringResource(R.string.forum_login_result_expired)
+    val tunnelBusyMessage = stringResource(R.string.forum_tunnel_busy)
     val failureMessage = stringResource(R.string.forum_login_result_failure)
 
     // Declining notifies the provider so the waiting browser page unblocks
@@ -163,6 +164,7 @@ fun ForumLoginPromptHost() {
                                             walletNotReady = walletNotReadyMessage,
                                             clockSkew = clockSkewMessage,
                                             expired = expiredMessage,
+                                            tunnelBusy = tunnelBusyMessage,
                                             generic = failureMessage,
                                         )
                                 }
@@ -207,6 +209,7 @@ internal fun failureMessageFor(
     walletNotReady: String,
     clockSkew: String,
     expired: String,
+    tunnelBusy: String,
     generic: String,
 ): String =
     when (outcome) {
@@ -214,5 +217,6 @@ internal fun failureMessageFor(
         is WarrenForumLoginOutcome.WalletNotReady -> walletNotReady
         is WarrenForumLoginOutcome.ClockSkew -> clockSkew
         is WarrenForumLoginOutcome.Expired -> expired
+        is WarrenForumLoginOutcome.Deferred -> tunnelBusy
         else -> generic
     }

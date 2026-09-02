@@ -506,6 +506,7 @@
     <string name="forum_login_result_clock_skew">登入遭拒：此裝置的時鐘偏差超過一分鐘。請開啟自動設定日期與時間，然後從瀏覽器頁面重新開始。</string>
     <string name="forum_login_result_expired">此登入要求已過期。請從瀏覽器頁面重新開始。</string>
     <string name="forum_login_result_failure">登入失敗。請稍後再試。</string>
+    <string name="forum_tunnel_busy">VPN 正在連線或已被封鎖。請等待其連線，或中斷連線，然後再試一次。</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">使用代碼登入論壇</string>

@@ -515,6 +515,7 @@
     <string name="forum_login_result_clock_skew">Вхід відхилено: годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час, потім почніть знову зі сторінки браузера.</string>
     <string name="forum_login_result_expired">Цей запит на вхід прострочено. Почніть знову зі сторінки браузера.</string>
     <string name="forum_login_result_failure">Не вдалося увійти. Повторіть спробу за мить.</string>
+    <string name="forum_tunnel_busy">VPN підключається або заблокований. Зачекайте на підключення або відключіть його, потім спробуйте ще раз.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Увійти на форум за кодом</string>

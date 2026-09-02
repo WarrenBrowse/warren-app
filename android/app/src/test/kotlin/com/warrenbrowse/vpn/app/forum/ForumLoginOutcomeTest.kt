@@ -52,20 +52,26 @@ class ForumLoginOutcomeTest {
     fun the_prompt_picks_the_message_matching_the_outcome() {
         assertEquals(
             "fix-clock",
-            failureMessageFor(WarrenForumLoginOutcome.ClockSkew, "sub", "wallet", "fix-clock", "expired", "generic"),
+            failureMessageFor(WarrenForumLoginOutcome.ClockSkew, "sub", "wallet", "fix-clock", "expired", "busy", "generic"),
         )
         assertEquals(
             "sub",
-            failureMessageFor(WarrenForumLoginOutcome.SubscriptionRequired, "sub", "wallet", "fix-clock", "expired", "generic"),
+            failureMessageFor(WarrenForumLoginOutcome.SubscriptionRequired, "sub", "wallet", "fix-clock", "expired", "busy", "generic"),
         )
         assertEquals(
             "wallet",
-            failureMessageFor(WarrenForumLoginOutcome.WalletNotReady, "sub", "wallet", "fix-clock", "expired", "generic"),
+            failureMessageFor(WarrenForumLoginOutcome.WalletNotReady, "sub", "wallet", "fix-clock", "expired", "busy", "generic"),
         )
         assertEquals(
             "generic",
-            failureMessageFor(WarrenForumLoginOutcome.Failure("x"), "sub", "wallet", "fix-clock", "expired", "generic"),
+            failureMessageFor(WarrenForumLoginOutcome.Failure("x"), "sub", "wallet", "fix-clock", "expired", "busy", "generic"),
         )
+        // A deferral is not a failure of the session: its own message, and
+        // the prompt stays armed for the retry.
+        val deferred = WarrenForumLoginOutcome.Deferred("connecting")
+        assertEquals("busy", failureMessageFor(deferred, "sub", "wallet", "fix-clock", "expired", "busy", "generic"))
+        assertFalse(isTerminalOutcome(deferred))
+        assertEquals("deferred-connecting", outcomeClass(deferred))
     }
 
     @Test
@@ -108,7 +114,7 @@ class ForumLoginOutcomeTest {
         assertTrue(isTerminalOutcome(WarrenForumLoginOutcome.Expired))
         assertEquals(
             "expired",
-            failureMessageFor(WarrenForumLoginOutcome.Expired, "sub", "wallet", "fix-clock", "expired", "generic"),
+            failureMessageFor(WarrenForumLoginOutcome.Expired, "sub", "wallet", "fix-clock", "expired", "busy", "generic"),
         )
     }
 
@@ -119,7 +125,7 @@ class ForumLoginOutcomeTest {
         assertEquals("transport", outcomeClass(outcome))
         assertEquals(
             "generic",
-            failureMessageFor(outcome, "sub", "wallet", "fix-clock", "expired", "generic"),
+            failureMessageFor(outcome, "sub", "wallet", "fix-clock", "expired", "busy", "generic"),
         )
         assertEquals(
             WarrenForumLoginOutcome.Failure("unknown"),

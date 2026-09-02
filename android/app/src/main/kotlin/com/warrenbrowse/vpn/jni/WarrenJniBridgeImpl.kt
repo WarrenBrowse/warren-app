@@ -26,6 +26,11 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
 
     override fun fetchNetworkInfo(): String = WarrenJni.fetchNetworkInfo()
 
+    override fun forumLogin(mnemonic: String, sid: String, host: String): String =
+        WarrenJni.forumLogin(mnemonic, sid, host)
+
+    override fun forumLoginCancel(sid: String, host: String) = WarrenJni.forumLoginCancel(sid, host)
+
     override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
         WarrenJni.forumReport(mnemonic, reportJson, logGz)
 

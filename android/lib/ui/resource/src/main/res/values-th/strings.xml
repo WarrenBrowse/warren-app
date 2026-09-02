@@ -506,6 +506,7 @@
     <string name="forum_login_result_clock_skew">การลงชื่อเข้าใช้ถูกปฏิเสธ นาฬิกาของอุปกรณ์นี้คลาดเคลื่อนเกินหนึ่งนาที เปิดใช้วันที่และเวลาอัตโนมัติ แล้วเริ่มใหม่จากหน้าเบราว์เซอร์</string>
     <string name="forum_login_result_expired">คำขอลงชื่อเข้าใช้นี้หมดอายุแล้ว เริ่มใหม่จากหน้าเบราว์เซอร์</string>
     <string name="forum_login_result_failure">เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่</string>
+    <string name="forum_tunnel_busy">VPN กำลังเชื่อมต่อหรือถูกบล็อกอยู่ โปรดรอจนกว่าจะเชื่อมต่อ หรือตัดการเชื่อมต่อ แล้วลองอีกครั้ง</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">ลงชื่อเข้าใช้ฟอรัมด้วยรหัส</string>

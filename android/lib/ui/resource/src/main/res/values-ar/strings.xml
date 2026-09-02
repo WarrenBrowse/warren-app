@@ -521,6 +521,7 @@
     <string name="forum_login_result_clock_skew">تعذّر تسجيل الدخول: ساعة هذا الجهاز منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين ثم ابدأ من جديد من صفحة المتصفح.</string>
     <string name="forum_login_result_expired">انتهت صلاحية طلب تسجيل الدخول هذا. ابدأ من جديد من صفحة المتصفح.</string>
     <string name="forum_login_result_failure">فشل تسجيل الدخول. يُرجى المحاولة مرة أخرى بعد قليل.</string>
+    <string name="forum_tunnel_busy">الشبكة الافتراضية الخاصة قيد الاتصال أو محظورة. انتظر حتى تتصل، أو افصلها، ثم حاول مرة أخرى.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">تسجيل الدخول إلى المنتدى برمز</string>

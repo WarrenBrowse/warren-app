@@ -509,6 +509,7 @@
     <string name="forum_login_result_clock_skew">Início de sessão recusado: o relógio deste dispositivo está desacertado em mais de um minuto. Ative a data e hora automáticas e recomece a partir da página do navegador.</string>
     <string name="forum_login_result_expired">Este pedido de início de sessão expirou. Recomece a partir da página do navegador.</string>
     <string name="forum_login_result_failure">Falha no início de sessão. Tente novamente dentro de momentos.</string>
+    <string name="forum_tunnel_busy">A VPN está a ligar ou está bloqueada. Aguarda até que ligue, ou desliga-a, e tenta novamente.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Iniciar sessão no fórum com um código</string>
