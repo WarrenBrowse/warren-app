@@ -11,6 +11,7 @@ import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.minimumInteractiveComponentSize
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -68,11 +69,16 @@ fun BetaBadge(
     var dialogVisible by remember { mutableStateOf(false) }
     val capMbps = capBps?.let { (it / BPS_PER_MBPS).toInt() }?.takeIf { it > 0 }
 
+    // The pill is 32 dp tall and the row 44: both keep their visual size while
+    // the node reserves the 48 dp touch floor around them, the way a Material
+    // chip does (minimumInteractiveComponentSize before the clip, so the
+    // reserved space stays unpainted).
     val container =
         when (variant) {
             BetaBadgeVariant.Overlay -> {
                 val shape = RoundedCornerShape(14.dp)
-                Modifier.wrapContentWidth()
+                Modifier.minimumInteractiveComponentSize()
+                    .wrapContentWidth()
                     .clip(shape)
                     .background(Color.Black.copy(alpha = Alpha60))
                     .border(1.dp, Color.White.copy(alpha = Alpha20), shape)
@@ -80,7 +86,8 @@ fun BetaBadge(
                     .padding(horizontal = 12.dp, vertical = 6.dp)
             }
             BetaBadgeVariant.Row ->
-                Modifier.fillMaxWidth()
+                Modifier.minimumInteractiveComponentSize()
+                    .fillMaxWidth()
                     .clip(RoundedCornerShape(12.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerLowest)
                     .clickable { dialogVisible = true }

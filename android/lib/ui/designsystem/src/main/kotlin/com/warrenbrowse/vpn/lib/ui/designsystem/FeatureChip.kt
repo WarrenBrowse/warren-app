@@ -3,7 +3,6 @@ package com.warrenbrowse.vpn.lib.ui.designsystem
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,8 +30,8 @@ private fun PreviewWarrenFeatureChip() {
  * A feature badge above the connection card (desktop FeatureIndicator): a
  * 22 dp pill, 2 x 8 padding, 12/600 label, radius 8, `blue10` fill with the
  * `blue` hairline; the error variant (a port forward the exit refused) is the
- * red fill at 40 % with the red hairline. The visual is small on purpose, so
- * the touch target is widened to the platform minimum around it.
+ * red fill at 40 % with the red hairline. The visual is small on purpose; the
+ * clickable Surface reserves the 48 dp touch floor around it on its own.
  */
 @Composable
 fun WarrenFeatureChip(
@@ -48,7 +47,7 @@ fun WarrenFeatureChip(
         if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
     Surface(
         onClick = onClick,
-        modifier = modifier.minimumInteractiveComponentSize(),
+        modifier = modifier,
         shape = MaterialTheme.shapes.chipShape,
         color = containerColor,
         contentColor = MaterialTheme.colorScheme.onPrimary,

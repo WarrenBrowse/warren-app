@@ -229,9 +229,11 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
                                 it
                             }
                         },
-                // Desktop: 12 at 60 % white.
+                // Desktop NotificationSubtitleText: 12/600 at 60 % white. The
+                // weight is explicit because the body face ships 400/600/700
+                // only, so labelMedium's 500 would resolve to regular.
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-                style = MaterialTheme.typography.labelMedium,
+                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
             )
         }
         action?.let {

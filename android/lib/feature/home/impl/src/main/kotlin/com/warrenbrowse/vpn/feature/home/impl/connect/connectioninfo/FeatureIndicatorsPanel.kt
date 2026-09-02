@@ -9,7 +9,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -38,7 +37,6 @@ import org.koin.compose.koinInject
  * exit actually granted DAITA) live in settings and in the NAT-PMP status, so
  * they are read here rather than threaded through the whole connect state.
  */
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AlwaysExpandedFeatureIndicators(
     features: List<FeatureIndicator>,
@@ -61,7 +59,10 @@ fun AlwaysExpandedFeatureIndicators(
             natPmpStatus = natPmpStatus,
         )
 
-    // Desktop stacks the badges in a left-aligned column, 5 px apart.
+    // Desktop stacks the badges in a left-aligned column. Each chip here is a
+    // 48 dp touch row around a 22 dp pill, so the rows touch and the pills
+    // fall 26 dp apart; the desktop's 5 px is not reachable without shrinking
+    // the touch boxes.
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(Dimens.chipStackGap),

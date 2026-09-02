@@ -57,6 +57,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -817,15 +818,13 @@ private fun Content(
                         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                     )
                     if (showBetaBadge) {
+                        // No vertical padding: the badge reserves its 48 dp touch
+                        // row around a 32 dp pill, which already spaces it.
                         BetaBadge(
                             capBps = betaCapBps,
                             capResolved = betaCapResolved,
                             variant = BetaBadgeVariant.Overlay,
-                            modifier =
-                                Modifier.padding(
-                                    horizontal = Dimens.mediumPadding,
-                                    vertical = Dimens.tinyPadding,
-                                ),
+                            modifier = Modifier.padding(horizontal = Dimens.mediumPadding),
                         )
                     }
                 }
@@ -893,10 +892,14 @@ private fun WarrenMainFooter(
     timeLeft: String?,
 ) {
     // Desktop AppMainFooter: a 60 % black band with a top hairline, 7 x 16
-    // padding; the copy icon turns into a green check for two seconds.
+    // padding; the copy icon turns into a green check for two seconds. Keyed
+    // on the tap count, not the flag, so a second tap inside the two seconds
+    // restarts them the way the desktop reschedules its timer.
+    var copyCount by remember { mutableIntStateOf(0) }
     var copied by remember { mutableStateOf(false) }
-    LaunchedEffect(copied) {
-        if (copied) {
+    LaunchedEffect(copyCount) {
+        if (copyCount > 0) {
+            copied = true
             delay(FOOTER_COPIED_MILLIS)
             copied = false
         }
@@ -924,14 +927,17 @@ private fun WarrenMainFooter(
                     IconButton(
                         onClick = {
                             onCopyPubkey()
-                            copied = true
+                            copyCount++
                         },
                         modifier = Modifier.size(Dimens.mediumPadding * 2),
                     ) {
                         Icon(
                             imageVector =
                                 if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
-                            contentDescription = stringResource(R.string.copy),
+                            // A screen reader gets the same confirmation the eye does.
+                            contentDescription =
+                                if (copied) stringResource(R.string.copied)
+                                else stringResource(R.string.copy),
                             tint =
                                 if (copied) MaterialTheme.colorScheme.positive
                                 else Color.White.copy(alpha = Alpha80),

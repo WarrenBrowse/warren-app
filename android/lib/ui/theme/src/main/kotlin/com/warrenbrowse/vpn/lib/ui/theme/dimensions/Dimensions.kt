@@ -24,9 +24,11 @@ data class Dimensions(
     val circularProgressBarSmallStrokeWidth: Dp = 4.dp,
     val connectButtonExtraPadding: Dp = 4.dp,
     val connectionCardMaxWidth: Dp = 480.dp,
-    // Desktop FeatureIndicator: 2 x 8 padding, 5 px between badges.
+    // Desktop FeatureIndicator: 2 x 8 padding. The desktop stacks its 22 px
+    // pills 5 px apart; here every chip sits in a 48 dp touch row, so the gap
+    // is between rows, and the pills already fall 26 dp apart at 0.
     val chipVerticalPadding: Dp = 2.dp,
-    val chipStackGap: Dp = 5.dp,
+    val chipStackGap: Dp = 0.dp,
     // Desktop AppMainFooter: 7 x 16.
     val footerVerticalPadding: Dp = 7.dp,
     // Desktop NotificationBanner: radius 14, 2 px status edge, 10 12 10 16 padding.
@@ -99,7 +101,9 @@ data class Dimensions(
     // Required to get the logo to look visually correct
     val splashLogoTextHeight: Dp = 18.dp,
     val switchIconSize: Dp = 24.dp,
-    val switchLocationRetryMinWidth: Dp = 40.dp,
+    // The desktop ShuffleButton is 40 px wide for a pointer; a finger gets the
+    // 48 dp floor, and the location button 1 dp away wins any tap left of it.
+    val switchLocationRetryMinWidth: Dp = 48.dp,
     val thinBorderWidth: Dp = 1.dp,
     val tinyPadding: Dp = 4.dp,
     // Desktop MainHeader: 32 px icons, 48 px lockup.
