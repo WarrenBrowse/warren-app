@@ -173,6 +173,20 @@ describe('approveForumAttach validation', () => {
     expect(signForumAttachLogs).not.toHaveBeenCalled();
   });
 
+  it('caps the gzip where its base64 field exactly fills the broker cap', () => {
+    // warren-connect measures the base64 FIELD (MAX_LOG_GZ_B64_CHARS =
+    // 16,000,000). An at-cap gzip must fit it, or the guard here lets a full
+    // upload through to a 413; the next byte must overflow it, or the cap is
+    // needlessly low.
+    const brokerMaxB64Chars = 16_000_000;
+    const encodedLength = (bytes: number) => Math.ceil(bytes / 3) * 4;
+    expect(encodedLength(MAX_LOG_GZ_BYTES)).toBeLessThanOrEqual(brokerMaxB64Chars);
+    expect(encodedLength(MAX_LOG_GZ_BYTES + 1)).toBeGreaterThan(brokerMaxB64Chars);
+    expect(Buffer.from(new Uint8Array(MAX_LOG_GZ_BYTES)).toString('base64').length).toBe(
+      encodedLength(MAX_LOG_GZ_BYTES),
+    );
+  });
+
   it('refuses an empty gzip without touching the daemon', async () => {
     const { rpc, signForumAttachLogs } = makeDaemon();
     const result = await approveForumAttach(request, rpc, new Uint8Array(0));

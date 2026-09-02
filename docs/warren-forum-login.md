@@ -87,7 +87,8 @@ what happened, steps, frequency). "Include technical logs" is on by default and
 "View the logs" shows the exact file about to be sent. Send runs the same
 tunnel-state preflight as the sign-in before collecting anything
 (`report.deferred`, the form left intact), then collects a fresh report, gzips
-it (12 MiB cap, the desktop's), signs and POSTs it. The broker
+it (12 MB cap, the broker's 16 M base64 characters translated to gzip bytes,
+the same figure on the desktop), signs and POSTs it. The broker
 creates the wallet's forum account when needed, opens the topic under the
 handle, tags the platform, and delivers the logs to the staff like the
 paperclip flow. Outcomes: created (with the topic link), never paid (routes to

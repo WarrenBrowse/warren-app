@@ -18,7 +18,7 @@ pub mod metadata;
 /// most recent events always survive.
 ///
 /// Bounded by what the forum attach-logs transport accepts, not by taste:
-/// warren-connect (>= 0.9.13) caps the upload at ~12 MiB of gzip and 32 MiB
+/// warren-connect (>= 0.9.13) caps the upload at 12 MB of gzip and 32 MiB
 /// decompressed, and Discourse accepts a 40 MB attachment. A report can carry
 /// up to about seven files (daemon, its rotation, the previous install's, plus
 /// the frontend main/renderer and their rotations), so 4 MiB each is 28 MiB

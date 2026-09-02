@@ -217,8 +217,13 @@ class WarrenSupportReporterImpl(
         kotlinx.serialization.json.JsonArray(items.map { JsonPrimitive(it) }).toString()
 
     companion object {
-        /** Largest gzip the app agrees to send; tracks the desktop's `MAX_LOG_GZ_BYTES`. */
-        const val MAX_LOG_GZ_BYTES = 12 * 1024 * 1024
+        /**
+         * Largest gzip the app agrees to send: the broker's cap on the base64
+         * field (warren-connect `MAX_LOG_GZ_B64_CHARS`, 16,000,000 characters)
+         * translated to gzip bytes at 3 bytes per 4 characters, the same
+         * derivation as `warren_forum::MAX_LOG_GZ_BYTES` and the desktop's.
+         */
+        const val MAX_LOG_GZ_BYTES = 16_000_000 / 4 * 3
     }
 }
 

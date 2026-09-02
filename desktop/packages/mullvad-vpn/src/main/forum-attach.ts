@@ -17,16 +17,23 @@ import { ALLOWED_CONNECT_HOSTS, FORUM_DEEP_LINK_SCHEME, getForumSession } from '
  * signed bytes and the sent bytes are identical.
  */
 
+/** warren-connect's `MAX_LOG_GZ_B64_CHARS`: the broker caps the base64 FIELD
+ * and answers 413 one character over it. */
+const BROKER_MAX_LOG_GZ_B64_CHARS = 16_000_000;
+
 /** Client-side cap on the gzipped report: the server rejects bigger uploads
  * (413), so a larger payload could only produce a doomed request.
  *
- * Must track warren-connect's `MAX_LOG_GZ_B64_CHARS` (16 M base64 characters,
- * about 12 MiB of gzip since base64 adds a third). This is the FIRST leg of a
+ * Derived from the broker's cap, never guessed: base64 spends 4 characters per
+ * 3 bytes, so 12,000,000 bytes fill the field exactly and one more byte
+ * overflows it (`12 * 1024 * 1024` sat 777,216 characters over, so an at-cap
+ * report was uploaded whole and then refused). This is the FIRST leg of a
  * four-leg chain, and the one that silently wins: raising the server caps
  * without this one changes nothing at all, because the app never sends the
  * bytes. The other legs are the route's body limit, the decompressed cap, and
- * Discourse's `max_attachment_size_kb`. */
-export const MAX_LOG_GZ_BYTES = 12 * 1024 * 1024;
+ * Discourse's `max_attachment_size_kb`. The shared `warren-forum` crate and
+ * the daemon's `sign_forum_attach_logs` gate carry the same derivation. */
+export const MAX_LOG_GZ_BYTES = (BROKER_MAX_LOG_GZ_B64_CHARS / 4) * 3;
 
 export interface ParsedForumAttach {
   sid: string;

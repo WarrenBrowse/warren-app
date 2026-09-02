@@ -11,6 +11,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import io.mockk.every
 import io.mockk.mockk
 import java.io.File
+import java.util.Base64
 import java.util.zip.GZIPInputStream
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -169,6 +170,16 @@ class WarrenSupportReporterImplTest {
         val fields = journal.fieldsOf(ForumEvent.REPORT_SUBMIT).single()
         assertTrue(JournalField.Class("created-none") in fields, fields.toString())
         assertTrue(JournalField.WithLogs(true) in fields, fields.toString())
+    }
+
+    @Test
+    fun a_gzip_at_the_cap_fills_the_brokers_base64_field_exactly() {
+        // warren-connect caps the base64 FIELD at 16,000,000 characters, so
+        // the byte cap must encode within it (or an at-cap report is uploaded
+        // whole and refused) and the next byte must not (or the cap is low).
+        val brokerMaxB64Chars = 16_000_000
+        assertTrue(Base64.getEncoder().encodeToString(ByteArray(cap)).length <= brokerMaxB64Chars)
+        assertTrue(Base64.getEncoder().encodeToString(ByteArray(cap + 1)).length > brokerMaxB64Chars)
     }
 
     @Test

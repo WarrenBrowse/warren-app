@@ -95,10 +95,16 @@ pub struct SignedForumRequest {
     pub body: Vec<u8>,
 }
 
-/// Largest gzipped report a signed request carries, the desktop's
-/// `MAX_LOG_GZ_BYTES` and the broker's cap: over it the broker answers 413,
-/// so the request is refused here before a 16 MiB body is signed and sent.
-pub const MAX_LOG_GZ_BYTES: usize = 12 * 1024 * 1024;
+/// Largest gzipped report a signed request carries. The broker caps the
+/// base64 FIELD, not the gzip (warren-connect `MAX_LOG_GZ_B64_CHARS`,
+/// 16,000,000 characters, 413 over it), and base64 spends 4 characters per 3
+/// bytes, so this is that cap translated: 12,000,000 bytes fill the field
+/// exactly and one more byte overflows it. `12 * 1024 * 1024` was the earlier
+/// reading and sat 777,216 characters over, so an at-cap report was signed,
+/// uploaded whole and then refused. The desktop `MAX_LOG_GZ_BYTES`, the
+/// daemon's `sign_forum_attach_logs` gate and the Android
+/// `WarrenSupportReporterImpl` carry the same derivation.
+pub const MAX_LOG_GZ_BYTES: usize = 16_000_000 / 4 * 3;
 
 /// Failure building a signed request. Deliberately coarse: the caller maps it
 /// to an outcome, and no cause with identity material is ever surfaced or
@@ -732,7 +738,7 @@ mod tests {
 
     #[test]
     fn report_request_refuses_a_log_over_the_size_cap_before_signing() {
-        // The broker's 413 is a round trip away with 12 MiB of body; the
+        // The broker's 413 is a round trip away with 16 MB of body; the
         // Kotlin side guards too, and this is the leg every FFI shares.
         let over = vec![0u8; MAX_LOG_GZ_BYTES + 1];
         assert_eq!(
@@ -746,6 +752,10 @@ mod tests {
         );
     }
 
+    /// warren-connect's `attach::MAX_LOG_GZ_B64_CHARS`: the broker caps the
+    /// base64 FIELD, and answers 413 one character over it.
+    const BROKER_MAX_LOG_GZ_B64_CHARS: usize = 16_000_000;
+
     #[test]
     fn report_request_accepts_a_log_exactly_at_the_size_cap() {
         let at_cap = vec![0u8; MAX_LOG_GZ_BYTES];
@@ -757,6 +767,34 @@ mod tests {
         )
         .expect("the cap is inclusive");
         assert!(req.body.len() > MAX_LOG_GZ_BYTES);
+    }
+
+    #[test]
+    fn a_log_at_the_cap_encodes_within_the_brokers_field_and_one_byte_over_does_not() {
+        // The cap is the broker's, translated from base64 characters to gzip
+        // bytes: at the cap the field the broker measures is exactly full, so
+        // an at-cap upload is accepted on the wire and not just here, and the
+        // next byte is the one the broker would refuse after a full upload.
+        let at_cap = vec![0u8; MAX_LOG_GZ_BYTES];
+        let req = build_signed_report_request(
+            &signing_key(),
+            r#"{"platform":"android"}"#,
+            Some(&at_cap),
+            1,
+        )
+        .expect("the cap is inclusive");
+        let body: serde_json::Value = serde_json::from_slice(&req.body).expect("json body");
+        let field = body["log_gz_b64"].as_str().expect("the log field");
+        assert!(
+            field.len() <= BROKER_MAX_LOG_GZ_B64_CHARS,
+            "{} base64 chars is over the broker's {BROKER_MAX_LOG_GZ_B64_CHARS}",
+            field.len()
+        );
+        let one_over_encoded = (MAX_LOG_GZ_BYTES + 1).div_ceil(3) * 4;
+        assert!(
+            one_over_encoded > BROKER_MAX_LOG_GZ_B64_CHARS,
+            "the cap is lower than the broker allows: {one_over_encoded} chars would still fit"
+        );
     }
 
     #[test]
