@@ -136,6 +136,7 @@
     <string name="expand">Espandi</string>
     <string name="collapse">Comprimi</string>
     <string name="copy">Copia</string>
+    <string name="copied">Copiato</string>
     <string name="app_info">Info app</string>
     <string name="changelog_title">Novità</string>
     <string name="version">Versione</string>

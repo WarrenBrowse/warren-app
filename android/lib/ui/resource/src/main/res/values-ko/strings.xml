@@ -136,6 +136,7 @@
     <string name="expand">펼치기</string>
     <string name="collapse">접기</string>
     <string name="copy">복사</string>
+    <string name="copied">복사됨</string>
     <string name="app_info">앱 정보</string>
     <string name="changelog_title">새로운 기능</string>
     <string name="version">버전</string>

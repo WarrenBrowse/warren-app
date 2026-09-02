@@ -136,6 +136,7 @@
     <string name="expand">Genişlet</string>
     <string name="collapse">Daralt</string>
     <string name="copy">Kopyala</string>
+    <string name="copied">Kopyalandı</string>
     <string name="app_info">Uygulama bilgileri</string>
     <string name="changelog_title">Yenilikler</string>
     <string name="version">Sürüm</string>

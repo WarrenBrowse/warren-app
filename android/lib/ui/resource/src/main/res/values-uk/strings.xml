@@ -136,6 +136,7 @@
     <string name="expand">Розгорнути</string>
     <string name="collapse">Згорнути</string>
     <string name="copy">Копіювати</string>
+    <string name="copied">Скопійовано</string>
     <string name="app_info">Інформація про застосунок</string>
     <string name="changelog_title">Що нового</string>
     <string name="version">Версія</string>

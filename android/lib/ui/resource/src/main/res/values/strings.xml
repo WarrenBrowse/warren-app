@@ -142,6 +142,7 @@
     <string name="expand">Expand</string>
     <string name="collapse">Collapse</string>
     <string name="copy">Copy</string>
+    <string name="copied">Copied</string>
     <string name="app_info">App info</string>
     <string name="changelog_title">What’s new</string>
     <string name="version">Version</string>

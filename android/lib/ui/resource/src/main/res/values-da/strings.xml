@@ -136,6 +136,7 @@
     <string name="expand">Udvid</string>
     <string name="collapse">Skjul</string>
     <string name="copy">Kopiér</string>
+    <string name="copied">Kopieret</string>
     <string name="app_info">App-oplysninger</string>
     <string name="changelog_title">Nyheder</string>
     <string name="version">Version</string>

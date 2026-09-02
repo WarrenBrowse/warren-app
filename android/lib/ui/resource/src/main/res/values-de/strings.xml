@@ -136,6 +136,7 @@
     <string name="expand">Ausklappen</string>
     <string name="collapse">Zuklappen</string>
     <string name="copy">Kopieren</string>
+    <string name="copied">Kopiert</string>
     <string name="app_info">App-Info</string>
     <string name="changelog_title">Was ist neu?</string>
     <string name="version">Version</string>

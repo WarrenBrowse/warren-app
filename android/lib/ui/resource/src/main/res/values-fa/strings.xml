@@ -136,6 +136,7 @@
     <string name="expand">باز کردن</string>
     <string name="collapse">پنهان کردن</string>
     <string name="copy">کپی</string>
+    <string name="copied">کپی شد</string>
     <string name="app_info">اطلاعات اپلیکیشن</string>
     <string name="changelog_title">تازه‌ها</string>
     <string name="version">نسخه</string>

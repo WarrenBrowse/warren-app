@@ -136,6 +136,7 @@
     <string name="expand">展開</string>
     <string name="collapse">折疊</string>
     <string name="copy">複製</string>
+    <string name="copied">已複製</string>
     <string name="app_info">應用程式資訊</string>
     <string name="changelog_title">最新動態</string>
     <string name="version">版本</string>

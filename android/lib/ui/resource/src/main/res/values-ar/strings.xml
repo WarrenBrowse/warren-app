@@ -136,6 +136,7 @@
     <string name="expand">توسيع</string>
     <string name="collapse">طي</string>
     <string name="copy">نسخ</string>
+    <string name="copied">تم النسخ</string>
     <string name="app_info">معلومات التطبيق</string>
     <string name="changelog_title">آخر المستجدات</string>
     <string name="version">الإصدار</string>

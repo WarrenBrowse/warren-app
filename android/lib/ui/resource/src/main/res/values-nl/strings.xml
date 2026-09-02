@@ -136,6 +136,7 @@
     <string name="expand">Uitvouwen</string>
     <string name="collapse">Samenvouwen</string>
     <string name="copy">Kopiëren</string>
+    <string name="copied">Gekopieerd</string>
     <string name="app_info">Appinfo</string>
     <string name="changelog_title">Wat is er nieuw</string>
     <string name="version">Versie</string>

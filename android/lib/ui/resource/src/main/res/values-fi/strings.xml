@@ -136,6 +136,7 @@
     <string name="expand">Näytä enemmän</string>
     <string name="collapse">Näytä vähemmän</string>
     <string name="copy">Kopioi</string>
+    <string name="copied">Kopioitu</string>
     <string name="app_info">Sovelluksen tiedot</string>
     <string name="changelog_title">Uutta</string>
     <string name="version">Versio</string>

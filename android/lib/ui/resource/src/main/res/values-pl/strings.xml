@@ -136,6 +136,7 @@
     <string name="expand">Rozwiń</string>
     <string name="collapse">Zwiń</string>
     <string name="copy">Kopiuj</string>
+    <string name="copied">Skopiowano</string>
     <string name="app_info">Informacje o aplikacji</string>
     <string name="changelog_title">Co nowego</string>
     <string name="version">Wersja</string>

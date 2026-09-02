@@ -136,6 +136,7 @@
     <string name="expand">展開</string>
     <string name="collapse">折りたたむ</string>
     <string name="copy">コピー</string>
+    <string name="copied">コピーしました</string>
     <string name="app_info">アプリ情報</string>
     <string name="changelog_title">新機能</string>
     <string name="version">バージョン</string>

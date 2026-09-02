@@ -136,6 +136,7 @@
     <string name="expand">ဖြန့်ရန်</string>
     <string name="collapse">ချုံ့ရန်</string>
     <string name="copy">ကူးယူရန်</string>
+    <string name="copied">ကူးယူပြီးပါပြီ</string>
     <string name="app_info">အက်ပ်အချက်အလက်</string>
     <string name="changelog_title">အသစ်ပါလာသော အကြောင်းအရာများ</string>
     <string name="version">ဗားရှင်း</string>

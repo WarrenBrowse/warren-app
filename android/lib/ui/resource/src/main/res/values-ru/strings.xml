@@ -136,6 +136,7 @@
     <string name="expand">Развернуть</string>
     <string name="collapse">Свернуть</string>
     <string name="copy">Копировать</string>
+    <string name="copied">Скопировано</string>
     <string name="app_info">Информация о приложении</string>
     <string name="changelog_title">Что нового</string>
     <string name="version">Версия</string>

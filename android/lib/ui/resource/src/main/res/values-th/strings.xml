@@ -136,6 +136,7 @@
     <string name="expand">ขยาย</string>
     <string name="collapse">ยุบ</string>
     <string name="copy">คัดลอก</string>
+    <string name="copied">คัดลอกแล้ว</string>
     <string name="app_info">ข้อมูลแอป</string>
     <string name="changelog_title">มีอะไรใหม่</string>
     <string name="version">เวอร์ชัน</string>

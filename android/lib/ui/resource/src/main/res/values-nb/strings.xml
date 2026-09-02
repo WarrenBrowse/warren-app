@@ -136,6 +136,7 @@
     <string name="expand">Utvid</string>
     <string name="collapse">Skjul</string>
     <string name="copy">Kopier</string>
+    <string name="copied">Kopiert</string>
     <string name="app_info">Appinfo</string>
     <string name="changelog_title">Dette er nytt</string>
     <string name="version">Versjon</string>

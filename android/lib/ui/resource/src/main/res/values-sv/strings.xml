@@ -136,6 +136,7 @@
     <string name="expand">Visa</string>
     <string name="collapse">Dölj</string>
     <string name="copy">Kopiera</string>
+    <string name="copied">Kopierat</string>
     <string name="app_info">Appinfo</string>
     <string name="changelog_title">Nyheter</string>
     <string name="version">Version</string>
