@@ -85,12 +85,16 @@ running.
 To force an update, set the repo variable `WARREN_UPDATE_MIN_VERSION` (see
 below) so the next published manifest declares the new floor. It is graduated:
 a normal release with no floor bump only shows the soft "update available"
-notification. Manage that variable with the helper:
+notification. The beta channel has its own floor, `WARREN_UPDATE_MIN_VERSION_BETA`,
+read only by a `beta-v*` release: the two version series are independent, so
+a prod floor never reaches a beta manifest and the reverse. Manage both with
+the helper:
 
 ```sh
 scripts/release/set-update-min-version.sh            # show current value
 scripts/release/set-update-min-version.sh 1.2.0      # block clients below 1.2.0
 scripts/release/set-update-min-version.sh --unset    # back to optional updates
+scripts/release/set-update-min-version.sh --beta 1.0.0   # the beta channel's floor
 ```
 
 ## Signing key
@@ -219,7 +223,8 @@ GitHub repo **variable**
 
 | Variable | Value |
 | --- | --- |
-| `WARREN_UPDATE_MIN_VERSION` | e.g. `1.2.0`: clients below this are hard-blocked. Leave unset for no forced update. |
+| `WARREN_UPDATE_MIN_VERSION` | e.g. `1.2.0`: prod clients below this are hard-blocked. Leave unset for no forced update. |
+| `WARREN_UPDATE_MIN_VERSION_BETA` | The same floor for the beta channel, in the beta version series (`1.0.0` since 2026-09-03: the 0.0.x betas have no forum-login handler). |
 
 ### Ordering gotcha
 

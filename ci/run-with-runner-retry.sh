@@ -54,6 +54,17 @@ warren_flake_class() { # warren_flake_class <logfile> [exit-code]
 		echo plain
 		return
 	fi
+	# The Colima VM's OOM killer takes a rustc, or cargo itself, when several
+	# runners compile at once (beta-v1.1.21's Linux build died that way at the
+	# dependency stage). bash reports the child as "Killed", cargo as
+	# "signal: 9, SIGKILL"; the exit code build.sh returns is its own, so it
+	# never reaches the 137 arm below. Nothing on disk is poisoned; a plain
+	# retry lands on a quieter VM, and the job's CARGO_BUILD_JOBS cap keeps the
+	# peak down.
+	if grep -qE ": line [0-9]+: +[0-9]+ Killed |signal: 9, SIGKILL" "$1"; then
+		echo plain
+		return
+	fi
 	# Last resort, and the only evidence a WEDGE ever leaves. When a crashed
 	# rustc becomes a zombie under Rosetta it never returns its GNU jobserver
 	# token, so cargo waits at 0 % CPU printing nothing at all; the zombie

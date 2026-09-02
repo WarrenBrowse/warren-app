@@ -61,6 +61,13 @@ expect "a build killed from outside leaves no signature to grep" plain "" 137
 expect "a build the timeout wrapper fired on" plain "" 124
 expect "a wedge that did manage to print something still retries" plain \
 	"Computing build version..." 137
+expect "the VM's OOM killer taking the cargo child leaves bash's Killed notice" plain \
+	"./build.sh: line 345: 24524 Killed                  cargo build \${cargo_target_arg[@]+\"\${cargo_target_arg[@]}\"}"
+expect "cargo reporting a rustc the OOM killer took" plain \
+	"error: could not compile \`mullvad-daemon\` (lib)
+
+Caused by:
+  process didn't exit successfully: \`rustc --crate-name mullvad_daemon\` (signal: 9, SIGKILL: kill)"
 
 echo "real failures (must NOT retry)"
 expect "a compile error is the code's own" "" \

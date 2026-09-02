@@ -1,15 +1,19 @@
 #!/usr/bin/env bash
-# Manage the WARREN_UPDATE_MIN_VERSION GitHub Actions repository variable.
+# Manage the WARREN_UPDATE_MIN_VERSION GitHub Actions repository variable, or
+# with --beta its beta-channel twin WARREN_UPDATE_MIN_VERSION_BETA.
 #
 # That variable becomes the manifest `minimum_supported_version` at the next
-# release: clients older than it are hard-blocked by the forced-update screen
-# (see docs/AUTO-UPDATE.md). Leave it unset for normal, optional updates.
+# release of its channel: clients older than it are hard-blocked by the
+# forced-update screen (see docs/AUTO-UPDATE.md). Leave it unset for normal,
+# optional updates. The two channels have independent version series, so each
+# floor is read only by its own channel's release.
 #
 # Usage:
 #   set-update-min-version.sh                # show the current value
 #   set-update-min-version.sh <version>      # set it, e.g. 1.2.0 or 1.2.0-beta1
 #   set-update-min-version.sh --unset        # remove it (disables forced update)
 #   set-update-min-version.sh -y <version>   # skip the confirmation prompt
+#   set-update-min-version.sh --beta ...     # the same, for the beta channel
 #
 # Env: WARREN_APP_REPO overrides the target repo (default WarrenBrowse/warren-app).
 # Portable: bash 3.2+ (macOS) and Linux. Requires an authenticated `gh`.
@@ -24,11 +28,12 @@ VALUE=""
 
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
 
-usage() { sed -n '2,16p' "$0" | sed 's/^#\{1,\} \{0,1\}//'; }
+usage() { sed -n '2,20p' "$0" | sed 's/^#\{1,\} \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     -y|--yes) ASSUME_YES=1 ;;
+    --beta) VAR="WARREN_UPDATE_MIN_VERSION_BETA" ;;
     -h|--help) usage; exit 0 ;;
     --unset|--clear|unset|clear) ACTION="unset" ;;
     get|show) ACTION="get" ;;
@@ -46,7 +51,13 @@ command -v gh >/dev/null 2>&1 || die "gh (GitHub CLI) not found: https://cli.git
 gh auth status >/dev/null 2>&1 || die "gh is not authenticated. Run: gh auth login"
 
 # Current value, or empty if the variable is unset. Never fails the script.
-current() { gh api "repos/$REPO/actions/variables/$VAR" --jq '.value' 2>/dev/null || true; }
+# gh prints the 404 body on stdout for an unset variable, so the exit status,
+# not the output, decides.
+current() {
+  local value=""
+  value="$(gh api "repos/$REPO/actions/variables/$VAR" --jq '.value' 2>/dev/null)" || value=""
+  printf '%s' "$value"
+}
 
 # semver-ish: MAJOR.MINOR.PATCH with an optional -prerelease (e.g. 1.2.0-beta1).
 valid_version() { printf '%s' "$1" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; }

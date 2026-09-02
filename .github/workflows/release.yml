@@ -85,6 +85,12 @@
 #     If set, becomes the manifest `minimum_supported_version`: clients older
 #     than this are hard-blocked by the forced-update screen until they update.
 #     Applies to desktop and Android (Android bakes the desktop tag version).
+#     Prod channel only: the beta series is independent (shared rule 2), so
+#     the prod floor never reaches a beta manifest.
+#   WARREN_UPDATE_MIN_VERSION_BETA
+#     The same lever for the beta manifests, in the beta version series. Set
+#     to 1.0.0 since 2026-09-03: the 0.0.x betas carry no forum-login intent
+#     filter and were still listed as supported.
 #   WARREN_UPDATE_MIN_VERSION_IOS
 #     Same lever for ios.json, in the iOS calendar scheme (e.g. 2026.3). Keep
 #     it set: without a minimum, clients fall back to "version listed in
@@ -322,6 +328,11 @@ jobs:
       CXX: clang++
       WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
       WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      # The Rosetta runners share the same 48 GiB Colima VM as the eight arm64
+      # ones; an uncapped x86_64 build (20 rustc under emulation) next to the
+      # arm64 and headless release jobs is what the VM's OOM killer answered on
+      # beta-v1.1.21. Ten keeps a healthy build well inside the 55 min attempt.
+      CARGO_BUILD_JOBS: "10"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -1249,6 +1260,7 @@ jobs:
       # vhost maps /updates/desktop onto it).
       WARREN_UPDATE_METADATA_BASE_BETA: https://api.beta.warrenbrowse.com/updates/desktop
       WARREN_UPDATE_MIN_VERSION: ${{ vars.WARREN_UPDATE_MIN_VERSION }}
+      WARREN_UPDATE_MIN_VERSION_BETA: ${{ vars.WARREN_UPDATE_MIN_VERSION_BETA }}
       WARREN_UPDATE_MIN_VERSION_IOS: ${{ vars.WARREN_UPDATE_MIN_VERSION_IOS }}
     steps:
       - name: Skip if no signing key
@@ -1319,10 +1331,11 @@ jobs:
             ${WARREN_UPDATE_MIN_VERSION_IOS:+--ios-min-version "$WARREN_UPDATE_MIN_VERSION_IOS"}
 
       # Same generator against the WarrenVPN-Beta-* assets, served under the
-      # beta API host. No forced-update floor on the beta channel (a permanent
-      # free beta is never forced onto a version by the prod policy), and
-      # --channel beta puts the Android APK on the download page: the beta app
-      # id has no store listing, the sideload APK IS its distribution.
+      # beta API host. The forced-update floor comes from the beta channel's
+      # own variable, never from the prod one (a permanent free beta is never
+      # forced onto a version by the prod policy), and --channel beta puts the
+      # Android APK on the download page: the beta app id has no store
+      # listing, the sideload APK IS its distribution.
       - name: Generate unsigned metadata (beta channel)
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_CHANNEL == 'beta'
         run: |
@@ -1337,7 +1350,8 @@ jobs:
             --artifact-prefix WarrenVPN-Beta \
             --channel beta \
             --out-dir unsigned \
-            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            ${WARREN_UPDATE_MIN_VERSION_BETA:+--min-version "$WARREN_UPDATE_MIN_VERSION_BETA"}
 
       - name: Sign metadata
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
