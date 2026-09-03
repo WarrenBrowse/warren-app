@@ -452,6 +452,27 @@ internal fun recentEntries(pins: List<ExitPin>, relays: List<WarrenRelaySummary>
         }
     }
 
+/** One recents entry as its row, at its own depth. */
+private fun recentRow(entry: RecentEntry, exitPin: ExitPin): PickerRow =
+    when (entry) {
+        is RecentEntry.Exit ->
+            PickerRow.ExitRow(
+                relay = entry.relay,
+                title = exitTitle(entry.relay),
+                ordinal = null,
+                depth = 0,
+                section = ExitSection.Recents,
+                isPinned = exitPin == ExitPin.Exit(entry.relay.exitId),
+            )
+        is RecentEntry.Scope ->
+            PickerRow.RecentScopeRow(
+                pin = entry.pin,
+                title = entry.title,
+                hasActive = entry.hasActive,
+                isPinned = exitPin == entry.pin,
+            )
+    }
+
 /**
  * The whole exit-hop list, in render order. [byCountry] is the already filtered
  * and sorted catalogue; a non-empty [query] force-expands every branch so a
@@ -471,30 +492,7 @@ internal fun buildPickerRows(
 
     if (recents.isNotEmpty()) {
         add(PickerRow.RecentsHeader)
-        recents.forEach { entry ->
-            when (entry) {
-                is RecentEntry.Exit ->
-                    add(
-                        PickerRow.ExitRow(
-                            relay = entry.relay,
-                            title = exitTitle(entry.relay),
-                            ordinal = null,
-                            depth = 0,
-                            section = ExitSection.Recents,
-                            isPinned = exitPin == ExitPin.Exit(entry.relay.exitId),
-                        )
-                    )
-                is RecentEntry.Scope ->
-                    add(
-                        PickerRow.RecentScopeRow(
-                            pin = entry.pin,
-                            title = entry.title,
-                            hasActive = entry.hasActive,
-                            isPinned = exitPin == entry.pin,
-                        )
-                    )
-            }
-        }
+        recents.forEach { entry -> add(recentRow(entry, exitPin)) }
         add(PickerRow.Gap("gap-recents"))
     }
 
