@@ -176,8 +176,13 @@ build_installer_sidebar "$SVG_SOURCE_PATH" "#1F1F20" \
 build_installer_sidebar "$BETA_SVG_PATH" "#F5ECDA" \
     "$DIST_ASSETS_DIR/windows/installersidebar-beta.bmp"
 
-# GUI notification icon
+# GUI notification icon. Every system notification the app raises on Linux and
+# Windows draws this file, so a non-prod build needs the badged copy too, under
+# the same name in a sibling directory (the rule the menubar tree already
+# follows). 128px is above BADGE_LABEL_MIN_PX, so it keeps the lettering.
 rsvg-convert -o ../assets/images/icon-notification.png -w 128 -h 128 $SVG_SOURCE_PATH
+mkdir -p ../assets/images/beta
+rsvg-convert -o ../assets/images/beta/icon-notification.png -w 128 -h 128 "$BETA_SVG_PATH"
 
 rm -rf "$TMP_DIR"
 

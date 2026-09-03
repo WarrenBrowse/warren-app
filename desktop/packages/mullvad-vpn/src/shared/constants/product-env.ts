@@ -32,6 +32,17 @@ export const productEnvironment: ProductEnvironment = resolveProductEnvironment(
 export const isBetaBuild: boolean =
   (typeof WARREN_PRODUCT_ENV === 'string' ? WARREN_PRODUCT_ENV : 'prod') === 'beta';
 
+// Directory holding the badged copy of an asset tree a non-prod build serves
+// (the menubar icons, the system-notification icon), under file names
+// identical to the prod ones. Staging wears the beta artwork like the app icon
+// does: what matters is being tellable from prod on one machine, and there is
+// no third palette.
+export const BADGED_ENVIRONMENT_DIR = 'beta';
+
+// The path segments a build inserts to reach that copy, empty in prod.
+export const badgedAssetSegments: string[] =
+  productEnvironment === 'prod' ? [] : [BADGED_ENVIRONMENT_DIR];
+
 // Per-environment anchors, a copy of the Rust `warren-product-env` crate's
 // table (the daemon side of the same values). The crate is the reference:
 // its `tests/platform_lockstep.rs` reads this file and fails on drift, and

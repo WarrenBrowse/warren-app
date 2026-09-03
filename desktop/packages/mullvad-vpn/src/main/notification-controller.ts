@@ -2,6 +2,7 @@ import { app, NativeImage, nativeImage, Notification as ElectronNotification } f
 import os from 'os';
 import path from 'path';
 
+import { badgedAssetSegments } from '../shared/constants/product-env';
 import { TunnelState } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import {
@@ -21,6 +22,17 @@ import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
 
 const THROTTLE_DELAY = 500;
+
+// The icon every system notification carries on Linux and Windows. A non-prod
+// build serves the badged copy from a sibling directory under the same file
+// name, the rule the menubar tree already follows (src/main/tray-icon.ts):
+// without it a beta notification puts the production mark on the desktop of a
+// tester who runs both installs.
+export const notificationIconRelativePath = path.join(
+  'assets/images',
+  ...badgedAssetSegments,
+  'icon-notification.png',
+);
 
 export interface Notification {
   specification: SystemNotification;
@@ -83,7 +95,7 @@ export default class NotificationController {
     }
 
     if (usePngIcon) {
-      const imagePath = path.join(import.meta.dirname, 'assets/images/icon-notification.png');
+      const imagePath = path.join(import.meta.dirname, notificationIconRelativePath);
       // `nativeImage` is undefined when running tests
       this.notificationIcon = nativeImage?.createFromPath(imagePath);
     }

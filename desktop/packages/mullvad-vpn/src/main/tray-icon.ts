@@ -1,17 +1,14 @@
 import { nativeImage } from 'electron';
 import path from 'path';
 
-import { productEnvironment } from '../shared/constants/product-env';
+import { badgedAssetSegments } from '../shared/constants/product-env';
 
 // A non-prod build serves the whole menubar tree from a sibling directory whose
 // assets carry the beta pip, under file names identical to the prod ones, so
-// the suffix matrix in tray-icon-controller.ts stays untouched.
-//
-// The test is `productEnvironment !== 'prod'`, not `isBetaBuild`: staging is a
-// non-prod install that has to be tellable from prod on the same machine, and
-// the packaging identity already hands staging the beta app icon (iconSuffix in
-// tasks/distribution.cjs) for that same reason. There is no third artwork.
-const BADGED_ENVIRONMENT_DIR = 'beta';
+// the suffix matrix in tray-icon-controller.ts stays untouched. The directory
+// name and the environment test are shared with every other badged asset tree
+// (`badgedAssetSegments`): staging is a non-prod install that has to be
+// tellable from prod on the same machine, and there is no third artwork.
 
 export class TrayIcon {
   constructor(public fileName?: string) {}
@@ -29,7 +26,7 @@ export class TrayIcon {
   }
 
   public get environmentDirectory(): string | undefined {
-    return productEnvironment === 'prod' ? undefined : BADGED_ENVIRONMENT_DIR;
+    return badgedAssetSegments[0];
   }
 
   public get filePath() {
