@@ -33,7 +33,7 @@ end says what changed, how it was measured and what the numbers do not say.
 | shape | R8 full mode, resource shrinking, `profileable android:shell`, not debuggable (`dumpsys package` flags `HAS_CODE ALLOW_CLEAR_USER_DATA`), Rust `release` profile (`opt-level = "s"`, LTO, data-plane crates at `opt-level = 3`) |
 | sizes | arm64 `libwarren_jni.so` 10,475,688 bytes (18.5 MB in a debug build); `classes.dex` 5,500,852 bytes. The 39.6 MB APK is not representative: an arm64-only cargo build leaves the other three ABIs' debug `.so` files in `rustJniLibs`, and the packager takes them |
 | signing | the dev keystore path works (`apksigner` on the first build: `CN=Warren VPN Dev`); the APK actually installed for the run was re-signed with the debug key so `adb install -r -t -d` updated the logged-in beta app in place instead of wiping its wallet (same applicationId, different certificate refuses the update) |
-| ART state | `dumpsys package dexopt`: `arm64: [status=verify] [reason=install]`, so no ahead-of-time code; the checked-in baseline profile names Mullvad classes only and matches nothing |
+| ART state | `dumpsys package dexopt`: `arm64: [status=verify] [reason=install]`, so no ahead-of-time code; the checked-in baseline profile named Mullvad classes only and matched nothing (regenerated on Warren's flow since: the P3 section) |
 | session | a paid test wallet logged in, forum identity learnt, exit pinned to Amsterdam, multi-hop on, DAITA off, port forwarding on |
 
 Measured 2026-09-03 between 00:15 and 01:05 UTC.
@@ -352,5 +352,8 @@ at construction on the main thread (H7, L11d).
 - **Refresh rate.** 60 Hz only; the 120 Hz budget of the review is untested.
 - **Compose recomposition counts** (S3, S5): Layout Inspector in Android
   Studio, not scriptable here.
-- **The h2 `GOAWAY` stall of S4 run 1** is a network event, reproducible only
-  by chance; it is recorded, not characterised.
+- **The h2 `GOAWAY` stall of S4 run 1** looked like a network event on this
+  run; the P2 re-measurement reproduced it on its first switch and read its
+  cause off the Rust debug log (the S4 section above: the first API request
+  after every TUN transition reused a pooled connection the routes had
+  orphaned). It is deterministic, and `64b0c40522` removes it.
