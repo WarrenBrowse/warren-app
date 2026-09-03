@@ -31,6 +31,20 @@ everywhere is the definition of parity.
 | `forum_outcomes.json` report | `client_rules.rs` (`report_outcome_for_response`, `report_envelope`) | `ReportOutcomeTest` (decodes `envelope`) | `forum-report.spec.ts` (`forumReportResultForResponse`, the `expect` column: kind, topic, trusted URL, logs, identity) | none |
 | `product_env.json` | `warren-product-env/tests/client_rules.rs` (every column, and `ProductEnv::anchors_json()` equals the row), `warren-product-env/tests/platform_lockstep.rs` (`product-env.ts`, `tasks/distribution.cjs`, `android/app/build.gradle.kts` and `ios/Configurations/ProductEnv.xcconfig` read as text and held to the crate, and the iOS `Info.plist` URL scheme held to the xcconfig selector), `warren-forum` `client_rules.rs` (connect host, forum origin) | `ProductEnvBuildConfigTest` (`BuildConfig` of the running flavor against the row, and against the row decoded as the native table `WarrenJni.productAnchorsJson()` returns); `ProductAnchorsJniTest` (instrumented, the real native table against `BuildConfig`) | `product-env.spec.ts` (`product-env.ts`, `tasks/distribution.cjs`) | `WarrenProductAnchorsTests` (the live table `warren_product_anchors()` returns against the row of the compiled environment, and every row through the Swift decoder) |
 
+The exit choice has its vector in the contract sibling rather than here:
+`warren-contract/warren-discovery/tests/fixtures/exit_pick.json` pins
+`pick_exit` (highest weight, ties on the smallest exit id) and `pick_entry`
+(the client's continent first). Its readers in this repo: Rust
+`mullvad-daemon` (`exit_vectors_replay_through_the_one_hop_selection`,
+`entry_vectors_replay_through_the_pair_ranking`, the daemon's own selection
+path) and `warren-jni` (`exit_vectors_replay_through_the_jni_contract`, the
+JSON the `resolveExitPin` export carries); Android JVM
+`JniExitPinResolverTest` (the request and answer bytes, twinned with the Rust
+`the_json_contract_*` tests) and the instrumented `ExitPinJniTest` (the vector
+through the real library, the file riding the test APK as an asset). Desktop
+has no reader of its own: the daemon is its engine. iOS `select_one_hop`
+calls the same `pick_exit`.
+
 The vitest readers run on the Node-only desktop CI machine and must stay free
 of cargo and Electron; the Rust readers run in `warren-checks.yml`; the JVM
 readers in `android-checks.yml`. A change under `fixtures/client-rules/`

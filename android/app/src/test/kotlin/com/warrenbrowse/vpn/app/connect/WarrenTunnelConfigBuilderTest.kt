@@ -3,8 +3,10 @@ package com.warrenbrowse.vpn.app.connect
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.ExitPin
+import com.warrenbrowse.vpn.lib.repository.ExitPinResolver
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
+import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import io.mockk.every
 import io.mockk.mockk
 import java.util.concurrent.atomic.AtomicInteger
@@ -95,6 +97,34 @@ class WarrenTunnelConfigBuilderTest {
         return catalog
     }
 
+    /**
+     * The exit choice is the Rust rule behind the JNI (`warren-jni/src/exit_pin.rs`,
+     * tested there); the builder only has to dial what it names and fall back when
+     * it names nothing, so the tests script the answer and record the question.
+     */
+    private class ScriptedExitPins(
+        private val resolveAnswer: String? = null,
+        private val failoverAnswer: String? = null,
+    ) : ExitPinResolver {
+        var resolveAsked: Pair<ExitPin, List<WarrenRelaySummary>>? = null
+        var failoverAsked: List<Any?>? = null
+
+        override fun resolve(pin: ExitPin, relays: List<WarrenRelaySummary>): WarrenRelaySummary? {
+            resolveAsked = pin to relays
+            return relays.firstOrNull { it.exitId == resolveAnswer }
+        }
+
+        override fun failover(
+            pin: ExitPin,
+            exitCountry: String?,
+            relays: List<WarrenRelaySummary>,
+            failedExitPubkeyHex: String,
+        ): WarrenRelaySummary? {
+            failoverAsked = listOf(pin, exitCountry, relays, failedExitPubkeyHex)
+            return relays.firstOrNull { it.exitId == failoverAnswer }
+        }
+    }
+
     // Construct the builder with a stub multi-hop directory fetch so the unit
     // tests never touch the native WarrenJni (which would fail to load its lib
     // in the JVM). The stub is non-empty so build() does not short-circuit.
@@ -102,7 +132,8 @@ class WarrenTunnelConfigBuilderTest {
         repo: WarrenLocalSettingsRepository,
         catalog: RelayCatalog,
         productFlags: WarrenProductFlags = WarrenProductFlags(isBeta = false),
-    ) = WarrenTunnelConfigBuilder(repo, productFlags, catalog) { stubDirectory }
+        exitPins: ExitPinResolver = ScriptedExitPins(),
+    ) = WarrenTunnelConfigBuilder(repo, productFlags, catalog, exitPins) { stubDirectory }
 
     private val stubDirectory = "stub-multihop-directory"
 
@@ -174,81 +205,64 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `selectedExitId picks the matching relay when present`() {
+    fun `the exit the resolver names for the pin is dialled`() {
         val otherRelay = sampleRelay.copy(
             exitId = "ffffffffffffffffffffffffffffffff",
             exitPubkeyHex = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
             endpoint = "warren-exit-2.warren.brown:443",
         )
+        val exitPins = ScriptedExitPins(resolveAnswer = otherRelay.exitId)
         val builder = cfgBuilder(
-            mockRepo(selectedExitId = otherRelay.exitId),
+            mockRepo(exitPin = ExitPin.Exit(otherRelay.exitId)),
             mockCatalog(listOf(sampleRelay, otherRelay)),
+            exitPins = exitPins,
         )
         val config = builder.build(pubkey)!!
         assertEquals(otherRelay.exitPubkeyHex, config.exitPubkeyHex)
         assertEquals(otherRelay.endpoint, config.exitEndpoint)
+        assertEquals(otherRelay.exitId, config.exitId)
     }
 
     @Test
-    fun `selectedExitId falls back when target is inactive`() {
-        val inactive = sampleRelay.copy(exitId = "deadbeefdeadbeefdeadbeefdeadbeef", active = false)
-        val builder = cfgBuilder(
-            mockRepo(selectedExitId = inactive.exitId),
-            mockCatalog(listOf(sampleRelay, inactive)),
-        )
-        // Inactive selection falls back to the first active relay (sample).
-        val config = builder.build(pubkey)!!
-        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
-    }
-
-    @Test
-    fun `a country pin resolves to an active exit in that country`() {
+    fun `the resolver is asked with the pin and the snapshot the dial reads`() {
         val fr = sampleRelay.copy(
             exitId = "ffffffffffffffffffffffffffffffff",
             exitPubkeyHex = "f".repeat(64),
-            endpoint = "warren-exit-fr.warren.brown:443",
             country = "FR",
             city = "Paris",
         )
+        val exitPins = ScriptedExitPins(resolveAnswer = fr.exitId)
         val builder = cfgBuilder(
-            mockRepo(exitPin = ExitPin.Country("FR")),
+            mockRepo(exitPin = ExitPin.City("FR", "Paris")),
             mockCatalog(listOf(sampleRelay, fr)),
+            exitPins = exitPins,
         )
         val config = builder.build(pubkey)!!
         assertEquals(fr.exitPubkeyHex, config.exitPubkeyHex)
+        assertEquals(
+            ExitPin.City("FR", "Paris") to listOf(sampleRelay.toSummary(), fr.toSummary()),
+            exitPins.resolveAsked,
+        )
     }
 
     @Test
-    fun `a city pin resolves to an active exit in that city`() {
-        val berlin = sampleRelay.copy(
-            exitId = "ffffffffffffffffffffffffffffffff",
-            exitPubkeyHex = "f".repeat(64),
-            endpoint = "warren-exit-ber.warren.brown:443",
-            country = "DE",
-            city = "Berlin",
-        )
+    fun `a pin the resolver cannot resolve falls back to the first active relay`() {
+        // An inactive or unknown target, an empty scope: Rust answers nothing and
+        // the builder's own chain (preferred country, then first active) runs.
+        val inactive = sampleRelay.copy(exitId = "deadbeefdeadbeefdeadbeefdeadbeef", active = false)
         val builder = cfgBuilder(
-            mockRepo(exitPin = ExitPin.City("DE", "Berlin")),
-            mockCatalog(listOf(sampleRelay, berlin)),
-        )
-        val config = builder.build(pubkey)!!
-        assertEquals(berlin.exitPubkeyHex, config.exitPubkeyHex)
-    }
-
-    @Test
-    fun `a country pin with nothing active falls back to the first active relay`() {
-        val downFr = sampleRelay.copy(
-            exitId = "ffffffffffffffffffffffffffffffff",
-            exitPubkeyHex = "f".repeat(64),
-            country = "FR",
-            active = false,
-        )
-        val builder = cfgBuilder(
-            mockRepo(exitPin = ExitPin.Country("FR")),
-            mockCatalog(listOf(sampleRelay, downFr)),
+            mockRepo(exitPin = ExitPin.Exit(inactive.exitId)),
+            mockCatalog(listOf(sampleRelay, inactive)),
         )
         val config = builder.build(pubkey)!!
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `an automatic pin is still put to the resolver so the rule stays in one place`() {
+        val exitPins = ScriptedExitPins()
+        cfgBuilder(mockRepo(), mockCatalog(), exitPins = exitPins).build(pubkey)!!
+        assertEquals(ExitPin.Automatic, exitPins.resolveAsked?.first)
     }
 
     @Test
@@ -443,24 +457,32 @@ class WarrenTunnelConfigBuilderTest {
         )
 
     @Test
-    fun `a failover moves the session to another exit of the same country first`() {
+    fun `a failover dials the alternative the resolver names`() {
+        val exitPins = ScriptedExitPins(failoverAnswer = secondGermanRelay.exitId)
         val builder =
-            cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, secondGermanRelay, frenchRelay)))
+            cfgBuilder(
+                mockRepo(exitCountry = "DE"),
+                mockCatalog(listOf(sampleRelay, secondGermanRelay, frenchRelay)),
+                exitPins = exitPins,
+            )
         val config = builder.buildFailover(previous)!!
         assertEquals(secondGermanRelay.exitPubkeyHex, config.exitPubkeyHex)
         assertEquals(secondGermanRelay.endpoint, config.exitEndpoint)
         assertEquals(secondGermanRelay.exitId, config.exitId)
+        assertEquals(
+            listOf(
+                ExitPin.Automatic,
+                "DE",
+                listOf(sampleRelay, secondGermanRelay, frenchRelay).map { it.toSummary() },
+                previous.exitPubkeyHex,
+            ),
+            exitPins.failoverAsked,
+            "the pin, the preferred country, the snapshot and the failed key reach the rule",
+        )
     }
 
     @Test
-    fun `a failover leaves the country when it has no other exit`() {
-        val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
-        val config = builder.buildFailover(previous)!!
-        assertEquals(frenchRelay.exitPubkeyHex, config.exitPubkeyHex)
-    }
-
-    @Test
-    fun `no failover when the pin allows only the exit that dropped`() {
+    fun `no failover when the resolver names no alternative`() {
         val builder =
             cfgBuilder(
                 mockRepo(selectedExitId = sampleRelay.exitId),
@@ -470,19 +492,17 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `a failover from an exit the catalogue no longer knows takes the normal pick`() {
-        val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
-        val config = builder.buildFailover(previous.copy(exitPubkeyHex = "ff".repeat(32)))!!
-        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
-    }
-
-    @Test
     fun `a failover keeps everything else the session was dialled with`() {
         // The directory travels with the session: run_multi_hop_session
         // verifies its signature and expiry at dial, so a stale one fails the
         // dial the way the same-config redial does, and a refetch would only
         // stall the retry behind the blackhole.
-        val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
+        val builder =
+            cfgBuilder(
+                mockRepo(),
+                mockCatalog(listOf(sampleRelay, frenchRelay)),
+                exitPins = ScriptedExitPins(failoverAnswer = frenchRelay.exitId),
+            )
         val config = builder.buildFailover(previous)!!
         assertEquals(previous.multihopDirectoryRaw, config.multihopDirectoryRaw)
         assertEquals(previous.daita, config.daita)
@@ -506,8 +526,14 @@ class WarrenTunnelConfigBuilderTest {
         runBlocking { catalog.refresh() }
         clock += 2.hours
         val directoryFetches = AtomicInteger()
+        val exitPins = ScriptedExitPins(failoverAnswer = frenchRelay.exitId)
         val builder =
-            WarrenTunnelConfigBuilder(mockRepo(), WarrenProductFlags(isBeta = false), catalog) {
+            WarrenTunnelConfigBuilder(
+                mockRepo(),
+                WarrenProductFlags(isBeta = false),
+                catalog,
+                exitPins,
+            ) {
                 directoryFetches.incrementAndGet()
                 stubDirectory
             }
@@ -517,6 +543,11 @@ class WarrenTunnelConfigBuilderTest {
         assertEquals(frenchRelay.exitPubkeyHex, config?.exitPubkeyHex)
         assertEquals(1, relayFetches.get(), "the stale snapshot is used, never refetched")
         assertEquals(0, directoryFetches.get(), "the directory is the session's own")
+        assertEquals(
+            listOf(sampleRelay, frenchRelay).map { it.toSummary() },
+            exitPins.failoverAsked?.get(2),
+            "the rule sees the snapshot as it was fetched two hours ago",
+        )
     }
 
     private fun relaysJson(relays: List<RelayInfo>): String =

@@ -116,6 +116,12 @@ mod status_watch;
 #[cfg(any(test, target_os = "android"))]
 mod path_metrics;
 
+// The exit a location pin (or a drop retry) dials, chosen over the verified
+// relay list with the shared `warren_discovery_core::pick_exit` rule;
+// host-tested on the JSON contract the JNI export carries.
+#[cfg(any(test, target_os = "android"))]
+mod exit_pin;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

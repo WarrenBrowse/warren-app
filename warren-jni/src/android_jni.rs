@@ -933,6 +933,52 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDire
     }
 }
 
+/// The exit a location pin dials, chosen over the relay list Kotlin hands
+/// back in the `listRelays` schema, with the shared
+/// `warren_discovery_core::pick_exit` rule (`crate::exit_pin`). Returns
+/// `{"index":n}` or `{"index":null}`. Pure: needs neither the logger nor
+/// the runtime, and logs no value of either input.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_resolveExitPin<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    pin_json: JString<'local>,
+    relays_json: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let pin = String::from_java(&jnix_env, pin_json);
+    let relays = String::from_java(&jnix_env, relays_json);
+    let json = crate::exit_pin::resolve_exit_pin_json(&pin, &relays);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// The exit a drop retry moves to (`crate::exit_pin::resolve_failover_exit`):
+/// same JSON shapes and answer as `resolveExitPin`; an empty `exit_country`
+/// means none preferred. Pure.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_resolveFailoverExit<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    pin_json: JString<'local>,
+    exit_country: JString<'local>,
+    relays_json: JString<'local>,
+    failed_exit_pubkey_hex: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let pin = String::from_java(&jnix_env, pin_json);
+    let exit_country = String::from_java(&jnix_env, exit_country);
+    let relays = String::from_java(&jnix_env, relays_json);
+    let failed = String::from_java(&jnix_env, failed_exit_pubkey_hex);
+    let json = crate::exit_pin::resolve_failover_exit_json(&pin, &exit_country, &relays, &failed);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// The one reqwest stack every API call that leaves on an ordinary socket
 /// rides (the unsigned client, the signed subscription read, the network
 /// descriptor): one connection pool and one root store per process instead

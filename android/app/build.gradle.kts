@@ -206,6 +206,14 @@ android {
                     }
                     .map { it.absolutePath }
             kotlin.directories.addAll(instrumentedTests)
+            // The shared exit-pick golden vector of the warren-contract sibling
+            // (the path-dep checkout next to this repo), replayed through the
+            // real native library by `ExitPinJniTest`. Test APK only.
+            assets.directories.add(
+                rootProject
+                    .file("../../warren-contract/warren-discovery/tests/fixtures")
+                    .absolutePath
+            )
         }
     }
 

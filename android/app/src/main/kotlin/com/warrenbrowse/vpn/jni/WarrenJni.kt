@@ -298,6 +298,32 @@ object WarrenJni {
     external fun listRelays(): String
 
     /**
+     * The exit a location pin dials, chosen in Rust over the relay list. `pinJson` is the
+     * `ExitPin` as `{"kind":"automatic"|"country"|"city"|"exit", ...}` and `relaysJson` the
+     * [listRelays] array (the same schema, re-encoded from the snapshot the dial reads). Returns
+     * `{"index":<position in relaysJson>}` or `{"index":null}` when the pin names nothing usable
+     * (an empty scope, an inactive exit, an automatic pin, or an input Rust could not read).
+     *
+     * The choice is the shared `warren_discovery_core::pick_exit` rule the desktop daemon dials
+     * by (highest weight, ties broken by the smallest exit id), so the same list resolves to the
+     * same node on every platform. Pure: needs neither [initLogger] nor the runtime.
+     */
+    external fun resolveExitPin(pinJson: String, relaysJson: String): String
+
+    /**
+     * The exit a drop retry moves to, chosen in Rust: an active alternative inside `pinJson`'s
+     * scope (an automatic pin narrowed to `exitCountry` when it is not empty), in the failed
+     * exit's own country first, then anywhere the pin allows, never `failedExitPubkeyHex` itself.
+     * Same JSON shapes and answer as [resolveExitPin]; `{"index":null}` when nothing fits. Pure.
+     */
+    external fun resolveFailoverExit(
+        pinJson: String,
+        exitCountry: String,
+        relaysJson: String,
+        failedExitPubkeyHex: String,
+    ): String
+
+    /**
      * Fetch the raw signed multi-hop directory (`GET /v1/multihop/directory`) as its verbatim JSON
      * string, or an empty string on any network failure.
      *

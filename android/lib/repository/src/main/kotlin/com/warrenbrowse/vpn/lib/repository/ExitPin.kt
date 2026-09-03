@@ -31,72 +31,38 @@ sealed interface ExitPin {
 data class ExitPinLabel(val exitId: String, val label: String)
 
 /**
- * Resolve [pin] to the one concrete exit the engine will dial, or `null` when
- * the pin names nothing usable (an empty scope, an inactive exit, or
- * [ExitPin.Automatic], which pins nothing on purpose so the caller's own
- * fallback chain still runs).
+ * Resolves a pin, or a drop, to the one concrete exit the engine dials.
  *
- * Candidates are the ACTIVE exits inside the pinned scope, the same rule the
- * shuffle button applies. The pick among them is the heaviest, tie-broken by
- * exit id, so re-dialling the same country lands on the same exit instead of
- * hopping between nodes on every reconnect.
+ * The rule lives in Rust (`warren-jni/src/exit_pin.rs`, over the shared
+ * `warren_discovery_core::pick_exit`): the heaviest active exit inside the
+ * pinned scope, ties broken by the smallest exit id, the same choice the
+ * desktop daemon makes from the same list. Kotlin only carries the pin and
+ * the relay snapshot across the JNI and reads the chosen position back, so
+ * no second copy of the rule exists to drift. The production binding is
+ * `app/connect/JniExitPinResolver`; JVM tests substitute a scripted one.
  */
-fun resolveExitPin(pin: ExitPin, relays: List<WarrenRelaySummary>): WarrenRelaySummary? {
-    val candidates = when (pin) {
-        ExitPin.Automatic -> return null
-        is ExitPin.Exit -> relays.filter { it.active && it.exitId == pin.exitId }
-        is ExitPin.City ->
-            relays.filter {
-                it.active &&
-                    it.country.equals(pin.country, ignoreCase = true) &&
-                    it.city.equals(pin.city, ignoreCase = true)
-            }
-        is ExitPin.Country ->
-            relays.filter { it.active && it.country.equals(pin.country, ignoreCase = true) }
-    }
-    return heaviest(candidates)
+interface ExitPinResolver {
+    /**
+     * The exit [pin] resolves to among [relays], or `null` when the pin names
+     * nothing usable (an empty scope, an inactive exit, or [ExitPin.Automatic],
+     * which pins nothing on purpose so the caller's own fallback chain runs).
+     */
+    fun resolve(pin: ExitPin, relays: List<WarrenRelaySummary>): WarrenRelaySummary?
+
+    /**
+     * The exit an automatic retry dials once [failedExitPubkeyHex] dropped, or
+     * `null` when [pin] leaves no alternative and the same exit is retried: an
+     * active alternative inside the pinned scope, in the failed exit's own
+     * country first, then anywhere the pin allows, never the failed exit itself.
+     * An automatic pin is scoped by [exitCountry] when one is preferred.
+     */
+    fun failover(
+        pin: ExitPin,
+        exitCountry: String?,
+        relays: List<WarrenRelaySummary>,
+        failedExitPubkeyHex: String,
+    ): WarrenRelaySummary?
 }
-
-/**
- * The exit an automatic retry dials once [failedExitPubkeyHex] dropped, or
- * `null` when the pin leaves no alternative and the same exit is retried.
- *
- * The desktop selector's failover policy
- * (`WarrenRelaySelector::select_failover_alternative`): an active alternative
- * inside the pinned scope, in the failed exit's own country first, then in any
- * country the scope allows, and never the failed exit itself. An automatic pin
- * is scoped by [exitCountry] when one is preferred. The pick among the
- * candidates is the [resolveExitPin] rule, so the same drop lands on the same
- * alternative every time instead of hopping between spares.
- */
-fun resolveFailoverExit(
-    pin: ExitPin,
-    exitCountry: String?,
-    relays: List<WarrenRelaySummary>,
-    failedExitPubkeyHex: String,
-): WarrenRelaySummary? {
-    val inScope =
-        relays.filter { it.active && it.exitPubkeyHex != failedExitPubkeyHex && pin.admits(it, exitCountry) }
-    val failedCountry = relays.firstOrNull { it.exitPubkeyHex == failedExitPubkeyHex }?.country
-    val sameCountry =
-        if (failedCountry == null) emptyList()
-        else inScope.filter { it.country.equals(failedCountry, ignoreCase = true) }
-    return heaviest(sameCountry.ifEmpty { inScope })
-}
-
-private fun ExitPin.admits(relay: WarrenRelaySummary, exitCountry: String?): Boolean =
-    when (this) {
-        ExitPin.Automatic ->
-            exitCountry.isNullOrBlank() || relay.country.equals(exitCountry, ignoreCase = true)
-        is ExitPin.Exit -> relay.exitId == exitId
-        is ExitPin.City ->
-            relay.country.equals(country, ignoreCase = true) &&
-                relay.city.equals(city, ignoreCase = true)
-        is ExitPin.Country -> relay.country.equals(country, ignoreCase = true)
-    }
-
-private fun heaviest(candidates: List<WarrenRelaySummary>): WarrenRelaySummary? =
-    candidates.maxWithOrNull(compareBy({ it.weight }, { it.exitId }))
 
 /** True when [country] is exactly what is pinned, with no deeper selection. */
 fun ExitPin.pinsCountry(country: String): Boolean =
