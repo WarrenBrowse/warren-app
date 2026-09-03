@@ -237,39 +237,13 @@ class AndroidForumPlatformReads(private val context: Context) : ForumPlatformRea
     override fun vpnServicePrepared(): Boolean = VpnService.prepare(context) == null
 
     override fun activeNetwork(): NetworkFacts? {
-        val network = cm.activeNetwork ?: return null
-        val caps = cm.getNetworkCapabilities(network) ?: return null
+        val network = cm.activeNetwork
+        val caps = network?.let(cm::getNetworkCapabilities) ?: return null
         val props = cm.getLinkProperties(network)
-        val transports =
-            buildSet {
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) add(NetworkTransport.WIFI)
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-                    add(NetworkTransport.CELLULAR)
-                }
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
-                    add(NetworkTransport.ETHERNET)
-                }
-                if (caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) add(NetworkTransport.VPN)
-            }
-        val flags =
-            buildSet {
-                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)) {
-                    add(NetworkFlag.VALIDATED)
-                }
-                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL)) {
-                    add(NetworkFlag.CAPTIVE)
-                }
-                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED)) {
-                    add(NetworkFlag.UNMETERED)
-                }
-                if (caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)) {
-                    add(NetworkFlag.INTERNET)
-                }
-            }
         val addresses = props?.linkAddresses.orEmpty().map { it.address }
         return NetworkFacts(
-            transports = transports,
-            flags = flags,
+            transports = TRANSPORTS.filter { caps.hasTransport(it.first) }.mapTo(linkedSetOf()) { it.second },
+            flags = FLAGS.filter { caps.hasCapability(it.first) }.mapTo(linkedSetOf()) { it.second },
             mtu = props?.mtu ?: 0,
             linkAddresses =
                 addresses.filter { it is Inet4Address || it is Inet6Address }.map { it.hostAddress ?: "" },
@@ -282,4 +256,22 @@ class AndroidForumPlatformReads(private val context: Context) : ForumPlatformRea
 
     private fun viewIntent(link: String): Intent =
         Intent(Intent.ACTION_VIEW, Uri.parse(link)).addCategory(Intent.CATEGORY_BROWSABLE)
+
+    private companion object {
+        // In the order the header words them, wifi first.
+        val TRANSPORTS =
+            listOf(
+                NetworkCapabilities.TRANSPORT_WIFI to NetworkTransport.WIFI,
+                NetworkCapabilities.TRANSPORT_CELLULAR to NetworkTransport.CELLULAR,
+                NetworkCapabilities.TRANSPORT_ETHERNET to NetworkTransport.ETHERNET,
+                NetworkCapabilities.TRANSPORT_VPN to NetworkTransport.VPN,
+            )
+        val FLAGS =
+            listOf(
+                NetworkCapabilities.NET_CAPABILITY_VALIDATED to NetworkFlag.VALIDATED,
+                NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL to NetworkFlag.CAPTIVE,
+                NetworkCapabilities.NET_CAPABILITY_NOT_METERED to NetworkFlag.UNMETERED,
+                NetworkCapabilities.NET_CAPABILITY_INTERNET to NetworkFlag.INTERNET,
+            )
+    }
 }

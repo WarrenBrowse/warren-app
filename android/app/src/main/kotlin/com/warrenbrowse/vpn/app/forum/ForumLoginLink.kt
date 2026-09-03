@@ -52,29 +52,40 @@ fun classifyForumLoginLink(
     rawUrl: String?,
     expectedScheme: String = com.warrenbrowse.vpn.BuildConfig.DEEP_LINK_SCHEME,
 ): ForumLinkVerdict {
-    if (rawUrl == null) return ForumLinkVerdict.Rejected("no-data")
-    val uri = try {
-        URI(rawUrl)
-    } catch (e: URISyntaxException) {
-        return ForumLinkVerdict.Rejected("not-a-uri")
-    }
-    if (uri.scheme != expectedScheme) {
+    val uri = rawUrl?.let(::parseUri)
+    // `warren://forum-login?..` parses with authority = "forum-login".
+    val action = uri?.authority ?: uri?.path?.trimStart('/')
+    return when {
+        rawUrl == null -> ForumLinkVerdict.Rejected("no-data")
+        uri == null -> ForumLinkVerdict.Rejected("not-a-uri")
         // The received scheme is a product-environment name, not identity
         // material: it is the one fact that tells a prod/beta mismatch apart.
-        return ForumLinkVerdict.Rejected("wrong-scheme:${uri.scheme ?: "none"}")
+        uri.scheme != expectedScheme -> ForumLinkVerdict.Rejected("wrong-scheme:${uri.scheme ?: "none"}")
+        action != "forum-login" -> ForumLinkVerdict.Rejected("wrong-action")
+        else -> classifyQuery(parseQuery(uri.rawQuery))
     }
-    // `warren://forum-login?..` parses with authority = "forum-login".
-    val action = uri.authority ?: uri.path?.trimStart('/')
-    if (action != "forum-login") return ForumLinkVerdict.Rejected("wrong-action")
-    val params = parseQuery(uri.rawQuery)
-    val sid = params["sid"] ?: return ForumLinkVerdict.Rejected("missing-sid")
-    val host = params["host"] ?: return ForumLinkVerdict.Rejected("missing-host")
-    if (!SID_REGEX.matches(sid)) return ForumLinkVerdict.Rejected("bad-sid-shape")
-    if (host != ALLOWED_CONNECT_HOST) return ForumLinkVerdict.Rejected("host-not-allowlisted")
-    // The provider sets `xd=1` on the QR link only. Anything else, an older
-    // provider included, is the same-device button and gets the ordinary
-    // prompt rather than a warning nobody can act on.
-    return ForumLinkVerdict.Accepted(ForumLoginLink(sid, host, crossDevice = params["xd"] == "1"))
+}
+
+private fun parseUri(rawUrl: String): URI? =
+    try {
+        URI(rawUrl)
+    } catch (e: URISyntaxException) {
+        null
+    }
+
+private fun classifyQuery(params: Map<String, String>): ForumLinkVerdict {
+    val sid = params["sid"]
+    val host = params["host"]
+    return when {
+        sid == null -> ForumLinkVerdict.Rejected("missing-sid")
+        host == null -> ForumLinkVerdict.Rejected("missing-host")
+        !SID_REGEX.matches(sid) -> ForumLinkVerdict.Rejected("bad-sid-shape")
+        host != ALLOWED_CONNECT_HOST -> ForumLinkVerdict.Rejected("host-not-allowlisted")
+        // The provider sets `xd=1` on the QR link only. Anything else, an older
+        // provider included, is the same-device button and gets the ordinary
+        // prompt rather than a warning nobody can act on.
+        else -> ForumLinkVerdict.Accepted(ForumLoginLink(sid, host, crossDevice = params["xd"] == "1"))
+    }
 }
 
 /**

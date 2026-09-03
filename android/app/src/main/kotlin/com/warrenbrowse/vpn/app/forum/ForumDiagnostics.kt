@@ -21,17 +21,38 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
         walletState: String,
         lastLoginClass: String?,
     ): Map<String, String> {
-        val facts = linkedMapOf<String, String>()
+        val facts = Facts()
+        facts.putApp()
+        facts.putClock()
+        facts.putRouting(lastLoginClass)
+        facts.putRestrictions()
+        facts.putTunnel(tunnelState)
+        facts.put("wallet") { walletState }
+        return facts.values
+    }
+
+    /** The header under construction, in the order the keys are pinned. */
+    private class Facts {
+        val values = linkedMapOf<String, String>()
+
+        // Every platform read is a different system service with its own failure
+        // classes (SecurityException on a ROM without the permission, a null
+        // service, a half-initialised one throwing IllegalStateException). Any
+        // of them is one unreadable fact and never a lost report, so the catch
+        // is deliberately total.
+        @Suppress("TooGenericExceptionCaught")
         fun put(key: String, read: () -> String?) {
-            facts[key] =
+            values[key] =
                 try {
                     read() ?: NONE
                 } catch (e: Exception) {
                     "unreadable:${e.javaClass.simpleName}"
                 }
         }
+    }
 
-        // Build and identity of the app.
+    /** Build and identity of the app, then the device, ROM and Google services it runs on. */
+    private fun Facts.putApp() {
         put("report-schema") { "android/1" }
         put("warren-product-env") { BuildConfig.FLAVOR }
         put("android-application-id") { BuildConfig.APPLICATION_ID }
@@ -40,8 +61,6 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
         }
         put("deep-link-scheme") { BuildConfig.DEEP_LINK_SCHEME }
         put("installer-package") { reads.installerPackage() ?: "unknown" }
-
-        // Device, ROM and Google services.
         put("android-fingerprint") {
             val build = reads.build()
             "${build.fingerprint} display=${build.display} patch=${build.securityPatch}"
@@ -51,8 +70,9 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
         put("webview-package") {
             reads.webViewPackage()?.let { "${it.packageName} ${it.versionName}" }
         }
+    }
 
-        // Clock.
+    private fun Facts.putClock() {
         put("time-now-utc") { reads.now().toString() }
         put("time-zone") {
             val tz = reads.timeZone()
@@ -69,14 +89,18 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
                 " process_age=${(elapsed - reads.processStartElapsedMs()) / MS_PER_SECOND}s"
         }
         put("locale") { reads.locale().toLanguageTag() }
+    }
 
-        // Deep-link routing.
+    /** Deep-link routing. */
+    private fun Facts.putRouting(lastLoginClass: String?) {
         put("deep-link-handlers") { deepLinkHandlers() }
         put("deep-link-resolved") { deepLinkResolved() }
         put("default-browser") { defaultBrowser() }
         put("last-forum-login") { lastLoginClass ?: NONE }
+    }
 
-        // Background and power restrictions.
+    /** Background and power restrictions. */
+    private fun Facts.putRestrictions() {
         put("battery-optimisation") {
             val power = reads.power()
             "ignoring=${power.ignoringBatteryOptimisations}" +
@@ -95,8 +119,10 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
                 else -> "unknown"
             }
         }
+    }
 
-        // VPN and tunnel.
+    /** VPN, tunnel and the network under them. */
+    private fun Facts.putTunnel(tunnelState: String) {
         put("tunnel-state") { tunnelState }
         put("vpn-service-prepared") { reads.vpnServicePrepared().toString() }
         put("always-on") {
@@ -114,23 +140,10 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
             val activeIsVpn = reads.activeNetwork()?.transports?.contains(NetworkTransport.VPN) == true
             "active_is_vpn=$activeIsVpn"
         }
-
-        // Network.
         put("network") { activeNetwork() }
         put("private-dns") { privateDns() }
         put("airplane-mode") { reads.globalSettingInt(Settings.Global.AIRPLANE_MODE_ON).settingWord() }
-
-        // Wallet.
-        put("wallet") { walletState }
-        return facts
     }
-
-    private fun Int.settingWord(): String =
-        when (this) {
-            1 -> "1"
-            0 -> "0"
-            else -> "unreadable"
-        }
 
     private fun romVerdict(): String {
         val build = reads.build()
@@ -226,3 +239,11 @@ class ForumDiagnostics(private val reads: ForumPlatformReads) : ForumFacts {
             "${BuildConfig.DEEP_LINK_SCHEME}://forum-login?sid=$PROBE_SID&host=connect.warrenbrowse.com"
     }
 }
+
+/** A boolean system setting as the header words it; anything else is a read that failed. */
+private fun Int.settingWord(): String =
+    when (this) {
+        1 -> "1"
+        0 -> "0"
+        else -> "unreadable"
+    }

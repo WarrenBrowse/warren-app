@@ -20,6 +20,12 @@ const val REPORT_MIN_DESCRIPTION_CHARS = 20
 /** Longest description the broker accepts. */
 const val REPORT_MAX_DESCRIPTION_CHARS = 4_000
 
+/**
+ * How far past the cap the fields still take keys: the counter then shows the
+ * overrun to trim instead of the field silently refusing to type.
+ */
+private const val REPORT_OVERRUN_CHARS = 200
+
 /** What the report screen shows. */
 data class ReportProblemUiState(
     val area: ReportArea? = null,
@@ -36,6 +42,19 @@ data class ReportProblemUiState(
 ) {
     val descriptionChars: Int
         get() = whatHappened.trim().length
+
+    /** The form as the broker takes it, or null while [canSend] is false. */
+    fun formIfSendable(): ReportForm? =
+        if (canSend && area != null && frequency != null) {
+            ReportForm(
+                area = area,
+                frequency = frequency,
+                whatHappened = whatHappened.trim(),
+                steps = steps.trim().ifEmpty { null },
+            )
+        } else {
+            null
+        }
 
     val canSend: Boolean
         get() =
@@ -57,17 +76,23 @@ class ReportProblemViewModel(private val reporter: WarrenSupportReporter) : View
         _state.update { it.copy(frequency = frequency, outcome = null) }
 
     fun setWhatHappened(text: String) =
-        _state.update { it.copy(whatHappened = text.take(REPORT_MAX_DESCRIPTION_CHARS + 200), outcome = null) }
+        _state.update {
+            it.copy(whatHappened = text.take(REPORT_MAX_DESCRIPTION_CHARS + REPORT_OVERRUN_CHARS), outcome = null)
+        }
 
     fun setSteps(text: String) =
-        _state.update { it.copy(steps = text.take(REPORT_MAX_DESCRIPTION_CHARS + 200), outcome = null) }
+        _state.update {
+            it.copy(steps = text.take(REPORT_MAX_DESCRIPTION_CHARS + REPORT_OVERRUN_CHARS), outcome = null)
+        }
 
     fun setIncludeLogs(include: Boolean) {
         val collected = _state.value.collected
         if (!include && collected != null) {
             reporter.discard(collected)
         }
-        _state.update { it.copy(includeLogs = include, collected = if (include) it.collected else null, outcome = null) }
+        _state.update {
+            it.copy(includeLogs = include, collected = if (include) it.collected else null, outcome = null)
+        }
     }
 
     /**
@@ -95,22 +120,19 @@ class ReportProblemViewModel(private val reporter: WarrenSupportReporter) : View
 
     fun send() {
         val s = _state.value
-        if (!s.canSend) return
-        val form =
-            ReportForm(
-                area = s.area ?: return,
-                frequency = s.frequency ?: return,
-                whatHappened = s.whatHappened.trim(),
-                steps = s.steps.trim().ifEmpty { null },
-            )
+        val form = s.formIfSendable() ?: return
         // Before anything is collected: a tunnel between states cannot reach
         // the broker, and the user is told so with the form left intact.
         val preflight = reporter.preflight()
         if (preflight is ForumPreflight.Defer) {
             _state.update { it.copy(outcome = ReportSubmitOutcome.Deferred(preflight.tunnelClass)) }
-            return
+        } else {
+            _state.update { it.copy(sending = true, outcome = null) }
+            sendCollected(s, form)
         }
-        _state.update { it.copy(sending = true, outcome = null) }
+    }
+
+    private fun sendCollected(s: ReportProblemUiState, form: ReportForm) {
         viewModelScope.launch {
             // A send with logs always collects afresh: the report should describe
             // the moment of the send, not the moment the screen was opened, and

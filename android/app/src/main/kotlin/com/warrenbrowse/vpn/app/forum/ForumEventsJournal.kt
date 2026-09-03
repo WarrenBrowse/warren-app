@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.app.forum
 
 import co.touchlab.kermit.Logger
 import java.io.File
+import java.io.IOException
 import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicLong
@@ -9,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -162,7 +164,7 @@ class ForumEventsJournal(private val logDir: File, private val scope: CoroutineS
                 val file = File(logDir, FILE_NAME)
                 if (file.length() > MAX_BYTES) truncateHead(file)
                 file.appendText(line + "\n")
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Logger.w(throwable = e) { "forum events journal write failed" }
             }
         }
@@ -180,7 +182,7 @@ class ForumEventsJournal(private val logDir: File, private val scope: CoroutineS
             if (!file.isFile) return@withContext null
             try {
                 file.useLines { lines -> lines.mapNotNull { classOf(it, event) }.lastOrNull() }
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Logger.w(throwable = e) { "forum events journal read failed" }
                 null
             }
@@ -226,7 +228,11 @@ class ForumEventsJournal(private val logDir: File, private val scope: CoroutineS
                 } else {
                     null
                 }
-            } catch (e: Exception) {
+            } catch (e: SerializationException) {
+                null
+            } catch (e: IllegalArgumentException) {
+                // A line whose fields are not the primitives a journal line
+                // carries is as skipped as one that does not parse.
                 null
             }
     }

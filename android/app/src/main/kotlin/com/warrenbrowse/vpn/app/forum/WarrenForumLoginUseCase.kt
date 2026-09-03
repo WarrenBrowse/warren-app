@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.int
@@ -84,28 +85,41 @@ class WarrenForumLoginUseCase(
     // prompt being dismissed (a composition scope would cancel it mid-flight).
     private val cancelScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
-    suspend fun signIn(link: ForumLoginLink): WarrenForumLoginOutcome {
+    suspend fun signIn(link: ForumLoginLink): WarrenForumLoginOutcome =
+        refusedBeforeSigning() ?: signAndPost(link)
+
+    /** The outcome that ends a sign-in before the mnemonic is read, or null to go on. */
+    private fun refusedBeforeSigning(): WarrenForumLoginOutcome? {
         if (walletRepository.state.value is WalletState.Absent) {
             Logger.w("WarrenForumLoginUseCase: no wallet on device")
             journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("wallet-absent"))
             return WarrenForumLoginOutcome.WalletNotReady
         }
-
-        // Before the mnemonic is read: a deferred attempt must touch nothing.
+        // A deferred attempt must touch nothing.
         val preflight = ForumPreflight.of(tunnelState.connectedInfo.value)
-        if (preflight is ForumPreflight.Defer) {
+        return if (preflight is ForumPreflight.Defer) {
             Logger.w("WarrenForumLoginUseCase: deferred, tunnel ${preflight.tunnelClass}")
             journal.record(ForumEvent.LOGIN_DEFERRED, JournalField.Class(preflight.tunnelClass))
-            return WarrenForumLoginOutcome.Deferred(preflight.tunnelClass)
+            WarrenForumLoginOutcome.Deferred(preflight.tunnelClass)
+        } else {
+            null
         }
+    }
 
-        val mnemonic = try {
-            walletRepository.readMnemonic()
-        } catch (e: Exception) {
-            Logger.e(throwable = e) { "WarrenForumLoginUseCase: mnemonic read failed" }
-            journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("wallet-read"))
-            return WarrenForumLoginOutcome.Failure("wallet-read")
-        }
+    // The keystore read and the JNI bridge each fail through an open set of
+    // runtime exceptions (keystore, user-auth, bridge and native-panic classes),
+    // and every one of them means the same thing here: this attempt failed and
+    // its class goes to the journal. None may escape into the consent prompt.
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun signAndPost(link: ForumLoginLink): WarrenForumLoginOutcome {
+        val mnemonic =
+            try {
+                walletRepository.readMnemonic()
+            } catch (e: Exception) {
+                Logger.e(throwable = e) { "WarrenForumLoginUseCase: mnemonic read failed" }
+                journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("wallet-read"))
+                return WarrenForumLoginOutcome.Failure("wallet-read")
+            }
 
         val started = System.currentTimeMillis()
         journal.record(ForumEvent.LOGIN_SIGNING, JournalField.CrossDevice(link.crossDevice))
@@ -139,6 +153,9 @@ class WarrenForumLoginUseCase(
      * page unblocks. Fire-and-forget on [cancelScope] so it is not cancelled
      * when the consent prompt leaves composition; nothing to report back.
      */
+    // The bridge's failure classes are the same open set as in signAndPost, and
+    // a decline that cannot be relayed is not the user's problem.
+    @Suppress("TooGenericExceptionCaught")
     fun cancel(link: ForumLoginLink) {
         journal.record(ForumEvent.LOGIN_DECLINED)
         cancelScope.launch {
@@ -190,6 +207,11 @@ internal fun parseForumLoginOutcome(rawJson: String): WarrenForumLoginOutcome =
                     )
             }
         }
-    } catch (e: Exception) {
+    } catch (e: SerializationException) {
+        WarrenForumLoginOutcome.Failure("invalid-envelope")
+    } catch (e: IllegalArgumentException) {
+        // A field of the wrong JSON shape is as much a broken envelope as bad JSON.
+        WarrenForumLoginOutcome.Failure("invalid-envelope")
+    } catch (e: IllegalStateException) {
         WarrenForumLoginOutcome.Failure("invalid-envelope")
     }

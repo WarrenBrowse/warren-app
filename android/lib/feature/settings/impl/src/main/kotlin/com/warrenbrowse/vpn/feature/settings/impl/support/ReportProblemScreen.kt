@@ -15,6 +15,7 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -81,123 +82,27 @@ fun ReportProblem(navigator: Navigator) {
             )
 
             val fieldColors = ExposedDropdownMenuDefaults.textFieldColors()
-            WarrenExposedDropdownMenuBox(
+            ReportPicker(
                 label = stringResource(R.string.report_problem_area_label),
-                title =
-                    state.area?.let { stringResource(it.labelRes()) }
-                        ?: stringResource(R.string.report_problem_pick_one),
+                picked = state.area?.let { stringResource(it.labelRes()) },
+                entries = ReportArea.entries,
+                labelOf = { stringResource(it.labelRes()) },
+                onPick = viewModel::setArea,
                 colors = fieldColors,
-            ) { close ->
-                ReportArea.entries.forEach { area ->
-                    DropdownMenuItem(
-                        text = { Text(stringResource(area.labelRes())) },
-                        onClick = {
-                            viewModel.setArea(area)
-                            close()
-                        },
-                    )
-                }
-            }
-
-            OutlinedTextField(
-                value = state.whatHappened,
-                onValueChange = viewModel::setWhatHappened,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
-                label = { Text(stringResource(R.string.report_problem_what_happened_label)) },
-                placeholder = { Text(stringResource(R.string.report_problem_what_happened_hint)) },
-                supportingText = {
-                    Text(
-                        text =
-                            stringResource(
-                                R.string.report_problem_chars,
-                                state.descriptionChars,
-                                REPORT_MIN_DESCRIPTION_CHARS,
-                            )
-                    )
-                },
-                minLines = 4,
-                enabled = !state.sending,
             )
 
-            OutlinedTextField(
-                value = state.steps,
-                onValueChange = viewModel::setSteps,
-                modifier = Modifier.fillMaxWidth(),
-                label = { Text(stringResource(R.string.report_problem_steps_label)) },
-                placeholder = { Text(stringResource(R.string.report_problem_steps_hint)) },
-                minLines = 2,
-                enabled = !state.sending,
-            )
+            ReportDescriptionFields(state, viewModel)
 
-            WarrenExposedDropdownMenuBox(
+            ReportPicker(
                 label = stringResource(R.string.report_problem_frequency_label),
-                title =
-                    state.frequency?.let { stringResource(it.labelRes()) }
-                        ?: stringResource(R.string.report_problem_pick_one),
+                picked = state.frequency?.let { stringResource(it.labelRes()) },
+                entries = ReportFrequency.entries,
+                labelOf = { stringResource(it.labelRes()) },
+                onPick = viewModel::setFrequency,
                 colors = fieldColors,
-            ) { close ->
-                ReportFrequency.entries.forEach { frequency ->
-                    DropdownMenuItem(
-                        text = { Text(stringResource(frequency.labelRes())) },
-                        onClick = {
-                            viewModel.setFrequency(frequency)
-                            close()
-                        },
-                    )
-                }
-            }
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.report_problem_include_logs),
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                    Text(
-                        text = stringResource(R.string.report_problem_include_logs_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                WarrenSwitch(
-                    checked = state.includeLogs,
-                    onCheckedChange = viewModel::setIncludeLogs,
-                )
-            }
-
-            if (state.includeLogs) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    WarrenTextButton(
-                        onClick = {
-                            viewModel.collect { report ->
-                                navigator.navigate(ReportPreviewNavKey(report.file.absolutePath))
-                            }
-                        },
-                        enabled = !state.collecting && !state.sending,
-                    ) {
-                        Text(stringResource(R.string.report_problem_view_logs))
-                    }
-                    if (state.collecting) {
-                        WarrenCircularProgressIndicatorSmall()
-                        Text(
-                            text = stringResource(R.string.report_problem_collecting),
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(start = Dimens.smallPadding),
-                        )
-                    }
-                }
-                if (state.collectFailed) {
-                    Text(
-                        text = stringResource(R.string.report_problem_collect_failed),
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall,
-                    )
-                }
-            }
+            ReportLogsSection(state, viewModel, navigator)
 
             state.outcome?.let { outcome ->
                 ReportOutcomeNotice(
@@ -224,6 +129,124 @@ fun ReportProblem(navigator: Navigator) {
     }
 }
 
+/** One of the form's closed choices, "Pick one" until picked. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun <T> ReportPicker(
+    label: String,
+    picked: String?,
+    entries: List<T>,
+    labelOf: @Composable (T) -> String,
+    onPick: (T) -> Unit,
+    colors: TextFieldColors,
+) {
+    WarrenExposedDropdownMenuBox(
+        label = label,
+        title = picked ?: stringResource(R.string.report_problem_pick_one),
+        colors = colors,
+    ) { close ->
+        entries.forEach { entry ->
+            DropdownMenuItem(
+                text = { Text(labelOf(entry)) },
+                onClick = {
+                    onPick(entry)
+                    close()
+                },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReportDescriptionFields(state: ReportProblemUiState, viewModel: ReportProblemViewModel) {
+    OutlinedTextField(
+        value = state.whatHappened,
+        onValueChange = viewModel::setWhatHappened,
+        modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
+        label = { Text(stringResource(R.string.report_problem_what_happened_label)) },
+        placeholder = { Text(stringResource(R.string.report_problem_what_happened_hint)) },
+        supportingText = {
+            Text(
+                text =
+                    stringResource(
+                        R.string.report_problem_chars,
+                        state.descriptionChars,
+                        REPORT_MIN_DESCRIPTION_CHARS,
+                    )
+            )
+        },
+        minLines = 4,
+        enabled = !state.sending,
+    )
+
+    OutlinedTextField(
+        value = state.steps,
+        onValueChange = viewModel::setSteps,
+        modifier = Modifier.fillMaxWidth(),
+        label = { Text(stringResource(R.string.report_problem_steps_label)) },
+        placeholder = { Text(stringResource(R.string.report_problem_steps_hint)) },
+        minLines = 2,
+        enabled = !state.sending,
+    )
+}
+
+/** The logs switch, and once on, the way to read them before they leave. */
+@Composable
+private fun ReportLogsSection(
+    state: ReportProblemUiState,
+    viewModel: ReportProblemViewModel,
+    navigator: Navigator,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = stringResource(R.string.report_problem_include_logs),
+                style = MaterialTheme.typography.titleMedium,
+            )
+            Text(
+                text = stringResource(R.string.report_problem_include_logs_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        WarrenSwitch(checked = state.includeLogs, onCheckedChange = viewModel::setIncludeLogs)
+    }
+
+    if (state.includeLogs) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            WarrenTextButton(
+                onClick = {
+                    viewModel.collect { report ->
+                        navigator.navigate(ReportPreviewNavKey(report.file.absolutePath))
+                    }
+                },
+                enabled = !state.collecting && !state.sending,
+            ) {
+                Text(stringResource(R.string.report_problem_view_logs))
+            }
+            if (state.collecting) {
+                WarrenCircularProgressIndicatorSmall()
+                Text(
+                    text = stringResource(R.string.report_problem_collecting),
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(start = Dimens.smallPadding),
+                )
+            }
+        }
+        if (state.collectFailed) {
+            Text(
+                text = stringResource(R.string.report_problem_collect_failed),
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+}
+
 @Composable
 private fun ReportOutcomeNotice(
     outcome: ReportSubmitOutcome,
@@ -232,32 +255,7 @@ private fun ReportOutcomeNotice(
     onSendWithoutLogs: () -> Unit,
 ) {
     when (outcome) {
-        is ReportSubmitOutcome.Created -> {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
-                Text(
-                    text =
-                        when (outcome.logs) {
-                            "attached" -> stringResource(R.string.report_problem_created_with_logs)
-                            "partial" -> stringResource(R.string.report_problem_created_partial)
-                            else -> stringResource(R.string.report_problem_created)
-                        },
-                    color = MaterialTheme.colorScheme.tertiary,
-                    style = MaterialTheme.typography.bodyMedium,
-                )
-                outcome.identity?.let { identity ->
-                    Text(
-                        text = stringResource(R.string.report_problem_posted_as, identity.handle),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                if (outcome.topicUrl.isNotEmpty()) {
-                    WarrenTextButton(onClick = { onOpenTopic(outcome.topicUrl) }) {
-                        Text(stringResource(R.string.report_problem_open_topic))
-                    }
-                }
-            }
-        }
+        is ReportSubmitOutcome.Created -> CreatedNotice(outcome, onOpenTopic)
         ReportSubmitOutcome.SubscriptionRequired ->
             ErrorNotice(stringResource(R.string.report_problem_error_subscription)) {
                 WarrenTextButton(onClick = onOpenHelpForm) {
@@ -265,7 +263,8 @@ private fun ReportOutcomeNotice(
                 }
             }
         ReportSubmitOutcome.ClockSkew -> ErrorNotice(stringResource(R.string.report_problem_error_clock))
-        ReportSubmitOutcome.RateLimited -> ErrorNotice(stringResource(R.string.report_problem_error_rate_limited))
+        ReportSubmitOutcome.RateLimited ->
+            ErrorNotice(stringResource(R.string.report_problem_error_rate_limited))
         ReportSubmitOutcome.TooLarge ->
             ErrorNotice(stringResource(R.string.report_problem_error_too_large)) {
                 WarrenTextButton(onClick = onSendWithoutLogs) {
@@ -280,9 +279,39 @@ private fun ReportOutcomeNotice(
             }
         ReportSubmitOutcome.Invalid -> ErrorNotice(stringResource(R.string.report_problem_error_invalid))
         ReportSubmitOutcome.ServerError -> ErrorNotice(stringResource(R.string.report_problem_error_server))
-        ReportSubmitOutcome.WalletNotReady -> ErrorNotice(stringResource(R.string.forum_login_result_wallet_not_ready))
+        ReportSubmitOutcome.WalletNotReady ->
+            ErrorNotice(stringResource(R.string.forum_login_result_wallet_not_ready))
         is ReportSubmitOutcome.Deferred -> ErrorNotice(stringResource(R.string.forum_tunnel_busy))
         is ReportSubmitOutcome.Failure -> ErrorNotice(stringResource(R.string.report_problem_error_generic))
+    }
+}
+
+/** The filed topic: what the logs did, the forum name it was posted under, the link. */
+@Composable
+private fun CreatedNotice(outcome: ReportSubmitOutcome.Created, onOpenTopic: (String) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
+        Text(
+            text =
+                when (outcome.logs) {
+                    "attached" -> stringResource(R.string.report_problem_created_with_logs)
+                    "partial" -> stringResource(R.string.report_problem_created_partial)
+                    else -> stringResource(R.string.report_problem_created)
+                },
+            color = MaterialTheme.colorScheme.tertiary,
+            style = MaterialTheme.typography.bodyMedium,
+        )
+        outcome.identity?.let { identity ->
+            Text(
+                text = stringResource(R.string.report_problem_posted_as, identity.handle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        if (outcome.topicUrl.isNotEmpty()) {
+            WarrenTextButton(onClick = { onOpenTopic(outcome.topicUrl) }) {
+                Text(stringResource(R.string.report_problem_open_topic))
+            }
+        }
     }
 }
 

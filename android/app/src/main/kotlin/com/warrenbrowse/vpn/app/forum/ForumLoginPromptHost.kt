@@ -52,15 +52,7 @@ fun ForumLoginPromptHost() {
     // prompt is open starts clean instead of inheriting a disarmed Approve.
     val state = remember { ForumLoginPromptState() }
     state.bind(link)
-
-    val approvedMessage = stringResource(R.string.forum_login_result_approved)
-    val subscriptionRequiredMessage =
-        stringResource(R.string.forum_login_result_subscription_required)
-    val walletNotReadyMessage = stringResource(R.string.forum_login_result_wallet_not_ready)
-    val clockSkewMessage = stringResource(R.string.forum_login_result_clock_skew)
-    val expiredMessage = stringResource(R.string.forum_login_result_expired)
-    val tunnelBusyMessage = stringResource(R.string.forum_tunnel_busy)
-    val failureMessage = stringResource(R.string.forum_login_result_failure)
+    val messages = promptMessages()
 
     // Declining notifies the provider so the waiting browser page unblocks
     // (mirrors the desktop), then dismisses the prompt. After a terminal
@@ -69,6 +61,32 @@ fun ForumLoginPromptHost() {
         if (!state.busy) {
             if (!state.terminal) useCase.cancel(link)
             controller.clear()
+        }
+    }
+
+    val onApprove = {
+        if (!state.busy && controller.isStale()) {
+            // The server session died while the prompt sat here; signing now
+            // can only fail on a dead sid.
+            state.fail(messages.expired)
+        } else if (!state.busy) {
+            // Keep the request pending (dialog stays) until the call returns,
+            // so this composable does not leave composition and cancel the
+            // coroutine mid-flight.
+            state.begin()
+            scope.launch {
+                val outcome = useCase.signIn(link)
+                if (outcome is WarrenForumLoginOutcome.Approved) {
+                    controller.clear()
+                    Toast.makeText(context, messages.approved, Toast.LENGTH_LONG).show()
+                    // The browser page is what completes the login, and it only
+                    // re-polls once it is visible again: hand the foreground
+                    // back to it, as the desktop hides its window.
+                    (context as? Activity)?.moveTaskToBack(true)
+                } else {
+                    state.settle(outcome, messages.failureFor(outcome))
+                }
+            }
         }
     }
 
@@ -82,37 +100,7 @@ fun ForumLoginPromptHost() {
                 )
             )
         },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
-                Text(
-                    stringResource(
-                        if (link.crossDevice) R.string.forum_login_body_first_cross_device
-                        else R.string.forum_login_body_first
-                    )
-                )
-                Text(
-                    stringResource(
-                        if (link.crossDevice) R.string.forum_login_body_second_cross_device
-                        else R.string.forum_login_body_second
-                    )
-                )
-                state.failure?.let { reason ->
-                    Text(
-                        text = reason,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier =
-                            Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
-                    )
-                }
-                if (state.busy) {
-                    Text(
-                        text = stringResource(R.string.forum_login_signing),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    )
-                }
-            }
-        },
+        text = { PromptBody(link, state) },
         confirmButton = {
             PrimaryButton(
                 text = stringResource(R.string.forum_login_approve),
@@ -123,49 +111,7 @@ fun ForumLoginPromptHost() {
                     if (state.busy) {
                         { WarrenCircularProgressIndicatorSmall() }
                     } else null,
-                onClick = {
-                    if (!state.busy && controller.isStale()) {
-                        // The server session died while the prompt sat here;
-                        // signing now can only fail on a dead sid.
-                        state.fail(expiredMessage)
-                    } else if (!state.busy) {
-                        // Keep the request pending (dialog stays) until the call
-                        // returns, so this composable does not leave composition
-                        // and cancel the coroutine mid-flight.
-                        state.begin()
-                        scope.launch {
-                            when (val outcome = useCase.signIn(link)) {
-                                is WarrenForumLoginOutcome.Approved -> {
-                                    controller.clear()
-                                    Toast.makeText(
-                                            context,
-                                            approvedMessage,
-                                            Toast.LENGTH_LONG,
-                                        )
-                                        .show()
-                                    // The browser page is what completes the
-                                    // login, and it only re-polls once it is
-                                    // visible again: hand the foreground back
-                                    // to it, as the desktop hides its window.
-                                    (context as? Activity)?.moveTaskToBack(true)
-                                }
-                                else ->
-                                    state.settle(
-                                        outcome,
-                                        failureMessageFor(
-                                            outcome = outcome,
-                                            subscriptionRequired = subscriptionRequiredMessage,
-                                            walletNotReady = walletNotReadyMessage,
-                                            clockSkew = clockSkewMessage,
-                                            expired = expiredMessage,
-                                            tunnelBusy = tunnelBusyMessage,
-                                            generic = failureMessage,
-                                        ),
-                                    )
-                            }
-                        }
-                    }
-                },
+                onClick = onApprove,
             )
         },
         dismissButton = {
@@ -186,6 +132,76 @@ fun ForumLoginPromptHost() {
         },
     )
 }
+
+/** The prompt's two sentences, the inline failure and the in-flight line. */
+@Composable
+private fun PromptBody(link: ForumLoginLink, state: ForumLoginPromptState) {
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
+        Text(
+            stringResource(
+                if (link.crossDevice) R.string.forum_login_body_first_cross_device
+                else R.string.forum_login_body_first
+            )
+        )
+        Text(
+            stringResource(
+                if (link.crossDevice) R.string.forum_login_body_second_cross_device
+                else R.string.forum_login_body_second
+            )
+        )
+        state.failure?.let { reason ->
+            Text(
+                text = reason,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Assertive },
+            )
+        }
+        if (state.busy) {
+            Text(
+                text = stringResource(R.string.forum_login_signing),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+            )
+        }
+    }
+}
+
+/**
+ * The prompt's copy, resolved in composition so the click handlers, which run
+ * outside it, hold plain strings.
+ */
+private class PromptMessages(
+    val approved: String,
+    private val subscriptionRequired: String,
+    private val walletNotReady: String,
+    private val clockSkew: String,
+    val expired: String,
+    private val tunnelBusy: String,
+    private val generic: String,
+) {
+    fun failureFor(outcome: WarrenForumLoginOutcome): String =
+        failureMessageFor(
+            outcome = outcome,
+            subscriptionRequired = subscriptionRequired,
+            walletNotReady = walletNotReady,
+            clockSkew = clockSkew,
+            expired = expired,
+            tunnelBusy = tunnelBusy,
+            generic = generic,
+        )
+}
+
+@Composable
+private fun promptMessages(): PromptMessages =
+    PromptMessages(
+        approved = stringResource(R.string.forum_login_result_approved),
+        subscriptionRequired = stringResource(R.string.forum_login_result_subscription_required),
+        walletNotReady = stringResource(R.string.forum_login_result_wallet_not_ready),
+        clockSkew = stringResource(R.string.forum_login_result_clock_skew),
+        expired = stringResource(R.string.forum_login_result_expired),
+        tunnelBusy = stringResource(R.string.forum_tunnel_busy),
+        generic = stringResource(R.string.forum_login_result_failure),
+    )
 
 /**
  * True when the provider has cancelled the session behind this outcome, so the

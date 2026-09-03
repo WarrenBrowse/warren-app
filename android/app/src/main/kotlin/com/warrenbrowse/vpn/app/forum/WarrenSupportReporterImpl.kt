@@ -18,11 +18,13 @@ import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
 import java.util.Locale
 import java.util.UUID
 import java.util.zip.GZIPOutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -138,29 +140,53 @@ class WarrenSupportReporterImpl(
             }
         }
 
-    override suspend fun submit(form: ReportForm, report: CollectedReport?): ReportSubmitOutcome {
+    override suspend fun submit(form: ReportForm, report: CollectedReport?): ReportSubmitOutcome =
         if (walletRepository.state.value is WalletState.Absent) {
             journal.record(ForumEvent.REPORT_SUBMIT, JournalField.Class("wallet-absent"))
-            return ReportSubmitOutcome.WalletNotReady
+            ReportSubmitOutcome.WalletNotReady
+        } else {
+            // The logs are sized before the wallet is touched: a refusal at the
+            // cap reads nothing and reaches nothing.
+            when (val logs = compressForWire(report)) {
+                is WireLogs.Refused -> logs.outcome
+                is WireLogs.Ready -> signAndSend(form, logs.gz)
+            }
         }
-        // The logs are sized before the wallet is touched: a refusal at the cap
-        // reads nothing and reaches nothing.
+
+    /** The report's logs gzipped for the wire, or the outcome that refuses them. */
+    private sealed interface WireLogs {
+        class Ready(val gz: ByteArray?) : WireLogs
+
+        class Refused(val outcome: ReportSubmitOutcome) : WireLogs
+    }
+
+    private suspend fun compressForWire(report: CollectedReport?): WireLogs {
         val logGz =
             try {
                 withContext(Dispatchers.IO) { report?.let { compressor.compress(it.file) } }
-            } catch (e: Exception) {
+            } catch (e: IOException) {
                 Logger.w(throwable = e) { "WarrenSupportReporter: gzip failed" }
                 journal.record(ForumEvent.REPORT_SUBMIT, JournalField.Class("gzip"))
-                return ReportSubmitOutcome.Failure("gzip")
+                return WireLogs.Refused(ReportSubmitOutcome.Failure("gzip"))
             }
-        if (logGz != null && logGz.size > MAX_LOG_GZ_BYTES) {
+        return if (logGz != null && logGz.size > MAX_LOG_GZ_BYTES) {
             journal.record(
                 ForumEvent.REPORT_SUBMIT,
                 JournalField.Class("too-large"),
                 JournalField.GzBytes(logGz.size.toLong()),
             )
-            return ReportSubmitOutcome.TooLarge
+            WireLogs.Refused(ReportSubmitOutcome.TooLarge)
+        } else {
+            WireLogs.Ready(logGz)
         }
+    }
+
+    // The keystore read and the JNI bridge each fail through an open set of
+    // runtime exceptions (keystore, user-auth, bridge and native-panic classes),
+    // and every one of them means the same thing here: this send failed and its
+    // class goes to the journal. None may escape into the screen.
+    @Suppress("TooGenericExceptionCaught")
+    private suspend fun signAndSend(form: ReportForm, logGz: ByteArray?): ReportSubmitOutcome {
         val mnemonic =
             try {
                 walletRepository.readMnemonic()
@@ -227,11 +253,7 @@ class WarrenSupportReporterImpl(
                 "frequency" to JsonPrimitive(form.frequency.token),
                 "what_happened" to JsonPrimitive(form.whatHappened.trim()),
                 "app_version" to JsonPrimitive(BuildConfig.VERSION_NAME),
-                "os_version" to
-                    JsonPrimitive(
-                        "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}) ${Build.MANUFACTURER} ${Build.MODEL}"
-                            .take(80)
-                    ),
+                "os_version" to JsonPrimitive(osVersionLine()),
                 "locale" to JsonPrimitive(Locale.getDefault().language),
             )
         form.steps?.trim()?.takeIf { it.isNotEmpty() }?.let { fields["steps"] = JsonPrimitive(it) }
@@ -240,6 +262,11 @@ class WarrenSupportReporterImpl(
 
     private fun buildJsonArray(items: List<String>): String =
         kotlinx.serialization.json.JsonArray(items.map { JsonPrimitive(it) }).toString()
+
+    /** The device line of the report body, capped to what the broker accepts. */
+    private fun osVersionLine(): String =
+        "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}) ${Build.MANUFACTURER} ${Build.MODEL}"
+            .take(OS_VERSION_MAX_CHARS)
 
     companion object {
         /**
@@ -253,8 +280,14 @@ class WarrenSupportReporterImpl(
         /** How long a file in the report directory outlives its screen. */
         const val STALE_REPORT_MILLIS = 60L * 60L * 1000L
 
-        /** The cache subdirectory the collected reports live in: `res/xml/report_paths.xml` exposes it and nothing else. */
+        /**
+         * The cache subdirectory the collected reports live in:
+         * `res/xml/report_paths.xml` exposes it and nothing else.
+         */
         const val REPORT_DIR = "reports"
+
+        /** The broker's cap on the `os_version` field. */
+        private const val OS_VERSION_MAX_CHARS = 80
     }
 }
 
@@ -306,34 +339,43 @@ internal fun reportOutcomeClass(outcome: ReportSubmitOutcome): String =
 internal fun parseReportOutcome(rawJson: String): ReportSubmitOutcome =
     try {
         val root = Json.parseToJsonElement(rawJson).jsonObject
-        if (root["ok"]?.jsonPrimitive?.boolean == true) {
-            val handle = root["handle"]?.jsonPrimitive?.content
-            ReportSubmitOutcome.Created(
-                topicId = root["topic_id"]?.jsonPrimitive?.long ?: 0L,
-                topicUrl = forumTopicUrlOrEmpty(root["topic_url"]?.jsonPrimitive?.content),
-                identity =
-                    handle?.let {
-                        ForumIdentity(handle = it, notifySlot = root["notify_slot"]?.jsonPrimitive?.int)
-                    },
-                logs = root["logs"]?.jsonPrimitive?.content ?: "none",
-            )
-        } else {
-            when (root["error"]?.jsonPrimitive?.content) {
-                "subscription-required" -> ReportSubmitOutcome.SubscriptionRequired
-                "clock-skew" -> ReportSubmitOutcome.ClockSkew
-                "rate-limited" -> ReportSubmitOutcome.RateLimited
-                "too-large" -> ReportSubmitOutcome.TooLarge
-                "invalid" -> ReportSubmitOutcome.Invalid
-                "server-error" -> ReportSubmitOutcome.ServerError
-                else ->
-                    when (val reason = root["reason"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }) {
-                        "upload-timeout" -> ReportSubmitOutcome.UploadTimedOut
-                        else -> ReportSubmitOutcome.Failure(reason ?: "unknown")
-                    }
-            }
-        }
-    } catch (e: Exception) {
+        if (root["ok"]?.jsonPrimitive?.boolean == true) createdOutcome(root) else refusedOutcome(root)
+    } catch (e: SerializationException) {
         ReportSubmitOutcome.Failure("invalid-envelope")
+    } catch (e: IllegalArgumentException) {
+        // A field of the wrong JSON shape (an object where a primitive should
+        // be, a non-number topic id) is as much a broken envelope as bad JSON.
+        ReportSubmitOutcome.Failure("invalid-envelope")
+    } catch (e: IllegalStateException) {
+        ReportSubmitOutcome.Failure("invalid-envelope")
+    }
+
+private fun createdOutcome(root: JsonObject): ReportSubmitOutcome.Created {
+    val handle = root["handle"]?.jsonPrimitive?.content
+    return ReportSubmitOutcome.Created(
+        topicId = root["topic_id"]?.jsonPrimitive?.long ?: 0L,
+        topicUrl = forumTopicUrlOrEmpty(root["topic_url"]?.jsonPrimitive?.content),
+        identity =
+            handle?.let {
+                ForumIdentity(handle = it, notifySlot = root["notify_slot"]?.jsonPrimitive?.int)
+            },
+        logs = root["logs"]?.jsonPrimitive?.content ?: "none",
+    )
+}
+
+private fun refusedOutcome(root: JsonObject): ReportSubmitOutcome =
+    when (root["error"]?.jsonPrimitive?.content) {
+        "subscription-required" -> ReportSubmitOutcome.SubscriptionRequired
+        "clock-skew" -> ReportSubmitOutcome.ClockSkew
+        "rate-limited" -> ReportSubmitOutcome.RateLimited
+        "too-large" -> ReportSubmitOutcome.TooLarge
+        "invalid" -> ReportSubmitOutcome.Invalid
+        "server-error" -> ReportSubmitOutcome.ServerError
+        else ->
+            when (val reason = root["reason"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }) {
+                "upload-timeout" -> ReportSubmitOutcome.UploadTimedOut
+                else -> ReportSubmitOutcome.Failure(reason ?: "unknown")
+            }
     }
 
 /** The forum's host: the only origin a topic link the broker returns is opened on. */
@@ -346,8 +388,8 @@ internal const val FORUM_HOST = "forum.warrenbrowse.com"
  * in the browser on one tap as a link the app vouched for.
  */
 internal fun forumTopicUrlOrEmpty(url: String?): String {
-    if (url.isNullOrEmpty()) return ""
-    val parsed = runCatching { java.net.URI(url) }.getOrNull() ?: return ""
-    val onForum = parsed.scheme == "https" && parsed.host == FORUM_HOST && parsed.userInfo == null
-    return if (onForum) url else ""
+    val parsed = url?.takeIf { it.isNotEmpty() }?.let { runCatching { java.net.URI(it) }.getOrNull() }
+    val onForum =
+        parsed != null && parsed.scheme == "https" && parsed.host == FORUM_HOST && parsed.userInfo == null
+    return if (onForum) url.orEmpty() else ""
 }
