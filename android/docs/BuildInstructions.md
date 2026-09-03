@@ -300,8 +300,18 @@ adb logcat -s WarrenJank
 screen, the picker, the settings tree):
 
 ```bash
-./gradlew :app:generateBetaNonMinifiedReleaseBaselineProfile
+./gradlew :app:generateProdReleaseBaselineProfile
 ```
+
+The task builds the `prodNonMinifiedRelease` app and its generator, installs
+both on the connected device, walks the flow, and moves the profile into
+`app/src/main/`. The prod flavor is the one to run when the device holds a
+beta install worth keeping: the two flavors share every class, and the
+generator's install replaces (and its data clear wipes) whichever app carries
+the application id it targets. Every release build then fails when the file is
+missing or names no Warren class (`checkBaselineProfile` in
+`app/build.gradle.kts`), so a regeneration that lands nothing cannot ship a
+profile-less APK unnoticed.
 
 The generator clears the package data and walks the privacy disclosure and the
 onboarding wizard to a fresh wallet, so run it on a device (API 33+, or rooted

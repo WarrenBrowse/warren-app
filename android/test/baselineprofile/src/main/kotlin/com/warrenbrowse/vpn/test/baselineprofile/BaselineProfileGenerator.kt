@@ -20,8 +20,9 @@ import org.junit.runner.RunWith
  * Generates the baseline profile for the Warren app, on Warren's own flow:
  * the cold start through the splash to the Connect screen, the location
  * picker, and the settings tree. Run it from gradle with
- * `./gradlew :app:generateBetaNonMinifiedReleaseBaselineProfile` (or the
- * prod variant); the profile lands in `app/src/main/baseline-prof.txt`.
+ * `./gradlew :app:generateProdReleaseBaselineProfile` (or the beta variant);
+ * the profile lands in `app/src/main/baseline-prof.txt`, and every release
+ * build checks it is there and names Warren classes.
  *
  * The device needs a wallet set up first, so the splash routes to Connect:
  * the runner clears the package data, so the generator walks the privacy
@@ -29,7 +30,9 @@ import org.junit.runner.RunWith
  * iteration and the existing one after. No tunnel is dialled: the profile is
  * about the classes the UI loads, and a real dial would need a subscription
  * and a network. Regenerate it whenever the startup path or the main
- * screens change substantially.
+ * screens change substantially. The two flavors share every class, so run
+ * the flavor whose application id the device can spare: the install replaces
+ * and the data clear wipes whatever app carries it.
  *
  * NOTE: API 33+ or rooted API 28+ is required.
  */
@@ -51,6 +54,12 @@ class BaselineProfileGenerator {
             maxIterations = 5,
         ) {
             pressHome()
+            // The first launch asks for the notification permission (API 33+).
+            // The system dialog has no place in the app's profile and the walk
+            // cannot see through it, so the permission is granted up front.
+            device.executeShellCommand(
+                "pm grant $packageName android.permission.POST_NOTIFICATIONS"
+            )
             startActivityAndWait()
             device.reachConnectScreen()
 
@@ -83,8 +92,9 @@ class BaselineProfileGenerator {
             if (hasObject(By.res(CONNECT_CARD_HEADER_TEST_TAG))) return
             waitForStableInActiveWindow()
             val next =
-                WIZARD_BUTTONS.firstNotNullOfOrNull { text -> findObject(By.text(text)) }
-                    ?: return@repeat
+                WIZARD_BUTTONS.firstNotNullOfOrNull { text ->
+                    findObject(By.text(text).enabled(true))
+                } ?: return@repeat
             next.click()
             wait(Until.hasObject(By.res(CONNECT_CARD_HEADER_TEST_TAG)), STEP_TIMEOUT_MS)
         }
@@ -101,16 +111,19 @@ class BaselineProfileGenerator {
         /**
          * The forward controls of the privacy disclosure and the onboarding
          * wizard (`strings.xml`: `agree_and_continue`, `onboarding_get_started`,
-         * `wallet_create_cta`, `wallet_backup_confirm_cta`, `onboarding_skip`,
-         * `onboarding_done_cta`), in the order a step may show more than one of
-         * them. The backup step's checkbox text ticks the box, which enables
-         * its button on the next pass.
+         * `wallet_create_cta`, the backup step's `Continue`,
+         * `wallet_backup_confirm_cta`, `onboarding_skip`, `onboarding_done_cta`),
+         * in the order a step may show more than one of them. Only an enabled
+         * control counts: the backup step's button is disabled until its
+         * checkbox text has ticked the box, and the text toggles the box on
+         * every tap, so the button must win as soon as it can be pressed.
          */
         val WIZARD_BUTTONS =
             listOf(
                 "Agree and continue",
                 "Get started",
                 "Create a new account",
+                "Continue",
                 "I have written down my recovery phrase in a safe place.",
                 "Skip for now",
                 "Connect",
