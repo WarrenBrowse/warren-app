@@ -2633,6 +2633,15 @@ msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr ""
 
+#. Character counter under the optional
+#. steps-to-reproduce field, which has a
+#. maximum but no minimum.
+#. Available placeholders:
+#. %(count)d - characters typed so far
+msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr ""
+
 #. Character counter under the description field.
 #. Available placeholders:
 #. %(count)d - characters typed so far

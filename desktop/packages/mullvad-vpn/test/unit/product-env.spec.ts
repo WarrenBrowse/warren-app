@@ -3,6 +3,7 @@ import os from 'os';
 import path from 'path';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { urls } from '../../src/shared/constants/urls';
 import { importForProductEnv, loadClientRules, ProductEnvFixture } from './client-rules';
 
 // The per-environment product anchors are spelled four times (the Rust
@@ -74,6 +75,16 @@ describe('product_env.json, the desktop reader', () => {
       expect(env.productAnchors.displayName, row.name).toBe(row.display_name);
       expect(env.productAnchors.unixProductDir, row.name).toBe(row.unix_product_dir);
       expect(env.productAnchors.deepLinkScheme, row.name).toBe(row.deep_link_scheme);
+    }
+  });
+
+  // The forum origin is the one anchor the desktop spells as a plain literal
+  // rather than reading off the product table, so nothing else would notice it
+  // drifting: `isTrustedTopicUrl` derives FORUM_HOST from it, and a stale host
+  // silently strips the link off every topic the broker returns.
+  it('pins the forum origin of urls.ts to the fixture', () => {
+    for (const row of rows) {
+      expect(new URL(urls.forum).host, row.name).toBe(new URL(row.forum_public_url).host);
     }
   });
 
