@@ -248,16 +248,27 @@ private fun WarmSceneryMasters(exitCountry: String?) {
  * Vertical translation of the foreground pair so Bula's painted feet line
  * lands [FOREGROUND_CARD_GAP] above the card's top edge. Positive when the
  * card sits low (disconnected: the pair slides down, revealing more
- * landscape), smaller or negative as the card grows so the burrow mouth never
- * disappears under it. Zero before the first card layout.
+ * landscape), zero as soon as the card grows past that line.
  */
 private fun androidx.compose.ui.graphics.GraphicsLayerScope.foregroundShift(
     cardTopPx: Float
-): Float {
-    if (cardTopPx.isNaN()) return 0f
-    val feetY = size.width * CANVAS_RATIO * BULA_FEET_FRACTION
-    return cardTopPx - FOREGROUND_CARD_GAP.toPx() - feetY
-}
+): Float =
+    foregroundShiftPx(
+        cardTopPx = cardTopPx,
+        gapPx = FOREGROUND_CARD_GAP.toPx(),
+        feetYPx = size.width * CANVAS_RATIO * BULA_FEET_FRACTION,
+    )
+
+/**
+ * The slide is one-way on purpose. The three masters are painted registered on
+ * one canvas, so sliding the foreground DOWN only covers more landscape, while
+ * lifting it above its painted line uncovers the rows the burrow was drawn to
+ * hide: the canal bed at the bottom of the plain, reported from the beta as the
+ * cave rising and showing the underside of the river when the connection
+ * details expand. Zero before the first card layout.
+ */
+internal fun foregroundShiftPx(cardTopPx: Float, gapPx: Float, feetYPx: Float): Float =
+    if (cardTopPx.isNaN()) 0f else (cardTopPx - gapPx - feetYPx).coerceAtLeast(0f)
 
 /**
  * The two full-bleed overlays: a faint phase-tinted wash on the top and bottom
