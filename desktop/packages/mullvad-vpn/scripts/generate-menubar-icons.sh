@@ -31,17 +31,28 @@ WINDOWS_DIR="$MENUBAR_ICONS_DIR/win32"
 LINUX_DIR="$MENUBAR_ICONS_DIR/linux"
 TMP_DIR=$(mktemp -d)
 
-# A non-prod build wears the same lock with an amber pip at the top-left, so a
+# A non-prod build wears the same lock with an amber pip in the corner, so a
 # machine running prod and beta side by side never shows two identical tray
 # icons. The badged tree keeps the prod file names and lives one directory
 # deeper (src/main/tray-icon.ts appends the segment), which leaves the icon
 # matrix in tray-icon-controller.ts untouched.
 BADGED_DIR_NAME="beta"
 
-# The pip is 7/16 of the canvas: large enough for the knocked-out B to read at
-# 44px, small enough to leave the lock recognisable at 16px.
-PIP_NUMERATOR=7
-PIP_DENOMINATOR=16
+# The pip is 3/8 of the canvas: large enough for the knocked-out B to read at
+# 44px, small enough to leave the lock recognisable at 16px. It sits flush in
+# the BOTTOM-left corner: the shackle is the lock's identity and it sits top
+# centre, close enough to the left edge at 16px that a top-left pip would cut it
+# in half, while the bottom left is the plain body and survives a clipped
+# corner. The forum-activity dot is a circle at the bottom RIGHT, so the two
+# never overlap and a square left of a circle stays unambiguous.
+PIP_NUMERATOR=3
+PIP_DENOMINATOR=8
+# Width of the transparent gap knocked out of the lock around the pip, as a
+# fraction of the canvas. Without it the pip and the lock merge into one blob
+# wherever they touch, which is every monochrome variant: a template image is
+# an alpha mask, so both shapes carry the same single tint and only a gap
+# separates them.
+PIP_HALO_DENOMINATOR=22
 # Below this canvas size the letter is a smudge and the pip stays a plain
 # square, the same concession build-logo-icons.sh makes for the app icon. Only
 # the 16px sub-image of the Windows .ico falls under it.
@@ -215,6 +226,8 @@ function overlay_beta_pip() {
     local pip_size=$((canvas_size * PIP_NUMERATOR / PIP_DENOMINATOR))
     local pip_svg_path="$TMP_DIR/beta-pip.svg"
     local pip_png_path="$TMP_DIR/beta-pip.png"
+    local cutter_svg_path="$TMP_DIR/beta-pip-cutter.svg"
+    local cutter_png_path="$TMP_DIR/beta-pip-cutter.png"
     local badged_png_path="$TMP_DIR/beta-badged.png"
     # An array that is never empty: bash 3.2, which is what /usr/bin/env bash
     # still resolves to on a stock macOS, treats an empty one as unset under
@@ -228,11 +241,29 @@ function overlay_beta_pip() {
 
     python3 "$GRAPHICS_DIR/make-beta-icon.py" "${pip_args[@]}"
     rsvg-convert -o "$pip_png_path" -w "$pip_size" -h "$pip_size" "$pip_svg_path"
-    convert -strip -background transparent -composite -colorspace sRGB -gravity NorthWest \
+
+    # The gap is the same rounded square one halo wider, rendered from the same
+    # builder so the two shapes can never drift apart, and subtracted from the
+    # lock before the pip lands on top. Both sit flush at the corner, so the gap
+    # only ever appears on the two edges that face the lock.
+    local halo=$((canvas_size / PIP_HALO_DENOMINATOR))
+    if [ "$halo" -lt 1 ]; then
+        halo=1
+    fi
+    local cutter_size=$((pip_size + halo))
+    python3 "$GRAPHICS_DIR/make-beta-icon.py" --badge "$GRAPHICS_DIR/beta-badge.svg" \
+        --square-pip --no-label --size "$cutter_size" --output "$cutter_svg_path"
+    rsvg-convert -o "$cutter_png_path" -w "$cutter_size" -h "$cutter_size" "$cutter_svg_path"
+    convert -strip -background transparent -colorspace sRGB -gravity SouthWest \
+        "$png_target_path" "$cutter_png_path" -compose DstOut -composite \
+        "${COMPRESSION_OPTIONS[@]}" "$badged_png_path"
+    mv "$badged_png_path" "$png_target_path"
+
+    convert -strip -background transparent -composite -colorspace sRGB -gravity SouthWest \
         "$png_target_path" "$pip_png_path" "${COMPRESSION_OPTIONS[@]}" "$badged_png_path"
     mv "$badged_png_path" "$png_target_path"
 
-    rm "$pip_svg_path" "$pip_png_path"
+    rm "$pip_svg_path" "$pip_png_path" "$cutter_svg_path" "$cutter_png_path"
 }
 
 # Creates a copy of the icon at $source_path and appends the notification symbol to it
