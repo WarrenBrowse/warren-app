@@ -126,11 +126,18 @@ describe('the upload deadline', () => {
 describe('the report outcome table', () => {
   const fixture = loadClientRules<ForumOutcomesFixture>('forum_outcomes.json');
 
+  // Without these two, the cheapest way to make a diverging arm green again is
+  // to add `"skip": ["desktop"]` to its case: the suite would pass while the
+  // desktop quietly stopped implementing the shared table, and only a
+  // hand-maintained README row would say so.
+  it('leaves no desktop skip on a report case: the desktop knows every report kind', () => {
+    expect(fixture.report.cases.filter(skippedOnDesktop)).toEqual([]);
+  });
+
   it('classes every pinned broker answer as the shared fixture says', () => {
-    for (const fixtureCase of fixture.report.cases) {
-      if (skippedOnDesktop(fixtureCase)) {
-        continue;
-      }
+    const cases = fixture.report.cases.filter((c) => !skippedOnDesktop(c));
+    expect(cases.length).toBeGreaterThanOrEqual(10);
+    for (const fixtureCase of cases) {
       const result = forumReportResultForResponse(fixtureCase.status, fixtureCase.body);
       const expected = fixtureCase.expect;
       expect(result.kind, fixtureCase.name).toBe(expected.kind);
@@ -288,6 +295,37 @@ describe('sending a report', () => {
     expect(settled).toBeUndefined();
     await vi.advanceTimersByTimeAsync(1);
     expect(await pending).toEqual({ kind: 'failed', reason: 'upload-timeout' });
+  });
+
+  it('disarms the deadline once the broker answers, so reading the body cannot cut it', async () => {
+    // The deadline bounds the UPLOAD. Left armed over `response.text()`, a
+    // broker that starts answering just under it has its body cut, the created
+    // topic is read as `http-201`, and the reporter resends the whole report
+    // and its logs into a second forum topic.
+    vi.useFakeTimers();
+    const { rpc } = makeDaemon();
+    let signal: AbortSignal | undefined;
+    forumFetch.mockImplementation((_url: string, init: RequestInit) => {
+      signal = init.signal ?? undefined;
+      return Promise.resolve({
+        status: 201,
+        ok: true,
+        text: () =>
+          new Promise<string>((resolve, reject) => {
+            init.signal?.addEventListener('abort', () =>
+              reject(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+            );
+            setTimeout(
+              () => resolve('{"status":"created","topic_id":42,"logs":"attached"}'),
+              90_000,
+            );
+          }),
+      });
+    });
+    const pending = sendForumReport(form, new Uint8Array(3), facts, rpc);
+    await vi.advanceTimersByTimeAsync(90_000);
+    expect(signal?.aborted).toBe(false);
+    expect(await pending).toEqual({ kind: 'created', topicId: 42, logs: 'attached' });
   });
 
   it('classes the same deadline without logs as a plain transport failure', async () => {
