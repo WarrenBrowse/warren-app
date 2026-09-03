@@ -3,7 +3,6 @@ import { Empty } from 'google-protobuf/google/protobuf/empty_pb.js';
 import { BoolValue, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb.js';
 import * as grpcTypes from 'management-interface/management-interface/grpc-types';
 
-import { productAnchors } from '../shared/constants/product-env';
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
@@ -36,6 +35,7 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
+import { daemonRpcPath } from './daemon-rpc-path';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
   convertFromApiAccessMethodSetting,
@@ -61,15 +61,11 @@ import {
   ensureExists,
 } from './grpc-type-convertions';
 
-// Must match `mullvad_paths::rpc_socket::get_default_rpc_socket_path` on the
-// Rust side. Without this alignment, Electron hits the legacy upstream Mullvad
-// path which can be squatted by a parallel official Mullvad VPN.app install.
-// Per product environment: a beta GUI talks to the beta daemon's socket,
-// never prod's.
-const DAEMON_RPC_PATH =
-  process.platform === 'win32'
-    ? `//./pipe/${productAnchors.displayName}`
-    : `/var/run/${productAnchors.unixProductDir}`;
+const DAEMON_RPC_PATH = daemonRpcPath(
+  process.platform,
+  process.env,
+  process.env.NODE_ENV === 'development',
+);
 
 /**
  * The signed community-forum login material returned by the daemon: the
