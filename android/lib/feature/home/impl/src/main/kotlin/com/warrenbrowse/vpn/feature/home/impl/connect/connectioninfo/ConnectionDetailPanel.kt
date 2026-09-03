@@ -11,18 +11,19 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectionDetails
 import com.warrenbrowse.vpn.feature.home.impl.connect.marqueeLine
 import com.warrenbrowse.vpn.lib.model.Endpoint
@@ -87,11 +88,7 @@ fun ConnectionDetailPanel(
             modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.smallPadding),
         )
         if (autoRecoveryCount > 0) {
-            LabelValueRow(
-                label = stringResource(R.string.connection_details_last),
-                value = lastReconnectAgeLabel(),
-                modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.smallPadding),
-            )
+            LastReconnectRow(modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.smallPadding))
         }
         LabelValueRow(
             label = stringResource(R.string.connection_details_obfuscation),
@@ -102,24 +99,36 @@ fun ConnectionDetailPanel(
 }
 
 /**
- * The age of the last recovery, re-read once a second while on screen so the
- * row does not freeze on the value it had when the panel opened. The adapter
- * stamps the moment on the elapsed-realtime clock, so a suspended device does
- * not shrink the age.
+ * The "Last" row: the age of the last recovery, re-read once a second while
+ * the screen is started so the row does not freeze on the value it had when
+ * the panel opened, and not at all while it is stopped, so a backgrounded app
+ * does not wake every second for a row nobody sees. The tick is read here and
+ * nowhere above, so each second recomposes this row and not the panel around
+ * it. The adapter stamps the moment on the elapsed-realtime clock, so a
+ * suspended device does not shrink the age.
  */
 @Composable
-private fun lastReconnectAgeLabel(): String {
+private fun LastReconnectRow(modifier: Modifier = Modifier) {
     val recoveryProvider = koinInject<WarrenAutoRecoveryProvider>()
     val lastAt by recoveryProvider.lastAutoRecoveryAtMs.collectAsStateWithLifecycle()
-    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
-    LaunchedEffect(lastAt) {
-        while (true) {
-            now = SystemClock.elapsedRealtime()
-            delay(AGE_TICK_MS)
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    val now by
+        produceState(SystemClock.elapsedRealtime(), lifecycle) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                while (true) {
+                    value = SystemClock.elapsedRealtime()
+                    delay(AGE_TICK_MS)
+                }
+            }
         }
-    }
-    val at = lastAt ?: return stringResource(R.string.connection_details_never)
-    return stringResource(R.string.connection_details_age, formatReconnectAge(now - at))
+    val value =
+        lastAt?.let { stringResource(R.string.connection_details_age, formatReconnectAge(now - it)) }
+            ?: stringResource(R.string.connection_details_never)
+    LabelValueRow(
+        label = stringResource(R.string.connection_details_last),
+        value = value,
+        modifier = modifier,
+    )
 }
 
 private const val AGE_TICK_MS = 1_000L
