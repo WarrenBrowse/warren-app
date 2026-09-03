@@ -45,6 +45,14 @@ detekt regression, run `./gradlew detekt --rerun-tasks` once before your change
 and once after, and compare the two weighted counts; a plain `detekt` prints
 nothing when up-to-date, which reads as a false clean.
 
+`connectedAndroidTest` (the instrumented suites under `src/androidTest`)
+uninstalls the app under test when it finishes, and an uninstall erases the
+app data: on the dev emulator that is the wallet, the settings and the forum
+identity. On 2026-09-03 one instrumented run removed the paid test wallet from
+the Pixel_10 emulator. Run instrumented tests only against a device you are
+willing to re-provision, and afterwards `./gradlew :app:installBetaDebug` plus
+a wallet re-import through the onboarding screen.
+
 ## Android performance: measure before and after, on the release-shaped build
 
 Never profile a debug build (StrictMode, Compose diagnostics, an 18 MB
