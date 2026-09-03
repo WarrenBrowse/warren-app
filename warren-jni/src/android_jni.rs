@@ -578,6 +578,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
             _cancel_tx: cancel_tx,
             task,
         });
+        // The VpnService routes are installed by now: whatever the API pool
+        // holds was opened on the physical network and is dead.
+        retire_api_transport();
         0
     }
     #[cfg(not(feature = "tunnel"))]
@@ -654,6 +657,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
         reset_natpmp_status();
         reset_path_health();
         reset_egress_dead();
+        // The routes go with the interface: connections pooled through the
+        // tunnel are dead the same way the pre-TUN ones were at connect.
+        retire_api_transport();
     }
 }
 
@@ -673,6 +679,8 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_notifyNetworkChan
 ) {
     #[cfg(feature = "tunnel")]
     crate::migration::notify_path_change();
+    // The API pool's connections were opened on the network just left.
+    retire_api_transport();
 }
 
 /// Returns the latest NAT-PMP port-forwarding status as a JSON string.
@@ -825,29 +833,53 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDire
     }
 }
 
+/// The one reqwest stack every API call that leaves on an ordinary socket
+/// rides (the unsigned client, the signed subscription read, the network
+/// descriptor): one connection pool and one root store per process instead
+/// of one per call. Retired at every TUN transition and handover
+/// ([`retire_api_transport`]) so no pooled connection outlives the network
+/// it was opened on; see `crate::api_transport`.
 #[cfg(target_os = "android")]
-static UNSIGNED_CLIENT: OnceLock<
-    warren_api::WarrenApiClient<warren_api::reqwest_transport::ReqwestTransport>,
-> = OnceLock::new();
+static API_TRANSPORT: crate::api_transport::TransportSlot<
+    warren_api::reqwest_transport::ReqwestTransport,
+> = crate::api_transport::TransportSlot::new(warren_api::reqwest_transport::ReqwestTransport::new);
+
+#[cfg(target_os = "android")]
+type ApiTransport =
+    crate::api_transport::SharedTransport<warren_api::reqwest_transport::ReqwestTransport>;
+
+/// A handle on the shared stack; a client built around it keeps working
+/// across retirements.
+#[cfg(target_os = "android")]
+const fn api_transport() -> ApiTransport {
+    crate::api_transport::SharedTransport::new(&API_TRANSPORT)
+}
+
+/// Drops the pooled API connections. Called on every TUN transition and
+/// network handover: a TCP flow opened on the physical network dies silently
+/// once the VpnService routes carry it through the exit (the server sees a
+/// new source address), and the first request that reused it waited out the
+/// whole 15 s transport timeout, twice per exit switch.
+#[cfg(target_os = "android")]
+fn retire_api_transport() {
+    API_TRANSPORT.retire();
+}
+
+#[cfg(target_os = "android")]
+static UNSIGNED_CLIENT: OnceLock<warren_api::WarrenApiClient<ApiTransport>> = OnceLock::new();
 
 /// The shared `WarrenApiClient` for the unsigned, no-mnemonic-available
 /// endpoints (`GET /v1/exits`, `GET /v1/multihop/directory`). The identity
 /// is only used by SIGNED methods, so a fixed placeholder is harmless here
 /// and documents the no-sign contract (mirrors warren-core's
 /// `WarrenApiClient::new_unsigned` zero-key sentinel).
-///
-/// Built once and shared: the transport owns reqwest's connection pool, so a
-/// per-call client repaid a full TCP + TLS 1.3 + HTTP/2 handshake on every
-/// fetch. The relay catalogue is refetched on each navigation, which made
-/// that handshake a visible stall.
 #[cfg(target_os = "android")]
-fn unsigned_warren_client()
--> &'static warren_api::WarrenApiClient<warren_api::reqwest_transport::ReqwestTransport> {
+fn unsigned_warren_client() -> &'static warren_api::WarrenApiClient<ApiTransport> {
     UNSIGNED_CLIENT.get_or_init(|| {
         warren_api::WarrenApiClient::new(
             PRODUCT_API_URL.to_owned(),
             warren_identity::WarrenIdentity::from_seed(&[0u8; 32]),
-            warren_api::reqwest_transport::ReqwestTransport::new(),
+            api_transport(),
         )
     })
 }
@@ -1222,11 +1254,10 @@ fn get_subscription_inner(mnemonic: &str) -> Result<u64, SubscriptionFetchError>
     })?;
     let identity = warren_identity::WarrenIdentity::from_mnemonic(mnemonic)
         .map_err(|e| SubscriptionFetchError::Setup(format!("invalid mnemonic: {e}")))?;
-    let client = warren_api::WarrenApiClient::new(
-        PRODUCT_API_URL.to_owned(),
-        identity,
-        warren_api::reqwest_transport::ReqwestTransport::new(),
-    );
+    // The identity is per call (the mnemonic never lingers); the HTTP stack
+    // under it is the process-wide one.
+    let client =
+        warren_api::WarrenApiClient::new(PRODUCT_API_URL.to_owned(), identity, api_transport());
     let resp = runtime
         .block_on(client.subscription())
         .map_err(SubscriptionFetchError::Client)?;
@@ -1275,7 +1306,7 @@ fn fetch_network_info_json() -> String {
     let Some(runtime) = RUNTIME.get() else {
         return fail();
     };
-    let transport = warren_api::reqwest_transport::ReqwestTransport::new();
+    let transport = api_transport();
     let request = HttpRequest {
         method: Method::Get,
         url: format!("{PRODUCT_API_URL}/v1/network"),

@@ -96,6 +96,12 @@ mod probes;
 #[cfg(any(test, target_os = "android"))]
 mod directory_cache;
 
+// The one HTTP stack the unsigned and signed API calls share, retired at
+// every TUN transition so no pooled connection outlives the network it was
+// opened on; host-tested.
+#[cfg(any(test, target_os = "android"))]
+mod api_transport;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 
