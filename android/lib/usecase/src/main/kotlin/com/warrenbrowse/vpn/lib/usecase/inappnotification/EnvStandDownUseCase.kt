@@ -53,7 +53,7 @@ class EnvStandDownUseCase(
         val record = store.readEnvStandDown()
         val installed = higherEnvironmentInstalled()
         if (installed == record.higherEnvironmentSeen) return
-        if (installed) standDown() else forget()
+        if (installed) standDown() else forget(record)
     }
 
     /**
@@ -95,11 +95,24 @@ class EnvStandDownUseCase(
     }
 
     /**
-     * The higher install is gone. The record is dropped whole rather than
-     * merely cleared of its banner, so a reinstall later reads as the new
-     * transition it is and stands this build down again.
+     * The higher install is gone. What this build gave up for it goes back
+     * before anything else, because the record about to be dropped is the only
+     * place those two values are written down: dropping it first leaves the
+     * user with the kill switch and the auto-connect off for good, the banner
+     * gone, and nothing on screen that ever said they had been turned off.
+     *
+     * A record the user already re-enabled restored them then, so it is left
+     * alone: writing it again would overwrite whatever they have chosen since.
+     *
+     * The record is then dropped whole rather than merely cleared of its
+     * banner, so a reinstall later reads as the new transition it is and stands
+     * this build down again.
      */
-    private fun forget() {
+    private fun forget(record: WarrenEnvStandDown) {
+        if (record.standingDown()) {
+            blockingPolicy.write(record.restoreBlockingPolicy)
+            autoConnect.write(record.restoreAutoConnect)
+        }
         store.writeEnvStandDown(WarrenEnvStandDown())
         standingDown.value = false
     }

@@ -140,6 +140,46 @@ class EnvStandDownUseCaseTest {
     }
 
     @Test
+    fun `the production install going away puts the auto-connect and the block back`() = runTest {
+        productionInstalled = true
+        val standDown = newUseCase()
+        standDown.refresh()
+        applied.clear()
+
+        productionInstalled = false
+        val afterUninstall = newUseCase()
+        afterUninstall.refresh()
+
+        // The record about to be dropped is the only place those two values are
+        // written down. Dropping it without restoring them leaves the user with
+        // no kill switch, no auto-connect, no banner, and nothing on screen that
+        // ever said they had been turned off.
+        assertEquals(listOf("blockingPolicy=true", "autoConnect=true"), applied)
+        assertTrue(autoConnect)
+        assertTrue(blockingPolicy)
+        afterUninstall().test { assertNull(awaitItem()) }
+    }
+
+    @Test
+    fun `an uninstall after the manual re-enable keeps what the user has chosen since`() = runTest {
+        productionInstalled = true
+        val standDown = newUseCase()
+        standDown.refresh()
+        standDown.reEnable()
+        // The re-enable already put both values back, and the user has turned
+        // them off themselves since. Writing the record again would overwrite
+        // that choice.
+        autoConnect = false
+        blockingPolicy = false
+        applied.clear()
+
+        productionInstalled = false
+        newUseCase().refresh()
+
+        assertEquals(emptyList(), applied)
+    }
+
+    @Test
     fun `the stand-down outranks every connection-state banner`() {
         // It explains why this build will not connect at all, so a banner about
         // the connection it is not attempting must never sit on top of it.
