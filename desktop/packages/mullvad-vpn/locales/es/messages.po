@@ -5349,3 +5349,27 @@ msgstr "Recibe un aviso cuando alguien te responda en el foro de la comunidad. A
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Esta solicitud de inicio de sesión ha caducado. Vuelve a empezar desde la página del navegador."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Iniciar sesión en el foro con un código"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Cuando el botón \"Abrir la aplicación Warren\" del foro no hizo nada"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "En la página de inicio de sesión del foro, el código de sesión aparece debajo del botón. Escríbelo aquí para aprobar ese inicio de sesión desde esta aplicación. La página sigue esperando mientras tanto."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Código de inicio de sesión"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "Un código de inicio de sesión tiene 32 letras y cifras, tal como aparece en la página del foro."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Continuar"

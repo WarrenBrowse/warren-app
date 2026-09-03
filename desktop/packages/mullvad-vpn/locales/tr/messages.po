@@ -5349,3 +5349,27 @@ msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Kapatmak 
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Bu oturum açma isteğinin süresi doldu. Tarayıcı sayfasından yeniden başlayın."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Foruma bir kodla giriş yap"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Forumdaki \"Warren uygulamasını aç\" düğmesi hiçbir şey yapmadığında"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "Forumun giriş sayfasında oturum kodu düğmenin altında gösterilir. Bu girişi bu uygulamadan onaylamak için kodu buraya yazın. Sayfa bu sırada beklemeye devam eder."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Giriş kodu"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "Bir giriş kodu, forum sayfasında gösterildiği gibi 32 harf ve rakamdan oluşur."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Devam et"

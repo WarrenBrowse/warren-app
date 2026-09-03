@@ -1646,6 +1646,41 @@ msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr ""
 
+#. Shown when the typed code is not a
+#. 32-character session id.
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr ""
+
+#. Button that hands the typed code to the
+#. consent prompt.
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr ""
+
+#. Explains where the code comes from and what
+#. typing it does.
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr ""
+
+#. Title of the view where a forum sign-in code is typed.
+#. Navigation row to the view where a forum sign-in
+#. code, shown on the forum's approval page, is typed.
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr ""
+
+#. Label of the sign-in code input field.
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr ""
+
+#. Subtitle of that row: when the fallback is for.
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr ""
+
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
 msgstr ""

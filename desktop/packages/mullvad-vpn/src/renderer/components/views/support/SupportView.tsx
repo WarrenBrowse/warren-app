@@ -7,7 +7,13 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { CommunityButton, FaqButton, RefundPolicyButton, TermsButton } from './components';
+import {
+  CommunityButton,
+  FaqButton,
+  ForumSignInCodeButton,
+  RefundPolicyButton,
+  TermsButton,
+} from './components';
 
 export function SupportView() {
   const { pop } = useHistory();
@@ -29,6 +35,7 @@ export function SupportView() {
                 <HeaderTitle>{messages.pgettext('support-view', 'Support')}</HeaderTitle>
                 <FlexColumn>
                   <CommunityButton />
+                  <ForumSignInCodeButton />
                   <FaqButton />
                   <TermsButton />
                   <RefundPolicyButton />

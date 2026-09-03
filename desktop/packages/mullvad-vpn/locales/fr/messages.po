@@ -4502,3 +4502,27 @@ msgstr "Soyez prévenu quand quelqu'un vous répond sur le forum communautaire. 
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Cette demande de connexion a expiré. Recommencez depuis la page du navigateur."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Se connecter au forum avec un code"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Quand le bouton \"Ouvrir l'application Warren\" du forum n'a rien fait"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "Sur la page de connexion du forum, le code de session est affiché sous le bouton. Saisissez-le ici pour approuver cette connexion depuis l'application. La page continue d'attendre pendant ce temps."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Code de connexion"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "Un code de connexion compte 32 lettres et chiffres, tel qu'affiché sur la page du forum."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Continuer"

@@ -4498,3 +4498,27 @@ msgstr "Află când îți răspunde cineva pe forumul comunității. Dezactivare
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Această cerere de autentificare a expirat. Reia de la pagina din browser."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Autentifică-te pe forum cu un cod"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Când butonul \"Deschide aplicația Warren\" de pe forum nu a făcut nimic"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "Pe pagina de autentificare a forumului, codul de sesiune este afișat sub buton. Introdu-l aici pentru a aproba acea autentificare din această aplicație. Pagina așteaptă în continuare între timp."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Cod de autentificare"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "Un cod de autentificare are 32 de litere și cifre, așa cum apare pe pagina forumului."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Continuă"

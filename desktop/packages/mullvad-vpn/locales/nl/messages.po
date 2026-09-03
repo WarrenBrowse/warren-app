@@ -5349,3 +5349,27 @@ msgstr "Krijg bericht wanneer iemand je antwoordt op het communityforum. Uitscha
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Dit aanmeldverzoek is verlopen. Begin opnieuw vanaf de browserpagina."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Aanmelden bij het forum met een code"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Wanneer de knop \"Warren-app openen\" op het forum niets deed"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "Op de aanmeldpagina van het forum staat de sessiecode onder de knop. Typ hem hier om die aanmelding vanuit deze app goed te keuren. De pagina blijft ondertussen wachten."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Aanmeldcode"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "Een aanmeldcode bestaat uit 32 letters en cijfers, zoals op de forumpagina staat."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Doorgaan"

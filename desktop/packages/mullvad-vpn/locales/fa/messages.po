@@ -5336,3 +5336,27 @@ msgstr "وقتی کسی در انجمن جامعه به شما پاسخ داد،
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "این درخواست ورود منقضی شده است. از صفحه مرورگر دوباره شروع کنید."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "ورود به انجمن با کد"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "وقتی دکمهٔ \"باز کردن برنامهٔ Warren\" در انجمن کاری نکرد"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "در صفحهٔ ورود انجمن، کد نشست زیر دکمه نمایش داده می‌شود. آن را اینجا وارد کنید تا آن ورود را از این برنامه تأیید کنید. صفحه در این مدت همچنان منتظر می‌ماند."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "کد ورود"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "کد ورود از ۳۲ حرف و رقم تشکیل شده است، همان‌طور که در صفحهٔ انجمن نشان داده می‌شود."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "ادامه"

@@ -33,6 +33,9 @@ export enum RoutePath {
   settingsTextImport = '/settings/settings-import/text-import',
   editApiAccessMethods = '/settings/api-access-methods/edit/:id?',
   support = '/settings/support',
+  // The forum sign-in finished by hand with the code the approval page
+  // shows when its button did not open the app.
+  forumSignInCode = '/settings/support/forum-sign-in-code',
   debug = '/settings/debug',
   selectLocation = '/select-location',
   filter = '/select-location/filter',

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ALLOWED_CONNECT_HOSTS,
   findForumDeepLinkArg,
+  forumLoginRequestFromCode,
   parseForumHandle,
   parseForumIdentityResponse,
   parseForumLoginUrl,
@@ -16,6 +17,7 @@ import {
   ForumLoginResult,
   IForumLoginRequest,
   isTerminalForumLoginResult,
+  normalizeForumSignInCode,
 } from '../../src/shared/forum-login';
 import {
   ForumLinkFixture,
@@ -89,6 +91,23 @@ describe('forum-login deep link parsing', () => {
   it('finds a forum-login arg among process argv (Windows/Linux delivery)', () => {
     expect(findForumDeepLinkArg(['/path/to/app', '--flag', good])).toBe(good);
     expect(findForumDeepLinkArg(['/path/to/app', '--flag'])).toBeUndefined();
+  });
+});
+
+describe('a sign-in code typed under Settings', () => {
+  it('raises the same-device request on the allowlisted broker', () => {
+    // The approval page shows its session id as a code when the deep link
+    // did not reach the app; the code stands for the button's own link.
+    expect(forumLoginRequestFromCode(' 0123 4567-89AB cdef\n0123456789abcdef ')).toEqual({
+      sid: '0123456789abcdef0123456789abcdef',
+      host: 'connect.warrenbrowse.com',
+      crossDevice: false,
+    });
+  });
+
+  it('refuses anything that is not a session id before it reaches the prompt', () => {
+    expect(forumLoginRequestFromCode('0123456789abcdef')).toBeUndefined();
+    expect(forumLoginRequestFromCode('')).toBeUndefined();
   });
 });
 
@@ -263,6 +282,16 @@ describe('forum_link.json, the desktop reader', () => {
         expect(fixtureCase.expect.rejected, fixtureCase.name).toBeDefined();
         expect(parsed, fixtureCase.name).toBeUndefined();
       }
+    }
+  });
+
+  it('normalises every typed sign-in code the way the Rust crate does', () => {
+    const cases = link.sign_in_code_cases.filter((c) => !skippedOnDesktop(c));
+    expect(cases.length).toBeGreaterThan(0);
+    for (const fixtureCase of cases) {
+      expect(normalizeForumSignInCode(fixtureCase.typed) ?? null, fixtureCase.name).toBe(
+        fixtureCase.expect,
+      );
     }
   });
 

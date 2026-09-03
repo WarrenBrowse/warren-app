@@ -5321,3 +5321,27 @@ msgstr "コミュニティフォーラムで誰かが返信したときに知ら
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "このサインイン要求は期限切れです。ブラウザのページからやり直してください。"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "コードでフォーラムにサインイン"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "フォーラムの「Warren アプリを開く」ボタンが反応しなかったとき"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "フォーラムのサインインページでは、ボタンの下にセッションコードが表示されています。ここに入力すると、このアプリからそのサインインを承認できます。その間、ページは待機し続けます。"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "サインインコード"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "サインインコードは、フォーラムページに表示されている32文字の英数字です。"
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "続行"

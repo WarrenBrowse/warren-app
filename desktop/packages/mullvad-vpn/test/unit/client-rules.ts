@@ -45,6 +45,7 @@ export interface SignInCodeCase {
   name: string;
   typed: string;
   expect: string | null;
+  skip?: string[];
 }
 
 export interface ForumLinkFixture {

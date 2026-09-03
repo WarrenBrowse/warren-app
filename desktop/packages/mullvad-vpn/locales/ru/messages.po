@@ -5379,3 +5379,27 @@ msgstr "Получайте уведомление, когда вам отвеч�
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Этот запрос на вход истёк. Начните заново со страницы браузера."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Войти на форум по коду"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Если кнопка \"Открыть приложение Warren\" на форуме ничего не сделала"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "На странице входа на форум код сеанса показан под кнопкой. Введите его здесь, чтобы подтвердить этот вход из приложения. Страница тем временем продолжает ждать."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Код входа"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "Код входа состоит из 32 букв и цифр, как показано на странице форума."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Продолжить"

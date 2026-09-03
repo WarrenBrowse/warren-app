@@ -5396,3 +5396,27 @@ msgstr "أعلمني عندما يرد عليك أحد في منتدى المج�
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "انتهت صلاحية طلب تسجيل الدخول هذا. ابدأ من جديد من صفحة المتصفح."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "تسجيل الدخول إلى المنتدى برمز"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "عندما لا يفعل زر \"فتح تطبيق Warren\" في المنتدى شيئًا"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "في صفحة تسجيل الدخول إلى المنتدى، يظهر رمز الجلسة أسفل الزر. أدخله هنا للموافقة على تسجيل الدخول هذا من هذا التطبيق. تواصل الصفحة الانتظار في هذه الأثناء."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "رمز تسجيل الدخول"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "يتكون رمز تسجيل الدخول من 32 حرفًا ورقمًا، كما هو معروض في صفحة المنتدى."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "متابعة"

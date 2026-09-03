@@ -50,6 +50,7 @@ export type LocalizationContexts =
   | 'beta-badge'
   | 'warren-mnemonic'
   | 'forum-login'
+  | 'forum-sign-in-code'
   | 'forum-attach'
   | 'custom-list-feature'
   | 'locations-feature';

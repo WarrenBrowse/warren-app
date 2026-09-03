@@ -26,6 +26,7 @@ import {
   ExpiredAccountErrorView,
   FilterView,
   ForumActivityView,
+  ForumSignInCodeView,
   KeysView,
   LaunchView,
   LoginView,
@@ -112,6 +113,7 @@ export default function AppRouter() {
           <Route exact path={RoutePath.settingsTextImport} component={SettingsTextImportView} />
           <Route exact path={RoutePath.editApiAccessMethods} component={EditApiAccessView} />
           <Route exact path={RoutePath.support} component={SupportView} />
+          <Route exact path={RoutePath.forumSignInCode} component={ForumSignInCodeView} />
           <Route exact path={RoutePath.debug} component={DebugView} />
           <Route exact path={RoutePath.selectLocation} component={SelectLocationView} />
           <Route exact path={RoutePath.filter} component={FilterView} />

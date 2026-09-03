@@ -2,7 +2,11 @@ import { Session, session } from 'electron';
 
 import { productAnchors } from '../shared/constants/product-env';
 import { ForumIdentity, isSlot } from '../shared/forum-identity';
-import { ForumLoginResult, IForumLoginRequest } from '../shared/forum-login';
+import {
+  ForumLoginResult,
+  IForumLoginRequest,
+  normalizeForumSignInCode,
+} from '../shared/forum-login';
 import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
 
@@ -83,6 +87,23 @@ export function parseForumLoginUrl(rawUrl: string): ParsedForumLogin | undefined
   // does not send it degrades to the ordinary prompt rather than to a warning
   // nobody can act on.
   return { sid, host, crossDevice: url.searchParams.get('xd') === '1' };
+}
+
+/**
+ * The forum sign-in finished by hand. The approval page shows its session id
+ * as a code when clicking its button did not open the app (a browser that
+ * asks first, no handler registered, an old install); typed under Settings,
+ * the code stands for the button's own link: the same-device request on the
+ * one allowlisted broker, which raises the very same consent prompt. Nothing
+ * else about the flow changes, so the browser stops being a single point of
+ * failure between the forum and the wallet.
+ */
+export function forumLoginRequestFromCode(typed: string): IForumLoginRequest | undefined {
+  const sid = normalizeForumSignInCode(typed);
+  if (sid === undefined) {
+    return undefined;
+  }
+  return { sid, host: ALLOWED_CONNECT_HOSTS[0], crossDevice: false };
 }
 
 /**

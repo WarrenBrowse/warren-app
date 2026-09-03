@@ -39,3 +39,15 @@ export type ForumLoginResult =
 export function isTerminalForumLoginResult(result: ForumLoginResult): boolean {
   return result === 'subscription-required' || result === 'clock-skew' || result === 'expired';
 }
+
+/**
+ * A sign-in code as a person types it: the 32 hex characters of the session
+ * id, in any case, with any spaces or dashes a display may have grouped them
+ * with. Returns the canonical sid, or `undefined` for anything else. The same
+ * rule as `warren_forum::normalize_sign_in_code`, pinned by the
+ * `sign_in_code_cases` of `fixtures/client-rules/forum_link.json`.
+ */
+export function normalizeForumSignInCode(typed: string): string | undefined {
+  const cleaned = typed.replace(/[\s-]/g, '').toLowerCase();
+  return /^[0-9a-f]{32}$/.test(cleaned) ? cleaned : undefined;
+}

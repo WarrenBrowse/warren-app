@@ -45,7 +45,13 @@ The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
   `AndroidForumPlatformReads` and whose JVM tests use a fake), the report
   submitter; the screens live in `lib/feature/settings/impl/support/`.
 - Desktop: `desktop/packages/mullvad-vpn/src/main/forum-*.ts` plus the daemon
-  `SignForum*` RPCs; see the files' headers.
+  `SignForum*` RPCs; see the files' headers. The sign-in code lives under
+  Settings, Support, "Sign in to the forum with a code" (the row under the
+  forum link): main normalises the typed code (`forumLoginRequestFromCode`)
+  and raises the same consent prompt as a deep link, on the one allowlisted
+  broker, same-device. The prompt's outcome table is the fixture's, `expired`
+  included, and it disarms Approve after a terminal refusal
+  (`isTerminalForumLoginResult`) the way the Android prompt does.
 
 ## The sign-in, step by step (Android)
 

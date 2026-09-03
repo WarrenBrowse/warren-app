@@ -10,6 +10,7 @@ export * from './edit-api-access';
 export * from './error';
 export * from './expired-account-error';
 export * from './forum-activity';
+export * from './forum-sign-in-code';
 export * from './filter';
 export * from './launch';
 export * from './main';

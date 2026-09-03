@@ -5321,3 +5321,27 @@ msgstr "รับการแจ้งเตือนเมื่อมีคน
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "คำขอลงชื่อเข้าใช้นี้หมดอายุแล้ว เริ่มใหม่จากหน้าเบราว์เซอร์"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "ลงชื่อเข้าใช้ฟอรัมด้วยรหัส"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "เมื่อปุ่ม \"เปิดแอป Warren\" บนฟอรัมไม่ทำงาน"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "ในหน้าลงชื่อเข้าใช้ของฟอรัม รหัสเซสชันจะแสดงอยู่ใต้ปุ่ม พิมพ์รหัสที่นี่เพื่ออนุมัติการลงชื่อเข้าใช้นั้นจากแอปนี้ หน้าเว็บจะรอต่อไประหว่างนั้น"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "รหัสลงชื่อเข้าใช้"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "รหัสลงชื่อเข้าใช้ประกอบด้วยตัวอักษรและตัวเลข 32 ตัว ตามที่แสดงบนหน้าฟอรัม"
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "ดำเนินการต่อ"

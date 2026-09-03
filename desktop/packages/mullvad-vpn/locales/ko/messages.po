@@ -5321,3 +5321,27 @@ msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다.
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "이 로그인 요청이 만료되었습니다. 브라우저 페이지에서 다시 시작하세요."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "코드로 포럼에 로그인"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "포럼의 \"Warren 앱 열기\" 버튼이 아무 반응이 없을 때"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "포럼 로그인 페이지에서 세션 코드는 버튼 아래에 표시됩니다. 여기에 입력하면 이 앱에서 해당 로그인을 승인할 수 있습니다. 그동안 페이지는 계속 기다립니다."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "로그인 코드"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "로그인 코드는 포럼 페이지에 표시된 대로 32자의 영문자와 숫자입니다."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "계속"

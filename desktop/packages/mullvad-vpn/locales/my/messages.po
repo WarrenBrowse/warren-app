@@ -5324,3 +5324,27 @@ msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ�
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "ဤဝင်ရောက်မှုတောင်းဆိုချက် သက်တမ်းကုန်သွားပါပြီ။ ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "ကုဒ်ဖြင့် ဖိုရမ်သို့ ဝင်ရောက်ရန်"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "ဖိုရမ်ရှိ \"Warren အက်ပ်ကို ဖွင့်ရန်\" ခလုတ်က ဘာမှ မဖြစ်သောအခါ"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "ဖိုရမ်၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ဆက်ရှင်ကုဒ်ကို ခလုတ်အောက်၌ ပြထားသည်။ ဤအက်ပ်မှ ထိုဝင်ရောက်မှုကို အတည်ပြုရန် ဤနေရာတွင် ရိုက်ထည့်ပါ။ ထိုအတောအတွင်း စာမျက်နှာက ဆက်စောင့်နေပါမည်။"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "ဝင်ရောက်မှုကုဒ်"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "ဝင်ရောက်မှုကုဒ်သည် ဖိုရမ်စာမျက်နှာတွင် ပြထားသည့်အတိုင်း စာလုံးနှင့် ဂဏန်း ၃၂ လုံး ဖြစ်သည်။"
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "ဆက်လုပ်ပါ"

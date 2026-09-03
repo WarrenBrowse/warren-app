@@ -78,6 +78,7 @@ import {
   cancelForumLogin,
   findForumDeepLinkArg,
   FORUM_DEEP_LINK_SCHEME,
+  forumLoginRequestFromCode,
   parseForumLoginUrl,
   PENDING_ATTACH_MAX_AGE_MS,
   PENDING_LOGIN_MAX_AGE_MS,
@@ -1349,6 +1350,17 @@ class ApplicationMain
     IpcMainEventChannel.forumLogin.handleCancel((request) => {
       this.pendingForumLogin.clear();
       return cancelForumLogin(request);
+    });
+    // The sign-in code typed by hand lands on the same consent prompt a deep
+    // link raises; main is the boundary that decides what a code stands for.
+    IpcMainEventChannel.forumLogin.handleRequestFromCode((typed) => {
+      const request = forumLoginRequestFromCode(typed);
+      if (request === undefined) {
+        return Promise.resolve(false);
+      }
+      log.info('Forum login: sign-in code accepted, asking for consent');
+      this.handleForumLoginDeepLink(request);
+      return Promise.resolve(true);
     });
 
     // Forum attach-logs: only an explicit user approval signs and sends.

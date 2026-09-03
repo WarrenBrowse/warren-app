@@ -184,6 +184,10 @@ export const ipcSchema = {
     getPending: invoke<void, IForumLoginRequest | undefined>(),
     approve: invoke<IForumLoginRequest, ForumLoginResult>(),
     cancel: invoke<IForumLoginRequest, void>(),
+    // A sign-in code typed under Settings, the browser-independent way in:
+    // main normalises it and, when it is a session id, raises the same
+    // `request` push a deep link would. Answers whether it was one.
+    requestFromCode: invoke<string, boolean>(),
     // The forum identity of this wallet, known only once the user has signed
     // in to the forum at least once (both values are minted server side).
     // Pushed on change so the account view and the activity bell update

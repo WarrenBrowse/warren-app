@@ -5321,3 +5321,27 @@ msgstr "有人在社区论坛回复你时提醒你。关闭后也会隐藏论坛
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "此登录请求已过期。请从浏览器页面重新开始。"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "使用代码登录论坛"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "当论坛上的“打开 Warren 应用”按钮没有反应时"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "在论坛登录页面，会话代码显示在按钮下方。在此输入该代码，即可从本应用批准该次登录。在此期间页面会继续等待。"
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "登录代码"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "登录代码由 32 个字母和数字组成，与论坛页面上显示的一致。"
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "继续"

@@ -5349,3 +5349,27 @@ msgstr "Få beskjed når noen svarer deg på fellesskapsforumet. Slår du det av
 msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Denne påloggingsforespørselen er utløpt. Start på nytt fra nettlesersiden."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign in to the forum with a code"
+msgstr "Logg inn på forumet med en kode"
+
+msgctxt "forum-sign-in-code"
+msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgstr "Når knappen \"Åpne Warren-appen\" på forumet ikke gjorde noe"
+
+msgctxt "forum-sign-in-code"
+msgid "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+msgstr "På forumets innloggingsside vises øktkoden under knappen. Skriv den inn her for å godkjenne den innloggingen fra denne appen. Siden fortsetter å vente imens."
+
+msgctxt "forum-sign-in-code"
+msgid "Sign-in code"
+msgstr "Innloggingskode"
+
+msgctxt "forum-sign-in-code"
+msgid "A sign-in code is 32 letters and digits, as shown on the forum page."
+msgstr "En innloggingskode består av 32 bokstaver og sifre, slik den vises på forumsiden."
+
+msgctxt "forum-sign-in-code"
+msgid "Continue"
+msgstr "Fortsett"
