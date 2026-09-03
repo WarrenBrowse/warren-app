@@ -484,11 +484,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 verify: { body, version in
                     WarrenAnnouncementsVerifier.verify(envelope: body, currentVersion: version)
                 },
+                address: {
+                    // Reading the wallet derives a seed from the phrase, which
+                    // is the same cost the lookup itself pays, so it goes on
+                    // the same queue rather than on a thread of the
+                    // cooperative pool.
+                    await withCheckedContinuation {
+                        (continuation: CheckedContinuation<String?, Never>) in
+                        Self.campaignVoucherQueue.async {
+                            continuation.resume(returning: Self.walletAddress())
+                        }
+                    }
+                },
                 voucher: { campaignID in
                     // The lookup signs and blocks on an HTTP round trip, so it
                     // runs on a queue of its own rather than parking a thread
                     // of the cooperative pool for the length of a request.
-                    await withCheckedContinuation { (continuation: CheckedContinuation<String?, Never>) in
+                    await withCheckedContinuation {
+                        (continuation: CheckedContinuation<WarrenCampaignVoucherAnswer, Never>) in
                         Self.campaignVoucherQueue.async {
                             continuation.resume(returning: Self.campaignVoucher(campaignID))
                         }
@@ -522,25 +535,42 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         qos: .utility
     )
 
-    /// This account's code for `campaignID`, over the wallet-signed lookup.
-    /// `nil` both for an account outside the cohort and for a lookup that
-    /// failed: on this side both are simply a card with no code.
-    ///
-    /// The wallet is read the way the forum login reads it, and the code is
-    /// never logged, not even as a length: it is a bearer token worth a month
-    /// of service and its only destination is the reader's own screen.
-    private static func campaignVoucher(_ campaignID: String) -> String? {
+    /// Warren SS58 address of the wallet the campaign lookup signs with, `nil`
+    /// when this device holds none. It keys the codes the feed holds so one
+    /// account is never shown the offer drawn for another, and it is never
+    /// logged.
+    private static func walletAddress() -> String? {
         guard let mnemonic = try? WarrenWalletKeychain.load(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
         else {
             return nil
         }
         defer { wallet.forgetSecret() }
+        return wallet.publicKeyAddress
+    }
+
+    /// This account's code for `campaignID`, over the wallet-signed lookup.
+    ///
+    /// The three outcomes are kept apart because the feed holds a server
+    /// answer and re-asks a failure: reading a transient outage as "outside
+    /// the cohort" would tell a cohort member they were never eligible for
+    /// the rest of the session.
+    ///
+    /// The wallet is read the way the forum login reads it, and the code is
+    /// never logged, not even as a length: it is a bearer token worth a month
+    /// of service and its only destination is the reader's own screen.
+    private static func campaignVoucher(_ campaignID: String) -> WarrenCampaignVoucherAnswer {
+        guard let mnemonic = try? WarrenWalletKeychain.load(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return .unanswered
+        }
+        defer { wallet.forgetSecret() }
         switch WarrenAccountClient.campaignVoucher(seed: wallet.seed, campaignID: campaignID) {
         case let .success(code):
-            return code
+            return code.map(WarrenCampaignVoucherAnswer.drawn) ?? .outside
         case .failure:
-            return nil
+            return .unanswered
         }
     }
 

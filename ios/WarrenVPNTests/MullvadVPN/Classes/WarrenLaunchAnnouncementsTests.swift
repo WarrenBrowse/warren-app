@@ -143,7 +143,7 @@ final class WarrenLaunchAnnouncementsTests: XCTestCase {
             verify: { _, _ in live },
             voucher: { campaign in
                 asked.append(campaign)
-                return "ABCD1234EFGH5678"
+                return .drawn("ABCD1234EFGH5678")
             }
         )
 
@@ -170,7 +170,7 @@ final class WarrenLaunchAnnouncementsTests: XCTestCase {
             verify: { _, _ in live },
             voucher: { campaign in
                 asked.append(campaign)
-                return "ABCD1234EFGH5678"
+                return .drawn("ABCD1234EFGH5678")
             }
         )
 
@@ -185,7 +185,7 @@ final class WarrenLaunchAnnouncementsTests: XCTestCase {
             announcements: [announcement(id: "launch", campaign: "prod-launch")],
             activeUntil: Date().addingTimeInterval(3600)
         )
-        let feed = makeFeed(verify: { _, _ in live }, voucher: { _ in nil })
+        let feed = makeFeed(verify: { _, _ in live }, voucher: { _ in .outside })
 
         await feed.refresh()
 
@@ -193,16 +193,167 @@ final class WarrenLaunchAnnouncementsTests: XCTestCase {
         XCTAssertNil(feed.announcements.first?.voucherCode)
     }
 
+    func testTheCodeIsDrawnOnceAndNotAskedForAgainOnEveryPoll() async {
+        var asked: [String] = []
+        let live = WarrenVerifiedAnnouncements(
+            announcements: [announcement(id: "launch", campaign: "prod-launch")],
+            activeUntil: Date().addingTimeInterval(3600)
+        )
+        let feed = makeFeed(
+            verify: { _, _ in live },
+            voucher: { campaign in
+                asked.append(campaign)
+                return .drawn("ABCD1234EFGH5678")
+            }
+        )
+
+        await feed.refresh()
+        await feed.refresh()
+        await feed.refresh()
+
+        // The lookup is wallet-signed. Re-issuing it on every five minute
+        // refresh would turn a one-shot draw into a presence beacon: the
+        // backend would learn roughly when this wallet has the app open, for
+        // the life of the campaign.
+        XCTAssertEqual(asked, ["prod-launch"])
+        XCTAssertEqual(feed.announcements.first?.voucherCode, "ABCD1234EFGH5678")
+    }
+
+    func testAnAccountOutsideTheCohortIsNotAskedForAgain() async {
+        var asked: [String] = []
+        let live = WarrenVerifiedAnnouncements(
+            announcements: [announcement(id: "launch", campaign: "prod-launch")],
+            activeUntil: Date().addingTimeInterval(3600)
+        )
+        let feed = makeFeed(
+            verify: { _, _ in live },
+            voucher: { campaign in
+                asked.append(campaign)
+                return .outside
+            }
+        )
+
+        await feed.refresh()
+        await feed.refresh()
+
+        // Outside the cohort is a final server answer, not a failure to retry.
+        XCTAssertEqual(asked, ["prod-launch"])
+        XCTAssertNil(feed.announcements.first?.voucherCode)
+    }
+
+    func testALookupThatNeverAnsweredIsAskedAgainOnTheNextPoll() async {
+        var asked: [String] = []
+        var reachable = false
+        let live = WarrenVerifiedAnnouncements(
+            announcements: [announcement(id: "launch", campaign: "prod-launch")],
+            activeUntil: Date().addingTimeInterval(3600)
+        )
+        let feed = makeFeed(
+            verify: { _, _ in live },
+            voucher: { campaign in
+                asked.append(campaign)
+                return reachable ? .drawn("ABCD1234EFGH5678") : .unanswered
+            }
+        )
+
+        await feed.refresh()
+        XCTAssertNil(feed.announcements.first?.voucherCode)
+
+        reachable = true
+        await feed.refresh()
+
+        // A transient outage must never tell a cohort member they were never
+        // eligible, so nothing is held for it.
+        XCTAssertEqual(asked, ["prod-launch", "prod-launch"])
+        XCTAssertEqual(feed.announcements.first?.voucherCode, "ABCD1234EFGH5678")
+    }
+
+    func testAnAccountSwitchDropsTheCodeDrawnForThePreviousWallet() async {
+        var asked: [String] = []
+        var address = "wbAAAA"
+        let live = WarrenVerifiedAnnouncements(
+            announcements: [announcement(id: "launch", campaign: "prod-launch")],
+            activeUntil: Date().addingTimeInterval(3600)
+        )
+        let feed = makeFeed(
+            verify: { _, _ in live },
+            voucher: { campaign in
+                asked.append(campaign)
+                return .drawn("ABCD1234EFGH5678")
+            },
+            address: { address }
+        )
+
+        await feed.refresh()
+        XCTAssertEqual(feed.announcements.first?.voucherCode, "ABCD1234EFGH5678")
+
+        address = "wbBBBB"
+        await feed.refresh()
+
+        // A code belongs to the wallet that asked for it, and the wallet that
+        // replaces it has its own or none at all.
+        XCTAssertEqual(asked, ["prod-launch", "prod-launch"])
+    }
+
+    func testACodeDrawnForAWalletReplacedMidRequestIsNeverShown() async {
+        var address = "wbAAAA"
+        let live = WarrenVerifiedAnnouncements(
+            announcements: [announcement(id: "launch", campaign: "prod-launch")],
+            activeUntil: Date().addingTimeInterval(3600)
+        )
+        let feed = makeFeed(
+            verify: { _, _ in live },
+            voucher: { _ in
+                // The user restores another wallet while the signed request is
+                // in flight.
+                address = "wbBBBB"
+                return .drawn("ABCD1234EFGH5678")
+            },
+            address: { address }
+        )
+
+        await feed.refresh()
+
+        XCTAssertNil(
+            feed.announcements.first?.voucherCode,
+            "the previous wallet's code must never reach the new account's screen"
+        )
+    }
+
+    func testADeviceHoldingNoWalletIsNeverAskedForACode() async {
+        var asked: [String] = []
+        let live = WarrenVerifiedAnnouncements(
+            announcements: [announcement(id: "launch", campaign: "prod-launch")],
+            activeUntil: Date().addingTimeInterval(3600)
+        )
+        let feed = makeFeed(
+            verify: { _, _ in live },
+            voucher: { campaign in
+                asked.append(campaign)
+                return .drawn("ABCD1234EFGH5678")
+            },
+            address: { nil }
+        )
+
+        await feed.refresh()
+
+        XCTAssertEqual(asked, [])
+        XCTAssertEqual(feed.announcements.count, 1, "the operator's text still reaches the reader")
+        XCTAssertNil(feed.announcements.first?.voucherCode)
+    }
+
     private func makeFeed(
         fetch: @escaping (URL) async -> Data? = { _ in Data("{}".utf8) },
         verify: @escaping (Data, String) -> WarrenVerifiedAnnouncements?,
-        voucher: @escaping (String) async -> String? = { _ in nil }
+        voucher: @escaping (String) async -> WarrenCampaignVoucherAnswer = { _ in .outside },
+        address: @escaping () async -> String? = { "wbAAAA" }
     ) -> WarrenLaunchAnnouncements {
         WarrenLaunchAnnouncements(
             currentVersion: "2026.3",
             backend: WarrenLaunchAnnouncements.Backend(
                 fetch: fetch,
                 verify: verify,
+                address: address,
                 voucher: voucher
             )
         )

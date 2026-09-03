@@ -38,6 +38,19 @@ protocol WarrenAnnouncementDismissing: AnyObject {
 
 extension AppPreferences: WarrenAnnouncementDismissing {}
 
+/// What the wallet-signed campaign lookup answered for this account. A card
+/// with no code either way, and the difference is only whether asking again
+/// could ever change the answer. The same three outcomes the daemon and
+/// Android hold, under the same names.
+enum WarrenCampaignVoucherAnswer: Equatable {
+    /// The code drawn for this account.
+    case drawn(String)
+    /// The server answered: this account is outside the cohort, for good.
+    case outside
+    /// No answer came back, so the next poll asks again.
+    case unanswered
+}
+
 /// The verified set this installation holds, and the instant it stops being
 /// displayable without a further fetch.
 struct WarrenHeldAnnouncements: Equatable {
@@ -76,12 +89,15 @@ final class WarrenLaunchAnnouncements: @unchecked Sendable {
         var fetch: (URL) async -> Data?
         /// Verification, which is where every display rule lives.
         var verify: (Data, String) -> WarrenVerifiedAnnouncements?
-        /// This account's code for `campaignID`, `nil` both for an account
-        /// outside the cohort and for a lookup that failed: on this side both
-        /// are simply a card with no code. Asynchronous because the real one
-        /// signs and blocks on an HTTP round trip, which belongs on a queue of
-        /// its own rather than on a thread of the cooperative pool.
-        var voucher: (String) async -> String?
+        /// Warren SS58 address of the identity the voucher lookup would sign
+        /// with, `nil` when this device holds no wallet at all. It keys the
+        /// held codes and nothing else, and it never reaches a log.
+        var address: () async -> String?
+
+        /// This account's code for `campaignID`. Asynchronous because the real
+        /// one signs and blocks on an HTTP round trip, which belongs on a queue
+        /// of its own rather than on a thread of the cooperative pool.
+        var voucher: (String) async -> WarrenCampaignVoucherAnswer
     }
 
     /// The held set moved: the banner has to be re-rendered.
@@ -95,6 +111,21 @@ final class WarrenLaunchAnnouncements: @unchecked Sendable {
     private var held: WarrenHeldAnnouncements = .empty
     private var lastFetch: Date?
     private var timer: Timer?
+
+    /// The identity the held codes were drawn for, and what the signed lookup
+    /// answered for each campaign under it.
+    ///
+    /// In memory only, and dropped whole on an identity change: a code belongs
+    /// to the wallet that asked for it, and the wallet that replaces it has its
+    /// own or none at all. Re-drawing is always safe because the server call is
+    /// a pure lookup that never mints and never assigns.
+    ///
+    /// Deliberately not zeroized. The code is rendered on the reader's own
+    /// screen and travels through the card to get there, so wiping this one
+    /// copy would be theatre; what bounds the exposure is that it never reaches
+    /// a log, an error or a problem report.
+    private var codesAddress: String?
+    private var codesByCampaign: [String: WarrenCampaignVoucherAnswer] = [:]
 
     init(
         anchors: WarrenProductAnchors = .current,
@@ -190,7 +221,23 @@ final class WarrenLaunchAnnouncements: @unchecked Sendable {
     /// that offers a campaign. The wallet is touched only when an announcement
     /// actually carries an offer: the signed lookup is the one request here
     /// that is tied to an account, so it is never made speculatively.
+    ///
+    /// The identity is read BEFORE anything else, and every code drawn under
+    /// another one is dropped first. That ordering is the daemon's
+    /// (`WarrenAnnouncementsUpdater::claim`) and Android's (`SessionCodes`):
+    /// acting under a stale identity would show one account the offer drawn
+    /// for another.
     private func withCodes(_ announcements: [WarrenAnnouncement]) async -> [WarrenAnnouncement] {
+        guard announcements.contains(where: { $0.voucherCampaignID != nil }) else {
+            return announcements
+        }
+        guard let address = await backend.address() else { return announcements }
+        lock.withLock {
+            if codesAddress != address {
+                codesAddress = address
+                codesByCampaign = [:]
+            }
+        }
         var withCodes: [WarrenAnnouncement] = []
         withCodes.reserveCapacity(announcements.count)
         for announcement in announcements {
@@ -199,10 +246,46 @@ final class WarrenLaunchAnnouncements: @unchecked Sendable {
                 continue
             }
             var withCode = announcement
-            withCode.voucherCode = await backend.voucher(campaign)
+            withCode.voucherCode = await claim(campaign, drawnFor: address)
             withCodes.append(withCode)
         }
         return withCodes
+    }
+
+    /// This account's code for `campaign`, `nil` when there is none to show.
+    ///
+    /// The answer is held for the session, so the wallet-signed request goes
+    /// out once rather than on every five minute refresh. Repeating it would
+    /// turn a one-shot draw into a wallet-authenticated presence beacon: the
+    /// backend would learn roughly when this wallet has the app open, twelve
+    /// times an hour, for the life of the campaign. The announcements
+    /// themselves ride a document byte-identical for every caller, so nothing
+    /// else in this poll says anything about the account.
+    ///
+    /// Outside the cohort is held too, because it is a final server answer
+    /// rather than a failure. A lookup that never answered is held by nothing,
+    /// so a transient outage never tells a cohort member they were never
+    /// eligible.
+    private func claim(_ campaign: String, drawnFor address: String) async -> String? {
+        if let answer = lock.withLock({ codesByCampaign[campaign] }) {
+            return code(of: answer)
+        }
+        let answer = await backend.voucher(campaign)
+        guard answer != .unanswered else { return nil }
+        // The wallet can be replaced while the request is in flight (create,
+        // restore, logout). A code drawn for the previous identity is not this
+        // one's, so it is neither shown nor held.
+        guard await backend.address() == address else { return nil }
+        lock.withLock {
+            guard codesAddress == address else { return }
+            codesByCampaign[campaign] = answer
+        }
+        return code(of: answer)
+    }
+
+    private func code(of answer: WarrenCampaignVoucherAnswer) -> String? {
+        guard case let .drawn(code) = answer else { return nil }
+        return code
     }
 
     private func publish(_ next: WarrenHeldAnnouncements) {
