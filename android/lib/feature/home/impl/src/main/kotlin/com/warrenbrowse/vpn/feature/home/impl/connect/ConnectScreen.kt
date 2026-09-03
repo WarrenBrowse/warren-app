@@ -6,6 +6,7 @@ import androidx.compose.runtime.DisposableEffect
 import android.app.Activity
 import android.content.res.Resources
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -230,6 +231,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val context = LocalContext.current
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
+    // Time-to-fully-drawn ends at this screen's first frame: `am start -W`
+    // stops at the splash, and every input of that first frame (tunnel state,
+    // wallet, pin, cached labels) is a synchronous local read, so no later
+    // frame adds content worth waiting for. The relay catalogue is a network
+    // fetch and deliberately not a condition: an offline start would then
+    // never report at all.
+    ReportDrawn()
 
     val warrenScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }

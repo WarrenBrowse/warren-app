@@ -21,6 +21,7 @@ dependencies {
     implementation(projects.lib.ui.util)
     implementation(projects.lib.usecase)
 
+    implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.animation)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.compose.icons.extended)
