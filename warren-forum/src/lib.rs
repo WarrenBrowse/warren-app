@@ -152,16 +152,37 @@ pub fn build_signed_request_at(
     host: &str,
     timestamp: u64,
 ) -> Result<SignedForumRequest, ForumRequestError> {
+    let nonce = nonce_16().ok_or(ForumRequestError::Invalid)?;
+    build_signed_request_with_nonce(signing_key, sid, host, timestamp, nonce)
+}
+
+/// [`build_signed_request_at`] with the nonce supplied by the caller, so the
+/// exact signature can be pinned by a golden vector (`forum_login_v1.json`).
+/// The broker refuses a nonce it has already seen, so a production caller
+/// goes through the minting twin and never reuses one.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the host is not allowlisted or the `sid`
+/// is malformed.
+pub fn build_signed_request_with_nonce(
+    signing_key: &SigningKey,
+    sid: &str,
+    host: &str,
+    timestamp: u64,
+    nonce: [u8; 16],
+) -> Result<SignedForumRequest, ForumRequestError> {
     if !is_allowed_connect_host(host) || !is_valid_sid(sid) {
         return Err(ForumRequestError::Invalid);
     }
     let body = format!("{{\"sid\":\"{sid}\"}}");
-    signed_post(
+    signed_post_with_nonce(
         signing_key,
         host,
         "/v1/forum/login",
         body.into_bytes(),
         timestamp,
+        nonce,
     )
 }
 
@@ -182,6 +203,23 @@ pub fn build_signed_report_request(
     log_gz: Option<&[u8]>,
     timestamp: u64,
 ) -> Result<SignedForumRequest, ForumRequestError> {
+    let nonce = nonce_16().ok_or(ForumRequestError::Invalid)?;
+    build_signed_report_request_with_nonce(signing_key, report_json, log_gz, timestamp, nonce)
+}
+
+/// [`build_signed_report_request`] with the nonce supplied by the caller, for
+/// the golden-vector replay; production callers mint one through the twin.
+///
+/// # Errors
+///
+/// As [`build_signed_report_request`], minus the RNG.
+pub fn build_signed_report_request_with_nonce(
+    signing_key: &SigningKey,
+    report_json: &str,
+    log_gz: Option<&[u8]>,
+    timestamp: u64,
+    nonce: [u8; 16],
+) -> Result<SignedForumRequest, ForumRequestError> {
     let mut report: serde_json::Map<String, serde_json::Value> =
         serde_json::from_str(report_json).map_err(|_| ForumRequestError::Invalid)?;
     if report.contains_key("log_gz_b64") {
@@ -196,12 +234,13 @@ pub fn build_signed_report_request(
     }
     let body = serde_json::to_vec(&serde_json::Value::Object(report))
         .map_err(|_| ForumRequestError::Invalid)?;
-    signed_post(
+    signed_post_with_nonce(
         signing_key,
         ALLOWED_CONNECT_HOST,
         "/v1/forum/report",
         body,
         timestamp,
+        nonce,
     )
 }
 
@@ -213,6 +252,26 @@ fn signed_post(
     timestamp: u64,
 ) -> Result<SignedForumRequest, ForumRequestError> {
     let nonce = nonce_16().ok_or(ForumRequestError::Invalid)?;
+    signed_post_with_nonce(signing_key, host, path, body, timestamp, nonce)
+}
+
+/// The raw signed POST of `body` to `path` on `host`, with the caller's nonce.
+/// Public for the golden-vector replay only, which signs against the vector's
+/// synthetic host: the flows above keep the allowlist in front of it, and a
+/// production caller never reaches this with a host of its own.
+///
+/// # Errors
+///
+/// Never today; the `Result` keeps the signature of the minting twin, whose
+/// one failure is the OS RNG.
+pub fn signed_post_with_nonce(
+    signing_key: &SigningKey,
+    host: &str,
+    path: &str,
+    body: Vec<u8>,
+    timestamp: u64,
+    nonce: [u8; 16],
+) -> Result<SignedForumRequest, ForumRequestError> {
     let sig = sign_request(signing_key, "POST", path, &body, timestamp, nonce);
     let mut headers: Vec<(String, String)> = sig
         .headers()

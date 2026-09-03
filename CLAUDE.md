@@ -149,6 +149,16 @@ fork). Do NOT reintroduce the old shim names (`warren-protocol`,
 `warren-multihop`, `warren-natpmp-*`, `warren-backoff`, `warren-relay`); the
 engine equivalents now live under `warrenguard-*`.
 
+The shared golden-vector corpus is the `vectors/` submodule
+(`WarrenBrowse/warren-vectors`, pinned by gitlink like in warren-connect and
+warren-sdk-rs). `warren-forum/tests/forum_login_vector.rs` reads
+`vectors/forum_login_v1.json`, so run `git submodule update --init vectors`
+once per clone; `warren-tests.yml` does the same and inits only that
+submodule. The app-level client rules (deep-link classes, outcome envelopes,
+product anchors) are not vectors: they live in `fixtures/client-rules/`
+(schema and readers in its README) and are replayed by cargo, vitest and the
+JVM tests from the same files.
+
 **Regenerate the lock with `scripts/dev/regen-lockfile.sh`, never a bare
 `cargo update -w`.** CI checks the siblings out at the pinned SHAs, but your dev
 machine has them at branch HEAD (newer). A plain `cargo update` resolves against

@@ -33,6 +33,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      - name: Checkout the golden vectors submodule
+        # The warren-forum suite replays vectors/forum_login_v1.json, the wire
+        # contract shared with warren-connect, so the vectors submodule has to
+        # be present. Only that one: the other submodules (the Mullvad
+        # binaries, the Windows libraries, the Gradle plugin) are large and
+        # nothing in this scope reads them. The token rides the first request
+        # for the reason the build-env action gives for the sibling clones:
+        # the fleet egresses through one IP and GitHub's anonymous throttle
+        # answers a first unauthenticated request with a fatal error.
+        env:
+          ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ENGINE_TOKEN" ]; then
+            auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+            git -c "http.extraheader=AUTHORIZATION: basic ${auth}" \
+              submodule update --init vectors
+          else
+            git submodule update --init vectors
+          fi
+          test -f vectors/forum_login_v1.json
+
       - uses: ./.github/actions/mullvad-build-env
         with:
           engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
