@@ -61,17 +61,28 @@ mod product_env_drift_gate {
 
 #[cfg(test)]
 mod ios_endpoint_drift_gate {
-    //! The iOS API endpoint config (`ios/Configurations/Api.xcconfig.template`)
-    //! is a hand-maintained xcconfig, not generated. The single source of truth
-    //! for product anchors is `warren_contract::product`. This gate runs in the
-    //! routine Warren test scope and fails the moment the shipped iOS API host
-    //! drifts from that anchor, so a shipped iOS build pointing back at
-    //! Mullvad's upstream endpoint cannot silently return.
+    //! The iOS API endpoint config is a hand-maintained pair of xcconfig files,
+    //! not generated: `ios/Configurations/Api.xcconfig.template` takes the API
+    //! host from `ios/Configurations/ProductEnv.xcconfig`, whose per-environment
+    //! table is selected by `WARREN_PRODUCT_ENV` (prod by default). The single
+    //! source of truth for product anchors is `warren_contract::product`. This
+    //! gate runs in the routine Warren test scope and fails the moment the
+    //! shipped iOS API host drifts from that anchor, so a shipped iOS build
+    //! pointing back at Mullvad's upstream endpoint cannot silently return.
+    //! (`warren-product-env`'s lockstep suite holds the whole table to the
+    //! environment crate; this gate holds the Release build's resolved host to
+    //! the contract.)
 
     /// The iOS API xcconfig template, resolved relative to this crate.
-    const XCCONFIG_PATH: &str = concat!(
+    const API_XCCONFIG_PATH: &str = concat!(
         env!("CARGO_MANIFEST_DIR"),
         "/../ios/Configurations/Api.xcconfig.template"
+    );
+
+    /// The iOS product-environment xcconfig (tracked, no template).
+    const PRODUCT_ENV_XCCONFIG_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../ios/Configurations/ProductEnv.xcconfig"
     );
 
     /// Host component of an `https://host[:port]/...` URL.
@@ -83,44 +94,74 @@ mod ios_endpoint_drift_gate {
             .unwrap_or("")
     }
 
-    /// Value of a `KEY[config=Release] = ...` line in the xcconfig, trimmed.
-    fn release_value<'a>(xcconfig: &'a str, key: &str) -> Option<&'a str> {
-        let needle = format!("{key}[config=Release]");
+    /// Value of a `KEY = ...` line in the xcconfig (the exact key, no
+    /// `[config=...]` condition), trimmed.
+    fn value<'a>(xcconfig: &'a str, key: &str) -> Option<&'a str> {
         xcconfig.lines().find_map(|line| {
-            let value = line.trim().strip_prefix(&needle)?.trim_start();
-            Some(value.strip_prefix('=')?.trim())
+            let rest = line.trim().strip_prefix(key)?.trim_start();
+            Some(rest.strip_prefix('=')?.trim())
         })
+    }
+
+    /// True iff some line sets `key` under a `[config=Release]` condition.
+    fn has_release_override(xcconfig: &str, key: &str) -> bool {
+        let needle = format!("{key}[config=Release]");
+        xcconfig
+            .lines()
+            .any(|line| line.trim().starts_with(&needle))
     }
 
     #[test]
     fn ios_release_api_host_matches_the_product_anchor() {
-        let xcconfig = std::fs::read_to_string(XCCONFIG_PATH)
+        let api = std::fs::read_to_string(API_XCCONFIG_PATH)
             .expect("iOS Api.xcconfig.template must exist at the expected path");
-        let host_name = release_value(&xcconfig, "HOST_NAME")
-            .expect("HOST_NAME[config=Release] must be present in the xcconfig");
-        let api_host_template = release_value(&xcconfig, "API_HOST_NAME")
-            .expect("API_HOST_NAME[config=Release] must be present in the xcconfig");
-        // Resolve the xcconfig interpolation, e.g. `api.$(HOST_NAME)`.
-        let resolved_api_host = api_host_template.replace("$(HOST_NAME)", host_name);
+        let product_env = std::fs::read_to_string(PRODUCT_ENV_XCCONFIG_PATH)
+            .expect("iOS ProductEnv.xcconfig must exist at the expected path");
+
+        // The API host follows the product environment, never a build
+        // configuration of its own.
+        assert_eq!(
+            value(&api, "API_HOST_NAME"),
+            Some("$(WARREN_API_HOST)"),
+            "API_HOST_NAME must resolve through WARREN_API_HOST in Api.xcconfig.template"
+        );
+        assert!(
+            !has_release_override(&api, "API_HOST_NAME"),
+            "API_HOST_NAME must not be overridden per build configuration"
+        );
+        // The Release configuration resolves the default environment.
+        let default_env = value(&product_env, "WARREN_PRODUCT_ENV")
+            .expect("WARREN_PRODUCT_ENV must have an unconditional default in ProductEnv.xcconfig");
+        assert!(
+            !has_release_override(&product_env, "WARREN_PRODUCT_ENV"),
+            "the Release configuration must build the default product environment"
+        );
+        let resolved_api_host = value(&product_env, &format!("WARREN_API_HOST_{default_env}"))
+            .unwrap_or_else(|| {
+                panic!("WARREN_API_HOST_{default_env} must be present in ProductEnv.xcconfig")
+            });
 
         let anchor_host = url_host(warren_contract::product::API_URL);
 
         assert_eq!(
             resolved_api_host, anchor_host,
             "iOS Release API host ({resolved_api_host}) drifted from the product anchor \
-             warren_contract::product::API_URL host ({anchor_host}); update the xcconfig HOST_NAME \
+             warren_contract::product::API_URL host ({anchor_host}); update ProductEnv.xcconfig \
              (or the anchor) so they match"
         );
     }
 
     #[test]
     fn ios_xcconfig_ships_no_mullvad_infrastructure() {
-        let xcconfig = std::fs::read_to_string(XCCONFIG_PATH)
-            .expect("iOS Api.xcconfig.template must exist at the expected path");
-        assert!(
-            !xcconfig.to_ascii_lowercase().contains("mullvad"),
-            "the iOS xcconfig must not reference Mullvad infrastructure: every endpoint derives \
-             from the Warren product anchors, never mullvad.net / a Mullvad-pinned host"
-        );
+        for path in [API_XCCONFIG_PATH, PRODUCT_ENV_XCCONFIG_PATH] {
+            let xcconfig = std::fs::read_to_string(path)
+                .expect("the iOS xcconfig must exist at the expected path");
+            assert!(
+                !xcconfig.to_ascii_lowercase().contains("mullvad"),
+                "{path}: the iOS xcconfig must not reference Mullvad infrastructure: every \
+                 endpoint derives from the Warren product anchors, never mullvad.net / a \
+                 Mullvad-pinned host"
+            );
+        }
     }
 }
