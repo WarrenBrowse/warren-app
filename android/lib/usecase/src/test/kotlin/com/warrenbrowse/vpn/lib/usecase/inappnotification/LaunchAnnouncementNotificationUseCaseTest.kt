@@ -148,10 +148,10 @@ class LaunchAnnouncementNotificationUseCaseTest {
 
     @Test
     fun `the card outranks the operator notice it can be buried under`() {
-        // Desktop NotificationArea: the announcement provider is first of all.
-        // A warning or an error notice holds the slot for as long as it stands,
-        // and the code the card carries stops being worth anything once the
-        // campaign closes; the card steps aside the moment it is put away.
+        // Desktop NotificationArea: the announcement provider sits above the
+        // notice. A warning or an error notice holds the slot for as long as it
+        // stands, and the code the card carries stops being worth anything once
+        // the campaign closes; the card steps aside the moment it is put away.
         val card = InAppNotification.LaunchAnnouncement(announcement("a1"))
         val notice =
             InAppNotification.OperatorNotice(
@@ -161,12 +161,24 @@ class LaunchAnnouncementNotificationUseCaseTest {
             card,
             listOf(
                     notice,
-                    InAppNotification.EnvStandDown,
                     InAppNotification.HostOffline,
                     InAppNotification.TunnelStateBlocked,
                     card,
                 )
                 .maxByOrNull { it.priority },
+        )
+    }
+
+    @Test
+    fun `the stand-down outranks the card, since it is why the app refuses to work`() {
+        // The day production opens is exactly when the two fire together on a
+        // beta install: the announcement goes out, the machine now runs prod,
+        // and this build has stood down. The single slot then has to carry the
+        // reason it will not connect and the way back, not the campaign.
+        val card = InAppNotification.LaunchAnnouncement(announcement("a1"))
+        assertEquals(
+            InAppNotification.EnvStandDown,
+            listOf(card, InAppNotification.EnvStandDown).maxByOrNull { it.priority },
         )
     }
 }

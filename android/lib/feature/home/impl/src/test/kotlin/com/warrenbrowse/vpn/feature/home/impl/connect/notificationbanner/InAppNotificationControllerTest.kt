@@ -90,17 +90,20 @@ class InAppNotificationControllerTest {
         val unsupportedVersion = InAppNotification.UnsupportedVersion(mockk())
         versionNotifications.value = unsupportedVersion
 
-        // The stand-down says this build will not connect at all, so it takes
-        // the head of the ladder: any banner about the connection would be
-        // describing a state this build is no longer trying to reach.
+        // The stand-down heads the whole ladder, the operator's own messages
+        // included: it says why this build will not connect at all and carries
+        // the only way back. The day production opens is exactly when it
+        // competes with the launch card, on every beta install that just stood
+        // down, and a campaign message shown there leaves the reader with an
+        // app that refuses to work and no word on why.
         val envStandDown = InAppNotification.EnvStandDown
         envStandDownNotifications.value = envStandDown
 
-        // The launch announcement is first of all (desktop NotificationArea):
-        // it steps aside the moment the reader puts it away, while a notice or
-        // a stand-down holds the slot for as long as the condition stands, and
-        // the code it carries stops being worth anything once the campaign
-        // closes.
+        // The launch announcement comes next, above the operator notice
+        // (desktop NotificationArea): it steps aside the moment the reader puts
+        // it away, while a notice holds the slot for as long as it stands, and
+        // the code the card carries stops being worth anything once the
+        // campaign closes.
         val announcement =
             InAppNotification.LaunchAnnouncement(
                 WarrenAnnouncement(
@@ -117,8 +120,8 @@ class InAppNotificationControllerTest {
 
             assertEquals(
                 listOf(
-                    announcement,
                     envStandDown,
+                    announcement,
                     tunnelStateBlocked,
                     unsupportedVersion,
                     newVersionChangelog,

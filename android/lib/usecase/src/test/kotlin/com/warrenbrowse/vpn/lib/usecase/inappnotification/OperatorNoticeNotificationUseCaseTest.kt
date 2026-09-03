@@ -127,21 +127,32 @@ class OperatorNoticeNotificationUseCaseTest {
     }
 
     @Test
-    fun `a notice outranks every other banner, the stand-down included`() {
-        // Desktop NotificationArea: the notice provider is first of all. When
-        // the operator has something to say to everyone, that is the one thing
-        // the user must see; the states it hides are still legible in the
+    fun `a notice outranks every connection-state banner`() {
+        // Desktop NotificationArea: the notice provider sits above them all.
+        // When the operator has something to say to everyone, that is the one
+        // thing the user must see; the states it hides are still legible in the
         // connect card's own status.
         val notice = InAppNotification.OperatorNotice(notice("a1"))
         assertEquals(
             notice,
             listOf(
-                    InAppNotification.EnvStandDown,
                     InAppNotification.HostOffline,
                     InAppNotification.TunnelStateBlocked,
                     notice,
                 )
                 .maxByOrNull { it.priority },
+        )
+    }
+
+    @Test
+    fun `the stand-down outranks a notice, it is the one message about this build`() {
+        // A broadcast notice describes the service; the stand-down describes
+        // this build's own refusal to connect and carries the way back. Only
+        // one of the two reaches the single slot.
+        val notice = InAppNotification.OperatorNotice(notice("a1"))
+        assertEquals(
+            InAppNotification.EnvStandDown,
+            listOf(notice, InAppNotification.EnvStandDown).maxByOrNull { it.priority },
         )
     }
 

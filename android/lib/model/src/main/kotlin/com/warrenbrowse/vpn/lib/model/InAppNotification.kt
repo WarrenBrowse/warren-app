@@ -17,14 +17,30 @@ sealed class InAppNotification {
     abstract val statusLevel: StatusLevel
     abstract val priority: Long
 
+    // A higher-priority product environment (prod over staging over beta) is
+    // installed on this device, so this build took its tunnel down and will not
+    // bring it back until the user says so. Head of the whole ladder, the
+    // operator's own messages included: it explains why this build is not
+    // connecting at all and carries the only way back. The day production opens
+    // is exactly when it competes with the launch card, on every beta install
+    // that just stood down, and a campaign message shown there leaves the
+    // reader with an app that refuses to work and no word on why.
+    // A deliberate stand-down rather than a failure, so it is a warning, not an
+    // error.
+    data object EnvStandDown : InAppNotification() {
+        override val statusLevel = StatusLevel.Warning
+        override val priority: Long = 1010
+    }
+
     /**
      * The operator has published a launch announcement, and it may carry the
-     * voucher code drawn for this account. First of all, above the operator
-     * notice itself (desktop `NotificationArea`): a warning or an error notice
-     * keeps the slot for as long as it stands, and the card carries a code that
-     * stops being worth anything once the campaign closes. The card steps aside
-     * on its own the moment the reader puts it away, and the notice is then the
-     * banner that shows.
+     * voucher code drawn for this account. Above the operator notice (desktop
+     * `NotificationArea`): a warning or an error notice keeps the slot for as
+     * long as it stands, and the card carries a code that stops being worth
+     * anything once the campaign closes. The card steps aside on its own the
+     * moment the reader puts it away, and the notice is then the banner that
+     * shows. Below the stand-down, which is why this build refuses to work at
+     * all.
      */
     data class LaunchAnnouncement(val announcement: WarrenAnnouncement) : InAppNotification() {
         override val statusLevel =
@@ -34,15 +50,15 @@ sealed class InAppNotification {
                 WarrenNoticeLevel.INFO -> StatusLevel.Info
             }
 
-        override val priority: Long = 1010
+        override val priority: Long = 1009
     }
 
     /**
-     * The operator has published a broadcast notice. Ranked above every other
-     * banner but the launch announcement, the stand-down included: when the
-     * operator has something to say to every user, that message is the one
-     * thing they must read, and the states it hides (connecting, offline,
-     * blocked) are still legible in the connect card's own status.
+     * The operator has published a broadcast notice. Ranked above every
+     * connection-state banner: when the operator has something to say to every
+     * user, that message is the one thing they must read, and the states it
+     * hides (connecting, offline, blocked) are still legible in the connect
+     * card's own status.
      *
      * It clears from the signal that raised it: Rust hands over an empty list
      * as soon as the notice is erased or its signed envelope lapses (desktop
@@ -58,18 +74,6 @@ sealed class InAppNotification {
                 WarrenNoticeLevel.INFO -> StatusLevel.Info
             }
 
-        override val priority: Long = 1009
-    }
-
-    // A higher-priority product environment (prod over staging over beta) is
-    // installed on this device, so this build took its tunnel down and will not
-    // bring it back until the user says so. Ranked above every tunnel banner
-    // because it explains why this build is not connecting at all: a banner
-    // about the connection would describe a state it is not trying to reach.
-    // A deliberate stand-down rather than a failure, so it is a warning, not an
-    // error.
-    data object EnvStandDown : InAppNotification() {
-        override val statusLevel = StatusLevel.Warning
         override val priority: Long = 1008
     }
 

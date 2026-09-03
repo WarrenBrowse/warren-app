@@ -163,13 +163,26 @@ export default function NotificationArea(props: IProps) {
   const appUpgradeEventType = useAppUpgradeEventType();
   const appUpgradeStep = convertEventTypeToStep(appUpgradeEventType);
 
+  // The single slot shows the first provider whose `mayDisplay()` is true, so
+  // this array is the priority ladder. `test/unit/notification-area-order.spec.ts`
+  // reads it back and pins its head.
   const notificationProviders: InAppNotificationProvider[] = [
-    // First, above the operator notice itself. A warning or an error notice is
-    // not dismissible, so ranking it higher would let a long-lived operator
-    // statement bury the card for as long as it stands, and the card carries a
-    // code that stops being worth anything once the campaign closes. The card
-    // steps aside on its own the moment the user dismisses it, and the notice
-    // is then the banner that shows.
+    // First of all, above the operator's own messages: it says why this build
+    // will not connect at all, and carries the only way back. The day
+    // production opens is exactly when it competes with the launch card, on
+    // every beta install that just stood down, and a campaign message shown
+    // there leaves the reader with an app that refuses to work and no word on
+    // why.
+    new WarrenEnvStandDownNotificationProvider({
+      envYield: warrenStatus?.envYield ?? null,
+      clearEnvYield: clearEnvYieldNow,
+    }),
+    // Then the launch announcement, above the operator notice itself. A
+    // warning or an error notice is not dismissible, so ranking it higher
+    // would let a long-lived operator statement bury the card for as long as
+    // it stands, and the card carries a code that stops being worth anything
+    // once the campaign closes. The card steps aside on its own the moment the
+    // user dismisses it, and the notice is then the banner that shows.
     new WarrenAnnouncementNotificationProvider({
       announcements: warrenStatus?.announcements ?? [],
       dismissedIds: dismissedAnnouncements,
@@ -185,14 +198,10 @@ export default function NotificationArea(props: IProps) {
       dismissedKeys: dismissedNotices,
       dismiss: dismissNotice,
     }),
-    // Then the coexistence banners, above every connection-state one: while
-    // this build has stood down for a higher-priority install, it is not
-    // trying to connect at all, so "connecting", "blocked" or "no internet"
-    // would all describe a state it is not in.
-    new WarrenEnvStandDownNotificationProvider({
-      envYield: warrenStatus?.envYield ?? null,
-      clearEnvYield: clearEnvYieldNow,
-    }),
+    // Then the courtesy banner of the build that holds priority, above every
+    // connection-state one: it names the install that is about to stand down,
+    // which no connection banner covers. Its stand-down counterpart is at the
+    // head of this list, not here.
     new WarrenLowerEnvActiveNotificationProvider({
       foreignEnvironments: warrenStatus?.foreignEnvironments ?? [],
     }),
