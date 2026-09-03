@@ -82,15 +82,6 @@ class WarrenApplication : Application() {
             StrictMode.ThreadPolicy.Builder()
                 .detectAll()
                 .penaltyListener(executor) { violation ->
-                    // It is a known issue that WarrenVpnService performs IO on the UI thread,
-                    // but we have chosen to keep it that way for now. See: DROID-2486
-                    val ignore =
-                        violation.stackTrace.any {
-                            it.className == "com.warrenbrowse.vpn.app.service.WarrenVpnService"
-                        }
-                    if (ignore) {
-                        return@penaltyListener
-                    }
                     android.util.Log.e(
                         "StrictMode",
                         "StrictMode thread policy violation:",
