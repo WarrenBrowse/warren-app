@@ -481,8 +481,10 @@ async fn run_multi_hop_session(
         // "Reduced MTU" sampler: the same post-connect probe as the desktop
         // daemon, so the chip means the same thing on both clients (the path
         // measured low, never the user's own MTU setting).
-        let _effective_mtu_guard =
-            spawn_effective_mtu_sampler(sessions.clone(), config.mtu.unwrap_or(DEFAULT_TUN_MTU));
+        let _effective_mtu_guard = spawn_effective_mtu_sampler(
+            sessions.clone(),
+            established_tun_mtu(config.mtu, config.enable_ipv6.unwrap_or(false)),
+        );
         // Migration watchdog: a Wi-Fi to cellular handover rebinds the live
         // QUIC endpoint (VpnService.protect re-applied to the fresh socket
         // before quinn can send on it) and revalidates the path in about one
@@ -703,17 +705,29 @@ pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> 
     serde_json::from_str(json).map_err(TunnelStartError::InvalidConfig)
 }
 
-/// Guard returned by [`maybe_spawn_nat_pmp`]. Drops the NAT-PMP
-/// refresh loop AND aborts the event-drain task on drop. Matches the
-/// daemon-side `NatPmpManager` pattern (which stores both handles).
-/// `None` from [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled in
-/// config.
-/// Stops the path-health publisher with the session and clears the last
-/// verdict, so a degraded value can never colour a disconnected UI or the
-/// first moments of the next session.
 /// The Kotlin-side default of `WarrenTunnelConfig.mtu`
-/// (`WarrenLocalSettingsRepository.MTU_MAX`), for a payload that omits it.
+/// (`WarrenLocalSettingsRepository.MTU_MAX`), for a payload that omits it,
+/// and the ceiling every TUN is clamped to.
 const DEFAULT_TUN_MTU: u16 = 1280;
+
+/// The floor `WarrenTunInterfacePlan` clamps a requested MTU to.
+const MIN_TUN_MTU: u16 = 576;
+
+/// The IPv6 minimum link MTU (RFC 8200): `VpnService` refuses a v6 address on
+/// an interface below it, so the plan raises the floor to it.
+const IPV6_MIN_TUN_MTU: u16 = 1280;
+
+/// The MTU the TUN was actually established with, from the one Kotlin
+/// requested: the same clamp `WarrenTunInterfacePlan` applies. The desktop
+/// sampler reads `tun_config.mtu`, the value it configured, and a sampler
+/// fed the request instead would miss a real reduction against a 1280
+/// interface whenever the user set the MTU below the v6 floor.
+fn established_tun_mtu(requested: Option<u16>, ipv6: bool) -> u16 {
+    let floor = if ipv6 { IPV6_MIN_TUN_MTU } else { MIN_TUN_MTU };
+    requested
+        .unwrap_or(DEFAULT_TUN_MTU)
+        .clamp(floor, DEFAULT_TUN_MTU)
+}
 
 /// Sample the live bundle's usable inner payload against the TUN MTU and
 /// publish the "Reduced MTU" verdict for Kotlin.
@@ -759,6 +773,9 @@ impl Drop for EffectiveMtuGuard {
     }
 }
 
+/// Stops the path-health publisher with the session and clears the last
+/// verdict, so a degraded value can never colour a disconnected UI or the
+/// first moments of the next session.
 struct PathHealthTaskGuard(tokio::task::JoinHandle<()>);
 
 impl Drop for PathHealthTaskGuard {
@@ -768,6 +785,11 @@ impl Drop for PathHealthTaskGuard {
     }
 }
 
+/// Guard returned by [`maybe_spawn_nat_pmp`]. Drops the NAT-PMP
+/// refresh loop AND aborts the event-drain task on drop. Matches the
+/// daemon-side `NatPmpManager` pattern (which stores both handles).
+/// `None` from [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled in
+/// config.
 struct NatPmpGuard {
     refresh: warrenguard_natpmp_client::RefreshLoopHandle,
     drain: tokio::task::JoinHandle<()>,
@@ -1016,6 +1038,18 @@ mod tests {
         let minimal = parse_config(r#"{"exit_pubkey_hex":"ab","exit_endpoint":"1.2.3.4:443"}"#)
             .expect("minimal payload must parse");
         assert_eq!(minimal.mtu, None);
+    }
+
+    #[test]
+    fn the_sampler_compares_against_the_mtu_the_interface_was_established_with() {
+        // The plan raises the floor to the IPv6 link minimum once a v6
+        // address is on the interface, so a lower request is established at
+        // 1280 and a path measuring 1100 IS a reduction there.
+        assert_eq!(super::established_tun_mtu(Some(900), true), 1280);
+        assert_eq!(super::established_tun_mtu(Some(900), false), 900);
+        assert_eq!(super::established_tun_mtu(Some(500), false), 576);
+        assert_eq!(super::established_tun_mtu(Some(1400), false), 1280);
+        assert_eq!(super::established_tun_mtu(None, false), 1280);
     }
 
     #[test]
