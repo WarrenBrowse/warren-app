@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 // Owns the Warren Quinn tunnel lifecycle for a given `WarrenVpnService`
 // instance. Sits between the Android `VpnService` API and the Rust JNI:
@@ -491,6 +492,21 @@ class WarrenQuinnAdapter(
      * time it runs and which must not block the main thread on the teardown.
      */
     fun disconnectInBackground(): Job = scope.launch { disconnect() }
+
+    /**
+     * [disconnect] bounded by [timeoutMs], for the system revoke: its caller
+     * must return promptly, and must not leave a session behind. A teardown
+     * that could not start within the bound (a dial holding the lock in the
+     * native connect, which on a cold runtime outlasts it) is not abandoned
+     * with the session and the recovery phrase still live: it is handed to the
+     * adapter's own scope and runs the moment the lock frees. Returns whether
+     * the teardown completed within the bound.
+     */
+    suspend fun disconnectWithin(timeoutMs: Long): Boolean {
+        val completed = withTimeoutOrNull(timeoutMs) { disconnect() } != null
+        if (!completed) disconnectInBackground()
+        return completed
+    }
 
     /**
      * Tear down the active session (cancel polling, drop the JNI tunnel and

@@ -12,6 +12,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
@@ -22,12 +23,14 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -134,10 +137,15 @@ class WarrenQuinnAdapterTest {
         @Volatile
         var statusOnConnect: Int? = null
 
+        /** When set, the dial parks in the native connect until it is opened. */
+        @Volatile
+        var connectGate: CountDownLatch? = null
+
         override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int {
             calls += CONNECT_TUNNEL
             configs += configJson
             threads[CONNECT_TUNNEL] = Thread.currentThread().name
+            connectGate?.await()
             statusOnConnect?.let { status = it }
             publish()
             return 0
@@ -755,6 +763,39 @@ class WarrenQuinnAdapterTest {
                 )
             } finally {
                 unmockkStatic(SystemClock::class)
+            }
+        }
+
+    /**
+     * The system revoke has to return promptly, so its teardown wait is
+     * bounded. A dial holding the lock past the bound (a cold native runtime,
+     * the key derivation) must not turn the bound into an abandoned session:
+     * the teardown, and the wipe of the recovery phrase with it, runs the
+     * moment the lock frees.
+     */
+    @Test
+    fun `ensure a bounded disconnect that gives up at the lock still finishes the teardown`() =
+        runTest {
+            val platform = RecordingPlatform()
+            val gate = CountDownLatch(1)
+            platform.connectGate = gate
+            val adapter = adapterWith(platform)
+            val mnemonic = Mnemonic(PHRASE)
+            val dial = launch(Dispatchers.IO) { adapter.connect(config(), mnemonic) }
+            awaitReal("the dial must be in flight") { CONNECT_TUNNEL in platform.calls.toList() }
+            platform.calls.clear()
+
+            val completed = withContext(Dispatchers.Default) { adapter.disconnectWithin(200) }
+            assertFalse(completed, "the teardown cannot run while the dial holds the lock")
+
+            gate.countDown()
+            dial.join()
+            awaitReal("the teardown must run once the lock frees") {
+                DISCONNECT_TUNNEL in platform.calls.toList() &&
+                    adapter.state.value is WarrenTunnelState.Disconnected
+            }
+            assertThrows(IllegalStateException::class.java, { mnemonic.phrase }) {
+                "the recovery phrase must be wiped by the deferred teardown"
             }
         }
 

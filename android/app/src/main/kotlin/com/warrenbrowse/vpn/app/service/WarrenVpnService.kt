@@ -28,7 +28,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
 
@@ -325,10 +324,15 @@ class WarrenVpnService : LifecycleVpnService() {
         // The system closes the interface as soon as this returns, so the
         // teardown has to complete here; the adapter runs it on its own
         // dispatcher and the wait is bounded so a wedged native close can
-        // never hang the main thread past the ANR budget.
+        // never hang the main thread past the ANR budget. A teardown the bound
+        // cut short still runs, on the adapter's scope, once the lock frees.
         runBlocking(Dispatchers.IO) {
-            withTimeoutOrNull(REVOKE_TEARDOWN_TIMEOUT_MS) { quinnAdapter.disconnect() }
-                ?: Logger.w("onRevoke: teardown still running after $REVOKE_TEARDOWN_TIMEOUT_MS ms")
+            if (!quinnAdapter.disconnectWithin(REVOKE_TEARDOWN_TIMEOUT_MS)) {
+                Logger.w(
+                    "onRevoke: teardown still pending after $REVOKE_TEARDOWN_TIMEOUT_MS ms; " +
+                        "it finishes in the background"
+                )
+            }
         }
     }
 
