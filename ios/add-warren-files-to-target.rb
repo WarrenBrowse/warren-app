@@ -133,6 +133,11 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumLinkTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumIdentityStoreTests.swift" => "WarrenVPNTests",
   "WarrenRustRuntimeTests/WarrenProductAnchorsTests.swift" => "WarrenRustRuntimeTests",
+
+  # The non-prod markers: the name iOS gives the VPN configuration in
+  # Settings, General, VPN and Device Management, and the header chip.
+  "WarrenVPNTests/MullvadVPN/TunnelManager/TunnelConfigurationTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Classes/HeaderBarViewTests.swift" => "WarrenVPNTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad

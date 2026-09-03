@@ -54,6 +54,14 @@ never kept as their own files, so the two can never drift apart:
   silhouette there) into the beta flavor overlay
   (`android/app/src/beta/res/`), whose `colors.xml` carries the brown
   `icon_background`.
+* iOS: `ios/scripts/generate-beta-app-icon.sh` writes the `AppIconBeta`
+  appiconset next to `AppIcon`, and `ASSETCATALOG_COMPILER_APPICON_NAME` picks
+  the set from `WARREN_APPICON_NAME`. The light appearance is the whole
+  artwork so it is rendered from `icon-square.svg`; the dark and tinted ones
+  are the mark alone on a transparent canvas, so they take the prod layer with
+  the badge composited on, and the tinted badge is the same knockout
+  silhouette Android's themed icon uses (iOS recolours that appearance from
+  the luminance it is given).
 
 If you change the palette, change it in the SVGs and in the `SAND` / `BROWN`
 constants of `make-beta-icon.py`, then regenerate both. The generator refuses

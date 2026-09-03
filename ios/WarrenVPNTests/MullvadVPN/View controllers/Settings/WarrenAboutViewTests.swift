@@ -14,6 +14,7 @@
 
 import SwiftUI
 import XCTest
+@testable import WarrenRustRuntime
 @testable import WarrenVPN
 
 
@@ -42,5 +43,31 @@ final class WarrenAboutViewTests: XCTestCase {
         let view = WarrenAboutView(appVersion: "1.0.0-beta.3", buildNumber: "42")
         XCTAssertEqual(view.appVersion, "1.0.0-beta.3")
         XCTAssertEqual(view.buildNumber, "42")
+    }
+
+    /// The title names the product this build IS, from the compiled table. A
+    /// literal read "Warren VPN" on every environment, so the one screen a user
+    /// opens to check what they are running answered for prod on a beta
+    /// install.
+    func test_title_isTheDisplayNameOfTheCompiledEnvironment() {
+        let view = WarrenAboutView(appVersion: "1.0.0", buildNumber: "1")
+        XCTAssertEqual(view.productName, WarrenProductAnchors.current.displayName)
+    }
+
+    func test_title_followsTheEnvironmentItIsGiven() throws {
+        let fixture = try ClientRulesFixtures.load("product_env.json")
+        let environments = try ClientRulesFixtures.object(fixture, "environments")
+        for name in environments.keys {
+            let row = try ClientRulesFixtures.object(environments, name)
+            let data = try JSONSerialization.data(withJSONObject: row)
+            let anchors = try XCTUnwrap(
+                WarrenProductAnchors.decode(String(decoding: data, as: UTF8.self)))
+            let view = WarrenAboutView(appVersion: "1.0.0", buildNumber: "1", anchors: anchors)
+            XCTAssertEqual(
+                view.productName,
+                try ClientRulesFixtures.string(row, "display_name"),
+                name
+            )
+        }
     }
 }

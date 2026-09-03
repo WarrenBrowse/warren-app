@@ -59,6 +59,13 @@ on:
       # The iOS endpoint xcconfig is drift-gated against the product anchors by
       # a mullvad-daemon test, so an edit here must run the Warren test scope.
       - "ios/Configurations/**"
+      # The plist holds the URL scheme and the display name as xcconfig
+      # selectors, and the Xcode project holds the app-icon selector; the
+      # product-env lockstep test refuses a literal in either. Both sat outside
+      # this filter, so putting a literal scheme back in the plist would have
+      # reached main with nothing run.
+      - "ios/WarrenVPN/Supporting Files/Info.plist"
+      - "ios/WarrenVPN.xcodeproj/project.pbxproj"
       - "mullvad-management-interface/proto/**"
       - "desktop/**"
       # The scenery layers only register if all three clients ship the same

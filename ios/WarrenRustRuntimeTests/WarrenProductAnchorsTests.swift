@@ -35,6 +35,29 @@ final class WarrenProductAnchorsTests: XCTestCase {
         }
     }
 
+    /// The marker every non-prod surface reads (the header chip, the name iOS
+    /// gives the VPN configuration) is derived from the environment name, so a
+    /// row added to the table is marked without a second list to update. Prod
+    /// carries none: its strings are the shipped ones and must not move.
+    func testEveryNonProdRowCarriesAMarkerAndProdCarriesNone() throws {
+        let fixture = try ClientRulesFixtures.load("product_env.json")
+        let environments = try ClientRulesFixtures.object(fixture, "environments")
+        var markers: Set<String> = []
+        for (name, row) in environments {
+            let data = try JSONSerialization.data(withJSONObject: row)
+            let decoded = try XCTUnwrap(WarrenProductAnchors.decode(String(decoding: data, as: UTF8.self)))
+            if name == "prod" {
+                XCTAssertTrue(decoded.isProd)
+                XCTAssertNil(decoded.environmentBadge)
+            } else {
+                XCTAssertFalse(decoded.isProd, name)
+                let marker = try XCTUnwrap(decoded.environmentBadge, name)
+                XCTAssertEqual(marker, name.uppercased(), name)
+                XCTAssertTrue(markers.insert(marker).inserted, "\(name): marker is not its own")
+            }
+        }
+    }
+
     func testATableMissingAColumnIsRefused() {
         XCTAssertNil(WarrenProductAnchors.decode(#"{"name":"prod"}"#))
         XCTAssertNil(WarrenProductAnchors.decode("not json"))

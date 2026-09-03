@@ -44,6 +44,17 @@ WARREN_APP_ID_SUFFIX_staging = .staging
 WARREN_APP_ID_SUFFIX_beta = .beta
 WARREN_APP_ID_SUFFIX = $(WARREN_APP_ID_SUFFIX_$(WARREN_PRODUCT_ENV))
 
+// The app-icon set in Assets.xcassets. The bundle id lets a beta install sit
+// beside a prod one; the icon is what tells them apart on the home screen and
+// in the App Switcher, the only place iOS shows the app before it is opened.
+// Staging shares the beta artwork, as it does on the desktop: what matters is
+// being distinguishable from prod, and there is no third palette. Regenerate
+// the badged set with ios/scripts/generate-beta-app-icon.sh.
+WARREN_APPICON_NAME_prod = AppIcon
+WARREN_APPICON_NAME_staging = AppIconBeta
+WARREN_APPICON_NAME_beta = AppIconBeta
+WARREN_APPICON_NAME = $(WARREN_APPICON_NAME_$(WARREN_PRODUCT_ENV))
+
 // The bootstrap seed the iOS address cache dials before it self-populates. Its
 // resolver has no system-DNS fallback, so this must be a LIVE IP of the API
 // host of the same row, never desktop's 0.0.0.0 no-pin sentinel. Keyed on the

@@ -8,6 +8,7 @@
 
 import Foundation
 import NetworkExtension
+import WarrenRustRuntime
 
 struct TunnelConfiguration {
     var isEnabled: Bool
@@ -15,6 +16,19 @@ struct TunnelConfiguration {
     var protocolConfiguration: NETunnelProviderProtocol
     var onDemandRules: [NEOnDemandRule]
     var isOnDemandEnabled: Bool
+
+    /// The name iOS shows for this VPN configuration in Settings, General, VPN
+    /// and Device Management. It is the only status surface the app can brand:
+    /// the status-bar VPN chip is drawn by the system with no app-supplied
+    /// content, so with two installs on one device that row is the single
+    /// place a user can tell which product holds the tunnel. Prod keeps the
+    /// shipped string exactly: renaming its configuration would rewrite the
+    /// row of every install that already has one.
+    static func vpnConfigurationName(for anchors: WarrenProductAnchors = .current) -> String {
+        let transport = "QUIC"
+        guard let marker = anchors.environmentBadge else { return transport }
+        return "\(transport) (\(marker.capitalized))"
+    }
 
     init(includeAllNetworks: Bool, excludeLocalNetworks: Bool, isOnDemandEnabled: Bool = true) {
         let protocolConfig = NETunnelProviderProtocol()
@@ -27,7 +41,7 @@ struct TunnelConfiguration {
         alwaysOnRule.interfaceTypeMatch = .any
 
         isEnabled = true
-        localizedDescription = "QUIC"
+        localizedDescription = Self.vpnConfigurationName()
         protocolConfiguration = protocolConfig
         onDemandRules = [alwaysOnRule]
         self.isOnDemandEnabled = isOnDemandEnabled

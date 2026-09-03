@@ -13,20 +13,34 @@
 //
 
 import SwiftUI
+import WarrenRustRuntime
 
 public struct WarrenAboutView: View {
     public let appVersion: String
     public let buildNumber: String
+    /// The product row this build was compiled for.
+    public let anchors: WarrenProductAnchors
 
-    public init(appVersion: String, buildNumber: String) {
+    public init(
+        appVersion: String,
+        buildNumber: String,
+        anchors: WarrenProductAnchors = .current
+    ) {
         self.appVersion = appVersion
         self.buildNumber = buildNumber
+        self.anchors = anchors
     }
+
+    /// The title of the screen a user opens to check what they are running. It
+    /// is the environment's own display name: a beta install calling itself
+    /// "Warren VPN" here answers the question wrongly, on the one screen asked
+    /// to answer it.
+    public var productName: String { anchors.displayName }
 
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Warren VPN")
+                Text(productName)
                     .font(.warrenBig)
                     .foregroundColor(.white)
 

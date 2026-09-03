@@ -7,6 +7,25 @@
 //
 
 import UIKit
+import WarrenRustRuntime
+
+/// A label that reserves room around its text, so the product chip reads as a
+/// pill around the word rather than a fill tight on its glyphs.
+private final class InsetLabel: UILabel {
+    var insets = UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6)
+
+    override func drawText(in rect: CGRect) {
+        super.drawText(in: rect.inset(by: insets))
+    }
+
+    override var intrinsicContentSize: CGSize {
+        let size = super.intrinsicContentSize
+        return CGSize(
+            width: size.width + insets.left + insets.right,
+            height: size.height + insets.top + insets.bottom
+        )
+    }
+}
 
 class HeaderBarView: UIView {
     // One-piece "Warren" lockup (the desktop wordmark SVG): the W with the
@@ -17,6 +36,29 @@ class HeaderBarView: UIView {
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
+
+    /// The non-prod marker, beside the wordmark. Once the app is open the home
+    /// screen icon is out of sight and the status-bar VPN chip is the system's
+    /// own, so this is the in-app answer to "which of the two installs am I
+    /// looking at". Prod shows nothing: its header must not change.
+    let productChipLabel: UILabel = {
+        let label = InsetLabel()
+        label.font = .warrenMiniSemiBold
+        label.adjustsFontForContentSizeCategory = true
+        label.textAlignment = .center
+        label.layer.cornerRadius = 4
+        label.layer.borderWidth = 1
+        label.layer.masksToBounds = true
+        label.setContentHuggingPriority(.required, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return label
+    }()
+
+    /// The marker text, `nil` on prod. Read from the compiled product table at
+    /// init; the tests set it to exercise a build they are not running as.
+    var productBadge: String? = WarrenProductAnchors.current.environmentBadge {
+        didSet { applyProductBadge() }
+    }
 
     private let deviceInfoHolder: UIStackView = {
         let stackView = UIStackView()
@@ -134,6 +176,18 @@ class HeaderBarView: UIView {
         )
         deviceNameLabel.textColor = subduedContentColor
         timeLeftLabel.textColor = subduedContentColor
+        // The chip has to be re-tinted here with everything else. It rides two
+        // very different backdrops (the charcoal bar, and the bright scenery
+        // sky on the connect screen), and an edge left in one tone's colour
+        // dissolves into the other.
+        productChipLabel.backgroundColor = UIColor.Warren.yellow
+        productChipLabel.textColor = UIColor.Warren.navy
+        productChipLabel.layer.borderColor = contentColor.withAlphaComponent(0.35).cgColor
+    }
+
+    private func applyProductBadge() {
+        productChipLabel.text = productBadge
+        productChipLabel.isHidden = productBadge == nil
     }
 
     var showsDivider = false {
@@ -232,7 +286,7 @@ class HeaderBarView: UIView {
 
         [deviceNameLabel, timeLeftLabel].forEach { deviceInfoHolder.addArrangedSubview($0) }
 
-        addConstrainedSubviews([wordmarkImageView, buttonContainer, deviceInfoHolder]) {
+        addConstrainedSubviews([wordmarkImageView, productChipLabel, buttonContainer, deviceInfoHolder]) {
             wordmarkImageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor)
             wordmarkImageView.topAnchor.constraint(
                 equalTo: layoutMarginsGuide.topAnchor,
@@ -242,6 +296,18 @@ class HeaderBarView: UIView {
             wordmarkImageView.widthAnchor.constraint(
                 equalTo: wordmarkImageView.heightAnchor,
                 multiplier: wordmarkAspectRatio
+            )
+
+            // The chip rides the letter band of the lockup, the same optical
+            // line the buttons take, so it reads as part of the wordmark
+            // instead of floating over the ears.
+            productChipLabel.leadingAnchor.constraint(
+                equalTo: wordmarkImageView.trailingAnchor,
+                constant: 8
+            )
+            productChipLabel.centerYAnchor.constraint(
+                equalTo: wordmarkImageView.centerYAnchor,
+                constant: 5
             )
 
             // The lockup's letters sit in the bottom band of its box (the W's
@@ -268,6 +334,7 @@ class HeaderBarView: UIView {
             )
         }
 
+        applyProductBadge()
         applyTone()
     }
 

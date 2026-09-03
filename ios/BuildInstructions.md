@@ -77,6 +77,14 @@ seeded with an IP of its OWN API host. Signing a non-prod build for
 distribution needs the suffixed ids added to `ExportOptions.plist` and to
 `App.xcconfig` / `PacketTunnel.xcconfig` first.
 
+A non-prod build is also visibly one. The app-icon set follows the same row
+(`WARREN_APPICON_NAME`, so `AppIconBeta` off prod), the About screen names the
+row's display name, and the header carries a chip beside the wordmark. The VPN
+row iOS shows in Settings, General, VPN and Device Management carries the same
+marker, and it is the only status surface the app can brand: the status-bar VPN
+chip is drawn by the system with no app-supplied content. Regenerate the badged
+icon with `ios/scripts/generate-beta-app-icon.sh`, never by hand.
+
 The per-environment values in that file are copies of the Rust table;
 `warren-product-env/tests/platform_lockstep.rs` fails on drift.
 

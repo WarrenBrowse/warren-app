@@ -35,6 +35,15 @@ public struct WarrenProductAnchors: Equatable, Sendable {
     /// The table of the environment this binary was compiled for.
     public static let current: WarrenProductAnchors = load()
 
+    /// The shipped production build. Prod carries no marker anywhere and none
+    /// of its strings may move: a rename reaches every existing install.
+    public var isProd: Bool { name == "prod" }
+
+    /// The short marker a non-prod build wears beside the wordmark and in the
+    /// name iOS gives its VPN configuration, `nil` on prod. Derived from the
+    /// environment name so a new row needs no second table to be added to.
+    public var environmentBadge: String? { isProd ? nil : name.uppercased() }
+
     /// Decodes the JSON object the FFI returns. `nil` when a column is
     /// missing, which the crate's own tests rule out for the live table; the
     /// unit test decodes the fixture rows through the same path.

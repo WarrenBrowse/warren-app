@@ -20,6 +20,22 @@ const IOS_PRODUCT_ENV_XCCONFIG: &str = "ios/Configurations/ProductEnv.xcconfig";
 const IOS_INFO_PLIST: &str = "ios/WarrenVPN/Supporting Files/Info.plist";
 const IOS_BASE_XCCONFIG: &str = "ios/Configurations/Base.xcconfig.template";
 const IOS_API_XCCONFIG: &str = "ios/Configurations/Api.xcconfig.template";
+const IOS_PBXPROJ: &str = "ios/WarrenVPN.xcodeproj/project.pbxproj";
+const IOS_ASSET_CATALOG: &str = "ios/WarrenVPN/Supporting Files/Assets.xcassets";
+const WARREN_CHECKS_WORKFLOW: &str = ".github/workflows/warren-checks.yml";
+
+/// Every copy of the product table this suite holds, so the workflow filter
+/// can be asked whether an edit to one of them runs the suite at all.
+const COPIES_READ_BY_THIS_SUITE: [&str; 8] = [
+    PRODUCT_ENV_TS,
+    DISTRIBUTION_CJS,
+    BUILD_GRADLE,
+    IOS_PRODUCT_ENV_XCCONFIG,
+    IOS_INFO_PLIST,
+    IOS_BASE_XCCONFIG,
+    IOS_API_XCCONFIG,
+    IOS_PBXPROJ,
+];
 
 fn repo_file(relative: &str) -> String {
     let path = format!("{}/../{relative}", env!("CARGO_MANIFEST_DIR"));
@@ -261,6 +277,7 @@ fn the_ios_xcconfig_table_is_the_crates() {
         "WARREN_DISPLAY_NAME",
         "WARREN_APP_ID_SUFFIX",
         "WARREN_API_ENDPOINT",
+        "WARREN_APPICON_NAME",
     ] {
         let line = format!("\n{selector} = $({selector}_$(WARREN_PRODUCT_ENV))\n");
         assert!(
@@ -380,6 +397,116 @@ fn the_ios_url_scheme_is_the_xcconfig_selector_not_a_literal() {
             !plist.contains(&literal),
             "{}: the scheme must not be spelled in the plist",
             env.name()
+        );
+    }
+}
+
+/// The quoted entries of the `paths:` sequence the workflow anchors as
+/// `&warren_paths`, which its pull_request trigger reuses.
+fn workflow_paths(workflow: &str) -> Vec<String> {
+    const ANCHOR: &str = "    paths: &warren_paths\n";
+    const ENTRY_INDENT: &str = "      ";
+    let start = workflow
+        .find(ANCHOR)
+        .unwrap_or_else(|| panic!("no anchored `paths:` list in {WARREN_CHECKS_WORKFLOW}"))
+        + ANCHOR.len();
+    workflow[start..]
+        .lines()
+        .take_while(|line| line.starts_with(ENTRY_INDENT))
+        .filter_map(|line| line.trim_start().strip_prefix("- "))
+        .map(|entry| entry.trim_matches('"').to_owned())
+        .collect()
+}
+
+/// Whether a GitHub `paths:` entry selects a file. The filter uses two shapes
+/// only: a literal path, and a `<dir>/**` prefix.
+fn path_selects(pattern: &str, path: &str) -> bool {
+    match pattern.strip_suffix("/**") {
+        Some(prefix) => path.starts_with(&format!("{prefix}/")),
+        None => pattern == path,
+    }
+}
+
+/// Every file this suite reads is a copy of the crate's table, and the suite
+/// is the only thing holding that copy to it. The workflow's `paths:` filter
+/// decides whether an edit runs the suite at all, so a copy missing from the
+/// filter is a copy with no gate: `Info.plist` sat outside it while the URL
+/// scheme test read it, and a literal scheme put back in the plist would have
+/// reached main with nothing run.
+#[test]
+fn every_copy_this_suite_reads_triggers_the_workflow_that_runs_it() {
+    let workflow = repo_file(WARREN_CHECKS_WORKFLOW);
+    let patterns = workflow_paths(&workflow);
+    assert!(
+        patterns.len() > 1,
+        "the `paths:` list of {WARREN_CHECKS_WORKFLOW} did not parse"
+    );
+    for copy in COPIES_READ_BY_THIS_SUITE {
+        assert!(
+            patterns.iter().any(|pattern| path_selects(pattern, copy)),
+            "{copy} is read by this suite but no `paths:` entry of \
+             {WARREN_CHECKS_WORKFLOW} selects it, so editing it runs no gate"
+        );
+    }
+}
+
+/// The bundle id lets a beta install sit beside a prod one; the icon is what
+/// tells the two apart on the home screen and in the App Switcher, the only
+/// place iOS shows the app before it is opened. The set is chosen by the
+/// environment, and EVERY build configuration of the app target resolves the
+/// same selector: leave one behind and a screenshot or UI-test build wears a
+/// different icon from the one that ships.
+#[test]
+fn the_ios_app_icon_set_follows_the_product_environment() {
+    let product_env = repo_file(IOS_PRODUCT_ENV_XCCONFIG);
+    let pbxproj = repo_file(IOS_PBXPROJ);
+
+    let settings: Vec<&str> = pbxproj
+        .lines()
+        .filter_map(|line| {
+            line.trim_start()
+                .strip_prefix("ASSETCATALOG_COMPILER_APPICON_NAME = ")
+        })
+        .map(|value| value.trim_end_matches(';'))
+        .collect();
+    assert!(
+        !settings.is_empty(),
+        "no ASSETCATALOG_COMPILER_APPICON_NAME in {IOS_PBXPROJ}"
+    );
+    for value in &settings {
+        assert_eq!(
+            *value, "\"$(WARREN_APPICON_NAME)\"",
+            "every build configuration takes the icon set from the product \
+             environment, not from a literal name"
+        );
+    }
+
+    let prod_set = xcconfig_value(&product_env, "WARREN_APPICON_NAME", ProductEnv::Prod);
+    for env in ALL {
+        let name = env.name();
+        let set = xcconfig_value(&product_env, "WARREN_APPICON_NAME", env);
+        let icon = format!(
+            "{}/../{IOS_ASSET_CATALOG}/{set}.appiconset/Icon-Light-1024x1024.png",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let artwork =
+            std::fs::read(&icon).unwrap_or_else(|err| panic!("{name}: read {icon}: {err}"));
+        if env == ProductEnv::Prod {
+            continue;
+        }
+        assert_ne!(set, prod_set, "{name}: shares the production icon set");
+        // A badged set that is a byte copy of the prod artwork tells a tester
+        // nothing, which is the whole point of shipping a second one.
+        let prod_icon = format!(
+            "{}/../{IOS_ASSET_CATALOG}/{prod_set}.appiconset/Icon-Light-1024x1024.png",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let prod_artwork =
+            std::fs::read(&prod_icon).unwrap_or_else(|err| panic!("read {prod_icon}: {err}"));
+        assert_ne!(
+            artwork, prod_artwork,
+            "{name}: wears the production artwork, so nothing on the home \
+             screen tells the two installs apart"
         );
     }
 }
