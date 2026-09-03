@@ -53,7 +53,10 @@ profileable, release Rust), and the baseline every performance change is
 compared against, scenario by scenario with the exact commands, is
 [`android/docs/PERF-BASELINE.md`](android/docs/PERF-BASELINE.md); the
 scripts that produced it live in `android/scripts/perf/`. Its thresholds are
-proposals, not gates, until a lot promotes one.
+proposals, not gates, until a lot promotes one. The on-device tooling (the
+Compose stability configuration and its opt-in reports, the `WarrenJank`
+logcat accounting, the baseline profile generator on Warren's flow) is
+described in `android/docs/BuildInstructions.md`.
 
 ## Desktop unit tests run on a Node-only machine, and must stay that way
 

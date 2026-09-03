@@ -4,6 +4,7 @@ import org.gradle.api.Project
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.getByType
 import utilities.configureAndroidCompose
+import utilities.configureComposeCompiler
 
 class AndroidLibraryComposePlugin : Plugin<Project> {
     override fun apply(target: Project) {
@@ -13,6 +14,7 @@ class AndroidLibraryComposePlugin : Plugin<Project> {
 
             val extension = extensions.getByType<LibraryExtension>()
             configureAndroidCompose(extension)
+            configureComposeCompiler()
         }
     }
 }

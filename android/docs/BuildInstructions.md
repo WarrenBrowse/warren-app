@@ -271,6 +271,44 @@ To avoid being rate limited we avoid running tests sending requests that are hig
 too often. If you want to run these tests you can override the
 `warren.test.e2e.config.runHighlyRateLimitedTests` gradle properties. The default value is `false`.
 
+### Compose compiler reports and stability
+
+Every module with composables shares the Compose compiler configuration of
+`gradle/build-logic/src/main/kotlin/utilities/ComposeCompiler.kt`: the stability
+configuration file `compose_compiler_config.conf` (the model classes composables
+take as parameters that the compiler cannot prove stable), and, when
+`warren.app.build.compose.reports=true` is set, the reports and metrics in each
+module's `build/compose_reports` and `build/compose_metrics`. There,
+`*-classes.txt` names every unstable class and `*-composables.txt` every
+composable that is restartable but not skippable. The property is off by
+default because the reports are an input of the build cache key.
+
+### Frame accounting on the device
+
+`MainActivity` tracks every frame with JankStats and folds the frames that
+missed their deadline into one logcat line per second, in every build and
+nowhere else (no telemetry):
+
+```bash
+adb logcat -s WarrenJank
+```
+
+### Baseline profile
+
+`app/src/main/baseline-prof.txt` is generated, never edited, by
+`test/baselineprofile` on Warren's own flow (the cold start to the Connect
+screen, the picker, the settings tree):
+
+```bash
+./gradlew :app:generateBetaNonMinifiedReleaseBaselineProfile
+```
+
+The generator clears the package data and walks the privacy disclosure and the
+onboarding wizard to a fresh wallet, so run it on a device (API 33+, or rooted
+API 28+) that holds no wallet worth keeping. Regenerate it when the startup
+path or the main screens change substantially; the `betaNonMinifiedRelease` and
+`betaBenchmarkRelease` variants exist for that purpose.
+
 ## Reproducible builds
 
 Reproducible builds are a way to verify that the app was built from the exact source code it claims to be built from. When a build is reproducible, compiling the same source code with the same tools will always produce bit-for-bit identical output.

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -14,6 +15,7 @@ import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.metrics.performance.JankStats
 import arrow.core.merge
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
@@ -27,6 +29,7 @@ import com.warrenbrowse.vpn.app.forum.ForumLinkVerdict
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.ForumLoginPromptHost
 import com.warrenbrowse.vpn.app.forum.classifyForumLoginLink
+import com.warrenbrowse.vpn.app.perf.JankLogger
 import com.warrenbrowse.vpn.di.uiModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
@@ -77,6 +80,12 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
 
     private var isReadyNextDraw: Boolean = false
 
+    // Frame deadline accounting for the whole window, folded into one logcat
+    // line per janky second (`adb logcat -s WarrenJank`). On device only, in
+    // every build: Warren keeps no telemetry, and a release build is the one
+    // whose frames are worth reading. Held so it lives as long as the window.
+    private var jankStats: JankStats? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         loadKoinModules(listOf(uiModule))
 
@@ -103,6 +112,13 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
                 ForumLoginPromptHost()
             }
         }
+        val jankLogger = JankLogger()
+        jankStats =
+            JankStats.createAndTrack(window) { frame ->
+                jankLogger
+                    .onFrame(frame.frameStartNanos + frame.frameDurationUiNanos, frame.frameDurationUiNanos, frame.isJank)
+                    ?.let { line -> Log.w(JANK_LOG_TAG, line) }
+            }
 
         // This is to protect against tapjacking attacks
         // This is applied at an OS level since Android 12 so it is only required on older versions
@@ -149,6 +165,8 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
 
     override fun onDestroy() {
         lifecycle.removeObserver(warrenAppViewModel)
+        jankStats?.isTrackingEnabled = false
+        jankStats = null
         super.onDestroy()
     }
 
@@ -220,4 +238,8 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
 
             awaitClose { removeOnNewIntentListener(listener) }
         }
+
+    private companion object {
+        const val JANK_LOG_TAG = "WarrenJank"
+    }
 }

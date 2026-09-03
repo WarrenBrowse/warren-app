@@ -8,6 +8,7 @@ import utilities.Flavors
 import utilities.Variant
 import utilities.appVersionProvider
 import utilities.baselineFilter
+import utilities.configureComposeCompiler
 import utilities.fullReleaseTasks
 import utilities.generateRemapArguments
 import utilities.getBooleanProperty
@@ -341,6 +342,8 @@ tasks
         }
     }
 
+configureComposeCompiler()
+
 kotlin {
     compilerOptions {
         allWarningsAsErrors = true
@@ -591,6 +594,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.metrics.performance)
     implementation(libs.androidx.tv)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.arrow)
