@@ -5094,6 +5094,22 @@ msgid "Multihop"
 msgstr "Multihop"
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr "Вход отклонён: часы этого компьютера расходятся более чем на минуту. Включите автоматическую дату и время, затем начните заново со страницы браузера."
+
+msgctxt "forum-login"
+msgid "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+msgstr "Подтверждайте, только если вы прямо сейчас видите эту страницу входа. Если кто-то прислал вам этот код, он входит от вашего имени. Электронная почта и пароль не используются."
+
+msgctxt "forum-login"
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren не может определить, в каком браузере выполняется вход и находится ли он сейчас перед вами. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы."
+
+msgctxt "forum-login"
+msgid "Sign in to the forum on another device?"
+msgstr "Войти на форум на другом устройстве?"
+
+msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr "Запрошен вход на форум сообщества Warren. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы."
 

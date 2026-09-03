@@ -131,6 +131,7 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Account/ForumHandleRow.swift" => "WarrenVPN",
   "WarrenVPNTests/Fixtures/ClientRulesFixtures.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumLinkTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumLoginCopyTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumIdentityStoreTests.swift" => "WarrenVPNTests",
   "WarrenRustRuntimeTests/WarrenProductAnchorsTests.swift" => "WarrenRustRuntimeTests",
 

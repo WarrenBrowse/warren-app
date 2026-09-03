@@ -5039,6 +5039,22 @@ msgid "never"
 msgstr "없음"
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr "로그인이 거부되었습니다. 이 컴퓨터의 시계가 1분 이상 어긋나 있습니다. 날짜 및 시간 자동 설정을 켜고 브라우저 페이지에서 다시 시작하세요."
+
+msgctxt "forum-login"
+msgid "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+msgstr "지금 그 로그인 페이지를 직접 보고 있는 경우에만 승인하세요. 누군가 이 코드를 보냈다면 그 사람이 당신으로 로그인하는 것입니다. 이메일과 비밀번호를 사용하지 않습니다."
+
+msgctxt "forum-login"
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "어떤 브라우저가 로그인되는지, 그것이 지금 당신 앞에 있는지 Warren은 알 수 없습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다."
+
+msgctxt "forum-login"
+msgid "Sign in to the forum on another device?"
+msgstr "다른 기기에서 포럼에 로그인하시겠습니까?"
+
+msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr "Warren 커뮤니티 포럼 로그인이 요청되었습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다."
 

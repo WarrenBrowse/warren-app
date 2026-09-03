@@ -161,33 +161,38 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
             : NSLocalizedString(
                 "Sign in to the Warren community forum?",
                 comment: "Forum login consent prompt title")
-        let message =
+        // Two paragraphs, localized separately, word for word the desktop and
+        // Android prompt: one flow, one wording, one set of translations. The
+        // cross-device pair names no origin, because a code typed under
+        // Settings raises this same prompt and has no QR anywhere in its flow.
+        let first =
             link.crossDevice
             ? NSLocalizedString(
-                """
-                This request came from a QR code, so the browser being signed in is on \
-                another device, not this one. Approve only if you are looking at that \
-                sign in page right now. If someone sent you this code, they are signing \
-                in as you. No email and no password are used.
-                """,
+                "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you.",
                 comment: "Forum login consent prompt body, cross device")
             : NSLocalizedString(
-                """
-                Your app will sign a one time challenge with your wallet key to \
-                prove it is you. No email and no password are used, and you appear \
-                under an anonymous handle that cannot be linked to your Warren \
-                account. Only approve if you started this sign in.
-                """,
+                "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you.",
                 comment: "Forum login consent prompt body")
+        let second =
+            link.crossDevice
+            ? NSLocalizedString(
+                "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used.",
+                comment: "Forum login consent prompt warning, cross device")
+            : NSLocalizedString(
+                "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.",
+                comment: "Forum login consent prompt warning")
+        let message = first + "\n\n" + second
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(
             UIAlertAction(
-                title: NSLocalizedString("Cancel", comment: ""),
+                title: NSLocalizedString(
+                    "Cancel", comment: "Forum login consent prompt, the refusing button"),
                 style: .cancel,
                 handler: { _ in Self.notifyCancelled(link) }))
         alert.addAction(
             UIAlertAction(
-                title: NSLocalizedString("Approve", comment: ""),
+                title: NSLocalizedString(
+                    "Approve sign-in", comment: "Forum login consent prompt, the approving button"),
                 style: .default,
                 handler: { [weak self] _ in self?.perform(link) }))
         presenter.present(alert, animated: true)
@@ -266,10 +271,13 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
                 "Set up your Warren wallet first.", comment: "Forum login refused, no wallet on this device")
         case .failed:
             message = NSLocalizedString(
-                "Sign in failed. Please try again in a moment.", comment: "Forum login failed")
+                "Sign-in failed. Please try again in a moment.", comment: "Forum login failed")
         }
         let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString("OK", comment: "Forum login result alert, the dismissing button"),
+                style: .default))
         presenter.present(alert, animated: true)
     }
 }

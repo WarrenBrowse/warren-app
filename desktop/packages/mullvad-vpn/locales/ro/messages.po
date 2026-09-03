@@ -4214,6 +4214,22 @@ msgid "Multihop"
 msgstr "Multihop"
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr "Autentificare refuzată: ceasul acestui computer este decalat cu mai mult de un minut. Activează data și ora automate, apoi reia de la pagina din browser."
+
+msgctxt "forum-login"
+msgid "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+msgstr "Aprobă doar dacă te uiți chiar acum la acea pagină de autentificare. Dacă cineva ți-a trimis acest cod, se autentifică în numele tău. Nu se folosesc adrese de e-mail sau parole."
+
+msgctxt "forum-login"
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren nu poate ști care browser se autentifică, nici dacă îl ai în față chiar acum. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu."
+
+msgctxt "forum-login"
+msgid "Sign in to the forum on another device?"
+msgstr "Te autentifici pe forum de pe alt dispozitiv?"
+
+msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr "S-a solicitat autentificarea pe forumul comunității Warren. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu."
 

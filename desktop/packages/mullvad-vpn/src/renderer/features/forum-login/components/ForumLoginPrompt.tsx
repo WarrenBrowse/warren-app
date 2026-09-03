@@ -89,11 +89,11 @@ export function ForumLoginPrompt() {
     close();
   }, [request, close]);
 
-  // A cross-device link (the QR on the approval page) is also exactly what a
-  // relayed sign-in looks like: the browser being signed in is not this
-  // machine. Nothing on the wire can tell those apart, only the person
-  // approving can, so the prompt names the situation instead of asking the
-  // same neutral question either way.
+  // Raised for a QR link and for a code typed under Settings alike, and both
+  // are exactly what a relayed sign-in looks like: the browser being signed in
+  // is not this app, and nothing on the wire can tell an honest one from an
+  // attacker's. Only the person approving can, so the copy states what Warren
+  // does not know rather than naming an origin it cannot verify.
   const crossDevice = request?.crossDevice === true;
 
   return (
@@ -109,7 +109,7 @@ export function ForumLoginPrompt() {
         crossDevice
           ? messages.pgettext(
               'forum-login',
-              'This request came from a QR code, so the browser being signed in is on another device, not this one. Your app will sign a one-time challenge with your wallet key to prove it is you.',
+              'Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you.',
             )
           : messages.pgettext(
               'forum-login',

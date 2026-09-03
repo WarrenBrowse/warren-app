@@ -503,7 +503,7 @@
     <string name="forum_login_body_first">Det ble bedt om en innlogging på Warren-fellesskapsforumet. Appen din signerer en engangsutfordring med lommeboknøkkelen din for å bevise at det er deg.</string>
     <string name="forum_login_body_second">Verken e-post eller passord brukes. Du vises under et anonymt kallenavn som ikke kan knyttes til Warren-kontoen din. Godkjenn bare hvis du selv startet denne innloggingen.</string>
     <string name="forum_login_title_cross_device">Logge inn på forumet på en annen enhet?</string>
-    <string name="forum_login_body_first_cross_device">Denne forespørselen kom fra en QR-kode, så nettleseren som logges inn er på en annen enhet, ikke denne. Appen din signerer en engangsutfordring med lommeboknøkkelen din for å bevise at det er deg.</string>
+    <string name="forum_login_body_first_cross_device">Warren kan ikke se hvilken nettleser som logges inn, eller om den står foran deg akkurat nå. Appen din signerer en engangsutfordring med lommeboknøkkelen din for å bevise at det er deg.</string>
     <string name="forum_login_body_second_cross_device">Godkjenn bare hvis du ser på den innloggingssiden akkurat nå. Hvis noen sendte deg denne koden, logger de inn som deg. Verken e-post eller passord brukes.</string>
     <string name="forum_login_approve">Godkjenn innlogging</string>
     <string name="forum_login_cancel">Avbryt</string>

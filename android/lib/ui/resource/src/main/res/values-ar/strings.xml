@@ -515,7 +515,7 @@
     <string name="forum_login_body_first">تم طلب تسجيل الدخول إلى منتدى مجتمع Warren. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت.</string>
     <string name="forum_login_body_second">لا يُستخدم بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار مجهول لا يمكن ربطه بحساب Warren الخاص بك. وافق فقط إذا كنت أنت من بدأ تسجيل الدخول هذا.</string>
     <string name="forum_login_title_cross_device">تسجيل الدخول إلى المنتدى على جهاز آخر؟</string>
-    <string name="forum_login_body_first_cross_device">جاء هذا الطلب من رمز QR، أي أن المتصفح الذي يجري تسجيل دخوله موجود على جهاز آخر، وليس هذا الجهاز. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت.</string>
+    <string name="forum_login_body_first_cross_device">لا يمكن لـ Warren معرفة المتصفح الذي يجري تسجيل دخوله، ولا ما إذا كان أمامك الآن. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت.</string>
     <string name="forum_login_body_second_cross_device">وافق فقط إذا كنت تنظر إلى صفحة تسجيل الدخول تلك الآن. إذا أرسل لك أحدهم هذا الرمز، فهو يسجّل الدخول باسمك. لا يُستخدم بريد إلكتروني ولا كلمة مرور.</string>
     <string name="forum_login_approve">الموافقة على تسجيل الدخول</string>
     <string name="forum_login_cancel">إلغاء</string>

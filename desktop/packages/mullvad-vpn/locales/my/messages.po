@@ -5042,6 +5042,22 @@ msgid "never"
 msgstr "ဘယ်တော့မှ"
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr "လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤကွန်ပျူတာ၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။"
+
+msgctxt "forum-login"
+msgid "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+msgstr "ထိုဝင်ရောက်မှုစာမျက်နှာကို ယခုကြည့်နေမှသာ အတည်ပြုပါ။ တစ်စုံတစ်ယောက်က ဤကုဒ်ကို ပို့ပေးခဲ့ပါက ၎င်းသည် သင့်အနေဖြင့် ဝင်ရောက်နေခြင်း ဖြစ်သည်။ အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။"
+
+msgctxt "forum-login"
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "မည်သည့် browser ဝင်ရောက်နေသည်၊ ယင်းသည် ယခု သင့်ရှေ့တွင် ရှိမရှိကို Warren မခွဲခြားနိုင်ပါ။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။"
+
+msgctxt "forum-login"
+msgid "Sign in to the forum on another device?"
+msgstr "အခြားစက်ပစ္စည်းတစ်ခုပေါ်တွင် ဖိုရမ်သို့ ဝင်ရောက်မလား?"
+
+msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr "Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်ရန် တောင်းဆိုမှုတစ်ခု ရှိပါသည်။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။"
 

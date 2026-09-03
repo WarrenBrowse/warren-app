@@ -500,7 +500,7 @@
     <string name="forum_login_body_first">已请求登录 Warren 社区论坛。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。</string>
     <string name="forum_login_body_second">不使用电子邮件和密码。您将以无法关联到 Warren 账户的匿名昵称显示。仅当此次登录由您本人发起时才批准。</string>
     <string name="forum_login_title_cross_device">在另一台设备上登录论坛？</string>
-    <string name="forum_login_body_first_cross_device">此请求来自二维码，因此正在登录的浏览器位于另一台设备上，而非本机。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。</string>
+    <string name="forum_login_body_first_cross_device">Warren 无法判断正在登录的是哪个浏览器，也无法判断它此刻是否就在您面前。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。</string>
     <string name="forum_login_body_second_cross_device">仅当您此刻正看着那个登录页面时才批准。如果有人向您发送了此代码，对方正在以您的身份登录。不使用电子邮件和密码。</string>
     <string name="forum_login_approve">批准登录</string>
     <string name="forum_login_cancel">取消</string>

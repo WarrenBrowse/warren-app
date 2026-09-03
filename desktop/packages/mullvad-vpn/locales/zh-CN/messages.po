@@ -5039,6 +5039,22 @@ msgid "never"
 msgstr "从未"
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr "登录被拒绝：此计算机的时钟偏差超过一分钟。请开启自动设置日期和时间，然后从浏览器页面重新开始。"
+
+msgctxt "forum-login"
+msgid "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+msgstr "仅当您此刻正看着那个登录页面时才批准。如果有人向您发送了此代码，对方正在以您的身份登录。不使用电子邮件和密码。"
+
+msgctxt "forum-login"
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren 无法判断正在登录的是哪个浏览器，也无法判断它此刻是否就在您面前。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。"
+
+msgctxt "forum-login"
+msgid "Sign in to the forum on another device?"
+msgstr "在另一台设备上登录论坛？"
+
+msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr "已请求登录 Warren 社区论坛。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。"
 

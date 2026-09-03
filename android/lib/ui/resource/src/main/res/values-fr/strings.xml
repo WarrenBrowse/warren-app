@@ -503,7 +503,7 @@
     <string name="forum_login_body_first">Une connexion au forum communautaire Warren a été demandée. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c\'est bien vous.</string>
     <string name="forum_login_body_second">Aucun e-mail ni mot de passe n\'est utilisé. Vous apparaissez sous un pseudonyme anonyme qui ne peut pas être relié à votre compte Warren. N\'approuvez que si vous êtes à l\'origine de cette connexion.</string>
     <string name="forum_login_title_cross_device">Se connecter au forum sur un autre appareil ?</string>
-    <string name="forum_login_body_first_cross_device">Cette demande vient d\'un code QR : le navigateur qui se connecte se trouve sur un autre appareil, pas celui-ci. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c\'est bien vous.</string>
+    <string name="forum_login_body_first_cross_device">Warren ne peut pas savoir quel navigateur se connecte, ni s\'il est devant vous en ce moment. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c\'est bien vous.</string>
     <string name="forum_login_body_second_cross_device">N\'approuvez que si vous avez cette page de connexion sous les yeux en ce moment. Si quelqu\'un vous a envoyé ce code, il se connecte en votre nom. Aucun e-mail ni mot de passe n\'est utilisé.</string>
     <string name="forum_login_approve">Approuver la connexion</string>
     <string name="forum_login_cancel">Annuler</string>

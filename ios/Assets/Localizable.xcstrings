@@ -95430,6 +95430,1782 @@
           }
         }
       }
+    },
+    "Sign in to the forum on another device?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to the forum on another device?"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول إلى المنتدى على جهاز آخر؟"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log ind på forummet på en anden enhed?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Forum auf einem anderen Gerät anmelden?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Iniciar sesión en el foro en otro dispositivo?"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورود به انجمن در دستگاهی دیگر؟"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjaudutaanko foorumille toisella laitteella?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter au forum sur un autre appareil ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuoi accedere al forum su un altro dispositivo?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のデバイスでフォーラムにサインインしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "다른 기기에서 포럼에 로그인하시겠습니까?"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြားစက်ပစ္စည်းတစ်ခုပေါ်တွင် ဖိုရမ်သို့ ဝင်ရောက်မလား?"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logge inn på forumet på en annen enhet?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelden bij het forum op een ander apparaat?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zalogować się do forum na innym urządzeniu?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão no fórum noutro dispositivo?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te autentifici pe forum de pe alt dispozitiv?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войти на форум на другом устройстве?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logga in på forumet på en annan enhet?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เข้าสู่ระบบฟอรัมบนอุปกรณ์อื่นหรือไม่?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foruma başka bir cihazda giriş yapılsın mı?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увійти на форум на іншому пристрої?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在另一台设备上登录论坛？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在另一部裝置上登入論壇？"
+          }
+        }
+      }
+    },
+    "Sign in to the Warren community forum?": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to the Warren community forum?"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول إلى منتدى مجتمع Warren؟"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log ind på Warren-fællesskabsforummet?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Warren Community-Forum anmelden?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Iniciar sesión en el foro de la comunidad Warren?"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورود به انجمن جامعه Warren؟"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjaudutaanko Warrenin yhteisöfoorumille?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter au forum communautaire Warren ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vuoi accedere al forum della community Warren?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren コミュニティフォーラムにサインインしますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 커뮤니티 포럼에 로그인하시겠습니까?"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်မလား?"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logge inn på Warren-fellesskapsforumet?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelden bij het Warren community-forum?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zalogować się do forum społeczności Warren?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão no fórum da comunidade Warren?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te autentifici pe forumul comunității Warren?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войти на форум сообщества Warren?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logga in på Warren-gemenskapsforumet?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เข้าสู่ระบบฟอรัมชุมชน Warren หรือไม่?"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren topluluk forumuna giriş yapılsın mı?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увійти на форум спільноти Warren?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录 Warren 社区论坛？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入 Warren 社群論壇？"
+          }
+        }
+      }
+    },
+    "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يمكن لـ Warren معرفة المتصفح الذي يجري تسجيل دخوله، ولا ما إذا كان أمامك الآن. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren kan ikke se hvilken browser der logges ind, eller om den står foran dig lige nu. Din app signerer en engangsudfordring med din wallet-nøgle for at bevise, at det er dig."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren kann nicht erkennen, welcher Browser angemeldet wird oder ob er gerade vor dir steht. Deine App signiert eine einmalige Anfrage mit deinem Wallet-Schlüssel, um zu bestätigen, dass du es bist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren no puede saber qué navegador está iniciando sesión, ni si lo tienes delante ahora mismo. Tu aplicación firmará un desafío de un solo uso con la clave de tu monedero para demostrar que eres tú."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren نمی‌تواند بداند کدام مرورگر وارد می‌شود یا آیا همین حالا پیش روی شماست. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ei voi tietää, mikä selain kirjautuu sisään tai onko se juuri nyt edessäsi. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ne peut pas savoir quel navigateur se connecte, ni s'il est devant vous en ce moment. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c'est bien vous."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren non può sapere quale browser stia accedendo, né se sia davanti a te in questo momento. La tua app firmerà una sfida monouso con la chiave del tuo portafoglio per dimostrare che sei tu."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "どのブラウザーがサインインしているのか、それがいま目の前にあるのかを Warren は判別できません。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "어떤 브라우저가 로그인되는지, 그것이 지금 당신 앞에 있는지 Warren은 알 수 없습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "မည်သည့် browser ဝင်ရောက်နေသည်၊ ယင်းသည် ယခု သင့်ရှေ့တွင် ရှိမရှိကို Warren မခွဲခြားနိုင်ပါ။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren kan ikke se hvilken nettleser som logges inn, eller om den står foran deg akkurat nå. Appen din signerer en engangsutfordring med lommeboknøkkelen din for å bevise at det er deg."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren kan niet zien welke browser wordt aangemeld, of die nu voor je staat. Je app ondertekent een eenmalige challenge met je wallet-sleutel om te bewijzen dat jij het bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren nie może ustalić, która przeglądarka jest logowana ani czy masz ją teraz przed sobą. Aplikacja podpisze jednorazowe wyzwanie kluczem Twojego portfela, aby potwierdzić Twoją tożsamość."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Warren não consegue saber qual navegador está a iniciar sessão, nem se o tem à frente neste momento. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren nu poate ști care browser se autentifică, nici dacă îl ai în față chiar acum. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren не может определить, в каком браузере выполняется вход и находится ли он сейчас перед вами. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren kan inte se vilken webbläsare som loggas in, eller om den står framför dig just nu. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ไม่สามารถบอกได้ว่าเบราว์เซอร์ใดกำลังเข้าสู่ระบบ หรือเบราว์เซอร์นั้นอยู่ตรงหน้าคุณในตอนนี้หรือไม่ แอปของคุณจะลงนามคำท้าทายแบบใช้ครั้งเดียวด้วยคีย์กระเป๋าเงินของคุณเพื่อยืนยันว่าเป็นคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren, hangi tarayıcının giriş yaptığını ya da o tarayıcının şu anda karşınızda olup olmadığını bilemez. Uygulamanız, sizin olduğunuzu kanıtlamak için cüzdan anahtarınızla tek seferlik bir doğrulama kodunu imzalayacak."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren не може визначити, у якому браузері виконується вхід і чи він зараз перед вами. Застосунок підпише одноразовий запит ключем вашого гаманця, щоб підтвердити, що це ви."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 无法判断正在登录的是哪个浏览器，也无法判断它此刻是否就在您面前。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 無法判斷正在登入的是哪一個瀏覽器，也無法判斷它此刻是否就在您面前。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。"
+          }
+        }
+      }
+    },
+    "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم طلب تسجيل الدخول إلى منتدى مجتمع Warren. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der blev anmodet om et login til Warren-fællesskabsforummet. Din app signerer en engangsudfordring med din wallet-nøgle for at bevise, at det er dig."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wurde eine Anmeldung beim Warren Community-Forum angefordert. Deine App signiert eine einmalige Anfrage mit deinem Wallet-Schlüssel, um zu bestätigen, dass du es bist."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se solicitó un inicio de sesión en el foro de la comunidad Warren. Tu aplicación firmará un desafío de un solo uso con la clave de tu monedero para demostrar que eres tú."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "درخواست ورود به انجمن جامعه Warren ثبت شد. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warrenin yhteisöfoorumille pyydettiin kirjautumista. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une connexion au forum communautaire Warren a été demandée. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c'est bien vous."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "È stato richiesto l'accesso al forum della community Warren. La tua app firmerà una sfida monouso con la chiave del tuo portafoglio per dimostrare che sei tu."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren コミュニティフォーラムへのサインインが要求されました。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 커뮤니티 포럼 로그인이 요청되었습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်ရန် တောင်းဆိုမှုတစ်ခု ရှိပါသည်။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det ble bedt om en innlogging på Warren-fellesskapsforumet. Appen din signerer en engangsutfordring med lommeboknøkkelen din for å bevise at det er deg."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is een aanmelding bij het Warren community-forum aangevraagd. Je app ondertekent een eenmalige challenge met je wallet-sleutel om te bewijzen dat jij het bent."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zażądano logowania do forum społeczności Warren. Aplikacja podpisze jednorazowe wyzwanie kluczem Twojego portfela, aby potwierdzić Twoją tożsamość."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foi solicitado um início de sessão no fórum da comunidade Warren. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "S-a solicitat autentificarea pe forumul comunității Warren. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запрошен вход на форум сообщества Warren. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En inloggning till Warren-gemenskapsforumet begärdes. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีการร้องขอเข้าสู่ระบบฟอรัมชุมชน Warren แอปของคุณจะลงนามคำท้าทายแบบใช้ครั้งเดียวด้วยคีย์กระเป๋าเงินของคุณเพื่อยืนยันว่าเป็นคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren topluluk forumuna giriş talep edildi. Uygulamanız, sizin olduğunuzu kanıtlamak için cüzdan anahtarınızla tek seferlik bir doğrulama kodunu imzalayacak."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Запитано вхід на форум спільноти Warren. Застосунок підпише одноразовий запит ключем вашого гаманця, щоб підтвердити, що це ви."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已请求登录 Warren 社区论坛。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已請求登入 Warren 社群論壇。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。"
+          }
+        }
+      }
+    },
+    "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وافق فقط إذا كنت تنظر إلى صفحة تسجيل الدخول تلك الآن. إذا أرسل لك أحدهم هذا الرمز، فهو يسجّل الدخول باسمك. لا يُستخدم بريد إلكتروني ولا كلمة مرور."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Godkend kun, hvis du ser på den loginside lige nu. Hvis nogen har sendt dig denne kode, logger de ind som dig. Der bruges ingen e-mail og ingen adgangskode."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestätige nur, wenn du diese Anmeldeseite gerade vor dir hast. Wenn dir jemand diesen Code geschickt hat, meldet er sich als du an. Es werden keine E-Mail und kein Passwort verwendet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprueba solo si estás viendo esa página de inicio de sesión ahora mismo. Si alguien te envió este código, está iniciando sesión como tú. No se usa ningún correo electrónico ni contraseña."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فقط در صورتی تأیید کنید که همین حالا آن صفحه ورود را می‌بینید. اگر کسی این کد را برای شما فرستاده است، او با نام شما وارد می‌شود. هیچ ایمیل و رمز عبوری استفاده نمی‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyväksy vain, jos katsot kyseistä kirjautumissivua juuri nyt. Jos joku lähetti sinulle tämän koodin, hän kirjautuu sinuna. Sähköpostia tai salasanaa ei käytetä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "N'approuvez que si vous avez cette page de connexion sous les yeux en ce moment. Si quelqu'un vous a envoyé ce code, il se connecte en votre nom. Aucun e-mail ni mot de passe n'est utilisé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva solo se stai guardando quella pagina di accesso in questo momento. Se qualcuno ti ha inviato questo codice, sta accedendo a nome tuo. Non vengono usati né e-mail né password."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "そのサインインページを今まさに見ている場合のみ承認してください。誰かからこのコードを送られた場合、その人があなたとしてサインインしようとしています。メールアドレスもパスワードも使用しません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "지금 그 로그인 페이지를 직접 보고 있는 경우에만 승인하세요. 누군가 이 코드를 보냈다면 그 사람이 당신으로 로그인하는 것입니다. 이메일과 비밀번호를 사용하지 않습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထိုဝင်ရောက်မှုစာမျက်နှာကို ယခုကြည့်နေမှသာ အတည်ပြုပါ။ တစ်စုံတစ်ယောက်က ဤကုဒ်ကို ပို့ပေးခဲ့ပါက ၎င်းသည် သင့်အနေဖြင့် ဝင်ရောက်နေခြင်း ဖြစ်သည်။ အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Godkjenn bare hvis du ser på den innloggingssiden akkurat nå. Hvis noen sendte deg denne koden, logger de inn som deg. Verken e-post eller passord brukes."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keur alleen goed als je die aanmeldpagina nu voor je hebt. Als iemand je deze code heeft gestuurd, meldt die persoon zich aan als jou. Er worden geen e-mail en geen wachtwoord gebruikt."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdź tylko wtedy, gdy właśnie masz tę stronę logowania przed sobą. Jeśli ktoś przysłał Ci ten kod, loguje się jako Ty. Nie są używane żadne adresy e-mail ani hasła."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprove apenas se estiver a ver essa página de início de sessão neste momento. Se alguém lhe enviou este código, está a iniciar sessão como você. Não são usados e-mail nem palavra-passe."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobă doar dacă te uiți chiar acum la acea pagină de autentificare. Dacă cineva ți-a trimis acest cod, se autentifică în numele tău. Nu se folosesc adrese de e-mail sau parole."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подтверждайте, только если вы прямо сейчас видите эту страницу входа. Если кто-то прислал вам этот код, он входит от вашего имени. Электронная почта и пароль не используются."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Godkänn bara om du tittar på den inloggningssidan just nu. Om någon skickade koden till dig loggar de in som du. Ingen e-post och inget lösenord används."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อนุมัติเฉพาะเมื่อคุณกำลังดูหน้าเข้าสู่ระบบนั้นอยู่ในขณะนี้เท่านั้น หากมีผู้ส่งโค้ดนี้ให้คุณ แสดงว่าผู้นั้นกำลังเข้าสู่ระบบในชื่อของคุณ ไม่มีการใช้อีเมลและรหัสผ่าน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca şu anda o giriş sayfasına bakıyorsanız onaylayın. Bu kodu size biri gönderdiyse sizin adınıza giriş yapıyor demektir. E-posta ve parola kullanılmaz."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підтверджуйте, лише якщо ви просто зараз бачите цю сторінку входу. Якщо хтось надіслав вам цей код, він входить від вашого імені. Електронна пошта й пароль не використовуються."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "仅当您此刻正看着那个登录页面时才批准。如果有人向您发送了此代码，对方正在以您的身份登录。不使用电子邮件和密码。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "僅當您此刻正看著那個登入頁面時才核准。如果有人傳送此代碼給您，對方正在以您的身分登入。不使用電子郵件和密碼。"
+          }
+        }
+      }
+    },
+    "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يُستخدم بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار مجهول لا يمكن ربطه بحساب Warren الخاص بك. وافق فقط إذا كنت أنت من بدأ تسجيل الدخول هذا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der bruges ingen e-mail og ingen adgangskode. Du vises under et anonymt kaldenavn, der ikke kan knyttes til din Warren-konto. Godkend kun, hvis du selv har startet dette login."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es werden keine E-Mail und kein Passwort verwendet. Du erscheinst unter einem anonymen Namen, der nicht mit deinem Warren-Konto verknüpft werden kann. Bestätige nur, wenn du diese Anmeldung selbst gestartet hast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se usa ningún correo electrónico ni contraseña. Apareces con un seudónimo anónimo que no puede vincularse a tu cuenta de Warren. Aprueba solo si iniciaste tú este acceso."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار ناشناس نمایش داده می‌شوید که قابل ارتباط با حساب Warren شما نیست. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sähköpostia tai salasanaa ei käytetä. Näyt anonyymillä nimimerkillä, jota ei voi yhdistää Warren-tiliisi. Hyväksy vain, jos aloitit tämän kirjautumisen itse."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun e-mail ni mot de passe n'est utilisé. Vous apparaissez sous un pseudonyme anonyme qui ne peut pas être relié à votre compte Warren. N'approuvez que si vous êtes à l'origine de cette connexion."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non vengono usati né e-mail né password. Compari con uno pseudonimo anonimo che non può essere collegato al tuo account Warren. Approva solo se sei stato tu ad avviare questo accesso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "メールアドレスもパスワードも使用しません。あなたは Warren アカウントに紐付けられない匿名のハンドル名で表示されます。ご自身でこのサインインを開始した場合のみ承認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이메일과 비밀번호를 사용하지 않습니다. Warren 계정과 연결할 수 없는 익명 핸들로 표시됩니다. 직접 이 로그인을 시작한 경우에만 승인하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။ သင်သည် သင့် Warren အကောင့်နှင့် ချိတ်ဆက်၍မရသော အမည်ဝှက်ဖြင့် ပေါ်လာပါမည်။ ဤဝင်ရောက်မှုကို သင်ကိုယ်တိုင် စတင်ခဲ့မှသာ အတည်ပြုပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verken e-post eller passord brukes. Du vises under et anonymt kallenavn som ikke kan knyttes til Warren-kontoen din. Godkjenn bare hvis du selv startet denne innloggingen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er worden geen e-mail en geen wachtwoord gebruikt. Je verschijnt onder een anonieme naam die niet aan je Warren-account kan worden gekoppeld. Keur alleen goed als je deze aanmelding zelf hebt gestart."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie są używane żadne adresy e-mail ani hasła. Występujesz pod anonimowym pseudonimem, którego nie można powiązać z Twoim kontem Warren. Zatwierdź tylko wtedy, gdy to Ty rozpocząłeś to logowanie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não são usados e-mail nem palavra-passe. Aparece sob um pseudónimo anónimo que não pode ser associado à sua conta Warren. Aprove apenas se foi você que iniciou este início de sessão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Электронная почта и пароль не используются. Вы отображаетесь под анонимным именем, которое нельзя связать с вашей учётной записью Warren. Подтверждайте вход, только если вы сами его начали."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen e-post och inget lösenord används. Du visas under ett anonymt alias som inte kan kopplas till ditt Warren-konto. Godkänn bara om du själv startade den här inloggningen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่มีการใช้อีเมลและรหัสผ่าน คุณจะปรากฏภายใต้ชื่อผู้ใช้นิรนามที่ไม่สามารถเชื่อมโยงกับบัญชี Warren ของคุณได้ อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการเข้าสู่ระบบนี้เท่านั้น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "E-posta ve parola kullanılmaz. Warren hesabınızla ilişkilendirilemeyen anonim bir takma adla görünürsünüz. Yalnızca bu girişi siz başlattıysanız onaylayın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Електронна пошта й пароль не використовуються. Ви відображаєтесь під анонімним іменем, яке не можна пов'язати з вашим обліковим записом Warren. Підтверджуйте вхід, лише якщо ви самі його розпочали."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不使用电子邮件和密码。您将以无法关联到 Warren 账户的匿名昵称显示。仅当此次登录由您本人发起时才批准。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不使用電子郵件和密碼。您將以無法連結至 Warren 帳戶的匿名代號顯示。僅當此次登入由您本人發起時才核准。"
+          }
+        }
+      }
+    },
+    "Approve sign-in": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approve sign-in"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموافقة على تسجيل الدخول"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Godkend login"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung bestätigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobar inicio de sesión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأیید ورود"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyväksy kirjautuminen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approuver la connexion"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Approva l'accesso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインを承認"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 승인"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်ခြင်းကို အတည်ပြုရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Godkjenn innlogging"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelding goedkeuren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zatwierdź logowanie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprovar início de sessão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobă autentificarea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подтвердить вход"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Godkänn inloggning"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อนุมัติการเข้าสู่ระบบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Girişi onayla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Підтвердити вхід"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "批准登录"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核准登入"
+          }
+        }
+      }
+    },
+    "Signed in to the Warren forum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Signed in to the Warren forum."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تسجيل الدخول إلى منتدى Warren."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logget ind på Warren-forummet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Warren-Forum angemeldet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sesión iniciada en el foro de Warren."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "به انجمن Warren وارد شدید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjauduttu Warren-foorumille."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connecté au forum Warren."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso al forum Warren eseguito."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren フォーラムにサインインしました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 포럼에 로그인했습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ဖိုရမ်သို့ ဝင်ရောက်ပြီးပါပြီ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logget inn på Warren-forumet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingelogd op het Warren-forum."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zalogowano na forum Warren."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sessão iniciada no fórum Warren."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "V-ați conectat la forumul Warren."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выполнен вход на форум Warren."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggad på Warren-forumet."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลงชื่อเข้าใช้ฟอรัม Warren แล้ว"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren forumunda oturum açıldı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Виконано вхід на форум Warren."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已登录 Warren 论坛。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已登入 Warren 論壇。"
+          }
+        }
+      }
+    },
+    "Forum access requires a Warren subscription. This wallet has never subscribed.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forum access requires a Warren subscription. This wallet has never subscribed."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتطلب الوصول إلى المنتدى اشتراكاً في Warren. لم تشترك هذه المحفظة قط."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adgang til forummet kræver et Warren-abonnement. Denne wallet har aldrig haft et abonnement."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Forumzugang erfordert ein Warren-Abo. Dieses Wallet hatte noch nie ein Abo."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El acceso al foro requiere una suscripción a Warren. Este monedero nunca se ha suscrito."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی به انجمن نیازمند اشتراک Warren است. این کیف پول هرگز اشتراک نداشته است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foorumin käyttö edellyttää Warren-tilausta. Tällä lompakolla ei ole koskaan ollut tilausta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accès au forum nécessite un abonnement Warren. Ce portefeuille n'a jamais souscrit."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'accesso al forum richiede un abbonamento Warren. Questo portafoglio non ha mai sottoscritto un abbonamento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォーラムを利用するには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포럼을 이용하려면 Warren 구독이 필요합니다. 이 지갑은 구독한 적이 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဖိုရမ်ကို အသုံးပြုရန် Warren subscription လိုအပ်ပါသည်။ ဤပိုက်ဆံအိတ်သည် တစ်ခါမျှ subscription မဝယ်ယူဖူးပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgang til forumet krever et Warren-abonnement. Denne lommeboken har aldri hatt et abonnement."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegang tot het forum vereist een Warren-abonnement. Deze wallet heeft nooit een abonnement gehad."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostęp do forum wymaga subskrypcji Warren. Ten portfel nigdy nie miał subskrypcji."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O acesso ao fórum requer uma subscrição Warren. Esta carteira nunca teve uma subscrição."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată un abonament."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ к форуму требует подписки Warren. С этого кошелька подписка никогда не оформлялась."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åtkomst till forumet kräver en Warren-prenumeration. Den här plånboken har aldrig haft en prenumeration."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงฟอรัมต้องมีการสมัครสมาชิก Warren กระเป๋าเงินนี้ไม่เคยสมัครสมาชิกมาก่อน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foruma erişim için Warren aboneliği gerekir. Bu cüzdan hiç abone olmamış."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ до форуму потребує підписки Warren. З цього гаманця підписку ніколи не оформлювали."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访问论坛需要 Warren 订阅。此钱包从未订阅过。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存取論壇需要 Warren 訂閱。此錢包從未訂閱過。"
+          }
+        }
+      }
+    },
+    "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تسجيل الدخول: ساعة هذا الجهاز منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين ثم ابدأ من جديد من صفحة المتصفح."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login afvist: enhedens ur er mere end et minut forkert. Slå automatisk dato og tid til, og start forfra fra browsersiden."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung abgelehnt: Die Uhr dieses Geräts geht um mehr als eine Minute falsch. Aktivieren Sie die automatische Datums- und Uhrzeiteinstellung und beginnen Sie erneut auf der Browserseite."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inicio de sesión rechazado: el reloj de este dispositivo está desfasado más de un minuto. Activa la fecha y hora automáticas y vuelve a empezar desde la página del navegador."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورود رد شد: ساعت این دستگاه بیش از یک دقیقه خطا دارد. تاریخ و ساعت خودکار را فعال کنید و از صفحه مرورگر دوباره شروع کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautuminen hylättiin: laitteen kello on yli minuutin väärässä. Ota automaattinen päivämäärä ja aika käyttöön ja aloita alusta selaimen sivulta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion refusée : l'horloge de cet appareil est décalée de plus d'une minute. Activez la date et l'heure automatiques, puis recommencez depuis la page du navigateur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso rifiutato: l'orologio di questo dispositivo è sfasato di oltre un minuto. Attiva data e ora automatiche e ricomincia dalla pagina del browser."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインが拒否されました。この端末の時計が1分以上ずれています。日付と時刻の自動設定を有効にして、ブラウザのページからやり直してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인이 거부되었습니다. 이 기기의 시계가 1분 이상 어긋나 있습니다. 날짜 및 시간 자동 설정을 켜고 브라우저 페이지에서 다시 시작하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pålogging avvist: klokken på denne enheten er mer enn ett minutt feil. Slå på automatisk dato og klokkeslett, og start på nytt fra nettlesersiden."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelding geweigerd: de klok van dit apparaat wijkt meer dan een minuut af. Schakel automatische datum en tijd in en begin opnieuw vanaf de browserpagina."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie odrzucone: zegar tego urządzenia różni się o ponad minutę. Włącz automatyczną datę i godzinę, a następnie zacznij od nowa na stronie przeglądarki."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Início de sessão recusado: o relógio deste dispositivo está desacertado em mais de um minuto. Ative a data e hora automáticas e recomece a partir da página do navegador."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autentificare refuzată: ceasul acestui dispozitiv este decalat cu mai mult de un minut. Activează data și ora automate, apoi reia de la pagina din browser."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход отклонён: часы этого устройства расходятся более чем на минуту. Включите автоматическую дату и время, затем начните заново со страницы браузера."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggning nekad: enhetens klocka går mer än en minut fel. Aktivera automatiskt datum och tid och börja om från webbläsarsidan."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การลงชื่อเข้าใช้ถูกปฏิเสธ นาฬิกาของอุปกรณ์นี้คลาดเคลื่อนเกินหนึ่งนาที เปิดใช้วันที่และเวลาอัตโนมัติ แล้วเริ่มใหม่จากหน้าเบราว์เซอร์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum açma reddedildi: bu cihazın saati bir dakikadan fazla sapmış. Otomatik tarih ve saati açın, sonra tarayıcı sayfasından yeniden başlayın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вхід відхилено: годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час, потім почніть знову зі сторінки браузера."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录被拒绝：此设备的时钟偏差超过一分钟。请开启自动设置日期和时间，然后从浏览器页面重新开始。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入遭拒：此裝置的時鐘偏差超過一分鐘。請開啟自動設定日期與時間，然後從瀏覽器頁面重新開始。"
+          }
+        }
+      }
+    },
+    "Sign-in failed. Please try again in a moment.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in failed. Please try again in a moment."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فشل تسجيل الدخول. يُرجى المحاولة مرة أخرى بعد قليل."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Login mislykkedes. Prøv igen om et øjeblik."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldung fehlgeschlagen. Bitte versuche es gleich noch einmal."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Error al iniciar sesión. Inténtalo de nuevo en un momento."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورود ناموفق بود. لطفاً کمی بعد دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautuminen epäonnistui. Yritä hetken kuluttua uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Échec de la connexion. Veuillez réessayer dans un instant."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso non riuscito. Riprova tra un momento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインに失敗しました。しばらくしてからもう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ ခဏအကြာတွင် ထပ်မံကြိုးစားပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innloggingen mislyktes. Prøv igjen om et øyeblikk."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelden mislukt. Probeer het zo meteen opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logowanie nie powiodło się. Spróbuj ponownie za chwilę."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falha no início de sessão. Tente novamente dentro de momentos."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autentificarea a eșuat. Te rugăm să încerci din nou peste un moment."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось войти. Повторите попытку через мгновение."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggningen misslyckades. Försök igen om en stund."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เข้าสู่ระบบไม่สำเร็จ โปรดลองอีกครั้งในอีกสักครู่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş başarısız oldu. Lütfen birazdan tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося увійти. Повторіть спробу за мить."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录失败。请稍后重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入失敗。請稍後再試。"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موافق"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تأیید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

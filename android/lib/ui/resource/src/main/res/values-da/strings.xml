@@ -503,7 +503,7 @@
     <string name="forum_login_body_first">Der blev anmodet om et login til Warren-fællesskabsforummet. Din app signerer en engangsudfordring med din wallet-nøgle for at bevise, at det er dig.</string>
     <string name="forum_login_body_second">Der bruges ingen e-mail og ingen adgangskode. Du vises under et anonymt kaldenavn, der ikke kan knyttes til din Warren-konto. Godkend kun, hvis du selv har startet dette login.</string>
     <string name="forum_login_title_cross_device">Log ind på forummet på en anden enhed?</string>
-    <string name="forum_login_body_first_cross_device">Denne anmodning kom fra en QR-kode, så browseren, der logges ind, er på en anden enhed, ikke denne. Din app signerer en engangsudfordring med din wallet-nøgle for at bevise, at det er dig.</string>
+    <string name="forum_login_body_first_cross_device">Warren kan ikke se hvilken browser der logges ind, eller om den står foran dig lige nu. Din app signerer en engangsudfordring med din wallet-nøgle for at bevise, at det er dig.</string>
     <string name="forum_login_body_second_cross_device">Godkend kun, hvis du ser på den loginside lige nu. Hvis nogen har sendt dig denne kode, logger de ind som dig. Der bruges ingen e-mail og ingen adgangskode.</string>
     <string name="forum_login_approve">Godkend login</string>
     <string name="forum_login_cancel">Annuller</string>

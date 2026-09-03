@@ -538,7 +538,7 @@
     <string name="forum_login_body_first">A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you.</string>
     <string name="forum_login_body_second">No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.</string>
     <string name="forum_login_title_cross_device">Sign in to the forum on another device?</string>
-    <string name="forum_login_body_first_cross_device">This request came from a QR code, so the browser being signed in is on another device, not this one. Your app will sign a one-time challenge with your wallet key to prove it is you.</string>
+    <string name="forum_login_body_first_cross_device">Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you.</string>
     <string name="forum_login_body_second_cross_device">Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used.</string>
     <string name="forum_login_approve">Approve sign-in</string>
     <string name="forum_login_cancel">Cancel</string>

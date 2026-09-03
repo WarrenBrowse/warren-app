@@ -4044,6 +4044,22 @@ msgid "The queries still travel through the VPN tunnel, but the resolver you cho
 msgstr "Les requêtes transitent malgré tout par le tunnel VPN, mais le résolveur que vous choisissez les verra. Laissez cette option désactivée, sauf si vous testez la résolution DNS distante."
 
 msgctxt "forum-login"
+msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgstr "Connexion refusée : l'horloge de cet ordinateur est décalée de plus d'une minute. Activez la date et l'heure automatiques, puis recommencez depuis la page du navigateur."
+
+msgctxt "forum-login"
+msgid "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used."
+msgstr "N'approuvez que si vous avez cette page de connexion sous les yeux en ce moment. Si quelqu'un vous a envoyé ce code, il se connecte en votre nom. Aucun e-mail ni mot de passe n'est utilisé."
+
+msgctxt "forum-login"
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr "Warren ne peut pas savoir quel navigateur se connecte, ni s'il est devant vous en ce moment. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c'est bien vous."
+
+msgctxt "forum-login"
+msgid "Sign in to the forum on another device?"
+msgstr "Se connecter au forum sur un autre appareil ?"
+
+msgctxt "forum-login"
 msgid "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr "Une connexion au forum communautaire Warren a été demandée. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c'est bien vous."
 

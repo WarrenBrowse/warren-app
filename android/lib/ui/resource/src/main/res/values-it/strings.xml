@@ -503,7 +503,7 @@
     <string name="forum_login_body_first">È stato richiesto l\'accesso al forum della community Warren. La tua app firmerà una sfida monouso con la chiave del tuo portafoglio per dimostrare che sei tu.</string>
     <string name="forum_login_body_second">Non vengono usati né e-mail né password. Compari con uno pseudonimo anonimo che non può essere collegato al tuo account Warren. Approva solo se sei stato tu ad avviare questo accesso.</string>
     <string name="forum_login_title_cross_device">Vuoi accedere al forum su un altro dispositivo?</string>
-    <string name="forum_login_body_first_cross_device">Questa richiesta proviene da un codice QR: il browser che accede si trova su un altro dispositivo, non su questo. La tua app firmerà una sfida monouso con la chiave del tuo portafoglio per dimostrare che sei tu.</string>
+    <string name="forum_login_body_first_cross_device">Warren non può sapere quale browser stia accedendo, né se sia davanti a te in questo momento. La tua app firmerà una sfida monouso con la chiave del tuo portafoglio per dimostrare che sei tu.</string>
     <string name="forum_login_body_second_cross_device">Approva solo se stai guardando quella pagina di accesso in questo momento. Se qualcuno ti ha inviato questo codice, sta accedendo a nome tuo. Non vengono usati né e-mail né password.</string>
     <string name="forum_login_approve">Approva l\'accesso</string>
     <string name="forum_login_cancel">Annulla</string>

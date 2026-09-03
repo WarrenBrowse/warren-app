@@ -1639,11 +1639,11 @@ msgid "Signing, please wait."
 msgstr ""
 
 msgctxt "forum-login"
-msgid "This request came from a QR code, so the browser being signed in is on another device, not this one. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgid "This sign-in request has expired. Start again from the browser page."
 msgstr ""
 
 msgctxt "forum-login"
-msgid "This sign-in request has expired. Start again from the browser page."
+msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr ""
 
 #. Shown when the typed code is not a
@@ -1685,6 +1685,23 @@ msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
 msgstr ""
 
+#. Banner shown when another Warren install on the same
+#. device has taken priority, so this one disconnected
+#. itself and will not connect.
+#. Available placeholders:
+#. %(product)s - Name of the install that took priority.
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr ""
+
+#. Banner shown when a lower-priority Warren install
+#. on the same device holds the tunnel.
+#. Available placeholders:
+#. %(product)s - Name of the install holding the tunnel.
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr ""
+
 #. Notification subtitle when the app upgrade is ready to install.
 #. Available placeholders:
 #. - %(suggestedUpgradeVersion)s: Upgrade version to be installed.
@@ -1701,6 +1718,10 @@ msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr ""
 
 msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr ""
+
+msgctxt "in-app-notifications"
 msgid "APP IS OUT OF SYNC"
 msgstr ""
 
@@ -1714,6 +1735,18 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
+msgstr ""
+
+#. Accessibility label for the control that ends this
+#. install's stand-down.
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr ""
+
+#. Clickable text that ends this install's stand-down and
+#. lets it connect again.
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
 msgstr ""
 
 #. Notification subtitle when the app upgrade is ready to install.
@@ -1853,6 +1886,10 @@ msgctxt "in-app-notifications"
 msgid "SERVER NOT FORWARDING TRAFFIC"
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr ""
+
 #. Notification subtitle when the installer verification failed.
 msgctxt "in-app-notifications"
 msgid "The installer could not be verified."
@@ -1918,6 +1955,14 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "WARREN"
+msgstr ""
+
+#. Follows the stand-down banner, telling the user when
+#. this install can be brought back.
+#. Available placeholders:
+#. %(product)s - Name of the install that took priority.
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
 msgstr ""
 
 msgctxt "in-app-notifications"

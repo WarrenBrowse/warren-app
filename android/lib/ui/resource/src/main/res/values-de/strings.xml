@@ -503,7 +503,7 @@
     <string name="forum_login_body_first">Es wurde eine Anmeldung beim Warren Community-Forum angefordert. Deine App signiert eine einmalige Anfrage mit deinem Wallet-Schlüssel, um zu bestätigen, dass du es bist.</string>
     <string name="forum_login_body_second">Es werden keine E-Mail und kein Passwort verwendet. Du erscheinst unter einem anonymen Namen, der nicht mit deinem Warren-Konto verknüpft werden kann. Bestätige nur, wenn du diese Anmeldung selbst gestartet hast.</string>
     <string name="forum_login_title_cross_device">Im Forum auf einem anderen Gerät anmelden?</string>
-    <string name="forum_login_body_first_cross_device">Diese Anfrage kam von einem QR-Code: Der Browser, der angemeldet wird, ist auf einem anderen Gerät, nicht auf diesem. Deine App signiert eine einmalige Anfrage mit deinem Wallet-Schlüssel, um zu bestätigen, dass du es bist.</string>
+    <string name="forum_login_body_first_cross_device">Warren kann nicht erkennen, welcher Browser angemeldet wird oder ob er gerade vor dir steht. Deine App signiert eine einmalige Anfrage mit deinem Wallet-Schlüssel, um zu bestätigen, dass du es bist.</string>
     <string name="forum_login_body_second_cross_device">Bestätige nur, wenn du diese Anmeldeseite gerade vor dir hast. Wenn dir jemand diesen Code geschickt hat, meldet er sich als du an. Es werden keine E-Mail und kein Passwort verwendet.</string>
     <string name="forum_login_approve">Anmeldung bestätigen</string>
     <string name="forum_login_cancel">Abbrechen</string>

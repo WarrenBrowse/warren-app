@@ -503,7 +503,7 @@
     <string name="forum_login_body_first">Warrenin yhteisöfoorumille pyydettiin kirjautumista. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä.</string>
     <string name="forum_login_body_second">Sähköpostia tai salasanaa ei käytetä. Näyt anonyymillä nimimerkillä, jota ei voi yhdistää Warren-tiliisi. Hyväksy vain, jos aloitit tämän kirjautumisen itse.</string>
     <string name="forum_login_title_cross_device">Kirjaudutaanko foorumille toisella laitteella?</string>
-    <string name="forum_login_body_first_cross_device">Tämä pyyntö tuli QR-koodista, joten kirjautuva selain on toisella laitteella, ei tällä. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä.</string>
+    <string name="forum_login_body_first_cross_device">Warren ei voi tietää, mikä selain kirjautuu sisään tai onko se juuri nyt edessäsi. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä.</string>
     <string name="forum_login_body_second_cross_device">Hyväksy vain, jos katsot kyseistä kirjautumissivua juuri nyt. Jos joku lähetti sinulle tämän koodin, hän kirjautuu sinuna. Sähköpostia tai salasanaa ei käytetä.</string>
     <string name="forum_login_approve">Hyväksy kirjautuminen</string>
     <string name="forum_login_cancel">Peruuta</string>
