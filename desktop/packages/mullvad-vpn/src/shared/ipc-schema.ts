@@ -341,6 +341,11 @@ export const ipcSchema = {
     setEnableDaita: invoke<boolean, void>(),
     setDaitaDirectOnly: invoke<boolean, void>(),
     setEnableRecents: invoke<boolean, void>(),
+    // End the stand-down this build holds for a higher-priority product
+    // environment, restoring the auto-connect and kill switch recorded when
+    // it stood down. The daemon refuses it while that environment still
+    // asserts the machine.
+    clearEnvYield: invoke<void, void>(),
     // Trust the new pubkey served for the
     // `exitIdHex` so future connects to that exit accept it as the
     // baseline. The daemon clears the pending mismatch from

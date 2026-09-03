@@ -124,6 +124,7 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleResetPinnedExitKeys(() =>
       this.daemonRpc.resetPinnedExitKeys(),
     );
+    IpcMainEventChannel.settings.handleClearEnvYield(() => this.daemonRpc.clearEnvYield());
     IpcMainEventChannel.settings.handleDismissPubkeyMismatch(() =>
       this.daemonRpc.dismissPubkeyMismatch(),
     );

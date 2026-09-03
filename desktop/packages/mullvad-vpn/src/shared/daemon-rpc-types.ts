@@ -813,6 +813,41 @@ export interface WarrenStatus {
   // the freshness; only this process knows which slot is the user's, so
   // asking the server about one account never happens.
   forumDigest: string | null;
+  // Every OTHER Warren product environment installed alongside this build,
+  // as the daemon's cross-environment watcher last saw it. Empty until the
+  // first observation, and on a machine running a single product it stays a
+  // list of environments that never assert.
+  foreignEnvironments: WarrenForeignEnv[];
+  // Set while this build has stood down for a higher-priority environment.
+  // `null` is the ordinary state. The daemon refuses connect requests while
+  // it is set, so every control that would issue one reads it first.
+  envYield: WarrenEnvYield | null;
+}
+
+// One other product environment, as the daemon's watcher last saw it. An
+// environment it cannot reach, or whose socket the OS does not vouch for,
+// arrives with `asserting: false`: wrongly standing down would disarm this
+// build's own kill switch on no evidence.
+export interface WarrenForeignEnv {
+  // Stable lowercase environment name ('prod', 'staging', 'beta').
+  name: string;
+  // True when that environment outranks this build, so it is one this build
+  // stands down for. False for a lower environment, watched only so the UI
+  // can say it will stand down.
+  outranksUs: boolean;
+  // True when it holds a tunnel in any state other than disconnected, or has
+  // its kill switch armed. An installed but idle environment asserts nothing.
+  asserting: boolean;
+}
+
+// The stand-down this build currently holds.
+export interface WarrenEnvYield {
+  // Stable lowercase name of the environment that holds the machine.
+  yieldedTo: string;
+  // True when the daemon would accept the manual re-enable right now, which
+  // is the only window the design promises: the higher environment stopped,
+  // or disconnected with its kill switch off.
+  restorable: boolean;
 }
 
 // One operator-published broadcast notice, ready to display: the daemon

@@ -2172,6 +2172,15 @@ export class WarrenStatus extends jspb.Message {
     setForumDigest(value: string): WarrenStatus;
     getRestoredAfterUncleanShutdown(): boolean;
     setRestoredAfterUncleanShutdown(value: boolean): WarrenStatus;
+    clearForeignEnvironmentsList(): void;
+    getForeignEnvironmentsList(): Array<WarrenForeignEnv>;
+    setForeignEnvironmentsList(value: Array<WarrenForeignEnv>): WarrenStatus;
+    addForeignEnvironments(value?: WarrenForeignEnv, index?: number): WarrenForeignEnv;
+
+    hasEnvYield(): boolean;
+    clearEnvYield(): void;
+    getEnvYield(): WarrenEnvYield | undefined;
+    setEnvYield(value?: WarrenEnvYield): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2200,6 +2209,57 @@ export namespace WarrenStatus {
         noticesList: Array<WarrenNotice.AsObject>,
         forumDigest?: string,
         restoredAfterUncleanShutdown: boolean,
+        foreignEnvironmentsList: Array<WarrenForeignEnv.AsObject>,
+        envYield?: WarrenEnvYield.AsObject,
+    }
+}
+
+export class WarrenForeignEnv extends jspb.Message { 
+    getName(): string;
+    setName(value: string): WarrenForeignEnv;
+    getOutranksUs(): boolean;
+    setOutranksUs(value: boolean): WarrenForeignEnv;
+    getAsserting(): boolean;
+    setAsserting(value: boolean): WarrenForeignEnv;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenForeignEnv.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenForeignEnv): WarrenForeignEnv.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenForeignEnv, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenForeignEnv;
+    static deserializeBinaryFromReader(message: WarrenForeignEnv, reader: jspb.BinaryReader): WarrenForeignEnv;
+}
+
+export namespace WarrenForeignEnv {
+    export type AsObject = {
+        name: string,
+        outranksUs: boolean,
+        asserting: boolean,
+    }
+}
+
+export class WarrenEnvYield extends jspb.Message { 
+    getYieldedTo(): string;
+    setYieldedTo(value: string): WarrenEnvYield;
+    getRestorable(): boolean;
+    setRestorable(value: boolean): WarrenEnvYield;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenEnvYield.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenEnvYield): WarrenEnvYield.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenEnvYield, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenEnvYield;
+    static deserializeBinaryFromReader(message: WarrenEnvYield, reader: jspb.BinaryReader): WarrenEnvYield;
+}
+
+export namespace WarrenEnvYield {
+    export type AsObject = {
+        yieldedTo: string,
+        restorable: boolean,
     }
 }
 

@@ -52,6 +52,8 @@ const BASE_STATUS: WarrenStatus = {
   networkInfo: null,
   notices: [],
   forumDigest: null,
+  foreignEnvironments: [],
+  envYield: null,
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

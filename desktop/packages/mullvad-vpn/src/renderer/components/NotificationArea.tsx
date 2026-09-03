@@ -33,9 +33,11 @@ import {
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
   WarrenConnectingStuckNotificationProvider,
+  WarrenEnvStandDownNotificationProvider,
   WarrenExitEgressNotificationProvider,
   WarrenFailoverNotificationProvider,
   WarrenHostOfflineNotificationProvider,
+  WarrenLowerEnvActiveNotificationProvider,
   WarrenMaintenanceNotificationProvider,
   WarrenNoticeNotificationProvider,
   WarrenPortMigrationNotificationProvider,
@@ -106,6 +108,15 @@ export default function NotificationArea(props: IProps) {
   const hostOffline = useHostOffline();
   const connectingStuck = useConnectingStuck();
   const exitEgressDead = useExitEgressDead();
+  const { clearEnvYield } = useAppContext();
+  const clearEnvYieldNow = useCallback(() => {
+    clearEnvYield().catch((error: Error) => {
+      // The daemon refuses the re-enable while the other environment still
+      // asserts the machine. The next status push re-renders the banner with
+      // the reason, so the user is not left with a silent no-op.
+      log.error(`Failed to end the environment stand-down: ${error.message}`);
+    });
+  }, [clearEnvYield]);
   const acknowledgeWarrenFailover = useCallback(() => {
     setWarrenFailoverAcknowledged(warrenStatus?.failoverCount ?? 0);
   }, [warrenStatus?.failoverCount]);
@@ -144,6 +155,17 @@ export default function NotificationArea(props: IProps) {
     // connect view's own status, and the daemon clears the notice (empty
     // list) as soon as it is erased or lapses.
     new WarrenNoticeNotificationProvider({ notices: warrenStatus?.notices ?? [] }),
+    // Then the coexistence banners, above every connection-state one: while
+    // this build has stood down for a higher-priority install, it is not
+    // trying to connect at all, so "connecting", "blocked" or "no internet"
+    // would all describe a state it is not in.
+    new WarrenEnvStandDownNotificationProvider({
+      envYield: warrenStatus?.envYield ?? null,
+      clearEnvYield: clearEnvYieldNow,
+    }),
+    new WarrenLowerEnvActiveNotificationProvider({
+      foreignEnvironments: warrenStatus?.foreignEnvironments ?? [],
+    }),
     // Then: losing the network trumps every other banner, and the flag
     // fires on the daemon's offline edge (debounced only past the
     // synthetic ~1 s blips), before the tunnel state machine reacts (it

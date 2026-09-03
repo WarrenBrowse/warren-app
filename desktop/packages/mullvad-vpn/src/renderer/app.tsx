@@ -719,6 +719,14 @@ export default class AppRenderer {
     actions.settings.updateWarrenCustomExit(settings);
   };
 
+  // End this build's stand-down for a higher-priority product environment.
+  // The daemon restores the auto-connect and kill switch it recorded, and
+  // drops the yield from WarrenStatus, so the banner and the disabled connect
+  // button clear through the existing status stream.
+  public clearEnvYield = async () => {
+    return IpcRendererEventChannel.settings.clearEnvYield();
+  };
+
   // Trust the new pubkey for the given `exitIdHex`,
   // replacing the pinned baseline. The daemon clears
   // `WarrenStatus.pubkeyMismatchPending` on success so the modal

@@ -4,6 +4,7 @@ export * from './app-upgrade-error';
 export * from './app-upgrade-ready';
 export * from './warren-connecting-stuck';
 export * from './warren-failover';
+export * from './warren-env-arbitration';
 export * from './warren-exit-egress';
 export * from './warren-host-offline';
 export * from './warren-maintenance';

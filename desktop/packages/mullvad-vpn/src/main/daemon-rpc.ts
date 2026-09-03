@@ -597,6 +597,14 @@ export class DaemonRpc extends GrpcClient {
     return response.getResetCount();
   }
 
+  // Manual re-enable after this build stood down for a higher-priority
+  // product environment. The daemon refuses it while that environment is
+  // still asserting the machine, which is why the GUI offers it only on the
+  // `restorable` flag it publishes with the yield.
+  public async clearEnvYield(): Promise<void> {
+    await this.callEmpty<Empty>(this.client.clearEnvYield);
+  }
+
   public async dismissPubkeyMismatch(): Promise<void> {
     await this.callEmpty<Empty>(this.client.dismissPubkeyMismatch);
   }

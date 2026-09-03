@@ -62,6 +62,8 @@ import {
   TunnelState,
   TunnelType,
   WarrenCustomExitSettings,
+  WarrenEnvYield,
+  WarrenForeignEnv,
   WarrenMultiHopSettings,
   WarrenNetworkInfo,
   WarrenNotice,
@@ -673,7 +675,25 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     networkInfo: convertFromWarrenNetworkInfo(status.getNetworkInfo()),
     notices: status.getNoticesList().map(convertFromWarrenNotice),
     forumDigest: status.hasForumDigest() ? (status.getForumDigest() ?? null) : null,
+    foreignEnvironments: status.getForeignEnvironmentsList().map(convertFromWarrenForeignEnv),
+    envYield: convertFromWarrenEnvYield(status.getEnvYield()),
   };
+}
+
+function convertFromWarrenForeignEnv(environment: grpcTypes.WarrenForeignEnv): WarrenForeignEnv {
+  return {
+    name: environment.getName(),
+    outranksUs: environment.getOutranksUs(),
+    asserting: environment.getAsserting(),
+  };
+}
+
+function convertFromWarrenEnvYield(
+  envYield: grpcTypes.WarrenEnvYield | undefined,
+): WarrenEnvYield | null {
+  return envYield
+    ? { yieldedTo: envYield.getYieldedTo(), restorable: envYield.getRestorable() }
+    : null;
 }
 
 function convertFromWarrenNotice(notice: grpcTypes.WarrenNotice): WarrenNotice {

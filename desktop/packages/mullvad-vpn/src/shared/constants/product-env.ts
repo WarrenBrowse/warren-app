@@ -64,3 +64,15 @@ const productAnchorsByEnvironment = {
 } as const;
 
 export const productAnchors = productAnchorsByEnvironment[productEnvironment];
+
+// Display name of ANY environment, not only the compiled one. The
+// coexistence banners name the OTHER install on the machine, and naming it
+// the way that install names itself (its tray tooltip, its window title) is
+// what lets the user tell the two apart. An environment this build does not
+// know is named by its own lowercase key rather than dropped, so a newer
+// daemon can report one without the banner going blank.
+export function displayNameForEnvironment(environment: string): string {
+  return environment in productAnchorsByEnvironment
+    ? productAnchorsByEnvironment[environment as ProductEnvironment].displayName
+    : environment;
+}

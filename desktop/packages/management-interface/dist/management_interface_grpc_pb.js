@@ -1279,6 +1279,26 @@ warrenStatusUpdates: {
     responseSerialize: serialize_mullvad_daemon_management_interface_WarrenStatus,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenStatus,
   },
+  // Manual re-enable after this build stood down for a higher-priority
+// product environment: restores the `auto_connect` and `lockdown_mode` the
+// user had at the instant of the stand-down and drops the yield, so
+// connects are accepted again. The tunnel is deliberately not reconnected.
+//
+// FAILED_PRECONDITION while that environment is still asserting the
+// machine, so the re-enable is only ever available in the window the
+// design promises: it stopped, or it disconnected with its kill switch
+// off. This build re-yields on its own the moment it connects again.
+clearEnvYield: {
+    path: '/mullvad_daemon.management_interface.ManagementService/ClearEnvYield',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
   // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
 // verify hook refuses connects when the served Ed25519 pubkey for
 // a known `exit_id` differs from the locally pinned baseline; the

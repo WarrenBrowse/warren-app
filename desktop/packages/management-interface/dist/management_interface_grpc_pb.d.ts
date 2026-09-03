@@ -61,6 +61,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     setWarrenCustomExit: IManagementServiceService_ISetWarrenCustomExit;
     getWarrenStatus: IManagementServiceService_IGetWarrenStatus;
     warrenStatusUpdates: IManagementServiceService_IWarrenStatusUpdates;
+    clearEnvYield: IManagementServiceService_IClearEnvYield;
     trustNewExitKey: IManagementServiceService_ITrustNewExitKey;
     resetPinnedExitKeys: IManagementServiceService_IResetPinnedExitKeys;
     dismissPubkeyMismatch: IManagementServiceService_IDismissPubkeyMismatch;
@@ -570,6 +571,15 @@ interface IManagementServiceService_IWarrenStatusUpdates extends grpc.MethodDefi
     requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
     responseSerialize: grpc.serialize<management_interface_pb.WarrenStatus>;
     responseDeserialize: grpc.deserialize<management_interface_pb.WarrenStatus>;
+}
+interface IManagementServiceService_IClearEnvYield extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/ClearEnvYield";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
 }
 interface IManagementServiceService_ITrustNewExitKey extends grpc.MethodDefinition<management_interface_pb.TrustNewExitKeyRequest, management_interface_pb.TrustNewExitKeyResponse> {
     path: "/mullvad_daemon.management_interface.ManagementService/TrustNewExitKey";
@@ -1227,6 +1237,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     setWarrenCustomExit: grpc.handleUnaryCall<management_interface_pb.WarrenCustomExitSettings, google_protobuf_empty_pb.Empty>;
     getWarrenStatus: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenStatus>;
     warrenStatusUpdates: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenStatus>;
+    clearEnvYield: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     trustNewExitKey: grpc.handleUnaryCall<management_interface_pb.TrustNewExitKeyRequest, management_interface_pb.TrustNewExitKeyResponse>;
     resetPinnedExitKeys: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.ResetPinnedExitKeysResponse>;
     dismissPubkeyMismatch: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
@@ -1442,6 +1453,9 @@ export interface IManagementServiceClient {
     getWarrenStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
     warrenStatusUpdates(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.WarrenStatus>;
     warrenStatusUpdates(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.WarrenStatus>;
+    clearEnvYield(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    clearEnvYield(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    clearEnvYield(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     trustNewExitKey(request: management_interface_pb.TrustNewExitKeyRequest, callback: (error: grpc.ServiceError | null, response: management_interface_pb.TrustNewExitKeyResponse) => void): grpc.ClientUnaryCall;
     trustNewExitKey(request: management_interface_pb.TrustNewExitKeyRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.TrustNewExitKeyResponse) => void): grpc.ClientUnaryCall;
     trustNewExitKey(request: management_interface_pb.TrustNewExitKeyRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.TrustNewExitKeyResponse) => void): grpc.ClientUnaryCall;
@@ -1788,6 +1802,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public getWarrenStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenStatus) => void): grpc.ClientUnaryCall;
     public warrenStatusUpdates(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.WarrenStatus>;
     public warrenStatusUpdates(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.WarrenStatus>;
+    public clearEnvYield(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public clearEnvYield(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public clearEnvYield(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public trustNewExitKey(request: management_interface_pb.TrustNewExitKeyRequest, callback: (error: grpc.ServiceError | null, response: management_interface_pb.TrustNewExitKeyResponse) => void): grpc.ClientUnaryCall;
     public trustNewExitKey(request: management_interface_pb.TrustNewExitKeyRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.TrustNewExitKeyResponse) => void): grpc.ClientUnaryCall;
     public trustNewExitKey(request: management_interface_pb.TrustNewExitKeyRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.TrustNewExitKeyResponse) => void): grpc.ClientUnaryCall;
