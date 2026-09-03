@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Sommige velden werden niet geaccepteerd. Controleer de beschrijving en probeer het opnieuw.</string>
     <string name="report_problem_error_server">Het forum kon het rapport nu niet aannemen. Probeer het later opnieuw.</string>
     <string name="report_problem_error_generic">Het rapport kon niet worden verstuurd. Controleer de verbinding en probeer het opnieuw.</string>
+    <string name="settings_replay_onboarding">Onboarding opnieuw afspelen</string>
+    <string name="login_blocking_kill_switch">Uw verbinding wordt momenteel geblokkeerd door onze kill-switch.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; is ingeschakeld. Schakel het uit om uw verbinding te deblokkeren.</string>
+    <string name="disable">Uitschakelen</string>
+    <string name="unblock">Deblokkeren</string>
+    <string name="connection_details_last">Laatst</string>
+    <string name="connection_details_never">nooit</string>
+    <string name="connection_details_age">%1$s geleden</string>
 </resources>

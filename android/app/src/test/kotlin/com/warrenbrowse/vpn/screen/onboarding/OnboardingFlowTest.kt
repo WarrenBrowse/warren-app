@@ -6,9 +6,11 @@ import com.warrenbrowse.vpn.core.NavigationState
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.core.ResultStore
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
+import com.warrenbrowse.vpn.feature.login.api.OnboardingNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
-import com.warrenbrowse.vpn.screen.navigation.OnboardingNavKey
+import com.warrenbrowse.vpn.screen.navigation.OnboardingBetaAccessNavKey
+import com.warrenbrowse.vpn.screen.navigation.OnboardingSubscriptionNavKey
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -49,6 +51,22 @@ class OnboardingFlowTest {
     }
 
     @Test
+    fun `a replay with a wallet present skips the wallet step`() {
+        // Desktop's wizard never creates or imports over a logged-in identity;
+        // on Android the wallet step would offer exactly that, so it is skipped.
+        val beta = navigatorAt(OnboardingNavKey)
+        enterWalletStep(beta, walletPresent = true, isBeta = true)
+        assertEquals(listOf(OnboardingNavKey, OnboardingBetaAccessNavKey), beta.backStack.toList())
+
+        val prod = navigatorAt(OnboardingNavKey)
+        enterWalletStep(prod, walletPresent = true, isBeta = false)
+        assertEquals(
+            listOf(OnboardingNavKey, OnboardingSubscriptionNavKey),
+            prod.backStack.toList(),
+        )
+    }
+
+    @Test
     fun `leaving the wizard marks it completed`() {
         val navigator = navigatorAt(OnboardingNavKey)
 
@@ -85,11 +103,11 @@ class OnboardingFlowTest {
     @Test
     fun `the funding step holds while a modal the user is reading is up`() {
         assertFalse(
-            shouldAdvanceFromFundingStep(alreadyAdvanced = false, funded = true, held = true),
+            shouldAdvanceFromFundingStep(alreadyAdvanced = false, funded = true, held = true)
         )
         // Holding must not burn the one-shot: the advance still happens on close.
         assertTrue(
-            shouldAdvanceFromFundingStep(alreadyAdvanced = false, funded = true, held = false),
+            shouldAdvanceFromFundingStep(alreadyAdvanced = false, funded = true, held = false)
         )
     }
 }

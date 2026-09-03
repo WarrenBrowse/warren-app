@@ -564,4 +564,12 @@
     <string name="report_problem_error_invalid">受け付けられない項目があります。説明を確認して、もう一度お試しください。</string>
     <string name="report_problem_error_server">フォーラムが現在レポートを受け付けられませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="report_problem_error_generic">レポートを送信できませんでした。接続を確認して、もう一度お試しください。</string>
+    <string name="settings_replay_onboarding">オンボーディングを再生</string>
+    <string name="login_blocking_kill_switch">現在、キルスイッチが接続をブロックしています。</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt;が有効になっています。接続のブロックを解除するには無効にしてください。</string>
+    <string name="disable">無効にする</string>
+    <string name="unblock">ブロックを解除</string>
+    <string name="connection_details_last">最終</string>
+    <string name="connection_details_never">なし</string>
+    <string name="connection_details_age">%1$s前</string>
 </resources>

@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Einige Felder wurden nicht akzeptiert. Prüfe die Beschreibung und versuche es erneut.</string>
     <string name="report_problem_error_server">Das Forum konnte den Bericht gerade nicht annehmen. Bitte versuche es später erneut.</string>
     <string name="report_problem_error_generic">Der Bericht konnte nicht gesendet werden. Prüfe die Verbindung und versuche es erneut.</string>
+    <string name="settings_replay_onboarding">Einführung erneut abspielen</string>
+    <string name="login_blocking_kill_switch">Unser Killswitch blockiert derzeit Ihre Verbindung.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; ist aktiviert. Deaktivieren Sie dies, um Ihre Verbindung freizugeben.</string>
+    <string name="disable">Deaktivieren</string>
+    <string name="unblock">Entsperren</string>
+    <string name="connection_details_last">Zuletzt</string>
+    <string name="connection_details_never">nie</string>
+    <string name="connection_details_age">vor %1$s</string>
 </resources>

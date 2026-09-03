@@ -564,4 +564,12 @@
     <string name="report_problem_error_invalid">အချို့အကွက်များကို လက်မခံနိုင်ပါ။ ဖော်ပြချက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။</string>
     <string name="report_problem_error_server">ဖိုရမ်က အစီရင်ခံစာကို ယခု လက်ခံ၍ မရပါ။ နောက်မှ ထပ်ကြိုးစားပါ။</string>
     <string name="report_problem_error_generic">အစီရင်ခံစာ ပေးပို့၍ မရပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။</string>
+    <string name="settings_replay_onboarding">မိတ်ဆက်လမ်းညွှန်ကို ပြန်ဖွင့်ရန်</string>
+    <string name="login_blocking_kill_switch">ကျွန်ုပ်တို့၏ Kill Switch သည် လက်ရှိတွင် သင်၏ ချိတ်ဆက်မှုကို ပိတ်ဆို့ထားသည်။</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; ကို ဖွင့်ထားပါသည်။ သင့်ချိတ်ဆက်မှုကို ပိတ်ဆို့ထားမှုမှ ဖယ်ရန် ၎င်းကို ပိတ်ပါ။</string>
+    <string name="disable">ပိတ်ရန်</string>
+    <string name="unblock">ပိတ်ဆို့မှုမှ ဖယ်ရန်</string>
+    <string name="connection_details_last">နောက်ဆုံး</string>
+    <string name="connection_details_never">ဘယ်တော့မှ</string>
+    <string name="connection_details_age">%1$s အကြာက</string>
 </resources>

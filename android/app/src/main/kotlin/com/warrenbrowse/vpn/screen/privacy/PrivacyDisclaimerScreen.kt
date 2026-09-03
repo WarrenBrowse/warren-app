@@ -31,24 +31,24 @@ import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeout
 import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.app.MainActivity
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.login.api.OnboardingNavKey
 import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
-import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorMedium
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorMedium
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
-import com.warrenbrowse.vpn.screen.navigation.OnboardingNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.splash.DAEMON_READY_TIMEOUT_MS
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 import org.koin.androidx.compose.koinViewModel
 
 @Preview

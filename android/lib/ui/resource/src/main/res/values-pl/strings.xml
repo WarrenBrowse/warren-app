@@ -573,4 +573,12 @@
     <string name="report_problem_error_invalid">Niektóre pola nie zostały przyjęte. Sprawdź opis i spróbuj ponownie.</string>
     <string name="report_problem_error_server">Forum nie mogło teraz przyjąć raportu. Spróbuj ponownie później.</string>
     <string name="report_problem_error_generic">Nie udało się wysłać raportu. Sprawdź połączenie i spróbuj ponownie.</string>
+    <string name="settings_replay_onboarding">Odtwórz wprowadzenie ponownie</string>
+    <string name="login_blocking_kill_switch">Nasz kill switch blokuje połączenie.</string>
+    <string name="login_blocking_lockdown">Opcja &lt;b&gt;%1$s&lt;/b&gt; jest włączona. Aby odblokować połączenie, wyłącz ją.</string>
+    <string name="disable">Wyłącz</string>
+    <string name="unblock">Odblokuj</string>
+    <string name="connection_details_last">Ostatnia</string>
+    <string name="connection_details_never">nigdy</string>
+    <string name="connection_details_age">%1$s temu</string>
 </resources>

@@ -564,4 +564,12 @@
     <string name="report_problem_error_invalid">部分字段未被接受。请检查描述后重试。</string>
     <string name="report_problem_error_server">论坛目前无法接收报告，请稍后再试。</string>
     <string name="report_problem_error_generic">无法发送报告。请检查网络连接后重试。</string>
+    <string name="settings_replay_onboarding">重新播放新手引导</string>
+    <string name="login_blocking_kill_switch">我们的终止开关当前正在阻止您的连接。</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt;已启用。将其停用以解除阻止您的连接。</string>
+    <string name="disable">停用</string>
+    <string name="unblock">解除阻止</string>
+    <string name="connection_details_last">最近一次</string>
+    <string name="connection_details_never">从未</string>
+    <string name="connection_details_age">%1$s前</string>
 </resources>

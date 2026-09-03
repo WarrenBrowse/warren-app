@@ -573,4 +573,12 @@
     <string name="report_problem_error_invalid">Деякі поля не прийнято. Перевірте опис і спробуйте знову.</string>
     <string name="report_problem_error_server">Форум зараз не зміг прийняти звіт. Спробуйте пізніше.</string>
     <string name="report_problem_error_generic">Не вдалося надіслати звіт. Перевірте з\'єднання і спробуйте знову.</string>
+    <string name="settings_replay_onboarding">Повторити початкове налаштування</string>
+    <string name="login_blocking_kill_switch">Аварійний вимикач блокує з’єднання.</string>
+    <string name="login_blocking_lockdown">Увімкнено опцію &lt;b&gt;%1$s&lt;/b&gt;. Щоб розблокувати з’єднання, вимкніть її.</string>
+    <string name="disable">Вимкнути</string>
+    <string name="unblock">Розблокувати</string>
+    <string name="connection_details_last">Остання</string>
+    <string name="connection_details_never">ніколи</string>
+    <string name="connection_details_age">%1$s тому</string>
 </resources>

@@ -7,33 +7,38 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
+import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryTextButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import org.koin.compose.koinInject
 
 /**
- * First-launch onboarding welcome. Introduces Warren's value props, then hands
- * off to wallet creation. The Warren mark sits in the top bar (like the desktop
- * AppMainHeader). Gated to be shown once (see
- * [com.warrenbrowse.vpn.screen.splash.SplashViewModel]).
+ * First-launch onboarding welcome. Introduces Warren's value props, then hands off to wallet
+ * creation. The Warren mark sits in the top bar (like the desktop AppMainHeader). Gated to be shown
+ * once (see [com.warrenbrowse.vpn.screen.splash.SplashViewModel]).
  *
- * "Get started" only advances; the wizard is marked completed at its real exits
- * (see [leaveWizard]). Skipping still routes through wallet creation because the
- * wallet IS the identity on Android: what is skipped is the guided funding and
- * preferences steps, so the post-wallet destination is Connect.
+ * "Get started" only advances; the wizard is marked completed at its real exits (see
+ * [leaveWizard]). Skipping still routes through wallet creation because the wallet IS the identity
+ * on Android: what is skipped is the guided funding and preferences steps, so the post-wallet
+ * destination is Connect.
  */
 @Composable
 fun OnboardingScreen(navigator: Navigator) {
     val settings = koinInject<WarrenLocalSettingsRepository>()
+    val walletState by koinInject<WalletRepository>().state.collectAsStateWithLifecycle()
+    val productFlags = koinInject<WarrenProductFlags>()
 
     OnboardingStepScaffold(navigator = navigator, verticalSpacing = ONBOARDING_STEP_WIDE_SPACING) {
         Text(
@@ -62,7 +67,13 @@ fun OnboardingScreen(navigator: Navigator) {
 
         VariantButton(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            onClick = { enterWalletStep(navigator) },
+            onClick = {
+                enterWalletStep(
+                    navigator,
+                    walletPresent = walletState !is WalletState.Absent,
+                    isBeta = productFlags.isBeta,
+                )
+            },
             text = stringResource(R.string.onboarding_get_started),
         )
         PrimaryTextButton(
@@ -74,10 +85,7 @@ fun OnboardingScreen(navigator: Navigator) {
 
 @Composable
 private fun ValueProp(title: String, body: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = "•",
             style = MaterialTheme.typography.titleMedium,

@@ -602,4 +602,15 @@
     <string name="report_problem_error_invalid">Some fields could not be accepted. Check the description and try again.</string>
     <string name="report_problem_error_server">The forum could not take the report right now. Please try again later.</string>
     <string name="report_problem_error_generic">The report could not be sent. Check the connection and try again.</string>
+    <!-- Settings entry that re-runs the first-launch wizard. -->
+    <string name="settings_replay_onboarding">Replay onboarding</string>
+    <!-- Login screen notice while the tunnel is blocking. -->
+    <string name="login_blocking_kill_switch">Our kill switch is currently blocking your connection.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; is enabled. Disable it to unblock your connection.</string>
+    <string name="disable">Disable</string>
+    <string name="unblock">Unblock</string>
+    <!-- Connection details: age of the last automatic reconnect. -->
+    <string name="connection_details_last">Last</string>
+    <string name="connection_details_never">never</string>
+    <string name="connection_details_age">%1$s ago</string>
 </resources>

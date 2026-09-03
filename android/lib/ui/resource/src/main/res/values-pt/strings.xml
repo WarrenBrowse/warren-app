@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Alguns campos não foram aceites. Verifica a descrição e tenta novamente.</string>
     <string name="report_problem_error_server">O fórum não conseguiu receber o relatório agora. Tenta novamente mais tarde.</string>
     <string name="report_problem_error_generic">Não foi possível enviar o relatório. Verifica a ligação e tenta novamente.</string>
+    <string name="settings_replay_onboarding">Repetir introdução</string>
+    <string name="login_blocking_kill_switch">De momento, o nosso kill switch está a bloquear a sua ligação.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; está ativado. Desative para desbloquear a sua ligação.</string>
+    <string name="disable">Desativar</string>
+    <string name="unblock">Desbloquear</string>
+    <string name="connection_details_last">Última</string>
+    <string name="connection_details_never">nunca</string>
+    <string name="connection_details_age">há %1$s</string>
 </resources>

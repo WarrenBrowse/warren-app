@@ -573,4 +573,12 @@
     <string name="report_problem_error_invalid">Некоторые поля не приняты. Проверьте описание и попробуйте снова.</string>
     <string name="report_problem_error_server">Форум сейчас не смог принять отчёт. Повторите попытку позже.</string>
     <string name="report_problem_error_generic">Не удалось отправить отчёт. Проверьте подключение и попробуйте снова.</string>
+    <string name="settings_replay_onboarding">Повторить первоначальную настройку</string>
+    <string name="login_blocking_kill_switch">Функция аварийного отключения блокирует соединение.</string>
+    <string name="login_blocking_lockdown">Включена опция &lt;b&gt;%1$s&lt;/b&gt;. Отключите ее, чтобы разблокировать соединение.</string>
+    <string name="disable">Отключить</string>
+    <string name="unblock">Разблокировать</string>
+    <string name="connection_details_last">Последняя</string>
+    <string name="connection_details_never">никогда</string>
+    <string name="connection_details_age">%1$s назад</string>
 </resources>

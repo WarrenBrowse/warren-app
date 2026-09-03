@@ -564,4 +564,12 @@
     <string name="report_problem_error_invalid">部分欄位未被接受。請檢查描述後重試。</string>
     <string name="report_problem_error_server">論壇目前無法接收報告，請稍後再試。</string>
     <string name="report_problem_error_generic">無法傳送報告。請檢查網路連線後重試。</string>
+    <string name="settings_replay_onboarding">重新播放新手引導</string>
+    <string name="login_blocking_kill_switch">我們的終止開關目前正在封鎖您的連線。</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; 已啟用。需先將其停用，才能為您的連線解除封鎖。</string>
+    <string name="disable">停用</string>
+    <string name="unblock">解除封鎖</string>
+    <string name="connection_details_last">上次</string>
+    <string name="connection_details_never">從未</string>
+    <string name="connection_details_age">%1$s前</string>
 </resources>

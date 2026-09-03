@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Bazı alanlar kabul edilemedi. Açıklamayı kontrol edip tekrar deneyin.</string>
     <string name="report_problem_error_server">Forum raporu şu anda alamadı. Lütfen daha sonra tekrar deneyin.</string>
     <string name="report_problem_error_generic">Rapor gönderilemedi. Bağlantıyı kontrol edip tekrar deneyin.</string>
+    <string name="settings_replay_onboarding">Tanıtımı yeniden oynat</string>
+    <string name="login_blocking_kill_switch">Kill Switch özelliğimiz şu anda bağlantınızı engelliyor.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; etkinleştirildi. Bağlantınızın engelini kaldırmak için bu seçeneği devre dışı bırakın.</string>
+    <string name="disable">Devre dışı bırak</string>
+    <string name="unblock">Engeli kaldır</string>
+    <string name="connection_details_last">Son</string>
+    <string name="connection_details_never">asla</string>
+    <string name="connection_details_age">%1$s önce</string>
 </resources>

@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Certains champs n\'ont pas été acceptés. Vérifiez la description et réessayez.</string>
     <string name="report_problem_error_server">Le forum n\'a pas pu prendre le rapport pour le moment. Réessayez plus tard.</string>
     <string name="report_problem_error_generic">Le rapport n\'a pas pu être envoyé. Vérifiez la connexion et réessayez.</string>
+    <string name="settings_replay_onboarding">Rejouer l\'assistant de démarrage</string>
+    <string name="login_blocking_kill_switch">Notre coupe-circuit bloque actuellement votre connexion.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; est activé. Désactivez-le pour débloquer votre connexion.</string>
+    <string name="disable">Désactiver</string>
+    <string name="unblock">Débloquer</string>
+    <string name="connection_details_last">Dernier</string>
+    <string name="connection_details_never">jamais</string>
+    <string name="connection_details_age">il y a %1$s</string>
 </resources>

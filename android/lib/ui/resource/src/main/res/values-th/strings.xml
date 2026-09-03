@@ -564,4 +564,12 @@
     <string name="report_problem_error_invalid">บางช่องไม่ได้รับการยอมรับ ตรวจสอบคำอธิบายแล้วลองอีกครั้ง</string>
     <string name="report_problem_error_server">ฟอรัมไม่สามารถรับรายงานได้ในขณะนี้ โปรดลองอีกครั้งภายหลัง</string>
     <string name="report_problem_error_generic">ไม่สามารถส่งรายงานได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง</string>
+    <string name="settings_replay_onboarding">เล่นการแนะนำเริ่มต้นใหม่</string>
+    <string name="login_blocking_kill_switch">คิลสวิตช์ของเราได้บล็อกการเชื่อมต่อของคุณอยู่ในขณะนี้</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; ได้เปิดใช้งานแล้ว ปิดใช้งานเพื่อปลดบล็อกการเชื่อมต่อของคุณ</string>
+    <string name="disable">ปิดใช้งาน</string>
+    <string name="unblock">ปลดบล็อก</string>
+    <string name="connection_details_last">ล่าสุด</string>
+    <string name="connection_details_never">ไม่เคย</string>
+    <string name="connection_details_age">%1$s ที่แล้ว</string>
 </resources>

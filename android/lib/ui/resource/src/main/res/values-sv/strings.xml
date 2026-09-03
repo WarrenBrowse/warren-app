@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Vissa fält kunde inte godtas. Kontrollera beskrivningen och försök igen.</string>
     <string name="report_problem_error_server">Forumet kunde inte ta emot rapporten just nu. Försök igen senare.</string>
     <string name="report_problem_error_generic">Rapporten kunde inte skickas. Kontrollera anslutningen och försök igen.</string>
+    <string name="settings_replay_onboarding">Spela upp introduktionen igen</string>
+    <string name="login_blocking_kill_switch">Vår Kill Switch blockerar din anslutning just nu.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; är aktiverat. Inaktivera för att sluta blockera din anslutning.</string>
+    <string name="disable">Inaktivera</string>
+    <string name="unblock">Avblockera</string>
+    <string name="connection_details_last">Senast</string>
+    <string name="connection_details_never">aldrig</string>
+    <string name="connection_details_age">%1$s sedan</string>
 </resources>

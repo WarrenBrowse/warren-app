@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">برخی فیلدها پذیرفته نشدند. شرح را بررسی کنید و دوباره تلاش کنید.</string>
     <string name="report_problem_error_server">انجمن اکنون نتوانست گزارش را بپذیرد. لطفاً بعداً دوباره تلاش کنید.</string>
     <string name="report_problem_error_generic">گزارش فرستاده نشد. اتصال را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="settings_replay_onboarding">پخش مجدد راهنمای شروع</string>
+    <string name="login_blocking_kill_switch">کلید قطع‌کننده ما در حال حاضر اتصال شما را مسدود کرده است.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; فعال است. برای باز کردن اتصال، آن را غیرفعال کنید.</string>
+    <string name="disable">غیرفعال کردن</string>
+    <string name="unblock">رفع انسداد</string>
+    <string name="connection_details_last">آخرین</string>
+    <string name="connection_details_never">هرگز</string>
+    <string name="connection_details_age">%1$s پیش</string>
 </resources>

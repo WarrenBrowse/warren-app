@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Nogle felter kunne ikke accepteres. Tjek beskrivelsen, og prøv igen.</string>
     <string name="report_problem_error_server">Forummet kunne ikke modtage rapporten lige nu. Prøv igen senere.</string>
     <string name="report_problem_error_generic">Rapporten kunne ikke sendes. Tjek forbindelsen, og prøv igen.</string>
+    <string name="settings_replay_onboarding">Afspil introduktion igen</string>
+    <string name="login_blocking_kill_switch">Vores kill-switch blokerer i øjeblikket din forbindelse.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; er aktiveret. Deaktiver det for at fjerne blokeringen af din forbindelse.</string>
+    <string name="disable">Deaktiver</string>
+    <string name="unblock">Fjern blokering</string>
+    <string name="connection_details_last">Sidst</string>
+    <string name="connection_details_never">aldrig</string>
+    <string name="connection_details_age">%1$s siden</string>
 </resources>

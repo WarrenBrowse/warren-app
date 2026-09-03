@@ -574,4 +574,12 @@
     <string name="report_problem_error_invalid">Unele câmpuri nu au putut fi acceptate. Verifică descrierea și încearcă din nou.</string>
     <string name="report_problem_error_server">Forumul nu a putut prelua raportul acum. Încearcă din nou mai târziu.</string>
     <string name="report_problem_error_generic">Raportul nu a putut fi trimis. Verifică conexiunea și încearcă din nou.</string>
+    <string name="settings_replay_onboarding">Redare proces de integrare</string>
+    <string name="login_blocking_kill_switch">Kill Switch-ul nostru vă blochează în prezent conexiunea.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; este activată. Dezactiveaz-o pentru a debloca conexiunea.</string>
+    <string name="disable">Dezactivați</string>
+    <string name="unblock">Deblocați</string>
+    <string name="connection_details_last">Ultimul</string>
+    <string name="connection_details_never">niciodată</string>
+    <string name="connection_details_age">cu %1$s în urmă</string>
 </resources>

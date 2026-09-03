@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Joitakin kenttiä ei voitu hyväksyä. Tarkista kuvaus ja yritä uudelleen.</string>
     <string name="report_problem_error_server">Foorumi ei voinut ottaa raporttia vastaan juuri nyt. Yritä myöhemmin uudelleen.</string>
     <string name="report_problem_error_generic">Raporttia ei voitu lähettää. Tarkista yhteys ja yritä uudelleen.</string>
+    <string name="settings_replay_onboarding">Toista käyttöönotto-opastus</string>
+    <string name="login_blocking_kill_switch">Tappokytkin estää tällä hetkellä yhteytesi.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; on käytössä. Pura verkkoyhteyden esto poistamalla se käytöstä.</string>
+    <string name="disable">Poista käytöstä</string>
+    <string name="unblock">Poista esto</string>
+    <string name="connection_details_last">Viimeisin</string>
+    <string name="connection_details_never">ei koskaan</string>
+    <string name="connection_details_age">%1$s sitten</string>
 </resources>

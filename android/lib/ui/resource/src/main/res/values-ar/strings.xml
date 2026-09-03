@@ -579,4 +579,12 @@
     <string name="report_problem_error_invalid">تعذر قبول بعض الحقول. تحقق من الوصف وحاول مجددًا.</string>
     <string name="report_problem_error_server">تعذر على المنتدى استلام التقرير الآن. يرجى المحاولة لاحقًا.</string>
     <string name="report_problem_error_generic">تعذر إرسال التقرير. تحقق من الاتصال وحاول مجددًا.</string>
+    <string name="settings_replay_onboarding">إعادة تشغيل التهيئة الأولية</string>
+    <string name="login_blocking_kill_switch">مفتاح الإيقاف التلقائي لدينا يحظر اتصالك في الوقت الحالي.</string>
+    <string name="login_blocking_lockdown">تم تفعيل &lt;b&gt;%1$s&lt;/b&gt;. أوقفه لإلغاء حظر اتصالك.</string>
+    <string name="disable">إيقاف</string>
+    <string name="unblock">إلغاء الحظر</string>
+    <string name="connection_details_last">الأخير</string>
+    <string name="connection_details_never">أبدًا</string>
+    <string name="connection_details_age">منذ %1$s</string>
 </resources>

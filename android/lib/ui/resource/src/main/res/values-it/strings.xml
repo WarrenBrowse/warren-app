@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Alcuni campi non sono stati accettati. Controlla la descrizione e riprova.</string>
     <string name="report_problem_error_server">Il forum non ha potuto ricevere il rapporto in questo momento. Riprova più tardi.</string>
     <string name="report_problem_error_generic">Impossibile inviare il rapporto. Controlla la connessione e riprova.</string>
+    <string name="settings_replay_onboarding">Ripeti l\'introduzione</string>
+    <string name="login_blocking_kill_switch">Il nostro kill switch sta attualmente bloccando la tua connessione.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt; abilitata. Disabilitala per sbloccare la tua connessione.</string>
+    <string name="disable">Disabilita</string>
+    <string name="unblock">Sblocca</string>
+    <string name="connection_details_last">Ultima</string>
+    <string name="connection_details_never">mai</string>
+    <string name="connection_details_age">%1$s fa</string>
 </resources>

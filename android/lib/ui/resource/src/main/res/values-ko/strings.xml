@@ -564,4 +564,12 @@
     <string name="report_problem_error_invalid">일부 항목이 허용되지 않았습니다. 설명을 확인하고 다시 시도하세요.</string>
     <string name="report_problem_error_server">포럼이 지금 보고서를 받을 수 없습니다. 나중에 다시 시도하세요.</string>
     <string name="report_problem_error_generic">보고서를 보낼 수 없습니다. 연결을 확인하고 다시 시도하세요.</string>
+    <string name="settings_replay_onboarding">온보딩 다시 보기</string>
+    <string name="login_blocking_kill_switch">현재 킬 스위치가 연결을 차단하고 있습니다.</string>
+    <string name="login_blocking_lockdown">&lt;b&gt;%1$s&lt;/b&gt;이(가) 활성화되었습니다. 연결을 차단 해제하려면 이 옵션을 비활성화하세요.</string>
+    <string name="disable">사용 안 함</string>
+    <string name="unblock">차단 해제</string>
+    <string name="connection_details_last">마지막</string>
+    <string name="connection_details_never">없음</string>
+    <string name="connection_details_age">%1$s 전</string>
 </resources>

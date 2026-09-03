@@ -567,4 +567,12 @@
     <string name="report_problem_error_invalid">Algunos campos no se aceptaron. Revisa la descripción e inténtalo de nuevo.</string>
     <string name="report_problem_error_server">El foro no pudo recibir el informe ahora mismo. Inténtalo de nuevo más tarde.</string>
     <string name="report_problem_error_generic">No se pudo enviar el informe. Comprueba la conexión e inténtalo de nuevo.</string>
+    <string name="settings_replay_onboarding">Repetir la introducción guiada</string>
+    <string name="login_blocking_kill_switch">La función de desconexión de seguridad está bloqueando la conexión.</string>
+    <string name="login_blocking_lockdown">El &lt;b&gt;%1$s&lt;/b&gt; está activado. Desactívelo para desbloquear la conexión.</string>
+    <string name="disable">Desactivar</string>
+    <string name="unblock">Desbloquear</string>
+    <string name="connection_details_last">Última</string>
+    <string name="connection_details_never">nunca</string>
+    <string name="connection_details_age">hace %1$s</string>
 </resources>

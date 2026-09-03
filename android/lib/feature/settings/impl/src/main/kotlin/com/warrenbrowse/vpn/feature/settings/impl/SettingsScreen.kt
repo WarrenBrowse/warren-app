@@ -31,13 +31,13 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appinfo.api.AppInfoNavKey
 import com.warrenbrowse.vpn.feature.language.api.LanguageNavKey
 import com.warrenbrowse.vpn.feature.notification.api.NotificationSettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.ForumSignInCodeNavKey
+import com.warrenbrowse.vpn.feature.settings.api.ReportProblemNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenDaitaSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
-import com.warrenbrowse.vpn.feature.settings.api.ForumSignInCodeNavKey
-import com.warrenbrowse.vpn.feature.settings.api.ReportProblemNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
@@ -51,8 +51,8 @@ import com.warrenbrowse.vpn.lib.ui.component.button.NavigateCloseIconButton
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.component.listitem.ExternalLinkListItem
 import com.warrenbrowse.vpn.lib.ui.component.listitem.NavigationListItem
-import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.designsystem.Position
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.tag.DAITA_CELL_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LAZY_LIST_TEST_TAG
@@ -121,7 +121,9 @@ fun Settings(navigator: Navigator) {
         onDaitaClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenDaitaSettingsNavKey) },
         onMultihopClick =
-            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenMultihopSettingsNavKey) },
+            dropUnlessResumed {
+                navigator.navigateReplaceIfDetailPane(WarrenMultihopSettingsNavKey)
+            },
         onPortForwardingClick =
             dropUnlessResumed {
                 navigator.navigateReplaceIfDetailPane(WarrenPortForwardingSettingsNavKey)
@@ -146,6 +148,7 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ReportProblemNavKey) },
         onForumSignInCodeClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ForumSignInCodeNavKey) },
+        onReplayOnboardingClick = dropUnlessResumed { replayOnboarding(localSettings, navigator) },
         onBackClick = dropUnlessResumed { navigator.goBackUntil(SettingsNavKey, inclusive = true) },
     )
 }
@@ -168,6 +171,7 @@ fun SettingsScreen(
     onWalletClick: () -> Unit = {},
     onReportProblemClick: () -> Unit = {},
     onForumSignInCodeClick: () -> Unit = {},
+    onReplayOnboardingClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(id = R.string.settings),
@@ -206,6 +210,7 @@ fun SettingsScreen(
                         onWalletClick = onWalletClick,
                         onReportProblemClick = onReportProblemClick,
                         onForumSignInCodeClick = onForumSignInCodeClick,
+                        onReplayOnboardingClick = onReplayOnboardingClick,
                     )
                 }
             }
@@ -229,6 +234,7 @@ private fun LazyListScope.content(
     onWalletClick: () -> Unit = {},
     onReportProblemClick: () -> Unit = {},
     onForumSignInCodeClick: () -> Unit = {},
+    onReplayOnboardingClick: () -> Unit = {},
 ) {
     if (showBetaBadge) {
         item {
@@ -248,10 +254,7 @@ private fun LazyListScope.content(
             DaitaListItem(isDaitaEnabled = state.isDaitaEnabled, onDaitaClick = onDaitaClick)
         }
         itemWithDivider {
-            MultihopCell(
-                isEnabled = state.isMultiHopEnabled,
-                onMultihopClick = onMultihopClick,
-            )
+            MultihopCell(isEnabled = state.isMultiHopEnabled, onMultihopClick = onMultihopClick)
         }
         itemWithDivider {
             PortForwardingCell(
@@ -320,6 +323,21 @@ private fun LazyListScope.content(
     itemWithDivider { PrivacyPolicy(state) }
 
     item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+
+    // Desktop settings root: the wizard replay sits on its own after the
+    // support and app-info block.
+    item { ReplayOnboarding(onReplayOnboardingClick) }
+
+    item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+}
+
+@Composable
+private fun ReplayOnboarding(onClick: () -> Unit) {
+    NavigationListItem(
+        title = stringResource(id = R.string.settings_replay_onboarding),
+        onClick = onClick,
+        position = Position.Single,
+    )
 }
 
 @Composable
@@ -351,11 +369,14 @@ private fun AppInfo(navigateToAppInfo: () -> Unit, state: SettingsUiState) {
     val upgrade = state.availableUpgrade
     NavigationListItem(
         title = stringResource(id = R.string.app_info),
-        subtitle = if (upgrade != null) {
-            state.appVersion + "\n" + stringResource(R.string.app_info_update_available, upgrade)
-        } else {
-            state.appVersion
-        },
+        subtitle =
+            if (upgrade != null) {
+                state.appVersion +
+                    "\n" +
+                    stringResource(R.string.app_info_update_available, upgrade)
+            } else {
+                state.appVersion
+            },
         // The version alone is forced LTR so its dotted number never reorders.
         // Once a translated sentence joins it the paragraph must follow the
         // locale instead, or an RTL update line would be laid out backwards.
@@ -385,14 +406,9 @@ private fun TermsOfUse() {
     // The one URL that always resolves to the contract the user is actually
     // under; without this row Android had no in-app path to it at all.
     val label = stringResource(id = R.string.terms_of_use)
-    val openTerms =
-        LocalUriHandler.current.createUriHook(stringResource(R.string.terms_of_use_url))
+    val openTerms = LocalUriHandler.current.createUriHook(stringResource(R.string.terms_of_use_url))
 
-    ExternalLinkListItem(
-        title = label,
-        onClick = openTerms,
-        position = Position.Middle,
-    )
+    ExternalLinkListItem(title = label, onClick = openTerms, position = Position.Middle)
 }
 
 @Composable
@@ -417,11 +433,7 @@ private fun RefundPolicy() {
     val openRefundPolicy =
         LocalUriHandler.current.createUriHook(stringResource(R.string.refund_policy_url))
 
-    ExternalLinkListItem(
-        title = label,
-        onClick = openRefundPolicy,
-        position = Position.Middle,
-    )
+    ExternalLinkListItem(title = label, onClick = openRefundPolicy, position = Position.Middle)
 }
 
 @Composable
@@ -430,11 +442,7 @@ private fun CommunityForum() {
     val openForum =
         LocalUriHandler.current.createUriHook(stringResource(R.string.community_forum_url))
 
-    ExternalLinkListItem(
-        title = label,
-        onClick = openForum,
-        position = Position.Top,
-    )
+    ExternalLinkListItem(title = label, onClick = openForum, position = Position.Top)
 }
 
 @Composable

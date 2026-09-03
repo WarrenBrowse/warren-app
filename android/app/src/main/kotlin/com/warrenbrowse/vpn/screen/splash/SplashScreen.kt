@@ -20,6 +20,7 @@ import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.SceneryBitmaps
+import com.warrenbrowse.vpn.feature.login.api.OnboardingNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoMark
@@ -28,7 +29,6 @@ import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoTone
 import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmark
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.screen.navigation.OnboardingNavKey
 import com.warrenbrowse.vpn.screen.navigation.PrivacyDisclaimerNavKey
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
