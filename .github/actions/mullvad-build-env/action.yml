@@ -115,10 +115,17 @@ runs:
         set -euo pipefail
         dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warrenguard"
         rm -rf "$dest"
-        git clone --filter=blob:none \
-          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warrenguard.git" "$dest"
+        # The token rides an Authorization header on the FIRST request, as
+        # actions/checkout sends it: git only offers URL credentials after a
+        # 401, and GitHub's per-IP throttle of anonymous git ("temporarily
+        # limiting some unauthenticated downloads") answers that first,
+        # unauthenticated request with a fatal error instead of a challenge.
+        # The fleet egresses through one shared exit IP, so the throttle can
+        # trip at any time; an authenticated first request is never counted.
+        auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+        git -c "http.extraheader=AUTHORIZATION: basic ${auth}" clone --filter=blob:none \
+          "https://github.com/WarrenBrowse/warrenguard.git" "$dest"
         git -C "$dest" checkout --detach "$WARRENGUARD_SHA"
-        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warrenguard.git"
 
     - name: Read pinned warren-contract SHA
       if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
@@ -139,10 +146,17 @@ runs:
         set -euo pipefail
         dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-contract"
         rm -rf "$dest"
-        git clone --filter=blob:none \
-          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warren-contract.git" "$dest"
+        # The token rides an Authorization header on the FIRST request, as
+        # actions/checkout sends it: git only offers URL credentials after a
+        # 401, and GitHub's per-IP throttle of anonymous git ("temporarily
+        # limiting some unauthenticated downloads") answers that first,
+        # unauthenticated request with a fatal error instead of a challenge.
+        # The fleet egresses through one shared exit IP, so the throttle can
+        # trip at any time; an authenticated first request is never counted.
+        auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+        git -c "http.extraheader=AUTHORIZATION: basic ${auth}" clone --filter=blob:none \
+          "https://github.com/WarrenBrowse/warren-contract.git" "$dest"
         git -C "$dest" checkout --detach "$WARREN_CONTRACT_SHA"
-        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-contract.git"
 
     - name: Read pinned warren-sdk-rs SHA
       if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
@@ -162,10 +176,17 @@ runs:
         set -euo pipefail
         dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-sdk-rs"
         rm -rf "$dest"
-        git clone --filter=blob:none \
-          "https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/warren-sdk-rs.git" "$dest"
+        # The token rides an Authorization header on the FIRST request, as
+        # actions/checkout sends it: git only offers URL credentials after a
+        # 401, and GitHub's per-IP throttle of anonymous git ("temporarily
+        # limiting some unauthenticated downloads") answers that first,
+        # unauthenticated request with a fatal error instead of a challenge.
+        # The fleet egresses through one shared exit IP, so the throttle can
+        # trip at any time; an authenticated first request is never counted.
+        auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+        git -c "http.extraheader=AUTHORIZATION: basic ${auth}" clone --filter=blob:none \
+          "https://github.com/WarrenBrowse/warren-sdk-rs.git" "$dest"
         git -C "$dest" checkout --detach "$WARREN_SDK_SHA"
-        git -C "$dest" remote set-url origin "https://github.com/WarrenBrowse/warren-sdk-rs.git"
 
     - name: Warn if the sibling checkout was skipped
       if: ${{ inputs.skip-warren-core != 'true' && inputs.engine-token == '' && inputs.warren-core-token == '' }}
@@ -266,6 +287,12 @@ runs:
         git config --global --unset-all url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf 2>/dev/null || true
         git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
         git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "https://github.com/WarrenBrowse/"
+        # Authenticated from the first request, for the same reason as the
+        # sibling clones above: cargo's fetch of the quinn fork would otherwise
+        # start anonymous and die on GitHub's per-IP throttle.
+        auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+        git config --global --unset-all http."https://github.com/WarrenBrowse/".extraheader 2>/dev/null || true
+        git config --global --add http."https://github.com/WarrenBrowse/".extraheader "AUTHORIZATION: basic ${auth}"
         echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
 
     - name: Assert Cargo.lock pins the quinn fork (prevents silent quinn-patch drop)
