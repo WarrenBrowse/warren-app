@@ -59,7 +59,10 @@ fun WarrenFeatureChip(
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier =
-                Modifier.padding(horizontal = Dimens.smallPadding, vertical = Dimens.chipVerticalPadding),
+                Modifier.padding(
+                    horizontal = Dimens.chipHorizontalPadding,
+                    vertical = Dimens.chipVerticalPadding,
+                ),
         )
     }
 }

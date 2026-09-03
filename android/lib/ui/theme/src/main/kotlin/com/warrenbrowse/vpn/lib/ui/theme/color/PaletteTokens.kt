@@ -1,55 +1,57 @@
 package com.warrenbrowse.vpn.lib.ui.theme.color
 
 import androidx.compose.ui.graphics.Color
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 
+/**
+ * The Warren dark palette under its historical Android names, every value an
+ * alias of the generated [DesignTokens.Colors] primitive (desktop
+ * `color-tokens.ts`, through `design-tokens.json`). HARD RULE from the desktop
+ * source: the neutrals (background, surfaces, primary cells) are truly neutral
+ * charcoal grey and carry no hue; all warmth/identity comes from the accents
+ * only (olive = connected, terracotta = disconnected, ocre = brand). If the
+ * neutrals lean warm the whole screen reads as a sepia wash.
+ */
 internal object PaletteTokens {
 
-    // Warren dark palette, kept in lockstep with the desktop source of truth
-    // (desktop/.../lib/foundations/tokens/color-tokens.ts). HARD RULE: the
-    // neutrals (background, surfaces, primary cells) are truly neutral charcoal
-    // grey and carry no hue; all warmth/identity comes from the accents only
-    // (olive = connected, terracotta = disconnected, ocre = brand). If the
-    // neutrals lean warm the whole screen reads as a sepia wash.
-
     // Primary interactive surface (buttons, raised cells): neutral warm-grey.
-    val Blue = Color(0xFF4A4846)
+    val Blue = DesignTokens.Colors.Blue
     // Main app background / surface: neutral charcoal.
-    val DarkBlue = Color(0xFF1F1F20)
+    val DarkBlue = DesignTokens.Colors.DarkBlue
     // Disconnected / error: terracotta accent.
-    val Red = Color(0xFFCA4C38)
+    val Red = DesignTokens.Colors.Red
     // Connected / success: olive-green accent.
-    val Green = Color(0xFF6EA24E)
+    val Green = DesignTokens.Colors.Green
     // Connecting / in-progress: orange accent, the third state of the
     // desktop tri-state (distinct from both terracotta and ocre).
-    val Orange = Color(0xFFE07A28)
+    val Orange = DesignTokens.Colors.Orange
 
     // Lifted tints of the three phase accents, for the connect-card title
     // only: the saturated accents land near 3.5:1 on the card at title size,
-    // these are built for 4.5:1 (desktop `redText` / `greenText` /
-    // `orangeText`). The fills keep the saturated accents.
-    val RedText = Color(0xFFE98E7A)
-    val GreenText = Color(0xFF96C474)
-    val OrangeText = Color(0xFFF0A360)
+    // these are built for 4.5:1. The fills keep the saturated accents.
+    val RedText = DesignTokens.Colors.RedText
+    val GreenText = DesignTokens.Colors.GreenText
+    val OrangeText = DesignTokens.Colors.OrangeText
 
     // Brand warm accents (Bula), used sparingly.
-    val Nose = Color(0xFFE8C896) // soft apricot
-    val Fur = Color(0xFFD09640) // ocre / beige, Bula's fur
-    val Yellow = Color(0xFFCA963C) // ocre (warning + brand)
+    val Nose = DesignTokens.Colors.Nose // soft apricot
+    val Fur = DesignTokens.Colors.Fur // ocre / beige, Bula's fur
+    val Yellow = DesignTokens.Colors.Yellow // ocre (warning + brand)
 
     // DarkerBlue - alternative contrast surfaces such as card background.
-    val DarkerBlue10 = Color(0xFF121213)
-    val DarkerBlue50 = Color(0xFF1A1A1B)
+    val DarkerBlue10 = DesignTokens.Colors.DarkerBlue10
+    val DarkerBlue50 = DesignTokens.Colors.DarkerBlue50
 
     // White (true near-white, neutral, NOT cream).
-    val MullvadWhite = Color(0xFFF7F7F8)
+    val MullvadWhite = DesignTokens.Colors.White
     val White = Color(0xFFFFFFFF)
 
     // Black
-    val Black = Color(0xFF000000)
+    val Black = DesignTokens.Colors.Black
 
-    // Disabled container colors: desaturated neutral / accent variants.
-    // Desktop blue40 for the disabled primary fill.
-    val DisabledContainerPrimary = Color(0xFF383735)
-    val DisabledContainerTertiary = Color(0xFF3A5630) // olive 40
-    val DisabledContainerDestructive = Color(0xFF64322C) // terracotta 40
+    // Disabled container colors: the desktop 40 steps of the primary and the
+    // two accents.
+    val DisabledContainerPrimary = DesignTokens.Colors.Blue40
+    val DisabledContainerTertiary = DesignTokens.Colors.Green40
+    val DisabledContainerDestructive = DesignTokens.Colors.Red40
 }

@@ -1112,7 +1112,7 @@ private fun ConnectionCard(
     Card(
         modifier =
             modifier.widthIn(max = Dimens.connectionCardMaxWidth).padding(Dimens.mediumPadding),
-        shape = RoundedCornerShape(Dimens.mediumPadding),
+        shape = RoundedCornerShape(Dimens.connectionCardRadius),
         colors = CardDefaults.cardColors(containerColor = containerColor.value),
         border = BorderStroke(1.dp, Color.White.copy(alpha = Alpha20)),
     ) {

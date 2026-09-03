@@ -24,10 +24,14 @@ data class Dimensions(
     val circularProgressBarSmallStrokeWidth: Dp = 4.dp,
     val connectButtonExtraPadding: Dp = 4.dp,
     val connectionCardMaxWidth: Dp = 480.dp,
-    // Desktop FeatureIndicator: 2 x 8 padding. The desktop stacks its 22 px
-    // pills 5 px apart; here every chip sits in a 48 dp touch row, so the gap
-    // is between rows, and the pills already fall 26 dp apart at 0.
+    // Desktop ConnectionPanel: radius16 on the glass card.
+    val connectionCardRadius: Dp = 16.dp,
+    // Desktop FeatureIndicator: 2 x 8 padding, radius8. The desktop stacks its
+    // 22 px pills 5 px apart; here every chip sits in a 48 dp touch row, so the
+    // gap is between rows, and the pills already fall 26 dp apart at 0.
     val chipVerticalPadding: Dp = 2.dp,
+    val chipHorizontalPadding: Dp = 8.dp,
+    val chipCornerRadius: Dp = 8.dp,
     val chipStackGap: Dp = 0.dp,
     // Desktop AppMainFooter: 7 x 16.
     val footerVerticalPadding: Dp = 7.dp,
