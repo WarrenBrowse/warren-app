@@ -45,6 +45,19 @@ detekt regression, run `./gradlew detekt --rerun-tasks` once before your change
 and once after, and compare the two weighted counts; a plain `detekt` prints
 nothing when up-to-date, which reads as a false clean.
 
+Instrumented tests (`./gradlew :app:connectedBetaDebugAndroidTest`, the
+`androidTest` source sets, among them `ExitPinJniTest` which replays the shared
+exit-pick vector through the real `libwarren_jni.so`) end with AGP uninstalling
+the app APK along with the test APK, and that wipes the app's data on the
+device: the wallet on the Pixel_10 emulator was lost that way on 2026-09-03
+and had to be restored by hand. Always pass
+`-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`, which
+installs over the running app instead (the process restarts, the data stays),
+and filter to one class with
+`-Pandroid.testInstrumentationRunnerArguments.class=<fqcn>` when only one is
+needed. Their fixture asset dir is the `../../warren-contract` sibling checkout,
+so a sibling missing next to the repo leaves that test without its vector.
+
 `connectedAndroidTest` (the instrumented suites under `src/androidTest`)
 uninstalls the app under test when it finishes, and an uninstall erases the
 app data: on the dev emulator that is the wallet, the settings and the forum
