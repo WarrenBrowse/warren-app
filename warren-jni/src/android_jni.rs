@@ -1452,6 +1452,80 @@ fn fetch_network_info_json() -> String {
     }
 }
 
+/// The verified operator broadcast notices held for this process, and the
+/// generation high-water mark that guards them. In memory only, like the
+/// daemon's: a notice is a live statement, never read off a disk cache.
+static NOTICES: parking_lot::Mutex<crate::notices::NoticesState> =
+    parking_lot::Mutex::new(crate::notices::NoticesState::new());
+
+/// One fetch of the operator broadcast notices (`GET /v1/notices` on the API
+/// host), verified against the pinned server key with the anti-rollback and
+/// freshness rules of [`crate::notices`]. Returns
+/// `{"notices":[{"id":..,"message":..,"level":"info"|"warning"|"error"}],
+/// "fetch":"ok"|"rejected"|"transport"}`: the list is what the banner must
+/// show right now, already filtered for the envelope expiry, each notice's own
+/// TTL and `current_version`, so Kotlin renders it verbatim as plain text.
+///
+/// It rides the shared API transport, so the request leaves through the tunnel
+/// whenever one is up, like every other `/v1` call this app makes; the route
+/// is public and unauthenticated, and nothing about the caller is sent.
+/// Kotlin owns the cadence (five minutes in the foreground, a fetch on
+/// resume). Blocks on a network GET: invoke off the main thread.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_noticesFetch<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    current_version: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let current = String::from_java(&jnix_env, current_version);
+    let json = notices_fetch(&current);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn notices_fetch(current_version: &str) -> String {
+    use crate::notices::{Fetched, Refresh, envelope};
+    use warren_api::transport::{HttpRequest, HttpTransport, Method};
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    // A version this build cannot state is `None`, which withholds every
+    // range-targeted notice: a targeted message shown to an untargeted client
+    // is worse than one not shown.
+    let client_version = Some(current_version).filter(|v| !v.is_empty());
+    let Some(runtime) = RUNTIME.get() else {
+        log::warn!("notices: initLogger must run first");
+        return envelope(&[], Refresh::Transport);
+    };
+    let transport = api_transport();
+    let request = HttpRequest {
+        method: Method::Get,
+        url: format!("{}/v1/notices", PRODUCT_API_URL.trim_end_matches('/')),
+        headers: Vec::new(),
+        body: Vec::new(),
+        use_sni: true,
+    };
+    let fetched = match runtime.block_on(transport.execute(request)) {
+        Ok(response) if response.status == 200 => {
+            Fetched::Body(String::from_utf8(response.body).unwrap_or_default())
+        }
+        Ok(response) => Fetched::Status(response.status),
+        Err(_) => {
+            log::debug!("notices: fetch failed");
+            Fetched::Transport
+        }
+    };
+    let pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
+    let mut state = NOTICES.lock();
+    let refresh = state.accept(fetched, &pins);
+    envelope(&state.display(now, client_version), refresh)
+}
+
 // Device list/remove JNI exports were dropped: Warren's identity is the
 // BIP39 wallet (one wallet = one pubkey), not a Mullvad-style per-account
 // device registry. The backend has no `/v1/devices` list/delete endpoint;

@@ -618,4 +618,8 @@
     <string name="env_stand_down_title">ПРІОРИТЕТ У ПРОДАКШЕНУ</string>
     <string name="env_stand_down_message">На цьому пристрої встановлено Warren VPN, і він має пріоритет, тому ця збірка відключилася та вимкнула режим блокування.</string>
     <string name="env_stand_down_re_enable">Усе одно використовувати цю збірку</string>
+    <string name="notice_title_important">ВАЖЛИВО</string>
+    <string name="notice_title_notice">ОГОЛОШЕННЯ</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">Читати оголошення повністю</string>
 </resources>

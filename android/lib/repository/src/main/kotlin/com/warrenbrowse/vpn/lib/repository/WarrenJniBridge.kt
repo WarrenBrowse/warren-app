@@ -90,6 +90,18 @@ interface WarrenJniBridge {
     fun forumDigestFetch(): String
 
     /**
+     * One fetch of the operator broadcast notices, verified in Rust against
+     * the pinned server key. Returns
+     * `{"notices":[{"id":..,"message":..,"level":"info"|"warning"|"error"}],`
+     * `"fetch":"ok"|"rejected"|"transport"}`: the list is what the banner must
+     * show right now, already filtered for the signed expiry, each notice's
+     * own TTL and [currentVersion], so nothing is filtered again here. The
+     * route is public and unauthenticated and the request carries nothing
+     * about the caller. Blocks on a network GET: invoke off the main thread.
+     */
+    fun noticesFetch(currentVersion: String): String
+
+    /**
      * The wallet's own forum notifications (`POST /v1/forum/notifications`),
      * signed and sent in Rust; the rows come back validated. Returns
      * `{"ok":true,"notifications":[..]}` or `{"ok":false,"error":..,"reason":..}`.

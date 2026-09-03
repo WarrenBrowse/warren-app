@@ -606,4 +606,8 @@
     <string name="env_stand_down_title">ထုတ်လုပ်မှုဗားရှင်းက ဦးစားပေးဖြစ်သည်</string>
     <string name="env_stand_down_message">ဤစက်ပစ္စည်းတွင် Warren VPN ကို ထည့်သွင်းထားပြီး ၎င်းက ဦးစားပေးဖြစ်သောကြောင့် ဤဗားရှင်းသည် ချိတ်ဆက်မှုကို ဖြုတ်လိုက်ပြီး လော့ခ်ဒေါင်းစနစ်ကို ပိတ်လိုက်သည်။</string>
     <string name="env_stand_down_re_enable">ဤဗားရှင်းကို ဆက်လက်အသုံးပြုရန်</string>
+    <string name="notice_title_important">အရေးကြီး</string>
+    <string name="notice_title_notice">အသိပေးချက်</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">အသိပေးချက်အပြည့်အစုံ ဖတ်ရန်</string>
 </resources>

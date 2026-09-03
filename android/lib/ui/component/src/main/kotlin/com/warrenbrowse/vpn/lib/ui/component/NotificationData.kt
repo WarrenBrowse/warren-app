@@ -5,6 +5,7 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Info
+import androidx.compose.material.icons.rounded.UnfoldMore
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
@@ -34,6 +35,8 @@ import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.ParameterGenerationError
 import com.warrenbrowse.vpn.lib.model.StatusLevel
+import com.warrenbrowse.vpn.lib.model.WarrenNotice
+import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
 import com.warrenbrowse.vpn.lib.ui.component.NotificationMessage.ClickableText
 import com.warrenbrowse.vpn.lib.ui.component.dialog.InfoDialog
 
@@ -42,6 +45,13 @@ data class NotificationData(
     val message: NotificationMessage? = null,
     val statusLevel: StatusLevel,
     val action: NotificationAction? = null,
+    /**
+     * Lines the message may take before it is ellipsised. Unbounded by
+     * default: every banner this app authors is written to fit. Only the
+     * operator notice sets it, because its text is not ours and the
+     * publication cap allows far more than a banner can hold.
+     */
+    val messageMaxLines: Int = Int.MAX_VALUE,
 ) {
     constructor(
         title: String,
@@ -125,6 +135,7 @@ fun InAppNotification.toNotificationData(
                     ),
                 statusLevel = statusLevel,
             )
+        is InAppNotification.OperatorNotice -> operatorNoticeBannerData(statusLevel, notice)
         InAppNotification.HostOffline ->
             NotificationData(
                 title = stringResource(id = R.string.no_internet_connection),
@@ -298,6 +309,56 @@ fun InAppNotification.toNotificationData(
                     ),
             )
     }
+
+/**
+ * The operator's own words, shown as authored. Only the severity label is
+ * translated: the message is rendered as plain text, never through HtmlCompat
+ * and never through a resource, because the signed channel exists precisely so
+ * that what the operator wrote is what the user reads.
+ *
+ * The banner clamps it and the action opens the full text in a dialog (the
+ * desktop's expand-text action): the publication cap is 500 characters, which
+ * no banner can hold without pushing the connect card off the screen.
+ */
+@Composable
+private fun operatorNoticeBannerData(
+    statusLevel: StatusLevel,
+    notice: WarrenNotice,
+): NotificationData {
+    val title =
+        when (notice.level) {
+            WarrenNoticeLevel.ERROR -> stringResource(R.string.notice_title_important)
+            WarrenNoticeLevel.WARNING -> stringResource(R.string.notice_title_notice)
+            WarrenNoticeLevel.INFO -> stringResource(R.string.notice_title_warren)
+        }
+    // Keyed on the id so a second notice replacing the first opens closed,
+    // rather than showing its text under the previous one's dialog.
+    var expanded by remember(notice.id) { mutableStateOf(false) }
+    if (expanded) {
+        InfoDialog(title = title, message = notice.message, onDismiss = { expanded = false })
+    }
+    return NotificationData(
+        // The primary constructor, because the convenience ones do not carry
+        // the clamp; the title is a plain resource all the same.
+        title = AnnotatedString(title),
+        message = NotificationMessage.Text(AnnotatedString(notice.message)),
+        statusLevel = statusLevel,
+        action =
+            NotificationAction(
+                Icons.Rounded.UnfoldMore,
+                onClick = { expanded = true },
+                contentDescription = stringResource(R.string.notice_read_in_full),
+            ),
+        messageMaxLines = NOTICE_BANNER_MAX_LINES,
+    )
+}
+
+/**
+ * Lines the banner gives an operator notice before the expand action carries
+ * the rest. Three: enough for a sentence the operator can rely on being read
+ * at a glance, short enough to leave the connect card on screen.
+ */
+private const val NOTICE_BANNER_MAX_LINES = 3
 
 @Composable
 private fun errorMessageBannerData(statusLevel: StatusLevel, error: ErrorState) =

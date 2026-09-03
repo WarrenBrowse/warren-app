@@ -606,4 +606,8 @@
     <string name="env_stand_down_title">正式版优先</string>
     <string name="env_stand_down_message">本设备已安装 Warren VPN，它拥有优先权，因此此版本已断开连接并关闭了锁定模式。</string>
     <string name="env_stand_down_re_enable">仍然使用此版本</string>
+    <string name="notice_title_important">重要</string>
+    <string name="notice_title_notice">公告</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">阅读完整公告</string>
 </resources>

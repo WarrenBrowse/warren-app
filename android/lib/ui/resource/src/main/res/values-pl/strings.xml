@@ -618,4 +618,8 @@
     <string name="env_stand_down_title">PRODUKCJA MA PIERWSZEŃSTWO</string>
     <string name="env_stand_down_message">Warren VPN jest zainstalowany na tym urządzeniu i ma pierwszeństwo, więc ta wersja rozłączyła się i wyłączyła tryb Lockdown.</string>
     <string name="env_stand_down_re_enable">Mimo to użyj tej wersji</string>
+    <string name="notice_title_important">WAŻNE</string>
+    <string name="notice_title_notice">OGŁOSZENIE</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">Przeczytaj całe ogłoszenie</string>
 </resources>

@@ -55,6 +55,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificati
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.OperatorNoticeNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.StandDownSetting
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.UpdateAvailableNotificationUseCase
@@ -133,6 +134,10 @@ val uiModule = module {
             isInstalledFromStore = installSourceProvider::isInstalledFromStore,
         )
     } bind InAppNotificationUseCase::class
+    // Ranked first of all: when the operator has published a notice, that
+    // message is the one thing the user must read, and the states it hides are
+    // still legible in the connect card's own status.
+    single { OperatorNoticeNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     // Coexistence with a higher-priority product environment (prod over
     // staging over beta). Presence of the other install is the whole rule,

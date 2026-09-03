@@ -610,4 +610,8 @@
     <string name="env_stand_down_title">PRODUKSJON HAR PRIORITET</string>
     <string name="env_stand_down_message">Warren VPN er installert på denne enheten og har prioritet, så denne versjonen koblet fra og slo av låsemodus.</string>
     <string name="env_stand_down_re_enable">Bruk denne versjonen likevel</string>
+    <string name="notice_title_important">VIKTIG</string>
+    <string name="notice_title_notice">MELDING</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">Les hele meldingen</string>
 </resources>

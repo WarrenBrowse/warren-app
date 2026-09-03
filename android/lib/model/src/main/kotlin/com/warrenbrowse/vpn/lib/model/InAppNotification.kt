@@ -17,6 +17,28 @@ sealed class InAppNotification {
     abstract val statusLevel: StatusLevel
     abstract val priority: Long
 
+    /**
+     * The operator has published a broadcast notice. Ranked above everything,
+     * the stand-down included: when the operator has something to say to every
+     * user, that message is the one thing they must read, and the states it
+     * hides (connecting, offline, blocked) are still legible in the connect
+     * card's own status.
+     *
+     * It carries no dismiss. It clears from the same signal that raised it:
+     * Rust hands over an empty list as soon as the notice is erased or its
+     * signed envelope lapses (desktop `WarrenNoticeNotificationProvider`).
+     */
+    data class OperatorNotice(val notice: WarrenNotice) : InAppNotification() {
+        override val statusLevel =
+            when (notice.level) {
+                WarrenNoticeLevel.ERROR -> StatusLevel.Error
+                WarrenNoticeLevel.WARNING -> StatusLevel.Warning
+                WarrenNoticeLevel.INFO -> StatusLevel.Info
+            }
+
+        override val priority: Long = 1009
+    }
+
     // A higher-priority product environment (prod over staging over beta) is
     // installed on this device, so this build took its tunnel down and will not
     // bring it back until the user says so. Ranked above every tunnel banner

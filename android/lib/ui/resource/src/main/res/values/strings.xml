@@ -648,4 +648,8 @@
     <string name="env_stand_down_title">PRODUCTION HAS PRIORITY</string>
     <string name="env_stand_down_message">Warren VPN is installed on this device and takes priority, so this build disconnected and turned lockdown mode off.</string>
     <string name="env_stand_down_re_enable">Use this build anyway</string>
+    <string name="notice_title_important">IMPORTANT</string>
+    <string name="notice_title_notice">NOTICE</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">Read the full notice</string>
 </resources>

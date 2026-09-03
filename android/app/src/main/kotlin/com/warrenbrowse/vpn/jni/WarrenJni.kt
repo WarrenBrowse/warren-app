@@ -142,6 +142,17 @@ object WarrenJni {
     external fun forumDigestFetch(): String
 
     /**
+     * One fetch of the operator broadcast notices (`GET /v1/notices` on the API host), verified in
+     * Rust against the pinned server key with the daemon's anti-rollback and freshness rules.
+     * Returns `{"notices":[{"id":..,"message":..,"level":"info"|"warning"|"error"}],
+     * "fetch":"ok"|"rejected"|"transport"}`: the list is what the banner must show right now,
+     * already filtered for the signed envelope expiry, each notice's own TTL and [currentVersion]
+     * (`BuildConfig.VERSION_NAME`). The route is public and unauthenticated, and the request
+     * carries nothing about the caller. Blocks on a network GET: invoke off the main thread.
+     */
+    external fun noticesFetch(currentVersion: String): String
+
+    /**
      * The wallet's own forum notifications (`POST /v1/forum/notifications`), signed with the wallet
      * key and sent in Rust; the rows are validated there (kinds, pinned paths, bounded text) and
      * come back as `{"ok":true,"notifications":[{id,kind,unread,created_at,title,actor,excerpt,

@@ -606,4 +606,8 @@
     <string name="env_stand_down_title">本番版が優先されます</string>
     <string name="env_stand_down_message">このデバイスには Warren VPN がインストールされており、そちらが優先されるため、このビルドは接続を切断し、ロックダウンモードをオフにしました。</string>
     <string name="env_stand_down_re_enable">それでもこのビルドを使う</string>
+    <string name="notice_title_important">重要</string>
+    <string name="notice_title_notice">お知らせ</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">お知らせを全文読む</string>
 </resources>

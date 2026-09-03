@@ -42,6 +42,8 @@ class AppVersionInfoRepositoryTest {
 
         override fun forumDigestFetch(): String = error("unused")
 
+        override fun noticesFetch(currentVersion: String): String = error("unused")
+
         override fun forumNotifications(mnemonic: String): String = error("unused")
 
         override fun forumNotificationsSeen(mnemonic: String): String = error("unused")

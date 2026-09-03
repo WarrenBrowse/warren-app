@@ -626,4 +626,8 @@
     <string name="env_stand_down_title">الإنتاج له الأولوية</string>
     <string name="env_stand_down_message">Warren VPN مثبت على هذا الجهاز وله الأولوية، لذلك قطع هذا الإصدار الاتصال وأوقف وضع التأمين.</string>
     <string name="env_stand_down_re_enable">استخدام هذا الإصدار على أي حال</string>
+    <string name="notice_title_important">هام</string>
+    <string name="notice_title_notice">إشعار</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">قراءة الإشعار كاملاً</string>
 </resources>

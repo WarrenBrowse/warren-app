@@ -610,4 +610,8 @@
     <string name="env_stand_down_title">A PRODUÇÃO TEM PRIORIDADE</string>
     <string name="env_stand_down_message">O Warren VPN está instalado neste dispositivo e tem prioridade, por isso esta versão desligou-se e desativou o modo de bloqueio.</string>
     <string name="env_stand_down_re_enable">Usar esta versão mesmo assim</string>
+    <string name="notice_title_important">IMPORTANTE</string>
+    <string name="notice_title_notice">AVISO</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">Ler o aviso completo</string>
 </resources>

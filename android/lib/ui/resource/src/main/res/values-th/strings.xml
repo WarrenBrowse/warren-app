@@ -606,4 +606,8 @@
     <string name="env_stand_down_title">รุ่นโปรดักชันมีลำดับความสำคัญสูงกว่า</string>
     <string name="env_stand_down_message">มีการติดตั้ง Warren VPN บนอุปกรณ์นี้และมีลำดับความสำคัญสูงกว่า บิลด์นี้จึงตัดการเชื่อมต่อและปิดโหมดล็อกดาวน์</string>
     <string name="env_stand_down_re_enable">ใช้บิลด์นี้ต่อไป</string>
+    <string name="notice_title_important">สำคัญ</string>
+    <string name="notice_title_notice">ประกาศ</string>
+    <string name="notice_title_warren">WARREN</string>
+    <string name="notice_read_in_full">อ่านประกาศฉบับเต็ม</string>
 </resources>

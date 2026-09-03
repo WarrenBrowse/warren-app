@@ -59,6 +59,10 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
 
     override fun forumDigestFetch(): String = ready { WarrenJni.forumDigestFetch() }
 
+    override fun noticesFetch(currentVersion: String): String = ready {
+        WarrenJni.noticesFetch(currentVersion)
+    }
+
     override fun forumNotifications(mnemonic: String): String = ready {
         WarrenJni.forumNotifications(mnemonic)
     }

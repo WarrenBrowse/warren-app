@@ -125,6 +125,12 @@ mod exit_pin;
 #[cfg(target_os = "android")]
 mod android_jni;
 
+// The verified operator broadcast notices and their anti-rollback and
+// freshness rules, host-tested; `android_jni` fetches them on Kotlin's
+// cadence.
+#[cfg(any(test, target_os = "android"))]
+mod notices;
+
 // The verified forum activity digest and its anti-rollback and freshness
 // rules, host-tested; `forum_android` fetches it on Kotlin's cadence.
 #[cfg(any(test, target_os = "android"))]

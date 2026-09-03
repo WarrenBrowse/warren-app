@@ -118,7 +118,7 @@ fun AnimatedNotificationBanner(
 @Composable
 @Suppress("LongMethod")
 private fun Notification(modifier: Modifier = Modifier, notificationBannerData: NotificationData) {
-    val (title, message, statusLevel, action) = notificationBannerData
+    val (title, message, statusLevel, action, messageMaxLines) = notificationBannerData
     // Floating dark rounded card over the backdrop (desktop NotificationBanner),
     // instead of an edge-to-edge opaque bar.
     val shape = RoundedCornerShape(Dimens.notificationBannerRadius)
@@ -238,6 +238,11 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
                 // only, so labelMedium's 500 would resolve to regular.
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                // Unbounded for every banner this app authors; the operator
+                // notice clamps, because its length is the publisher's choice
+                // and the connect card must stay on screen.
+                maxLines = messageMaxLines,
+                overflow = TextOverflow.Ellipsis,
             )
         }
         action?.let {

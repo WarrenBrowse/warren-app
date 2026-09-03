@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
+import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
 import com.warrenbrowse.vpn.app.forum.forumDigestWanted
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumJournal
@@ -78,6 +79,7 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val forumLoginController by inject<ForumLoginController>()
     private val forumEventsJournal by inject<ForumJournal>()
     private val forumDigestPoller by inject<ForumDigestPoller>()
+    private val noticePoller by inject<WarrenNoticePoller>()
     private val forumActivityOpenRequests by inject<ForumActivityOpenRequests>()
     private val localSettings by inject<WarrenLocalSettingsRepository>()
     private val forumIdentityRepository by inject<ForumIdentityRepository>()
@@ -164,6 +166,23 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
                 if (userPreferencesRepository.preferences().isPrivacyDisclosureAccepted) {
                     bindService()
                 }
+            }
+        }
+
+        // The operator notice poll lives exactly as long as the window is
+        // visible and the privacy disclosure is accepted: a fetch on every
+        // start (what the operator published while the app was away), then one
+        // every five minutes, cancelled at stop. Nothing polls in the
+        // background: the desktop daemon can, because it is already talking to
+        // the API on its own channel, but an app that woke up for a banner
+        // nobody is looking at would be a periodic beacon.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                noticePoller.runWhile(
+                    userPreferencesRepository.preferencesFlow().map {
+                        it.isPrivacyDisclosureAccepted
+                    }
+                )
             }
         }
 

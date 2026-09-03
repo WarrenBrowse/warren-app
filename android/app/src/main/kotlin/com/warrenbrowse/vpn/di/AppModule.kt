@@ -15,6 +15,7 @@ import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
+import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
 import com.warrenbrowse.vpn.app.forum.ForumJournal
@@ -63,6 +64,8 @@ import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenNoticeRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenNoticeState
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
@@ -234,6 +237,19 @@ val appModule = module {
         )
     }
     single { ForumDigestPoller(jni = get(), activity = get(), tunnelState = get()) }
+    // The operator broadcast banner (doc 55): one signed message from the
+    // operator, verified in Rust and shown above every other banner. The state
+    // is in memory only, so an erased notice can never come back off a disk
+    // cache.
+    single { WarrenNoticeRepository() } bind WarrenNoticeState::class
+    single {
+        WarrenNoticePoller(
+            jni = get(),
+            state = get(),
+            tunnelState = get(),
+            clientVersion = BuildConfig.VERSION_NAME,
+        )
+    }
     single { ForumActivityOpenRequests() }
     single<WarrenSupportReporter> {
         WarrenSupportReporterImpl(
