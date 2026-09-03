@@ -16,6 +16,7 @@
 //  - subscription: signed `GET /v1/subscription`  -> expiry
 //  - voucher:      unsigned `POST /v1/register`    -> expiry
 //  - delete:       signed `DELETE /v1/account`
+//  - campaign:     signed `GET /v1/campaign/{id}/voucher` -> code
 //
 //  Threading: every call blocks the calling thread (the Rust side
 //  `block_on`s an HTTP round-trip). Callers MUST invoke these off the
@@ -200,6 +201,60 @@ public enum WarrenAccountClient {
                 return .failure(.transport("storekit check response missing expires_at"))
             }
         }
+    }
+
+    /// Signed `GET /v1/campaign/{campaignID}/voucher`. Returns the production
+    /// voucher code this account was pre-assigned when the campaign was
+    /// published, or `nil` when the account is outside the cohort (the
+    /// server's 404, a normal and quiet outcome).
+    ///
+    /// The offer itself rides `GET /v1/announcements`, a document identical
+    /// for every caller, which is what keeps the server from learning who
+    /// asks about what. A per-account value cannot ride that document, so it
+    /// comes from here, behind the same wallet signature that guards
+    /// `/v1/subscription`. The lookup is a pure server-side read that never
+    /// mints and never assigns, so repeating it is always safe.
+    ///
+    /// A failure is a `.failure`, never a `nil`: a transient outage must not
+    /// tell a cohort member they were never eligible. The code is a bearer
+    /// token worth a month of service: it goes to the account's own screen and
+    /// nowhere else, never to a log, an error or a problem report. Blocking,
+    /// run off the main thread.
+    public static func campaignVoucher(seed: Data, campaignID: String) -> Result<String?, WarrenAccountError> {
+        guard seed.count == seedByteCount else { return .failure(.invalidInput("seed must be 32 bytes")) }
+        let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
+            guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+            return campaignID.withCString { campaignPtr in
+                warren_account_campaign_voucher(base, campaignPtr)
+            }
+        }
+        guard let raw else { return .failure(.transport("FFI returned a null result")) }
+        defer { warren_wallet_free_mnemonic(raw) }
+        return campaignVoucherOutcome(fromEnvelope: String(cString: raw))
+    }
+
+    /// Maps the `warren_account_campaign_voucher` JSON envelope:
+    /// `{"ok":true,"code":"<code>"}` for a cohort member,
+    /// `{"ok":true,"code":null}` for an account outside it, and the shared
+    /// `{"ok":false,...}` error shape otherwise. Pure so the three outcomes
+    /// are unit-tested off the device.
+    static func campaignVoucherOutcome(fromEnvelope envelope: String?) -> Result<String?, WarrenAccountError> {
+        guard let envelope,
+            let data = envelope.data(using: .utf8),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return .failure(.transport("FFI returned an unparseable envelope"))
+        }
+        guard object["ok"] as? Bool == true else {
+            let message = object["error"] as? String ?? "unknown error"
+            if let status = object["status"] as? NSNumber {
+                return .failure(.server(status: status.intValue, message: message))
+            }
+            return .failure(.transport(message))
+        }
+        // A missing `code` reads exactly like an explicit null: both mean the
+        // server named no code for this account.
+        return .success(object["code"] as? String)
     }
 
     /// Signs and submits a community-forum login challenge for `sid` to the

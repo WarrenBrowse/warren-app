@@ -57,6 +57,7 @@ public protocol AppPreferencesDataSource {
     var includeAllNetworksConsent: Bool { get set }
     var hasCompletedWarrenOnboarding: Bool { get set }
     var warrenAcknowledgedFailoverCount: Int { get set }
+    var warrenDismissedAnnouncements: [String] { get set }
 }
 
 enum AppStorageKey: String {
@@ -72,6 +73,7 @@ enum AppStorageKey: String {
     case hasCompletedWarrenOnboarding
     case warrenAcknowledgedFailoverCount
     case warrenEnvStandDown
+    case warrenDismissedAnnouncements
 }
 
 public final class AppPreferences: AppPreferencesDataSource {
@@ -125,4 +127,13 @@ public final class AppPreferences: AppPreferencesDataSource {
     /// this build back anyway.
     @CompositeStorage(key: AppStorageKey.warrenEnvStandDown.rawValue, container: .standard)
     public var warrenEnvStandDown = WarrenEnvStandDownRecord()
+
+    /// Ids of the launch announcements the reader has put away.
+    ///
+    /// A dismissal is permanent: an announcement is an event rather than a
+    /// live operator statement, and it may already have handed over a voucher
+    /// code, so raising it again on every launch would be nagging about
+    /// something the reader has dealt with.
+    @CompositeStorage(key: AppStorageKey.warrenDismissedAnnouncements.rawValue, container: .standard)
+    public var warrenDismissedAnnouncements: [String] = []
 }

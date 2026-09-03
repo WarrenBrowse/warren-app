@@ -55,6 +55,12 @@ mod warren_wallet_ffi;
 // `test` so its fixture tests run on the host.
 #[cfg(any(target_os = "ios", test))]
 mod warren_version_ffi;
+// Signed launch-announcement verification (`GET /v1/announcements`). Pure
+// verify-and-render (the fetch lives in Swift, like the update manifest);
+// compiled under `test` so its signature, anti-rollback and freshness tests
+// run on the host.
+#[cfg(any(target_os = "ios", test))]
+mod warren_announcements_ffi;
 // Community-forum wallet login (doc 55): the pure request-construction +
 // validation + outcome mapping (host-testable); the network POST that consumes
 // it is iOS-gated in `warren_forum_ffi`.

@@ -33,6 +33,7 @@ public enum NotificationProviderIdentifier: String {
     case latestChangesInAppNotificationProvider = "LatestChangesInAppNotificationProvider"
     case warrenFailoverInAppNotification = "WarrenFailoverInAppNotification"
     case warrenEnvStandDownInAppNotification = "WarrenEnvStandDownInAppNotification"
+    case warrenAnnouncementInAppNotification = "WarrenAnnouncementInAppNotification"
     case `default` = "default"
 
     public var domainIdentifier: String {

@@ -760,6 +760,42 @@ char *warren_version_check_verify(const uint8_t *manifest,
 void warren_version_check_free(char *ptr);
 
 /**
+ * Verify a fetched `GET /v1/announcements` envelope and render what this
+ * build must display right now.
+ *
+ * `envelope` / `envelope_len`: raw bytes of the fetched body.
+ * `current_version`: null-terminated running app version string, used for the
+ * per-announcement client-version range. An empty string withholds every
+ * range-targeted announcement, because a targeted card shown to an untargeted
+ * client is worse than one not shown.
+ *
+ * Returns a heap-allocated JSON C string
+ * `{"announcements":[{"id":..,"headline":..,"body":..,"level":..,"cta":..,
+ * "voucher_campaign_id":..}],"active_until":<unix secs>}`. Returns null when
+ * the envelope does not verify, moves the generation backwards, or is
+ * unreadable: the caller must then keep what it already holds and never trust
+ * the body.
+ *
+ * # Safety
+ * `envelope` must point to `envelope_len` readable bytes. `current_version`
+ * must be a valid null-terminated C string. The returned pointer must be
+ * passed to `warren_announcements_free` exactly once.
+ */
+char *warren_announcements_verify(const uint8_t *envelope,
+                                  uintptr_t envelope_len,
+                                  const char *current_version);
+
+/**
+ * Frees a string previously returned by `warren_announcements_verify`. No-op
+ * on null.
+ *
+ * # Safety
+ * `ptr` must have been returned by `warren_announcements_verify` and must not
+ * have been freed already.
+ */
+void warren_announcements_free(char *ptr);
+
+/**
  * Signed `GET /v1/subscription`. Returns the wallet's subscription
  * expiry as `{"ok":true,"expires_at":<unix secs>}` or an error envelope.
  *
@@ -808,6 +844,32 @@ char *warren_account_storekit_check(const uint8_t *seed, const char *jws);
  * `warren_wallet_free_mnemonic`.
  */
 char *warren_account_redeem_voucher(const uint8_t *seed, const char *voucher);
+
+/**
+ * Signed `GET /v1/campaign/{campaign_id}/voucher`. Returns the production
+ * voucher code this account was pre-assigned when the campaign was
+ * published, as `{"ok":true,"code":"<code>"}`; `{"ok":true,"code":null}`
+ * when the account is outside the cohort (the server's `404`, a normal and
+ * quiet outcome); an error envelope when the lookup failed, which the caller
+ * retries rather than reading as "you were never eligible".
+ *
+ * The offer itself rides `GET /v1/announcements`, a document byte-identical
+ * for every caller, which is what keeps the server from learning who asks
+ * about what. A per-account value cannot ride that document, so it comes from
+ * here, behind the same wallet signature that guards `/v1/subscription`. The
+ * call is a pure server-side lookup that never mints and never assigns, so
+ * repeating it is always safe and can never drain the pool.
+ *
+ * The code is a bearer token worth a month of service: it goes to the
+ * account's own screen and nowhere else, never to a log, an error or a
+ * problem report.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes;
+ * `campaign_id`, when non-null, must be a valid null-terminated C string.
+ * The returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_campaign_voucher(const uint8_t *seed, const char *campaign_id);
 
 /**
  * Signed `DELETE /v1/account`. Permanently deletes the wallet's

@@ -18,6 +18,7 @@
 //! - subscription: signed `GET /v1/subscription`  -> `{ expires_at }`
 //! - voucher:      unsigned `POST /v1/register`    -> `{ expires_at }`
 //! - delete:       signed `DELETE /v1/account`
+//! - campaign:     signed `GET /v1/campaign/{id}/voucher` -> `{ code }`
 //!
 //! Memory ownership: each call returns a heap `CString` holding a JSON
 //! envelope. The caller MUST free it via `warren_wallet_free_mnemonic`
@@ -25,6 +26,7 @@
 //! produces). Envelope shapes:
 //! - `{"ok":true,"expires_at":<u64>}`            (subscription / voucher)
 //! - `{"ok":true}`                               (delete)
+//! - `{"ok":true,"code":"<code>"|null}`          (campaign lookup)
 //! - `{"ok":false,"error":"<msg>"}`              (input / transport error)
 //! - `{"ok":false,"error":"<msg>","status":<u16>}` (server non-2xx; the
 //!   Swift side maps `status` to a localized message; the response body
@@ -258,6 +260,60 @@ pub unsafe extern "C" fn warren_account_redeem_voucher(
         };
         match handle.block_on(client.register(&req)) {
             Ok(resp) => ok_expiry_json(resp.expires_at),
+            Err(error) => err_client_json(&error),
+        }
+    })
+}
+
+/// Signed `GET /v1/campaign/{campaign_id}/voucher`. Returns the production
+/// voucher code this account was pre-assigned when the campaign was
+/// published, as `{"ok":true,"code":"<code>"}`; `{"ok":true,"code":null}`
+/// when the account is outside the cohort (the server's `404`, a normal and
+/// quiet outcome); an error envelope when the lookup failed, which the caller
+/// retries rather than reading as "you were never eligible".
+///
+/// The offer itself rides `GET /v1/announcements`, a document byte-identical
+/// for every caller, which is what keeps the server from learning who asks
+/// about what. A per-account value cannot ride that document, so it comes from
+/// here, behind the same wallet signature that guards `/v1/subscription`. The
+/// call is a pure server-side lookup that never mints and never assigns, so
+/// repeating it is always safe and can never drain the pool.
+///
+/// The code is a bearer token worth a month of service: it goes to the
+/// account's own screen and nowhere else, never to a log, an error or a
+/// problem report.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes;
+/// `campaign_id`, when non-null, must be a valid null-terminated C string.
+/// The returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_account_campaign_voucher(
+    seed: *const u8,
+    campaign_id: *const c_char,
+) -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        if campaign_id.is_null() {
+            return err_input_json("null campaign id");
+        }
+        // SAFETY: `campaign_id` is a valid null-terminated C string (precondition).
+        let campaign = match unsafe { CStr::from_ptr(campaign_id) }.to_str() {
+            Ok(s) => s.to_owned(),
+            Err(_) => return err_input_json("campaign id is not valid UTF-8"),
+        };
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let client = client_for_seed(&seed);
+        match handle.block_on(client.campaign_voucher(&campaign)) {
+            // `code` is serialized by serde_json, never spliced into the
+            // envelope by hand, and nothing on this path logs it.
+            Ok(code) => into_cstring(json!({ "ok": true, "code": code }).to_string()),
             Err(error) => err_client_json(&error),
         }
     })

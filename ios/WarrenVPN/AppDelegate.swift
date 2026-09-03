@@ -59,6 +59,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// environment is installed beside it. Nil on prod, which outranks
     /// everything and watches nothing.
     nonisolated(unsafe) private var envStandDown: WarrenEnvStandDown?
+    /// The launch announcements this installation holds, and the foreground
+    /// poll that keeps them current.
+    nonisolated(unsafe) private var launchAnnouncements: WarrenLaunchAnnouncements?
+    /// The view controller the full announcement is presented on, resolved at
+    /// presentation time so the sheet lands over whatever is on screen. The
+    /// scene that owns the window supplies it, like the forum flow's.
+    nonisolated(unsafe) var announcementPresenter: (() -> UIViewController?)?
 
     let notificationSettingsListener = NotificationSettingsListener()
     private var notificationSettingsUpdater: NotificationSettingsUpdater!
@@ -283,11 +290,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     @objc private func didBecomeActive(_ notification: Notification) {
         relayCacheTracker.startPeriodicUpdates()
         addressCacheUpdateScheduler.startPeriodicUpdates()
+        // The re-check on every activation is what catches up on whatever the
+        // operator published while the app was away; the poll it starts keeps
+        // a long foreground session current.
+        launchAnnouncements?.startPolling()
     }
 
     @objc private func willResignActive(_ notification: Notification) {
         relayCacheTracker.stopPeriodicUpdates()
         addressCacheUpdateScheduler.stopPeriodicUpdates()
+        // Nothing is fetched from the background: a background cadence would
+        // make the app a periodic beacon for a card nobody is looking at.
+        launchAnnouncements?.stopPolling()
     }
 
     @objc private func didEnterBackground(_ notification: Notification) {
@@ -446,8 +460,88 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             ),
             WarrenFailoverNotificationProvider(acknowledgeStore: appPreferences),
             makeEnvStandDownNotificationProvider(),
+            makeAnnouncementNotificationProvider(),
         ]
         UNUserNotificationCenter.current().delegate = self
+    }
+
+    /// The launch-announcement feed and its banner. Built together so the
+    /// notifications are re-evaluated the moment the held set moves, which is
+    /// the only thing that changes what the banner shows.
+    private func makeAnnouncementNotificationProvider() -> WarrenAnnouncementNotificationProvider {
+        let feed = WarrenLaunchAnnouncements(
+            backend: WarrenLaunchAnnouncements.Backend(
+                fetch: { url in
+                    var request = URLRequest(url: url)
+                    request.timeoutInterval = 15
+                    guard let (data, response) = try? await URLSession.shared.data(for: request),
+                        (response as? HTTPURLResponse)?.statusCode == 200
+                    else {
+                        return nil
+                    }
+                    return data
+                },
+                verify: { body, version in
+                    WarrenAnnouncementsVerifier.verify(envelope: body, currentVersion: version)
+                },
+                voucher: { campaignID in
+                    // The lookup signs and blocks on an HTTP round trip, so it
+                    // runs on a queue of its own rather than parking a thread
+                    // of the cooperative pool for the length of a request.
+                    await withCheckedContinuation { (continuation: CheckedContinuation<String?, Never>) in
+                        Self.campaignVoucherQueue.async {
+                            continuation.resume(returning: Self.campaignVoucher(campaignID))
+                        }
+                    }
+                }
+            )
+        )
+        launchAnnouncements = feed
+
+        let provider = WarrenAnnouncementNotificationProvider(
+            source: { [weak feed] in feed?.announcements ?? [] },
+            dismissStore: appPreferences,
+            present: { [weak self] announcement in
+                MainActor.assumeIsolated {
+                    guard let presenter = self?.announcementPresenter?() else { return }
+                    WarrenAnnouncementPresenter.present(announcement, over: presenter)
+                }
+            }
+        )
+        feed.didChange = {
+            // `updateNotifications` asserts it runs on the main queue, and the
+            // poll that moved the set does not.
+            DispatchQueue.main.async { NotificationManager.shared.updateNotifications() }
+        }
+        return provider
+    }
+
+    /// Where the blocking, wallet-signed campaign lookup runs.
+    private static let campaignVoucherQueue = DispatchQueue(
+        label: "WarrenCampaignVoucher",
+        qos: .utility
+    )
+
+    /// This account's code for `campaignID`, over the wallet-signed lookup.
+    /// `nil` both for an account outside the cohort and for a lookup that
+    /// failed: on this side both are simply a card with no code.
+    ///
+    /// The wallet is read the way the forum login reads it, and the code is
+    /// never logged, not even as a length: it is a bearer token worth a month
+    /// of service and its only destination is the reader's own screen.
+    private static func campaignVoucher(_ campaignID: String) -> String? {
+        guard let mnemonic = try? WarrenWalletKeychain.load(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return nil
+        }
+        defer { wallet.forgetSecret() }
+        switch WarrenAccountClient.campaignVoucher(seed: wallet.seed, campaignID: campaignID) {
+        case let .success(code):
+            return code
+        case .failure:
+            return nil
+        }
     }
 
     /// The coexistence stand-down and its banner. Built together so the

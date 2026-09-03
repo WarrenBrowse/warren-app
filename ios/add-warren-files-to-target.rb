@@ -144,6 +144,18 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Notifications/WarrenEnvStandDownNotificationProviderTests.swift" =>
     "WarrenVPNTests",
 
+  # The launch announcement: the Rust verifier facade, the foreground feed,
+  # the banner, the full view, and their tests.
+  "WarrenRustRuntime/WarrenAnnouncements.swift" => "WarrenRustRuntime",
+  "WarrenVPN/Classes/WarrenLaunchAnnouncements.swift" => "WarrenVPN",
+  "WarrenVPN/Notifications/Notification Providers/WarrenAnnouncementNotificationProvider.swift" =>
+    "WarrenVPN",
+  "WarrenVPN/View controllers/Announcement/WarrenAnnouncementView.swift" => "WarrenVPN",
+  "WarrenRustRuntimeTests/WarrenAnnouncementsTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenLaunchAnnouncementsTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Notifications/WarrenAnnouncementNotificationProviderTests.swift" =>
+    "WarrenVPNTests",
+
   # The non-prod markers: the name iOS gives the VPN configuration in
   # Settings, General, VPN and Device Management, and the header chip.
   "WarrenVPNTests/MullvadVPN/TunnelManager/TunnelConfigurationTests.swift" => "WarrenVPNTests",

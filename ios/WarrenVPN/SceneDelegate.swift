@@ -195,6 +195,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
         // A `<scheme>://forum-login` deep link that cold-starts the app arrives
         // here rather than via `openURLContexts` (doc 55).
         forumLogin.presenter = { [weak self] in self?.topViewController() }
+        // The launch announcement opens in full over whatever is on screen,
+        // resolved at presentation time for the same reason.
+        appDelegate.announcementPresenter = { [weak self] in self?.topViewController() }
         // A forum request signed while the tunnel is between states cannot
         // resolve the broker's host name, so the flow reads the tunnel and
         // defers instead of spending the session on it.
