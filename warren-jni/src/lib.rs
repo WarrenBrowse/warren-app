@@ -102,6 +102,11 @@ mod directory_cache;
 #[cfg(any(test, target_os = "android"))]
 mod api_transport;
 
+// Both verdicts of the signed update manifest from one read; the pairing is
+// host-tested, the fetch is Android-gated in `android_jni`.
+#[cfg(any(test, target_os = "android"))]
+mod version_check;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

@@ -1,6 +1,12 @@
 package com.warrenbrowse.vpn.jni
 
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
+import com.warrenbrowse.vpn.lib.repository.WarrenVersionVerdict
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Default [WarrenJniBridge] implementation: delegates each method to
@@ -18,11 +24,18 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         WarrenJni.mnemonicPubkeySs58(mnemonic)
 
 
-    override fun checkVersionSupported(currentVersion: String): Boolean =
-        WarrenJni.checkVersionSupported(currentVersion) == 1
-
-    override fun latestAvailableVersion(currentVersion: String): String? =
-        WarrenJni.latestAvailableVersion(currentVersion).ifEmpty { null }
+    override fun fetchVersionInfo(currentVersion: String): WarrenVersionVerdict =
+        try {
+            val obj = Json.parseToJsonElement(WarrenJni.fetchVersionInfo(currentVersion)).jsonObject
+            WarrenVersionVerdict(
+                isSupported = obj["supported"]?.jsonPrimitive?.booleanOrNull ?: true,
+                latestAvailable = obj["latest"]?.jsonPrimitive?.contentOrNull?.ifEmpty { null },
+            )
+        } catch (e: IllegalArgumentException) {
+            // A malformed envelope reads as "nothing known", the same fail-open
+            // and fail-closed pair the native side answers on its own failures.
+            WarrenVersionVerdict.UNKNOWN
+        }
 
     override fun fetchNetworkInfo(): String = WarrenJni.fetchNetworkInfo()
 

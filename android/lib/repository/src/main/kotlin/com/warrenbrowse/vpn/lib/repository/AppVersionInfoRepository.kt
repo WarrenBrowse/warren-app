@@ -20,14 +20,14 @@ import com.warrenbrowse.vpn.lib.model.VersionInfo
  * Exposes whether the running app version is still supported, driving the
  * "unsupported version" in-app banner + store deep-link (and the forced-update
  * gate), plus the newest stable version available for an in-app "update
- * available" notification. Both answers come from the signed `android.json`
- * update manifest, fetched + Ed25519-verified in Rust via [WarrenJniBridge]
+ * available" notification. Both answers come from one fetch of the signed
+ * `android.json` update manifest, Ed25519-verified in Rust via [WarrenJniBridge]
  * (the same verifier the desktop app uses).
  *
  * Starts as `isSupported = true` with no known upgrade (no false block / no
  * false prompt before the first check) and refreshes once on construction, then
  * on a periodic timer so a long-running app eventually notices a newly published
- * release without a restart. The JNI calls block on a network fetch, so they run
+ * release without a restart. The JNI call blocks on a network fetch, so it runs
  * on [ioDispatcher]. Fail-open on support (any error keeps `isSupported = true`);
  * fail-closed on the upgrade prompt (any error keeps `availableUpgrade = null`).
  */
@@ -55,25 +55,21 @@ class AppVersionInfoRepository(
     }
 
     /**
-     * Re-fetch the signed manifest and update [versionInfo]. Fail-open on the
-     * support flag, fail-closed on the upgrade prompt.
+     * Re-fetch the signed manifest once and update both answers in
+     * [versionInfo]. Fail-open on the support flag, fail-closed on the upgrade
+     * prompt.
      */
     suspend fun refresh() {
-        val (supported, upgrade) =
+        val verdict =
             withContext(ioDispatcher) {
-                val supported =
-                    runCatching { jniBridge.checkVersionSupported(buildVersion.name) }
-                        .getOrDefault(true)
-                val upgrade =
-                    runCatching { jniBridge.latestAvailableVersion(buildVersion.name) }
-                        .getOrNull()
-                supported to upgrade
+                runCatching { jniBridge.fetchVersionInfo(buildVersion.name) }
+                    .getOrDefault(WarrenVersionVerdict.UNKNOWN)
             }
         _versionInfo.value =
             VersionInfo(
                 currentVersion = buildVersion.name,
-                isSupported = supported,
-                availableUpgrade = upgrade,
+                isSupported = verdict.isSupported,
+                availableUpgrade = verdict.latestAvailable,
             )
     }
 

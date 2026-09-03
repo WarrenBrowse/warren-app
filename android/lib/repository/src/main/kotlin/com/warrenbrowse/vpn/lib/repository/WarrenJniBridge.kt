@@ -36,21 +36,14 @@ interface WarrenJniBridge {
 
 
     /**
-     * Return whether the running [currentVersion] is still supported, based on
-     * the signed `android.json` update manifest (Ed25519-verified). `true` =
-     * supported, `false` = must force-update. Fail-open on any error. Blocks on
-     * a network fetch, so callers must invoke it off the main thread.
+     * Both verdicts of the signed `android.json` update manifest
+     * (Ed25519-verified) from one fetch: whether [currentVersion] may keep
+     * running, and the newest stable version newer than it. Any error answers
+     * [WarrenVersionVerdict.UNKNOWN] (fail-open on support, fail-closed on the
+     * prompt). Blocks on a network fetch, so callers must invoke it off the
+     * main thread.
      */
-    fun checkVersionSupported(currentVersion: String): Boolean
-
-    /**
-     * Return the newest stable version newer than [currentVersion], or `null`
-     * when there is none / on any error, based on the same signed `android.json`
-     * manifest (Ed25519-verified). Fail-closed: a false "update available" is
-     * never reported. Blocks on a network fetch, so callers must invoke it off
-     * the main thread.
-     */
-    fun latestAvailableVersion(currentVersion: String): String?
+    fun fetchVersionInfo(currentVersion: String): WarrenVersionVerdict
 
     /**
      * Fetch the public `GET /v1/network` environment descriptor as a
@@ -104,4 +97,16 @@ interface WarrenJniBridge {
         outputPath: String,
         forSend: Boolean,
     ): String
+}
+
+/**
+ * What the update manifest says about the running version: [isSupported] drives
+ * the forced-update gate, [latestAvailable] the "update available" prompt
+ * (`null` when no newer stable release is known).
+ */
+data class WarrenVersionVerdict(val isSupported: Boolean, val latestAvailable: String?) {
+    companion object {
+        /** The answer when the manifest could not be read. */
+        val UNKNOWN = WarrenVersionVerdict(isSupported = true, latestAvailable = null)
+    }
 }

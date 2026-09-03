@@ -313,36 +313,21 @@ object WarrenJni {
     external fun fetchNetworkInfo(): String
 
     /**
-     * Return whether the running app version is still supported (allowed to
-     * keep running). `1` = supported, `0` = must force-update.
+     * Both verdicts of the signed `android.json` update manifest from one
+     * fetch, as `{"supported":bool,"latest":"x.y.z"}`: whether the running
+     * version may keep running (the forced-update gate) and the newest stable
+     * release strictly newer than [currentVersion] (`latest` empty when there
+     * is none). The manifest comes from the Let's-Encrypt-pinned host and its
+     * Ed25519 signature is verified against the embedded trusted pubkey with
+     * the same verifier as the desktop app.
      *
-     * Fetches the signed `android.json` update manifest from the
-     * Let's-Encrypt-pinned host, verifies its Ed25519 signature against the
-     * embedded trusted pubkey, then applies the shared
-     * `minimum_supported_version` rule (same verifier as the desktop app).
-     *
-     * Fail-open: any transient failure (network, signature, unparseable
-     * version, runtime not ready) returns `1` so a flaky network never locks
-     * the user out. Blocks the calling thread on a network fetch, so it must
-     * be invoked off the main thread.
-     *
-     * @param currentVersion the running app version string (`BuildConfig.VERSION_NAME`).
-     */
-    external fun checkVersionSupported(currentVersion: String): Int
-
-    /**
-     * Return the version string of the newest stable release strictly newer
-     * than [currentVersion], or an empty string when there is none / on any
-     * error. Drives the sideload-only "update available" in-app notification.
-     *
-     * Same signed-manifest fetch + Ed25519 verification as
-     * [checkVersionSupported]. Unlike that call (which is fail-open so a flaky
-     * network never locks the user out), this one is fail-closed: every failure
-     * path returns `""` so a false "update available" prompt is never shown. An
-     * empty result means "no update known". Blocks on a network fetch, so it
-     * must be invoked off the main thread.
+     * Fail-open on support and fail-closed on the prompt: any failure
+     * (network, signature, unparseable version, runtime not ready) answers
+     * `{"supported":true,"latest":""}`, so a flaky network never locks the
+     * user out and never shows an update that may not exist. Blocks on a
+     * network fetch, so it must be invoked off the main thread.
      *
      * @param currentVersion the running app version string (`BuildConfig.VERSION_NAME`).
      */
-    external fun latestAvailableVersion(currentVersion: String): String
+    external fun fetchVersionInfo(currentVersion: String): String
 }

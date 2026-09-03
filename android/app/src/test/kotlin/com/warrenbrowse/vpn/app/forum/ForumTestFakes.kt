@@ -10,6 +10,7 @@ import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
+import com.warrenbrowse.vpn.lib.repository.WarrenVersionVerdict
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import java.time.Instant
 import java.util.Locale
@@ -115,9 +116,7 @@ internal class FakeJniBridge(
 
     override fun mnemonicPubkeySs58(mnemonic: String): String = error("unused")
 
-    override fun checkVersionSupported(currentVersion: String): Boolean = error("unused")
-
-    override fun latestAvailableVersion(currentVersion: String): String? = error("unused")
+    override fun fetchVersionInfo(currentVersion: String): WarrenVersionVerdict = error("unused")
 
     override fun fetchNetworkInfo(): String = error("unused")
 

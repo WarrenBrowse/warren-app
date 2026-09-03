@@ -106,6 +106,10 @@ rand010 = { package = "rand", version = "0.10" }
 serde_json = { workspace = true }
 # Process-death roundtrip tests for the persisted v7 token bundle.
 tempfile = "3"
+# The manifest types the version verdict (`version_check`) pairs; no `client`
+# feature here, so the host tests build no reqwest.
+mullvad-update = { path = "../mullvad-update" }
+mullvad-version = { path = "../mullvad-version" }
 
 # Android-only deps: the JNI surface + log + Tokio runtime for the (still
 # stubbed) tunnel lifecycle exports.
