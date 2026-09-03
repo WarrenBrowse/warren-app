@@ -126,8 +126,9 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
         val jankLogger = JankLogger()
         jankStats =
             JankStats.createAndTrack(window) { frame ->
+                val endNanos = frame.frameStartNanos + frame.frameDurationUiNanos
                 jankLogger
-                    .onFrame(frame.frameStartNanos + frame.frameDurationUiNanos, frame.frameDurationUiNanos, frame.isJank)
+                    .onFrame(endNanos, frame.frameDurationUiNanos, frame.isJank)
                     ?.let { line -> Log.w(JANK_LOG_TAG, line) }
             }
 

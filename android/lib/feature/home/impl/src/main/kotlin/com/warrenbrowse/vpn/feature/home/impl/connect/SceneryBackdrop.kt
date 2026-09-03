@@ -138,24 +138,7 @@ fun SceneryBackdrop(
     cardTop: () -> Float = { Float.NaN },
 ) {
     val scenery = resolveScenery(phase, exitCountry)
-
-    // The exit's landscape is decoded on IO as soon as the exit is known (the
-    // pin names it while disconnected), so the first connecting frame finds it
-    // warm instead of decoding 7.8 MB on the main thread; and again on every
-    // return to the foreground, the pinned exit unchanged, because a memory
-    // trim while the app was away drops every master. The always-drawn ones
-    // are re-warmed for the same reason.
-    val context = LocalContext.current
-    val lifecycle = LocalLifecycleOwner.current.lifecycle
-    LaunchedEffect(exitCountry, lifecycle) {
-        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            withContext(Dispatchers.IO) {
-                val bitmaps = SceneryBitmaps.of(context)
-                firstFrameMasters().forEach(bitmaps::warm)
-                bitmaps.warm(countryLandscape(exitCountry))
-            }
-        }
-    }
+    WarmSceneryMasters(exitCountry)
 
     val blurRadius by
         animateDpAsState(
@@ -235,6 +218,29 @@ fun SceneryBackdrop(
         )
 
         PhaseWash { washColor.value }
+    }
+}
+
+/**
+ * Decodes the masters the next frames draw on IO, before any frame asks: the
+ * exit's landscape as soon as the exit is known (the pin names it while
+ * disconnected), so the first connecting frame finds it warm instead of
+ * decoding 7.8 MB on the main thread, and the always-drawn ones with it. Run
+ * again on every return to the foreground, the pinned exit unchanged, because
+ * a memory trim while the app was away drops every master.
+ */
+@Composable
+private fun WarmSceneryMasters(exitCountry: String?) {
+    val context = LocalContext.current
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(exitCountry, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            withContext(Dispatchers.IO) {
+                val bitmaps = SceneryBitmaps.of(context)
+                firstFrameMasters().forEach(bitmaps::warm)
+                bitmaps.warm(countryLandscape(exitCountry))
+            }
+        }
     }
 }
 

@@ -102,9 +102,9 @@ class WarrenTunnelConfigBuilderTest {
         repo: WarrenLocalSettingsRepository,
         catalog: RelayCatalog,
         productFlags: WarrenProductFlags = WarrenProductFlags(isBeta = false),
-    ) = WarrenTunnelConfigBuilder(repo, productFlags, catalog) { STUB_DIRECTORY }
+    ) = WarrenTunnelConfigBuilder(repo, productFlags, catalog) { stubDirectory }
 
-    private val STUB_DIRECTORY = "stub-multihop-directory"
+    private val stubDirectory = "stub-multihop-directory"
 
     @Test
     fun `default config requests multi-hop (empty entry hop) and no daita`() {
@@ -133,7 +133,7 @@ class WarrenTunnelConfigBuilderTest {
         // that), so entry_hop and the prefetched directory are still sent.
         assertNotNull(config.entryHop)
         assertNull(config.entryHop?.relayPubkeyHex)
-        assertEquals(STUB_DIRECTORY, config.multihopDirectoryRaw)
+        assertEquals(stubDirectory, config.multihopDirectoryRaw)
     }
 
     @Test
@@ -509,7 +509,7 @@ class WarrenTunnelConfigBuilderTest {
         val builder =
             WarrenTunnelConfigBuilder(mockRepo(), WarrenProductFlags(isBeta = false), catalog) {
                 directoryFetches.incrementAndGet()
-                STUB_DIRECTORY
+                stubDirectory
             }
 
         val config = builder.buildFailover(previous)
