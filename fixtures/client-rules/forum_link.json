@@ -262,6 +262,8 @@
       "expect": { "rejected": "host-not-allowlisted" }
     }
   ],
+  "_comment_sign_in_code_cross_device": "A typed code is the one sign-in the app cannot place: the code can as easily have been read off another screen or pasted into a chat, so the prompt carries the cross-device warning, the only one that says an approval signs in whoever sent the code.",
+  "sign_in_code_cross_device": true,
   "sign_in_code_cases": [
     {
       "name": "canonical_passes_through",

@@ -95,9 +95,16 @@ enum WarrenForumLinks {
     }
 
     /// The link a sign-in code typed by hand stands for: the same request a
-    /// deep link would carry, against the one allowlisted host, same device.
+    /// deep link would carry, against the one allowlisted host.
+    ///
+    /// Marked cross-device, which is the honest reading: there is no link and
+    /// no `xd` signal, so the app cannot tell a code the user read off this
+    /// screen from one an attacker sent them ("paste this in Settings to
+    /// finish your sign-in"). Only the cross-device prompt says that approving
+    /// hands the forum identity to whoever sent the code, and that is exactly
+    /// this case.
     static func linkFromCode(_ sid: String, host: String) -> ForumLoginLink {
-        ForumLoginLink(sid: sid, host: host, crossDevice: false)
+        ForumLoginLink(sid: sid, host: host, crossDevice: true)
     }
 }
 

@@ -94,15 +94,28 @@ describe('forum-login deep link parsing', () => {
   });
 });
 
+// The cross-platform fixture (fixtures/client-rules/README.md), replayed here
+// and by the Rust, Kotlin and Swift readers of the same file.
+const link = loadClientRules<ForumLinkFixture>('forum_link.json');
+
 describe('a sign-in code typed under Settings', () => {
-  it('raises the same-device request on the allowlisted broker', () => {
+  it('raises the request on the allowlisted broker whatever the typing looks like', () => {
     // The approval page shows its session id as a code when the deep link
     // did not reach the app; the code stands for the button's own link.
     expect(forumLoginRequestFromCode(' 0123 4567-89AB cdef\n0123456789abcdef ')).toEqual({
       sid: '0123456789abcdef0123456789abcdef',
       host: 'connect.warrenbrowse.com',
-      crossDevice: false,
+      crossDevice: link.sign_in_code_cross_device,
     });
+  });
+
+  it('raises the cross-device warning for a typed code, which no signal places', () => {
+    // A typed code carries no `xd`, and by construction the app has no link:
+    // the code can as easily have been read off another screen or pasted into
+    // a chat by whoever started the sign-in. Only the cross-device prompt says
+    // that approving signs in whoever sent it.
+    expect(link.sign_in_code_cross_device).toBe(true);
+    expect(forumLoginRequestFromCode('0123456789abcdef0123456789abcdef')?.crossDevice).toBe(true);
   });
 
   it('refuses anything that is not a session id before it reaches the prompt', () => {
@@ -231,8 +244,6 @@ describe('the terminal outcomes', () => {
 // The cross-platform fixtures: one file each, replayed here, in the Rust
 // crates and in the Android JVM suite (fixtures/client-rules/README.md).
 describe('forum_link.json, the desktop reader', () => {
-  const link = loadClientRules<ForumLinkFixture>('forum_link.json');
-
   it('pins the host allowlist and the two pending lifetimes', () => {
     expect(ALLOWED_CONNECT_HOSTS).toEqual(link.allowed_hosts);
     expect(PENDING_LOGIN_MAX_AGE_MS).toBe(link.pending_ttl_secs.login * 1000);

@@ -116,9 +116,17 @@ class ForumLoginLinkTest {
     }
 
     @Test
-    fun a_typed_code_stands_for_the_same_device_link_on_the_allowlisted_host() {
+    fun a_typed_code_carries_the_cross_device_warning_no_signal_can_place() {
+        // A typed code carries no `xd`, and by construction there is no link:
+        // the code can as easily have been read off another screen or pasted
+        // into a chat by whoever started the sign-in. Only the cross-device
+        // prompt says that approving signs in whoever sent it.
         val sid = "0123456789abcdef0123456789abcdef"
-        assertEquals(ForumLoginLink(sid, "connect.warrenbrowse.com", crossDevice = false), forumLoginLinkFromCode(sid))
+        assertEquals(
+            ForumLoginLink(sid, "connect.warrenbrowse.com", crossDevice = true),
+            forumLoginLinkFromCode(sid),
+        )
+        assertTrue(fixture["sign_in_code_cross_device"]!!.jsonPrimitive.boolean)
     }
 
     // The cross-platform fixture (fixtures/client-rules/README.md), replayed

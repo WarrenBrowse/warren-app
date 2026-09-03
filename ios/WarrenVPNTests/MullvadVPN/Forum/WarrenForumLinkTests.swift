@@ -67,11 +67,17 @@ final class WarrenForumLinkTests: XCTestCase {
         }
     }
 
-    func testATypedCodeStandsForTheSameDeviceLinkOnTheAllowlistedHost() {
+    func testATypedCodeCarriesTheCrossDeviceWarningNoSignalCanPlace() throws {
+        // A typed code carries no `xd`, and by construction there is no link:
+        // the code can as easily have been read off another screen or pasted
+        // into a chat by whoever started the sign-in. Only the cross-device
+        // prompt says that approving signs in whoever sent it.
         let sid = "0123456789abcdef0123456789abcdef"
         XCTAssertEqual(
             WarrenForumLinks.linkFromCode(sid, host: allowedHost),
-            ForumLoginLink(sid: sid, host: allowedHost, crossDevice: false))
+            ForumLoginLink(sid: sid, host: allowedHost, crossDevice: true))
+        let fixture = try ClientRulesFixtures.load("forum_link.json")
+        XCTAssertEqual(fixture["sign_in_code_cross_device"] as? Bool, true)
     }
 
     func testTheSceneHandsTheFlowAURLAsItsAbsoluteString() throws {

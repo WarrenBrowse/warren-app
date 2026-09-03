@@ -93,17 +93,23 @@ export function parseForumLoginUrl(rawUrl: string): ParsedForumLogin | undefined
  * The forum sign-in finished by hand. The approval page shows its session id
  * as a code when clicking its button did not open the app (a browser that
  * asks first, no handler registered, an old install); typed under Settings,
- * the code stands for the button's own link: the same-device request on the
- * one allowlisted broker, which raises the very same consent prompt. Nothing
- * else about the flow changes, so the browser stops being a single point of
- * failure between the forum and the wallet.
+ * the code stands for the button's own link on the one allowlisted broker,
+ * which raises the very same consent prompt. Nothing else about the flow
+ * changes, so the browser stops being a single point of failure between the
+ * forum and the wallet.
+ *
+ * It is marked cross-device, which is the honest reading: there is no link and
+ * no `xd` signal, so the app cannot tell a code the user read off this screen
+ * from one an attacker sent them ("paste this in Settings to finish your
+ * sign-in"). Only the cross-device prompt says that approving hands the forum
+ * identity to whoever sent the code, and that is exactly this case.
  */
 export function forumLoginRequestFromCode(typed: string): IForumLoginRequest | undefined {
   const sid = normalizeForumSignInCode(typed);
   if (sid === undefined) {
     return undefined;
   }
-  return { sid, host: ALLOWED_CONNECT_HOSTS[0], crossDevice: false };
+  return { sid, host: ALLOWED_CONNECT_HOSTS[0], crossDevice: true };
 }
 
 /**

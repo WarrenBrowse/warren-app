@@ -25,7 +25,7 @@ everywhere is the definition of parity.
 |---|---|---|---|---|
 | `forum_link.json` login cases | `warren-forum/tests/client_rules.rs` (sid shape, host allowlist, status and cancel URLs; the URL-level classes have no Rust parser yet) | `ForumLoginLinkTest` (`classifyForumLoginLink`, the full class vocabulary) | `forum-login.spec.ts` (`parseForumLoginUrl`, accept or reject only: desktop has no rejection classes) | `WarrenForumLinkTests` (`WarrenForumLinks.classify`, the full class vocabulary; the scheme comes from the Rust table through `WarrenProductAnchors`) |
 | `forum_link.json` attach cases | none (no attach builder in the crate yet) | none (no attach-logs handler on Android) | `forum-login.spec.ts` (`parseForumAttachUrl`) | none |
-| `forum_link.json` sign-in codes | `warren-forum/tests/client_rules.rs` (`normalize_sign_in_code`) | `ForumLoginLinkTest` (`normalizeForumSignInCode`) | `forum-login.spec.ts` (`normalizeForumSignInCode`, `forumLoginRequestFromCode`) | `WarrenForumLinkTests` (`WarrenForumLinks.normalizeSignInCode`, `linkFromCode`) |
+| `forum_link.json` sign-in codes | `warren-forum/tests/client_rules.rs` (`normalize_sign_in_code`; the crate has no code-to-link builder, so `sign_in_code_cross_device` has no Rust reader) | `ForumLoginLinkTest` (`normalizeForumSignInCode`, `forumLoginLinkFromCode` incl. `sign_in_code_cross_device`) | `forum-login.spec.ts` (`normalizeForumSignInCode`, `forumLoginRequestFromCode` incl. `sign_in_code_cross_device`) | `WarrenForumLinkTests` (`WarrenForumLinks.normalizeSignInCode`, `linkFromCode` incl. `sign_in_code_cross_device`) |
 | `forum_link.json` `allowed_hosts`, `schemes`, `pending_ttl_secs` | `client_rules.rs` (hosts, schemes against `product_env.json`) | `ForumLoginLinkTest` (host, login TTL), `ProductEnvBuildConfigTest` (scheme) | `forum-login.spec.ts` (hosts, both TTLs), `product-env.spec.ts` (schemes) | `WarrenForumLinkTests` (hosts, schemes against `product_env.json` and the compiled table) |
 | `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | `WarrenForumLoginOutcomeTests` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminal`) |
 | `forum_outcomes.json` report | `client_rules.rs` (`report_outcome_for_response`, `report_envelope`) | `ReportOutcomeTest` (decodes `envelope`) | `forum-report.spec.ts` (`forumReportResultForResponse`, the `expect` column: kind, topic, trusted URL, logs, identity) | none |
@@ -87,6 +87,11 @@ which readers ignore. A case may carry `"skip": ["desktop", "android", "ios",
   in a JavaScript safe integer, and `0` is the pre-topic variant).
 - `sign_in_code_cases[]`: `{name, typed, expect}`, the sid a typed sign-in
   code stands for, or `null` when it is refused.
+- `sign_in_code_cross_device`: whether the link a typed code stands for
+  carries the cross-device consent prompt. `true`: a typed code arrives with
+  no link and no `xd`, so the app cannot tell one the user read off this
+  screen from one an attacker sent them, and only that prompt says approving
+  signs in whoever sent the code.
 
 ### `forum_outcomes.json`
 

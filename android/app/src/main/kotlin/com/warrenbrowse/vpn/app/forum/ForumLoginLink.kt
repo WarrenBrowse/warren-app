@@ -91,9 +91,15 @@ private fun classifyQuery(params: Map<String, String>): ForumLinkVerdict {
 /**
  * The link a sign-in code typed by hand stands for: the same request a deep
  * link would carry, against the one allowlisted host. Browser-independent.
+ *
+ * Marked cross-device, which is the honest reading: there is no link and no
+ * `xd` signal, so the app cannot tell a code the user read off this screen
+ * from one an attacker sent them ("paste this in Settings to finish your
+ * sign-in"). Only the cross-device prompt says that approving hands the forum
+ * identity to whoever sent the code, and that is exactly this case.
  */
 fun forumLoginLinkFromCode(sid: String): ForumLoginLink =
-    ForumLoginLink(sid, ALLOWED_CONNECT_HOST, crossDevice = false)
+    ForumLoginLink(sid, ALLOWED_CONNECT_HOST, crossDevice = true)
 
 private fun parseQuery(rawQuery: String?): Map<String, String> {
     if (rawQuery.isNullOrEmpty()) return emptyMap()

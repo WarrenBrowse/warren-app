@@ -55,6 +55,7 @@ export interface ForumLinkFixture {
   login_cases: LinkCase<AcceptedLogin>[];
   attach_cases: LinkCase<AcceptedAttach>[];
   sign_in_code_cases: SignInCodeCase[];
+  sign_in_code_cross_device: boolean;
 }
 
 export interface OutcomeCase {
