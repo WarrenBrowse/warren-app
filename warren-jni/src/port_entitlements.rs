@@ -71,7 +71,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                 .entry(wallet_pubkey)
                 .or_insert_with(|| {
                     let manager = Arc::new(PortEntitlementManager::new(Arc::new(make_client())));
-                    spawn_refresh(manager.clone(), self.now.clone());
+                    spawn_refresh(manager.clone(), self.now.clone(), slot);
                     manager
                 })
                 .clone()
@@ -81,20 +81,68 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
     }
 }
 
+/// Waits for `source` to vend a credential, giving up after `grace`.
+///
+/// The engine reads the credential once per NAT-PMP cycle, and the first cycle
+/// starts milliseconds after the handshake. On Android the VpnService process
+/// is created at connect, so the mint is cold every session and that first
+/// request would always go out bare, leaving the port on the exit's per-client
+/// quota for the whole lease. The wait runs off the datapath (the tunnel is
+/// already carrying traffic) and it is bounded: a mint that never lands must
+/// delay the mapping, never withhold it.
+pub(crate) async fn await_first_credential(
+    source: &CredentialSource,
+    grace: Duration,
+    poll: Duration,
+) -> Option<Vec<u8>> {
+    let deadline = tokio::time::Instant::now() + grace;
+    loop {
+        if let Some(credential) = source() {
+            return Some(credential);
+        }
+        if tokio::time::Instant::now() >= deadline {
+            return None;
+        }
+        tokio::time::sleep(poll).await;
+    }
+}
+
 /// Background top-up: the first tick fires immediately (stock as soon as a
 /// wallet is seen), then every [`REFRESH_INTERVAL`], exactly like the desktop
 /// twin. The manager only mints epochs it has not attempted yet, so in steady
 /// state a tick costs one unsigned directory fetch.
-fn spawn_refresh<T: HttpTransport + 'static>(manager: Arc<PortEntitlementManager<T>>, now: NowFn) {
+///
+/// `probe_slot` is the slot the log reports the stock of, and it is the slot
+/// the first caller asked for (on Android, the only one: the single
+/// preferred-port model). Probing assigns that slot its credential right after
+/// the refresh, which is idempotent for the epoch and removes the cold-start
+/// race for the session after this one.
+fn spawn_refresh<T: HttpTransport + 'static>(
+    manager: Arc<PortEntitlementManager<T>>,
+    now: NowFn,
+    probe_slot: usize,
+) {
     tokio::spawn(async move {
         let mut tick = tokio::time::interval(REFRESH_INTERVAL);
         loop {
             tick.tick().await;
-            if let Err(e) = manager.refresh_auto(now()).await {
+            let n = now();
+            match manager.refresh_auto(n).await {
+                // Presence only, never the credential: a refresh that answered
+                // 200 and stocked nothing (the issuer already served this
+                // account this epoch, or refused it) is otherwise
+                // indistinguishable from one that did, and the two degrade to
+                // the same silent per-client quota at the exit.
+                Ok(()) => log::info!(
+                    "Warren port-entitlement refresh ok (slot stocked={})",
+                    manager.credential_for_slot(probe_slot, n).is_some()
+                ),
                 // Transient: the batch keeps vending what it already holds and
                 // the next tick retries. The error chain carries no credential
                 // or seed material.
-                log::warn!("Warren port-entitlement refresh failed (keeping existing): {e}");
+                Err(e) => {
+                    log::warn!("Warren port-entitlement refresh failed (keeping existing): {e}")
+                }
             }
         }
     });
@@ -402,6 +450,50 @@ mod tests {
         // one forwarded port at the exit.
         let other = mint.credential_source([1; 32], 1, || unreachable!("manager must be reused"));
         assert_ne!(other().expect("slot 1 draws its own"), first);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_first_request_waits_for_a_mint_that_is_still_landing() {
+        let issuer = FakeIssuer::new(&[100]);
+        let (_t, now) = clock(NOW);
+        let mint = EntitlementMint::new(now);
+        let source = mint.credential_source([1; 32], 0, || client(&issuer));
+
+        // The mint is cold at the instant the loop would fire its first cycle;
+        // the wait is what keeps that request from going out bare.
+        assert!(source().is_none());
+        let credential = super::await_first_credential(
+            &source,
+            Duration::from_secs(8),
+            Duration::from_millis(250),
+        )
+        .await;
+        assert_eq!(credential, source(), "the wait vends what the slot holds");
+        assert!(credential.is_some(), "a landing mint must be waited for");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_mint_that_never_lands_lets_the_request_go_bare() {
+        let issuer = FakeIssuer::new(&[100]);
+        issuer.0.fail_transport.store(true, Ordering::SeqCst);
+        let (_t, now) = clock(NOW);
+        let mint = EntitlementMint::new(now);
+        let source = mint.credential_source([1; 32], 0, || client(&issuer));
+
+        // Degrade, never refuse: the grace expires and the mapping still goes
+        // out, on the exit's own quota.
+        let started = tokio::time::Instant::now();
+        let credential = super::await_first_credential(
+            &source,
+            Duration::from_secs(8),
+            Duration::from_millis(250),
+        )
+        .await;
+        assert!(credential.is_none());
+        assert!(
+            started.elapsed() >= Duration::from_secs(8),
+            "the wait must be bounded by the grace, not by the mint"
+        );
     }
 
     #[tokio::test]

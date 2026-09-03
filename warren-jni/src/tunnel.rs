@@ -809,7 +809,11 @@ impl Drop for PathHealthTaskGuard {
 /// `None` from [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled in
 /// config.
 struct NatPmpGuard {
-    refresh: warrenguard_natpmp_client::RefreshLoopHandle,
+    /// Filled by `starter` once the loop is running; empty while it is still
+    /// giving the entitlement mint its head start.
+    refresh:
+        std::sync::Arc<parking_lot::Mutex<Option<warrenguard_natpmp_client::RefreshLoopHandle>>>,
+    starter: tokio::task::JoinHandle<()>,
     drain: tokio::task::JoinHandle<()>,
 }
 
@@ -818,7 +822,14 @@ impl Drop for NatPmpGuard {
         // Clear the published status so a stale "mapped" port does not
         // linger in the UI after the mapping is torn down.
         crate::android_jni::reset_natpmp_status();
-        self.refresh.cancel();
+        // Ordered: abort the starter first, so a teardown during the head
+        // start cannot race a loop into existence behind the cancel below.
+        // The starter stores its handle with no await between spawn and
+        // store, so an abort can never land in that gap.
+        self.starter.abort();
+        if let Some(mut refresh) = self.refresh.lock().take() {
+            refresh.cancel();
+        }
         // Abort eagerly: the refresh-loop cancel closes the sender
         // and the drain would exit naturally on the next `recv`, but
         // an explicit abort removes the window where Kotlin observes
@@ -827,6 +838,14 @@ impl Drop for NatPmpGuard {
         self.drain.abort();
     }
 }
+
+/// How long the first mapping request waits for the entitlement mint before
+/// going out bare. Sized off the observed cold-start cost of the twin v7 token
+/// mint on the same protected transport (~2.5 s on the emulator), with margin
+/// for a slow mobile network. Off the datapath: the tunnel already carries
+/// traffic while this runs.
+const ENTITLEMENT_GRACE: std::time::Duration = std::time::Duration::from_secs(8);
+const ENTITLEMENT_POLL: std::time::Duration = std::time::Duration::from_millis(250);
 
 /// Last NAT-PMP external port granted by an exit in this process, so an
 /// auto-mode forward keeps the same public port when the user changes exit:
@@ -884,36 +903,56 @@ fn maybe_spawn_nat_pmp(
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
-    // Assigning the slot here (rather than only on the first cycle) is what
-    // lets the log say whether this session rides the doc 99 chain at all.
-    // Idempotent: the slot keeps that credential for the whole epoch.
-    let entitlement_present = entitlements().is_some();
-    // The entitlement is consulted once per refresh cycle rather than captured
-    // once: a credential is valid for its own epoch only, so a mapping that
-    // outlives an epoch presents the next batch at its next renewal. An
-    // exhausted batch or an unreachable API answers `None` and the request goes
-    // out bare, which leaves the exit on its per-client quota (degrade, never
-    // refuse).
-    let refresh = warrenguard_natpmp_client::spawn_refresh_loop_with(
-        warrenguard_natpmp_client::RefreshLoopConfig {
-            server,
-            protos: if is_tcp {
-                warrenguard_natpmp_client::ForwardProtos::Tcp
-            } else {
-                warrenguard_natpmp_client::ForwardProtos::Udp
-            },
-            internal_port: 0,
-            suggested_external_port,
-            lifetime_secs,
-            suggestion,
-            bind_addr: Some(bind_addr),
-            credential: Some(entitlements),
-        },
-        tx,
-    );
     // Publish the initial "requesting" state so Kotlin shows progress
-    // immediately after the toggle takes effect.
+    // immediately after the toggle takes effect, including while the starter
+    // below is still waiting on the mint.
     crate::android_jni::set_natpmp_status(r#"{"state":"requesting"}"#.to_owned());
+    let protos = if is_tcp {
+        warrenguard_natpmp_client::ForwardProtos::Tcp
+    } else {
+        warrenguard_natpmp_client::ForwardProtos::Udp
+    };
+    let refresh = std::sync::Arc::new(parking_lot::Mutex::new(None));
+    let refresh_slot = refresh.clone();
+    let starter = tokio::spawn(async move {
+        // The engine reads the credential once per cycle, and the first cycle
+        // decides whether the exit counts this port against the subscriber's
+        // fleet-wide entitlement or against its own per-client quota. The mint
+        // is cold on Android (the VpnService process is created at connect), so
+        // give it a bounded head start rather than spending the whole first
+        // lease un-entitled.
+        let entitlement_present = crate::port_entitlements::await_first_credential(
+            &entitlements,
+            ENTITLEMENT_GRACE,
+            ENTITLEMENT_POLL,
+        )
+        .await
+        .is_some();
+        // Presence only: a credential is bearer material and never reaches a
+        // log. `false` is the documented degrade, otherwise indistinguishable
+        // from a working chain.
+        log::info!(
+            "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr}, entitlement={entitlement_present})"
+        );
+        // The entitlement is consulted once per refresh cycle rather than
+        // captured once: a credential is valid for its own epoch only, so a
+        // mapping that outlives an epoch presents the next batch at its next
+        // renewal, without the loop restarting.
+        let handle = warrenguard_natpmp_client::spawn_refresh_loop_with(
+            warrenguard_natpmp_client::RefreshLoopConfig {
+                server,
+                protos,
+                internal_port: 0,
+                suggested_external_port,
+                lifetime_secs,
+                suggestion,
+                bind_addr: Some(bind_addr),
+                credential: Some(entitlements),
+            },
+            tx,
+        );
+        *refresh_slot.lock() = Some(handle);
+    });
     let drain = tokio::spawn(async move {
         while let Some(event) = rx.recv().await {
             log::info!("NAT-PMP event from Android tunnel: {event:?}");
@@ -932,14 +971,11 @@ fn maybe_spawn_nat_pmp(
             }
         }
     });
-    // Presence only: a credential is bearer material and never reaches a log.
-    // `false` here is the documented degrade (the exit applies its per-client
-    // quota), which is otherwise indistinguishable from a working chain.
-    log::info!(
-        "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr}, entitlement={})",
-        entitlement_present
-    );
-    Some(NatPmpGuard { refresh, drain })
+    Some(NatPmpGuard {
+        refresh,
+        starter,
+        drain,
+    })
 }
 
 /// Project a [`warrenguard_natpmp_client::NatPmpEvent`] to the JSON status
