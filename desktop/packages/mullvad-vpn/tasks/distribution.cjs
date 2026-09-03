@@ -237,22 +237,20 @@ function envProblemReportLink() {
     path.join(`env-assets-${productEnvName}`, 'linux', 'problem-report-link'),
   );
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  // unlink, not rm: the staged link dangles (its target only exists on an
-  // installed machine), and rmSync follows it, finds nothing, and with
-  // `force` returns without removing the link, so the next symlinkSync on a
-  // runner that kept build/ from the previous run failed with EEXIST.
-  try {
-    fs.unlinkSync(out);
-  } catch (err) {
-    if (err.code !== 'ENOENT') {
-      throw err;
-    }
-  }
+  // Staged under a private name and renamed into place. Two packagers can
+  // stage this path at once (vitest runs the two specs that load this config
+  // in parallel workers), and a remove-then-create pair raced them into
+  // EEXIST on the second create; rename(2) replaces whatever sits at `out`
+  // atomically, so neither ever meets the other's half-done work.
+  // product-env-report-link.spec.ts reproduces the collision.
+  const staging = `${out}.${process.pid}`;
+  fs.rmSync(staging, { force: true });
   if (isLink) {
-    fs.symlinkSync(target, out);
+    fs.symlinkSync(target, staging);
   } else {
-    fs.writeFileSync(out, target);
+    fs.writeFileSync(staging, target);
   }
+  fs.renameSync(staging, out);
   return out;
 }
 
@@ -909,6 +907,7 @@ async function removeNseventforwarderNativeModules() {
 }
 
 exports.newConfig = newConfig;
+exports.envProblemReportLink = envProblemReportLink;
 exports.packWin = packWin;
 exports.packMac = packMac;
 exports.packLinux = packLinux;
