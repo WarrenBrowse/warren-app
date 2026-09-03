@@ -59,18 +59,30 @@ const SAMPLES: WarrenAnnouncement[] = [
 
 // The banner geometry of NotificationBanner's own Collapsible. Repeated here
 // rather than rendered through it, because the real one is a motion component
-// whose entry animation would freeze the preview mid-slide.
-const BANNER_STYLE = [
-  'display:flex',
-  'flex-direction:row',
-  'max-width:300px',
-  'border-radius:14px',
-  'border:1px solid var(--color-white-alpha20)',
-  'border-top:2px solid var(--color-green)',
-  'background-color:var(--color-black-alpha60)',
-  'box-shadow:0 8px 24px rgba(0, 0, 0, 0.35)',
-  'padding:10px 12px 10px 16px',
-].join(';');
+// whose entry animation would freeze the preview mid-slide. The top edge
+// follows the level exactly as NotificationBanner's LeveledCollapsible does,
+// so a preview cannot show a green edge over an amber dot when the app would
+// not.
+const BANNER_EDGE_COLOR: Record<string, string> = {
+  success: 'var(--color-green)',
+  warning: 'var(--color-yellow)',
+  error: 'var(--color-red)',
+};
+
+function bannerStyle(indicator?: string): string {
+  const edge = (indicator && BANNER_EDGE_COLOR[indicator]) ?? 'var(--color-green)';
+  return [
+    'display:flex',
+    'flex-direction:row',
+    'max-width:300px',
+    'border-radius:14px',
+    'border:1px solid var(--color-white-alpha20)',
+    `border-top:2px solid ${edge}`,
+    'background-color:var(--color-black-alpha60)',
+    'box-shadow:0 8px 24px rgba(0, 0, 0, 0.35)',
+    'padding:10px 12px 10px 16px',
+  ].join(';');
+}
 
 function readAsset(relative: string): string {
   return fs.readFileSync(path.join(PACKAGE_ROOT, relative), 'utf8');
@@ -122,16 +134,19 @@ export function renderAnnouncementCardPreview(): string {
     if (notification.action?.type !== 'announcement-card') {
       throw new Error('the announcement provider stopped producing a card');
     }
-    return renderToStaticMarkup(
-      sheet.collectStyles(
-        <WarrenAnnouncementCard
-          title={notification.title}
-          indicator={notification.indicator}
-          announcement={notification.action.announcement}
-          onOpenCta={() => undefined}
-        />,
+    return {
+      indicator: notification.indicator,
+      markup: renderToStaticMarkup(
+        sheet.collectStyles(
+          <WarrenAnnouncementCard
+            title={notification.title}
+            indicator={notification.indicator}
+            announcement={notification.action.announcement}
+            onOpenCta={() => undefined}
+          />,
+        ),
       ),
-    );
+    };
   });
 
   return `<!doctype html>
@@ -164,7 +179,7 @@ body {
 ${inlineIcons(sheet.getStyleTags())}
 </head>
 <body>
-${cards.map((card) => `<div style="${BANNER_STYLE}">${card}</div>`).join('\n')}
+${cards.map((card) => `<div style="${bannerStyle(card.indicator)}">${card.markup}</div>`).join('\n')}
 </body>
 </html>
 `;

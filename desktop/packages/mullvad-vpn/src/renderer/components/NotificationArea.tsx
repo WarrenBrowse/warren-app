@@ -327,7 +327,8 @@ export default function NotificationArea(props: IProps) {
         <NotificationBanner
           animateIn={isMounted}
           aria-hidden={!notification}
-          className={props.className}>
+          className={props.className}
+          indicator={notification.indicator}>
           {announcementCard ? (
             <WarrenAnnouncementCard
               title={notification.title}

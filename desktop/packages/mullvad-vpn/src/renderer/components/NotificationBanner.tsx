@@ -215,23 +215,41 @@ const Content = styled.section({
   height: 'fit-content',
 });
 
+// The edge follows the level when the banner declares one, so the two signals
+// on a card cannot disagree: an amber dot under a green edge reads as two
+// contradictory verdicts on the same message. Android's banner already draws a
+// status-coloured accent, so this is desktop catching up rather than diverging.
+// The override lives here, and never inside `Collapsible`, because
+// scripts/design-tokens/lib.mjs parses that block's `borderTop` literal to
+// publish the design system's default banner edge.
+const LeveledCollapsible = styled(Collapsible)<INotificationIndicatorProps>((props) => ({
+  borderTopColor: props.$type ? notificationIndicatorTypeColorMap[props.$type] : undefined,
+}));
+
 interface INotificationBannerProps {
   children?: React.ReactNode; // Array<NotificationContent | NotificationActions>,
   className?: string;
   animateIn: boolean;
+  indicator?: InAppNotificationIndicatorType;
 }
 
-export function NotificationBanner({ className, children, animateIn }: INotificationBannerProps) {
+export function NotificationBanner({
+  className,
+  children,
+  animateIn,
+  indicator,
+}: INotificationBannerProps) {
   const translateYInitial = animateIn ? '-100%' : '0%';
 
   return (
-    <Collapsible
+    <LeveledCollapsible
+      $type={indicator}
       animate={{ translateY: '0%' }}
       className={className}
       exit={{ translateY: '-100%' }}
       initial={{ translateY: translateYInitial }}
       transition={{ duration: 0.25 }}>
       <Content>{children}</Content>
-    </Collapsible>
+    </LeveledCollapsible>
   );
 }
