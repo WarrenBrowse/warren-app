@@ -227,6 +227,15 @@ class WarrenLocalSettingsRepository(context: Context) {
     val recentsEnabled: StateFlow<Boolean> = _recentsEnabled.asStateFlow()
 
     /**
+     * The desktop `forumNotifications` GUI setting: whether community-forum
+     * activity is shown at all (the header bell, the local notification, the
+     * launcher badge). On for an install that never touched it.
+     */
+    private val _forumNotificationsEnabled =
+        MutableStateFlow(prefs.getBoolean(KEY_FORUM_NOTIFICATIONS_ENABLED, true))
+    val forumNotificationsEnabled: StateFlow<Boolean> = _forumNotificationsEnabled.asStateFlow()
+
+    /**
      * User-defined custom lists of exits (desktop "custom lists" parity):
      * name -> ordered exit ids. Surfaced at the top of the location picker so
      * users can group favourite exits. Persisted as a [String] set of names
@@ -375,6 +384,11 @@ class WarrenLocalSettingsRepository(context: Context) {
     fun clearRecents() {
         prefs.edit().remove(KEY_RECENT_PINS).remove(KEY_RECENT_EXIT_IDS).apply()
         _recentPins.value = emptyList()
+    }
+
+    fun setForumNotificationsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_FORUM_NOTIFICATIONS_ENABLED, enabled).apply()
+        _forumNotificationsEnabled.value = enabled
     }
 
     /**
@@ -717,6 +731,7 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val RECENT_COUNTRY_PREFIX = "country:"
         private const val RECENT_CITY_PREFIX = "city:"
         private const val KEY_RECENTS_ENABLED = "recents_enabled"
+        private const val KEY_FORUM_NOTIFICATIONS_ENABLED = "forum_notifications_enabled"
         private const val RECENT_DELIMITER = ","
         private const val KEY_CUSTOM_LIST_NAMES = "custom_list_names"
         private const val KEY_CUSTOM_LIST_PREFIX = "custom_list_exits_"

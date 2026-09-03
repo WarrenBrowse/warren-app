@@ -34,6 +34,21 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `forum notifications default to on and persist the switch`() {
+        // The desktop `forumNotifications` GUI setting: on for an install
+        // that never touched it, off removes the bell, the badge and the
+        // notification alike.
+        every { mockPrefs.getBoolean("forum_notifications_enabled", true) } returns true
+        val repo = WarrenLocalSettingsRepository(mockContext)
+        assertTrue(repo.forumNotificationsEnabled.value)
+
+        repo.setForumNotificationsEnabled(false)
+
+        assertFalse(repo.forumNotificationsEnabled.value)
+        verify { mockEditor.putBoolean("forum_notifications_enabled", false) }
+    }
+
+    @Test
     fun `state flows seed from disk on construction`() {
         every { mockPrefs.getBoolean("daita_enabled", false) } returns true
         every { mockPrefs.getBoolean("nat_pmp_enabled", false) } returns false
