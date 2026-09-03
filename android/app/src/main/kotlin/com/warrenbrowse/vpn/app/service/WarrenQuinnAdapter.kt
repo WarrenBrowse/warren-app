@@ -101,6 +101,18 @@ class WarrenQuinnAdapter(
     private val _pathWedged = MutableStateFlow(false)
     val pathWedged: StateFlow<Boolean> = _pathWedged.asStateFlow()
 
+    // The engine's "Reduced MTU" verdict: the usable inner payload once the
+    // live path measured below the TUN MTU, null while it carries full-size
+    // packets. Desktop shows the same post-connect sample as its "Reduced MTU"
+    // chip; the user-set MTU is a different chip on both clients.
+    private val _effectiveMtu = MutableStateFlow<Int?>(null)
+    val effectiveMtu: StateFlow<Int?> = _effectiveMtu.asStateFlow()
+
+    // When the last automatic recovery landed (`SystemClock.elapsedRealtime`),
+    // null until one did. The desktop "Last" row next to "Reconnects".
+    private val _lastAutoRecoveryAtMs = MutableStateFlow<Long?>(null)
+    val lastAutoRecoveryAtMs: StateFlow<Long?> = _lastAutoRecoveryAtMs.asStateFlow()
+
     // Automatic retries that landed on a different exit than the one that
     // dropped, since process start (desktop `failover_count`). Counted when the
     // alternative connects, not when it is picked: the banner it drives
@@ -295,6 +307,8 @@ class WarrenQuinnAdapter(
                 val wedged =
                     health == PATH_HEALTH_DEGRADED_BOTH || health == PATH_HEALTH_EGRESS_DEAD
                 if (wedged != _pathWedged.value) _pathWedged.value = wedged
+                val reducedMtu = platform.effectiveMtu().takeIf { it > 0 }
+                if (reducedMtu != _effectiveMtu.value) _effectiveMtu.value = reducedMtu
                 if (code != lastSeen) {
                     lastSeen = code
                     Logger.i("WarrenQuinnAdapter: native status $code")
@@ -374,6 +388,7 @@ class WarrenQuinnAdapter(
                 val recoveries = platform.autoRecoveryCount() + autoRecovery.count
                 if (recoveries != _autoRecoveryCount.value) {
                     _autoRecoveryCount.value = recoveries
+                    _lastAutoRecoveryAtMs.value = SystemClock.elapsedRealtime()
                 }
             }
         }
@@ -513,6 +528,7 @@ class WarrenQuinnAdapter(
         datapathNetwork = null
         datapathNetworkSeen = false
         _natPmpStatus.value = NATPMP_IDLE
+        _effectiveMtu.value = null
         _state.value = WarrenTunnelState.Disconnected
     }
 
@@ -535,6 +551,7 @@ class WarrenQuinnAdapter(
         // user explicitly released traffic (RELEASE below). An active TUN whose
         // pump has died still drops everything, so keeping it is leak-safe.
         _natPmpStatus.value = NATPMP_IDLE
+        _effectiveMtu.value = null
         // Only an unexpected drop counts as a flap; a user teardown must not
         // record one. The blackhole-up-FIRST behaviour (block, then retry) is
         // the Mullvad fail-closed model and lives in KillSwitchPolicy.
@@ -622,6 +639,7 @@ class WarrenQuinnAdapter(
      */
     private fun onSessionExpired(config: WarrenTunnelConfig) {
         _natPmpStatus.value = NATPMP_IDLE
+        _effectiveMtu.value = null
         flapDetector.reset()
         if (config.lockdownMode) {
             Logger.w("WarrenQuinnAdapter: account unauthorized; blocking (subscription expired)")

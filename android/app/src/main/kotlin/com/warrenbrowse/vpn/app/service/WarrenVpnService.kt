@@ -9,11 +9,7 @@ import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import arrow.atomic.AtomicInt
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
+import com.warrenbrowse.talpid.LifecycleVpnService
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
@@ -28,7 +24,11 @@ import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
-import com.warrenbrowse.talpid.LifecycleVpnService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
 
@@ -44,10 +44,9 @@ class WarrenVpnService : LifecycleVpnService() {
     private lateinit var foregroundNotificationHandler: ForegroundNotificationManager
 
     /**
-     * Warren Quinn adapter owns the entire tunnel lifecycle. Constructed
-     * in `onCreate` (it holds the [android.net.VpnService] reference and
-     * the [android.net.ConnectivityManager] for handover reconnect, both
-     * of which are unique to this service instance).
+     * Warren Quinn adapter owns the entire tunnel lifecycle. Constructed in `onCreate` (it holds
+     * the [android.net.VpnService] reference and the [android.net.ConnectivityManager] for handover
+     * reconnect, both of which are unique to this service instance).
      *
      * This adapter is the only tunnel-state authority.
      */
@@ -90,13 +89,14 @@ class WarrenVpnService : LifecycleVpnService() {
         // it is owned by the service and kept alive for the service's
         // lifetime; its own scope outlives even that, which is what lets
         // `onDestroy` hand it the final teardown without waiting.
-        quinnAdapter = WarrenQuinnAdapter(
-            vpnService = this,
-            connectivityManager = getSystemService<ConnectivityManager>()!!,
-            settings = getKoin().get(),
-            connectivity = connectivityMonitor.connectivity,
-            failoverConfig = warrenConnectUseCase::buildFailoverConfig,
-        )
+        quinnAdapter =
+            WarrenQuinnAdapter(
+                vpnService = this,
+                connectivityManager = getSystemService<ConnectivityManager>()!!,
+                settings = getKoin().get(),
+                connectivity = connectivityMonitor.connectivity,
+                failoverConfig = warrenConnectUseCase::buildFailoverConfig,
+            )
 
         // Observe Quinn tunnel transitions:
         //   1. mirror every state into the process-wide proxy so any
@@ -116,8 +116,14 @@ class WarrenVpnService : LifecycleVpnService() {
             }
         }
         lifecycleScope.launch {
-            quinnAdapter.pathWedged.collect { wedged ->
-                quinnStateProxy.updatePathWedged(wedged)
+            quinnAdapter.pathWedged.collect { wedged -> quinnStateProxy.updatePathWedged(wedged) }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.lastAutoRecoveryAtMs.collect { at ->
+                quinnStateProxy.updateLastAutoRecoveryAt(at)
             }
         }
         lifecycleScope.launch {
@@ -194,18 +200,19 @@ class WarrenVpnService : LifecycleVpnService() {
                 // runs off the main thread to avoid an ANR on a slow device.
                 foregroundNotificationHandler.startForeground()
                 lifecycleScope.launch {
-                    val config = withContext(Dispatchers.Default) {
-                        when (val result = warrenConnectUseCase.buildFreshConfig()) {
-                            is WarrenConnectUseCase.ConfigResult.Ready -> result.config
-                            else -> {
-                                Logger.w(
-                                    "Reconnect: config rebuild unavailable ($result), " +
-                                        "reusing the cached config",
-                                )
-                                null
+                    val config =
+                        withContext(Dispatchers.Default) {
+                            when (val result = warrenConnectUseCase.buildFreshConfig()) {
+                                is WarrenConnectUseCase.ConfigResult.Ready -> result.config
+                                else -> {
+                                    Logger.w(
+                                        "Reconnect: config rebuild unavailable ($result), " +
+                                            "reusing the cached config"
+                                    )
+                                    null
+                                }
                             }
                         }
-                    }
                     if (config != null) {
                         quinnAdapter.reconnectWith(config)
                     } else {
@@ -233,12 +240,15 @@ class WarrenVpnService : LifecycleVpnService() {
                         )
                     }
                     else -> {
-                        val config = try {
-                            warrenTunnelConfigFromWireJson(configJson)
-                        } catch (e: Exception) {
-                            Logger.e(throwable = e) { "Failed to deserialise WarrenTunnelConfig" }
-                            null
-                        }
+                        val config =
+                            try {
+                                warrenTunnelConfigFromWireJson(configJson)
+                            } catch (e: Exception) {
+                                Logger.e(throwable = e) {
+                                    "Failed to deserialise WarrenTunnelConfig"
+                                }
+                                null
+                            }
                         if (config != null) {
                             lifecycleScope.launch {
                                 // Ownership of the mnemonic transfers to the
@@ -264,9 +274,7 @@ class WarrenVpnService : LifecycleVpnService() {
                 // Disconnect always routes through the Quinn adapter
                 // now. If no session is running, this is a no-op
                 // (Mutex + state-machine guard inside the adapter).
-                lifecycleScope.launch {
-                    quinnAdapter.disconnect()
-                }
+                lifecycleScope.launch { quinnAdapter.disconnect() }
 
                 // If disconnect intent is received and no one is using this service, simply stop
                 // foreground and let system stop service when it deems it not to be necessary.
@@ -359,9 +367,9 @@ class WarrenVpnService : LifecycleVpnService() {
 
     companion object {
         /**
-         * How long a system revoke may wait for the session teardown. The
-         * native close is a task abort plus fd closes (tens of milliseconds);
-         * the bound only matters when something is wedged.
+         * How long a system revoke may wait for the session teardown. The native close is a task
+         * abort plus fd closes (tens of milliseconds); the bound only matters when something is
+         * wedged.
          */
         private const val REVOKE_TEARDOWN_TIMEOUT_MS = 3_000L
     }

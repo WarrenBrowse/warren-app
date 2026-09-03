@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo
 
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,22 +11,31 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectionDetails
 import com.warrenbrowse.vpn.feature.home.impl.connect.marqueeLine
 import com.warrenbrowse.vpn.lib.model.Endpoint
 import com.warrenbrowse.vpn.lib.model.TransportProtocol
 import com.warrenbrowse.vpn.lib.model.TunnelEndpoint
+import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.ui.component.SPACE_CHAR
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.tag.LOCATION_INFO_CONNECTION_IN_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LOCATION_INFO_CONNECTION_OUT_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import kotlinx.coroutines.delay
+import org.koin.compose.koinInject
 
 @Composable
 fun ConnectionDetailPanel(
@@ -69,14 +79,20 @@ fun ConnectionDetailPanel(
         }
 
         // Desktop warren-status-view rows: Reconnects is shown in every session
-        // (0 included), the obfuscation row states the always-on HTTP/3 mimicry.
-        // The desktop "Last" (age of the last reconnect) is omitted: the Android
-        // engine surfaces only the reconnect count, not a timestamp.
+        // (0 included), "Last" only once one happened, and the obfuscation row
+        // states the always-on HTTP/3 mimicry.
         LabelValueRow(
             label = stringResource(R.string.connection_details_reconnects),
             value = autoRecoveryCount.toString(),
             modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.smallPadding),
         )
+        if (autoRecoveryCount > 0) {
+            LabelValueRow(
+                label = stringResource(R.string.connection_details_last),
+                value = lastReconnectAgeLabel(),
+                modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.smallPadding),
+            )
+        }
         LabelValueRow(
             label = stringResource(R.string.connection_details_obfuscation),
             value = stringResource(R.string.connection_details_obfuscation_active),
@@ -84,6 +100,29 @@ fun ConnectionDetailPanel(
         )
     }
 }
+
+/**
+ * The age of the last recovery, re-read once a second while on screen so the
+ * row does not freeze on the value it had when the panel opened. The adapter
+ * stamps the moment on the elapsed-realtime clock, so a suspended device does
+ * not shrink the age.
+ */
+@Composable
+private fun lastReconnectAgeLabel(): String {
+    val recoveryProvider = koinInject<WarrenAutoRecoveryProvider>()
+    val lastAt by recoveryProvider.lastAutoRecoveryAtMs.collectAsStateWithLifecycle()
+    var now by remember { mutableLongStateOf(SystemClock.elapsedRealtime()) }
+    LaunchedEffect(lastAt) {
+        while (true) {
+            now = SystemClock.elapsedRealtime()
+            delay(AGE_TICK_MS)
+        }
+    }
+    val at = lastAt ?: return stringResource(R.string.connection_details_never)
+    return stringResource(R.string.connection_details_age, formatReconnectAge(now - at))
+}
+
+private const val AGE_TICK_MS = 1_000L
 
 @Composable
 private fun LabelValueRow(label: String?, value: String, modifier: Modifier = Modifier) {

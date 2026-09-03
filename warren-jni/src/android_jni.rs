@@ -155,6 +155,31 @@ pub(crate) fn reset_path_health() {
     SESSION_STATUS.bump();
 }
 
+/// Latest "Reduced MTU" verdict of the session sampler, as the `jint` Kotlin
+/// reads through `getEffectiveMtu` (see [`crate::path_metrics`]): the usable
+/// inner payload once the live path measured below the TUN MTU, `0` while it
+/// carries full-size packets. Feeds the connect screen's "Reduced MTU (n)"
+/// chip, which on desktop comes from the negotiated endpoint and must not be
+/// confused with the user-set MTU.
+static EFFECTIVE_MTU: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
+
+/// Publish the sampler's verdict for Kotlin to read; wakes the waiter only
+/// when the value moved, since the sampler ticks every few seconds.
+#[cfg(feature = "tunnel")]
+pub(crate) fn set_effective_mtu(verdict: Option<u16>) {
+    let code = crate::path_metrics::effective_mtu_code(verdict);
+    if EFFECTIVE_MTU.swap(code, std::sync::atomic::Ordering::Relaxed) != code {
+        SESSION_STATUS.bump();
+    }
+}
+
+/// Clear the verdict on teardown so the next session (or a disconnected UI)
+/// never shows the previous path's reduction.
+#[cfg(feature = "tunnel")]
+pub(crate) fn reset_effective_mtu() {
+    set_effective_mtu(None);
+}
+
 /// Latest in-tunnel egress verdict: `true` while the exit answers the client
 /// and forwards nothing to the internet. Its own cell rather than a second
 /// writer on [`PATH_HEALTH`], because the two publishers run on unrelated
@@ -829,6 +854,18 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getPathHealth(
         let _ = egress_dead;
         goodput
     }
+}
+
+/// Returns the "Reduced MTU" verdict: the usable inner payload in bytes once
+/// the live path measured below the TUN MTU, `0` while it carries full-size
+/// packets. Read by Kotlin alongside `getTunnelStatus()` on every status
+/// wake.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getEffectiveMtu(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jint {
+    EFFECTIVE_MTU.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 /// Returns a JSON-encoded array of [`RelayInfo`] objects describing the

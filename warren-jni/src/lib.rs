@@ -112,6 +112,10 @@ mod version_check;
 #[cfg(any(test, target_os = "android"))]
 mod status_watch;
 
+// The "Reduced MTU" verdict rule, host-tested; `tunnel` samples and publishes it.
+#[cfg(any(test, target_os = "android"))]
+mod path_metrics;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

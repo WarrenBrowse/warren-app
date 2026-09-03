@@ -116,6 +116,12 @@ pub struct WarrenTunnelConfig {
     /// filtering can read it. `#[serde(default)]` keeps older payloads valid.
     #[serde(default)]
     pub enable_ipv6: Option<bool>,
+    /// The TUN MTU Kotlin configured (`VpnService.Builder.setMtu`). Read only
+    /// by the "Reduced MTU" sampler, which compares the live path's usable
+    /// inner payload against it; absent on older payloads, where the Kotlin
+    /// default applies.
+    #[serde(default)]
+    pub mtu: Option<u16>,
     /// App-level kill switch. Enforced Android-side (the adapter keeps a
     /// blackhole interface up when the tunnel drops). Accepted here for
     /// schema parity.
@@ -472,6 +478,11 @@ async fn run_multi_hop_session(
             }
         });
         let _path_health_guard = PathHealthTaskGuard(path_health_task);
+        // "Reduced MTU" sampler: the same post-connect probe as the desktop
+        // daemon, so the chip means the same thing on both clients (the path
+        // measured low, never the user's own MTU setting).
+        let _effective_mtu_guard =
+            spawn_effective_mtu_sampler(sessions.clone(), config.mtu.unwrap_or(DEFAULT_TUN_MTU));
         // Migration watchdog: a Wi-Fi to cellular handover rebinds the live
         // QUIC endpoint (VpnService.protect re-applied to the fresh socket
         // before quinn can send on it) and revalidates the path in about one
@@ -700,6 +711,54 @@ pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> 
 /// Stops the path-health publisher with the session and clears the last
 /// verdict, so a degraded value can never colour a disconnected UI or the
 /// first moments of the next session.
+/// The Kotlin-side default of `WarrenTunnelConfig.mtu`
+/// (`WarrenLocalSettingsRepository.MTU_MAX`), for a payload that omits it.
+const DEFAULT_TUN_MTU: u16 = 1280;
+
+/// Sample the live bundle's usable inner payload against the TUN MTU and
+/// publish the "Reduced MTU" verdict for Kotlin.
+///
+/// DPLPMTUD needs a few RTTs to settle, so the first sample waits 4 s after
+/// the dial (sampling at once would flag every network as reduced); after
+/// that a 5 s cadence, republished only when the quantized verdict moves.
+/// Mirrors the desktop daemon's sampler in `talpid-warren-tunnel`. Ends on its
+/// own when the supervisor closes the session watch; the guard aborts it with
+/// the attempt and clears the verdict.
+fn spawn_effective_mtu_sampler(
+    mut sessions: warrenguard_transport::supervisor::ClientWatch,
+    tun_mtu: u16,
+) -> EffectiveMtuGuard {
+    EffectiveMtuGuard(tokio::spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_secs(4)).await;
+        loop {
+            let bundle = sessions.borrow().clone();
+            if let Some(bundle) = bundle {
+                crate::android_jni::set_effective_mtu(crate::path_metrics::reduced_mtu_verdict(
+                    bundle.max_inner_payload(),
+                    tun_mtu,
+                ));
+            }
+            tokio::select! {
+                () = tokio::time::sleep(std::time::Duration::from_secs(5)) => {}
+                res = sessions.changed() => {
+                    if res.is_err() {
+                        break;
+                    }
+                }
+            }
+        }
+    }))
+}
+
+struct EffectiveMtuGuard(tokio::task::JoinHandle<()>);
+
+impl Drop for EffectiveMtuGuard {
+    fn drop(&mut self) {
+        self.0.abort();
+        crate::android_jni::reset_effective_mtu();
+    }
+}
+
 struct PathHealthTaskGuard(tokio::task::JoinHandle<()>);
 
 impl Drop for PathHealthTaskGuard {
@@ -948,6 +1007,15 @@ mod tests {
         let cfg = parse_config(json).expect("single-hop payload must parse");
         assert_eq!(cfg.multihop_two_hop, Some(false));
         assert!(cfg.entry_hop.is_some());
+    }
+
+    #[test]
+    fn the_tun_mtu_is_read_off_the_kotlin_payload() {
+        let cfg = parse_config(FULL_WIRE_JSON).expect("full payload must parse");
+        assert_eq!(cfg.mtu, Some(1200));
+        let minimal = parse_config(r#"{"exit_pubkey_hex":"ab","exit_endpoint":"1.2.3.4:443"}"#)
+            .expect("minimal payload must parse");
+        assert_eq!(minimal.mtu, None);
     }
 
     #[test]

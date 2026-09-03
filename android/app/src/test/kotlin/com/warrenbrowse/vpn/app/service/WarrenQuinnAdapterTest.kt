@@ -186,6 +186,15 @@ class WarrenQuinnAdapterTest {
 
         override fun pathHealth(): Int = health
 
+        @Volatile
+        var mtuVerdict: Int = 0
+            set(value) {
+                field = value
+                publish()
+            }
+
+        override fun effectiveMtu(): Int = mtuVerdict
+
         override fun registerNetworkCallback(
             callback: ConnectivityManager.NetworkCallback
         ): Boolean {
@@ -680,6 +689,55 @@ class WarrenQuinnAdapterTest {
             }
             assertTrue(platform.configs.last().contains("ab".repeat(32)))
             assertEquals(0, adapter.failoverCount.value)
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
+
+    /**
+     * The engine's "Reduced MTU" verdict rides the status wake like the other
+     * datapath facts, and a torn-down session takes its verdict with it: the
+     * chip describes the live path, never the previous one.
+     */
+    @Test
+    fun `ensure the reduced MTU verdict reaches the adapter and clears with the session`() =
+        runTest {
+            val platform = RecordingPlatform()
+            val (adapter, _) = connectedAdapter(platform)
+            assertEquals(null, adapter.effectiveMtu.value)
+
+            platform.mtuVerdict = 1216
+            awaitReal("the verdict must reach the adapter") { adapter.effectiveMtu.value == 1216 }
+
+            adapter.disconnect()
+            awaitReal("a torn-down session must clear the verdict") {
+                adapter.effectiveMtu.value == null
+            }
+        }
+
+    /** The "Last" row needs the moment the count moved, not only the count. */
+    @Test
+    fun `ensure a landed recovery stamps the time of the last recovery`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 12_345L
+        try {
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, failoverConfig = { null }, dropRetryGraceMs = 0L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            assertEquals(null, adapter.lastAutoRecoveryAtMs.value)
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the retry must be counted as a recovery") {
+                adapter.autoRecoveryCount.value == 1
+            }
+            awaitReal("the recovery must be stamped") {
+                adapter.lastAutoRecoveryAtMs.value == 12_345L
+            }
             adapter.disconnect()
         } finally {
             unmockkStatic(SystemClock::class)

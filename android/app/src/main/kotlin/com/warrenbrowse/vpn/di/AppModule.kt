@@ -6,50 +6,27 @@ import android.os.Build
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.SupervisorJob
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.RelayCatalog
-import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
+import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
 import com.warrenbrowse.vpn.app.forum.ForumJournal
+import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.JournalField
 import com.warrenbrowse.vpn.app.forum.LinkSource
-import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
 import com.warrenbrowse.vpn.app.forum.forumLoginLinkFromCode
-import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
-import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
-import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
-import com.warrenbrowse.vpn.lib.repository.SharedPreferencesForumIdentityRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
-import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
-import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
 import com.warrenbrowse.vpn.app.network.WarrenNetworkInfoUseCase
-import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
-import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
+import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
 import com.warrenbrowse.vpn.lib.model.BuildVersion
@@ -62,13 +39,37 @@ import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
+import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
+import com.warrenbrowse.vpn.lib.repository.SharedPreferencesForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.repository.UserPreferences
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.SupervisorJob
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
@@ -115,6 +116,7 @@ val appModule = module {
             WarrenAutoRecoveryProvider::class,
             WarrenPathHealthProvider::class,
             WarrenFailoverProvider::class,
+            WarrenPathMetricsProvider::class,
         )
 
     // Process-wide truthful connectivity source: feeds the adapter's
@@ -147,13 +149,11 @@ val appModule = module {
 
     // Disconnect path bound to the lib-side surface contract; Connect button +
     // tile service + notification action all resolve this single binding.
-    single {
-        WarrenDisconnectUseCase(context = androidContext(), connectionProxy = get())
-    } bind WarrenQuinnDisconnectInvoker::class
+    single { WarrenDisconnectUseCase(context = androidContext(), connectionProxy = get()) } bind
+        WarrenQuinnDisconnectInvoker::class
 
-    single {
-        WarrenReconnectUseCase(context = androidContext(), connectionProxy = get())
-    } bind WarrenQuinnReconnectInvoker::class
+    single { WarrenReconnectUseCase(context = androidContext(), connectionProxy = get()) } bind
+        WarrenQuinnReconnectInvoker::class
 
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
     single { WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get()) } bind

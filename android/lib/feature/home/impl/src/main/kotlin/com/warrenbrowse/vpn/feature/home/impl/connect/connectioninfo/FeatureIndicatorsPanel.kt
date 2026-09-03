@@ -22,6 +22,7 @@ import com.warrenbrowse.vpn.common.compose.LocalSharedTransitionScope
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenFeatureChip
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
@@ -30,12 +31,11 @@ import org.koin.compose.koinInject
 /**
  * The active-feature chips floating above the connection card.
  *
- * Every chip is always shown: the card sits over the scenery with the whole
- * screen width available, so there is nothing to collapse behind a "+N more"
- * affordance. The caller supplies the engine's indicators; the live values that
- * make a chip informative (the MTU in force, the forwarded port, whether the
- * exit actually granted DAITA) live in settings and in the NAT-PMP status, so
- * they are read here rather than threaded through the whole connect state.
+ * Every chip is always shown: the card sits over the scenery with the whole screen width available,
+ * so there is nothing to collapse behind a "+N more" affordance. The caller supplies the engine's
+ * indicators; the live values that make a chip informative (the MTU in force, the forwarded port,
+ * whether the exit actually granted DAITA) live in settings and in the NAT-PMP status, so they are
+ * read here rather than threaded through the whole connect state.
  */
 @Composable
 fun AlwaysExpandedFeatureIndicators(
@@ -44,8 +44,10 @@ fun AlwaysExpandedFeatureIndicators(
 ) {
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val natPmpProvider = koinInject<WarrenNatPmpStatusProvider>()
+    val pathMetrics = koinInject<WarrenPathMetricsProvider>()
 
     val mtu by settings.tunnelMtu.collectAsStateWithLifecycle()
+    val effectiveMtu by pathMetrics.effectiveMtu.collectAsStateWithLifecycle()
     val daitaWanted by settings.daitaEnabled.collectAsStateWithLifecycle()
     val natPmpEnabled by settings.natPmpEnabled.collectAsStateWithLifecycle()
     val natPmpStatus by natPmpProvider.natPmpStatus.collectAsStateWithLifecycle()
@@ -54,6 +56,7 @@ fun AlwaysExpandedFeatureIndicators(
         featureChips(
             features = features,
             mtu = mtu,
+            effectiveMtu = effectiveMtu,
             daitaWanted = daitaWanted,
             natPmpEnabled = natPmpEnabled,
             natPmpStatus = natPmpStatus,
@@ -113,14 +116,16 @@ private data class FeatureChip(
 )
 
 /**
- * The engine's indicators plus the two the engine cannot report on its own: a
- * reduced MTU (a client-side setting) and DAITA asked for but not granted by
- * this exit, which is exactly the case a user needs to be told about.
+ * The engine's indicators plus the ones read here rather than threaded through the connect state:
+ * the path's "Reduced MTU" verdict, the user-set MTU (a client-side setting, the plain "MTU" chip
+ * as on desktop) and DAITA asked for but not granted by this exit, which is exactly the case a user
+ * needs to be told about.
  */
 @Composable
 private fun featureChips(
     features: List<FeatureIndicator>,
     mtu: Int,
+    effectiveMtu: Int?,
     daitaWanted: Boolean,
     natPmpEnabled: Boolean,
     natPmpStatus: String,
@@ -131,20 +136,26 @@ private fun featureChips(
         chips.add(FeatureChip(indicator, indicator.label(natPmpStatus)))
     }
 
-    if (mtu < WarrenLocalSettingsRepository.MTU_MAX) {
+    // Same words as the desktop chips, same meaning: "Reduced MTU (n)" is the
+    // path measuring low, "MTU" is the value the user set.
+    if (effectiveMtu != null) {
         chips.add(
             FeatureChip(
-                FeatureIndicator.CUSTOM_MTU,
-                stringResource(R.string.feature_reduced_mtu_value, mtu.toString()),
+                FeatureIndicator.REDUCED_MTU,
+                stringResource(R.string.feature_reduced_mtu_value, effectiveMtu.toString()),
             )
         )
+    }
+    if (mtu < WarrenLocalSettingsRepository.MTU_MAX) {
+        chips.add(FeatureChip(FeatureIndicator.CUSTOM_MTU, stringResource(R.string.mtu)))
     }
 
     // The setting is on and the engine reports no DAITA on this session, so the
     // protection the user enabled is not running.
-    if (daitaWanted &&
-        FeatureIndicator.DAITA !in features &&
-        FeatureIndicator.DAITA_MULTIHOP !in features
+    if (
+        daitaWanted &&
+            FeatureIndicator.DAITA !in features &&
+            FeatureIndicator.DAITA_MULTIHOP !in features
     ) {
         chips.add(
             FeatureChip(
@@ -183,9 +194,9 @@ private fun FeatureIndicator.label(natPmpStatus: String): String {
             FeatureIndicator.DNS_CONTENT_BLOCKERS -> R.string.dns_content_blockers
             FeatureIndicator.CUSTOM_DNS -> R.string.feature_custom_dns
             FeatureIndicator.SERVER_IP_OVERRIDE -> R.string.server_ip_override
-            FeatureIndicator.CUSTOM_MTU -> R.string.feature_reduced_mtu
-            FeatureIndicator.PORT_FORWARDING ->
-                return portForwardingLabel(natPmpStatus)
+            FeatureIndicator.CUSTOM_MTU -> R.string.mtu
+            FeatureIndicator.REDUCED_MTU -> R.string.feature_reduced_mtu
+            FeatureIndicator.PORT_FORWARDING -> return portForwardingLabel(natPmpStatus)
             FeatureIndicator.DAITA -> R.string.daita
             FeatureIndicator.DAITA_MULTIHOP ->
                 return stringResource(R.string.daita_multihop, stringResource(R.string.daita))
@@ -206,8 +217,8 @@ private fun portForwardingLabel(natPmpStatus: String): String {
 }
 
 /**
- * The label for a port-forwarding request that did not produce a mapping, or
- * null while the request is merely in flight (nothing to report yet).
+ * The label for a port-forwarding request that did not produce a mapping, or null while the request
+ * is merely in flight (nothing to report yet).
  */
 @Composable
 private fun natPmpFailureLabel(natPmpStatus: String): String? =
@@ -219,9 +230,8 @@ private fun natPmpFailureLabel(natPmpStatus: String): String? =
     }
 
 /**
- * Flat JSON string/number value by key, unquoted, or null. The NAT-PMP status
- * crosses the JNI bridge as a flat JSON object, and this module carries no JSON
- * parser for one field.
+ * Flat JSON string/number value by key, unquoted, or null. The NAT-PMP status crosses the JNI
+ * bridge as a flat JSON object, and this module carries no JSON parser for one field.
  */
 private fun natPmpJsonField(json: String, key: String): String? {
     val marker = "\"$key\""

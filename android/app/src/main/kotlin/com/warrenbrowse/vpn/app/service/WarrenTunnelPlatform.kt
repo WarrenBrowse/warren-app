@@ -13,27 +13,26 @@ import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 /**
  * Every platform and native call [WarrenQuinnAdapter] makes, behind one seam.
  *
- * The adapter's fail-closed ordering (a TUN, live or blocking, always holds the
- * routes; the live fd is closed only once its successor is established) cannot
- * be observed through `VpnService` and `WarrenJni` directly: the first is an
- * Android inner-class builder and the second an `object` that loads
- * `libwarren_jni.so` at init, so neither exists off-device. Routing both
- * through this interface is what lets `WarrenQuinnAdapterTest` record the ORDER
- * of the handover sequence. Inverting that order is the one mistake in this
- * class that turns an outage into a leak, so it is pinned by a test.
+ * The adapter's fail-closed ordering (a TUN, live or blocking, always holds the routes; the live fd
+ * is closed only once its successor is established) cannot be observed through `VpnService` and
+ * `WarrenJni` directly: the first is an Android inner-class builder and the second an `object` that
+ * loads `libwarren_jni.so` at init, so neither exists off-device. Routing both through this
+ * interface is what lets `WarrenQuinnAdapterTest` record the ORDER of the handover sequence.
+ * Inverting that order is the one mistake in this class that turns an outage into a leak, so it is
+ * pinned by a test.
  */
 interface WarrenTunnelPlatform {
     /**
-     * Apply [plan] to a fresh `VpnService.Builder` and establish it. Returns
-     * null when the platform refused the interface; the caller must then keep
-     * whatever interface is currently up rather than close it.
+     * Apply [plan] to a fresh `VpnService.Builder` and establish it. Returns null when the platform
+     * refused the interface; the caller must then keep whatever interface is currently up rather
+     * than close it.
      */
     fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor?
 
     /**
-     * Start the native session on [tunFd] (ownership transfers to the native
-     * side). Returns 0 on success, negative on a synchronous failure; may throw
-     * the native-thrown `RuntimeException` family.
+     * Start the native session on [tunFd] (ownership transfers to the native side). Returns 0 on
+     * success, negative on a synchronous failure; may throw the native-thrown `RuntimeException`
+     * family.
      */
     fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int
 
@@ -41,18 +40,17 @@ interface WarrenTunnelPlatform {
     fun disconnectTunnel()
 
     /**
-     * Report an underlying-network handover to the native migration watchdog,
-     * which rebinds the live QUIC endpoint and revalidates the path in about
-     * one RTT instead of re-handshaking. When it cannot, the watchdog ends the
-     * session and the status goes `Disconnected`, which is the adapter's
-     * signal to run its own handover fallback.
+     * Report an underlying-network handover to the native migration watchdog, which rebinds the
+     * live QUIC endpoint and revalidates the path in about one RTT instead of re-handshaking. When
+     * it cannot, the watchdog ends the session and the status goes `Disconnected`, which is the
+     * adapter's signal to run its own handover fallback.
      */
     fun notifyNetworkChanged()
 
     /**
-     * Blocks until the native status generation differs from [lastSeen] or
-     * [timeoutMs] elapsed, and returns the generation now seen. Every fact
-     * below changes the generation, so one wait covers them all.
+     * Blocks until the native status generation differs from [lastSeen] or [timeoutMs] elapsed, and
+     * returns the generation now seen. Every fact below changes the generation, so one wait covers
+     * them all.
      */
     fun awaitStatusChange(lastSeen: Long, timeoutMs: Long): Long
 
@@ -65,12 +63,15 @@ interface WarrenTunnelPlatform {
     /** Engine datapath verdict; see the `PATH_HEALTH_*` constants. */
     fun pathHealth(): Int
 
+    /** Engine "Reduced MTU" verdict in bytes, `0` while the path is not reduced. */
+    fun effectiveMtu(): Int
+
     /** Waits for the previous session to finish winding down. */
     fun awaitTunnelClosed(timeoutMs: Long): Boolean
 
     /**
-     * Watch for underlying-network changes. Returns false when the platform
-     * denied the registration, in which case the handover path is inert.
+     * Watch for underlying-network changes. Returns false when the platform denied the
+     * registration, in which case the handover path is inert.
      */
     fun registerNetworkCallback(callback: ConnectivityManager.NetworkCallback): Boolean
 
@@ -84,21 +85,23 @@ class AndroidTunnelPlatform(
 ) : WarrenTunnelPlatform {
 
     override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
-        val builder = vpnService.Builder()
-            .setSession(plan.session)
-            .setMtu(plan.mtu)
+        val builder = vpnService.Builder().setSession(plan.session).setMtu(plan.mtu)
         plan.addresses.forEach {
             try {
                 builder.addAddress(it.address, it.prefixLength)
             } catch (e: IllegalArgumentException) {
-                Logger.w(throwable = e) { "skipping invalid address ${it.address}/${it.prefixLength}" }
+                Logger.w(throwable = e) {
+                    "skipping invalid address ${it.address}/${it.prefixLength}"
+                }
             }
         }
         plan.routes.forEach {
             try {
                 builder.addRoute(it.address, it.prefixLength)
             } catch (e: IllegalArgumentException) {
-                Logger.w(throwable = e) { "skipping invalid route ${it.address}/${it.prefixLength}" }
+                Logger.w(throwable = e) {
+                    "skipping invalid route ${it.address}/${it.prefixLength}"
+                }
             }
         }
         plan.dnsServers.forEach {
@@ -154,18 +157,19 @@ class AndroidTunnelPlatform(
 
     override fun pathHealth(): Int = WarrenJni.getPathHealth()
 
+    override fun effectiveMtu(): Int = WarrenJni.getEffectiveMtu()
+
     override fun awaitTunnelClosed(timeoutMs: Long): Boolean =
         WarrenJni.awaitTunnelClosed(timeoutMs.toInt()) == 1
 
-    override fun registerNetworkCallback(
-        callback: ConnectivityManager.NetworkCallback
-    ): Boolean {
+    override fun registerNetworkCallback(callback: ConnectivityManager.NetworkCallback): Boolean {
         // NET_CAPABILITY_NOT_VPN keeps our own TUN out of the stream, so the
         // interface we just established is never read as a handover.
-        val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
-            .build()
+        val request =
+            NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                .build()
         return try {
             connectivityManager.registerNetworkCallback(request, callback)
             true
@@ -192,9 +196,8 @@ class AndroidTunnelPlatform(
 const val PATH_HEALTH_HEALTHY = 0
 
 /**
- * Large probes die while small ones survive: a last-mile shrink. Deliberately
- * NOT a wedge, it has its own MSS-clamp / PMTU handling and a re-dial cannot
- * cure it.
+ * Large probes die while small ones survive: a last-mile shrink. Deliberately NOT a wedge, it has
+ * its own MSS-clamp / PMTU handling and a re-dial cannot cure it.
  */
 const val PATH_HEALTH_DEGRADED_LARGE = 1
 
@@ -202,10 +205,9 @@ const val PATH_HEALTH_DEGRADED_LARGE = 1
 const val PATH_HEALTH_DEGRADED_BOTH = 2
 
 /**
- * The in-tunnel egress probe's verdict: the exit answers the client and
- * forwards nothing to the internet. Kept distinct from [PATH_HEALTH_DEGRADED_BOTH]
- * because the goodput prober stays green on this class (the exit answers the
- * tunnel gateway it echoes off), so a log that conflated the two could not tell
- * a client-side wedge from a broken exit. Both read as wedged to the UI.
+ * The in-tunnel egress probe's verdict: the exit answers the client and forwards nothing to the
+ * internet. Kept distinct from [PATH_HEALTH_DEGRADED_BOTH] because the goodput prober stays green
+ * on this class (the exit answers the tunnel gateway it echoes off), so a log that conflated the
+ * two could not tell a client-side wedge from a broken exit. Both read as wedged to the UI.
  */
 const val PATH_HEALTH_EGRESS_DEAD = 3

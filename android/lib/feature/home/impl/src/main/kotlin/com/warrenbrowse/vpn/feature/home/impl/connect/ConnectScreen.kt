@@ -1481,5 +1481,6 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.LAN_SHARING,
         FeatureIndicator.DNS_CONTENT_BLOCKERS,
         FeatureIndicator.CUSTOM_DNS,
+        FeatureIndicator.REDUCED_MTU,
         FeatureIndicator.CUSTOM_MTU -> WarrenTunnelSettingsNavKey
     }
