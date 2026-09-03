@@ -42,4 +42,40 @@ class CountryNamesTest {
         // caller still gets something to show rather than an empty string.
         assertTrue(countryDisplayName("ZZ", Locale.ENGLISH).isNotBlank())
     }
+
+    // ICU's lookup is called inside the picker's sort comparator and once per
+    // relay per keystroke, on the main thread, so the answer is kept per code
+    // and locale.
+
+    @Test
+    fun `a code is looked up once per locale and served from the memo after`() {
+        CountryNames.clear()
+
+        countryDisplayName("nl", Locale.ENGLISH)
+        countryDisplayName("nl", Locale.ENGLISH)
+        countryDisplayName("NL", Locale.ENGLISH)
+
+        assertEquals(1, CountryNames.size(), "one entry per code and locale")
+        assertEquals("Netherlands", countryDisplayName("nl", Locale.ENGLISH))
+    }
+
+    @Test
+    fun `the memo is keyed on the locale, so a language change is a fresh lookup`() {
+        CountryNames.clear()
+
+        countryDisplayName("de", Locale.ENGLISH)
+        countryDisplayName("de", Locale.FRENCH)
+
+        assertEquals(2, CountryNames.size())
+    }
+
+    @Test
+    fun `anything but a two letter code is never memoised`() {
+        CountryNames.clear()
+
+        countryDisplayName("Netherlands")
+        countryDisplayName("  ")
+
+        assertEquals(0, CountryNames.size())
+    }
 }

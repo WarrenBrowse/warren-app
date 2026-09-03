@@ -49,6 +49,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificatio
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.UpdateAvailableNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
 import com.warrenbrowse.vpn.receiver.AutoStartVpnBootCompletedReceiver
+import com.warrenbrowse.vpn.screen.outoftime.OutOfTimeGateViewModel
 import com.warrenbrowse.vpn.screen.privacy.PrivacyDisclaimerViewModel
 import com.warrenbrowse.vpn.screen.splash.SplashViewModel
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
@@ -174,6 +175,7 @@ val uiModule = module {
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { ReportProblemViewModel(get()) }
     viewModel { SplashViewModel(get(), get(), inject(), inject()) }
+    viewModel { OutOfTimeGateViewModel(get(), get()) }
     viewModel { NotificationSettingsViewModel(get()) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         viewModel { LanguageViewModel(get()) }

@@ -20,20 +20,18 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.scene.DialogSceneStrategy
@@ -45,7 +43,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import com.warrenbrowse.vpn.common.compose.LocalSharedTransitionScope
 import com.warrenbrowse.vpn.common.compose.accessibilityDataSensitive
 import com.warrenbrowse.vpn.core.LocalResultStore
@@ -74,10 +71,7 @@ import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenSupportEntries
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
-import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
-import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
@@ -95,6 +89,7 @@ import com.warrenbrowse.vpn.screen.navigation.privacyDisclaimerEntry
 import com.warrenbrowse.vpn.screen.navigation.reachedFromSplash
 import com.warrenbrowse.vpn.screen.navigation.splashEntry
 import com.warrenbrowse.vpn.screen.outoftime.OutOfTimeGateAction
+import com.warrenbrowse.vpn.screen.outoftime.OutOfTimeGateViewModel
 import com.warrenbrowse.vpn.screen.outoftime.outOfTimeGateAction
 import com.warrenbrowse.vpn.screen.outoftime.outOfTimeGateActive
 import com.warrenbrowse.vpn.screen.unsupportedversion.UnsupportedVersionBlocked
@@ -133,45 +128,20 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
     // version is no longer supported, replace the whole UI with the blocking
     // screen (the tunnel is left untouched).
     val appVersionInfoRepository = koinInject<AppVersionInfoRepository>()
-    val appVersionInfo = appVersionInfoRepository.versionInfo.collectAsState().value
+    val appVersionInfo by appVersionInfoRepository.versionInfo.collectAsStateWithLifecycle()
 
     // Out-of-time gate (desktop ExpiredAccountErrorView, iOS .outOfTime): when
     // a previously funded subscription has lapsed, or the exit refused the
     // account, replace the main UI with the full-screen renewal surface. Only
     // raised inside the main (Connect-rooted) flow: onboarding / login /
     // funding flows win over the gate, and it dismisses reactively the moment
-    // credit lands in the shared cached expiry.
-    val localSettings = koinInject<WarrenLocalSettingsRepository>()
+    // credit lands in the shared cached expiry. The verdict is one boolean
+    // from its view model, so the shell no longer recomposes on every tunnel
+    // edge or clock tick, only when the verdict changes.
     val productFlags = koinInject<WarrenProductFlags>()
-    val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
-    val cachedExpiry = localSettings.cachedSubscriptionExpiry.collectAsState().value
-    val connectedInfo = tunnelStateProvider.connectedInfo.collectAsState().value
-    val tunnelExpired = when (connectedInfo) {
-        is WarrenConnectedInfo.Blocking -> connectedInfo.expired
-        is WarrenConnectedInfo.Failed -> connectedInfo.expired
-        else -> false
-    }
-    var nowSecs by remember { mutableLongStateOf(System.currentTimeMillis() / 1000) }
-    LaunchedEffect(cachedExpiry) {
-        // Re-arm on every expiry change so the gate raises itself the moment
-        // the subscription lapses while the app is open (iOS timer parity);
-        // between boundaries a coarse tick is enough.
-        while (true) {
-            nowSecs = System.currentTimeMillis() / 1000
-            val untilExpirySecs = cachedExpiry - nowSecs
-            val tickSecs =
-                if (untilExpirySecs in 1..OUT_OF_TIME_TICK_SECS) untilExpirySecs
-                else OUT_OF_TIME_TICK_SECS
-            delay(tickSecs * 1_000)
-        }
-    }
+    val lapsed by koinViewModel<OutOfTimeGateViewModel>().lapsed.collectAsStateWithLifecycle()
     val inMainFlow = navigationState.backStack.any { it is ConnectNavKey }
-    val outOfTime = outOfTimeGateActive(
-        expiryUnixSecs = cachedExpiry,
-        nowSecs = nowSecs,
-        inMainFlow = inMainFlow,
-        tunnelExpired = tunnelExpired,
-    )
+    val outOfTime = outOfTimeGateActive(lapsed = lapsed, inMainFlow = inMainFlow)
     val outOfTimeInStack = navigationState.backStack.any { it is OutOfTimeNavKey }
     // Clearing pops the gate AND anything opened from it (Settings, the account
     // page): those were an escape from the interruption, so when the
@@ -197,7 +167,12 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         CheckNotificationPermission(serviceConnectionManager)
     }
 
-    val entryProvider = entryProvider {
+    // Remembered: the shell still recomposes on navigation and on the gate
+    // verdict, and rebuilding 25 entry registrations each time was pure
+    // allocation. Everything the entries capture is stable across the shell's
+    // life (the navigator and the product flags).
+    val entryProvider = remember(nav3, productFlags) {
+        entryProvider {
         autoConnectEntry(nav3)
         changelogEntry(nav3)
         homeEntry(nav3)
@@ -238,6 +213,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         warrenSupportEntries(nav3)
         splashEntry(nav3)
         splitTunnelingEntry(nav3)
+        }
     }
 
     val gate =
@@ -369,9 +345,6 @@ private fun AnimatedContentTransitionScope<Scene<NavKey2>>.popNavDisplayTransiti
             towards = AnimatedContentTransitionScope.SlideDirection.End,
             targetOffset = { (it * ENTER_TRANSITION_SLIDE_FACTOR).toInt() },
         ) + fadeOut(tween(TRANSITION_DEFAULT_DURATION_MS))
-
-// Coarse re-evaluation tick for the out-of-time gate between expiry boundaries.
-private const val OUT_OF_TIME_TICK_SECS = 60L
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

@@ -63,6 +63,51 @@ class LocationPickerRowsTest {
     // Search threshold
 
     @Test
+    fun `the row function lists the entry countries once each behind the automatic row`() {
+        val rows =
+            pickerRows(
+                PickerInputs(
+                    relays = listOf(relay("a", "nl", "Amsterdam"), relay("b", "nl", "Rotterdam"), relay("c", "de", "Berlin")),
+                    query = "",
+                    scope = PickerScope.Entry,
+                    entryCountry = "de",
+                    recentsEnabled = true,
+                    recentExitIds = emptyList(),
+                    customLists = emptyMap(),
+                    exitPin = ExitPin.Automatic,
+                    expanded = ExpandedKeys(emptySet(), emptySet()),
+                )
+            )
+
+        assertTrue(rows.first() is PickerRow.EntryAutomaticRow)
+        val countries = rows.filterIsInstance<PickerRow.EntryCountryRow>()
+        assertEquals(listOf("de", "nl"), countries.map { it.country })
+        assertTrue(countries.single { it.country == "de" }.isPinned)
+    }
+
+    @Test
+    fun `the row function keeps recents out of a search`() {
+        val relays = listOf(relay("a", "nl", "Amsterdam"), relay("c", "de", "Berlin"))
+        fun rowsFor(query: String) =
+            pickerRows(
+                PickerInputs(
+                    relays = relays,
+                    query = query,
+                    scope = PickerScope.Exit,
+                    entryCountry = null,
+                    recentsEnabled = true,
+                    recentExitIds = listOf("a"),
+                    customLists = emptyMap(),
+                    exitPin = ExitPin.Automatic,
+                    expanded = ExpandedKeys(emptySet(), emptySet()),
+                )
+            )
+
+        assertTrue(rowsFor("").any { it is PickerRow.RecentsHeader })
+        assertTrue(rowsFor("ber").none { it is PickerRow.RecentsHeader })
+    }
+
+    @Test
     fun `a one character query is not applied`() {
         assertEquals("", appliedQuery("f"))
         assertEquals("", appliedQuery("  f  "))

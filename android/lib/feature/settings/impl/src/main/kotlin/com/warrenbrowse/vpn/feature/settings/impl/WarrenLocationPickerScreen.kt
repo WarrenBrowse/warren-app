@@ -85,7 +85,9 @@ import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorL
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenListItem
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -141,7 +143,18 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val reconnectInvoker = koinInject<WarrenQuinnReconnectInvoker>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
-    val connectedInfo by tunnelStateProvider.connectedInfo.collectAsStateWithLifecycle()
+    // Only the in-flight bit of the tunnel state reaches this composition: a
+    // dial is already running, so every row is inert until it settles. The
+    // whole state used to be collected, and every Connecting, Connected or
+    // Disconnecting edge recomposed the list; the pick reads the live state
+    // at tap time instead.
+    val inFlight by
+        remember(tunnelStateProvider) {
+                tunnelStateProvider.connectedInfo.map { transitionInFlight(it) }.distinctUntilChanged()
+            }
+            .collectAsStateWithLifecycle(
+                initialValue = transitionInFlight(tunnelStateProvider.connectedInfo.value)
+            )
     val exitPin by settings.exitPin.collectAsStateWithLifecycle()
     val recentExitIds by settings.recentExitIds.collectAsStateWithLifecycle()
     val recentsEnabled by settings.recentsEnabled.collectAsStateWithLifecycle()
@@ -169,10 +182,6 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     // turning it off from another screen collapses the picker back to the exit.
     var pickerScope by rememberSaveable { mutableStateOf(PickerScope.Exit) }
     val activeScope = if (multiHopEnabled) pickerScope else PickerScope.Exit
-
-    // A dial is already running: a second pick would tear down the one in
-    // flight, so every row is inert until it settles.
-    val inFlight = transitionInFlight(connectedInfo)
 
     var expandedCountries by
         rememberSaveable(stateSaver = ExpandedKeySaver) { mutableStateOf(emptySet<String>()) }
@@ -213,7 +222,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     // back to whichever screen pushed the picker (Connect or port forwarding).
     val applyPin: (ExitPin) -> Unit = { pin ->
         settings.setExitPin(pin)
-        val followUp = pickFollowUp(connectedInfo)
+        val followUp = pickFollowUp(tunnelStateProvider.connectedInfo.value)
         if (followUp == PickFollowUp.Reconnect) reconnectInvoker.reconnect()
         if (followUp == PickFollowUp.Connect && connectOnPick) {
             // The caller owns the VPN-consent gate and the biometric host, so
@@ -227,40 +236,21 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     val applied = appliedQuery(query)
     val searching = applied.isNotEmpty()
 
-    val rows = if (activeScope == PickerScope.Entry) {
-        assignPositions(
-            buildEntryRows(
-                countries = entryCountriesOf(relays, applied),
-                entryCountry = entryCountry,
-                notSearching = !searching,
-            )
+    // The row list is a pure function of its inputs, computed when one of them
+    // changes and never on a recomposition caused by anything else.
+    val pickerInputs =
+        PickerInputs(
+            relays = relays,
+            query = applied,
+            scope = activeScope,
+            entryCountry = entryCountry,
+            recentsEnabled = recentsEnabled,
+            recentExitIds = recentExitIds,
+            customLists = customLists,
+            exitPin = exitPin,
+            expanded = ExpandedKeys(expandedCountries, expandedCities),
         )
-    } else {
-        val filtered = relays.filter { relayMatches(it, applied) }
-        val recentRelays = if (!searching && recentsEnabled) {
-            recentExitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
-        } else {
-            emptyList()
-        }
-        // country -> (city -> relays), both ordered by localized name.
-        val byCountry: Map<String, Map<String, List<WarrenRelaySummary>>> =
-            filtered
-                .sortedWith(compareBy({ countryDisplayName(it.country) }, { it.city }))
-                .groupBy { it.country }
-                .mapValues { (_, rs) -> rs.groupBy { it.city } }
-
-        assignPositions(
-            buildPickerRows(
-                query = applied,
-                recentRelays = recentRelays,
-                customLists = visibleCustomLists(customLists, relays, applied),
-                byCountry = byCountry,
-                exitPin = exitPin,
-                expandedCountries = expandedCountries,
-                expandedCities = expandedCities,
-            )
-        )
-    }
+    val rows = remember(pickerInputs) { pickerRows(pickerInputs) }
 
     val noSearchResult = searching &&
         rows.none { it is PickerRow.ExitRow || it is PickerRow.EntryCountryRow }

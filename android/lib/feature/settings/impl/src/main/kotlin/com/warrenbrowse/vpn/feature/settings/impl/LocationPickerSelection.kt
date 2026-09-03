@@ -291,6 +291,64 @@ internal fun assignPositions(rows: List<PickerRow>): List<PickerRow> {
     return out
 }
 
+/**
+ * Everything the row list is computed from, held by value so the composable
+ * recomputes the rows only when one of them changes, never on a recomposition
+ * caused by something else (a tunnel edge, a snackbar).
+ */
+internal data class PickerInputs(
+    val relays: List<WarrenRelaySummary>,
+    /** The applied query (see [appliedQuery]), empty when not searching. */
+    val query: String,
+    val scope: PickerScope,
+    val entryCountry: String?,
+    val recentsEnabled: Boolean,
+    val recentExitIds: List<String>,
+    val customLists: Map<String, List<String>>,
+    val exitPin: ExitPin,
+    val expanded: ExpandedKeys,
+)
+
+/** The picker's rows for [inputs], in render order. Pure: no composition state. */
+internal fun pickerRows(inputs: PickerInputs): List<PickerRow> =
+    with(inputs) {
+        val searching = query.isNotEmpty()
+        if (scope == PickerScope.Entry) {
+            assignPositions(
+                buildEntryRows(
+                    countries = entryCountriesOf(relays, query),
+                    entryCountry = entryCountry,
+                    notSearching = !searching,
+                )
+            )
+        } else {
+            val filtered = relays.filter { relayMatches(it, query) }
+            val recentRelays =
+                if (!searching && recentsEnabled) {
+                    recentExitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
+                } else {
+                    emptyList()
+                }
+            // country -> (city -> relays), both ordered by localized name.
+            val byCountry: Map<String, Map<String, List<WarrenRelaySummary>>> =
+                filtered
+                    .sortedWith(compareBy({ countryDisplayName(it.country) }, { it.city }))
+                    .groupBy { it.country }
+                    .mapValues { (_, rs) -> rs.groupBy { it.city } }
+            assignPositions(
+                buildPickerRows(
+                    query = query,
+                    recentRelays = recentRelays,
+                    customLists = visibleCustomLists(customLists, relays, query),
+                    byCountry = byCountry,
+                    exitPin = exitPin,
+                    expandedCountries = expanded.countries,
+                    expandedCities = expanded.cities,
+                )
+            )
+        }
+    }
+
 /** Distinct catalogue countries for the entry hop, ordered by localized name. */
 internal fun entryCountriesOf(relays: List<WarrenRelaySummary>, query: String): List<String> =
     relays
