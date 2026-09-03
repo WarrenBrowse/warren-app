@@ -72,6 +72,13 @@ class DesignParityTest {
     }
 
     @Test
+    fun `the country flag is the desktop round flag`() {
+        assertEquals(DesignTokens.CountryFlag.Size, dims.countryFlagSize)
+        assertEquals(DesignTokens.CountryFlag.BorderWidth, dims.thinBorderWidth)
+        assertEquals(DesignTokens.CountryFlag.BorderAlpha, Alpha20)
+    }
+
+    @Test
     fun `the dialog radius is the desktop radius12`() {
         assertEquals(DesignTokens.Radius.Radius12, dims.dialogCornerRadius)
     }

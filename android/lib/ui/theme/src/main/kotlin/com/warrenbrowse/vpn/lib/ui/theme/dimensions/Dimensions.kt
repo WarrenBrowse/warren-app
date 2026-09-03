@@ -50,6 +50,8 @@ data class Dimensions(
     val connectionStatusWellSize: Dp = 36.dp,
     val connectionStatusWellRadius: Dp = 11.dp,
     val connectionStatusIconSize: Dp = 18.dp,
+    // Desktop CurrentCountryFlag: a 22 px round flag with the white hairline.
+    val countryFlagSize: Dp = 22.dp,
     val deleteIconSize: Dp = 24.dp,
     val dialogIconHeight: Dp = 48.dp,
     val fabSpacing: Dp = 16.dp, // Copied from the private val FabSpacing in Scaffold.kt

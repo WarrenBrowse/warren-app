@@ -1291,25 +1291,6 @@ private fun ConnectionCardHeader(
     }
 }
 
-/**
- * Round country flag pinned to the right of the status row (desktop
- * CurrentCountryFlag). Rendered as the emoji flag of the ISO alpha-2 code so
- * no per-country assets are needed; hidden when the code is unknown.
- */
-@Composable
-private fun CountryFlag(countryCode: String?, modifier: Modifier = Modifier) {
-    val emoji = countryCode?.toFlagEmoji() ?: return
-    Text(text = emoji, fontSize = 22.sp, modifier = modifier)
-}
-
-private fun String.toFlagEmoji(): String? {
-    val code = trim().uppercase()
-    if (code.length != 2 || !code.all { it in 'A'..'Z' }) return null
-    val base = 0x1F1E6
-    return String(Character.toChars(base + (code[0] - 'A'))) +
-        String(Character.toChars(base + (code[1] - 'A')))
-}
-
 @Composable
 private fun GeoIpLocation?.asString(): String {
     val city = this?.city
