@@ -250,6 +250,12 @@ export async function sendForumReport(
         signal: abort.signal,
       },
     );
+    // The deadline bounds the UPLOAD, and the upload is over the moment the
+    // broker answers. Leaving it armed over the body read cut a created topic
+    // into an `http-201` failure whenever the answer started just under the
+    // deadline, and the reporter then filed the same report, and the same
+    // logs, a second time.
+    clearTimeout(timer);
     const bodyText = await response.text().catch(() => '');
     const result = forumReportResultForResponse(response.status, bodyText);
     log.info(
