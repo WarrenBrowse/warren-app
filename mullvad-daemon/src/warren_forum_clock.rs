@@ -22,9 +22,25 @@ use std::time::Duration;
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const TOTAL_TIMEOUT: Duration = Duration::from_secs(8);
 
-/// Past this the correction is worth a line: under it the two clocks agree
-/// well inside the broker's window and the read changed nothing.
-const NOTABLE_OFFSET_SECS: i64 = 30;
+/// The window the broker accepts a signature in, either side of its own
+/// clock. A device inside it needs no correction at all, so none is applied:
+/// the server gets to move the stamp only when the stamp would otherwise be
+/// refused.
+const BROKER_WINDOW_SECS: i64 = 60;
+
+/// How far the stamp may be moved FORWARD, at the answer's word.
+///
+/// The two directions are not the same risk. A stamp moved into the past is
+/// spent: a signature carrying an instant that has gone by is replayable only
+/// at an instant that has gone by. A stamp moved into the future is not: an
+/// answer claiming a `Date` months ahead mints signatures the broker can hold
+/// and present at the moment they become current, for a wallet whose owner
+/// was not acting then. So a backward correction is bounded only by the
+/// representable range, and a forward one by the largest drift this has ever
+/// had to cover: the incident that put the correction here was five minutes
+/// (`73e03e8bfb`), and past a quarter of an hour the device clock is the more
+/// credible of the two.
+const MAX_FORWARD_CORRECTION_SECS: i64 = 15 * 60;
 
 /// The endpoint the clock is read from: the broker's health answer is
 /// unauthenticated, carries nothing about the caller, and is served by the
@@ -43,16 +59,31 @@ pub(crate) fn offset_from_date(date_header: Option<&str>, device_now: u64) -> i6
         .unwrap_or(0)
 }
 
-/// The timestamp a forum request is signed at: the device clock shifted by
-/// the measured offset. A shift that would leave the representable range
-/// keeps the device stamp, so a broken clock degrades to the old behaviour
-/// instead of signing at an absurd instant.
+/// The timestamp a forum request is signed at: the device clock shifted by the
+/// part of the measured offset that is actually applied. A shift that would
+/// leave the representable range keeps the device stamp, so a broken clock
+/// degrades to the old behaviour instead of signing at an absurd instant.
 pub(crate) fn corrected_timestamp(device_now: u64, offset_secs: i64) -> u64 {
+    let applied = applicable_offset(offset_secs);
     i64::try_from(device_now)
         .ok()
-        .and_then(|now| now.checked_add(offset_secs))
+        .and_then(|now| now.checked_add(applied))
         .and_then(|corrected| u64::try_from(corrected).ok())
         .unwrap_or(device_now)
+}
+
+/// The part of the measured offset the stamp is actually moved by.
+///
+/// Zero in the two cases where the answer must not decide the instant a
+/// wallet signs at: a device already inside the broker's window (nothing to
+/// fix), and a `Date` further ahead than any drift this exists to cover (see
+/// [`MAX_FORWARD_CORRECTION_SECS`]).
+pub(crate) fn applicable_offset(offset_secs: i64) -> i64 {
+    if offset_secs.abs() * 2 <= BROKER_WINDOW_SECS || offset_secs > MAX_FORWARD_CORRECTION_SECS {
+        0
+    } else {
+        offset_secs
+    }
 }
 
 /// Reads the broker's clock once and returns the timestamp to sign at.
@@ -61,8 +92,14 @@ pub(crate) fn corrected_timestamp(device_now: u64, offset_secs: i64) -> u64 {
 pub(crate) async fn signing_timestamp(host: &str) -> u64 {
     let device_now = crate::warren_artifact_refresh::now_unix();
     let offset = read_offset(host, device_now).await;
-    if offset.abs() > NOTABLE_OFFSET_SECS {
-        log::info!("Forum clock: this machine is {offset} s off the broker, correcting the stamp");
+    match applicable_offset(offset) {
+        0 if offset > MAX_FORWARD_CORRECTION_SECS => log::info!(
+            "Forum clock: the broker answered {offset} s ahead, too far to stamp at; signing on this machine's clock"
+        ),
+        0 => (),
+        applied => log::info!(
+            "Forum clock: this machine is {applied} s off the broker, correcting the stamp"
+        ),
     }
     corrected_timestamp(device_now, offset)
 }
@@ -95,7 +132,7 @@ async fn read_offset(host: &str, device_now: u64) -> i64 {
 
 #[cfg(test)]
 mod tests {
-    use super::{corrected_timestamp, health_url, offset_from_date};
+    use super::{applicable_offset, corrected_timestamp, health_url, offset_from_date};
 
     /// 2023-11-14 22:13:20 UTC, the instant the vectors are pinned at.
     const SERVER_NOW: u64 = 1_700_000_000;
@@ -134,6 +171,42 @@ mod tests {
         // A clock at the epoch with a server an hour ahead must not wrap.
         assert_eq!(corrected_timestamp(10, -3_600), 10);
         assert_eq!(corrected_timestamp(u64::MAX, 1), u64::MAX);
+    }
+
+    /// The answer decides the instant a wallet signs at, so how far forward
+    /// it may push that instant is bounded: a `Date` months ahead would mint
+    /// signatures the broker can hold and present when they become current.
+    #[test]
+    fn a_broker_answering_from_the_future_does_not_move_the_stamp() {
+        let a_year = 365 * 24 * 60 * 60;
+        assert_eq!(applicable_offset(a_year), 0);
+        assert_eq!(corrected_timestamp(SERVER_NOW, a_year), SERVER_NOW);
+
+        assert_eq!(applicable_offset(3_600), 0);
+        assert_eq!(corrected_timestamp(SERVER_NOW, 3_600), SERVER_NOW);
+    }
+
+    /// The other direction is spent the moment it is signed: a stamp in the
+    /// past is replayable only in the past, so a device stuck years ahead is
+    /// still pulled back to the broker and can still file its report.
+    #[test]
+    fn a_device_running_ahead_is_still_pulled_back_however_far() {
+        let a_year = 365 * 24 * 60 * 60;
+        assert_eq!(applicable_offset(-a_year), -a_year);
+        assert_eq!(
+            corrected_timestamp(SERVER_NOW + u64::try_from(a_year).unwrap(), -a_year),
+            SERVER_NOW
+        );
+    }
+
+    /// The broker accepts a stamp within a minute of its own, so a device
+    /// already inside that window is left exactly as it is: the correction
+    /// exists for a stamp that would otherwise be refused, and nothing else.
+    #[test]
+    fn a_device_inside_the_brokers_window_is_left_alone() {
+        assert_eq!(applicable_offset(20), 0);
+        assert_eq!(applicable_offset(-30), 0);
+        assert_eq!(corrected_timestamp(SERVER_NOW, 20), SERVER_NOW);
     }
 
     #[test]
