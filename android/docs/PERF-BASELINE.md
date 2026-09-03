@@ -9,6 +9,10 @@ what the review proposed and is **proposed, not yet a gate**: no CI job fails
 on any of them, and the first fix lots (H1, H2/H5, H3, H4) are measured
 against this table, before and after.
 
+The **P2** columns are the second run, after the first fix lot (H1 and
+H2/H5: `cc5fc6a6e8` to `b2fb915395`); the section "P2 re-measurement" at the
+end says what changed, how it was measured and what the numbers do not say.
+
 ## Machine
 
 | item | value |
@@ -74,25 +78,25 @@ perfetto`).
 
 ### S1 cold start (`am force-stop`, then `am start -W`; page cache not dropped, no root)
 
-| metric | median | worst | runs | proposed threshold (AVD) |
-|---|---|---|---|---|
-| `TotalTime` (TTID) | 830 ms | 1247 ms | 1247, 830, 750 | <= 900 ms |
-| `Fully drawn` (TTFD, new `ReportDrawn` on the Connect screen) | 830 ms | 1247 ms | same as TTID on every run | none proposed; equal to TTID today because the splash keeps the window until the Connect screen's first frame, so that frame is both |
+| metric | median | worst | runs | P2 median | P2 worst | P2 runs | proposed threshold (AVD) |
+|---|---|---|---|---|---|---|---|
+| `TotalTime` (TTID) | 830 ms | 1247 ms | 1247, 830, 750 | 589 ms | 908 ms | 516, 589, 908 | <= 900 ms |
+| `Fully drawn` (TTFD, new `ReportDrawn` on the Connect screen) | 830 ms | 1247 ms | same as TTID on every run | 589 ms | 908 ms | same as TTID | none proposed; equal to TTID today because the splash keeps the window until the Connect screen's first frame, so that frame is both |
 | main-thread slice > 50 ms other than `bindApplication` | not measured (no trace of a cold start yet) | | | none |
 | StrictMode disk violations on main | not measurable (release build) | | | zero |
 
 ### S2 connect, then disconnect (from the home screen, Amsterdam pinned)
 
-| metric | median | worst | runs | proposed threshold |
-|---|---|---|---|---|
-| tap to `dispatched Quinn connect intent` (config rebuild: `/v1/exits` + directory fetch, Keystore read) | 226 ms | 612 ms | 277, 171, 188, 226, 206, 409, 185, 217, 244, 612, 365 | none (part of the 2.0 s budget) |
-| tap to native `multi-hop connect (` (service start, config parse, `establish`, `connectTunnel`) | 482 ms | 874 ms | 482, 256, 405, 490, 463, 672, 447, 535, 453, 874, 672 | none |
-| tap to `multi-hop tunnel up` (engine has an inner IP) | 867 ms | 1411 ms | 967, 867, 877, 854, 817, 1326, 853, 819, 809, 1411, 1329 | <= 2.0 s tap to Connected (UI lands <= 250 ms later, poll granularity, H3) |
-| dispatch to tunnel up | 689 ms | 964 ms | 690, 696, 689, 628, 611, 917, 668, 602, 565, 799, 964 | none |
-| disconnect tap to `multi-hop tunnel cancelled by Kotlin` | 21 ms | 35 ms | 14, 16, 27, 35, 20, 16, 31, 21, 27, 1, 24 | none |
-| disconnect tap to the Connect button back on screen (`px-poll`, last six runs) | 1336 ms | 1623 ms | 1326, 1623, 1291, 1316, 1345, 1506 | none (the card stays on `Disconnecting` until the adapter has seen the session close) |
-| tap to first `Connecting` frame | not measured (needs a frame-level marker) | | | <= 1 frame |
-| main-thread slice > 16 ms in the 2 s after the tap | see the Perfetto section: the longest non-drawing main-thread slices are `serviceUnbind` 23 ms, `serviceStart` (connect intent) 14 ms, `binder transaction` 12 ms | | | none > 16 ms |
+| metric | median | worst | runs | P2 median | P2 worst | P2 runs | proposed threshold |
+|---|---|---|---|---|---|---|---|
+| tap to `dispatched Quinn connect intent` (config rebuild: `/v1/exits` + directory fetch, Keystore read; P2: no fetch, the catalogue and the directory are served from the hourly cache) | 226 ms | 612 ms | 277, 171, 188, 226, 206, 409, 185, 217, 244, 612, 365 | 10 ms | 272 ms | 272, 6, 86, 5, 10 | none (part of the 2.0 s budget) |
+| tap to native `multi-hop connect (` (service start, config parse, `establish`, `connectTunnel`) | 482 ms | 874 ms | 482, 256, 405, 490, 463, 672, 447, 535, 453, 874, 672 | 467 ms | 1032 ms | 1032, 80, 467, 61, 499 | none |
+| tap to `multi-hop tunnel up` (engine has an inner IP) | 867 ms | 1411 ms | 967, 867, 877, 854, 817, 1326, 853, 819, 809, 1411, 1329 | 1084 ms | 1504 ms | 1504, 461, 1084, 704, 1121 | <= 2.0 s tap to Connected (UI lands <= 250 ms later, poll granularity, H3) |
+| dispatch to tunnel up | 689 ms | 964 ms | 690, 696, 689, 628, 611, 917, 668, 602, 565, 799, 964 | 998 ms | 1232 ms | 1232, 455, 998, 699, 1111 | none |
+| disconnect tap to `multi-hop tunnel cancelled by Kotlin` | 21 ms | 35 ms | 14, 16, 27, 35, 20, 16, 31, 21, 27, 1, 24 | 36 ms | 75 ms | 28, 36, 75, 28, 55 | none |
+| disconnect tap to the Connect button back on screen (`px-poll`, last six runs) | 1336 ms | 1623 ms | 1326, 1623, 1291, 1316, 1345, 1506 | 2367 ms | 5130 ms | 5130, 2508, 2367, 1946, 2363 | none (the card stays on `Disconnecting` until the adapter has seen the session close) |
+| tap to first `Connecting` frame | not measured (needs a frame-level marker) | | | | | | <= 1 frame |
+| main-thread slice > 16 ms in the 2 s after the tap | see the Perfetto section: the longest non-drawing main-thread slices are `serviceUnbind` 23 ms, `serviceStart` (connect intent) 14 ms, `binder transaction` 12 ms | | | P2 trace: `Recomposer:recompose` 55 ms, bitmap decode 33 ms (H4), `serviceUnbind` 30 ms, `binder transaction` 28 ms, `serviceStart` 11 ms; the adapter's own Binder work (`establish`) now shows on `DefaultDispatch` (9 transactions, longest 27 ms) and no longer on main | | | none > 16 ms |
 
 Eleven runs: the first five in one series (one under Perfetto), six more
 later in the session once the disconnect wait had moved to pixel polling;
@@ -124,15 +128,16 @@ per frame for 6 s) is the same.
 
 ### S4 exit switch while connected (picker, tap another city; the picker pops on the pick)
 
-| metric | median | worst | runs | proposed threshold |
-|---|---|---|---|---|
-| pick tap to `dispatched reconnect intent` | 0 ms (inside the tap command) | | -2, -3, -2, -2 | |
-| pick tap to old session torn down (`cancelled by Kotlin`; the config rebuild's two fetches come first) | 452 ms | 25,172 ms | 25172, 411, 410, 492 | |
-| pick tap to native `multi-hop connect (` (400 ms settle + `awaitTunnelClosed`) | 1226 ms | 25,810 ms | 25810, 991, 1352, 1100 | |
-| pick tap to `multi-hop tunnel up` | 1798 ms | 26,339 ms | 26339, 1656, 1940, 1511 | <= 2.5 s (<= 1.5 s after the cache and settle fixes) |
-| janky frames during the switch (picker pop + card + scenery crossfade) | 95.8 % | 96.3 % | 95.6, 94.6, 96.3, 96.0 % | |
-| frame time P50 / P99 | 150 / 575 ms | 150 / 600 ms | | no main-thread slice > 16 ms |
-| a `Disconnected` frame visible between the pick and the new `Connected` | not observed in the logs (the reconnect bridge held); not verified frame by frame | | | none visible |
+| metric | median | worst | runs | P2 median | P2 worst | P2 runs | proposed threshold |
+|---|---|---|---|---|---|---|---|
+| pick tap to `dispatched reconnect intent` | 0 ms (inside the tap command) | | -2, -3, -2, -2 | 0 ms | | -5, -7, -5, -3 | |
+| pick tap to old session torn down (`cancelled by Kotlin`; the config rebuild's two fetches come first; P2: no fetch) | 452 ms | 25,172 ms | 25172, 411, 410, 492 | 25 ms | 169 ms | 15, 35, 169, 14 | |
+| pick tap to native `multi-hop connect (` (400 ms settle + `awaitTunnelClosed`) | 1226 ms | 25,810 ms | 25810, 991, 1352, 1100 | 505 ms | 692 ms | 510, 495, 692, 499 | |
+| pick tap to `multi-hop tunnel up` | 1798 ms | 26,339 ms | 26339, 1656, 1940, 1511 | 1262 ms | 1551 ms | 1551, 1001, 1522, 802 | <= 2.5 s (<= 1.5 s after the cache and settle fixes) |
+| HTTPS requests issued inside the switch window (h2 request headers sent, from the Rust debug log) | 3 (picker refresh, `/v1/exits`, directory) | | | 0 to 1 | | the remaining one is the `/v1/subscription` refresh the Connect screen issues on re-entry, not the switch | 0 |
+| janky frames during the switch (picker pop + card + scenery crossfade) | 95.8 % | 96.3 % | 95.6, 94.6, 96.3, 96.0 % | 100 % | 100 % | see the host-load caveat | |
+| frame time P50 / P99 | 150 / 575 ms | 150 / 600 ms | | 300 / 875 ms | 350 / 1300 ms | see the host-load caveat | no main-thread slice > 16 ms |
+| a `Disconnected` frame visible between the pick and the new `Connected` | not observed in the logs (the reconnect bridge held); not verified frame by frame | | | same | | | none visible |
 
 Run 1 is the outlier the review predicted at H5 (a): the `/v1/exits` fetch
 through the tunnel received an h2 `GOAWAY` right after the handshake, three
@@ -142,6 +147,19 @@ and re-dialled the **old** exit while the picker already showed the new
 one. The user saw a 26 s switch that landed on the exit they left, with no
 error. Runs 2 to 4 are the normal path: 1.5 to 1.9 s, of which 0.4 s is the
 network round trips and about 0.6 s the fixed settle plus close wait.
+
+The P2 lot reproduced run 1 on its first switch too, and the Rust debug log
+named the cause: `hyper_util::client::legacy::pool: reuse idle connection`.
+The shared reqwest client kept the h2 connection it had opened to the API
+**before** the TUN came up; once the VpnService routes were installed that
+TCP flow left through the exit under another source address, the server
+never answered it, and each of the two requests that reused it died in the
+transport's 15 s timeout (the `GOAWAY` is hyper closing the dead connection
+afterwards). It is not a network event: it happens on the first API request
+after every TUN transition, deterministically. `64b0c40522` retires the
+pool at `connectTunnel`, `disconnectTunnel` and `notifyNetworkChanged`, and
+`058250de16` removes the two requests from the switch altogether, so the
+four P2 switches show neither the stall nor the fetches.
 
 ### S5 picker typing ("ne", "net", "neth", four deletes; 6 relays in the catalogue)
 
@@ -249,6 +267,70 @@ a new one takes a minute to record. Summary of the 40 s window (connect,
 
 The `linux.perf` callstack sampling of the review's config was left out:
 `perf_event_open` is not available to the shell on this image.
+
+## P2 re-measurement (H1 and H2/H5, 2026-09-03)
+
+Build `b2fb915395`, the same `betaBenchmarkRelease` variant, arm64 cargo
+target and debug signing as the baseline, installed over the logged-in app
+(`versionName 1.1.4-dev-b2fb91`). Commits under measurement:
+
+- `cc5fc6a6e8` every tunnel transition (`establish`, `connectTunnel`, the
+  teardown) runs on the adapter's own dispatcher; `onRevoke` waits on it with
+  a 3 s bound, `onDestroy` does not wait;
+- `30a5e6ec59` StrictMode watches the VPN service (the exemption is gone,
+  with the dead split-tunnelling migration and the redundant library load
+  that were its last two violations);
+- `058250de16` the relay catalogue and the multi-hop directory follow the
+  daemon's cadence (refetched once an hour, served from the snapshot in
+  between: `RelayCatalog`, `warren-jni/src/directory_cache.rs`);
+- `64b0c40522` one reqwest stack for every API call, retired at each TUN
+  transition and handover (`warren-jni/src/api_transport.rs`);
+- `b0d6e5f3e6` one manifest fetch for both the support gate and the upgrade
+  prompt; `b2fb915395` the forum TLS configurations built once.
+
+Method as above, S1 x3, S2 x5, S4 x4 (Helsinki, Amsterdam, Helsinki,
+Amsterdam), one Perfetto trace of an S2 run, plus the request count of the
+S4 window read from the Rust debug log (`send frame=Headers` lines against
+`api.beta.warrenbrowse.com`). Measured 01:38 to 01:50 UTC.
+
+**Host-load caveat.** The Mac ran other agents' Dart and Git tooling during
+these runs: load average 4 at the start of the series, 16 at its end (the
+baseline ran on an idle host). The S6 navigation control, which no commit in
+this lot touches, rendered 37 frames at P50 93 ms against 49 frames at
+P50 42 ms in the baseline, so every frame-time and every UI-polled figure
+here (janky percentages, percentiles, the disconnect `px-poll`) is about half
+as good as the same build would measure on an idle host and must not be read
+as a regression or an improvement. The Perfetto trace agrees: the main thread
+spent 0.35 s runnable-but-not-scheduled over the 34 s window against 0.58 s
+running. The engine-marker timings (device clock, log to log) are affected
+far less, and the two that this lot changed moved by an order of magnitude:
+
+- tap to dispatch (S2) 226 ms to 10 ms: the config build makes no request;
+- pick to old session down (S4) 452 ms to 25 ms, pick to tunnel up 1798 ms to
+  1262 ms: the switch makes no request and no longer hits the dead pooled
+  connection (no 26 s run in eight P2 switches, two lots);
+- requests inside the switch window 3 to 0 (one run shows 1, the Connect
+  screen's `/v1/subscription` refresh on re-entry, which is `ConnectScreen.kt`
+  and not this lot);
+- cold start TTID 830 ms to 589 ms median, with the load caveat above (the
+  lot touched nothing on the startup path; the redundant `loadLibrary` and
+  the service's migration only ran when the service started).
+
+What the trace says about H1: the adapter's Binder work now appears on
+`DefaultDispatch` (9 `binder transaction` slices, the longest 27 ms, which is
+`establish()` creating the interface in `system_server`), and the
+`serviceStart` slice of the connect intent on main is 11 ms of framework
+bookkeeping. The main-thread slices still above 16 ms are the framework's
+`serviceUnbind` (30 ms) and its `startForeground` transactions (28 ms),
+Compose recomposition (55 ms) and the first scenery bitmap decode (33 ms,
+H4): none is the tunnel transition, and the last two are L11d's.
+
+StrictMode, on the debug build of the same commits, lists no violation whose
+stack passes through `app.service` across a connect, a disconnect, two
+switches and a network cut; the remaining violations are the
+`SharedPreferences` reads of `WarrenLocalSettingsRepository`,
+`AndroidKeystoreWalletRepository` and `SharedPreferencesForumIdentityRepository`
+at construction on the main thread (H7, L11d).
 
 ## What this AVD cannot measure
 
