@@ -332,6 +332,110 @@ switches and a network cut; the remaining violations are the
 `AndroidKeystoreWalletRepository` and `SharedPreferencesForumIdentityRepository`
 at construction on the main thread (H7, L11d).
 
+## P3 re-measurement (the second lot and the review fixes, 2026-09-03)
+
+Build `7659958614`, the same `betaBenchmarkRelease` variant, arm64 cargo
+target and debug re-signing as P1 and P2, installed over the logged-in app
+(`versionName 1.1.4-dev-765995`). Commits under measurement, on top of P2:
+
+- `00ca7f26ed` the status watch wakes from the engine instead of polling four
+  times a second (H3);
+- `ab2da39450`, `3928e5db50`, `73e422be2e` the blur runs on the continuation
+  band only, the blur effects are reused across frames, the masters are
+  decoded off the main thread, the always-drawn ones are pinned outside the
+  landscape LRU and re-warmed on every foreground, and the animated wash is
+  read in the draw lambda (H4);
+- `c24dba7128`, `c5f550b448` the native runtime starts on its own thread, the
+  preference repositories are constructed off the main thread, the picker
+  rows are computed outside composition (H7);
+- `f51fb46828` the baseline profile generated on Warren's flow (H8), which
+  this run does not yet exercise (below);
+- the review fixes of the same day: the drop failover resolved without a
+  fetch, the forum digest poll gated, the last-reconnect tick stopped off
+  screen, the forum header slot immutable.
+
+Method as above: S1 x3, S2 x3 (whose frame statistics are S3), S7 x2, in that
+order, from the scripts in `android/scripts/perf/`. Measured 07:47 to 07:55
+UTC. **Host-load caveat**, as in P2: load average 8.7 at the start of the
+series and 5.5 at its end (the P1 baseline ran on an idle host), so the
+frame-time figures and the UI-polled disconnect time are not comparable with
+P1 on their own; the engine-marker timings and the S7 process counters are
+affected far less.
+
+### S1 cold start
+
+| metric | P3 median | P3 worst | P3 runs | P2 median | P1 median |
+|---|---|---|---|---|---|
+| `TotalTime` (TTID) | 638 ms | 648 ms | 638, 521, 648 | 589 ms | 830 ms |
+| `Fully drawn` (TTFD) | 638 ms | 648 ms | same as TTID on every run | 589 ms | 830 ms |
+
+The baseline profile ships in this APK but does not shape these numbers:
+`adb install` hands it to ProfileInstaller, which writes it at first run, and
+the AVD compiles it at the next background dexopt, not inside this window.
+Its effect on S1 needs a run after a `cmd package compile -m speed-profile`
+(or a night on a phone), which this session did not take.
+
+### S2 connect, then disconnect
+
+| metric | P3 median | P3 worst | P3 runs | P2 median | P1 median |
+|---|---|---|---|---|---|
+| tap to `dispatched Quinn connect intent` | 33 ms | 186 ms | 186, 33, 21 | 10 ms | 226 ms |
+| tap to native `multi-hop connect (` | 255 ms | 724 ms | 724, 255, 223 | 467 ms | 482 ms |
+| tap to `multi-hop tunnel up` | 588 ms | 1174 ms | 1174, 564, 588 | 1084 ms | 867 ms |
+| dispatch to tunnel up | 567 ms | 988 ms | 988, 531, 567 | 998 ms | 689 ms |
+| disconnect tap to `multi-hop tunnel cancelled by Kotlin` | 39 ms | 44 ms | 16, 39, 44 | 36 ms | 21 ms |
+| disconnect tap to the Connect button back on screen (`px-poll`) | 2993 ms | 3437 ms | 1515, 2993, 3437 | 2367 ms | 1336 ms |
+
+The first run of the series carries the process's cold paths (186 ms to the
+dispatch, 724 ms to the native connect); the two warm runs sit at 21 to 33 ms
+and 223 to 255 ms, under everything P1 measured. The tunnel-up time is the
+network's, and the beta exits answered faster than during P2. The disconnect
+UI time is the loaded host's (P2 carries the same caveat).
+
+### S3 connecting animation (frames of the 8 s after the connect tap, from the S2 runs)
+
+| metric | P3 median | P3 worst | P3 runs | P2 median | P1 median |
+|---|---|---|---|---|---|
+| frames rendered | 75 | 109 | 109, 72, 75 | 55.5 | 106 |
+| janky frames | 98.7 % | 100 % | 97.3, 100, 98.7 % | 98.2 % | 99.0 % |
+| frame time P50 | 150 ms | 150 ms | 125, 150, 150 | 275 ms | 150 ms |
+| frame time P90 | 350 ms | 500 ms | 300, 500, 350 | 525 ms | 300 ms |
+| frame time P95 | 550 ms | 700 ms | 450, 700, 550 | 800 ms | 450 ms |
+| frame time P99 | 1100 ms | 1100 ms | 550, 1100, 1100 | 950 ms | 700 ms |
+
+What this AVD says about H4 is bounded by the section below: the emulated GL
+pipeline puts every blur frame above 100 ms whatever the layer count, so the
+band cut (one canvas blur and one band blur per frame instead of three
+full-screen passes) cannot show as a frame time here, and the loaded host
+puts P3 between P1 and P2 on every percentile. The decode moved off the main
+thread is visible elsewhere: the P2 trace's 33 ms main-thread bitmap decode
+has no equivalent, since the first connecting frame now finds the exit's
+landscape already decoded (the P3 lot pins that in `SceneryBitmapCacheTest`,
+not in a frame count). A phone with a real GPU is where S3 must be re-read.
+
+### S7 idle, 60 s, connected
+
+| metric | P3 runs | P1 median | P1 runs |
+|---|---|---|---|
+| process CPU, share of one core | 0.10 %, 0.07 % | 0.13 % | 0.13, 0.12, 0.13 |
+| context switches per second, all threads | 0.6 /s, 14.7 /s | 25.6 /s | 26.3, 22.7, 25.6 |
+| voluntary switches per second | 2.8 /s, 14.2 /s | 24.8 /s | 25.4, 22.3, 24.8 |
+| `WarrenJni` logcat lines per minute | 73, 117 | 59 | 59, 56, 88 |
+| threads | 45, 45 | 57 | |
+| PSS after the window | 82.1 MB, 81.8 MB | 91.4 MB | 92.2, 91.4, 91.4 |
+
+The four-per-second status poll is gone from the idle process: one window
+ran at 0.6 context switches a second, the other at 14.7, and the two differ
+by more than the whole P1 figure. The counters cannot say what woke the
+second window (the engine's own timers, an egress probe, the forum digest
+poll that runs once a minute while the screen is on, the `quinn` debug lines
+the release build still writes, which are the higher `WarrenJni` count), so
+the H3 claim stays what the section below says it is: settled only by a
+physical device with Battery Historian. Twelve fewer threads and about 9 MB
+less PSS are consistent with the scenery cache holding two landscapes beside
+the three pinned masters instead of five arbitrary ones, and with the native
+runtime's threads, but neither is isolated here.
+
 ## What this AVD cannot measure
 
 - **Battery and wakeups as a phone sees them (H3).** No Battery Historian, no
