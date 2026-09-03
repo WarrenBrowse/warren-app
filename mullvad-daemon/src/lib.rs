@@ -3624,17 +3624,12 @@ impl Daemon {
         tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         sid: String,
     ) {
-        let result = self.warren_identity.has_user_identity().then(|| {
-            let body = forum_login_body(&sid);
-            let headers = self.warren_identity.signer().sign_request(
-                "POST",
-                "/v1/forum/login",
-                body.as_bytes(),
-            );
-            (headers, body)
-        });
-        log::debug!("on_sign_forum_login: signed={}", result.is_some());
-        Self::oneshot_send(tx, result, "sign_forum_login");
+        self.sign_forum_request(
+            tx,
+            "/v1/forum/login",
+            forum_login_body(&sid),
+            "sign_forum_login",
+        );
     }
 
     /// Signs the community-forum notification read (doc 55). The body is
@@ -3647,17 +3642,12 @@ impl Daemon {
         &self,
         tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
     ) {
-        let result = self.warren_identity.has_user_identity().then(|| {
-            let body = forum_notifications_body();
-            let headers = self.warren_identity.signer().sign_request(
-                "POST",
-                "/v1/forum/notifications",
-                body.as_bytes(),
-            );
-            (headers, body)
-        });
-        log::debug!("on_sign_forum_notifications: signed={}", result.is_some());
-        Self::oneshot_send(tx, result, "sign_forum_notifications");
+        self.sign_forum_request(
+            tx,
+            "/v1/forum/notifications",
+            forum_notifications_body(),
+            "sign_forum_notifications",
+        );
     }
 
     /// Signs marking the caller's own forum notification list seen (doc 55).
@@ -3669,20 +3659,12 @@ impl Daemon {
         &self,
         tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
     ) {
-        let result = self.warren_identity.has_user_identity().then(|| {
-            let body = forum_notifications_body();
-            let headers = self.warren_identity.signer().sign_request(
-                "POST",
-                "/v1/forum/notifications/seen",
-                body.as_bytes(),
-            );
-            (headers, body)
-        });
-        log::debug!(
-            "on_sign_forum_notifications_seen: signed={}",
-            result.is_some()
+        self.sign_forum_request(
+            tx,
+            "/v1/forum/notifications/seen",
+            forum_notifications_body(),
+            "sign_forum_notifications_seen",
         );
-        Self::oneshot_send(tx, result, "sign_forum_notifications_seen");
     }
 
     /// Signs the community-forum attach-logs request for `sid` (doc 55).
@@ -3702,17 +3684,49 @@ impl Daemon {
         topic_id: u64,
         log_gz: Vec<u8>,
     ) {
-        let result = self.warren_identity.has_user_identity().then(|| {
-            let body = forum_attach_body(&sid, topic_id, &log_gz);
-            let headers = self.warren_identity.signer().sign_request(
-                "POST",
-                "/v1/forum/attach-logs",
-                body.as_bytes(),
-            );
-            (headers, body)
+        self.sign_forum_request(
+            tx,
+            "/v1/forum/attach-logs",
+            forum_attach_body(&sid, topic_id, &log_gz),
+            "sign_forum_attach_logs",
+        );
+    }
+
+    /// The one place a community-forum request is signed: reads the broker's
+    /// clock, stamps the signature with it, and hands back the headers with
+    /// the exact bytes the GUI POSTs. Replies `None` when no identity is
+    /// bootstrapped, before anything is read or signed.
+    ///
+    /// The correction is what makes these flows work on a machine whose clock
+    /// has never synchronised: the broker refuses a signature more than a
+    /// minute from its own, and every one of these refusals is terminal for
+    /// the flow that raised it. It lives here rather than in each handler so
+    /// a later flow cannot be added without it.
+    ///
+    /// **No-log policy**: the pubkey, the signature and the body are never
+    /// logged, only whether it signed.
+    fn sign_forum_request(
+        &self,
+        tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
+        path: &'static str,
+        body: String,
+        flow: &'static str,
+    ) {
+        if !self.warren_identity.has_user_identity() {
+            log::debug!("{flow}: not signed (no identity)");
+            Self::oneshot_send(tx, None, flow);
+            return;
+        }
+        let signer = self.warren_identity.signer();
+        tokio::spawn(async move {
+            let timestamp =
+                warren_forum_clock::signing_timestamp(warren_forum::connect_host()).await;
+            let signed = signed_forum_request(&signer, path, body, timestamp);
+            log::debug!("{flow}: signed");
+            if tx.send(Some(signed)).is_err() {
+                log::warn!("Unable to send {flow} to the daemon command sender");
+            }
         });
-        log::debug!("on_sign_forum_attach_logs: signed={}", result.is_some());
-        Self::oneshot_send(tx, result, "sign_forum_attach_logs");
     }
 
     /// Signs the community-forum in-app report (doc 55). Builds the
@@ -6052,6 +6066,19 @@ fn forum_report_body(
     String::from_utf8(body).map_err(|_| warren_forum::ForumRequestError::Invalid)
 }
 
+/// Signs `body` for `path` at `timestamp` with the daemon's Warren identity
+/// key, returning the header values and the bytes back, so the caller cannot
+/// send anything but what was signed.
+fn signed_forum_request(
+    signer: &mullvad_api::warren_auth::WarrenAuthSigner,
+    path: &str,
+    body: String,
+    timestamp: u64,
+) -> (mullvad_api::warren_auth::WarrenAuthHeaders, String) {
+    let headers = signer.sign_request_with_timestamp("POST", path, body.as_bytes(), timestamp);
+    (headers, body)
+}
+
 /// Signs the canonical in-app report body at `timestamp` with the daemon's
 /// Warren identity key, returning the header values and the exact bytes the
 /// GUI POSTs. Kept out of the command handler so the corrected stamp is
@@ -6258,6 +6285,34 @@ mod forum_report_tests {
         // broker exactly as it was built here.
         assert_eq!(body, r#"{"area":"other"}"#);
         assert_eq!(headers.signature_hex.len(), 128);
+    }
+
+    #[test]
+    fn every_forum_flow_signs_at_the_corrected_stamp_and_for_its_own_path() {
+        // The clock correction belongs to all four wallet-signed forum flows,
+        // not only the report: the broker refuses any of them on a stamp more
+        // than a minute out, and a login refused that way is terminal, with a
+        // notice the person cannot act on. Each still signs for its own path,
+        // so no signature is interchangeable with another.
+        const CORRECTED: u64 = 1_700_000_000;
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[11u8; 32]));
+        let paths = [
+            "/v1/forum/login",
+            "/v1/forum/notifications",
+            "/v1/forum/notifications/seen",
+            "/v1/forum/attach-logs",
+        ];
+        let mut signatures = std::collections::HashSet::new();
+        for path in paths {
+            let (headers, body) =
+                super::signed_forum_request(&signer, path, "{}".to_owned(), CORRECTED);
+            assert_eq!(headers.timestamp, CORRECTED, "{path}");
+            assert_eq!(body, "{}", "{path}: the signed bytes are handed back");
+            assert!(
+                signatures.insert(headers.signature_hex),
+                "{path}: a signature must not be replayable on another path"
+            );
+        }
     }
 
     #[test]
