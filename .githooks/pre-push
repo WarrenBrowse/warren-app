@@ -29,9 +29,11 @@ scope_all=0
 # Collect the files across every non-deleting ref update. A new branch has an
 # all-zero remote sha, so diff it against the fetched main instead. If a range
 # cannot be resolved, fall back to checking everything.
+push_sha=""
 while read -r _local_ref local_sha _remote_ref remote_sha; do
   [ -z "${local_sha:-}" ] && continue
   [ "$local_sha" = "$zero" ] && continue # deleting a remote ref: nothing to lint
+  push_sha="$local_sha"
   if [ "$remote_sha" = "$zero" ]; then
     base=$(git merge-base "$local_sha" origin/main 2>/dev/null || true)
     [ -z "$base" ] && { scope_all=1; break; }
@@ -62,17 +64,55 @@ fi
 
 fail=0
 
-# Both gates below read the WORKING TREE, while a push ships COMMITS. An
-# uncommitted edit under the path a gate covers (the next lot in progress, or a
-# second agent sharing this checkout) therefore makes the gate measure code that
-# is not being pushed: on 2026-09-03 a half-written component nobody had
-# committed added a translator string, and the pot gate blocked six unrelated
-# commits over it. A dirty path means the gate cannot conclude anything about
-# the pushed range, so it is skipped with a warning, like every other case this
-# hook cannot measure.
-tree_dirty() {
-  ! git diff --quiet HEAD -- "$@" ||
-    [ -n "$(git ls-files --others --exclude-standard -- "$@")" ]
+# Both gates read the code being PUSHED, never the working tree. Reading the
+# tree was wrong in both directions: an uncommitted edit under a gated path
+# (the next lot in progress, or a second agent sharing this checkout) made the
+# gate measure code nobody was pushing, and on 2026-09-03 a half-written
+# component blocked six unrelated commits over a translator string; skipping
+# the gate whenever anything was uncommitted then turned both gates off in the
+# normal state of a working checkout, which is how a red main gets pushed.
+#
+# So the pushed commit is checked out into a throwaway worktree and the two
+# commands run there. The worktree lives beside a symlink farm of the sibling
+# repos, because this repo's crates reach them by relative path (`../warrenguard`
+# and friends) and `cargo fmt` resolves the workspace before it formats
+# anything. It is removed on the way out, including on a failure or an
+# interrupt, and never inside the workspace root.
+prepush_worktree=""
+prepush_root=""
+
+cleanup_worktree() {
+  [ -n "$prepush_worktree" ] || return 0
+  git worktree remove --force "$prepush_worktree" >/dev/null 2>&1 || true
+  git worktree prune >/dev/null 2>&1 || true
+  [ -n "$prepush_root" ] && rm -rf "$prepush_root"
+  prepush_worktree=""
+  prepush_root=""
+}
+trap cleanup_worktree EXIT INT TERM
+
+# Checks out $push_sha into a throwaway worktree and leaves its path in
+# $prepush_worktree, empty when it could not be created (the caller then skips
+# its gate, like every other case this hook cannot measure).
+#
+# Sets a variable rather than echoing a path: a command substitution would run
+# it in a subshell, where the path it recorded for the cleanup trap dies with
+# that subshell and the worktree outlives the push.
+ensure_worktree() {
+  [ -n "$prepush_worktree" ] && return 0
+  [ -n "$push_sha" ] || return 0
+  prepush_root=$(mktemp -d "${TMPDIR:-/tmp}/warren-prepush.XXXXXX") || return 0
+  if ! git worktree add --detach --quiet "$prepush_root/warren-app" "$push_sha" >/dev/null 2>&1; then
+    rm -rf "$prepush_root"
+    prepush_root=""
+    return 0
+  fi
+  prepush_worktree="$prepush_root/warren-app"
+  for sibling in warrenguard warren-sdk-rs warren-contract warren-quinn; do
+    [ -d "$repo_root/../$sibling" ] &&
+      ln -s "$repo_root/../$sibling" "$prepush_root/$sibling"
+  done
+  return 0
 }
 
 # Gate 1: cargo fmt --check, Warren scope. The -p list is copied verbatim from
@@ -84,25 +124,27 @@ if [ "$has_rs" -eq 1 ]; then
   for s in warrenguard warren-sdk-rs warren-contract; do
     [ -d "$repo_root/../$s" ] || siblings_ok=0
   done
+  ensure_worktree
+  worktree="$prepush_worktree"
   if ! command -v cargo >/dev/null 2>&1 || ! cargo fmt --version >/dev/null 2>&1; then
     echo "warren pre-push: cargo/rustfmt not found; skipping the fmt gate (CI still enforces it)." >&2
-  elif tree_dirty '*.rs'; then
-    echo "warren pre-push: uncommitted Rust in the tree, so cargo fmt would check it and not the pushed commits; skipping the fmt gate (CI still enforces it)." >&2
+  elif [ -z "$worktree" ]; then
+    echo "warren pre-push: the pushed commit could not be checked out; skipping the fmt gate (CI still enforces it)." >&2
   elif [ "$siblings_ok" -eq 0 ]; then
     echo "warren pre-push: sibling repos (../warrenguard, ../warren-sdk-rs, ../warren-contract) missing; skipping the fmt gate (CI still enforces it)." >&2
   else
-    echo "warren pre-push: cargo fmt --check (Warren scope)..." >&2
+    echo "warren pre-push: cargo fmt --check (Warren scope, on the pushed commit)..." >&2
     # Stable rustfmt prints one benign warning per nightly-only rustfmt.toml
     # option (CI does too). Drop just those from stderr so a real diff stands
     # out; the diff itself is on stdout and the exit code is untouched.
-    if ! cargo fmt \
+    if ! (cd "$worktree" && cargo fmt \
       -p mullvad-daemon -p mullvad-api -p mullvad-types \
       -p mullvad-management-interface -p mullvad-cli \
       -p talpid-warren-tunnel -p talpid-core \
       -p warren-jni -p warren-ios -p warren-forum \
-      -- --check \
+      -- --check) \
       2> >(grep -v 'unstable features are only available in nightly channel' >&2); then
-      echo "  FAIL: formatting drift. Run 'cargo fmt' (Warren scope) and commit before pushing." >&2
+      echo "  FAIL: formatting drift in the pushed commits. Run 'cargo fmt' (Warren scope) and commit before pushing." >&2
       fail=1
     fi
   fi
@@ -113,15 +155,26 @@ fi
 # like the pre-commit auto-fix, then block so the dev reviews and commits it.
 if [ "$has_ui" -eq 1 ]; then
   pkg="desktop/packages/mullvad-vpn"
+  ensure_worktree
+  worktree="$prepush_worktree"
+  # The extractor is pure JS over the sources, but it is run through the
+  # package's own script, so the worktree borrows the installed dependencies
+  # rather than installing its own.
   if [ ! -d "$pkg/node_modules" ]; then
     echo "warren pre-push: $pkg/node_modules missing; skipping the messages.pot gate (run the desktop install; CI still enforces it)." >&2
-  elif tree_dirty "$pkg"; then
-    echo "warren pre-push: $pkg has uncommitted changes, so the extractor would read them and not the pushed commits; skipping the messages.pot gate (CI still enforces it)." >&2
-  elif ! (cd "$pkg" && npm run --silent update-translations) >/dev/null 2>&1; then
-    echo "warren pre-push: update-translations could not run; skipping the messages.pot gate (CI still enforces it)." >&2
-  elif ! git diff --quiet -- "$pkg/locales/messages.pot"; then
-    echo "  FAIL: messages.pot is stale. Regenerated it in your working tree; review it, 'git add $pkg/locales/messages.pot' and commit before pushing." >&2
-    fail=1
+  elif [ -z "$worktree" ]; then
+    echo "warren pre-push: the pushed commit could not be checked out; skipping the messages.pot gate (CI still enforces it)." >&2
+  else
+    [ -e "$worktree/desktop/node_modules" ] ||
+      ln -s "$repo_root/desktop/node_modules" "$worktree/desktop/node_modules" 2>/dev/null || true
+    [ -e "$worktree/$pkg/node_modules" ] ||
+      ln -s "$repo_root/$pkg/node_modules" "$worktree/$pkg/node_modules" 2>/dev/null || true
+    if ! (cd "$worktree/$pkg" && npm run --silent update-translations) >/dev/null 2>&1; then
+      echo "warren pre-push: update-translations could not run; skipping the messages.pot gate (CI still enforces it)." >&2
+    elif ! git -C "$worktree" diff --quiet -- "$pkg/locales/messages.pot"; then
+      echo "  FAIL: the pushed commits leave messages.pot stale. Run 'npm run update-translations' in $pkg, review it, and commit the result before pushing." >&2
+      fail=1
+    fi
   fi
 fi
 
