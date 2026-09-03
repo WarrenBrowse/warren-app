@@ -42,6 +42,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryNotificat
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ConnectingStuckNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitEgressNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
@@ -103,6 +104,9 @@ val uiModule = module {
         InAppNotificationUseCase::class
     single { ConnectingStuckNotificationUseCase(get()) } bind
         InAppNotificationUseCase::class
+    // Registered under its own type too: the connect screen acknowledges the
+    // switch through it when the banner is dismissed.
+    single { ExitSwitchedNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     // Expiry competes for the single banner slot instead of drawing its own
     // strip above it.
     single { AccountExpiryNotificationUseCase(get()) } bind
@@ -163,6 +167,7 @@ val uiModule = module {
             localSettings = get(),
             hostOfflineProvider = get(),
             autoRecoveryProvider = get(),
+            exitSwitchedNotificationUseCase = get(),
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }

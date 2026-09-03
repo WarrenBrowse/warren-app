@@ -576,6 +576,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                     connectViewModel.dismissUpdateAvailable(it.version)
                 }
             },
+            onClickDismissExitSwitched = connectViewModel::acknowledgeExitSwitch,
             )
 
             pubkeyMismatch?.let { mismatch ->
@@ -673,6 +674,7 @@ fun ConnectScreen(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit = {},
+    onClickDismissExitSwitched: () -> Unit = {},
 ) {
     // The header paints its own glyphs black over the pale scenery sky; the
     // OS status bar right above it must follow (desktop header tone "dark"),
@@ -713,6 +715,7 @@ fun ConnectScreen(
                 onClickDismissAndroid16UpgradeWarning,
                 onClickShowAndroid16UpgradeInfo,
                 onClickDismissUpdateAvailable,
+                onClickDismissExitSwitched,
             )
         }
 
@@ -775,6 +778,7 @@ private fun Content(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
+    onClickDismissExitSwitched: () -> Unit,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
     // time so the burrow foreground clears the card in every state, tracking
@@ -826,6 +830,7 @@ private fun Content(
                         onClickDismissAndroid16UpgradeWarning =
                             onClickDismissAndroid16UpgradeWarning,
                         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
+                        onClickDismissExitSwitched = onClickDismissExitSwitched,
                     )
                     if (showBetaBadge) {
                         // No vertical padding: the badge reserves its 48 dp touch

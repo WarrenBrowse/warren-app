@@ -55,6 +55,7 @@ private fun PreviewNotificationBanner() {
                     onClickDismissChangelog = {},
                     onClickDismissAndroid16UpgradeWarning = {},
                     onClickDismissUpdateAvailable = {},
+                    onClickDismissExitSwitched = {},
                 )
                 Spacer(modifier = Modifier.size(16.dp))
             }
@@ -75,6 +76,7 @@ fun NotificationBanner(
     onClickDismissChangelog: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
+    onClickDismissExitSwitched: () -> Unit,
 ) {
     if (isTv()) {
         NotificationBannerTv(
@@ -89,6 +91,7 @@ fun NotificationBanner(
             onClickDismissChangelog = onClickDismissChangelog,
             onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
             onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
+            onClickDismissExitSwitched = onClickDismissExitSwitched,
         )
     } else {
         AnimatedNotificationBanner(
@@ -104,6 +107,7 @@ fun NotificationBanner(
             onClickDismissChangelog = onClickDismissChangelog,
             onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
             onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
+            onClickDismissExitSwitched = onClickDismissExitSwitched,
         )
     }
 }

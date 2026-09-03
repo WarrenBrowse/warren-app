@@ -8,6 +8,7 @@ import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
 import com.warrenbrowse.vpn.lib.repository.resolveExitPin
+import com.warrenbrowse.vpn.lib.repository.resolveFailoverExit
 
 /**
  * Composes a [WarrenTunnelConfig] from in-memory state.
@@ -40,8 +41,17 @@ class WarrenTunnelConfigBuilder(
      * Build a config or `null` if the relay catalogue is empty (no
      * available exit). Callers should surface a "no exit reachable"
      * message to the user when this happens.
+     *
+     * [excludedExitPubkeyHex] names the exit an automatic retry is failing
+     * over from: the pick then avoids it whenever the pin leaves an
+     * alternative (desktop `assemble_failover_for_attempt`), and degrades to
+     * the ordinary pick when it does not, so a transient refusal never
+     * strands the user without an exit.
      */
-    fun build(walletPubkey: WalletAddress): WarrenTunnelConfig? {
+    fun build(
+        walletPubkey: WalletAddress,
+        excludedExitPubkeyHex: String? = null,
+    ): WarrenTunnelConfig? {
         val daitaEnabled = localSettings.daitaEnabled.value
         val natPmpEnabled = localSettings.natPmpEnabled.value
         val ipv6Enabled = localSettings.ipv6Enabled.value
@@ -54,10 +64,15 @@ class WarrenTunnelConfigBuilder(
         val exitCountry = localSettings.exitCountry.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
 
-        // Exit precedence: explicit picker > preferred country > first active.
-        // The picker pin can name a country or a city, so it is resolved to one
-        // concrete exit here: the engine only ever accepts a single exit.
-        val exit = resolveExitPin(localSettings.exitPin.value, relays)
+        // Exit precedence: failover alternative > explicit picker > preferred
+        // country > first active. The picker pin can name a country or a city,
+        // so it is resolved to one concrete exit here: the engine only ever
+        // accepts a single exit.
+        val pin = localSettings.exitPin.value
+        val alternative =
+            excludedExitPubkeyHex?.let { resolveFailoverExit(pin, exitCountry, relays, it) }
+        val exit = alternative
+            ?: resolveExitPin(pin, relays)
             ?: exitCountry?.let { c -> relays.firstOrNull { it.active && it.country.equals(c, ignoreCase = true) } }
             ?: relays.firstOrNull { it.active }
             ?: run {

@@ -479,6 +479,10 @@
     <string name="connecting_stuck_message">ဤလုပ်ဆောင်ချက်သည် ပုံမှန်ထက် ကြာနေပါသည်။ Warren မှ ဆက်လက် ကြိုးစားနေပါသည်။ မချိတ်ဆက်နိုင်ပါက ကျွန်ုပ်တို့၏ အသိုက်အဝန်း ဖိုရမ်တွင် ပြဿနာကို ရီပို့တ်လုပ်ပါ။</string>
     <string name="exit_egress_dead_title">ဆာဗာမှ ကူးလူးမှုကို ပြန်လည်ပို့ဆောင်မပေးပါ</string>
     <string name="exit_egress_dead_message">ဆာဗာသည် သင့်ကူးလူးမှုကို ပြန်လည်ပို့ဆောင်ခြင်း ရပ်တန့်သွားပါသည်။ Warren မှ အလိုအလျောက် ဆာဗာပြောင်းပေးမည် သို့မဟုတ် ပြန်လည်ချိတ်ဆက်ပေးပါမည်။</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">EXIT ပြောင်းလဲပြီး</string>
+    <string name="exit_switched_message">သင်၏ ယခင် exit သည် မရောက်ရှိနိုင်တော့ပါ။ Warren သည် သင့်ကို အခြားဆာဗာတစ်ခုမှတစ်ဆင့် အလိုအလျောက် လမ်းကြောင်းပြောင်းပေးခဲ့သည်။</string>
     <string name="subscription_expires_soon_title">မကြာမီ အကောင့် ခရက်ဒစ် သက်တမ်းကုန်ပါတော့မည်</string>
     <string name="subscription_expired_title">အကောင့် ခရက်ဒစ် သက်တမ်းကုန်သွားပါပြီ</string>
     <string name="troubleshoot">ပြစ်ချက် ရှာဖွေ ဖယ်ရှားရန်</string>

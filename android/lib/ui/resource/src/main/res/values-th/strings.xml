@@ -479,6 +479,10 @@
     <string name="connecting_stuck_message">ขั้นตอนนี้ใช้เวลานานกว่าปกติ Warren จะลองใหม่ต่อไป หากยังเชื่อมต่อไม่ได้ โปรดรายงานปัญหาในฟอรัมชุมชนของเรา</string>
     <string name="exit_egress_dead_title">เซิร์ฟเวอร์ไม่ส่งต่อการรับส่งข้อมูล</string>
     <string name="exit_egress_dead_message">เซิร์ฟเวอร์หยุดส่งต่อการรับส่งข้อมูลของคุณ Warren จะสลับเซิร์ฟเวอร์หรือเชื่อมต่อใหม่โดยอัตโนมัติ</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">เปลี่ยนเซิร์ฟเวอร์ทางออกแล้ว</string>
+    <string name="exit_switched_message">เซิร์ฟเวอร์ทางออกก่อนหน้าของคุณเข้าถึงไม่ได้ Warren ได้กำหนดเส้นทางคุณผ่านเซิร์ฟเวอร์อื่นโดยอัตโนมัติ</string>
     <string name="subscription_expires_soon_title">เครดิตในบัญชีจะหมดอายุในเร็ว ๆ นี้</string>
     <string name="subscription_expired_title">เครดิตในบัญชีหมดอายุแล้ว</string>
     <string name="troubleshoot">การแก้ไขปัญหา</string>

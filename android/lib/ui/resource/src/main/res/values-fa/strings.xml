@@ -482,6 +482,10 @@
     <string name="connecting_stuck_message">این کار بیش از حد معمول طول کشیده است. Warren به تلاش ادامه می‌دهد؛ اگر متصل نشد، مشکل را در انجمن کاربران ما گزارش دهید.</string>
     <string name="exit_egress_dead_title">سرور ترافیک را هدایت نمی‌کند</string>
     <string name="exit_egress_dead_message">سرور هدایت ترافیک شما را متوقف کرد. Warren به‌طور خودکار سرور را تغییر می‌دهد یا دوباره متصل می‌شود.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">گره خروجی تغییر کرد</string>
+    <string name="exit_switched_message">گره خروجی قبلی شما غیرقابل دسترسی شد. Warren به‌طور خودکار شما را از طریق یک سرور جایگزین مسیریابی کرد.</string>
     <string name="subscription_expires_soon_title">اعتبار حساب به‌زودی منقضی می‌شود</string>
     <string name="subscription_expired_title">اعتبار حساب منقضی شد</string>
     <string name="troubleshoot">عیب‌یابی</string>

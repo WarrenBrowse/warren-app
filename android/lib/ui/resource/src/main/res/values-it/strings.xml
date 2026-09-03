@@ -482,6 +482,10 @@
     <string name="connecting_stuck_message">Sta richiedendo più tempo del solito. Warren continua a riprovare; se non riesce a connettersi, segnala il problema sul forum della community.</string>
     <string name="exit_egress_dead_title">IL SERVER NON INOLTRA IL TRAFFICO</string>
     <string name="exit_egress_dead_message">Il server ha smesso di inoltrare il tuo traffico. Warren cambierà server o si riconnetterà automaticamente.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">USCITA CAMBIATA</string>
+    <string name="exit_switched_message">Il tuo nodo di uscita precedente è diventato irraggiungibile. Warren ti ha instradato automaticamente attraverso un server alternativo.</string>
     <string name="subscription_expires_soon_title">CREDITO ACCOUNT IN SCADENZA</string>
     <string name="subscription_expired_title">CREDITO ACCOUNT SCADUTO</string>
     <string name="troubleshoot">Risoluzione dei problemi</string>

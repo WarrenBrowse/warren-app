@@ -479,6 +479,10 @@
     <string name="connecting_stuck_message">通常より時間がかかっています。Warren は再試行を続けます。接続できない場合は、コミュニティフォーラムで問題を報告してください。</string>
     <string name="exit_egress_dead_title">サーバーがトラフィックを転送していません</string>
     <string name="exit_egress_dead_message">サーバーがトラフィックの転送を停止しました。Warren が自動的にサーバーを切り替えるか、再接続します。</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">出口サーバーが切り替わりました</string>
+    <string name="exit_switched_message">以前の出口サーバーに到達できなくなりました。Warren が自動的に別のサーバー経由で接続を切り替えました。</string>
     <string name="subscription_expires_soon_title">アカウントのクレジットがもうすぐ無効になります。</string>
     <string name="subscription_expired_title">アカウントのクレジットが無効になりました</string>
     <string name="troubleshoot">トラブルシューティング</string>

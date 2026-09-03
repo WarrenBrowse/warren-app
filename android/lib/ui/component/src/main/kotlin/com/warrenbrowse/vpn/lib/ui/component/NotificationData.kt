@@ -92,6 +92,7 @@ fun InAppNotification.toNotificationData(
     onClickDismissChangelog: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
+    onClickDismissExitSwitched: () -> Unit,
 ) =
     when (this) {
         InAppNotification.HostOffline ->
@@ -112,6 +113,18 @@ fun InAppNotification.toNotificationData(
                 message = stringResource(id = R.string.connecting_stuck_message),
                 statusLevel = statusLevel,
                 action = forumAction(),
+            )
+        InAppNotification.ExitSwitched ->
+            NotificationData(
+                title = stringResource(id = R.string.exit_switched_title),
+                message = stringResource(id = R.string.exit_switched_message),
+                statusLevel = statusLevel,
+                action =
+                    NotificationAction(
+                        Icons.Rounded.Clear,
+                        onClickDismissExitSwitched,
+                        stringResource(id = R.string.dismiss),
+                    ),
             )
         InAppNotification.TunnelStateBlocked ->
             NotificationData(

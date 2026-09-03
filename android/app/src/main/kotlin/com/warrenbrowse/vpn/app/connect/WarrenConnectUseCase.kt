@@ -5,10 +5,12 @@ import android.content.Intent
 import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
+import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.app.service.WarrenVpnService
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.ExitKeyVerdict
@@ -78,14 +80,7 @@ class WarrenConnectUseCase(
      * Pure with respect to the wallet secret: only the public pubkey is read.
      */
     fun buildFreshConfig(): ConfigResult {
-        val pubkey = when (val state = walletRepository.state.value) {
-            is WalletState.Ready -> state.pubkey
-            is WalletState.Locked -> state.pubkey
-            WalletState.Absent -> {
-                Logger.w("WarrenConnectUseCase: no wallet on device")
-                return ConfigResult.WalletNotReady
-            }
-        }
+        val pubkey = walletPubkey() ?: return ConfigResult.WalletNotReady
 
         val built = configBuilder.build(pubkey) ?: run {
             Logger.e("WarrenConnectUseCase: relay catalogue empty, no exit to connect to")
@@ -95,33 +90,73 @@ class WarrenConnectUseCase(
         // Trust-on-first-use exit key check (fail closed). A mismatch means the
         // exit's key changed since we last pinned it; refuse so the user can
         // decide (reset pins in settings to accept a rotation).
-        built.exitId?.let { exitId ->
-            when (val verdict = localSettings.exitKeyVerdict(exitId, built.exitPubkeyHex)) {
-                is ExitKeyVerdict.Mismatch -> {
-                    Logger.w("WarrenConnectUseCase: exit key mismatch for $exitId, refusing")
-                    return ConfigResult.ExitKeyMismatch(
-                        exitId = exitId,
-                        pinnedPubkeyHex = verdict.pinned,
-                        observedPubkeyHex = built.exitPubkeyHex,
-                    )
-                }
-                ExitKeyVerdict.FirstSeen ->
-                    localSettings.trustExitKey(exitId, built.exitPubkeyHex)
-                ExitKeyVerdict.Match -> Unit
+        val exitId = built.exitId
+        if (exitId != null) {
+            val verdict = checkExitKey(exitId, built.exitPubkeyHex)
+            if (verdict is ExitKeyVerdict.Mismatch) {
+                return ConfigResult.ExitKeyMismatch(
+                    exitId = exitId,
+                    pinnedPubkeyHex = verdict.pinned,
+                    observedPubkeyHex = built.exitPubkeyHex,
+                )
             }
         }
 
-        // Apply the local-network-sharing + MTU toggles here so they are honoured
-        // regardless of the config builder (the natural place, kept minimal).
-        // Both are serialized fields, so they survive the JSON round-trip through
-        // the VpnService Intent down to the TUN plan.
-        return ConfigResult.Ready(
-            built.copy(
-                allowLan = localSettings.allowLan.value,
-                mtu = localSettings.tunnelMtu.value,
-            ),
-        )
+        return ConfigResult.Ready(withLocalToggles(built))
     }
+
+    /**
+     * The config an automatic retry dials after [previous] dropped: the same
+     * settings on an alternative exit the pin allows, or `null` when there is
+     * none (the retry then redials [previous]). Desktop
+     * `assemble_failover_for_attempt`, with the exit-key pin enforced the same
+     * way as on a fresh connect: an alternative whose key changed since it was
+     * pinned is refused rather than dialled, because the retry runs with no
+     * user to decide.
+     */
+    fun buildFailoverConfig(previous: WarrenTunnelConfig): WarrenTunnelConfig? {
+        val alternative =
+            walletPubkey()
+                ?.let { configBuilder.build(it, excludedExitPubkeyHex = previous.exitPubkeyHex) }
+                ?.takeIf { it.exitPubkeyHex != previous.exitPubkeyHex }
+                ?.takeUnless { built ->
+                    val verdict = built.exitId?.let { checkExitKey(it, built.exitPubkeyHex) }
+                    verdict is ExitKeyVerdict.Mismatch
+                }
+        return alternative?.let(::withLocalToggles)
+    }
+
+    private fun walletPubkey(): WalletAddress? =
+        when (val state = walletRepository.state.value) {
+            is WalletState.Ready -> state.pubkey
+            is WalletState.Locked -> state.pubkey
+            WalletState.Absent -> {
+                Logger.w("WarrenConnectUseCase: no wallet on device")
+                null
+            }
+        }
+
+    /** The pin verdict for [exitId], pinning a first sighting on the way. */
+    private fun checkExitKey(exitId: String, pubkeyHex: String): ExitKeyVerdict {
+        val verdict = localSettings.exitKeyVerdict(exitId, pubkeyHex)
+        when (verdict) {
+            is ExitKeyVerdict.Mismatch ->
+                Logger.w("WarrenConnectUseCase: exit key mismatch for $exitId, refusing")
+            ExitKeyVerdict.FirstSeen -> localSettings.trustExitKey(exitId, pubkeyHex)
+            ExitKeyVerdict.Match -> Unit
+        }
+        return verdict
+    }
+
+    // Apply the local-network-sharing + MTU toggles here so they are honoured
+    // regardless of the config builder (the natural place, kept minimal).
+    // Both are serialized fields, so they survive the JSON round-trip through
+    // the VpnService Intent down to the TUN plan.
+    private fun withLocalToggles(built: WarrenTunnelConfig): WarrenTunnelConfig =
+        built.copy(
+            allowLan = localSettings.allowLan.value,
+            mtu = localSettings.tunnelMtu.value,
+        )
 
     /**
      * `WarrenQuinnConnectInvoker` impl: maps the app-private [Outcome] to the

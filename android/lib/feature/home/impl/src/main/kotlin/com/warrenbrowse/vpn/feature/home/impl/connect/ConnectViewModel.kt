@@ -38,6 +38,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
 
 @Suppress("LongParameterList")
 class ConnectViewModel(
@@ -57,6 +58,7 @@ class ConnectViewModel(
     private val localSettings: WarrenLocalSettingsRepository,
     hostOfflineProvider: WarrenHostOfflineProvider,
     autoRecoveryProvider: WarrenAutoRecoveryProvider,
+    private val exitSwitchedNotificationUseCase: ExitSwitchedNotificationUseCase,
 ) : ViewModel() {
     private val _uiSideEffect = Channel<UiSideEffect>()
 
@@ -233,6 +235,9 @@ class ConnectViewModel(
     fun dismissUpdateAvailable(version: String) = viewModelScope.launch {
         userPreferencesRepository.setDismissedUpgradeVersion(version)
     }
+
+    /** The switch banner is read; the next failover raises it again. */
+    fun acknowledgeExitSwitch() = exitSwitchedNotificationUseCase.acknowledge()
 
     private fun revokedDeviceEffect() =
         deviceRepository.deviceState.filterIsInstance<DeviceState.Revoked>().map {

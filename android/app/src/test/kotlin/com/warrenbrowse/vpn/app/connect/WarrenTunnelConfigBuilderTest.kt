@@ -402,4 +402,58 @@ class WarrenTunnelConfigBuilderTest {
         val config = builder.build(pubkey)!!
         assertEquals(0L, config.maxRateBps)
     }
+
+    // Failover: the drop retry rebuilds the config with the failed exit
+    // excluded, and falls back to the same exit when nothing else fits the pin.
+
+    private val secondGermanRelay = sampleRelay.copy(
+        exitId = "11111111111111111111111111111111",
+        exitPubkeyHex = "1111111111111111111111111111111111111111111111111111111111111111",
+        endpoint = "warren-exit-de-2.warren.brown:443",
+        city = "Berlin",
+        weight = 50,
+    )
+
+    private val frenchRelay = sampleRelay.copy(
+        exitId = "22222222222222222222222222222222",
+        exitPubkeyHex = "2222222222222222222222222222222222222222222222222222222222222222",
+        endpoint = "warren-exit-fr.warren.brown:443",
+        country = "FR",
+        city = "Paris",
+        weight = 80,
+    )
+
+    @Test
+    fun `excluding the previous exit dials another exit of the same country first`() {
+        val builder =
+            cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, secondGermanRelay, frenchRelay)))
+        val config = builder.build(pubkey, excludedExitPubkeyHex = sampleRelay.exitPubkeyHex)!!
+        assertEquals(secondGermanRelay.exitPubkeyHex, config.exitPubkeyHex)
+        assertEquals(secondGermanRelay.exitId, config.exitId)
+    }
+
+    @Test
+    fun `excluding the previous exit leaves its country when it has no other exit`() {
+        val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
+        val config = builder.build(pubkey, excludedExitPubkeyHex = sampleRelay.exitPubkeyHex)!!
+        assertEquals(frenchRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `excluding the only exit the pin allows retries that exit`() {
+        val builder =
+            cfgBuilder(
+                mockRepo(selectedExitId = sampleRelay.exitId),
+                mockCatalog(listOf(sampleRelay, frenchRelay)),
+            )
+        val config = builder.build(pubkey, excludedExitPubkeyHex = sampleRelay.exitPubkeyHex)!!
+        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
+
+    @Test
+    fun `excluding an exit the catalogue no longer knows falls back to the normal pick`() {
+        val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
+        val config = builder.build(pubkey, excludedExitPubkeyHex = "ff".repeat(32))!!
+        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+    }
 }

@@ -479,6 +479,10 @@
     <string name="connecting_stuck_message">此程序比平常更久。Warren 會持續重試；若仍無法連線，請在我們的社群論壇回報問題。</string>
     <string name="exit_egress_dead_title">伺服器未轉送流量</string>
     <string name="exit_egress_dead_message">伺服器已停止轉送您的流量。Warren 將自動切換伺服器或重新連線。</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">出口已切換</string>
+    <string name="exit_switched_message">您先前的出口已無法連線。Warren 已自動為您改用其他伺服器路由。</string>
     <string name="subscription_expires_soon_title">帳戶點數即將到期</string>
     <string name="subscription_expired_title">帳戶點數已到期</string>
     <string name="troubleshoot">故障排除</string>

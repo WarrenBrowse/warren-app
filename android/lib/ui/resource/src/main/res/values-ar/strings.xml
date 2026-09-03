@@ -494,6 +494,10 @@
     <string name="connecting_stuck_message">يستغرق هذا وقتًا أطول من المعتاد. يواصل Warren المحاولة، وإذا لم يتم الاتصال، فأبلغ عن المشكلة في منتدى مجتمعنا.</string>
     <string name="exit_egress_dead_title">الخادم لا يمرِّر البيانات</string>
     <string name="exit_egress_dead_message">توقَّف الخادم عن تمرير بياناتك. سيبدِّل Warren الخادم أو يعيد الاتصال تلقائيًا.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">تم تبديل خادم الخروج</string>
+    <string name="exit_switched_message">أصبح خادم الخروج السابق غير قابل للوصول. وجّهك Warren تلقائيًا عبر خادم بديل.</string>
     <string name="subscription_expires_soon_title">سينتهي رصيد الحساب قريبًا</string>
     <string name="subscription_expired_title">انتهى رصيد الحساب</string>
     <string name="troubleshoot">استكشاف الأخطاء وإصلاحها</string>

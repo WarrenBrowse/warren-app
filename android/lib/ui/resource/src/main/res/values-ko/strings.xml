@@ -479,6 +479,10 @@
     <string name="connecting_stuck_message">평소보다 오래 걸리고 있습니다. Warren이 계속 다시 시도합니다. 연결되지 않으면 커뮤니티 포럼에 문제를 신고하세요.</string>
     <string name="exit_egress_dead_title">서버가 트래픽을 전달하지 않음</string>
     <string name="exit_egress_dead_message">서버가 트래픽 전달을 중단했습니다. Warren이 자동으로 서버를 전환하거나 다시 연결합니다.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">출구 서버 변경됨</string>
+    <string name="exit_switched_message">이전 출구 서버에 연결할 수 없게 되었습니다. Warren이 자동으로 대체 서버를 통해 경로를 변경했습니다.</string>
     <string name="subscription_expires_soon_title">계정 크레딧이 곧 만료됩니다</string>
     <string name="subscription_expired_title">계정 크레딧이 만료되었습니다</string>
     <string name="troubleshoot">문제 해결</string>

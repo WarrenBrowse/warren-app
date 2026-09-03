@@ -482,6 +482,10 @@
     <string name="connecting_stuck_message">Dit duurt langer dan gebruikelijk. Warren blijft het proberen; als er geen verbinding tot stand komt, meld het probleem dan op ons communityforum.</string>
     <string name="exit_egress_dead_title">SERVER STUURT GEEN VERKEER DOOR</string>
     <string name="exit_egress_dead_message">De server stuurt uw verkeer niet meer door. Warren wisselt automatisch van server of maakt opnieuw verbinding.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">EXIT GEWISSELD</string>
+    <string name="exit_switched_message">Uw vorige exitserver werd onbereikbaar. Warren heeft u automatisch via een alternatieve server geleid.</string>
     <string name="subscription_expires_soon_title">ACCOUNTKREDIET VERVALT BINNENKORT</string>
     <string name="subscription_expired_title">ACCOUNTKREDIET VERVALLEN</string>
     <string name="troubleshoot">Probleem oplossen</string>

@@ -28,6 +28,7 @@ fun PreviewNotificationBannerTv() {
             onClickDismissChangelog = {},
             onClickDismissAndroid16UpgradeWarning = {},
             onClickDismissUpdateAvailable = {},
+            onClickDismissExitSwitched = {},
         )
     }
 }
@@ -45,6 +46,7 @@ fun NotificationBannerTv(
     onClickDismissChangelog: () -> Unit,
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
+    onClickDismissExitSwitched: () -> Unit,
 ) {
     AnimatedNotificationBanner(
         modifier = modifier,
@@ -69,5 +71,6 @@ fun NotificationBannerTv(
         onClickDismissChangelog = onClickDismissChangelog,
         onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
+        onClickDismissExitSwitched = onClickDismissExitSwitched,
     )
 }

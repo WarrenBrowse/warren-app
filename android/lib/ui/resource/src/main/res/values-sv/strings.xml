@@ -482,6 +482,10 @@
     <string name="connecting_stuck_message">Det här tar längre tid än vanligt. Warren fortsätter att försöka. Rapportera problemet på vårt forum om anslutningen inte upprättas.</string>
     <string name="exit_egress_dead_title">SERVERN VIDAREBEFORDRAR INTE TRAFIK</string>
     <string name="exit_egress_dead_message">Servern slutade vidarebefordra din trafik. Warren byter server eller återansluter automatiskt.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">EXITNOD BYTT</string>
+    <string name="exit_switched_message">Din tidigare exitnod blev oåtkomlig. Warren dirigerade dig automatiskt via en annan server.</string>
     <string name="subscription_expires_soon_title">KONTOKREDITEN GÅR SNART UT</string>
     <string name="subscription_expired_title">KONTOKREDITEN HAR GÅTT UT</string>
     <string name="troubleshoot">Felsök</string>

@@ -488,6 +488,10 @@
     <string name="connecting_stuck_message">Це триває довше, ніж зазвичай. Warren продовжує спроби; якщо підключитися не вдасться, повідомте про проблему на нашому форумі.</string>
     <string name="exit_egress_dead_title">СЕРВЕР НЕ ПЕРЕДАЄ ТРАФІК</string>
     <string name="exit_egress_dead_message">Сервер перестав передавати ваш трафік. Warren автоматично змінить сервер або перепідключиться.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">ВИХІДНИЙ СЕРВЕР ЗМІНЕНО</string>
+    <string name="exit_switched_message">Ваш попередній вихідний сервер став недоступним. Warren автоматично перенаправив вас через альтернативний сервер.</string>
     <string name="subscription_expires_soon_title">ЗАКІНЧУЄТЬСЯ БАЛАНС ОБЛІКОВОГО ЗАПИСУ</string>
     <string name="subscription_expired_title">БАЛАНС ОБЛІКОВОГО ЗАПИСУ ВИЧЕРПАНО</string>
     <string name="troubleshoot">Усунення неполадок</string>

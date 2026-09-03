@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.app.service
 
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
@@ -36,7 +37,8 @@ class WarrenQuinnStateProxy :
     WarrenTunnelStateProvider,
     WarrenNatPmpStatusProvider,
     WarrenAutoRecoveryProvider,
-    WarrenPathHealthProvider {
+    WarrenPathHealthProvider,
+    WarrenFailoverProvider {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
@@ -69,6 +71,9 @@ class WarrenQuinnStateProxy :
     private val _pathWedged = MutableStateFlow(false)
     override val pathWedged: StateFlow<Boolean> = _pathWedged.asStateFlow()
 
+    private val _failoverCount = MutableStateFlow(0)
+    override val failoverCount: StateFlow<Int> = _failoverCount.asStateFlow()
+
     /** Called by [WarrenVpnService] on every adapter-side transition. */
     fun update(next: WarrenTunnelState) {
         _state.value = next
@@ -86,6 +91,11 @@ class WarrenQuinnStateProxy :
 
     fun updateAutoRecoveryCount(count: Int) {
         _autoRecoveryCount.value = count
+    }
+
+    /** Called by [WarrenVpnService] on every landed failover. */
+    fun updateFailoverCount(count: Int) {
+        _failoverCount.value = count
     }
 
     private companion object {

@@ -66,6 +66,14 @@ sealed class InAppNotification {
         override val priority: Long = 1002
     }
 
+    // An automatic retry landed on another exit than the one that dropped
+    // (desktop WarrenFailoverNotificationProvider). Stays up until dismissed,
+    // so a switch that happened while the screen was away is still read.
+    data object ExitSwitched : InAppNotification() {
+        override val statusLevel = StatusLevel.Warning
+        override val priority: Long = 1001
+    }
+
     /**
      * Subscription running out. [daysLeft] is 0 once the expiry is past, which
      * is the only case coded as an error: an expiry that is merely approaching
@@ -74,18 +82,18 @@ sealed class InAppNotification {
     data class CloseToExpiry(val daysLeft: Long) : InAppNotification() {
         override val statusLevel =
             if (daysLeft <= 0L) StatusLevel.Error else StatusLevel.Warning
-        override val priority: Long = 1001
+        override val priority: Long = 1000
     }
 
     // Right after an install the changelog outranks a fresh update prompt, so
     // the user reads what just landed instead of being asked to update again.
     data object NewVersionChangelog : InAppNotification() {
         override val statusLevel = StatusLevel.Info
-        override val priority: Long = 1000
+        override val priority: Long = 999
     }
 
     data class UpdateAvailable(val version: String) : InAppNotification() {
         override val statusLevel = StatusLevel.Warning
-        override val priority: Long = 999
+        override val priority: Long = 998
     }
 }

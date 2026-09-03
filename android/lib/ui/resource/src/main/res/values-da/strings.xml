@@ -482,6 +482,10 @@
     <string name="connecting_stuck_message">Dette tager længere tid end normalt. Warren bliver ved med at forsøge. Rapporter problemet på vores forum, hvis forbindelsen ikke oprettes.</string>
     <string name="exit_egress_dead_title">SERVEREN VIDERESENDER IKKE TRAFIK</string>
     <string name="exit_egress_dead_message">Serveren stoppede med at videresende din trafik. Warren skifter server eller genopretter forbindelsen automatisk.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">EXIT SKIFTET</string>
+    <string name="exit_switched_message">Din tidligere exit blev utilgængelig. Warren rutede dig automatisk gennem en alternativ server.</string>
     <string name="subscription_expires_soon_title">KONTOKREDIT UDLØBER SNART</string>
     <string name="subscription_expired_title">KONTOKREDIT UDLØBET</string>
     <string name="troubleshoot">Fejlfinding</string>

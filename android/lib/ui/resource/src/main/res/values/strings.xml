@@ -511,6 +511,10 @@
     <string name="exit_egress_dead_title">SERVER NOT FORWARDING TRAFFIC</string>
     <string name="exit_egress_dead_message">The server stopped forwarding your traffic. Warren will switch or reconnect automatically.</string>
 
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">EXIT SWITCHED</string>
+    <string name="exit_switched_message">Your previous exit became unreachable. Warren routed you through an alternative server automatically.</string>
+
     <string name="subscription_expires_soon_title">ACCOUNT CREDIT EXPIRES SOON</string>
     <string name="subscription_expired_title">ACCOUNT CREDIT EXPIRED</string>
 

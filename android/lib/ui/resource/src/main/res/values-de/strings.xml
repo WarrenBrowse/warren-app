@@ -482,6 +482,10 @@
     <string name="connecting_stuck_message">Das dauert länger als üblich. Warren versucht es weiter; falls keine Verbindung zustande kommt, melden Sie das Problem in unserem Community-Forum.</string>
     <string name="exit_egress_dead_title">SERVER LEITET DEN TRAFFIC NICHT WEITER</string>
     <string name="exit_egress_dead_message">Der Server hat die Weiterleitung Ihres Traffics eingestellt. Warren wechselt den Server oder verbindet sich automatisch neu.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">EXIT GEWECHSELT</string>
+    <string name="exit_switched_message">Ihr vorheriger Exit-Server wurde unerreichbar. Warren hat Sie automatisch über einen alternativen Server geleitet.</string>
     <string name="subscription_expires_soon_title">KONTOGUTHABEN LÄUFT BALD AB</string>
     <string name="subscription_expired_title">KONTOGUTHABEN ABGELAUFEN</string>
     <string name="troubleshoot">Fehlerbehebung</string>

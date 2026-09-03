@@ -95,6 +95,7 @@ class WarrenVpnService : LifecycleVpnService() {
             connectivityManager = getSystemService<ConnectivityManager>()!!,
             settings = getKoin().get(),
             connectivity = connectivityMonitor.connectivity,
+            failoverConfig = warrenConnectUseCase::buildFailoverConfig,
         )
 
         // Observe Quinn tunnel transitions:
@@ -117,6 +118,11 @@ class WarrenVpnService : LifecycleVpnService() {
         lifecycleScope.launch {
             quinnAdapter.pathWedged.collect { wedged ->
                 quinnStateProxy.updatePathWedged(wedged)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.failoverCount.collect { count ->
+                quinnStateProxy.updateFailoverCount(count)
             }
         }
         lifecycleScope.launch {

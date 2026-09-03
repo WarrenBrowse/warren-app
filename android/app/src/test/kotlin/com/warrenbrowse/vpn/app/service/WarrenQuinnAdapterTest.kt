@@ -127,9 +127,18 @@ class WarrenQuinnAdapterTest {
             return if (plan.blocking) blackholeTun else liveTun
         }
 
+        /** The wire config of every dial, in order. */
+        val configs = mutableListOf<String>()
+
+        /** A status the native side reports as soon as a dial is issued, when set. */
+        @Volatile
+        var statusOnConnect: Int? = null
+
         override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int {
             calls += CONNECT_TUNNEL
+            configs += configJson
             threads[CONNECT_TUNNEL] = Thread.currentThread().name
+            statusOnConnect?.let { status = it }
             publish()
             return 0
         }
@@ -199,6 +208,8 @@ class WarrenQuinnAdapterTest {
     private fun adapterWith(
         platform: RecordingPlatform,
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
+        failoverConfig: (WarrenTunnelConfig) -> WarrenTunnelConfig? = { null },
+        dropRetryGraceMs: Long = 15_000L,
     ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
         every { settings.splitTunnelingEnabled } returns MutableStateFlow(false)
@@ -210,6 +221,8 @@ class WarrenQuinnAdapterTest {
             connectivity = MutableStateFlow<Connectivity>(Connectivity.PresumeOnline),
             platform = platform,
             dispatcher = dispatcher,
+            failoverConfig = failoverConfig,
+            dropRetryGraceMs = dropRetryGraceMs,
         )
     }
 
@@ -605,5 +618,71 @@ class WarrenQuinnAdapterTest {
             platform.threads[DISCONNECT_TUNNEL],
             "disconnectTunnel() must run on the adapter's dispatcher, got: ${platform.threads}",
         )
+    }
+
+    /**
+     * Desktop parity (`assemble_failover_for_attempt`): the retry after an
+     * unexpected drop dials the alternative the failover rule hands back, and
+     * the switch is reported once that dial lands, never before, because the
+     * banner promises a working alternative.
+     */
+    @Test
+    fun `ensure a drop retry dials the failover exit and reports the switch once it lands`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val alternative =
+                    config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+                val adapter =
+                    adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 0L)
+                adapter.connect(config(), Mnemonic(PHRASE))
+                awaitReal("the session must reach Connected") {
+                    adapter.state.value is WarrenTunnelState.Connected
+                }
+                assertEquals(0, adapter.failoverCount.value)
+
+                platform.statusOnConnect = STATUS_CONNECTED
+                platform.status = STATUS_DISCONNECTED
+                awaitReal("the retry must dial the alternative exit") {
+                    platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
+                }
+                awaitReal("the landed retry must report one switch") {
+                    adapter.failoverCount.value == 1
+                }
+                val landed = adapter.state.value as WarrenTunnelState.Connected
+                assertEquals("exit2.example:443", landed.exitEndpointHost)
+                adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
+
+    /** With no alternative the retry redials the same exit and reports no switch. */
+    @Test
+    fun `ensure a drop retry without an alternative redials the same exit silently`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, failoverConfig = { null }, dropRetryGraceMs = 0L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the retry must redial") { platform.configs.size == 2 }
+            awaitReal("the redial must land") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            assertTrue(platform.configs.last().contains("ab".repeat(32)))
+            assertEquals(0, adapter.failoverCount.value)
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
     }
 }

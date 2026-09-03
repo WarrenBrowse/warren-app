@@ -488,6 +488,10 @@
     <string name="connecting_stuck_message">Trwa to dłużej niż zwykle. Warren ponawia próby; jeśli połączenie nie zostanie nawiązane, zgłoś problem na naszym forum.</string>
     <string name="exit_egress_dead_title">SERWER NIE PRZEKAZUJE RUCHU</string>
     <string name="exit_egress_dead_message">Serwer przestał przekazywać Twój ruch. Warren automatycznie zmieni serwer lub połączy się ponownie.</string>
+
+    <!-- An automatic retry landed on another exit (desktop WarrenFailoverNotificationProvider). -->
+    <string name="exit_switched_title">ZMIENIONO WĘZEŁ WYJŚCIOWY</string>
+    <string name="exit_switched_message">Twój poprzedni węzeł wyjściowy stał się nieosiągalny. Warren automatycznie przekierował Cię przez serwer alternatywny.</string>
     <string name="subscription_expires_soon_title">DOŁADOWANIE KONTA WKRÓTCE WYGASA</string>
     <string name="subscription_expired_title">DOŁADOWANIE KONTA WYGASŁO</string>
     <string name="troubleshoot">Rozwiązywanie problemów</string>

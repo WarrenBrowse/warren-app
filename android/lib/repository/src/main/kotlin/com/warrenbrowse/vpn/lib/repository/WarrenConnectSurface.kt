@@ -203,6 +203,17 @@ interface WarrenPathHealthProvider {
 }
 
 /**
+ * Lib-side surface for the failover counter: automatic retries that landed
+ * on a different exit than the one that dropped, since process start (desktop
+ * `failover_count`). The concrete impl is `app/service/WarrenQuinnStateProxy`.
+ * Drives the "EXIT SWITCHED" banner, which the user dismisses by acknowledging
+ * the count reached so far.
+ */
+interface WarrenFailoverProvider {
+    val failoverCount: StateFlow<Int>
+}
+
+/**
  * Lib-side surface for the Warren disconnect path. The concrete impl
  * lives in `app/connect/WarrenDisconnectUseCase` and is bound to this
  * interface in `di/AppModule`. The disconnect path does not need

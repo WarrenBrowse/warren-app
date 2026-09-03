@@ -68,6 +68,12 @@ class WarrenQuinnAdapter(
     // Where the platform and native calls run; injectable so a test can name
     // the thread it expects them on.
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    // The config an automatic retry dials instead of the one that dropped, or
+    // null to redial the same exit: desktop `assemble_failover_for_attempt`,
+    // resolved by the caller from the current pin and catalogue.
+    private val failoverConfig: (WarrenTunnelConfig) -> WarrenTunnelConfig? = { null },
+    // Injectable so a test does not sit through the production grace.
+    private val dropRetryGraceMs: Long = DROP_RETRY_GRACE_MS,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val lock = Mutex()
@@ -94,6 +100,18 @@ class WarrenQuinnAdapter(
     // that carries nothing.
     private val _pathWedged = MutableStateFlow(false)
     val pathWedged: StateFlow<Boolean> = _pathWedged.asStateFlow()
+
+    // Automatic retries that landed on a different exit than the one that
+    // dropped, since process start (desktop `failover_count`). Counted when the
+    // alternative connects, not when it is picked: the banner it drives
+    // promises a working alternative.
+    private val _failoverCount = MutableStateFlow(0)
+    val failoverCount: StateFlow<Int> = _failoverCount.asStateFlow()
+
+    // Set when the retry in flight dials another exit; consumed by the status
+    // watch on the Connected edge, cleared by any user action.
+    @Volatile
+    private var pendingFailover = false
 
     private var activeConfig: WarrenTunnelConfig? = null
     // Held as a zeroizable [Mnemonic] (CharArray-backed), NOT a String: the
@@ -338,6 +356,11 @@ class WarrenQuinnAdapter(
                         if (autoRecovery.onConnected()) {
                             Logger.i("WarrenQuinnAdapter: automatic recovery landed")
                         }
+                        if (pendingFailover) {
+                            pendingFailover = false
+                            _failoverCount.value += 1
+                            Logger.i("WarrenQuinnAdapter: failover landed on an alternative exit")
+                        }
                     }
                     _state.value = statusFromCode(code, sessionConfig)
                 }
@@ -474,8 +497,9 @@ class WarrenQuinnAdapter(
         handoverNotified = false
         flapDetector.reset()
         // A user action clears any pending recovery attribution: whatever
-        // connects next is not an automatic recovery.
+        // connects next is not an automatic recovery, nor a failover.
         autoRecovery.onUserAction()
+        pendingFailover = false
         unregisterNetworkCallback()
         pendingHandover?.cancel()
         pendingHandover = null
@@ -632,16 +656,22 @@ class WarrenQuinnAdapter(
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
             autoRecovery.armAutomation()
-            delay(DROP_RETRY_GRACE_MS)
+            delay(dropRetryGraceMs)
             awaitDialableNetwork()
+            // Resolved after the wait, on the catalogue as it stands then: the
+            // exit that dropped is excluded whenever the pin leaves a choice,
+            // and redialled when it does not (desktop
+            // `assemble_failover_for_attempt`).
+            val next = failoverConfig(config) ?: config
             lock.withLock {
                 if (userInitiatedDisconnect) return@withLock
                 statusWatchJob?.cancel()
                 statusWatchJob = null
                 // Reset so connect()'s guard passes; the blackhole stays up.
                 _state.value = WarrenTunnelState.Disconnected
+                pendingFailover = next.exitPubkeyHex != config.exitPubkeyHex
             }
-            if (!userInitiatedDisconnect) connectLocked(config, mnemonic)
+            if (!userInitiatedDisconnect) connectLocked(next, mnemonic)
         }
     }
 

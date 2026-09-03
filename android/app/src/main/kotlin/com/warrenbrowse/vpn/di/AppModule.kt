@@ -44,6 +44,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
@@ -113,6 +114,7 @@ val appModule = module {
             WarrenNatPmpStatusProvider::class,
             WarrenAutoRecoveryProvider::class,
             WarrenPathHealthProvider::class,
+            WarrenFailoverProvider::class,
         )
 
     // Process-wide truthful connectivity source: feeds the adapter's
