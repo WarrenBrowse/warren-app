@@ -394,6 +394,12 @@ msgctxt "accessibility"
 msgid "Delete custom list %(listName)s"
 msgstr "刪除自訂清單 %(listName)s"
 
+#. Accessibility label of the control that puts an
+#. announcement away for good.
+msgctxt "accessibility"
+msgid "Dismiss the announcement"
+msgstr "關閉公告"
+
 #. Accessibility label for button to edit a custom list.
 #. The placeholder is replaced with the name of the custom list.
 msgctxt "accessibility"
@@ -1623,6 +1629,16 @@ msgstr "按一下此處查看最新動態。"
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "按一下此處更新"
+
+#. Label of the voucher code an announcement granted to this account.
+msgctxt "in-app-notifications"
+msgid "Your code"
+msgstr "我的優惠券兌換碼"
+
+#. Confirmation shown once the voucher code is on the clipboard.
+msgctxt "in-app-notifications"
+msgid "Copied"
+msgstr "已複製"
 
 #. Notification subtitle when the installer download failed.
 msgctxt "in-app-notifications"
@@ -4725,6 +4741,12 @@ msgstr "確定"
 msgctxt "accessibility"
 msgid "Copy public key"
 msgstr "複製公鑰"
+
+#. Accessibility label of the control that copies
+#. the voucher code to the clipboard.
+msgctxt "accessibility"
+msgid "Copy the voucher code"
+msgstr "複製優惠券兌換碼"
 
 msgctxt "accessibility"
 msgid "Hide public key"

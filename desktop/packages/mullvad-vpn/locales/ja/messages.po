@@ -394,6 +394,12 @@ msgctxt "accessibility"
 msgid "Delete custom list %(listName)s"
 msgstr "カスタムリストの%(listName)sを削除する"
 
+#. Accessibility label of the control that puts an
+#. announcement away for good.
+msgctxt "accessibility"
+msgid "Dismiss the announcement"
+msgstr "お知らせを閉じる"
+
 #. Accessibility label for button to edit a custom list.
 #. The placeholder is replaced with the name of the custom list.
 msgctxt "accessibility"
@@ -1623,6 +1629,16 @@ msgstr "新機能を確認するにはここをクリックしてください。
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "ここをクリックして更新"
+
+#. Label of the voucher code an announcement granted to this account.
+msgctxt "in-app-notifications"
+msgid "Your code"
+msgstr "あなたのコード"
+
+#. Confirmation shown once the voucher code is on the clipboard.
+msgctxt "in-app-notifications"
+msgid "Copied"
+msgstr "コピーしました"
 
 #. Notification subtitle when the installer download failed.
 msgctxt "in-app-notifications"
@@ -4725,6 +4741,12 @@ msgstr "OK"
 msgctxt "accessibility"
 msgid "Copy public key"
 msgstr "公開鍵をコピー"
+
+#. Accessibility label of the control that copies
+#. the voucher code to the clipboard.
+msgctxt "accessibility"
+msgid "Copy the voucher code"
+msgstr "バウチャーコードをコピー"
 
 msgctxt "accessibility"
 msgid "Hide public key"

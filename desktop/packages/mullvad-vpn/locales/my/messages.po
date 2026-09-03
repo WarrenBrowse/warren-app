@@ -394,6 +394,12 @@ msgctxt "accessibility"
 msgid "Delete custom list %(listName)s"
 msgstr "စိတ်ကြိုက်စာရင်း %(listName)s ကို ဖျက်ရန်"
 
+#. Accessibility label of the control that puts an
+#. announcement away for good.
+msgctxt "accessibility"
+msgid "Dismiss the announcement"
+msgstr "ကြေညာချက်ကို ပိတ်ရန်"
+
 #. Accessibility label for button to edit a custom list.
 #. The placeholder is replaced with the name of the custom list.
 msgctxt "accessibility"
@@ -1623,6 +1629,16 @@ msgstr "အသစ်ထူးသော အကြောင်းအရာကိ�
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "အပ်ဒိတ်လုပ်ရန် ဤနေရာကို နှိပ်ပါ"
+
+#. Label of the voucher code an announcement granted to this account.
+msgctxt "in-app-notifications"
+msgid "Your code"
+msgstr "သင့်ကုဒ်"
+
+#. Confirmation shown once the voucher code is on the clipboard.
+msgctxt "in-app-notifications"
+msgid "Copied"
+msgstr "ကူးယူပြီးပါပြီ"
 
 #. Notification subtitle when the installer download failed.
 msgctxt "in-app-notifications"
@@ -4728,6 +4744,12 @@ msgstr "OK"
 msgctxt "accessibility"
 msgid "Copy public key"
 msgstr "Public key ကို ကူးယူရန်"
+
+#. Accessibility label of the control that copies
+#. the voucher code to the clipboard.
+msgctxt "accessibility"
+msgid "Copy the voucher code"
+msgstr "ဘောက်ချာကုဒ်ကို ကူးယူရန်"
 
 msgctxt "accessibility"
 msgid "Hide public key"

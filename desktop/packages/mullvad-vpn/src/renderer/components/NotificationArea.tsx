@@ -1,7 +1,7 @@
 import { AnimatePresence } from 'motion/react';
 import { useCallback, useState } from 'react';
 
-import { urls } from '../../shared/constants';
+import { Url, urls } from '../../shared/constants';
 import { messages } from '../../shared/gettext';
 import log from '../../shared/logging';
 import {
@@ -32,6 +32,7 @@ import {
   AppUpgradeProgressNotificationProvider,
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
+  WarrenAnnouncementNotificationProvider,
   WarrenConnectingStuckNotificationProvider,
   WarrenEnvStandDownNotificationProvider,
   WarrenExitEgressNotificationProvider,
@@ -61,6 +62,7 @@ import {
   NotificationTroubleshootDialogAction,
 } from './NotificationBanner';
 import { NotificationSubtitle } from './NotificationSubtitle';
+import { WarrenAnnouncementCard } from './WarrenAnnouncementCard';
 
 interface IProps {
   className?: string;
@@ -108,7 +110,16 @@ export default function NotificationArea(props: IProps) {
   const hostOffline = useHostOffline();
   const connectingStuck = useConnectingStuck();
   const exitEgressDead = useExitEgressDead();
-  const { clearEnvYield } = useAppContext();
+  const { clearEnvYield, dismissAnnouncement, openUrl } = useAppContext();
+  const dismissedAnnouncements = useSelector(
+    (state: IReduxState) => state.settings.guiSettings.dismissedAnnouncements ?? [],
+  );
+  const openAnnouncementCta = useCallback(
+    (url: Url) => {
+      void openUrl(url);
+    },
+    [openUrl],
+  );
   const clearEnvYieldNow = useCallback(() => {
     clearEnvYield().catch((error: Error) => {
       // The daemon refuses the re-enable while the other environment still
@@ -149,7 +160,18 @@ export default function NotificationArea(props: IProps) {
   const appUpgradeStep = convertEventTypeToStep(appUpgradeEventType);
 
   const notificationProviders: InAppNotificationProvider[] = [
-    // Above everything, including the network-loss banner: when the
+    // First, above the operator notice itself. A notice is not dismissible, so
+    // ranking it higher would let a long-lived operator statement bury the
+    // card for as long as it stands, and the card carries a code that stops
+    // being worth anything once the campaign closes. The card steps aside on
+    // its own the moment the user dismisses it, and the notice is then the
+    // banner that shows.
+    new WarrenAnnouncementNotificationProvider({
+      announcements: warrenStatus?.announcements ?? [],
+      dismissedIds: dismissedAnnouncements,
+      dismiss: dismissAnnouncement,
+    }),
+    // Then the operator broadcast, above the network-loss banner: when the
     // operator has published a notice, that message is the one thing the
     // user must read. The states it covers are still legible in the
     // connect view's own status, and the daemon clears the notice (empty
@@ -283,6 +305,15 @@ export default function NotificationArea(props: IProps) {
   const showFullText = useCallback(() => setExpandedText(expandable), [expandable]);
   const hideFullText = useCallback(() => setExpandedText(undefined), []);
 
+  // A launch announcement owns the whole banner: its headline is the title, so
+  // the level word the other banners carry would be a second title on top of
+  // the operator's own words, and its code and call to action do not fit the
+  // one-line title/subtitle/action shape.
+  const announcementCard =
+    notification?.action?.type === 'announcement-card'
+      ? notification.action.announcement
+      : undefined;
+
   return (
     <AnimatePresence>
       {notification && (
@@ -290,37 +321,48 @@ export default function NotificationArea(props: IProps) {
           animateIn={isMounted}
           aria-hidden={!notification}
           className={props.className}>
-          <NotificationIndicator
-            $type={notification.indicator}
-            data-testid="notificationIndicator"
-          />
-          <NotificationContent role="status" aria-live="polite">
-            <NotificationTitle data-testid="notificationTitle">
-              {notification.title}
-            </NotificationTitle>
-            {expandable ? (
-              <NotificationExpandableSubtitle
-                text={expandable.content}
-                expandLabel={
-                  // TRANSLATORS: Shown under a banner whose text was too long
-                  // TRANSLATORS: to fit; opens the full message.
-                  messages.pgettext('in-app-notifications', 'Read the full message')
-                }
-                onExpand={showFullText}
-              />
-            ) : (
-              <NotificationSubtitle
-                data-testid="notificationSubTitle"
-                subtitle={notification.subtitle}
-              />
-            )}
-          </NotificationContent>
-          {notification.action && (
-            <NotificationActionWrapper
-              action={notification.action}
-              isModalOpen={isModalOpen}
-              setIsModalOpen={setIsModalOpen}
+          {announcementCard ? (
+            <WarrenAnnouncementCard
+              title={notification.title}
+              indicator={notification.indicator}
+              announcement={announcementCard}
+              onOpenCta={openAnnouncementCta}
             />
+          ) : (
+            <>
+              <NotificationIndicator
+                $type={notification.indicator}
+                data-testid="notificationIndicator"
+              />
+              <NotificationContent role="status" aria-live="polite">
+                <NotificationTitle data-testid="notificationTitle">
+                  {notification.title}
+                </NotificationTitle>
+                {expandable ? (
+                  <NotificationExpandableSubtitle
+                    text={expandable.content}
+                    expandLabel={
+                      // TRANSLATORS: Shown under a banner whose text was too long
+                      // TRANSLATORS: to fit; opens the full message.
+                      messages.pgettext('in-app-notifications', 'Read the full message')
+                    }
+                    onExpand={showFullText}
+                  />
+                ) : (
+                  <NotificationSubtitle
+                    data-testid="notificationSubTitle"
+                    subtitle={notification.subtitle}
+                  />
+                )}
+              </NotificationContent>
+              {notification.action && (
+                <NotificationActionWrapper
+                  action={notification.action}
+                  isModalOpen={isModalOpen}
+                  setIsModalOpen={setIsModalOpen}
+                />
+              )}
+            </>
           )}
           <ModalAlert
             isOpen={expandedText !== undefined}
@@ -395,9 +437,9 @@ function NotificationActionWrapper({
     }
   }
 
-  if (action.type === 'expand-text') {
-    // The control lives under the text itself, so the action column would
-    // only add an empty box next to it.
+  if (action.type === 'expand-text' || action.type === 'announcement-card') {
+    // The controls live inside the text or the card itself, so the action
+    // column would only add an empty box next to them.
     return null;
   }
 

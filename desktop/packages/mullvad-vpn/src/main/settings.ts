@@ -170,6 +170,10 @@ export default class Settings implements Readonly<ISettings> {
       this.guiSettings.backupPending = backupPending;
     });
 
+    IpcMainEventChannel.guiSettings.handleDismissAnnouncement((id: string) => {
+      this.guiSettings.dismissAnnouncement(id);
+    });
+
     IpcMainEventChannel.currentVersion.handleDisplayedChangelog(() => {
       this.guiSettings.changelogDisplayedForVersion = this.currentVersion.gui;
     });

@@ -7,16 +7,24 @@ import { InAppNotificationIndicatorType } from '../../shared/notifications/notif
 import { IconButton } from '../lib/components';
 import { colors } from '../lib/foundations';
 import { useExclusiveTask } from '../lib/hooks/use-exclusive-task';
-import { tinyText } from './common-styles';
+import { smallText, tinyText } from './common-styles';
 
 const NOTIFICATION_AREA_ID = 'notification-area';
 
-export const NotificationTitle = styled.span(tinyText, {
+// The banner carries operator-authored text, so the title and the body have to
+// separate at a glance rather than being one block of bold 12px. Same hierarchy
+// the announcement card uses: a title one step up the size ladder, and a body
+// at regular weight with enough contrast to survive the glass surface over the
+// scenery photo.
+export const NotificationTitle = styled.span(smallText, {
   color: colors.white,
+  overflowWrap: 'anywhere',
 });
 
 export const NotificationSubtitleText = styled.span(tinyText, {
-  color: colors.whiteAlpha60,
+  fontWeight: 'normal',
+  color: colors.whiteAlpha80,
+  overflowWrap: 'anywhere',
 });
 
 interface INotificationSubtitleProps {
@@ -144,8 +152,10 @@ export function NotificationCloseAction(props: NotificationActionProps) {
 export const NotificationContent = styled.div.attrs({ id: NOTIFICATION_AREA_ID })({
   display: 'flex',
   flexDirection: 'column',
+  gap: '2px',
   flex: 1,
   paddingRight: '4px',
+  minWidth: 0,
 });
 
 export const NotificationActions = styled.div({
@@ -169,7 +179,9 @@ export const NotificationIndicator = styled.div<INotificationIndicatorProps>((pr
   width: '10px',
   height: '10px',
   borderRadius: '5px',
-  marginTop: '4px',
+  // Centred on the title's line box rather than on its cap height, so the dot
+  // reads as part of the title line: (20px line height - 10px dot) / 2.
+  marginTop: '5px',
   marginRight: '8px',
   backgroundColor: props.$type
     ? notificationIndicatorTypeColorMap[props.$type]

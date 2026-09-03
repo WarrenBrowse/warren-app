@@ -98,8 +98,16 @@ export default [
     rules: { 'lazy-gettext/no-module-scope-gettext': 'error' },
   },
   {
-    files: ['test/**/*.spec.ts'],
+    // Chai's `expect(x).to.be.true` is an expression, and a spec that renders a
+    // component is a `.tsx`, so both extensions are exempt.
+    files: ['test/**/*.spec.{ts,tsx}'],
     rules: { '@typescript-eslint/no-unused-expressions': 'off' },
+  },
+  {
+    // A spec renders a component with inline handlers on purpose: there is no
+    // re-render to make an identity-stable callback worth anything.
+    files: ['test/**/*.tsx'],
+    rules: { 'react/jsx-no-bind': 'off' },
   },
   {
     files: ['tasks/*', 'scripts/*'],

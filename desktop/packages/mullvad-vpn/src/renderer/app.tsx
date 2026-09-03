@@ -855,6 +855,12 @@ export default class AppRenderer {
     IpcRendererEventChannel.currentVersion.displayedChangelog();
   };
 
+  // Puts a launch announcement away for good. The id is the key, so a second
+  // announcement published later still reaches a user who dismissed the first.
+  public dismissAnnouncement = (id: string): void => {
+    IpcRendererEventChannel.guiSettings.dismissAnnouncement(id);
+  };
+
   public setDismissedUpgrade = (): void => {
     IpcRendererEventChannel.upgradeVersion.dismissedUpgrade(
       this.reduxStore.getState().version.suggestedUpgrade?.version ?? '',

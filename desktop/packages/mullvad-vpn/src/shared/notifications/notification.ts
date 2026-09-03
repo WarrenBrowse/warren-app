@@ -61,7 +61,31 @@ export type InAppNotificationAction =
       // modal independent of how the subtitle happens to be rendered.
       type: 'expand-text';
       expand: { title: string; content: string };
+    }
+  | {
+      // A launch announcement is a card rather than a one-line banner: it
+      // brings its own headline, an optional call to action, and a voucher
+      // code the reader has to be able to copy. The whole payload travels
+      // here so the providers stay pure data and the card owns its layout.
+      type: 'announcement-card';
+      announcement: InAppAnnouncementCard;
     };
+
+export interface InAppAnnouncementCard {
+  id: string;
+  body: string;
+  // Verbatim, in the grouping the operator published: a code is transcribed
+  // by hand as often as it is copied, so it is never regrouped here.
+  voucherCode: string | null;
+  // `null` when the announcement carries no call to action, and when its url
+  // did not survive the render-time https check: the text still reaches the
+  // reader, the link never becomes clickable.
+  cta: { label: string; url: Url } | null;
+  // An announcement is an event, so the reader can put it away for good. A
+  // notice carries no equivalent: it is a live operator statement and clears
+  // from the same signal that raised it.
+  dismiss: () => void;
+}
 
 export type InAppNotificationIndicatorType = 'success' | 'warning' | 'error';
 

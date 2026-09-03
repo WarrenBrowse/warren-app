@@ -399,6 +399,12 @@ msgctxt "accessibility"
 msgid "Copy public key"
 msgstr "Copiați cheia publică"
 
+#. Accessibility label of the control that copies
+#. the voucher code to the clipboard.
+msgctxt "accessibility"
+msgid "Copy the voucher code"
+msgstr "Copiați codul voucherului"
+
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -409,6 +415,12 @@ msgstr "Caruselul de informații DAITA"
 msgctxt "accessibility"
 msgid "Delete custom list %(listName)s"
 msgstr "Ștergeți lista personalizată d%(listName)s"
+
+#. Accessibility label of the control that puts an
+#. announcement away for good.
+msgctxt "accessibility"
+msgid "Dismiss the announcement"
+msgstr "Închideți anunțul"
 
 #. Accessibility label for button to edit a custom list.
 #. The placeholder is replaced with the name of the custom list.
@@ -1673,6 +1685,16 @@ msgstr "Faceți clic aici pentru a vedea noutățile."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Faceți clic aici pentru a actualiza"
+
+#. Label of the voucher code an announcement granted to this account.
+msgctxt "in-app-notifications"
+msgid "Your code"
+msgstr "Codul dvs."
+
+#. Confirmation shown once the voucher code is on the clipboard.
+msgctxt "in-app-notifications"
+msgid "Copied"
+msgstr "Copiat"
 
 #. Notification subtitle when the installer download failed.
 msgctxt "in-app-notifications"

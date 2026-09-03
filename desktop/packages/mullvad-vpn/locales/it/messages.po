@@ -400,6 +400,12 @@ msgctxt "accessibility"
 msgid "Delete custom list %(listName)s"
 msgstr "Elimina elenco personalizzato %(listName)s"
 
+#. Accessibility label of the control that puts an
+#. announcement away for good.
+msgctxt "accessibility"
+msgid "Dismiss the announcement"
+msgstr "Chiudi l’annuncio"
+
 #. Accessibility label for button to edit a custom list.
 #. The placeholder is replaced with the name of the custom list.
 msgctxt "accessibility"
@@ -1629,6 +1635,16 @@ msgstr "Clicca qui per vedere le novità."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Clicca qui per aggiornare"
+
+#. Label of the voucher code an announcement granted to this account.
+msgctxt "in-app-notifications"
+msgid "Your code"
+msgstr "Il tuo codice"
+
+#. Confirmation shown once the voucher code is on the clipboard.
+msgctxt "in-app-notifications"
+msgid "Copied"
+msgstr "Copiato"
 
 #. Notification subtitle when the installer download failed.
 msgctxt "in-app-notifications"
@@ -4864,6 +4880,12 @@ msgstr "OK"
 msgctxt "accessibility"
 msgid "Copy public key"
 msgstr "Copia chiave pubblica"
+
+#. Accessibility label of the control that copies
+#. the voucher code to the clipboard.
+msgctxt "accessibility"
+msgid "Copy the voucher code"
+msgstr "Copia il codice voucher"
 
 msgctxt "accessibility"
 msgid "Hide public key"

@@ -20,6 +20,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   onboardingPending: 'boolean',
   backupPending: 'boolean',
   pendingPurchases: 'Array<string>',
+  dismissedAnnouncements: 'Array<string>',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -37,6 +38,7 @@ const defaultSettings: IGuiSettingsState = {
   onboardingPending: false,
   backupPending: false,
   pendingPurchases: [],
+  dismissedAnnouncements: [],
 };
 
 export default class GuiSettings {
@@ -185,6 +187,23 @@ export default class GuiSettings {
 
   get pendingPurchases(): Array<string> {
     return this.stateValue.pendingPurchases ?? [];
+  }
+
+  // Launch announcements the user has put away (see gui-settings-state.ts).
+  // Append-only and de-duplicated: a card the user dismissed twice, on two
+  // runs, must not grow the file forever.
+  public dismissAnnouncement(id: string) {
+    if (this.dismissedAnnouncements.includes(id)) {
+      return;
+    }
+    this.changeStateAndNotify({
+      ...this.stateValue,
+      dismissedAnnouncements: [...this.dismissedAnnouncements, id],
+    });
+  }
+
+  get dismissedAnnouncements(): Array<string> {
+    return this.stateValue.dismissedAnnouncements ?? [];
   }
 
   public load() {

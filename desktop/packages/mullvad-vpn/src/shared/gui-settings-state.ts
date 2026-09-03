@@ -67,6 +67,15 @@ export interface IGuiSettingsState {
   // backup-pending state. Cleared once the backup is confirmed.
   backupPending?: boolean;
 
+  // Ids of the launch announcements the user has put away. An announcement is
+  // an event: once it has been read, and its code copied, it must not come
+  // back on every launch, so the dismissal is keyed by the announcement id and
+  // outlives the process. Notices have no equivalent field on purpose, because
+  // a notice is a live operator statement and clears from the same signal that
+  // raised it. Optional so settings files written by older versions keep
+  // validating.
+  dismissedAnnouncements?: Array<string>;
+
   // App-initiated purchases (doc 35) awaiting their webhook voucher,
   // as `${wpid}:${startedUnixMs}` entries. Persisted so a purchase
   // paid after the app was closed is still redeemed on the next run

@@ -352,6 +352,12 @@ msgctxt "accessibility"
 msgid "Copy public key"
 msgstr ""
 
+#. Accessibility label of the control that copies
+#. the voucher code to the clipboard.
+msgctxt "accessibility"
+msgid "Copy the voucher code"
+msgstr ""
+
 #. Accessibility label for a carousel that explains the DAITA feature to the user.
 msgctxt "accessibility"
 msgid "DAITA information carousel"
@@ -361,6 +367,12 @@ msgstr ""
 #. The placeholder is replaced with the name of the custom list.
 msgctxt "accessibility"
 msgid "Delete custom list %(listName)s"
+msgstr ""
+
+#. Accessibility label of the control that puts an
+#. announcement away for good.
+msgctxt "accessibility"
+msgid "Dismiss the announcement"
 msgstr ""
 
 #. Accessibility label for button to edit a custom list.
@@ -1774,6 +1786,11 @@ msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr ""
 
+#. Confirmation shown once the voucher code is on the clipboard.
+msgctxt "in-app-notifications"
+msgid "Copied"
+msgstr ""
+
 #. Notification subtitle when the installer download failed.
 msgctxt "in-app-notifications"
 msgid "Could not download installer."
@@ -1963,6 +1980,11 @@ msgstr ""
 #. %(product)s - Name of the install that took priority.
 msgctxt "in-app-notifications"
 msgid "You can bring it back once %(product)s is disconnected."
+msgstr ""
+
+#. Label of the voucher code an announcement granted to this account.
+msgctxt "in-app-notifications"
+msgid "Your code"
 msgstr ""
 
 msgctxt "in-app-notifications"
