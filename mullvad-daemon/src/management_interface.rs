@@ -778,6 +778,52 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
+    /// Signs a community-forum in-app report (doc 55). The body's shape and
+    /// the log cap are the shared builder's rules, applied in the daemon
+    /// (`warren_forum::report_body`), so this layer and the mobile FFI cannot
+    /// disagree on what is signable; it only maps the refusal classes.
+    /// **No-log policy**: never log the pubkey, the signature, the report
+    /// text or the log content.
+    async fn sign_forum_report(
+        &self,
+        request: Request<types::ForumReportRequest>,
+    ) -> ServiceResult<types::ForumLoginSignature> {
+        // Same wallet-key gate as the other forum signatures: without it the
+        // world-accessible socket is a signing oracle for any local user.
+        self.authorize_wallet_access(&request)?;
+        let request = request.into_inner();
+        // No field at all for a report without logs, never an empty one: the
+        // vector pins both shapes.
+        let log_gz = (!request.log_gz.is_empty()).then_some(request.log_gz);
+        log::debug!("sign_forum_report (pubkey/sig/report NEVER logged)");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(DaemonCommand::SignForumReport(
+            tx,
+            request.report_json,
+            log_gz,
+        ))?;
+        match self.wait_for_result(rx).await? {
+            Ok((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
+                pubkey_ss58: headers.pubkey_ss58,
+                signature_hex: headers.signature_hex,
+                timestamp: headers.timestamp,
+                nonce_hex: headers.nonce_hex,
+                body,
+            })),
+            Err(crate::ForumReportSignError::NoIdentity) => Err(Status::failed_precondition(
+                "no Warren identity bootstrapped",
+            )),
+            Err(crate::ForumReportSignError::Build(
+                warren_forum::ForumRequestError::LogTooLarge,
+            )) => Err(Status::invalid_argument("log_gz exceeds the 12 MB cap")),
+            Err(crate::ForumReportSignError::Build(warren_forum::ForumRequestError::Invalid)) => {
+                Err(Status::invalid_argument(
+                    "report_json must be a JSON object without a log_gz_b64 field",
+                ))
+            }
+        }
+    }
+
     /// Snapshot of the live Warren tunnel status read directly from
     /// the daemon-shared cache.
     async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {

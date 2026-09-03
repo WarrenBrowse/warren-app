@@ -133,6 +133,23 @@ service ManagementService {
   // the sid is malformed, or the gzip is empty or exceeds 1 MiB.
   rpc SignForumAttachLogs(ForumAttachLogsRequest) returns (ForumLoginSignature) {}
 
+  // Signs a community-forum in-app report (warren-core doc 55): the
+  // Settings, Support, "Report a problem" form filed without a browser. The
+  // GUI passes the form's fields as one JSON object (the connect contract's
+  // field names: platform, area, frequency, what_happened, steps,
+  // app_version, os_version, locale) plus the gzipped redacted problem
+  // report, empty for a report filed without logs; the daemon builds the
+  // canonical body through the crate the mobile clients sign with (the
+  // fields plus `log_gz_b64`, compact, keys ascending), signs
+  // `POST /v1/forum/report` with the Warren identity key, and returns the
+  // four X-Warren-* header values plus that exact body. The GUI POSTs the
+  // body verbatim so the signed bytes and the sent bytes are identical. The
+  // key never leaves the daemon. Errors if no identity is bootstrapped
+  // (FAILED_PRECONDITION), if the fields are not a JSON object or carry a
+  // `log_gz_b64` of their own, or if the gzip is over the 12,000,000 byte
+  // cap (INVALID_ARGUMENT), the broker's 16,000,000 base64 characters.
+  rpc SignForumReport(ForumReportRequest) returns (ForumLoginSignature) {}
+
   // Warren multi-hop (M4.E.D / two-relayed QUIC HPKE doctrine).
   // OFF by default per doctrine `warren_multihop_doctrine_v1` (full
   // bandwidth single-hop, opt-in privacy). entry_country / exit_country
@@ -845,6 +862,16 @@ message ForumAttachLogsRequest {
   string sid = 1;
   uint64 topic_id = 2;
   bytes log_gz = 3;
+}
+
+// Community-forum in-app report (doc 55). `report_json` is the form's fields
+// as one JSON object in the connect contract's names (never a `log_gz_b64`
+// of its own: the daemon adds that field), `log_gz` the gzipped redacted
+// problem report, empty when the report is filed without logs (max
+// 12,000,000 bytes otherwise).
+message ForumReportRequest {
+  string report_json = 1;
+  bytes log_gz = 2;
 }
 
 // Warren live tunnel status surface via GetWarrenStatus rpc and the

@@ -109,6 +109,10 @@ mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
 rand = { workspace = true }
 warren-product-env = { path = "../warren-product-env" }
+# The in-app report body (`POST /v1/forum/report`, doc 55) is serialised by
+# the crate the Android and iOS FFI share, so the desktop signs the same bytes
+# the mobile clients send; the daemon only supplies the signer.
+warren-forum = { path = "../warren-forum" }
 # Warren fork - fetches `GET /v1/exits` at boot to bootstrap
 # `<cache_dir>/warren-relays.json` from warren-api. Public endpoint
 # (no client signature); the server-signed v2 response is verified at
@@ -205,6 +209,9 @@ ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std
 # expiry) instead of a hand-built VerifiedMultiHopDirectory.
 warren-discovery-core = { path = "../../warren-contract/warren-discovery", features = ["test-helpers"] }
 insta = { workspace = true, features = ["json"] }
+# Decodes the shared forum golden vector (`vectors/forum_login_v1.json`) the
+# report signing replays.
+hex = "0.4"
 talpid-time = { path = "../talpid-time", features = ["test"] }
 tokio = { workspace = true, features = ["test-util"] }
 # `WarrenRemoteAccountBackend`'s adapter mapping is tested against a mocked

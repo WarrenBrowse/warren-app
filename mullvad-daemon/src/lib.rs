@@ -438,6 +438,18 @@ pub enum DaemonCommand {
         u64,
         Vec<u8>,
     ),
+    /// Signs a community-forum in-app report (doc 55). Carries the form's
+    /// fields as one JSON object and the gzipped problem report (`None` for
+    /// a report filed without logs); replies with the four X-Warren-* header
+    /// values + the exact signed body, or why it could not be signed. The
+    /// signing key never leaves the daemon.
+    SignForumReport(
+        oneshot::Sender<
+            Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError>,
+        >,
+        String,
+        Option<Vec<u8>>,
+    ),
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
     /// validation + atomic write. The daemon hot-swaps the
     /// in-memory `WarrenAuthSigner` and triggers `account_manager.login`
@@ -2665,6 +2677,9 @@ impl Daemon {
             SignForumAttachLogs(tx, sid, topic_id, log_gz) => {
                 self.on_sign_forum_attach_logs(tx, sid, topic_id, log_gz)
             }
+            SignForumReport(tx, report_json, log_gz) => {
+                self.on_sign_forum_report(tx, report_json, log_gz)
+            }
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
@@ -3353,6 +3368,44 @@ impl Daemon {
         });
         log::debug!("on_sign_forum_attach_logs: signed={}", result.is_some());
         Self::oneshot_send(tx, result, "sign_forum_attach_logs");
+    }
+
+    /// Signs the community-forum in-app report (doc 55). Builds the
+    /// canonical body via [`forum_report_body`] (the crate the mobile FFI
+    /// share) and signs `POST /v1/forum/report` with the Warren identity key
+    /// held in the daemon, returning the header values + the exact signed
+    /// body (the GUI POSTs it verbatim).
+    ///
+    /// **No-log policy**: the pubkey, the signature, the report text and the
+    /// log content are never logged; only whether it signed, and the class
+    /// of a refusal.
+    fn on_sign_forum_report(
+        &self,
+        tx: oneshot::Sender<
+            Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError>,
+        >,
+        report_json: String,
+        log_gz: Option<Vec<u8>>,
+    ) {
+        let result = if self.warren_identity.has_user_identity() {
+            forum_report_body(&report_json, log_gz.as_deref())
+                .map(|body| {
+                    let headers = self.warren_identity.signer().sign_request(
+                        "POST",
+                        FORUM_REPORT_PATH,
+                        body.as_bytes(),
+                    );
+                    (headers, body)
+                })
+                .map_err(ForumReportSignError::Build)
+        } else {
+            Err(ForumReportSignError::NoIdentity)
+        };
+        match &result {
+            Ok(_) => log::debug!("on_sign_forum_report: signed"),
+            Err(err) => log::debug!("on_sign_forum_report: not signed ({err:?})"),
+        }
+        Self::oneshot_send(tx, result, "sign_forum_report");
     }
 
     /// Restores the mnemonic via
@@ -5619,6 +5672,156 @@ fn forum_attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> String {
     use base64::Engine;
     let log_gz_b64 = base64::engine::general_purpose::STANDARD.encode(log_gz);
     format!("{{\"sid\":\"{sid}\",\"topic_id\":{topic_id},\"log_gz_b64\":\"{log_gz_b64}\"}}")
+}
+
+/// The path the in-app report is signed for: the shared crate's, so the
+/// daemon and the FFI crates cannot sign for two different routes.
+pub use warren_forum::FORUM_REPORT_PATH;
+
+/// Canonical `POST /v1/forum/report` JSON body (doc 55): the form's fields
+/// plus the gzipped problem report as `log_gz_b64`, serialised once by the
+/// crate the Android and iOS FFI share (`warren_forum::report_body`), so the
+/// desktop signs and sends the bytes the mobile clients do. `None` for a
+/// report filed without logs: no field at all, never an empty one.
+///
+/// # Errors
+///
+/// [`warren_forum::ForumRequestError::Invalid`] if `report_json` is not a
+/// JSON object or smuggles a `log_gz_b64` field of its own;
+/// [`warren_forum::ForumRequestError::LogTooLarge`] over the shared
+/// 12,000,000 byte cap (the broker's 16,000,000 base64 characters).
+fn forum_report_body(
+    report_json: &str,
+    log_gz: Option<&[u8]>,
+) -> Result<String, warren_forum::ForumRequestError> {
+    let body = warren_forum::report_body(report_json, log_gz)?;
+    // serde_json emits UTF-8 and the log field is base64: the bytes are text.
+    String::from_utf8(body).map_err(|_| warren_forum::ForumRequestError::Invalid)
+}
+
+/// Why the daemon could not sign an in-app report.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ForumReportSignError {
+    /// No Warren identity is bootstrapped yet: there is no key to sign with.
+    NoIdentity,
+    /// The body could not be built (shape, or the log over the cap).
+    Build(warren_forum::ForumRequestError),
+}
+
+#[cfg(test)]
+mod forum_report_tests {
+    use super::{FORUM_REPORT_PATH, forum_report_body};
+    use mullvad_api::warren_auth::WarrenAuthSigner;
+    use warren_forum::ForumRequestError;
+    use warren_identity::ed25519_dalek::SigningKey;
+
+    /// The shared golden vector (the warren-vectors submodule): the exact
+    /// signed report requests a client sends to the connect broker, replayed
+    /// by the FFI crates through `warren-forum` and by warren-connect on the
+    /// other side of the wire.
+    const VECTOR_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../vectors/forum_login_v1.json"
+    );
+
+    fn vector() -> serde_json::Value {
+        let raw = std::fs::read_to_string(VECTOR_PATH).unwrap_or_else(|err| {
+            panic!("read {VECTOR_PATH}: {err} (run `git submodule update --init vectors`)")
+        });
+        let vector: serde_json::Value = serde_json::from_str(&raw).expect("forum_login_v1.json");
+        assert_eq!(vector["version"], 1, "this suite replays forum_login v1");
+        vector
+    }
+
+    fn str_of<'a>(value: &'a serde_json::Value, key: &str) -> &'a str {
+        value[key]
+            .as_str()
+            .unwrap_or_else(|| panic!("`{key}` is a string in {value}"))
+    }
+
+    #[test]
+    fn the_daemon_signs_the_vectors_report_requests_byte_for_byte() {
+        // The daemon's own signer over the shared body builder must produce
+        // the bytes the vector pins, with and without logs: a divergence here
+        // is a desktop report the broker refuses while the mobile clients get
+        // through.
+        let vector = vector();
+        let secret: [u8; 32] = hex::decode(str_of(&vector["signer"], "signing_key_hex"))
+            .expect("hex")
+            .try_into()
+            .expect("32 bytes");
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&secret));
+        let timestamp = vector["signer"]["timestamp"].as_u64().expect("timestamp");
+
+        let mut replayed = 0;
+        for request in vector["requests"].as_array().expect("requests") {
+            let name = str_of(request, "name");
+            if !name.starts_with("report_") {
+                continue;
+            }
+            assert_eq!(str_of(request, "path"), FORUM_REPORT_PATH, "{name}: path");
+            let log_gz = request
+                .get("log_gz_hex")
+                .and_then(serde_json::Value::as_str)
+                .map(|gz| hex::decode(gz).expect("log_gz_hex"));
+            let body = forum_report_body(&request["fields"].to_string(), log_gz.as_deref())
+                .expect("the vector's report builds");
+            assert_eq!(body, str_of(request, "body_utf8"), "{name}: body");
+
+            let nonce: [u8; 16] = hex::decode(str_of(request, "nonce_hex"))
+                .expect("hex")
+                .try_into()
+                .expect("16 bytes");
+            let headers = signer.sign_request_at(
+                "POST",
+                FORUM_REPORT_PATH,
+                body.as_bytes(),
+                timestamp,
+                nonce,
+            );
+            let pinned = &request["headers"];
+            assert_eq!(
+                headers.pubkey_ss58,
+                str_of(pinned, "X-Warren-PubKey"),
+                "{name}"
+            );
+            assert_eq!(
+                headers.signature_hex,
+                str_of(pinned, "X-Warren-Sig"),
+                "{name}"
+            );
+            assert_eq!(
+                headers.timestamp.to_string(),
+                str_of(pinned, "X-Warren-Timestamp"),
+                "{name}"
+            );
+            assert_eq!(
+                headers.nonce_hex,
+                str_of(pinned, "X-Warren-Nonce"),
+                "{name}"
+            );
+            replayed += 1;
+        }
+        assert_eq!(
+            replayed, 2,
+            "the vector pins a report with and without logs"
+        );
+    }
+
+    #[test]
+    fn the_report_body_keeps_the_shared_builders_refusals() {
+        assert_eq!(
+            forum_report_body("[1,2]", None),
+            Err(ForumRequestError::Invalid)
+        );
+        assert_eq!(
+            forum_report_body(
+                r#"{"area":"other"}"#,
+                Some(&vec![0u8; warren_forum::MAX_LOG_GZ_BYTES + 1])
+            ),
+            Err(ForumRequestError::LogTooLarge)
+        );
+    }
 }
 
 #[cfg(test)]

@@ -218,6 +218,32 @@ pub fn build_signed_report_request_with_nonce(
     timestamp: u64,
     nonce: [u8; 16],
 ) -> Result<SignedForumRequest, ForumRequestError> {
+    let body = report_body(report_json, log_gz)?;
+    signed_post_with_nonce(
+        signing_key,
+        warren_product_env::CONNECT_HOST,
+        FORUM_REPORT_PATH,
+        body,
+        timestamp,
+        nonce,
+    )
+}
+
+/// The path the in-app report is signed for and posted to.
+pub const FORUM_REPORT_PATH: &str = "/v1/forum/report";
+
+/// The canonical body of the in-app report: `report_json`'s fields plus
+/// `log_gz` as the `log_gz_b64` field when present, serialised compact with
+/// the keys in ascending order. The one serialisation every platform signs:
+/// the FFI crates through [`build_signed_report_request`], the desktop daemon
+/// with its own signer over [`FORUM_REPORT_PATH`].
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if `report_json` is not a JSON object or
+/// already carries a `log_gz_b64` field; [`ForumRequestError::LogTooLarge`]
+/// if `log_gz` is over [`MAX_LOG_GZ_BYTES`].
+pub fn report_body(report_json: &str, log_gz: Option<&[u8]>) -> Result<Vec<u8>, ForumRequestError> {
     let mut report: serde_json::Map<String, serde_json::Value> =
         serde_json::from_str(report_json).map_err(|_| ForumRequestError::Invalid)?;
     if report.contains_key("log_gz_b64") {
@@ -230,16 +256,7 @@ pub fn build_signed_report_request_with_nonce(
         let b64 = base64::Engine::encode(&base64::engine::general_purpose::STANDARD, gz);
         report.insert("log_gz_b64".to_owned(), serde_json::Value::String(b64));
     }
-    let body = serde_json::to_vec(&serde_json::Value::Object(report))
-        .map_err(|_| ForumRequestError::Invalid)?;
-    signed_post_with_nonce(
-        signing_key,
-        warren_product_env::CONNECT_HOST,
-        "/v1/forum/report",
-        body,
-        timestamp,
-        nonce,
-    )
+    serde_json::to_vec(&serde_json::Value::Object(report)).map_err(|_| ForumRequestError::Invalid)
 }
 
 fn signed_post(
@@ -1114,6 +1131,39 @@ mod tests {
         .expect("builds");
         let body: serde_json::Value = serde_json::from_slice(&without.body).expect("json body");
         assert!(body.get("log_gz_b64").is_none());
+    }
+
+    #[test]
+    fn report_body_is_the_fields_plus_the_log_field_serialised_once_in_key_order() {
+        // The desktop daemon signs this body with its own signer and the FFI
+        // crates sign it through the builder above: one serialisation, so
+        // every platform sends the bytes the vector pins (compact, keys
+        // ascending, the log field slotted in among them).
+        let body = report_body(
+            r#"{"what_happened":"The sign-in button does nothing at all, twice.","area":"other"}"#,
+            Some(b"\x1f\x8b\x08\x00fake"),
+        )
+        .expect("a JSON object report builds");
+        assert_eq!(
+            body,
+            br#"{"area":"other","log_gz_b64":"H4sIAGZha2U=","what_happened":"The sign-in button does nothing at all, twice."}"#
+        );
+        let without = report_body(r#"{"area":"other"}"#, None).expect("builds");
+        assert_eq!(without, br#"{"area":"other"}"#);
+    }
+
+    #[test]
+    fn report_body_refuses_what_the_signed_builder_refuses() {
+        assert_eq!(report_body("[1,2]", None), Err(ForumRequestError::Invalid));
+        assert_eq!(
+            report_body(r#"{"log_gz_b64":"AAAA"}"#, Some(b"x")),
+            Err(ForumRequestError::Invalid)
+        );
+        let over = vec![0u8; MAX_LOG_GZ_BYTES + 1];
+        assert_eq!(
+            report_body(r#"{"area":"other"}"#, Some(&over)),
+            Err(ForumRequestError::LogTooLarge)
+        );
     }
 
     #[test]

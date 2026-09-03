@@ -2625,6 +2625,202 @@ msgctxt "redeem-voucher-view"
 msgid "Voucher was successfully redeemed."
 msgstr ""
 
+#. Character counter under the description field.
+#. Available placeholders:
+#. %(count)d - characters typed so far
+#. %(min)d - the shortest description the forum accepts
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr ""
+
+#. Description of the switch that attaches the logs.
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr ""
+
+#. A choice of where the reported problem happens.
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr ""
+
+#. A choice of where the reported problem happens.
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr ""
+
+#. A choice of how often the reported problem happens.
+msgctxt "report-problem"
+msgid "Every time"
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr ""
+
+#. Label of the optional steps-to-reproduce field.
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr ""
+
+#. Label of the choice of how often the problem happens.
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr ""
+
+#. Label of the switch that attaches the logs.
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr ""
+
+#. A choice of where the reported problem happens.
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr ""
+
+#. A choice of how often the reported problem happens.
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr ""
+
+#. Button that opens the website help form.
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr ""
+
+#. Button that opens the created forum topic.
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr ""
+
+#. Names the anonymous forum handle the report was posted under.
+#. Available placeholders:
+#. %(handle)s - the forum name
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr ""
+
+#. Title of the in-app bug report view.
+#. Navigation row to the in-app bug report form.
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr ""
+
+#. Subtitle of that row.
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr ""
+
+#. Button that resends the report with the logs left out.
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr ""
+
+#. A choice of where the reported problem happens.
+msgctxt "report-problem"
+msgid "Something else"
+msgstr ""
+
+#. A choice of how often the reported problem happens.
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr ""
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr ""
+
+#. Shown when the logs could not be collected.
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr ""
+
+#. Button that opens the logs about to be sent.
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr ""
+
+#. A choice of where the reported problem happens.
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr ""
+
+#. Placeholder of the steps-to-reproduce field.
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr ""
+
+#. Placeholder of the description field.
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr ""
+
+#. Label of the description field.
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr ""
+
+#. Label of the choice of where the problem happens.
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr ""
+
+#. Explains where the report and the logs go.
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr ""
+
 #. Title label in navigation bar
 msgctxt "select-language-nav"
 msgid "Select language"

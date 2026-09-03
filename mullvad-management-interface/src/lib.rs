@@ -193,6 +193,13 @@ pub enum SocketSecurity {
     WorldAccessible,
 }
 
+/// Largest request the management service decodes. tonic's default is 4 MiB,
+/// under the 12,000,000 gzip bytes a forum report or attach-logs request
+/// carries (`SignForumReport`, `SignForumAttachLogs`), so an at-cap report was
+/// refused here before the daemon ever saw it. Sized to the cap plus the
+/// report's own fields and the protobuf framing.
+const MAX_RPC_MESSAGE_BYTES: usize = 16 * 1024 * 1024;
+
 pub fn spawn_rpc_server(
     management_service: impl ManagementService,
     relay_selector_service: impl RelaySelectorService,
@@ -202,7 +209,10 @@ pub fn spawn_rpc_server(
     let (incoming, security) = build_incoming(rpc_socket_path)?;
 
     let grpc_server = Server::builder()
-        .add_service(ManagementServiceServer::new(management_service))
+        .add_service(
+            ManagementServiceServer::new(management_service)
+                .max_decoding_message_size(MAX_RPC_MESSAGE_BYTES),
+        )
         .add_service(RelaySelectorServiceServer::new(relay_selector_service))
         .serve_with_incoming_shutdown(incoming, abort_rx);
 

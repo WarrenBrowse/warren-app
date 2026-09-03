@@ -3189,6 +3189,7 @@ dependencies = [
  "warren-api",
  "warren-contract",
  "warren-discovery-core",
+ "warren-forum",
  "warren-identity",
  "warren-product-env",
  "warrenguard-config",

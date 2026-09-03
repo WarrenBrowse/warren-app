@@ -15,6 +15,7 @@ import log from '../shared/logging';
 
 const NETWORK_CALL_TIMEOUT = 10000;
 const CHANNEL_STATE_TIMEOUT = 1000 * 60 * 60;
+const MAX_RPC_MESSAGE_BYTES = 16 * 1024 * 1024;
 
 const RPC_PATH_PREFIX = 'unix://';
 
@@ -200,6 +201,11 @@ export class GrpcClient {
 
   private channelOptions(): grpc.ClientOptions {
     return {
+      // The forum report and attach-logs signatures come back with the signed
+      // body inline, up to 12,000,000 gzip bytes as 16,000,000 base64
+      // characters, over grpc-js's 4 MB default. Same figure as the daemon's
+      // `MAX_RPC_MESSAGE_BYTES`, which bounds the request side.
+      'grpc.max_receive_message_length': MAX_RPC_MESSAGE_BYTES,
       'grpc.max_reconnect_backoff_ms': 3000,
       'grpc.initial_reconnect_backoff_ms': 3000,
       'grpc.keepalive_time_ms': Math.pow(2, 30),

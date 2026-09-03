@@ -305,6 +305,17 @@ function deserialize_mullvad_daemon_management_interface_ForumLoginSignature(buf
   return management_interface_pb.ForumLoginSignature.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_ForumReportRequest(arg) {
+  if (!(arg instanceof management_interface_pb.ForumReportRequest)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.ForumReportRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_ForumReportRequest(buffer_arg) {
+  return management_interface_pb.ForumReportRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_LogFilter(arg) {
   if (!(arg instanceof management_interface_pb.LogFilter)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.LogFilter');
@@ -1167,6 +1178,32 @@ signForumAttachLogs: {
     responseType: management_interface_pb.ForumLoginSignature,
     requestSerialize: serialize_mullvad_daemon_management_interface_ForumAttachLogsRequest,
     requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumAttachLogsRequest,
+    responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
+  },
+  // Signs a community-forum in-app report (warren-core doc 55): the
+// Settings, Support, "Report a problem" form filed without a browser. The
+// GUI passes the form's fields as one JSON object (the connect contract's
+// field names: platform, area, frequency, what_happened, steps,
+// app_version, os_version, locale) plus the gzipped redacted problem
+// report, empty for a report filed without logs; the daemon builds the
+// canonical body through the crate the mobile clients sign with (the
+// fields plus `log_gz_b64`, compact, keys ascending), signs
+// `POST /v1/forum/report` with the Warren identity key, and returns the
+// four X-Warren-* header values plus that exact body. The GUI POSTs the
+// body verbatim so the signed bytes and the sent bytes are identical. The
+// key never leaves the daemon. Errors if no identity is bootstrapped
+// (FAILED_PRECONDITION), if the fields are not a JSON object or carry a
+// `log_gz_b64` of their own, or if the gzip is over the 12,000,000 byte
+// cap (INVALID_ARGUMENT), the broker's 16,000,000 base64 characters.
+signForumReport: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SignForumReport',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.ForumReportRequest,
+    responseType: management_interface_pb.ForumLoginSignature,
+    requestSerialize: serialize_mullvad_daemon_management_interface_ForumReportRequest,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_ForumReportRequest,
     responseSerialize: serialize_mullvad_daemon_management_interface_ForumLoginSignature,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ForumLoginSignature,
   },

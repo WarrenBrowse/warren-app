@@ -55,6 +55,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     signForumNotifications: IManagementServiceService_ISignForumNotifications;
     signForumNotificationsSeen: IManagementServiceService_ISignForumNotificationsSeen;
     signForumAttachLogs: IManagementServiceService_ISignForumAttachLogs;
+    signForumReport: IManagementServiceService_ISignForumReport;
     getWarrenMultiHopSettings: IManagementServiceService_IGetWarrenMultiHopSettings;
     setWarrenMultiHopSettings: IManagementServiceService_ISetWarrenMultiHopSettings;
     setWarrenCustomExit: IManagementServiceService_ISetWarrenCustomExit;
@@ -513,6 +514,15 @@ interface IManagementServiceService_ISignForumAttachLogs extends grpc.MethodDefi
     responseStream: false;
     requestSerialize: grpc.serialize<management_interface_pb.ForumAttachLogsRequest>;
     requestDeserialize: grpc.deserialize<management_interface_pb.ForumAttachLogsRequest>;
+    responseSerialize: grpc.serialize<management_interface_pb.ForumLoginSignature>;
+    responseDeserialize: grpc.deserialize<management_interface_pb.ForumLoginSignature>;
+}
+interface IManagementServiceService_ISignForumReport extends grpc.MethodDefinition<management_interface_pb.ForumReportRequest, management_interface_pb.ForumLoginSignature> {
+    path: "/mullvad_daemon.management_interface.ManagementService/SignForumReport";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<management_interface_pb.ForumReportRequest>;
+    requestDeserialize: grpc.deserialize<management_interface_pb.ForumReportRequest>;
     responseSerialize: grpc.serialize<management_interface_pb.ForumLoginSignature>;
     responseDeserialize: grpc.deserialize<management_interface_pb.ForumLoginSignature>;
 }
@@ -1211,6 +1221,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     signForumNotifications: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.ForumLoginSignature>;
     signForumNotificationsSeen: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.ForumLoginSignature>;
     signForumAttachLogs: grpc.handleUnaryCall<management_interface_pb.ForumAttachLogsRequest, management_interface_pb.ForumLoginSignature>;
+    signForumReport: grpc.handleUnaryCall<management_interface_pb.ForumReportRequest, management_interface_pb.ForumLoginSignature>;
     getWarrenMultiHopSettings: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenMultiHopSettings>;
     setWarrenMultiHopSettings: grpc.handleUnaryCall<management_interface_pb.WarrenMultiHopSettings, google_protobuf_empty_pb.Empty>;
     setWarrenCustomExit: grpc.handleUnaryCall<management_interface_pb.WarrenCustomExitSettings, google_protobuf_empty_pb.Empty>;
@@ -1414,6 +1425,9 @@ export interface IManagementServiceClient {
     signForumAttachLogs(request: management_interface_pb.ForumAttachLogsRequest, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
     signForumAttachLogs(request: management_interface_pb.ForumAttachLogsRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
     signForumAttachLogs(request: management_interface_pb.ForumAttachLogsRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
+    signForumReport(request: management_interface_pb.ForumReportRequest, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
+    signForumReport(request: management_interface_pb.ForumReportRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
+    signForumReport(request: management_interface_pb.ForumReportRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
     getWarrenMultiHopSettings(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenMultiHopSettings) => void): grpc.ClientUnaryCall;
     getWarrenMultiHopSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenMultiHopSettings) => void): grpc.ClientUnaryCall;
     getWarrenMultiHopSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenMultiHopSettings) => void): grpc.ClientUnaryCall;
@@ -1757,6 +1771,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public signForumAttachLogs(request: management_interface_pb.ForumAttachLogsRequest, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
     public signForumAttachLogs(request: management_interface_pb.ForumAttachLogsRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
     public signForumAttachLogs(request: management_interface_pb.ForumAttachLogsRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
+    public signForumReport(request: management_interface_pb.ForumReportRequest, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
+    public signForumReport(request: management_interface_pb.ForumReportRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
+    public signForumReport(request: management_interface_pb.ForumReportRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ForumLoginSignature) => void): grpc.ClientUnaryCall;
     public getWarrenMultiHopSettings(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenMultiHopSettings) => void): grpc.ClientUnaryCall;
     public getWarrenMultiHopSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenMultiHopSettings) => void): grpc.ClientUnaryCall;
     public getWarrenMultiHopSettings(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenMultiHopSettings) => void): grpc.ClientUnaryCall;

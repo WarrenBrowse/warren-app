@@ -2099,6 +2099,31 @@ export namespace ForumAttachLogsRequest {
     }
 }
 
+export class ForumReportRequest extends jspb.Message { 
+    getReportJson(): string;
+    setReportJson(value: string): ForumReportRequest;
+    getLogGz(): Uint8Array | string;
+    getLogGz_asU8(): Uint8Array;
+    getLogGz_asB64(): string;
+    setLogGz(value: Uint8Array | string): ForumReportRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ForumReportRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: ForumReportRequest): ForumReportRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ForumReportRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ForumReportRequest;
+    static deserializeBinaryFromReader(message: ForumReportRequest, reader: jspb.BinaryReader): ForumReportRequest;
+}
+
+export namespace ForumReportRequest {
+    export type AsObject = {
+        reportJson: string,
+        logGz: Uint8Array | string,
+    }
+}
+
 export class WarrenStatus extends jspb.Message { 
     getReconnectCount(): number;
     setReconnectCount(value: number): WarrenStatus;

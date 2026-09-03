@@ -391,6 +391,36 @@ export class DaemonRpc extends GrpcClient {
     };
   }
 
+  /**
+   * Signs a community-forum in-app report (doc 55). `reportJson` is the
+   * form's fields as one JSON object in the connect contract's names and
+   * `logGz` the gzipped redacted problem report (empty for a report filed
+   * without logs). The daemon builds the canonical `POST /v1/forum/report`
+   * body through the crate the mobile clients sign with, signs it with the
+   * Warren identity key, and returns the four X-Warren-* header values plus
+   * that exact body, which must be POSTed verbatim so the signed bytes and
+   * the sent bytes are identical. The signing key never leaves the daemon.
+   */
+  public async signForumReport(
+    reportJson: string,
+    logGz: Uint8Array,
+  ): Promise<ForumLoginSignature> {
+    const request = new grpcTypes.ForumReportRequest();
+    request.setReportJson(reportJson);
+    request.setLogGz(logGz);
+    const response = await this.call<grpcTypes.ForumReportRequest, grpcTypes.ForumLoginSignature>(
+      this.client.signForumReport,
+      request,
+    );
+    return {
+      pubkeySs58: response.getPubkeySs58(),
+      signatureHex: response.getSignatureHex(),
+      timestamp: response.getTimestamp(),
+      nonceHex: response.getNonceHex(),
+      body: response.getBody(),
+    };
+  }
+
   public async submitVoucher(voucherCode: string): Promise<VoucherResponse> {
     try {
       const response = await this.callString<grpcTypes.VoucherSubmission>(
