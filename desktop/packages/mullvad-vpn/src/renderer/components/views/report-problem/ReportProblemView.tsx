@@ -127,6 +127,17 @@ function areaLabel(area: ForumReportArea): string {
   }
 }
 
+// The gettext lookup runs here rather than in the JSX ternary it is rendered
+// from, where the extractor cannot attach the translator note to either arm and
+// the string reaches `messages.pot` with no context at all.
+function savedLogsHint(): string {
+  // TRANSLATORS: Shown once the logs have been written to the chosen file.
+  return messages.pgettext(
+    'report-problem',
+    'The logs were saved. You can attach them to the help form on the website.',
+  );
+}
+
 function frequencyLabel(frequency: ForumReportFrequency): string {
   switch (frequency) {
     case 'always':
@@ -553,13 +564,7 @@ export function ReportProblemView() {
                       </Button.Text>
                     </Button>
                     <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
-                      {state.saveOutcome === 'saved'
-                        ? // TRANSLATORS: Shown once the logs have been written to the chosen file.
-                          messages.pgettext(
-                            'report-problem',
-                            'The logs were saved. You can attach them to the help form on the website.',
-                          )
-                        : ''}
+                      {state.saveOutcome === 'saved' ? savedLogsHint() : ''}
                     </Text>
                     {state.saveOutcome === 'failed' && (
                       <StyledRefusal role="alert">
