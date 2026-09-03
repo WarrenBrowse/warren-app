@@ -85,7 +85,7 @@ data class SceneryState(
 // Only these exits have bespoke art; every other country falls back to the
 // plaine, same as desktop and iOS.
 @DrawableRes
-private fun countryLandscape(exitCountry: String?): Int =
+internal fun countryLandscape(exitCountry: String?): Int =
     when (exitCountry?.trim()?.lowercase()) {
         "de", "germany" -> R.drawable.scenery_germany
         "fi", "finland" -> R.drawable.scenery_finland
@@ -112,3 +112,12 @@ fun resolveScenery(phase: ConnectionPhase, exitCountry: String?): SceneryState =
         ConnectionPhase.Blocked ->
             SceneryState(R.drawable.scenery_plaine, showBula = false, blurred = true)
     }
+
+/**
+ * The masters the first home frame draws whatever the phase: the watched
+ * plain behind an exposed screen, the burrow and Bula. Warmed before the
+ * Connect screen is reached so that frame decodes nothing on the main thread.
+ */
+@Suppress("FunctionOnlyReturningConstant")
+internal fun firstFrameMasters(): List<Int> =
+    listOf(R.drawable.scenery_plaine, R.drawable.scenery_terrier, R.drawable.scenery_bula)

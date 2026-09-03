@@ -18,6 +18,7 @@ import com.warrenbrowse.vpn.app.util.FileLogWriter
 import com.warrenbrowse.vpn.di.ApplicationScope
 import com.warrenbrowse.vpn.di.KERMIT_FILE_LOG_DIR_NAME
 import com.warrenbrowse.vpn.di.appModule
+import com.warrenbrowse.vpn.feature.home.impl.connect.SceneryBitmaps
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
@@ -58,6 +59,14 @@ class WarrenApplication : Application() {
             get<NotificationManager>()
             initFileLogger(get<ApplicationScope>())
         }
+    }
+
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        // The decoded scenery masters are the largest thing the app keeps for
+        // art it may not be drawing; the next frame that needs one decodes it
+        // again, so dropping them under pressure costs one decode, not a frame.
+        if (level >= TRIM_MEMORY_UI_HIDDEN) SceneryBitmaps.clear()
     }
 
     private fun initFileLogger(scope: CoroutineScope) {

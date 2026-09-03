@@ -28,13 +28,23 @@ import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.TileMode
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import kotlin.math.roundToInt
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // The scenery masters are one pre-registered 1140x1706 canvas per layer
 // (landscape, burrow, Bula). Drawing every layer full width and top anchored
@@ -52,6 +62,15 @@ private val SEAM_FEATHER = 56.dp
 // bottom edge and blurred: a reflection continues the exact colors it meets,
 // so the seam cannot band whatever the art.
 private val CONTINUATION_BLUR_RADIUS = 28.dp
+
+// The continuation's blur layer is cut down to the rows of the canvas the
+// mirror actually shows below the seam, plus this much above them. The
+// layer's edge treatment is Decal (a transparent outside) and a Gaussian of
+// radius r fades about 1.5 r inward from an edge, so the top rows of the
+// band fade; the margin, twice the largest radius, puts that fade past the
+// bottom of the screen once the band is mirrored, and every visible pixel
+// is the one the full-screen layer produced.
+private val CONTINUATION_BAND_MARGIN = 84.dp
 
 // Bula's feet row in the 1140x1706 masters (alpha bounding box of
 // scenery_bula). The foreground pair (burrow + Bula, registered to each other,
@@ -101,6 +120,14 @@ fun SceneryBackdrop(
 ) {
     val scenery = resolveScenery(phase, exitCountry)
 
+    // The exit's landscape is decoded on IO as soon as the exit is known (the
+    // pin names it while disconnected), so the first connecting frame finds it
+    // warm instead of decoding 7.8 MB on the main thread.
+    val context = LocalContext.current
+    LaunchedEffect(exitCountry) {
+        withContext(Dispatchers.IO) { SceneryBitmaps.of(context).warm(countryLandscape(exitCountry)) }
+    }
+
     val blurRadius by
         animateDpAsState(
             targetValue = if (scenery.blurred) LANDSCAPE_BLUR_RADIUS else 0.dp,
@@ -146,7 +173,7 @@ fun SceneryBackdrop(
         // view when the card grows. The landscape behind does not move, so the
         // wider the gap to the card, the more of the country art shows.
         Image(
-            painter = painterResource(id = R.drawable.scenery_terrier),
+            painter = rememberSceneryPainter(R.drawable.scenery_terrier),
             contentDescription = null, // Decorative backdrop.
             contentScale = ContentScale.FillWidth,
             alignment = Alignment.TopCenter,
@@ -156,7 +183,7 @@ fun SceneryBackdrop(
                 },
         )
         Image(
-            painter = painterResource(id = R.drawable.scenery_bula),
+            painter = rememberSceneryPainter(R.drawable.scenery_bula),
             contentDescription = null, // Decorative backdrop.
             contentScale = ContentScale.FillWidth,
             alignment = Alignment.TopCenter,
@@ -263,11 +290,12 @@ private fun LandscapeCrossfade(
 }
 
 /**
- * One landscape: the blurred full-screen continuation underneath, then the
- * sharp full-width canvas on top, its bottom edge feathered into the
- * continuation so the seam never shows. Every animated value is read INSIDE a
+ * One landscape: the blurred continuation band underneath, then the sharp
+ * full-width canvas on top, its bottom edge feathered into the continuation
+ * so the seam never shows. Every animated value is read INSIDE a
  * graphicsLayer or draw lambda (draw phase), so composition does not re-run
- * for a single frame of the blur, the zoom or the fade.
+ * for a single frame of the blur, the zoom or the fade, and the two blur
+ * effects are reused across frames while their radius holds.
  */
 @Composable
 private fun Landscape(
@@ -276,28 +304,52 @@ private fun Landscape(
     blurRadius: () -> Dp,
     alpha: () -> Float = { 1f },
 ) {
-    val painter = painterResource(id = landscape)
+    val painter = rememberSceneryPainter(landscape)
+    val continuationBlur = remember { blurEffects() }
+    val canvasBlur = remember { blurEffects() }
     // Continuation band: the canvas mirrored around its own bottom edge, then
     // blurred hard. A reflection meets the seam with the very colors the sharp
-    // canvas ends on, so no banding is possible whatever the art.
-    Image(
-        painter = painter,
-        contentDescription = null, // Decorative backdrop.
-        contentScale = ContentScale.FillWidth,
-        alignment = Alignment.TopCenter,
-        modifier =
-            Modifier.fillMaxSize().graphicsLayer {
-                this.alpha = alpha()
-                val canvasBottomFraction = (size.width * CANVAS_RATIO) / size.height
-                transformOrigin =
-                    androidx.compose.ui.graphics.TransformOrigin(0.5f, canvasBottomFraction)
-                scaleX = zoom()
-                scaleY = -zoom()
-                val radiusPx = CONTINUATION_BLUR_RADIUS.toPx() + blurRadius().toPx()
-                renderEffect = BlurEffect(radiusPx, radiusPx, TileMode.Decal)
-                clip = true
-            },
-    )
+    // canvas ends on, so no banding is possible whatever the art. The layer
+    // that carries the blur, the mirror and the zoom covers only the rows of
+    // the canvas the mirror shows below the seam, so the ~110 px Gaussian
+    // costs that band's pixels per frame instead of the whole screen's. The
+    // transforms stay on the blurred layer itself, as they were on the
+    // full-screen one: the blur runs on the unscaled band and its edge fade is
+    // scaled outward with it, which is what keeps the screen edges identical.
+    Layout(
+        content = {
+            Box(
+                Modifier.graphicsLayer {
+                        this.alpha = alpha()
+                        // The band's bottom edge is the seam.
+                        transformOrigin = TransformOrigin(0.5f, 1f)
+                        scaleX = zoom()
+                        scaleY = -zoom()
+                        val radiusPx = CONTINUATION_BLUR_RADIUS.toPx() + blurRadius().toPx()
+                        renderEffect = continuationBlur.effect(radiusPx)
+                        clip = true
+                    }
+                    .continuationBand()
+            ) {
+                Image(
+                    painter = painter,
+                    contentDescription = null, // Decorative backdrop.
+                    contentScale = ContentScale.FillWidth,
+                    alignment = Alignment.TopCenter,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+        },
+        modifier = Modifier.fillMaxSize(),
+    ) { measurables, constraints ->
+        // Loose constraints: a reported size is coerced into the constraints a
+        // node was measured with, so the band could never be shorter than the
+        // screen under the fixed ones this full-size layout receives.
+        val band =
+            measurables.single().measure(constraints.copy(minWidth = 0, minHeight = 0))
+        val seam = (constraints.maxWidth * CANVAS_RATIO).roundToInt()
+        layout(constraints.maxWidth, constraints.maxHeight) { band.place(0, seam - band.height) }
+    }
     Image(
         painter = painter,
         contentDescription = null, // Decorative backdrop.
@@ -309,10 +361,8 @@ private fun Landscape(
                     this.alpha = alpha()
                     scaleX = zoom()
                     scaleY = zoom()
-                    val radiusPx = blurRadius().toPx()
                     // A zero-radius BlurEffect is invalid; no blur means no effect.
-                    renderEffect =
-                        if (radiusPx > 0f) BlurEffect(radiusPx, radiusPx, TileMode.Decal) else null
+                    renderEffect = canvasBlur.effect(blurRadius().toPx())
                     // Offscreen so the DstIn feather below cuts this layer's own
                     // pixels rather than everything already on screen.
                     compositingStrategy = CompositingStrategy.Offscreen
@@ -339,4 +389,46 @@ private fun Landscape(
                     )
                 },
     )
+}
+
+/** The blur effects a landscape layer cycles through, one instance per radius. */
+private fun blurEffects(): RenderEffectCache<RenderEffect> =
+    RenderEffectCache { radiusPx -> BlurEffect(radiusPx, radiusPx, TileMode.Decal) }
+
+/**
+ * Height of the continuation band's source, in pixels, for a screen
+ * [widthPx] wide and [heightPx] tall: the rows above the seam that the
+ * mirror shows below it, plus the blur margin.
+ */
+internal fun continuationBandHeight(widthPx: Float, heightPx: Float, density: Density): Float =
+    with(density) {
+        val seam = widthPx * CANVAS_RATIO
+        (heightPx - seam).coerceAtLeast(0f) + CONTINUATION_BAND_MARGIN.toPx()
+    }
+
+/**
+ * Sizes the node to the continuation band's source rows, the ones just
+ * above the seam, while measuring its content full screen and sliding it up
+ * so those rows fill the node. The parent places the node with its bottom
+ * edge on the seam, and the node's own transform mirrors it below.
+ */
+private fun Modifier.continuationBand(): Modifier = layout { measurable, constraints ->
+    val placeable = measurable.measure(constraints)
+    val seam = (placeable.width * CANVAS_RATIO).roundToInt()
+    val height =
+        continuationBandHeight(placeable.width.toFloat(), placeable.height.toFloat(), this)
+            .roundToInt()
+            .coerceIn(0, seam)
+    layout(placeable.width, height) { placeable.place(0, height - seam) }
+}
+
+/**
+ * The painter for a scenery master, from the process-wide decode cache: a
+ * cached master costs a lookup, a cold one the same decode `painterResource`
+ * paid on every new composable instance.
+ */
+@Composable
+private fun rememberSceneryPainter(@DrawableRes id: Int): Painter {
+    val context = LocalContext.current
+    return remember(id) { BitmapPainter(SceneryBitmaps.of(context).get(id)) }
 }
