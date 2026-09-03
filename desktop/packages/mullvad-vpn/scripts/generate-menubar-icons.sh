@@ -15,15 +15,43 @@ if ! command -v rsvg-convert > /dev/null; then
     exit 1
 fi
 
+if ! command -v python3 > /dev/null; then
+    echo >&2 "python3 is required to derive the beta pip"
+    exit 1
+fi
+
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 MENUBAR_ICONS_DIR="${SCRIPT_DIR}/../assets/images/menubar-icons"
+GRAPHICS_DIR="$( cd "$SCRIPT_DIR/../../../.." && pwd )/graphics"
 
 SVG_DIR="$MENUBAR_ICONS_DIR/svg"
 MACOS_DIR="$MENUBAR_ICONS_DIR/darwin"
 WINDOWS_DIR="$MENUBAR_ICONS_DIR/win32"
 LINUX_DIR="$MENUBAR_ICONS_DIR/linux"
 TMP_DIR=$(mktemp -d)
+
+# A non-prod build wears the same lock with an amber pip at the top-left, so a
+# machine running prod and beta side by side never shows two identical tray
+# icons. The badged tree keeps the prod file names and lives one directory
+# deeper (src/main/tray-icon.ts appends the segment), which leaves the icon
+# matrix in tray-icon-controller.ts untouched.
+BADGED_DIR_NAME="beta"
+
+# The pip is 7/16 of the canvas: large enough for the knocked-out B to read at
+# 44px, small enough to leave the lock recognisable at 16px.
+PIP_NUMERATOR=7
+PIP_DENOMINATOR=16
+# Below this canvas size the letter is a smudge and the pip stays a plain
+# square, the same concession build-logo-icons.sh makes for the app icon. Only
+# the 16px sub-image of the Windows .ico falls under it.
+PIP_LABEL_MIN_PX=20
+
+# Set per pass by generate_all: 1 makes generate_lock_png stamp the pip.
+BADGE_PIP=0
+MACOS_TARGET_DIR="$MACOS_DIR"
+WINDOWS_TARGET_DIR="$WINDOWS_DIR"
+LINUX_TARGET_DIR="$LINUX_DIR"
 
 COMPRESSION_OPTIONS=(
     -define png:compression-filter=5
@@ -34,7 +62,24 @@ COMPRESSION_OPTIONS=(
 )
 
 function main() {
-    mkdir -p "$MACOS_DIR" "$WINDOWS_DIR" "$LINUX_DIR"
+    generate_all "$MACOS_DIR" "$WINDOWS_DIR" "$LINUX_DIR" 0
+    # Staging is badged too: it is a non-prod install that has to be tellable
+    # from prod on the same machine, and there is no third artwork. The app
+    # icon already shares the beta assets with staging for that reason.
+    generate_all "$MACOS_DIR/$BADGED_DIR_NAME" "$WINDOWS_DIR/$BADGED_DIR_NAME" \
+        "$LINUX_DIR/$BADGED_DIR_NAME" 1
+
+    rmdir "$TMP_DIR"
+}
+
+# Generates the whole icon set into one target tree, badged or not.
+function generate_all() {
+    MACOS_TARGET_DIR="$1"
+    WINDOWS_TARGET_DIR="$2"
+    LINUX_TARGET_DIR="$3"
+    BADGE_PIP="$4"
+
+    mkdir -p "$MACOS_TARGET_DIR" "$WINDOWS_TARGET_DIR" "$LINUX_TARGET_DIR"
 
     # The placeholder is used as the initial tray icon on Linux
     generate_placeholder "lock-placeholder"
@@ -45,8 +90,6 @@ function main() {
     # The monochrome source svg differs from the colored one. The red circle is a hole in the monochrome
     # one. "lock-10_mono.svg" is the same icon but with a hole instead of a circle.
     generate lock-10 lock-10_mono
-
-    rmdir "$TMP_DIR"
 }
 
 # Generates the placeholder icon is an empty icon which is used as the initial icon on Linux
@@ -54,7 +97,7 @@ function main() {
 function generate_placeholder() {
     local icon_name="$1"
     local svg_source_path="$SVG_DIR/$icon_name.svg"
-    local linux_target_base_path="$LINUX_DIR/$icon_name"
+    local linux_target_base_path="$LINUX_TARGET_DIR/$icon_name"
     local png_target_path="$linux_target_base_path.png"
     local target_size=48
     local target_padding=4
@@ -154,6 +197,42 @@ function generate_lock_png() {
         "$svg_source_path"
     convert -background transparent "$png_tmp_path" -gravity center \
         -extent "${target_size}x$target_size" "${COMPRESSION_OPTIONS[@]}" "$png_target_path"
+
+    # Stamped here rather than on each variant, so every downstream step (the
+    # notification overlay, the macOS append, the .ico colour reductions)
+    # inherits it from the one place the lock is drawn.
+    if [ "$BADGE_PIP" = "1" ]; then
+        overlay_beta_pip "$png_target_path" "$target_size"
+    fi
+}
+
+# Stamps the beta pip onto the top-left of an already generated icon. The
+# corner is forced: the notification dot is an amber circle at the bottom right
+# of the same canvas, and the two must not be confusable.
+function overlay_beta_pip() {
+    local png_target_path="$1"
+    local canvas_size="$2"
+    local pip_size=$((canvas_size * PIP_NUMERATOR / PIP_DENOMINATOR))
+    local pip_svg_path="$TMP_DIR/beta-pip.svg"
+    local pip_png_path="$TMP_DIR/beta-pip.png"
+    local badged_png_path="$TMP_DIR/beta-badged.png"
+    # An array that is never empty: bash 3.2, which is what /usr/bin/env bash
+    # still resolves to on a stock macOS, treats an empty one as unset under
+    # `set -u`.
+    local pip_args=(--badge "$GRAPHICS_DIR/beta-badge.svg" --square-pip
+        --size "$pip_size" --output "$pip_svg_path")
+
+    if [ "$canvas_size" -lt "$PIP_LABEL_MIN_PX" ]; then
+        pip_args+=(--no-label)
+    fi
+
+    python3 "$GRAPHICS_DIR/make-beta-icon.py" "${pip_args[@]}"
+    rsvg-convert -o "$pip_png_path" -w "$pip_size" -h "$pip_size" "$pip_svg_path"
+    convert -strip -background transparent -composite -colorspace sRGB -gravity NorthWest \
+        "$png_target_path" "$pip_png_path" "${COMPRESSION_OPTIONS[@]}" "$badged_png_path"
+    mv "$badged_png_path" "$png_target_path"
+
+    rm "$pip_svg_path" "$pip_png_path"
 }
 
 # Creates a copy of the icon at $source_path and appends the notification symbol to it
@@ -198,9 +277,9 @@ function generate() {
     local black_svg_source_path="$TMP_DIR/black.svg"
     local white_svg_source_path="$TMP_DIR/white.svg"
 
-    local macos_target_base_path="$MACOS_DIR/$icon_name"
-    local linux_target_base_path="$LINUX_DIR/$icon_name"
-    local windows_target_base_path="$WINDOWS_DIR/$icon_name"
+    local macos_target_base_path="$MACOS_TARGET_DIR/$icon_name"
+    local linux_target_base_path="$LINUX_TARGET_DIR/$icon_name"
+    local windows_target_base_path="$WINDOWS_TARGET_DIR/$icon_name"
 
     sed -E 's/#[0-9a-fA-F]{6}/#000000/g' "$monochrome_svg_source_path" > "$black_svg_source_path"
     sed -E 's/#[0-9a-fA-F]{6}/#FFFFFF/g' "$monochrome_svg_source_path" > "$white_svg_source_path"

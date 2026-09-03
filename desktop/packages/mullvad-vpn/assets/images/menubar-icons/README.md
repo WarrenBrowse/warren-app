@@ -12,6 +12,13 @@ run from the `desktop/packages/mullvad-vpn`-directory using
 
 The script crates all menubar images for all platforms including the monochrome ones.
 
+It writes each platform's tree twice: the prod icons at the root, and a `beta/`
+subdirectory holding the same file names with the amber beta pip stamped on the
+top-left. `src/main/tray-icon.ts` inserts that segment for every non-prod
+product environment (beta and staging), so a machine running two Warren installs
+never shows two identical tray icons. Deriving the pip needs `python3` on top of
+the dependencies below.
+
 ### Dependencies
 Imagemagick is required for the script to run.
 

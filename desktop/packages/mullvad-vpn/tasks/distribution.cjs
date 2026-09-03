@@ -596,6 +596,14 @@ function newConfig() {
   };
 }
 
+// Windows cannot load a tray icon out of the asar archive, so the .ico files
+// are unpacked to disk beside it. The `**` is load-bearing: a non-prod build
+// serves its tray icons from a badged subdirectory (menubar-icons/win32/beta/),
+// and a glob that stops at win32/ leaves those inside the archive, which shows
+// an empty tray at runtime, in packaged builds only, with no error and no way
+// to reproduce it from `npm run develop`.
+const WINDOWS_ASAR_UNPACK = ['build/assets/images/menubar-icons/win32/**/lock-*.ico', '**/*.node'];
+
 async function packWin() {
   const DEFAULT_ARCH = targets === 'aarch64-pc-windows-msvc' ? 'arm64' : 'x64';
 
@@ -621,7 +629,7 @@ async function packWin() {
           },
         ],
       },
-      asarUnpack: ['build/assets/images/menubar-icons/win32/lock-*.ico', '**/*.node'],
+      asarUnpack: WINDOWS_ASAR_UNPACK,
       beforeBuild: (options) => {
         process.env.CPP_BUILD_MODE = release ? 'Release' : 'Debug';
         process.env.CPP_BUILD_TARGET = options.arch;
@@ -908,6 +916,7 @@ async function removeNseventforwarderNativeModules() {
 }
 
 exports.newConfig = newConfig;
+exports.WINDOWS_ASAR_UNPACK = WINDOWS_ASAR_UNPACK;
 exports.envProblemReportLink = envProblemReportLink;
 exports.packWin = packWin;
 exports.packMac = packMac;

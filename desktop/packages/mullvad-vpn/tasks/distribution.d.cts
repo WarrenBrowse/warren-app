@@ -10,6 +10,7 @@ export declare function newConfig(): {
   nsis: { installerSidebar: string };
   [key: string]: unknown;
 };
+export declare const WINDOWS_ASAR_UNPACK: string[];
 export declare function packWin(...args: unknown[]): unknown;
 export declare function packMac(...args: unknown[]): unknown;
 export declare function packLinux(...args: unknown[]): unknown;

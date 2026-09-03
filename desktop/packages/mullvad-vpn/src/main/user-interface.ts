@@ -5,6 +5,7 @@ import { sprintf } from 'sprintf-js';
 import { promisify } from 'util';
 
 import { connectEnabled, disconnectEnabled, reconnectEnabled } from '../shared/connect-helper';
+import { productAnchors } from '../shared/constants/product-env';
 import { DisconnectSource, IAccountData, ILocation, TunnelState } from '../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../shared/gettext';
 import log from '../shared/logging';
@@ -692,7 +693,7 @@ export default class UserInterface implements WindowControllerDelegate {
       }
     }
 
-    return 'Warren VPN';
+    return productAnchors.displayName;
   }
 
   private createLocationString(location?: ILocation): string | undefined {
@@ -717,7 +718,7 @@ export default class UserInterface implements WindowControllerDelegate {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: sprintf(messages.pgettext('tray-icon-context-menu', 'Open %(mullvadVpn)s'), {
-          mullvadVpn: 'Warren VPN',
+          mullvadVpn: productAnchors.displayName,
         }),
         click: () => this.windowController.show(),
       },

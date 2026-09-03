@@ -12,6 +12,30 @@ export type TrayIconType = 'unsecured' | 'securing' | 'secured';
 
 type IconParameters = { monochromatic: boolean; notification: boolean };
 
+// The file-name suffix that picks one cell of the icon matrix. Exported so the
+// asset gates can enumerate every icon the controller may ask for from the
+// matrix itself, instead of from a copy of it that drifts.
+export function trayIconSuffix(
+  platform: string,
+  monochromatic: boolean,
+  notification: boolean,
+  systemUsesLightTheme?: boolean,
+): string {
+  const notificationIcon = notification ? '_notification' : '';
+  if (!monochromatic) {
+    return notificationIcon;
+  }
+  switch (platform) {
+    case 'darwin':
+      return `${notificationIcon}Template`;
+    case 'win32':
+      return systemUsesLightTheme ? `_black${notificationIcon}` : `_white${notificationIcon}`;
+    case 'linux':
+    default:
+      return `_white${notificationIcon}`;
+  }
+}
+
 export default class TrayIconController {
   private animation?: KeyframeAnimation;
   private iconSet: NativeImage[] = [];
@@ -129,22 +153,14 @@ export default class TrayIconController {
   };
 
   private loadImages(systemUsesLightTheme?: boolean): NativeImage[] {
-    const notificationIcon = this.iconParameters.notification ? '_notification' : '';
-    if (this.iconParameters.monochromatic) {
-      switch (process.platform) {
-        case 'darwin':
-          return this.loadImageSet(`${notificationIcon}Template`);
-        case 'win32':
-          return systemUsesLightTheme
-            ? this.loadImageSet(`_black${notificationIcon}`)
-            : this.loadImageSet(`_white${notificationIcon}`);
-        case 'linux':
-        default:
-          return this.loadImageSet(`_white${notificationIcon}`);
-      }
-    } else {
-      return this.loadImageSet(notificationIcon);
-    }
+    return this.loadImageSet(
+      trayIconSuffix(
+        process.platform,
+        this.iconParameters.monochromatic,
+        this.iconParameters.notification,
+        systemUsesLightTheme,
+      ),
+    );
   }
 
   private loadImageSet(suffix: string): NativeImage[] {
