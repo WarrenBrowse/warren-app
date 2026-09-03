@@ -267,6 +267,30 @@ pub(crate) fn envelope(announcements: &[DisplayAnnouncement], refresh: Refresh) 
     .unwrap_or_else(|_| r#"{"announcements":[],"fetch":"rejected"}"#.to_owned())
 }
 
+/// Whether a campaign id is safe to put in a signed URL path.
+///
+/// The id comes off the wire inside the announcement document and goes
+/// straight into `GET /v1/campaign/{campaign_id}/voucher`, which is the exact
+/// string the request is SIGNED over while the HTTP layer normalises the path
+/// it sends. A `/`, a `..`, a `?` or a `#` therefore makes the signed path and
+/// the sent path diverge, and can retarget the signed GET at another endpoint
+/// of the same host. Nothing but a name is ever a campaign id, so the check is
+/// the narrow one: ASCII letters, digits, `-` and `_`, bounded length.
+///
+/// Its long-term home is the contract, beside `validate_cta_url`, so the two
+/// clients and the server read one rule; until the contract carries it, each
+/// client refuses the draw on its own and the card shows with no code.
+pub(crate) fn campaign_id_is_wire_safe(campaign_id: &str) -> bool {
+    !campaign_id.is_empty()
+        && campaign_id.len() <= MAX_CAMPAIGN_ID_LEN
+        && campaign_id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+}
+
+/// Longest campaign id a client will draw for. A name, not a document.
+const MAX_CAMPAIGN_ID_LEN: usize = 64;
+
 /// The FFI envelope of the wallet-signed campaign lookup:
 /// `{"ok":true,"code":"..."}` with the code this account was pre-assigned,
 /// `{"ok":true,"code":null}` when the account is outside the cohort, and
@@ -637,5 +661,25 @@ mod tests {
                 "a reason must not carry values from the envelope: {reason}"
             );
         }
+    }
+
+    /// The id goes into the path the request is SIGNED over, while the HTTP
+    /// layer normalises the path it sends: a separator in it makes the two
+    /// diverge and can retarget the signed GET at another endpoint.
+    #[test]
+    fn a_campaign_id_that_could_retarget_the_signed_path_is_refused() {
+        assert!(campaign_id_is_wire_safe("prod-launch"));
+        assert!(campaign_id_is_wire_safe("launch_2026"));
+        assert!(campaign_id_is_wire_safe("A1"));
+
+        assert!(!campaign_id_is_wire_safe(""));
+        assert!(!campaign_id_is_wire_safe("../admin/announcements"));
+        assert!(!campaign_id_is_wire_safe("launch/voucher"));
+        assert!(!campaign_id_is_wire_safe("launch?admin=1"));
+        assert!(!campaign_id_is_wire_safe("launch#frag"));
+        assert!(!campaign_id_is_wire_safe("launch%2f"));
+        assert!(!campaign_id_is_wire_safe("launch mois"));
+        assert!(!campaign_id_is_wire_safe("lancement-été"));
+        assert!(!campaign_id_is_wire_safe(&"a".repeat(65)));
     }
 }

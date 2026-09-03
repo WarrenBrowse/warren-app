@@ -1644,6 +1644,12 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_campaignVoucher<'
 fn campaign_voucher(mnemonic: &str, campaign_id: &str) -> Result<Option<String>, ()> {
     use crate::announcements::Held;
 
+    if !crate::announcements::campaign_id_is_wire_safe(campaign_id) {
+        // The wallet is not even read: no code can come of an id the signed
+        // path could not carry, and a card with no code still shows.
+        log::debug!("campaignVoucher: the campaign id is not wire-safe, not drawn");
+        return Ok(None);
+    }
     let Some(runtime) = RUNTIME.get() else {
         log::warn!("campaignVoucher: initLogger must run first");
         return Err(());

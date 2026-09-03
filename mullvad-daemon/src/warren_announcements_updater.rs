@@ -108,6 +108,30 @@ impl std::fmt::Debug for DisplayAnnouncement {
     }
 }
 
+/// Whether a campaign id is safe to put in a signed URL path.
+///
+/// The id comes off the wire inside the announcement document and goes
+/// straight into `GET /v1/campaign/{campaign_id}/voucher`, which is the exact
+/// string the request is SIGNED over while the HTTP layer normalises the path
+/// it sends. A `/`, a `..`, a `?` or a `#` therefore makes the signed path and
+/// the sent path diverge, and can retarget the signed GET at another endpoint
+/// of the same host. Nothing but a name is ever a campaign id, so the check is
+/// the narrow one: ASCII letters, digits, `-` and `_`, bounded length.
+///
+/// Its long-term home is the contract, beside `validate_cta_url`, so the two
+/// clients and the server read one rule; until the contract carries it, each
+/// client refuses the draw on its own and the card shows with no code.
+pub(crate) fn campaign_id_is_wire_safe(campaign_id: &str) -> bool {
+    !campaign_id.is_empty()
+        && campaign_id.len() <= MAX_CAMPAIGN_ID_LEN
+        && campaign_id
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_')
+}
+
+/// Longest campaign id a client will draw for. A name, not a document.
+const MAX_CAMPAIGN_ID_LEN: usize = 64;
+
 /// A call to action the renderer may turn into a clickable button.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct DisplayCta {
@@ -399,6 +423,10 @@ impl WarrenAnnouncementsUpdater {
             .and_then(|held| held.by_campaign.get(campaign_id))
         {
             return held.clone();
+        }
+        if !campaign_id_is_wire_safe(campaign_id) {
+            log::debug!("Warren campaign voucher: the campaign id is not wire-safe, not drawn");
+            return None;
         }
         let fetched = match source.fetch(campaign_id.to_owned()).await {
             Ok(code) => code,
@@ -831,5 +859,25 @@ mod tests {
             rendered.contains("has_voucher_code: true"),
             "whether a code is held is still worth seeing: {rendered}"
         );
+    }
+
+    /// The id goes into the path the request is SIGNED over, while the HTTP
+    /// layer normalises the path it sends: a separator in it makes the two
+    /// diverge and can retarget the signed GET at another endpoint.
+    #[test]
+    fn a_campaign_id_that_could_retarget_the_signed_path_is_refused() {
+        assert!(campaign_id_is_wire_safe("prod-launch"));
+        assert!(campaign_id_is_wire_safe("launch_2026"));
+        assert!(campaign_id_is_wire_safe("A1"));
+
+        assert!(!campaign_id_is_wire_safe(""));
+        assert!(!campaign_id_is_wire_safe("../admin/announcements"));
+        assert!(!campaign_id_is_wire_safe("launch/voucher"));
+        assert!(!campaign_id_is_wire_safe("launch?admin=1"));
+        assert!(!campaign_id_is_wire_safe("launch#frag"));
+        assert!(!campaign_id_is_wire_safe("launch%2f"));
+        assert!(!campaign_id_is_wire_safe("launch mois"));
+        assert!(!campaign_id_is_wire_safe("lancement-été"));
+        assert!(!campaign_id_is_wire_safe(&"a".repeat(65)));
     }
 }
