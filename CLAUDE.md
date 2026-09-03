@@ -172,7 +172,7 @@ engine equivalents now live under `warrenguard-*`.
 
 The shared golden-vector corpus is the `vectors/` submodule
 (`WarrenBrowse/warren-vectors`, pinned by gitlink like in warren-connect and
-warren-sdk-rs). `warren-forum/tests/forum_login_vector.rs` reads
+warren-sdk-rs). `warren-forum/src/forum_login_vector_tests.rs` reads
 `vectors/forum_login_v1.json`, so run `git submodule update --init vectors`
 once per clone; `warren-tests.yml` does the same and inits only that
 submodule. The app-level client rules (deep-link classes, outcome envelopes,

@@ -817,11 +817,12 @@ impl ManagementService for ManagementServiceImpl {
             Err(crate::ForumReportSignError::Build(
                 warren_forum::ForumRequestError::LogTooLarge,
             )) => Err(Status::invalid_argument("log_gz exceeds the 12 MB cap")),
-            Err(crate::ForumReportSignError::Build(warren_forum::ForumRequestError::Invalid)) => {
-                Err(Status::invalid_argument(
-                    "report_json must be a JSON object without a log_gz_b64 field",
-                ))
-            }
+            // `Invalid` and any refusal class added later: the fields are what
+            // the caller must change, and no cause is surfaced because a build
+            // error can quote the request.
+            Err(crate::ForumReportSignError::Build(_)) => Err(Status::invalid_argument(
+                "report_json must be a JSON object without a log_gz_b64 field",
+            )),
         }
     }
 

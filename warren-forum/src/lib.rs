@@ -106,8 +106,14 @@ pub const MAX_LOG_GZ_BYTES: usize = 16_000_000 / 4 * 3;
 
 /// Failure building a signed request. Deliberately coarse: the caller maps it
 /// to an outcome, and no cause with identity material is ever surfaced or
-/// logged.
+/// logged, so the messages name the class and never the value.
+///
+/// It is a `std::error::Error` so a consumer can attach it as a `#[source]`
+/// and walk the chain (shared rule 20). The two impls are written by hand
+/// rather than derived: this crate is the one every mobile FFI links, and its
+/// dependency list is kept to what the wire format actually needs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum ForumRequestError {
     /// The host was not allowlisted, the sid was malformed, the report was
     /// not a JSON object, or the RNG / clock was unusable.
@@ -116,6 +122,17 @@ pub enum ForumRequestError {
     /// refuse it (413), so the caller reports `TooLarge` without a round trip.
     LogTooLarge,
 }
+
+impl core::fmt::Display for ForumRequestError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(match self {
+            Self::Invalid => "the request could not be built from what was given",
+            Self::LogTooLarge => "the gzipped report is over the size the broker accepts",
+        })
+    }
+}
+
+impl std::error::Error for ForumRequestError {}
 
 /// Build the signed forum-login request for `sid` against `host`, signing with
 /// `signing_key` (each platform derives it from its own secret store: Android
@@ -163,7 +180,7 @@ pub fn build_signed_request_at(
 ///
 /// [`ForumRequestError::Invalid`] if the host is not allowlisted or the `sid`
 /// is malformed.
-pub fn build_signed_request_with_nonce(
+pub(crate) fn build_signed_request_with_nonce(
     signing_key: &SigningKey,
     sid: &str,
     host: &str,
@@ -211,7 +228,7 @@ pub fn build_signed_report_request(
 /// # Errors
 ///
 /// As [`build_signed_report_request`], minus the RNG.
-pub fn build_signed_report_request_with_nonce(
+pub(crate) fn build_signed_report_request_with_nonce(
     signing_key: &SigningKey,
     report_json: &str,
     log_gz: Option<&[u8]>,
@@ -271,15 +288,19 @@ fn signed_post(
 }
 
 /// The raw signed POST of `body` to `path` on `host`, with the caller's nonce.
-/// Public for the golden-vector replay only, which signs against the vector's
-/// synthetic host: the flows above keep the allowlist in front of it, and a
-/// production caller never reaches this with a host of its own.
+///
+/// Crate-private on purpose: it signs for ANY host, so nothing outside this
+/// module may reach it. Every wallet-signed flow the crate exposes puts
+/// [`is_allowed_connect_host`] in front of it, which is what stops a hostile
+/// deep link from steering a wallet signature at an attacker's server. The
+/// golden-vector replay, which signs against the vector's synthetic host,
+/// lives in `forum_login_vector_tests` inside the crate for the same reason.
 ///
 /// # Errors
 ///
 /// Never today; the `Result` keeps the signature of the minting twin, whose
 /// one failure is the OS RNG.
-pub fn signed_post_with_nonce(
+pub(crate) fn signed_post_with_nonce(
     signing_key: &SigningKey,
     host: &str,
     path: &str,
@@ -990,8 +1011,34 @@ fn unix_secs_now() -> Option<u64> {
         .map(|d| d.as_secs())
 }
 
+/// The golden-vector replay, inside the crate so the deterministic signers it
+/// drives stay `pub(crate)`.
+#[cfg(test)]
+mod forum_login_vector_tests;
+
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn the_request_error_is_a_std_error_naming_its_class_and_nothing_else() {
+        // Shared rule 20: a library error enum is a `std::error::Error`, so a
+        // consumer can attach it as a `#[source]` and walk the chain. It is
+        // also rendered into a user-facing status, so the message names the
+        // class and never the host, the report or the key.
+        fn assert_is_std_error<E: std::error::Error>(_: &E) {}
+        for error in [
+            super::ForumRequestError::Invalid,
+            super::ForumRequestError::LogTooLarge,
+        ] {
+            assert_is_std_error(&error);
+            let rendered = error.to_string();
+            assert!(!rendered.is_empty());
+            assert!(
+                !rendered.contains("http") && !rendered.contains("log_gz_b64"),
+                "{rendered}"
+            );
+        }
+    }
     use super::*;
 
     const SID: &str = "0123456789abcdef0123456789abcdef";

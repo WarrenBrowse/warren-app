@@ -5,8 +5,15 @@
 //! is replayed by warren-connect on the other side of the wire, so a
 //! mismatch here is a real wire regression, never a reason to touch the
 //! vector.
+//!
+//! It lives inside the crate rather than in `tests/` so the deterministic
+//! signers it needs stay `pub(crate)`: one of them signs for any host, with
+//! the caller's nonce, and the crate's whole guarantee is that every
+//! wallet-signed request passes the connect-host allowlist first. Exported,
+//! it was one `use` away from any flow in warren-jni, warren-ios or the
+//! daemon signing an attacker-supplied host or replaying a burnt nonce.
 
-use warren_forum::{
+use super::{
     FailReason, ForumIdentity, ForumLoginOutcome, ReportOutcome, SignedForumRequest,
     build_signed_report_request_with_nonce, build_signed_request_with_nonce, connect_host,
     outcome_for_response, report_outcome_for_response, signed_post_with_nonce,

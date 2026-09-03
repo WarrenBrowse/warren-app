@@ -265,7 +265,7 @@ from drifting, each replayed by every platform's own unit tests:
 - `vectors/forum_login_v1.json` (the warren-vectors submodule): the exact
   signed bytes of a login and of a report, and the broker's exact answer per
   outcome; synthetic host and key. Replayed by
-  `warren-forum/tests/forum_login_vector.rs` through the nonce-taking
+  `warren-forum/src/forum_login_vector_tests.rs` through the nonce-taking
   builders (`build_signed_request_with_nonce`,
   `build_signed_report_request_with_nonce`), and by warren-connect on the
   other side of the wire.

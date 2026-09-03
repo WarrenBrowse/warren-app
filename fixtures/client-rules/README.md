@@ -10,7 +10,7 @@ These files are app data, so unlike a `warren-vectors` vector they may name
 the real product anchors (`connect.warrenbrowse.com`, the real deep-link
 schemes). The wire itself (signed bytes, the broker's exact answers) is the
 Tier A vector `vectors/forum_login_v1.json`, replayed by
-`warren-forum/tests/forum_login_vector.rs` and by warren-connect.
+`warren-forum/src/forum_login_vector_tests.rs` and by warren-connect.
 
 A fixture is written against the behaviour at HEAD. Changing a rule means
 changing the fixture and every reader in the same commit; a reader must never

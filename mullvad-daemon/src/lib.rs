@@ -5724,18 +5724,22 @@ fn forum_report_body(
 }
 
 /// Why the daemon could not sign an in-app report.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
 pub enum ForumReportSignError {
     /// No Warren identity is bootstrapped yet: there is no key to sign with.
+    #[error("no Warren identity is bootstrapped, so there is no key to sign with")]
     NoIdentity,
     /// The body could not be built (shape, or the log over the cap).
-    Build(warren_forum::ForumRequestError),
+    #[error("the signed report body could not be built")]
+    Build(#[from] warren_forum::ForumRequestError),
 }
 
 #[cfg(test)]
 mod forum_report_tests {
-    use super::{FORUM_REPORT_PATH, forum_report_body};
+    use super::{FORUM_REPORT_PATH, ForumReportSignError, forum_report_body};
     use mullvad_api::warren_auth::WarrenAuthSigner;
+    use std::error::Error;
     use warren_forum::ForumRequestError;
     use warren_identity::ed25519_dalek::SigningKey;
 
@@ -5761,6 +5765,42 @@ mod forum_report_tests {
         value[key]
             .as_str()
             .unwrap_or_else(|| panic!("`{key}` is a string in {value}"))
+    }
+
+    #[test]
+    fn a_refusal_to_sign_is_a_std_error_that_keeps_its_cause() {
+        // Shared rule 20: a library error enum is a `std::error::Error` with
+        // the underlying cause attached, so a caller can use `?` and walk the
+        // chain instead of matching on a string.
+        let refusal = ForumReportSignError::from(ForumRequestError::LogTooLarge);
+        assert_eq!(
+            refusal,
+            ForumReportSignError::Build(ForumRequestError::LogTooLarge)
+        );
+        let source = refusal.source().expect("the cause is attached");
+        assert_eq!(
+            source.to_string(),
+            ForumRequestError::LogTooLarge.to_string()
+        );
+        assert!(ForumReportSignError::NoIdentity.source().is_none());
+    }
+
+    #[test]
+    fn neither_refusal_message_carries_anything_but_its_class() {
+        // No-log discipline: these render into a gRPC status the GUI shows, so
+        // they must never quote the report, the host or the key.
+        for refusal in [
+            ForumReportSignError::NoIdentity,
+            ForumReportSignError::Build(ForumRequestError::Invalid),
+            ForumReportSignError::Build(ForumRequestError::LogTooLarge),
+        ] {
+            let rendered = format!("{refusal}");
+            assert!(!rendered.is_empty());
+            assert!(
+                !rendered.contains("log_gz_b64") && !rendered.contains("http"),
+                "{rendered}"
+            );
+        }
     }
 
     #[test]

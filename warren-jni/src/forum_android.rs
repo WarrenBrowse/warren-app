@@ -397,7 +397,9 @@ fn forum_report(mnemonic: &str, report_json: &str, log_gz: Option<&[u8]>) -> Rep
             log::warn!("forumReport: log over the size cap, not sent");
             return ReportOutcome::TooLarge;
         }
-        Err(ForumRequestError::Invalid) => {
+        // `Invalid` and any refusal class added later: nothing was sent, so
+        // the honest outcome is the build failure, never a retry.
+        Err(_) => {
             log::warn!("forumReport: could not build signed request");
             return ReportOutcome::Failed(FailReason::Build);
         }
