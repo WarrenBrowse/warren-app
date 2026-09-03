@@ -35,8 +35,9 @@
 
 use ed25519_dalek::VerifyingKey;
 use warren_discovery_core::{
-    DEFAULT_RTT_TTL_SECS, DirectoryError, PathAwareParams, RttCache, VerifiedMultiHopDirectory,
-    node_rtt_from, select_circuit_path_aware, valid_circuits, verify_multihop_directory_any,
+    DEFAULT_RTT_TTL_SECS, DirectoryError, ExitCandidate, PathAwareParams, RttCache,
+    VerifiedMultiHopDirectory, node_rtt_from, pick_exit, select_circuit_path_aware, valid_circuits,
+    verify_multihop_directory_any,
 };
 use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
 
@@ -209,30 +210,23 @@ fn select_two_hop(
 
 /// Selects a 1-hop circuit: one node serves as both entry relay and exit
 /// (reached on the node's unified `:443` dispatcher). Honors the
-/// `exit_country` hint; deterministic highest-weight pick, ties broken by
-/// smallest `exit_id`. Mirrors
-/// `mullvad-daemon::warren_multi_hop_directory::select_one_hop_circuit`.
+/// `exit_country` hint; the pick among the matching nodes is the shared
+/// `warren_discovery_core::pick_exit` (highest weight, ties broken by the
+/// smallest `exit_id`), the same call the daemon's `select_one_hop_circuit`
+/// makes, so a directory resolves to one node on every platform.
 fn select_one_hop(dir: &VerifiedMultiHopDirectory, exit_country: &str) -> Option<SelectedCircuit> {
-    let mut candidates: Vec<usize> = dir
+    let candidates: Vec<usize> = dir
         .nodes
         .iter()
         .enumerate()
         .filter(|(_, n)| country_matches(exit_country, &n.country))
         .map(|(i, _)| i)
         .collect();
-    if candidates.is_empty() {
-        return None;
-    }
-    candidates.sort_by(|&a, &b| {
-        dir.nodes[b].weight.cmp(&dir.nodes[a].weight).then_with(|| {
-            dir.nodes[a]
-                .exit
-                .exit_id
-                .as_bytes()
-                .cmp(dir.nodes[b].exit.exit_id.as_bytes())
-        })
-    });
-    let idx = candidates[0];
+    let ranked: Vec<ExitCandidate> = candidates
+        .iter()
+        .map(|&i| ExitCandidate::from(&dir.nodes[i]))
+        .collect();
+    let idx = candidates[pick_exit(&ranked)?];
     Some(circuit_from(dir, idx, idx))
 }
 
@@ -305,6 +299,51 @@ mod tests {
             signed_at: 0,
             expires_at: u64::MAX,
             dropped: 0,
+        }
+    }
+
+    /// The shared crate's `exit_pick.json` vector through THIS platform's
+    /// 1-hop pick, the way the daemon replays it through its own: the shared
+    /// rule and what iOS actually dials cannot drift apart unseen.
+    #[test]
+    fn exit_vectors_replay_through_the_one_hop_selection() {
+        let op = op_key();
+        let fixture: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../warren-contract/warren-discovery/tests/fixtures/exit_pick.json"
+        ))
+        .expect("exit_pick.json must parse");
+        let cases = fixture["exit"].as_array().expect("exit section");
+        assert!(cases.len() >= 8, "the exit section must keep its cases");
+        for case in cases {
+            let name = case["name"].as_str().expect("case name");
+            // The tag numbers the node (relay id included) while the exit id
+            // comes from the vector, so a full tie on duplicate exit ids is
+            // still told apart by the relay id of the pick.
+            let nodes: Vec<NodeEntry> = case["candidates"]
+                .as_array()
+                .expect("candidates")
+                .iter()
+                .enumerate()
+                .map(|(i, c)| {
+                    let tag = u8::try_from(i + 1).expect("small fixtures");
+                    let mut n = node(&op, tag, "de", 0, c["weight"].as_u64().expect("weight"));
+                    let id: [u8; 16] = hex::decode(c["exit_id"].as_str().expect("id"))
+                        .expect("fixture ids are hex")
+                        .try_into()
+                        .expect("fixture ids are 16 bytes");
+                    n.exit.exit_id = ExitId::from_bytes(id);
+                    n
+                })
+                .collect();
+            let d = dir(nodes);
+            let picked = select_one_hop(&d, "").map(|c| c.relay.relay_id);
+            let expected = case["expected"]
+                .as_u64()
+                .map(|i| d.nodes[usize::try_from(i).expect("index")].relay.relay_id);
+            assert_eq!(
+                picked, expected,
+                "exit vector `{name}` diverged from the iOS 1-hop pick"
+            );
         }
     }
 
