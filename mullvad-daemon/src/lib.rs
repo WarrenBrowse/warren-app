@@ -242,6 +242,23 @@ pub mod service {
 
 pub type ResponseTx<T, E> = oneshot::Sender<Result<T, E>>;
 
+/// Why a settings change guarded by the cross-environment arbitration did
+/// not happen.
+///
+/// A second variant rather than a `settings::Error` because the two answers
+/// mean opposite things to a client: the save failed, or the daemon is
+/// healthy and another product environment holds the machine. Only a typed
+/// refusal lets a GUI name that environment instead of showing a write
+/// error for a disk that is fine.
+#[derive(thiserror::Error, Debug)]
+#[non_exhaustive]
+pub enum GuardedSettingError {
+    #[error(transparent)]
+    Settings(#[from] settings::Error),
+    #[error(transparent)]
+    EnvYield(#[from] warren_env_arbitration::EnvYieldError),
+}
+
 /// Whether macOS split tunneling is usable in THIS build.
 ///
 /// macOS split tunneling relies on Endpoint Security, which requires a
@@ -591,10 +608,17 @@ pub enum DaemonCommand {
     /// Set the beta program setting.
     SetShowBetaReleases(ResponseTx<(), settings::Error>, bool),
     /// Set the lockdown_mode setting.
+    ///
+    /// `Err` refuses an ARMING while this build has stood down for a
+    /// higher-priority product environment. Disarming is always accepted.
     #[cfg(not(target_os = "android"))]
-    SetLockdownMode(ResponseTx<(), settings::Error>, bool),
+    SetLockdownMode(ResponseTx<(), GuardedSettingError>, bool),
     /// Set the auto-connect setting.
-    SetAutoConnect(ResponseTx<(), settings::Error>, bool),
+    ///
+    /// `Err` refuses an ENABLE while this build has stood down, so the next
+    /// boot cannot resolve its target state to `Secured` underneath the
+    /// environment holding the machine. Disabling is always accepted.
+    SetAutoConnect(ResponseTx<(), GuardedSettingError>, bool),
     /// Set if IPv6 should be enabled in the tunnel
     SetEnableIpv6(ResponseTx<(), settings::Error>, bool),
     /// Set if userspace WireGuard should be forced.
@@ -2235,25 +2259,31 @@ impl Daemon {
     /// Consume the `Daemon` and run the main event loop. Blocks until an error happens or a
     /// shutdown event is received.
     pub async fn run(mut self) -> Result<(), Error> {
-        self.handle_initial_target_state();
+        self.handle_initial_target_state().await;
         self.handle_events().await;
         self.disconnect_tunnel_and_wait().await;
         self.finalize().await;
         Ok(())
     }
 
-    fn handle_initial_target_state(&mut self) {
+    async fn handle_initial_target_state(&mut self) {
+        let action = warren_env_arbitration::secured_boot_action(
+            self.settings.settings().warren_env_yield.as_ref(),
+        );
         match self.target_state.to_strict() {
             either::Either::Right(state)
-                if warren_env_arbitration::may_restore_tunnel_on_boot(
-                    true,
-                    self.settings.settings().warren_env_yield.as_ref(),
-                ) =>
+                if action == warren_env_arbitration::SecuredBootAction::Restore =>
             {
                 self.send_tunnel_command(Self::secured_state_to_tunnel_command(state));
             }
             either::Either::Right(_) => {
                 log::info!("not restoring the tunnel: this build has stood down");
+                // Skipping the connect is not enough. `target_state` would
+                // stay `Secured`, and every reconnect (a settings change, a
+                // wake, a network change) brings the tunnel up on exactly
+                // that, so the first one would put this build back on the
+                // machine under the environment holding it.
+                self.target_state.set(TargetState::Unsecured).await;
                 self.fetch_am_i_mullvad();
             }
             either::Either::Left(_) => {
@@ -4913,12 +4943,38 @@ impl Daemon {
         }
     }
 
+    /// Whether a guarded settings change may be applied right now.
+    ///
+    /// Both callers go through this one helper so the guard cannot be
+    /// forgotten by a handler that only remembers to save.
+    fn refuse_guarded_setting(
+        &self,
+        change: warren_env_arbitration::GuardedSetting,
+    ) -> Result<(), GuardedSettingError> {
+        warren_env_arbitration::refuse_setting_change(
+            change,
+            self.settings.settings().warren_env_yield.as_ref(),
+        )
+        .map_err(GuardedSettingError::EnvYield)
+    }
+
     #[cfg(not(target_os = "android"))]
     async fn on_set_lockdown_mode(
         &mut self,
-        tx: ResponseTx<(), settings::Error>,
+        tx: ResponseTx<(), GuardedSettingError>,
         lockdown_mode: bool,
     ) {
+        // Arming a machine-wide block on a build that also refuses to
+        // connect is the one combination that must not exist: the block
+        // takes the whole machine offline, including the tunnel of the
+        // environment this build stood down for, and no environment on the
+        // machine can then carry traffic. Disarming stays free.
+        if let Err(refusal) = self.refuse_guarded_setting(
+            warren_env_arbitration::GuardedSetting::LockdownMode(lockdown_mode),
+        ) {
+            Self::oneshot_send(tx, Err(refusal), "set_lockdown_mode refused");
+            return;
+        }
         match self
             .settings
             .update(move |settings| settings.lockdown_mode = lockdown_mode)
@@ -4938,16 +4994,29 @@ impl Daemon {
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set_lockdown_mode response");
+                Self::oneshot_send(
+                    tx,
+                    Err(GuardedSettingError::Settings(e)),
+                    "set_lockdown_mode response",
+                );
             }
         }
     }
 
     async fn on_set_auto_connect(
         &mut self,
-        tx: ResponseTx<(), settings::Error>,
+        tx: ResponseTx<(), GuardedSettingError>,
         auto_connect: bool,
     ) {
+        // Refused while stood down so the state the next boot must never
+        // resolve cannot be created at all: `auto_connect` forces the boot
+        // target state to `Secured`, and every reconnect keys off that.
+        if let Err(refusal) = self.refuse_guarded_setting(
+            warren_env_arbitration::GuardedSetting::AutoConnect(auto_connect),
+        ) {
+            Self::oneshot_send(tx, Err(refusal), "set auto-connect refused");
+            return;
+        }
         match self
             .settings
             .update(move |settings| settings.auto_connect = auto_connect)
@@ -4958,7 +5027,11 @@ impl Daemon {
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
-                Self::oneshot_send(tx, Err(e), "set auto-connect response");
+                Self::oneshot_send(
+                    tx,
+                    Err(GuardedSettingError::Settings(e)),
+                    "set auto-connect response",
+                );
             }
         }
     }
@@ -5620,9 +5693,17 @@ impl Daemon {
     fn on_trigger_shutdown(&mut self, user_init_shutdown: bool) {
         // Block all traffic before shutting down to ensure that no traffic can leak on boot or
         // shutdown.
+        // Never while this build has stood down. The block is machine-wide,
+        // and a build that refuses to connect must not leave one standing:
+        // it would take the machine offline with the environment that DOES
+        // hold the tunnel on it. `auto_connect` can still read true here
+        // after a crash between two steps of the stand-down.
         #[cfg(not(target_os = "android"))]
         if !user_init_shutdown
             && (*self.target_state == TargetState::Secured || self.settings.auto_connect)
+            && warren_env_arbitration::may_assert_machine(
+                self.settings.settings().warren_env_yield.as_ref(),
+            )
         {
             log::debug!("Blocking firewall during shutdown");
             let (tx, _rx) = oneshot::channel();

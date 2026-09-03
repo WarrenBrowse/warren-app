@@ -226,6 +226,20 @@ pub enum EnvYieldError {
     NotYielded,
 }
 
+/// Whether this build may assert the machine at all: bring a tunnel up, or
+/// arm the machine-wide block.
+///
+/// One invariant behind every door below, because the two halves are only
+/// safe together. A build that has stood down refuses to connect, so arming
+/// its block would seal the machine behind an environment that cannot carry
+/// its traffic, and the environment that can (prod) loses its tunnel with
+/// it. Blocked with no way out is strictly worse than either product being
+/// off.
+#[must_use]
+pub fn may_assert_machine(held: Option<&mullvad_types::settings::WarrenEnvYield>) -> bool {
+    held.is_none()
+}
+
 /// Whether a target-state change is refused, and why.
 ///
 /// Only a CONNECT is ever refused, and only while a yield is held. A
@@ -236,24 +250,97 @@ pub fn refuse_target_state(
     connecting: bool,
     held: Option<&mullvad_types::settings::WarrenEnvYield>,
 ) -> Result<(), EnvYieldError> {
+    refuse_reassertion(connecting, held)
+}
+
+/// A settings change that would put this build back on the machine on its
+/// own, with no connect request anywhere.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GuardedSetting {
+    /// `lockdown_mode`. Armed, it blocks the whole machine's traffic with no
+    /// tunnel of ours up.
+    LockdownMode(bool),
+    /// `auto_connect`. Enabled, it resolves the next boot's target state to
+    /// `Secured` and brings this build's tunnel back.
+    AutoConnect(bool),
+}
+
+impl GuardedSetting {
+    /// Whether applying this change would assert the machine.
+    const fn reasserts(self) -> bool {
+        match self {
+            GuardedSetting::LockdownMode(armed) => armed,
+            GuardedSetting::AutoConnect(enabled) => enabled,
+        }
+    }
+}
+
+/// Whether a settings change is refused while this build has stood down.
+///
+/// Turning either setting OFF is always accepted: the stand-down does
+/// exactly that itself, and a user turning them off is agreeing with it.
+/// Turning either ON is refused with the same typed error the connect path
+/// answers, so a client can name the environment holding the machine.
+///
+/// The kill switch is the dangerous half. A build that refuses to connect
+/// and arms a machine-wide block is the one combination that must not
+/// exist: the block takes the whole machine offline, prod's tunnel with it,
+/// and no environment on the machine can then carry traffic. `auto_connect`
+/// is the other half of the same hole, and it is refused here so the state
+/// a stood-down build must never boot into cannot be created in the first
+/// place.
+pub fn refuse_setting_change(
+    change: GuardedSetting,
+    held: Option<&mullvad_types::settings::WarrenEnvYield>,
+) -> Result<(), EnvYieldError> {
+    refuse_reassertion(change.reasserts(), held)
+}
+
+/// One body behind every refusing door, so a new door cannot answer
+/// differently from the ones already there. `reasserts` is false for
+/// anything that gives the machine up (a disconnect, a disarm, a disabled
+/// auto-connect), and those are always accepted: reaching that state is the
+/// whole point of the stand-down, and refusing them would wedge the machine
+/// in the state the arbitration exists to leave.
+fn refuse_reassertion(
+    reasserts: bool,
+    held: Option<&mullvad_types::settings::WarrenEnvYield>,
+) -> Result<(), EnvYieldError> {
     match held {
-        Some(record) if connecting => Err(EnvYieldError::YieldedTo(record.yielded_to.clone())),
+        Some(record) if reasserts => Err(EnvYieldError::YieldedTo(record.yielded_to.clone())),
         _ => Ok(()),
     }
 }
 
-/// Whether a boot may restore a persisted `Secured` target state.
+/// What a boot does with a `Secured` target state, whether that state came
+/// from `auto_connect` or from the cache an unclean shutdown left behind.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SecuredBootAction {
+    /// Nothing holds the machine: bring the tunnel up.
+    Restore,
+    /// A yield is held. Refusing the connect is NOT enough on its own: the
+    /// target state has to be put back to `Unsecured` as well, because
+    /// every later reconnect keys off it and would bring this build up
+    /// under the environment that holds the machine.
+    StandDown,
+}
+
+/// Whether a boot may act on a persisted `Secured` target state.
 ///
 /// Disabling `auto_connect` does not cover this path: the target-state cache
-/// is restored whatever that setting says, so a build that stood down would
-/// otherwise come back up underneath the environment that holds the machine,
-/// with nothing on screen saying why.
+/// is restored whatever that setting says, and `auto_connect` itself can be
+/// on again after a crash between two steps of the stand-down, so a build
+/// that stood down would otherwise come back up underneath the environment
+/// that holds the machine, with nothing on screen saying why.
 #[must_use]
-pub fn may_restore_tunnel_on_boot(
-    persisted_secured: bool,
+pub fn secured_boot_action(
     held: Option<&mullvad_types::settings::WarrenEnvYield>,
-) -> bool {
-    persisted_secured && held.is_none()
+) -> SecuredBootAction {
+    if may_assert_machine(held) {
+        SecuredBootAction::Restore
+    } else {
+        SecuredBootAction::StandDown
+    }
 }
 
 /// The whole coexistence picture, as one snapshot for every GUI.
@@ -326,6 +413,15 @@ mod tests {
             env,
             outranks_us,
             state: None,
+        }
+    }
+
+    /// A yield held for prod, with both settings recorded as they were.
+    fn yielded_to_prod() -> WarrenEnvYield {
+        WarrenEnvYield {
+            yielded_to: "prod".to_owned(),
+            restore_auto_connect: true,
+            restore_lockdown_mode: true,
         }
     }
 
@@ -683,14 +779,104 @@ mod tests {
         // one way a machine comes back connected with nothing on screen
         // saying why. Coming back up underneath the environment that holds
         // the machine is exactly what the stand-down exists to prevent.
-        let record = WarrenEnvYield {
-            yielded_to: "prod".to_owned(),
-            restore_auto_connect: true,
-            restore_lockdown_mode: true,
-        };
-        assert!(!may_restore_tunnel_on_boot(true, Some(&record)));
-        assert!(may_restore_tunnel_on_boot(true, None));
-        assert!(!may_restore_tunnel_on_boot(false, None));
+        assert_eq!(
+            secured_boot_action(Some(&yielded_to_prod())),
+            SecuredBootAction::StandDown
+        );
+        assert_eq!(secured_boot_action(None), SecuredBootAction::Restore);
+    }
+
+    #[test]
+    fn a_boot_that_stood_down_also_drops_the_secured_target_state() {
+        // Refusing the connect leaves `target_state` at `Secured`, and every
+        // reconnect (a settings change, a wake, a network change) keys off
+        // exactly that, so the FIRST such reconnect puts this build back on
+        // the machine. Reachable whenever `auto_connect` survived the
+        // stand-down: the user set it again, or a crash landed between the
+        // record and the step that clears it.
+        assert_eq!(
+            secured_boot_action(Some(&yielded_to_prod())),
+            SecuredBootAction::StandDown,
+            "the boot has to clear the Secured state, not merely skip the connect"
+        );
+    }
+
+    #[test]
+    fn arming_the_kill_switch_while_yielded_is_refused_with_the_typed_error() {
+        // The one combination that must not exist: a build that refuses to
+        // connect and arms a machine-wide block seals the whole machine,
+        // including the tunnel of the environment it stood down for.
+        assert_eq!(
+            refuse_setting_change(GuardedSetting::LockdownMode(true), Some(&yielded_to_prod())),
+            Err(EnvYieldError::YieldedTo("prod".to_owned()))
+        );
+    }
+
+    #[test]
+    fn disarming_the_kill_switch_while_yielded_is_accepted() {
+        // The stand-down itself disarms it, and a user turning it off is
+        // agreeing with the stand-down. Refusing would wedge an armed block
+        // on a build that cannot carry traffic.
+        assert_eq!(
+            refuse_setting_change(
+                GuardedSetting::LockdownMode(false),
+                Some(&yielded_to_prod())
+            ),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn re_enabling_auto_connect_while_yielded_is_refused_with_the_typed_error() {
+        // Refused so the state a stood-down build must never boot into
+        // cannot be created at all.
+        assert_eq!(
+            refuse_setting_change(GuardedSetting::AutoConnect(true), Some(&yielded_to_prod())),
+            Err(EnvYieldError::YieldedTo("prod".to_owned()))
+        );
+    }
+
+    #[test]
+    fn disabling_auto_connect_while_yielded_is_accepted() {
+        assert_eq!(
+            refuse_setting_change(GuardedSetting::AutoConnect(false), Some(&yielded_to_prod())),
+            Ok(())
+        );
+    }
+
+    #[test]
+    fn both_guarded_settings_move_freely_with_no_yield_held() {
+        for change in [
+            GuardedSetting::LockdownMode(true),
+            GuardedSetting::LockdownMode(false),
+            GuardedSetting::AutoConnect(true),
+            GuardedSetting::AutoConnect(false),
+        ] {
+            assert_eq!(refuse_setting_change(change, None), Ok(()));
+        }
+    }
+
+    #[test]
+    fn a_yield_forbids_every_way_of_asserting_the_machine() {
+        // One invariant behind the connect door, the two settings doors and
+        // the boot door. Asserted together so a door that stopped agreeing
+        // with the other three fails here rather than shipping as the one
+        // way back onto a machine another environment holds.
+        let held = yielded_to_prod();
+        assert!(!may_assert_machine(Some(&held)));
+        assert!(refuse_target_state(true, Some(&held)).is_err());
+        assert!(refuse_setting_change(GuardedSetting::LockdownMode(true), Some(&held)).is_err());
+        assert!(refuse_setting_change(GuardedSetting::AutoConnect(true), Some(&held)).is_err());
+        assert_eq!(
+            secured_boot_action(Some(&held)),
+            SecuredBootAction::StandDown
+        );
+
+        assert!(may_assert_machine(None));
+        assert!(refuse_target_state(true, None).is_ok());
+        assert!(refuse_setting_change(GuardedSetting::LockdownMode(true), None).is_ok());
+        assert!(refuse_setting_change(GuardedSetting::AutoConnect(true), None).is_ok());
+        assert_eq!(secured_boot_action(None), SecuredBootAction::Restore);
     }
 
     #[test]

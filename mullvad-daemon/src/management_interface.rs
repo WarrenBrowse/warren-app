@@ -1058,7 +1058,9 @@ impl ManagementService for ManagementServiceImpl {
         log::debug!("set_lockdown_mode({})", lockdown_mode);
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SetLockdownMode(tx, lockdown_mode))?;
-        self.wait_for_result(rx).await??;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_guarded_setting_error)?;
         Ok(Response::new(()))
     }
 
@@ -1076,7 +1078,9 @@ impl ManagementService for ManagementServiceImpl {
         log::debug!("set_auto_connect({})", auto_connect);
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SetAutoConnect(tx, auto_connect))?;
-        self.wait_for_result(rx).await??;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_guarded_setting_error)?;
         Ok(Response::new(()))
     }
 
@@ -2391,6 +2395,17 @@ fn validate_forum_sid(sid: &str) -> Result<(), Status> {
 /// parsing anything.
 fn map_env_yield_error(error: crate::warren_env_arbitration::EnvYieldError) -> Status {
     Status::failed_precondition(error.to_string())
+}
+
+/// A guarded settings change carries two very different answers, and they
+/// must not collapse into one status: a save that failed is the daemon's
+/// problem, an arbitration refusal is another product environment holding
+/// the machine and names it.
+fn map_guarded_setting_error(error: crate::GuardedSettingError) -> Status {
+    match error {
+        crate::GuardedSettingError::Settings(error) => Status::from(error),
+        crate::GuardedSettingError::EnvYield(error) => map_env_yield_error(error),
+    }
 }
 
 fn map_daemon_error(error: crate::Error) -> Status {
