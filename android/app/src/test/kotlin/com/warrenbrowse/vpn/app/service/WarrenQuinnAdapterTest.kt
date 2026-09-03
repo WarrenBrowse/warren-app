@@ -12,14 +12,19 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import java.util.concurrent.Executors
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -63,6 +68,9 @@ class WarrenQuinnAdapterTest {
     private class RecordingPlatform : WarrenTunnelPlatform {
         val calls = mutableListOf<String>()
 
+        /** The thread each platform call ran on, by call name (last one wins). */
+        val threads = mutableMapOf<String, String>()
+
         @Volatile
         var status: Int = STATUS_CONNECTED
         var callback: ConnectivityManager.NetworkCallback? = null
@@ -81,17 +89,21 @@ class WarrenQuinnAdapterTest {
         }
 
         override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor {
-            calls += if (plan.blocking) ESTABLISH_BLACKHOLE else ESTABLISH_LIVE
+            val call = if (plan.blocking) ESTABLISH_BLACKHOLE else ESTABLISH_LIVE
+            calls += call
+            threads[call] = Thread.currentThread().name
             return if (plan.blocking) blackholeTun else liveTun
         }
 
         override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int {
             calls += CONNECT_TUNNEL
+            threads[CONNECT_TUNNEL] = Thread.currentThread().name
             return 0
         }
 
         override fun disconnectTunnel() {
             calls += DISCONNECT_TUNNEL
+            threads[DISCONNECT_TUNNEL] = Thread.currentThread().name
         }
 
         override fun awaitTunnelClosed(timeoutMs: Long): Boolean {
@@ -134,7 +146,10 @@ class WarrenQuinnAdapterTest {
         lockdownMode = true,
     )
 
-    private fun adapterWith(platform: RecordingPlatform): WarrenQuinnAdapter {
+    private fun adapterWith(
+        platform: RecordingPlatform,
+        dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
         every { settings.splitTunnelingEnabled } returns MutableStateFlow(false)
         every { settings.excludedApps } returns MutableStateFlow(emptySet())
@@ -144,8 +159,14 @@ class WarrenQuinnAdapterTest {
             settings = settings,
             connectivity = MutableStateFlow<Connectivity>(Connectivity.PresumeOnline),
             platform = platform,
+            dispatcher = dispatcher,
         )
     }
+
+    /** A dispatcher whose only thread carries a name an assertion can read. */
+    private fun namedDispatcher(name: String): CoroutineDispatcher =
+        Executors.newSingleThreadExecutor { runnable -> Thread(runnable, name) }
+            .asCoroutineDispatcher()
 
     /**
      * Connect, then hand back the callback the adapter registered and a
@@ -411,6 +432,60 @@ class WarrenQuinnAdapterTest {
         assertTrue(
             closed < dialled,
             "must await the close BEFORE dialling, got ${platform.calls}",
+        )
+    }
+
+    /**
+     * `VpnService.Builder.establish()` is a Binder round trip into
+     * `system_server` and `connectTunnel` parses the config, derives the
+     * wallet key (PBKDF2) and registers the TUN with the engine. The service
+     * calls the adapter from its lifecycle scope, which is the main thread,
+     * so unless the adapter leaves that thread itself the connect animation
+     * stalls for the whole sequence on every tap.
+     */
+    @Test
+    fun `ensure connect establishes and dials on the adapter dispatcher`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform, dispatcher = namedDispatcher("adapter-io"))
+        val caller = Thread.currentThread().name
+
+        adapter.connect(config(), Mnemonic(PHRASE))
+
+        assertNotEquals(caller, "adapter-io", "the test itself must not run on the dispatcher")
+        assertEquals(
+            "adapter-io",
+            platform.threads[ESTABLISH_LIVE],
+            "establish() must run on the adapter's dispatcher, got: ${platform.threads}",
+        )
+        assertEquals(
+            "adapter-io",
+            platform.threads[CONNECT_TUNNEL],
+            "connectTunnel() must run on the adapter's dispatcher, got: ${platform.threads}",
+        )
+        adapter.disconnect()
+    }
+
+    /**
+     * The teardown is the other stall: the native session abort plus the fd
+     * juggling, reached from the same main-thread lifecycle scope on every
+     * Disconnect tap and on every revoke.
+     */
+    @Test
+    fun `ensure disconnect tears the session down on the adapter dispatcher`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform, dispatcher = namedDispatcher("adapter-io"))
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
+        }
+        platform.threads.clear()
+
+        adapter.disconnect()
+
+        assertEquals(
+            "adapter-io",
+            platform.threads[DISCONNECT_TUNNEL],
+            "disconnectTunnel() must run on the adapter's dispatcher, got: ${platform.threads}",
         )
     }
 }

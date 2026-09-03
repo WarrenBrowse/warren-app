@@ -13,13 +13,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
-import com.warrenbrowse.vpn.app.service.migration.MigrateSplitTunneling
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
-import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
@@ -40,7 +39,6 @@ class WarrenVpnService : LifecycleVpnService() {
 
     private lateinit var warrenConnectUseCase: WarrenConnectUseCase
 
-    private lateinit var migrateSplitTunneling: MigrateSplitTunneling
     private lateinit var apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder
 
     private lateinit var foregroundNotificationHandler: ForegroundNotificationManager
@@ -77,7 +75,6 @@ class WarrenVpnService : LifecycleVpnService() {
                 ForegroundNotificationManager(this@WarrenVpnService, get())
             get<NotificationManager>()
 
-            migrateSplitTunneling = get()
             apiEndpointFromIntentHolder = get()
             quinnStateProxy = get()
             warrenConnectUseCase = get()
@@ -91,8 +88,8 @@ class WarrenVpnService : LifecycleVpnService() {
 
         // Quinn adapter must outlive every connect/disconnect cycle, so
         // it is owned by the service and kept alive for the service's
-        // lifetime. The adapter's internal `SupervisorJob` is cancelled
-        // from `onDestroy` below.
+        // lifetime; its own scope outlives even that, which is what lets
+        // `onDestroy` hand it the final teardown without waiting.
         quinnAdapter = WarrenQuinnAdapter(
             vpnService = this,
             connectivityManager = getSystemService<ConnectivityManager>()!!,
@@ -141,10 +138,6 @@ class WarrenVpnService : LifecycleVpnService() {
             }
         }
 
-        // Warren fetches relay lists via warren-api-client at runtime, so the
-        // upstream `relays.json` asset extraction (`prepareFiles()`) is gone.
-        migrateSplitTunneling.migrate()
-
         // Log any API endpoint override seeded by mockapi tests so the
         // future warren-api-client can pick it up.
         val intentApiOverride = apiEndpointFromIntentHolder.apiEndpointOverride
@@ -152,13 +145,9 @@ class WarrenVpnService : LifecycleVpnService() {
             Logger.i("API endpoint override present: $intentApiOverride")
         }
 
-        WarrenJni.initLogger(filesDir.absolutePath)
-        Logger.i("warren-jni initialised")
-
-        // The Quinn adapter owns the tunnel lifecycle end-to-end. The
-        // components resolved from Koin here are the notification channel
-        // factory, foreground notification manager, split-tunnelling migration
-        // shim, and the API-endpoint intent holder.
+        // The Rust runtime and logger are the application's (`WarrenApplication`
+        // initialises them before any component runs); the service starts
+        // nothing of its own on the main thread.
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -319,8 +308,14 @@ class WarrenVpnService : LifecycleVpnService() {
 
     override fun onRevoke() {
         Logger.d("onRevoke")
-        // Bring the Quinn session down cleanly on system revoke.
-        runBlocking { quinnAdapter.disconnect() }
+        // The system closes the interface as soon as this returns, so the
+        // teardown has to complete here; the adapter runs it on its own
+        // dispatcher and the wait is bounded so a wedged native close can
+        // never hang the main thread past the ANR budget.
+        runBlocking(Dispatchers.IO) {
+            withTimeoutOrNull(REVOKE_TEARDOWN_TIMEOUT_MS) { quinnAdapter.disconnect() }
+                ?: Logger.w("onRevoke: teardown still running after $REVOKE_TEARDOWN_TIMEOUT_MS ms")
+        }
     }
 
     override fun onUnbind(intent: Intent): Boolean {
@@ -344,8 +339,9 @@ class WarrenVpnService : LifecycleVpnService() {
 
         // `disconnect()` is idempotent (state-machine guards a no-op if
         // already disconnected), so it is safe even if no session was
-        // ever started.
-        runBlocking { quinnAdapter.disconnect() }
+        // ever started. Nothing here waits for it: the lifecycle scope is
+        // already cancelled, and the adapter's own scope outlives the service.
+        quinnAdapter.disconnectInBackground()
 
         Logger.i("Shutdown complete")
     }
@@ -356,8 +352,11 @@ class WarrenVpnService : LifecycleVpnService() {
     }
 
     companion object {
-        init {
-            System.loadLibrary("warren_jni")
-        }
+        /**
+         * How long a system revoke may wait for the session teardown. The
+         * native close is a task abort plus fd closes (tens of milliseconds);
+         * the bound only matters when something is wedged.
+         */
+        private const val REVOKE_TEARDOWN_TIMEOUT_MS = 3_000L
     }
 }

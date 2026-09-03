@@ -11,6 +11,7 @@ import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.vpn.app.connectivity.canDialRelay
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,6 +46,14 @@ import kotlinx.coroutines.withContext
 //
 // State machine + reconnect-on-network-change live here, not in Rust.
 //
+// Every transition runs on [dispatcher], never on the caller's thread: the
+// service reaches the adapter from its lifecycle scope, which is the main
+// thread, and `establish()` (a Binder round trip into system_server), the
+// native `connectTunnel` (config parse, PBKDF2 key derivation, TUN
+// registration) and the teardown all take tens of milliseconds at the exact
+// moment the connect animation starts. `WarrenQuinnAdapterTest` pins the
+// thread affinity.
+//
 // TODO: the builder configuration (DNS, bypass CIDRs, multi-hop entry
 // plumbing) is not wired yet.
 class WarrenQuinnAdapter(
@@ -56,8 +65,11 @@ class WarrenQuinnAdapter(
     // sequence's ORDER is observable off-device; see [WarrenTunnelPlatform].
     private val platform: WarrenTunnelPlatform =
         AndroidTunnelPlatform(vpnService, connectivityManager),
+    // Where the platform and native calls run; injectable so a test can name
+    // the thread it expects them on.
+    private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val lock = Mutex()
 
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
@@ -158,7 +170,10 @@ class WarrenQuinnAdapter(
      * reconnect paths pass the already-owned mnemonic back in (same instance),
      * which is reused rather than re-stored.
      */
-    suspend fun connect(config: WarrenTunnelConfig, mnemonic: Mnemonic) = lock.withLock {
+    suspend fun connect(config: WarrenTunnelConfig, mnemonic: Mnemonic) =
+        withContext(dispatcher) { connectLocked(config, mnemonic) }
+
+    private suspend fun connectLocked(config: WarrenTunnelConfig, mnemonic: Mnemonic) = lock.withLock {
         if (_state.value !is WarrenTunnelState.Disconnected) {
             Logger.w("WarrenQuinnAdapter: connect() called while not disconnected")
             // Never zero the session's own mnemonic; only wipe a foreign one
@@ -364,9 +379,8 @@ class WarrenQuinnAdapter(
      * is better than not dialling.
      */
     private suspend fun awaitPreviousSessionClosed() {
-        val closed = withContext(Dispatchers.IO) {
-            platform.awaitTunnelClosed(SESSION_CLOSE_TIMEOUT_MS)
-        }
+        // Blocking native wait; the callers already sit on [dispatcher].
+        val closed = platform.awaitTunnelClosed(SESSION_CLOSE_TIMEOUT_MS)
         if (!closed) {
             Logger.w("WarrenQuinnAdapter: previous session still closing, dialling anyway")
         }
@@ -379,18 +393,18 @@ class WarrenQuinnAdapter(
         delay(PEER_CLOSE_SETTLE_MS)
     }
 
-    suspend fun reconnect() {
+    suspend fun reconnect() = withContext(dispatcher) {
         val config = activeConfig
         val mnemonic = activeMnemonic
         if (config == null || mnemonic == null) {
             Logger.w("WarrenQuinnAdapter: reconnect() called without an active session")
-            return
+            return@withContext
         }
         lock.withLock { teardownLocked(reconnecting = true) }
         awaitPreviousSessionClosed()
         // Reuse the same owned Mnemonic instance (connect() detects identity
         // and does not re-store or wipe it).
-        connect(config, mnemonic)
+        connectLocked(config, mnemonic)
     }
 
     /**
@@ -403,26 +417,35 @@ class WarrenQuinnAdapter(
      * No-op when there is no active session (no cached mnemonic to reuse); the
      * user must use the normal connect flow in that case.
      */
-    suspend fun reconnectWith(newConfig: WarrenTunnelConfig) {
+    suspend fun reconnectWith(newConfig: WarrenTunnelConfig) = withContext(dispatcher) {
         val mnemonic = activeMnemonic
         if (mnemonic == null) {
             Logger.w("WarrenQuinnAdapter: reconnectWith() called without an active session")
-            return
+            return@withContext
         }
         lock.withLock { teardownLocked(reconnecting = true) }
         awaitPreviousSessionClosed()
         // teardownLocked() clears activeConfig but keeps activeMnemonic, so the
         // instance we captured is still the session's own: connect() detects the
         // identity and does not re-store or wipe it.
-        connect(newConfig, mnemonic)
+        connectLocked(newConfig, mnemonic)
     }
 
-    suspend fun disconnect() = lock.withLock {
-        teardownLocked()
-        // User teardown is terminal: wipe the cached mnemonic.
-        activeMnemonic?.close()
-        activeMnemonic = null
+    suspend fun disconnect() = withContext(dispatcher) {
+        lock.withLock {
+            teardownLocked()
+            // User teardown is terminal: wipe the cached mnemonic.
+            activeMnemonic?.close()
+            activeMnemonic = null
+        }
     }
+
+    /**
+     * [disconnect] without waiting for it, on the adapter's own scope. For the
+     * service's `onDestroy`, whose lifecycle scope is already cancelled by the
+     * time it runs and which must not block the main thread on the teardown.
+     */
+    fun disconnectInBackground(): Job = scope.launch { disconnect() }
 
     /**
      * Tear down the active session (cancel polling, drop the JNI tunnel and
@@ -611,7 +634,7 @@ class WarrenQuinnAdapter(
                 // Reset so connect()'s guard passes; the blackhole stays up.
                 _state.value = WarrenTunnelState.Disconnected
             }
-            if (!userInitiatedDisconnect) connect(config, mnemonic)
+            if (!userInitiatedDisconnect) connectLocked(config, mnemonic)
         }
     }
 
@@ -725,7 +748,7 @@ class WarrenQuinnAdapter(
             // Re-check intent after the grace period: a user disconnect during
             // the wait cancels this job (teardownLocked cancels pendingHandover)
             // and flips the flag, so we must not reconnect over a user teardown.
-            if (!userInitiatedDisconnect) connect(config, mnemonic)
+            if (!userInitiatedDisconnect) connectLocked(config, mnemonic)
         }
     }
 
