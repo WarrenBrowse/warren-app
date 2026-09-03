@@ -1,12 +1,17 @@
 package com.warrenbrowse.vpn.app.connect
 
+import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
 import io.mockk.every
 import io.mockk.mockk
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.TestTimeSource
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -86,6 +91,7 @@ class WarrenTunnelConfigBuilderTest {
     private fun mockCatalog(relays: List<RelayInfo> = listOf(sampleRelay)): RelayCatalog {
         val catalog: RelayCatalog = mockk()
         every { catalog.relaysForDial() } returns relays.map { it.toSummary() }
+        every { catalog.list() } returns relays.map { it.toSummary() }
         return catalog
     }
 
@@ -403,8 +409,9 @@ class WarrenTunnelConfigBuilderTest {
         assertEquals(0L, config.maxRateBps)
     }
 
-    // Failover: the drop retry rebuilds the config with the failed exit
-    // excluded, and falls back to the same exit when nothing else fits the pin.
+    // Failover: the drop retry moves the dropped session to another exit the
+    // pin admits, resolved from the catalogue snapshot already in memory, and
+    // redials the same exit when nothing else fits the pin.
 
     private val secondGermanRelay = sampleRelay.copy(
         exitId = "11111111111111111111111111111111",
@@ -423,37 +430,99 @@ class WarrenTunnelConfigBuilderTest {
         weight = 80,
     )
 
+    /** The session that dropped, as the adapter dialled it. */
+    private val previous =
+        WarrenTunnelConfig(
+            exitPubkeyHex = sampleRelay.exitPubkeyHex,
+            exitEndpoint = sampleRelay.endpoint,
+            exitId = sampleRelay.exitId,
+            walletPubkeyHex = pubkey.value,
+            entryHop = WarrenTunnelConfig.EntryHop(),
+            multihopDirectoryRaw = "the-directory-the-session-was-dialled-with",
+            daita = WarrenTunnelConfig.DaitaSpec(paddingMachine = "tamaraw", normalizePackets = true),
+        )
+
     @Test
-    fun `excluding the previous exit dials another exit of the same country first`() {
+    fun `a failover moves the session to another exit of the same country first`() {
         val builder =
             cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, secondGermanRelay, frenchRelay)))
-        val config = builder.build(pubkey, excludedExitPubkeyHex = sampleRelay.exitPubkeyHex)!!
+        val config = builder.buildFailover(previous)!!
         assertEquals(secondGermanRelay.exitPubkeyHex, config.exitPubkeyHex)
+        assertEquals(secondGermanRelay.endpoint, config.exitEndpoint)
         assertEquals(secondGermanRelay.exitId, config.exitId)
     }
 
     @Test
-    fun `excluding the previous exit leaves its country when it has no other exit`() {
+    fun `a failover leaves the country when it has no other exit`() {
         val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
-        val config = builder.build(pubkey, excludedExitPubkeyHex = sampleRelay.exitPubkeyHex)!!
+        val config = builder.buildFailover(previous)!!
         assertEquals(frenchRelay.exitPubkeyHex, config.exitPubkeyHex)
     }
 
     @Test
-    fun `excluding the only exit the pin allows retries that exit`() {
+    fun `no failover when the pin allows only the exit that dropped`() {
         val builder =
             cfgBuilder(
                 mockRepo(selectedExitId = sampleRelay.exitId),
                 mockCatalog(listOf(sampleRelay, frenchRelay)),
             )
-        val config = builder.build(pubkey, excludedExitPubkeyHex = sampleRelay.exitPubkeyHex)!!
+        assertNull(builder.buildFailover(previous))
+    }
+
+    @Test
+    fun `a failover from an exit the catalogue no longer knows takes the normal pick`() {
+        val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
+        val config = builder.buildFailover(previous.copy(exitPubkeyHex = "ff".repeat(32)))!!
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
     }
 
     @Test
-    fun `excluding an exit the catalogue no longer knows falls back to the normal pick`() {
+    fun `a failover keeps everything else the session was dialled with`() {
+        // The directory travels with the session: run_multi_hop_session
+        // verifies its signature and expiry at dial, so a stale one fails the
+        // dial the way the same-config redial does, and a refetch would only
+        // stall the retry behind the blackhole.
         val builder = cfgBuilder(mockRepo(), mockCatalog(listOf(sampleRelay, frenchRelay)))
-        val config = builder.build(pubkey, excludedExitPubkeyHex = "ff".repeat(32))!!
-        assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+        val config = builder.buildFailover(previous)!!
+        assertEquals(previous.multihopDirectoryRaw, config.multihopDirectoryRaw)
+        assertEquals(previous.daita, config.daita)
+        assertEquals(previous.walletPubkeyHex, config.walletPubkeyHex)
     }
+
+    @Test
+    fun `a failover is resolved from the snapshot in memory and fetches nothing`() {
+        // The drop retry runs behind the kill-switch blackhole, where no
+        // unprotected socket leaves the device: a fetch there can only wait
+        // out the transport's timeout before the redial starts. So the
+        // failover reads the snapshot however old it is, the way the desktop
+        // assemble_failover_for_attempt picks from the daemon's own list.
+        val clock = TestTimeSource()
+        val relayFetches = AtomicInteger()
+        val catalog =
+            RelayCatalog(timeSource = clock) {
+                relayFetches.incrementAndGet()
+                relaysJson(listOf(sampleRelay, frenchRelay))
+            }
+        runBlocking { catalog.refresh() }
+        clock += 2.hours
+        val directoryFetches = AtomicInteger()
+        val builder =
+            WarrenTunnelConfigBuilder(mockRepo(), WarrenProductFlags(isBeta = false), catalog) {
+                directoryFetches.incrementAndGet()
+                STUB_DIRECTORY
+            }
+
+        val config = builder.buildFailover(previous)
+
+        assertEquals(frenchRelay.exitPubkeyHex, config?.exitPubkeyHex)
+        assertEquals(1, relayFetches.get(), "the stale snapshot is used, never refetched")
+        assertEquals(0, directoryFetches.get(), "the directory is the session's own")
+    }
+
+    private fun relaysJson(relays: List<RelayInfo>): String =
+        relays.joinToString(prefix = "[", postfix = "]") {
+            """{"exit_id":"${it.exitId}","exit_pubkey_hex":"${it.exitPubkeyHex}",""" +
+                """"endpoint":"${it.endpoint}","country":"${it.country}","city":"${it.city}",""" +
+                """"active":${it.active},"weight":${it.weight}}"""
+        }
 }

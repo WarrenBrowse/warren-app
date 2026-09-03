@@ -48,7 +48,7 @@ class WarrenConnectUseCaseTest {
         val walletRepository: WalletRepository = mockk()
         every { walletRepository.state } returns MutableStateFlow(wallet)
         val builder: WarrenTunnelConfigBuilder = mockk()
-        every { builder.build(pubkey, previous.exitPubkeyHex) } returns built
+        every { builder.buildFailover(previous) } returns built
         every { localSettings.exitKeyVerdict(any(), any()) } returns verdict
         every { localSettings.allowLan } returns MutableStateFlow(true)
         every { localSettings.tunnelMtu } returns MutableStateFlow(1400)
@@ -65,9 +65,8 @@ class WarrenConnectUseCaseTest {
 
     @Test
     fun `no alternative yields no failover config`() {
-        // The builder degrades to the ordinary pick when the pin leaves nothing
-        // else, which is the previous exit again: that is a plain retry.
-        assertNull(useCase(previous).buildFailoverConfig(previous))
+        // The builder hands back nothing when the pin leaves no other exit:
+        // that is a plain retry of the previous config.
         assertNull(useCase(null).buildFailoverConfig(previous))
     }
 
@@ -87,10 +86,5 @@ class WarrenConnectUseCaseTest {
                 .buildFailoverConfig(previous)
         assertEquals(alternative.exitPubkeyHex, config?.exitPubkeyHex)
         verify { localSettings.trustExitKey(alternative.exitId!!, alternative.exitPubkeyHex) }
-    }
-
-    @Test
-    fun `no wallet yields no failover config`() {
-        assertNull(useCase(alternative, wallet = WalletState.Absent).buildFailoverConfig(previous))
     }
 }

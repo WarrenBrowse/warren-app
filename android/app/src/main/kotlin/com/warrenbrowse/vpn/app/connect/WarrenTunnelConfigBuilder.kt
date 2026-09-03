@@ -41,17 +41,8 @@ class WarrenTunnelConfigBuilder(
      * Build a config or `null` if the relay catalogue is empty (no
      * available exit). Callers should surface a "no exit reachable"
      * message to the user when this happens.
-     *
-     * [excludedExitPubkeyHex] names the exit an automatic retry is failing
-     * over from: the pick then avoids it whenever the pin leaves an
-     * alternative (desktop `assemble_failover_for_attempt`), and degrades to
-     * the ordinary pick when it does not, so a transient refusal never
-     * strands the user without an exit.
      */
-    fun build(
-        walletPubkey: WalletAddress,
-        excludedExitPubkeyHex: String? = null,
-    ): WarrenTunnelConfig? {
+    fun build(walletPubkey: WalletAddress): WarrenTunnelConfig? {
         val daitaEnabled = localSettings.daitaEnabled.value
         val natPmpEnabled = localSettings.natPmpEnabled.value
         val ipv6Enabled = localSettings.ipv6Enabled.value
@@ -64,15 +55,11 @@ class WarrenTunnelConfigBuilder(
         val exitCountry = localSettings.exitCountry.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
 
-        // Exit precedence: failover alternative > explicit picker > preferred
-        // country > first active. The picker pin can name a country or a city,
-        // so it is resolved to one concrete exit here: the engine only ever
-        // accepts a single exit.
+        // Exit precedence: explicit picker > preferred country > first active.
+        // The picker pin can name a country or a city, so it is resolved to
+        // one concrete exit here: the engine only ever accepts a single exit.
         val pin = localSettings.exitPin.value
-        val alternative =
-            excludedExitPubkeyHex?.let { resolveFailoverExit(pin, exitCountry, relays, it) }
-        val exit = alternative
-            ?: resolveExitPin(pin, relays)
+        val exit = resolveExitPin(pin, relays)
             ?: exitCountry?.let { c -> relays.firstOrNull { it.active && it.country.equals(c, ignoreCase = true) } }
             ?: relays.firstOrNull { it.active }
             ?: run {
@@ -132,6 +119,35 @@ class WarrenTunnelConfigBuilder(
             // Beta builds never send a user bandwidth value: the beta cap
             // is network-imposed and enforced by the exits.
             maxRateBps = if (productFlags.isBeta) 0 else localSettings.maxRateBps.value,
+        )
+    }
+
+    /**
+     * The config a drop retry dials instead of [previous]: the same session
+     * moved to an alternative exit the pin admits, or `null` when the
+     * catalogue snapshot holds none (the retry then redials [previous]).
+     *
+     * Resolved from memory alone, the way the desktop
+     * `assemble_failover_for_attempt` picks from the daemon's own list: the
+     * retry runs behind the kill-switch blackhole, where no unprotected socket
+     * leaves the device, so a fetch here could only wait out the transport's
+     * timeout before the redial starts. The snapshot is read whatever its age,
+     * and the directory blob travels with the session: `run_multi_hop_session`
+     * verifies its signature and its expiry at dial, so a stale one fails the
+     * dial exactly as the same-config redial does.
+     */
+    fun buildFailover(previous: WarrenTunnelConfig): WarrenTunnelConfig? {
+        val alternative =
+            resolveFailoverExit(
+                localSettings.exitPin.value,
+                localSettings.exitCountry.value,
+                relayCatalog.list(),
+                previous.exitPubkeyHex,
+            ) ?: return null
+        return previous.copy(
+            exitPubkeyHex = alternative.exitPubkeyHex,
+            exitEndpoint = alternative.endpoint,
+            exitId = alternative.exitId,
         )
     }
 

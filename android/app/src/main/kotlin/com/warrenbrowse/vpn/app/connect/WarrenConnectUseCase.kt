@@ -107,22 +107,21 @@ class WarrenConnectUseCase(
 
     /**
      * The config an automatic retry dials after [previous] dropped: the same
-     * settings on an alternative exit the pin allows, or `null` when there is
+     * session on an alternative exit the pin allows, or `null` when there is
      * none (the retry then redials [previous]). Desktop
      * `assemble_failover_for_attempt`, with the exit-key pin enforced the same
      * way as on a fresh connect: an alternative whose key changed since it was
      * pinned is refused rather than dialled, because the retry runs with no
-     * user to decide.
+     * user to decide. No request leaves here: the retry runs behind the
+     * kill-switch blackhole, and the builder resolves the alternative from the
+     * catalogue already in memory.
      */
     fun buildFailoverConfig(previous: WarrenTunnelConfig): WarrenTunnelConfig? {
         val alternative =
-            walletPubkey()
-                ?.let { configBuilder.build(it, excludedExitPubkeyHex = previous.exitPubkeyHex) }
-                ?.takeIf { it.exitPubkeyHex != previous.exitPubkeyHex }
-                ?.takeUnless { built ->
-                    val verdict = built.exitId?.let { checkExitKey(it, built.exitPubkeyHex) }
-                    verdict is ExitKeyVerdict.Mismatch
-                }
+            configBuilder.buildFailover(previous)?.takeUnless { built ->
+                val verdict = built.exitId?.let { checkExitKey(it, built.exitPubkeyHex) }
+                verdict is ExitKeyVerdict.Mismatch
+            }
         return alternative?.let(::withLocalToggles)
     }
 
