@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import com.warrenbrowse.vpn.lib.model.countryDisplayName
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import com.warrenbrowse.vpn.lib.ui.designsystem.Position
@@ -39,13 +40,14 @@ class LocationPickerRowsTest {
         relays: List<WarrenRelaySummary>,
         query: String = "",
         recents: List<WarrenRelaySummary> = emptyList(),
+        recentScopes: List<ExitPin> = emptyList(),
         customLists: List<CustomListSection> = emptyList(),
         exitPin: ExitPin = ExitPin.Automatic,
         expandedCountries: Set<String> = emptySet(),
         expandedCities: Set<String> = emptySet(),
     ) = buildPickerRows(
         query = query,
-        recentRelays = recents,
+        recents = recentEntries(recents.map { ExitPin.Exit(it.exitId) } + recentScopes, relays),
         customLists = customLists,
         byCountry = byCountry(relays),
         exitPin = exitPin,
@@ -72,7 +74,7 @@ class LocationPickerRowsTest {
                     scope = PickerScope.Entry,
                     entryCountry = "de",
                     recentsEnabled = true,
-                    recentExitIds = emptyList(),
+                    recentPins = emptyList(),
                     customLists = emptyMap(),
                     exitPin = ExitPin.Automatic,
                     expanded = ExpandedKeys(emptySet(), emptySet()),
@@ -96,7 +98,7 @@ class LocationPickerRowsTest {
                     scope = PickerScope.Exit,
                     entryCountry = null,
                     recentsEnabled = true,
-                    recentExitIds = listOf("a"),
+                    recentPins = listOf(ExitPin.Exit("a")),
                     customLists = emptyMap(),
                     exitPin = ExitPin.Automatic,
                     expanded = ExpandedKeys(emptySet(), emptySet()),
@@ -253,6 +255,68 @@ class LocationPickerRowsTest {
         val built = rows(catalogue, recents = listOf(catalogue[0]))
 
         assertTrue(built.none { it.key == "recents-toggle" })
+    }
+
+    @Test
+    fun `a recent country or city is listed at its own depth in recents`() {
+        // Desktop recents are locations at the depth they were picked
+        // (`RecentGeographicalLocation`), so a country or city pin is a recent
+        // row of its own, labelled with its parents like the desktop row.
+        val built = rows(
+            catalogue,
+            recentScopes = listOf(ExitPin.City("DE", "Frankfurt"), ExitPin.Country("FR")),
+            exitPin = ExitPin.Country("FR"),
+        )
+        val scopes = built.filterIsInstance<PickerRow.RecentScopeRow>()
+
+        assertEquals(
+            listOf(ExitPin.City("DE", "Frankfurt"), ExitPin.Country("FR")),
+            scopes.map { it.pin },
+        )
+        assertEquals(listOf(false, true), scopes.map { it.isPinned })
+        // Country names follow the device locale, so the expectation does too.
+        assertEquals("Frankfurt, " + countryDisplayName("DE"), scopes[0].title)
+        assertEquals(countryDisplayName("FR"), scopes[1].title)
+        assertEquals(0, built.indexOfFirst { it is PickerRow.RecentsHeader })
+    }
+
+    @Test
+    fun `recents keep the order they were used in across depths`() {
+        val entries = recentEntries(
+            listOf(ExitPin.Country("SE"), ExitPin.Exit("de1"), ExitPin.City("FR", "Paris")),
+            catalogue,
+        )
+        val built = rows(catalogue).let {
+            buildPickerRows(
+                query = "",
+                recents = entries,
+                customLists = emptyList(),
+                byCountry = byCountry(catalogue),
+                exitPin = ExitPin.Automatic,
+                expandedCountries = emptySet(),
+                expandedCities = emptySet(),
+            )
+        }
+        val header = built.indexOfFirst { it is PickerRow.RecentsHeader }
+        assertTrue(built[header + 1] is PickerRow.RecentScopeRow)
+        assertTrue(built[header + 2] is PickerRow.ExitRow)
+        assertTrue(built[header + 3] is PickerRow.RecentScopeRow)
+    }
+
+    @Test
+    fun `a recent scope the catalogue no longer serves is dropped`() {
+        val entries = recentEntries(
+            listOf(ExitPin.Country("ZZ"), ExitPin.City("DE", "Munich"), ExitPin.Exit("gone")),
+            catalogue,
+        )
+        assertTrue(entries.isEmpty())
+    }
+
+    @Test
+    fun `a recent scope with every exit down stays listed but disabled`() {
+        val down = catalogue.map { if (it.country == "SE") it.copy(active = false) else it }
+        val scope = recentEntries(listOf(ExitPin.Country("SE")), down).single() as RecentEntry.Scope
+        assertFalse(scope.hasActive)
     }
 
     // Selection

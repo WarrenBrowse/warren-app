@@ -244,6 +244,27 @@ internal sealed interface PickerRow {
         override fun withPosition(position: Position) = copy(position = position)
     }
 
+    /**
+     * A recently used country or city, listed at its own depth in the recents
+     * section (desktop `RecentGeographicalLocation`, which shows a city with
+     * its parent country). Tapping it applies [pin] again.
+     */
+    data class RecentScopeRow(
+        val pin: ExitPin,
+        val title: String,
+        val hasActive: Boolean,
+        override val isPinned: Boolean,
+        override val position: Position = Position.Single,
+    ) : PickerRow {
+        override val key = "recent-scope-" + when (pin) {
+            is ExitPin.Country -> pin.country
+            is ExitPin.City -> cityKey(pin.country, pin.city)
+            else -> "none"
+        }
+
+        override fun withPosition(position: Position) = copy(position = position)
+    }
+
     data class ExitRow(
         val relay: WarrenRelaySummary,
         val title: String,
@@ -303,7 +324,7 @@ internal data class PickerInputs(
     val scope: PickerScope,
     val entryCountry: String?,
     val recentsEnabled: Boolean,
-    val recentExitIds: List<String>,
+    val recentPins: List<ExitPin>,
     val customLists: Map<String, List<String>>,
     val exitPin: ExitPin,
     val expanded: ExpandedKeys,
@@ -323,12 +344,8 @@ internal fun pickerRows(inputs: PickerInputs): List<PickerRow> =
             )
         } else {
             val filtered = relays.filter { relayMatches(it, query) }
-            val recentRelays =
-                if (!searching && recentsEnabled) {
-                    recentExitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
-                } else {
-                    emptyList()
-                }
+            val recents =
+                if (!searching && recentsEnabled) recentEntries(recentPins, relays) else emptyList()
             // country -> (city -> relays), both ordered by localized name.
             val byCountry: Map<String, Map<String, List<WarrenRelaySummary>>> =
                 filtered
@@ -338,7 +355,7 @@ internal fun pickerRows(inputs: PickerInputs): List<PickerRow> =
             assignPositions(
                 buildPickerRows(
                     query = query,
-                    recentRelays = recentRelays,
+                    recents = recents,
                     customLists = visibleCustomLists(customLists, relays, query),
                     byCountry = byCountry,
                     exitPin = exitPin,
@@ -386,6 +403,55 @@ internal fun buildEntryRows(
 internal fun exitTitle(relay: WarrenRelaySummary): String =
     relay.city.ifBlank { countryDisplayName(relay.country) }
 
+/** A recents entry resolved against the catalogue: one exit, or a scope. */
+internal sealed interface RecentEntry {
+    data class Exit(val relay: WarrenRelaySummary) : RecentEntry
+
+    data class Scope(val pin: ExitPin, val title: String, val hasActive: Boolean) : RecentEntry
+}
+
+/**
+ * The recents worth a row, in the order they were used. An exit the catalogue
+ * dropped, or a scope it no longer serves at all, is skipped; a scope whose
+ * exits are all down stays listed (disabled), as its country row does.
+ */
+internal fun recentEntries(pins: List<ExitPin>, relays: List<WarrenRelaySummary>): List<RecentEntry> =
+    pins.mapNotNull { pin ->
+        when (pin) {
+            ExitPin.Automatic -> null
+            is ExitPin.Exit -> relays.firstOrNull { it.exitId == pin.exitId }?.let { RecentEntry.Exit(it) }
+            is ExitPin.Country -> {
+                val inScope = relays.filter { it.country.equals(pin.country, ignoreCase = true) }
+                if (inScope.isEmpty()) {
+                    null
+                } else {
+                    RecentEntry.Scope(
+                        pin = pin,
+                        title = countryDisplayName(pin.country),
+                        hasActive = inScope.any { it.active },
+                    )
+                }
+            }
+            is ExitPin.City -> {
+                val inScope =
+                    relays.filter {
+                        it.country.equals(pin.country, ignoreCase = true) &&
+                            it.city.equals(pin.city, ignoreCase = true)
+                    }
+                if (inScope.isEmpty()) {
+                    null
+                } else {
+                    RecentEntry.Scope(
+                        pin = pin,
+                        // The parent country travels with the city, as on desktop.
+                        title = inScope.first().city + ", " + countryDisplayName(pin.country),
+                        hasActive = inScope.any { it.active },
+                    )
+                }
+            }
+        }
+    }
+
 /**
  * The whole exit-hop list, in render order. [byCountry] is the already filtered
  * and sorted catalogue; a non-empty [query] force-expands every branch so a
@@ -394,7 +460,7 @@ internal fun exitTitle(relay: WarrenRelaySummary): String =
 @Suppress("LongParameterList")
 internal fun buildPickerRows(
     query: String,
-    recentRelays: List<WarrenRelaySummary>,
+    recents: List<RecentEntry>,
     customLists: List<CustomListSection>,
     byCountry: Map<String, Map<String, List<WarrenRelaySummary>>>,
     exitPin: ExitPin,
@@ -403,19 +469,31 @@ internal fun buildPickerRows(
 ): List<PickerRow> = buildList {
     val searching = query.isNotEmpty()
 
-    if (recentRelays.isNotEmpty()) {
+    if (recents.isNotEmpty()) {
         add(PickerRow.RecentsHeader)
-        recentRelays.forEach { relay ->
-            add(
-                PickerRow.ExitRow(
-                    relay = relay,
-                    title = exitTitle(relay),
-                    ordinal = null,
-                    depth = 0,
-                    section = ExitSection.Recents,
-                    isPinned = exitPin == ExitPin.Exit(relay.exitId),
-                )
-            )
+        recents.forEach { entry ->
+            when (entry) {
+                is RecentEntry.Exit ->
+                    add(
+                        PickerRow.ExitRow(
+                            relay = entry.relay,
+                            title = exitTitle(entry.relay),
+                            ordinal = null,
+                            depth = 0,
+                            section = ExitSection.Recents,
+                            isPinned = exitPin == ExitPin.Exit(entry.relay.exitId),
+                        )
+                    )
+                is RecentEntry.Scope ->
+                    add(
+                        PickerRow.RecentScopeRow(
+                            pin = entry.pin,
+                            title = entry.title,
+                            hasActive = entry.hasActive,
+                            isPinned = exitPin == entry.pin,
+                        )
+                    )
+            }
         }
         add(PickerRow.Gap("gap-recents"))
     }

@@ -278,15 +278,18 @@ class WarrenLocalSettingsRepositoryTest {
         every { mockPrefs.getBoolean("recents_enabled", true) } returns true
         val repo = WarrenLocalSettingsRepository(mockContext)
 
-        listOf("a", "b", "c", "a").forEach { repo.recordRecentExit(it) }
+        listOf("a", "b", "c", "a").forEach { repo.recordRecentPin(ExitPin.Exit(it)) }
         // "a" deduped to front, order reflects last-touched.
-        assertEquals(listOf("a", "c", "b"), repo.recentExitIds.value)
+        assertEquals(listOf("a", "c", "b").map { ExitPin.Exit(it) }, repo.recentPins.value)
 
-        repo.recordRecentExit("d")
-        repo.recordRecentExit("e")
-        repo.recordRecentExit("f")
+        repo.recordRecentPin(ExitPin.Exit("d"))
+        repo.recordRecentPin(ExitPin.Exit("e"))
+        repo.recordRecentPin(ExitPin.Exit("f"))
         // Capped at five, oldest ("b") evicted.
-        assertEquals(listOf("f", "e", "d", "a", "c"), repo.recentExitIds.value)
+        assertEquals(
+            listOf("f", "e", "d", "a", "c").map { ExitPin.Exit(it) },
+            repo.recentPins.value,
+        )
     }
 
     @Test
@@ -297,11 +300,54 @@ class WarrenLocalSettingsRepositoryTest {
         val repo = WarrenLocalSettingsRepository(mockContext)
 
         repo.setSelectedExitId("exit-1")
-        assertEquals(listOf("exit-1"), repo.recentExitIds.value)
+        assertEquals(listOf(ExitPin.Exit("exit-1")), repo.recentPins.value)
 
         repo.setSelectedExitId(null)
         // Clearing the selection leaves recents untouched.
-        assertEquals(listOf("exit-1"), repo.recentExitIds.value)
+        assertEquals(listOf(ExitPin.Exit("exit-1")), repo.recentPins.value)
+    }
+
+    @Test
+    fun `a country or city pin is recorded as recent at its own depth`() {
+        // Desktop recents are locations at whatever depth was picked
+        // (`Recent::try_from(&RelaySettings)`), not only single relays.
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getBoolean("recents_enabled", true) } returns true
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setExitPin(ExitPin.Country("DE"))
+        repo.setExitPin(ExitPin.City("FR", "Paris"))
+        repo.setExitPin(ExitPin.Exit("nl1"))
+        repo.setExitPin(ExitPin.Automatic)
+
+        assertEquals(
+            listOf(ExitPin.Exit("nl1"), ExitPin.City("FR", "Paris"), ExitPin.Country("DE")),
+            repo.recentPins.value,
+        )
+        // The persisted form carries the depth, so a city and a country of the
+        // same name never collapse into one entry.
+        verify { mockEditor.putString("recent_pins", "exit:nl1,city:FR/Paris,country:DE") }
+    }
+
+    @Test
+    fun `recents persisted by an older build as exit ids are read back as exit pins`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getString("recent_exit_ids", null) } returns "a,b"
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(listOf(ExitPin.Exit("a"), ExitPin.Exit("b")), repo.recentPins.value)
+    }
+
+    @Test
+    fun `a persisted recent pin round-trips through its stored form`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getString("recent_pins", null) } returns "city:FR/Paris,country:de,exit:x"
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(
+            listOf(ExitPin.City("FR", "Paris"), ExitPin.Country("de"), ExitPin.Exit("x")),
+            repo.recentPins.value,
+        )
     }
 
     @Test
@@ -326,22 +372,22 @@ class WarrenLocalSettingsRepositoryTest {
         every { mockPrefs.getBoolean("recents_enabled", true) } returns true
         val repo = WarrenLocalSettingsRepository(mockContext)
 
-        repo.recordRecentExit("a")
-        assertEquals(listOf("a"), repo.recentExitIds.value)
+        repo.recordRecentPin(ExitPin.Exit("a"))
+        assertEquals(listOf(ExitPin.Exit("a")), repo.recentPins.value)
 
         // Turning recents off forgets the current list immediately...
         repo.setRecentsEnabled(false)
-        assertEquals(emptyList<String>(), repo.recentExitIds.value)
+        assertEquals(emptyList<ExitPin>(), repo.recentPins.value)
         assertFalse(repo.recentsEnabled.value)
 
         // ...and no new recents are recorded while it stays off.
-        repo.recordRecentExit("b")
-        assertEquals(emptyList<String>(), repo.recentExitIds.value)
+        repo.recordRecentPin(ExitPin.Exit("b"))
+        assertEquals(emptyList<ExitPin>(), repo.recentPins.value)
 
         // Re-enabling resumes recording.
         repo.setRecentsEnabled(true)
-        repo.recordRecentExit("c")
-        assertEquals(listOf("c"), repo.recentExitIds.value)
+        repo.recordRecentPin(ExitPin.Exit("c"))
+        assertEquals(listOf(ExitPin.Exit("c")), repo.recentPins.value)
     }
 
     @Test

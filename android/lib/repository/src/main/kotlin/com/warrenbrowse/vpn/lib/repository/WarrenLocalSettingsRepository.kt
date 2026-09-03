@@ -208,12 +208,15 @@ class WarrenLocalSettingsRepository(context: Context) {
     val exitPin: StateFlow<ExitPin> = _exitPin.asStateFlow()
 
     /**
-     * Recently selected exit identifiers, most-recent-first, capped at
-     * [MAX_RECENT_EXITS]. Surfaced at the top of the location picker so
-     * frequently-used exits are one tap away (desktop "recents" parity).
+     * Recently selected locations at the depth they were picked (a country, a
+     * city or one exit), most-recent-first, capped at [MAX_RECENT_EXITS].
+     * Surfaced at the top of the location picker so frequently-used locations
+     * are one tap away. Desktop records the location constraint itself
+     * (`Recent::try_from(&RelaySettings)`), so a country pick is a recent in
+     * its own right, never flattened to the exit it resolved to.
      */
-    private val _recentExitIds = MutableStateFlow(readRecentExitIds())
-    val recentExitIds: StateFlow<List<String>> = _recentExitIds.asStateFlow()
+    private val _recentPins = MutableStateFlow(readRecentPins())
+    val recentPins: StateFlow<List<ExitPin>> = _recentPins.asStateFlow()
 
     /**
      * Whether recently-used exits are remembered. When off, no new recents
@@ -334,8 +337,8 @@ class WarrenLocalSettingsRepository(context: Context) {
         // A broader pin renders its own name, so a leftover exit label would
         // contradict it; the new exit's label is written once it resolves.
         if (pin !is ExitPin.Exit) clearExitPinLabel()
-        // Selecting (not clearing) one exit records it as recently used.
-        if (pin is ExitPin.Exit) recordRecentExit(pin.exitId)
+        // Selecting (not clearing) a location records it as recently used.
+        recordRecentPin(pin)
     }
 
     /**
@@ -357,37 +360,73 @@ class WarrenLocalSettingsRepository(context: Context) {
         }
     }
 
-    /** Push [exitId] to the front of the recents list (deduped, capped). */
-    fun recordRecentExit(exitId: String) {
-        if (!_recentsEnabled.value) return
-        val updated = (listOf(exitId) + _recentExitIds.value.filter { it != exitId })
-            .take(MAX_RECENT_EXITS)
-        prefs.edit().putString(KEY_RECENT_EXIT_IDS, updated.joinToString(RECENT_DELIMITER)).apply()
-        _recentExitIds.value = updated
+    /** Push [pin] to the front of the recents list (deduped, capped); Automatic pins nothing. */
+    fun recordRecentPin(pin: ExitPin) {
+        if (!_recentsEnabled.value || pin == ExitPin.Automatic) return
+        val updated = (listOf(pin) + _recentPins.value.filter { it != pin }).take(MAX_RECENT_EXITS)
+        prefs.edit()
+            .putString(KEY_RECENT_PINS, updated.joinToString(RECENT_DELIMITER) { encodeRecentPin(it) })
+            .remove(KEY_RECENT_EXIT_IDS)
+            .apply()
+        _recentPins.value = updated
     }
 
-    /** Forget all recently-used exits. */
-    fun clearRecentExits() {
-        prefs.edit().remove(KEY_RECENT_EXIT_IDS).apply()
-        _recentExitIds.value = emptyList()
+    /** Forget all recently-used locations. */
+    fun clearRecents() {
+        prefs.edit().remove(KEY_RECENT_PINS).remove(KEY_RECENT_EXIT_IDS).apply()
+        _recentPins.value = emptyList()
     }
 
     /**
-     * Enable/disable remembering recently-used exits. Turning it off also
+     * Enable/disable remembering recently-used locations. Turning it off also
      * forgets the current list so the privacy choice takes effect immediately.
      */
     fun setRecentsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_RECENTS_ENABLED, enabled).apply()
         _recentsEnabled.value = enabled
-        if (!enabled) clearRecentExits()
+        if (!enabled) clearRecents()
     }
 
-    private fun readRecentExitIds(): List<String> =
-        prefs.getString(KEY_RECENT_EXIT_IDS, null)
+    /**
+     * The stored list, or the exit-id list an older build wrote (every entry
+     * of which was a single exit) when the scoped key is absent.
+     */
+    private fun readRecentPins(): List<ExitPin> {
+        val scoped = prefs.getString(KEY_RECENT_PINS, null)
+        if (scoped != null) {
+            return scoped.split(RECENT_DELIMITER).mapNotNull { decodeRecentPin(it.trim()) }
+        }
+        return prefs.getString(KEY_RECENT_EXIT_IDS, null)
             ?.split(RECENT_DELIMITER)
             ?.map { it.trim() }
             ?.filter { it.isNotEmpty() }
+            ?.map { ExitPin.Exit(it) }
             ?: emptyList()
+    }
+
+    /** `exit:<id>`, `country:<cc>` or `city:<cc>/<city>`; the depth travels with the entry. */
+    private fun encodeRecentPin(pin: ExitPin): String =
+        when (pin) {
+            ExitPin.Automatic -> ""
+            is ExitPin.Exit -> RECENT_EXIT_PREFIX + pin.exitId
+            is ExitPin.Country -> RECENT_COUNTRY_PREFIX + pin.country
+            is ExitPin.City -> RECENT_CITY_PREFIX + pin.country + SCOPE_DELIMITER + pin.city
+        }
+
+    private fun decodeRecentPin(entry: String): ExitPin? =
+        when {
+            entry.startsWith(RECENT_EXIT_PREFIX) ->
+                entry.removePrefix(RECENT_EXIT_PREFIX).takeIf { it.isNotEmpty() }?.let { ExitPin.Exit(it) }
+            entry.startsWith(RECENT_COUNTRY_PREFIX) ->
+                entry.removePrefix(RECENT_COUNTRY_PREFIX).takeIf { it.isNotEmpty() }?.let { ExitPin.Country(it) }
+            entry.startsWith(RECENT_CITY_PREFIX) -> {
+                val scope = entry.removePrefix(RECENT_CITY_PREFIX)
+                val country = scope.substringBefore(SCOPE_DELIMITER, "")
+                val city = scope.substringAfter(SCOPE_DELIMITER, "")
+                if (country.isEmpty() || city.isEmpty()) null else ExitPin.City(country, city)
+            }
+            else -> null
+        }
 
     /**
      * Trust-on-first-use verdict for an exit's public key (desktop
@@ -673,6 +712,10 @@ class WarrenLocalSettingsRepository(context: Context) {
         // which makes the first occurrence the unambiguous country/city split.
         private const val SCOPE_DELIMITER = "/"
         private const val KEY_RECENT_EXIT_IDS = "recent_exit_ids"
+        private const val KEY_RECENT_PINS = "recent_pins"
+        private const val RECENT_EXIT_PREFIX = "exit:"
+        private const val RECENT_COUNTRY_PREFIX = "country:"
+        private const val RECENT_CITY_PREFIX = "city:"
         private const val KEY_RECENTS_ENABLED = "recents_enabled"
         private const val RECENT_DELIMITER = ","
         private const val KEY_CUSTOM_LIST_NAMES = "custom_list_names"

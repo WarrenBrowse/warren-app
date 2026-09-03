@@ -156,7 +156,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
                 initialValue = transitionInFlight(tunnelStateProvider.connectedInfo.value)
             )
     val exitPin by settings.exitPin.collectAsStateWithLifecycle()
-    val recentExitIds by settings.recentExitIds.collectAsStateWithLifecycle()
+    val recentPins by settings.recentPins.collectAsStateWithLifecycle()
     val recentsEnabled by settings.recentsEnabled.collectAsStateWithLifecycle()
     val customLists by settings.customLists.collectAsStateWithLifecycle()
     val multiHopEnabled by settings.multiHopEnabled.collectAsStateWithLifecycle()
@@ -245,7 +245,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             scope = activeScope,
             entryCountry = entryCountry,
             recentsEnabled = recentsEnabled,
-            recentExitIds = recentExitIds,
+            recentPins = recentPins,
             customLists = customLists,
             exitPin = exitPin,
             expanded = ExpandedKeys(expandedCountries, expandedCities),
@@ -499,7 +499,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             message = stringResource(R.string.location_clear_recents_confirm),
             confirmationText = stringResource(R.string.location_clear),
             onConfirm = {
-                settings.clearRecentExits()
+                settings.clearRecents()
                 confirmClearRecents = false
             },
             onBack = { confirmClearRecents = false },
@@ -728,6 +728,18 @@ private fun LazyItemScope.PickerRowContent(
                 hierarchy = hierarchyOf(row.depth),
                 onSelect = dropUnlessResumed { onApplyPin(ExitPin.City(row.country, row.city)) },
                 onToggleExpand = { onToggleCity(cityKey(row.country, row.city)) },
+            )
+
+        is PickerRow.RecentScopeRow ->
+            ExitCell(
+                modifier = itemModifier,
+                title = row.title,
+                selected = row.isPinned,
+                active = row.hasActive,
+                isEnabled = row.hasActive && !inFlight,
+                position = row.position,
+                hierarchy = Hierarchy.Parent,
+                onClick = dropUnlessResumed { onApplyPin(row.pin) },
             )
 
         is PickerRow.ExitRow -> {
