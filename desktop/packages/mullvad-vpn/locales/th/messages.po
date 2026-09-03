@@ -5345,3 +5345,167 @@ msgstr "รหัสลงชื่อเข้าใช้ประกอบด
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "ดำเนินการต่อ"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d ตัวอักษร (อย่างน้อย %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "บันทึกแบบไม่ระบุตัวตนจากแอปนี้ มองเห็นได้เฉพาะทีมสนับสนุน"
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "การท่องเว็บ (หน้าเว็บไม่โหลด ช้า เว็บไซต์เสีย)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "การเชื่อมต่อ (เชื่อมต่อไม่ได้ หลุด ไม่มีอินเทอร์เน็ต)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "ทุกครั้ง"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "การเข้าถึงฟอรัมต้องมีการสมัครสมาชิก Warren กระเป๋าเงินนี้ไม่เคยสมัครสมาชิก โปรดใช้แบบฟอร์มขอความช่วยเหลือบนเว็บไซต์แทน"
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "เราจะทำให้เกิดขึ้นซ้ำได้อย่างไร (ไม่บังคับ)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "เกิดขึ้นบ่อยแค่ไหน"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "แนบบันทึกทางเทคนิค"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "การติดตั้งหรืออัปเดต Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "เกิดขึ้นครั้งเดียว"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "เปิดแบบฟอร์มขอความช่วยเหลือ"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "เปิดหัวข้อ"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "โพสต์ในชื่อ %(handle)s"
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "กำลังเตรียมรายงาน โปรดรอ"
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "รายงานปัญหา"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "ส่งคำอธิบายและบันทึกของคุณให้ทีมสนับสนุน"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "ส่งรายงาน"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "ส่งโดยไม่มีบันทึก"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "การส่งบันทึกใช้เวลานานเกินไปบนการเชื่อมต่อนี้"
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "กำลังส่ง โปรดรอสักครู่"
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "บางช่องไม่ได้รับการยอมรับ ตรวจสอบคำอธิบายแล้วลองอีกครั้ง"
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "อย่างอื่น"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "บางครั้ง"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "ฟอรัมไม่สามารถรับรายงานได้ในขณะนี้ โปรดลองอีกครั้งภายหลัง"
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "บันทึกมีขนาดใหญ่เกินกว่าจะส่งได้"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "ไม่สามารถรวบรวมบันทึกได้ คุณยังส่งคำอธิบายได้"
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "ไม่สามารถส่งรายงานได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "นาฬิกาของอุปกรณ์นี้คลาดเคลื่อนเกินหนึ่งนาที เปิดวันที่และเวลาอัตโนมัติ แล้วส่งอีกครั้ง"
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "มีรายงานจากกระเป๋าเงินนี้มากเกินไปในตอนนี้ โปรดลองอีกครั้งภายหลัง"
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "ดูบันทึก"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "กระเป๋าเงิน การชำระเงิน หรือการสมัครสมาชิก"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "คุณทำอะไรก่อนหน้านั้น ทีละขั้นตอนถ้าทำได้"
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "คุณเห็นอะไร และคาดหวังอะไรแทน คัดลอกข้อความแสดงข้อผิดพลาดใดๆ อย่าใส่ที่อยู่กระเป๋าเงินของคุณเด็ดขาด"
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "เกิดอะไรขึ้น"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "ปัญหาเกิดขึ้นที่ไหน"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "คำอธิบายของคุณจะถูกโพสต์บนฟอรัมชุมชนภายใต้ชื่อฟอรัมนิรนามของคุณ บันทึกทางเทคนิค หากคุณแนบมาด้วย จะถูกส่งเป็นการส่วนตัวให้ทีมสนับสนุนเท่านั้นและไม่ปรากฏต่อสาธารณะ"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "รายงานของคุณอยู่บนฟอรัมแล้ว และบันทึกของคุณถึงทีมสนับสนุนแล้ว"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "รายงานของคุณอยู่บนฟอรัมแล้ว"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "รายงานของคุณอยู่บนฟอรัมแล้ว บันทึกส่งถึงได้เพียงบางส่วน ทีมสนับสนุนอาจขออีกครั้ง"
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "บัญชี Warren ของคุณยังไม่พร้อม จึงยังลงนามรายงานไม่ได้ โปรดตั้งค่าแอปให้เสร็จ แล้วส่งอีกครั้ง"

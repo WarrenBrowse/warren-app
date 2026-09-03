@@ -52,5 +52,6 @@ export type LocalizationContexts =
   | 'forum-login'
   | 'forum-sign-in-code'
   | 'forum-attach'
+  | 'report-problem'
   | 'custom-list-feature'
   | 'locations-feature';

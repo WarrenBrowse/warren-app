@@ -36,6 +36,9 @@ export enum RoutePath {
   // The forum sign-in finished by hand with the code the approval page
   // shows when its button did not open the app.
   forumSignInCode = '/settings/support/forum-sign-in-code',
+  // The in-app bug report (doc 55): the forum's "Report a bug" form filed
+  // with the wallet signature and the redacted logs, without a browser.
+  reportProblem = '/settings/support/report-problem',
   debug = '/settings/debug',
   selectLocation = '/select-location',
   filter = '/select-location/filter',

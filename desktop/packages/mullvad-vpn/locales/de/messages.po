@@ -5374,3 +5374,167 @@ msgstr "Ein Anmeldecode besteht aus 32 Buchstaben und Ziffern, wie auf der Forum
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Weiter"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d Zeichen (mindestens %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Anonymisierte Protokolle dieser App, nur für das Support-Team sichtbar."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Surfen (Seiten laden nicht, langsam, defekte Websites)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Verbindung (keine Verbindung möglich, Abbrüche, kein Internet)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Jedes Mal"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Der Forumzugang erfordert ein Warren-Abonnement. Diese Wallet hat nie eines abgeschlossen: Nutze stattdessen das Hilfeformular auf der Website."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Wie können wir es nachstellen? (optional)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Wie oft tritt es auf?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Technische Protokolle beifügen"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Installation oder Aktualisierung von Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Es ist einmal passiert"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Hilfeformular öffnen"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Thema öffnen"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Veröffentlicht als %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Der Bericht wird vorbereitet, bitte warten."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Problem melden"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Eine Beschreibung und deine Protokolle an das Support-Team senden"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Bericht senden"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Ohne die Protokolle senden"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Das Senden der Protokolle hat über diese Verbindung zu lange gedauert."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Wird gesendet, bitte warten."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Einige Felder wurden nicht akzeptiert. Prüfe die Beschreibung und versuche es erneut."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Etwas anderes"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Manchmal"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Das Forum konnte den Bericht gerade nicht annehmen. Bitte versuche es später erneut."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Die Protokolle sind zu groß zum Senden."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Die Protokolle konnten nicht gesammelt werden. Du kannst die Beschreibung trotzdem senden."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Der Bericht konnte nicht gesendet werden. Prüfe die Verbindung und versuche es erneut."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "Die Uhr dieses Geräts weicht um mehr als eine Minute ab. Aktiviere die automatische Datums- und Zeiteinstellung und sende erneut."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "Zu viele Berichte von dieser Wallet im Moment. Bitte versuche es später erneut."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Protokolle ansehen"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Wallet, Zahlung oder Abonnement"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Was hast du unmittelbar davor getan? Wenn möglich Schritt für Schritt."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Was hast du gesehen, und was hättest du stattdessen erwartet? Kopiere jede Fehlermeldung. Gib niemals deine Wallet-Adresse an."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Was ist passiert?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Wo tritt das Problem auf?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Deine Beschreibung wird im Community-Forum unter deinem anonymen Forumnamen veröffentlicht. Die technischen Protokolle gehen, wenn du sie beifügst, vertraulich an das Support-Team und erscheinen nie öffentlich."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Dein Bericht ist im Forum und deine Protokolle haben das Support-Team erreicht."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Dein Bericht ist im Forum."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Dein Bericht ist im Forum. Die Protokolle konnten nur teilweise übermittelt werden; das Support-Team fragt eventuell erneut danach."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Dein Warren-Konto ist noch nicht bereit, daher kann der Bericht nicht signiert werden. Schließe die Einrichtung der App ab und sende dann erneut."

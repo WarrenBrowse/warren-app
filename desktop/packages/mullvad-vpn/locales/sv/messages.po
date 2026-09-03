@@ -5373,3 +5373,167 @@ msgstr "En inloggningskod består av 32 bokstäver och siffror, som på forumsid
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Fortsätt"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d tecken (minst %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Anonymiserade loggar från den här appen, synliga endast för supportteamet."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Surfning (sidor laddas inte, långsamt, trasiga webbplatser)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Anslutning (kan inte ansluta, avbrott, inget internet)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Varje gång"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Åtkomst till forumet kräver en Warren-prenumeration. Den här plånboken har aldrig prenumererat: använd hjälpformuläret på webbplatsen i stället."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Hur kan vi återskapa det? (valfritt)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Hur ofta händer det?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Ta med tekniska loggar"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Installation eller uppdatering av Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Det hände en gång"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Öppna hjälpformuläret"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Öppna ämnet"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Publicerad som %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Rapporten förbereds, vänta."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Rapportera ett problem"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Skicka en beskrivning och dina loggar till supportteamet"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Skicka rapporten"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Skicka utan loggarna"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Det tog för lång tid att skicka loggarna över den här anslutningen."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Skickar, vänta."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Vissa fält kunde inte godtas. Kontrollera beskrivningen och försök igen."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Något annat"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Ibland"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Forumet kunde inte ta emot rapporten just nu. Försök igen senare."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Loggarna är för stora för att skickas."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Loggarna kunde inte samlas in. Du kan ändå skicka beskrivningen."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Rapporten kunde inte skickas. Kontrollera anslutningen och försök igen."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "Enhetens klocka avviker mer än en minut. Aktivera automatisk datum och tid och skicka igen."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "För många rapporter från den här plånboken just nu. Försök igen senare."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Visa loggarna"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Plånbok, betalning eller prenumeration"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Vad gjorde du precis innan? Steg för steg om du kan."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Vad såg du, och vad förväntade du dig i stället? Kopiera eventuella felmeddelanden. Ta aldrig med din plånboksadress."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Vad hände?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Var uppstår problemet?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Din beskrivning publiceras på communityforumet under ditt anonyma forumnamn. De tekniska loggarna går, om du tar med dem, privat till supportteamet och visas aldrig offentligt."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Din rapport finns på forumet och dina loggar har nått supportteamet."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Din rapport finns på forumet."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Din rapport finns på forumet. Loggarna levererades bara delvis; supportteamet kan be om dem igen."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Ditt Warren-konto är inte klart ännu, så rapporten kan inte signeras. Slutför inställningen av appen och skicka sedan igen."

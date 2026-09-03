@@ -5360,3 +5360,167 @@ msgstr "کد ورود از ۳۲ حرف و رقم تشکیل شده است، هم
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "ادامه"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d نویسه (دست‌کم %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "گزارش‌های ناشناس‌شدهٔ این برنامه، فقط برای تیم پشتیبانی قابل مشاهده است."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "مرور وب (صفحات بارگذاری نمی‌شوند، کندی، سایت‌های خراب)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "اتصال (اتصال برقرار نمی‌شود، قطعی، بدون اینترنت)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "هر بار"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "دسترسی به انجمن به اشتراک Warren نیاز دارد. این کیف پول هرگز اشتراکی نداشته است: به‌جای آن از فرم کمک وب‌سایت استفاده کنید."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "چگونه می‌توانیم آن را بازتولید کنیم؟ (اختیاری)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "هر چند وقت یک‌بار رخ می‌دهد؟"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "ضمیمه کردن گزارش‌های فنی"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "نصب یا به‌روزرسانی Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "یک بار رخ داد"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "باز کردن فرم کمک"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "باز کردن موضوع"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "ارسال‌شده به نام %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "در حال آماده‌سازی گزارش، لطفاً صبر کنید."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "گزارش مشکل"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "ارسال شرح مشکل و گزارش‌های شما به تیم پشتیبانی"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "ارسال گزارش"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "ارسال بدون گزارش‌ها"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "ارسال گزارش‌ها روی این اتصال بیش از حد طول کشید."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "در حال ارسال، لطفاً صبر کنید."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "برخی فیلدها پذیرفته نشدند. شرح را بررسی کنید و دوباره تلاش کنید."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "چیز دیگری"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "گاهی"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "انجمن اکنون نتوانست گزارش را بپذیرد. لطفاً بعداً دوباره تلاش کنید."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "گزارش‌ها برای ارسال بیش از حد بزرگ‌اند."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "گزارش‌ها جمع‌آوری نشدند. همچنان می‌توانید شرح مشکل را بفرستید."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "گزارش فرستاده نشد. اتصال را بررسی کنید و دوباره تلاش کنید."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "ساعت این دستگاه بیش از یک دقیقه اختلاف دارد. تاریخ و ساعت خودکار را فعال کنید و دوباره بفرستید."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "فعلاً گزارش‌های زیادی از این کیف پول فرستاده شده است. لطفاً بعداً دوباره تلاش کنید."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "مشاهده لاگ‌ها"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "کیف پول، پرداخت یا اشتراک"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "درست پیش از آن چه کردید؟ در صورت امکان گام‌به‌گام."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "چه دیدید و به‌جای آن انتظار چه چیزی را داشتید؟ هر پیام خطایی را کپی کنید. هرگز نشانی کیف پول خود را وارد نکنید."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "چه اتفاقی افتاد؟"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "مشکل کجا رخ می‌دهد؟"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "شرح شما در انجمن جامعه زیر نام ناشناس انجمن شما منتشر می‌شود. گزارش‌های فنی، اگر آن‌ها را ضمیمه کنید، به‌صورت خصوصی به تیم پشتیبانی می‌رسند و هرگز عمومی نمی‌شوند."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "گزارش شما در انجمن است و گزارش‌های فنی شما به تیم پشتیبانی رسید."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "گزارش شما در انجمن است."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "گزارش شما در انجمن است. گزارش‌های فنی فقط بخشی تحویل شد؛ ممکن است تیم پشتیبانی دوباره آن‌ها را بخواهد."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "حساب Warren شما هنوز آماده نیست، بنابراین گزارش قابل امضا نیست. راه‌اندازی برنامه را کامل کنید، سپس دوباره ارسال کنید."

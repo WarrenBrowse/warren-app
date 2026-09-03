@@ -5345,3 +5345,167 @@ msgstr "登入代碼由 32 個字母和數字組成，與論壇頁面上顯示�
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "繼續"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d 個字元（至少 %(min)d 個）"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "本應用程式的匿名化記錄檔，僅支援團隊可見。"
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "瀏覽（頁面無法載入、緩慢、網站異常）"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "連線（無法連線、斷線、沒有網路）"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "每次"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "存取論壇需要 Warren 訂閱。此錢包從未訂閱過，請改用網站上的協助表單。"
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "如何重現此問題？（選填）"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "多久發生一次？"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "包含技術記錄檔"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "安裝或更新 Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "只發生過一次"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "開啟協助表單"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "開啟主題"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "以 %(handle)s 的身分發布。"
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "正在準備報告，請稍候。"
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "回報問題"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "向支援團隊傳送問題描述和記錄檔"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "傳送報告"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "不含記錄檔傳送"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "在此連線上傳送記錄檔耗時過長。"
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "正在傳送，請稍候。"
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "部分欄位未被接受。請檢查描述後重試。"
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "其他"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "有時"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "論壇目前無法接收報告，請稍後再試。"
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "記錄檔過大，無法傳送。"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "無法收集記錄檔。您仍然可以傳送描述。"
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "無法傳送報告。請檢查網路連線後重試。"
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "此裝置的時鐘偏差超過一分鐘。請開啟自動日期和時間，然後重新傳送。"
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "此錢包目前傳送的報告過多，請稍後再試。"
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "查看日誌"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "錢包、付款或訂閱"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "此前您做了什麼？如果可以，請逐步說明。"
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "您看到了什麼，原本期望什麼？請複製任何錯誤訊息。切勿包含您的錢包地址。"
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "發生了什麼事？"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "問題出現在哪裡？"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "您的描述會以匿名論壇名稱發布在社群論壇上。若包含技術記錄檔，記錄檔只會私下傳送給支援團隊，絕不會公開。"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "您的報告已發布到論壇，記錄檔已送達支援團隊。"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "您的報告已發布到論壇。"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "您的報告已發布到論壇。記錄檔只送達了一部分，支援團隊可能會再次索取。"
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "你的 Warren 帳號尚未就緒，因此無法簽署回報。請先完成應用程式的設定，再重新傳送。"

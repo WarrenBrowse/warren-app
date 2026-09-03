@@ -5373,3 +5373,167 @@ msgstr "Bir giriş kodu, forum sayfasında gösterildiği gibi 32 harf ve rakamd
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Devam et"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d karakter (en az %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Bu uygulamanın anonimleştirilmiş günlükleri, yalnızca destek ekibi görebilir."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Gezinme (sayfalar yüklenmiyor, yavaş, bozuk siteler)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Bağlantı (bağlanamıyor, kopuyor, internet yok)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Her seferinde"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Foruma erişim için Warren aboneliği gerekir. Bu cüzdan hiç abone olmadı: bunun yerine web sitesindeki yardım formunu kullanın."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Bunu nasıl yeniden oluşturabiliriz? (isteğe bağlı)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Ne sıklıkla oluyor?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Teknik günlükleri ekle"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Warren'ı yükleme veya güncelleme"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Bir kez oldu"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Yardım formunu aç"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Konuyu aç"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "%(handle)s olarak gönderildi."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Rapor hazırlanıyor, lütfen bekleyin."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Bir sorun bildir"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Destek ekibine bir açıklama ve günlüklerinizi gönderin"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Raporu gönder"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Günlükler olmadan gönder"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Günlüklerin gönderilmesi bu bağlantıda çok uzun sürdü."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Gönderiliyor, lütfen bekleyin."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Bazı alanlar kabul edilemedi. Açıklamayı kontrol edip tekrar deneyin."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Başka bir şey"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Bazen"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Forum raporu şu anda alamadı. Lütfen daha sonra tekrar deneyin."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Günlükler gönderilemeyecek kadar büyük."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Günlükler toplanamadı. Yine de açıklamayı gönderebilirsiniz."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Rapor gönderilemedi. Bağlantıyı kontrol edip tekrar deneyin."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "Bu cihazın saati bir dakikadan fazla sapmış. Otomatik tarih ve saati etkinleştirip yeniden gönderin."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "Bu cüzdandan şimdilik çok fazla rapor gönderildi. Lütfen daha sonra tekrar deneyin."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Günlükleri görüntüle"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Cüzdan, ödeme veya abonelik"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Hemen öncesinde ne yaptınız? Mümkünse adım adım."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Ne gördünüz ve bunun yerine ne bekliyordunuz? Varsa hata mesajını kopyalayın. Cüzdan adresinizi asla eklemeyin."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Ne oldu?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Sorun nerede oluşuyor?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Açıklamanız, topluluk forumunda anonim forum adınızla yayımlanır. Teknik günlükler, eklerseniz, gizli olarak destek ekibine gider ve asla herkese açık görünmez."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Raporunuz forumda ve günlükleriniz destek ekibine ulaştı."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Raporunuz forumda."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Raporunuz forumda. Günlükler yalnızca kısmen iletilebildi; destek ekibi yeniden isteyebilir."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Warren hesabınız henüz hazır değil, bu yüzden rapor imzalanamıyor. Uygulama kurulumunu tamamlayın, ardından yeniden gönderin."

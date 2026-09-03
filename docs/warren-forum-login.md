@@ -11,7 +11,7 @@ who cannot get through the browser still reaches the support team.
 |---|---|---|---|
 | Forum sign-in | `<scheme>://forum-login?sid&host(&xd=1)` deep link, or a sign-in code typed under Settings | `{"sid":...}` | `POST /v1/forum/login` |
 | Attach logs to a topic | `<scheme>://attach-logs?sid&topic&host` (desktop today) | `{"sid","topic_id","log_gz_b64"}` | `POST /v1/forum/attach-logs` |
-| In-app report | Settings, "Report a problem" (Android today) | the form fields plus `log_gz_b64` | `POST /v1/forum/report` |
+| In-app report | Settings, "Report a problem" (Android and desktop) | the form fields plus `log_gz_b64` | `POST /v1/forum/report` |
 
 The scheme is per product environment (`warren`, `warren-beta`,
 `warren-staging`); connect emits the one its `WARREN_DEEP_LINK_SCHEME` names.
@@ -87,6 +87,31 @@ The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
 
 Every step writes its class to the events journal and the Rust log, so a
 report filed afterwards explains a failure without a second round trip.
+
+## The in-app report (desktop)
+
+Settings, Support, "Report a problem" is the same form as the Android one
+below, with the same field names, outcome table and copy (the locale entries
+were taken from the Android strings). The pieces: the renderer view
+(`components/views/report-problem/`, rules in
+`features/report-problem/form-state.ts`, unit-tested off Electron), the main
+process (`main/forum-report.ts`: the body fields, the outcome table replayed
+from `forum_outcomes.json`, the POST under the body-sized deadline of
+`uploadDeadlineMs`, the resend-without-logs class), and the daemon RPC
+`SignForumReport`, which builds the body through `warren_forum::report_body`
+(the crate the mobile clients sign with) and signs it with the daemon's own
+signer; `mullvad-daemon`'s `forum_report_tests` replays the report requests of
+`forum_login_v1.json` through that path. "View the logs" collects a report
+main holds by id and opens it with the OS viewer (the attach prompt's path);
+the send collects a fresh one, gzips it in main, and deletes the temp file
+afterwards. The wallet address is passed to the collector as a redaction
+string, as on Android. The management RPC and the gRPC client both carry a 16
+MiB message cap for the report and attach bodies; tonic's 4 MiB default
+refused an at-cap report before the daemon saw it.
+
+Not on the desktop yet: the tunnel-state preflight and the clock preflight
+against the connect host (the daemon stamps its own clock, as for the
+sign-in), and the share-sheet export of the collected file.
 
 ## The in-app report (Android)
 

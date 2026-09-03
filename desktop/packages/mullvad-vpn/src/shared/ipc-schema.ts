@@ -37,6 +37,7 @@ import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumIdentity } from './forum-identity';
 import { ForumLoginResult, IForumLoginRequest } from './forum-login';
 import { ForumNotificationsResult } from './forum-notifications';
+import { ForumReportResult, IForumReportForm } from './forum-report';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
 import {
@@ -220,6 +221,18 @@ export const ipcSchema = {
     getPending: invoke<void, IForumAttachRequest | undefined>(),
     approve: invoke<IForumAttachRequest, ForumAttachResult>(),
     cancel: invoke<IForumAttachRequest, void>(),
+  },
+  // Community-forum in-app report (doc 55): the Settings, Support, "Report a
+  // problem" form. `collect` writes a redacted problem report for "View the
+  // logs" (opened through problemReport.viewLog) and answers its id, or
+  // undefined when the collection failed; `discard` deletes one; `send`
+  // collects its own fresh report when the form asks for logs, has the daemon
+  // sign the body and posts it to the broker. The renderer never sees the log
+  // content, only ids and the outcome.
+  forumReport: {
+    collect: invoke<void, string | undefined>(),
+    discard: invoke<string, void>(),
+    send: invoke<IForumReportForm, ForumReportResult>(),
   },
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),

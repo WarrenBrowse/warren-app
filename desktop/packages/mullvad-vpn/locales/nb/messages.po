@@ -5373,3 +5373,167 @@ msgstr "En innloggingskode består av 32 bokstaver og sifre, slik den vises på 
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Fortsett"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d tegn (minst %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Anonymiserte logger fra denne appen, bare synlige for supportteamet."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Surfing (sider lastes ikke, tregt, ødelagte nettsteder)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Tilkobling (kan ikke koble til, brudd, ikke internett)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Hver gang"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Tilgang til forumet krever et Warren-abonnement. Denne lommeboken har aldri hatt et: bruk hjelpeskjemaet på nettstedet i stedet."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Hvordan kan vi gjenskape det? (valgfritt)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Hvor ofte skjer det?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Ta med tekniske logger"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Installering eller oppdatering av Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Det skjedde én gang"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Åpne hjelpeskjemaet"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Åpne emnet"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Publisert som %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Rapporten forberedes, vent litt."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Rapporter et problem"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Send en beskrivelse og loggene dine til supportteamet"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Send rapporten"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Send uten loggene"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Det tok for lang tid å sende loggene over denne tilkoblingen."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Sender, vennligst vent."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Noen felt kunne ikke godtas. Sjekk beskrivelsen og prøv igjen."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Noe annet"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Noen ganger"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Forumet kunne ikke ta imot rapporten akkurat nå. Prøv igjen senere."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Loggene er for store til å sendes."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Loggene kunne ikke samles inn. Du kan likevel sende beskrivelsen."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Rapporten kunne ikke sendes. Sjekk tilkoblingen og prøv igjen."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "Klokken på denne enheten avviker med mer enn ett minutt. Slå på automatisk dato og klokkeslett, og send på nytt."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "For mange rapporter fra denne lommeboken akkurat nå. Prøv igjen senere."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Se loggene"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Lommebok, betaling eller abonnement"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Hva gjorde du rett før? Trinn for trinn hvis du kan."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Hva så du, og hva forventet du i stedet? Kopier eventuelle feilmeldinger. Ta aldri med lommebokadressen din."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Hva skjedde?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Hvor oppstår problemet?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Beskrivelsen din publiseres på fellesskapsforumet under det anonyme forumnavnet ditt. De tekniske loggene går, hvis du tar dem med, privat til supportteamet og vises aldri offentlig."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Rapporten din er på forumet, og loggene dine har nådd supportteamet."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Rapporten din er på forumet."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Rapporten din er på forumet. Loggene ble bare delvis levert; supportteamet kan be om dem igjen."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Warren-kontoen din er ikke klar ennå, så rapporten kan ikke signeres. Fullfør oppsettet av appen, og send så igjen."

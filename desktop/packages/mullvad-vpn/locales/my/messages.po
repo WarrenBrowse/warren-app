@@ -5348,3 +5348,167 @@ msgstr "ဝင်ရောက်မှုကုဒ်သည် ဖိုရမ�
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "ဆက်လုပ်ပါ"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "စာလုံး %(count)d လုံး (အနည်းဆုံး %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "ဤအက်ပ်မှ အမည်မသိပြုလုပ်ထားသော မှတ်တမ်းများ၊ ပံ့ပိုးမှုအဖွဲ့သာ မြင်နိုင်သည်။"
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "အင်တာနက်ကြည့်ရှုခြင်း (စာမျက်နှာများ မပွင့်၊ နှေး၊ ဝက်ဘ်ဆိုက်များ ပျက်)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "ချိတ်ဆက်မှု (ချိတ်ဆက်၍မရ၊ ပြတ်တောက်၊ အင်တာနက် မရှိ)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "အကြိမ်တိုင်း"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "ဖိုရမ်သို့ ဝင်ရောက်ရန် Warren စာရင်းသွင်းမှု လိုအပ်သည်။ ဤပိုက်ဆံအိတ်သည် ဘယ်တော့မှ စာရင်းမသွင်းခဲ့ပါ။ ဝက်ဘ်ဆိုက်ရှိ အကူအညီဖောင်ကို အစားသုံးပါ။"
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "ကျွန်ုပ်တို့ ဘယ်လို ပြန်ဖြစ်အောင် လုပ်နိုင်မလဲ (ရွေးချယ်နိုင်)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "ဘယ်လောက် မကြာခဏ ဖြစ်သလဲ"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "နည်းပညာမှတ်တမ်းများ ထည့်သွင်းရန်"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Warren ကို ထည့်သွင်းခြင်း သို့မဟုတ် အပ်ဒိတ်လုပ်ခြင်း"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "တစ်ကြိမ် ဖြစ်ခဲ့သည်"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "အကူအညီဖောင်ကို ဖွင့်ရန်"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "ခေါင်းစဉ်ကို ဖွင့်ရန်"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "%(handle)s အဖြစ် တင်ထားသည်။"
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "အစီရင်ခံစာ ပြင်ဆင်နေသည်၊ ခဏစောင့်ပါ။"
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "ပြဿနာ ရီပို့တ်လုပ်ရန်"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "ဖော်ပြချက်နှင့် သင့်မှတ်တမ်းများကို ပံ့ပိုးမှုအဖွဲ့သို့ ပေးပို့ရန်"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "အစီရင်ခံစာ ပေးပို့ရန်"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "မှတ်တမ်းများ မပါဘဲ ပေးပို့ရန်"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "ဤချိတ်ဆက်မှုတွင် မှတ်တမ်းများ ပေးပို့ရန် အချိန်ကြာလွန်းပါသည်။"
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "ပို့နေသည်၊ ခေတ္တစောင့်ပါ။"
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "အချို့အကွက်များကို လက်မခံနိုင်ပါ။ ဖော်ပြချက်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "အခြား"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "တစ်ခါတစ်ရံ"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "ဖိုရမ်က အစီရင်ခံစာကို ယခု လက်ခံ၍ မရပါ။ နောက်မှ ထပ်ကြိုးစားပါ။"
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "မှတ်တမ်းများ ကြီးလွန်း၍ ပေးပို့၍ မရပါ။"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "မှတ်တမ်းများ စုဆောင်း၍ မရပါ။ ဖော်ပြချက်ကိုတော့ ပေးပို့နိုင်ပါသေးသည်။"
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "အစီရင်ခံစာ ပေးပို့၍ မရပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ အလိုအလျောက် ရက်စွဲနှင့် အချိန်ကို ဖွင့်ပြီး ပြန်ပို့ပါ။"
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "ဤပိုက်ဆံအိတ်မှ အစီရင်ခံစာများ လောလောဆယ် များလွန်းနေသည်။ နောက်မှ ထပ်ကြိုးစားပါ။"
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "မှတ်တမ်းများကို ကြည့်ရန်"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "ပိုက်ဆံအိတ်၊ ငွေပေးချေမှု သို့မဟုတ် စာရင်းသွင်းမှု"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "မဖြစ်ခင် သင် ဘာလုပ်ခဲ့သလဲ။ ဖြစ်နိုင်ပါက အဆင့်ဆင့် ရေးပါ။"
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "သင် ဘာမြင်ခဲ့ပြီး အဲ့အစား ဘာကို မျှော်လင့်ခဲ့သလဲ။ အမှားစာသားရှိပါက ကူးထည့်ပါ။ သင့်ပိုက်ဆံအိတ်လိပ်စာကို ဘယ်တော့မှ မထည့်ပါနှင့်။"
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "ဘာဖြစ်သွားသလဲ"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "ပြဿနာက ဘယ်နေရာမှာ ဖြစ်သလဲ"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "သင့်ဖော်ပြချက်ကို သင့်အမည်မသိ ဖိုရမ်အမည်ဖြင့် အသိုက်အဝန်းဖိုရမ်တွင် တင်ပါမည်။ နည်းပညာမှတ်တမ်းများ ထည့်သွင်းပါက ပံ့ပိုးမှုအဖွဲ့သို့သာ သီးသန့်ပေးပို့ပြီး လူသိရှင်ကြား ဘယ်တော့မှ မပေါ်ပါ။"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "သင့်အစီရင်ခံစာ ဖိုရမ်ပေါ် ရောက်ပြီး သင့်မှတ်တမ်းများ ပံ့ပိုးမှုအဖွဲ့ထံ ရောက်သွားပါပြီ။"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "သင့်အစီရင်ခံစာ ဖိုရမ်ပေါ် ရောက်ပါပြီ။"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "သင့်အစီရင်ခံစာ ဖိုရမ်ပေါ် ရောက်ပါပြီ။ မှတ်တမ်းများကို တစ်စိတ်တစ်ပိုင်းသာ ပေးပို့နိုင်ခဲ့သည်၊ ပံ့ပိုးမှုအဖွဲ့က ထပ်တောင်းနိုင်ပါသည်။"
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "သင့် Warren အကောင့် အဆင်သင့် မဖြစ်သေးသဖြင့် အစီရင်ခံစာကို လက်မှတ်ထိုး၍ မရပါ။ အက်ပ်ကို စတင်သတ်မှတ်ခြင်း ပြီးအောင်လုပ်ပြီးမှ ထပ်ပို့ပါ။"

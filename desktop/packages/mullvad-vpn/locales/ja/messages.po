@@ -5345,3 +5345,167 @@ msgstr "サインインコードは、フォーラムページに表示されて
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "続行"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d 文字（%(min)d 文字以上）"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "このアプリの匿名化されたログで、サポートチームのみが閲覧できます。"
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "ブラウジング（ページが読み込めない、遅い、サイトが壊れている）"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "接続（接続できない、切断される、インターネットに繋がらない）"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "毎回"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "フォーラムへのアクセスには Warren のサブスクリプションが必要です。このウォレットは一度も登録していません。代わりにウェブサイトのヘルプフォームをご利用ください。"
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "再現手順（任意）"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "どのくらいの頻度で起きますか？"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "技術ログを含める"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Warren のインストールまたは更新"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "一度だけ"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "ヘルプフォームを開く"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "トピックを開く"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "%(handle)s として投稿されました。"
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "レポートを準備しています。お待ちください。"
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "問題を報告する"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "説明とログをサポートチームに送信"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "レポートを送信"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "ログなしで送信"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "この接続ではログの送信に時間がかかりすぎました。"
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "送信しています。しばらくお待ちください。"
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "受け付けられない項目があります。説明を確認して、もう一度お試しください。"
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "その他"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "ときどき"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "フォーラムが現在レポートを受け付けられませんでした。しばらくしてからもう一度お試しください。"
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "ログが大きすぎて送信できません。"
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "ログを収集できませんでした。説明だけでも送信できます。"
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "レポートを送信できませんでした。接続を確認して、もう一度お試しください。"
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "この端末の時計が1分以上ずれています。日付と時刻の自動設定を有効にしてから、もう一度送信してください。"
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "このウォレットからのレポートが現在多すぎます。しばらくしてからもう一度お試しください。"
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "ログを表示"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "ウォレット、支払い、サブスクリプション"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "その直前に何をしましたか？できれば順を追って。"
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "何が表示され、代わりに何を期待していましたか？エラーメッセージがあればコピーしてください。ウォレットアドレスは絶対に含めないでください。"
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "何が起きましたか？"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "問題はどこで起きますか？"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "説明は、匿名のフォーラム名でコミュニティフォーラムに公開されます。技術ログを含めた場合、ログはサポートチームにのみ非公開で届き、公開されることはありません。"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "レポートがフォーラムに投稿され、ログはサポートチームに届きました。"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "レポートがフォーラムに投稿されました。"
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "レポートはフォーラムに投稿されました。ログは一部しか届いていません。サポートチームから再度求められることがあります。"
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Warren アカウントの準備がまだできていないため、レポートに署名できません。アプリの初期設定を完了してから、もう一度送信してください。"

@@ -5373,3 +5373,167 @@ msgstr "Een aanmeldcode bestaat uit 32 letters en cijfers, zoals op de forumpagi
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Doorgaan"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d tekens (minimaal %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Geanonimiseerde logboeken van deze app, alleen zichtbaar voor het supportteam."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Browsen (pagina's laden niet, traag, kapotte sites)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Verbinding (kan geen verbinding maken, valt weg, geen internet)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Elke keer"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Toegang tot het forum vereist een Warren-abonnement. Deze wallet heeft er nooit een gehad: gebruik het hulpformulier op de website."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Hoe kunnen wij het ook laten gebeuren? (optioneel)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Hoe vaak gebeurt het?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Technische logboeken meesturen"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Warren installeren of bijwerken"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Het is één keer gebeurd"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Hulpformulier openen"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Onderwerp openen"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Geplaatst als %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Het rapport wordt voorbereid, even geduld."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Een probleem rapporteren"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Een beschrijving en je logboeken naar het supportteam sturen"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Rapport versturen"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Versturen zonder de logboeken"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Het versturen van de logboeken duurde te lang via deze verbinding."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Bezig met verzenden, even geduld."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Sommige velden werden niet geaccepteerd. Controleer de beschrijving en probeer het opnieuw."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Iets anders"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Soms"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Het forum kon het rapport nu niet aannemen. Probeer het later opnieuw."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "De logboeken zijn te groot om te versturen."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "De logboeken konden niet worden verzameld. Je kunt de beschrijving toch versturen."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Het rapport kon niet worden verstuurd. Controleer de verbinding en probeer het opnieuw."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "De klok van dit apparaat wijkt meer dan een minuut af. Zet automatische datum en tijd aan en verstuur opnieuw."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "Te veel rapporten van deze wallet op dit moment. Probeer het later opnieuw."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "De logs bekijken"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Wallet, betaling of abonnement"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Wat deed je vlak daarvoor? Stap voor stap als het kan."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Wat zag je, en wat had je in plaats daarvan verwacht? Kopieer elke foutmelding. Vermeld nooit je walletadres."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Wat is er gebeurd?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Waar treedt het probleem op?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Je beschrijving wordt op het communityforum geplaatst onder je anonieme forumnaam. De technische logboeken gaan, als je ze meestuurt, vertrouwelijk naar het supportteam en verschijnen nooit openbaar."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Je rapport staat op het forum en je logboeken zijn bij het supportteam aangekomen."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Je rapport staat op het forum."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Je rapport staat op het forum. De logboeken zijn maar gedeeltelijk afgeleverd; het supportteam vraagt er misschien opnieuw om."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Je Warren-account is nog niet klaar, dus het rapport kan niet worden ondertekend. Voltooi de installatie van de app en verstuur het daarna opnieuw."

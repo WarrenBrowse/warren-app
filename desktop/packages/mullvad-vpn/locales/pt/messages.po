@@ -5373,3 +5373,167 @@ msgstr "Um código de início de sessão tem 32 letras e algarismos, tal como ap
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Continuar"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d caracteres (mínimo %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Registos anonimizados desta aplicação, visíveis apenas pela equipa de suporte."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Navegação (páginas que não carregam, lentidão, sites avariados)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Ligação (não consegue ligar, quebras, sem internet)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Sempre"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "O acesso ao fórum requer uma subscrição Warren. Esta carteira nunca subscreveu: usa antes o formulário de ajuda do site."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Como podemos reproduzir? (opcional)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Com que frequência acontece?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Incluir registos técnicos"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Instalação ou atualização do Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Aconteceu uma vez"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Abrir o formulário de ajuda"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Abrir o tópico"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Publicado como %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "A preparar o relatório, aguarda."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Reportar um problema"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Enviar uma descrição e os teus registos à equipa de suporte"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Enviar o relatório"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Enviar sem os registos"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "O envio dos registos demorou demasiado nesta ligação."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "A enviar, aguarde."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Alguns campos não foram aceites. Verifica a descrição e tenta novamente."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Outra coisa"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Às vezes"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "O fórum não conseguiu receber o relatório agora. Tenta novamente mais tarde."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Os registos são demasiado grandes para enviar."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Não foi possível recolher os registos. Podes enviar a descrição na mesma."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Não foi possível enviar o relatório. Verifica a ligação e tenta novamente."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "O relógio deste dispositivo está desfasado mais de um minuto. Ativa a data e hora automáticas e envia de novo."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "Demasiados relatórios desta carteira por agora. Tenta novamente mais tarde."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Ver os registos"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Carteira, pagamento ou subscrição"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "O que fizeste mesmo antes? Passo a passo, se puderes."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "O que viste e o que esperavas em vez disso? Copia qualquer mensagem de erro. Nunca incluas o endereço da tua carteira."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "O que aconteceu?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Onde ocorre o problema?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "A tua descrição é publicada no fórum da comunidade com o teu nome de fórum anónimo. Os registos técnicos, se os incluíres, vão em privado para a equipa de suporte e nunca aparecem publicamente."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "O teu relatório está no fórum e os teus registos chegaram à equipa de suporte."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "O teu relatório está no fórum."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "O teu relatório está no fórum. Os registos só foram entregues em parte; a equipa de suporte pode voltar a pedi-los."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "A tua conta Warren ainda não está pronta, por isso o relatório não pode ser assinado. Conclui a configuração da aplicação e depois envia novamente."

@@ -5403,3 +5403,167 @@ msgstr "Код входу складається з 32 літер і цифр, �
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Продовжити"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d символів (щонайменше %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Знеособлені журнали цього застосунку, видимі лише команді підтримки."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Перегляд сайтів (сторінки не завантажуються, повільно, сайти не працюють)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "З'єднання (не вдається під'єднатися, обриви, немає інтернету)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Щоразу"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Для доступу до форуму потрібна підписка Warren. Цей гаманець ніколи її не мав: скористайтеся формою допомоги на сайті."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Як нам це відтворити? (необов'язково)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Як часто це трапляється?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Додати технічні журнали"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Встановлення або оновлення Warren"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Сталося один раз"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Відкрити форму допомоги"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Відкрити тему"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Опубліковано як %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Підготовка звіту, зачекайте."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Повідомити про проблему"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Надіслати опис і ваші журнали команді підтримки"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Надіслати звіт"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Надіслати без журналів"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Надсилання журналів через це з’єднання тривало надто довго."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Надсилання, зачекайте."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Деякі поля не прийнято. Перевірте опис і спробуйте знову."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Щось інше"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Іноді"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Форум зараз не зміг прийняти звіт. Спробуйте пізніше."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Журнали завеликі для надсилання."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Не вдалося зібрати журнали. Ви все одно можете надіслати опис."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Не вдалося надіслати звіт. Перевірте з'єднання і спробуйте знову."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "Годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час і надішліть знову."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "Забагато звітів із цього гаманця наразі. Спробуйте пізніше."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Переглянути журнали"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Гаманець, оплата або підписка"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Що ви робили безпосередньо перед цим? Крок за кроком, якщо можливо."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Що ви побачили і чого очікували натомість? Скопіюйте будь-яке повідомлення про помилку. Ніколи не вказуйте адресу свого гаманця."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Що сталося?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Де виникає проблема?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Ваш опис публікується на форумі спільноти під вашим анонімним іменем на форумі. Технічні журнали, якщо ви їх додасте, приватно передаються команді підтримки і ніколи не з'являються публічно."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Ваш звіт на форумі, а журнали дійшли до команди підтримки."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Ваш звіт на форумі."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Ваш звіт на форумі. Журнали доставлено лише частково; команда підтримки може попросити їх знову."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Ваш обліковий запис Warren ще не готовий, тому звіт неможливо підписати. Завершіть налаштування застосунку, а потім надішліть знову."

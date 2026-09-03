@@ -5373,3 +5373,167 @@ msgstr "Kirjautumiskoodissa on 32 kirjainta ja numeroa, kuten foorumisivulla nä
 msgctxt "forum-sign-in-code"
 msgid "Continue"
 msgstr "Jatka"
+
+msgctxt "report-problem"
+msgid "%(count)d characters (at least %(min)d)"
+msgstr "%(count)d merkkiä (vähintään %(min)d)"
+
+msgctxt "report-problem"
+msgid "Anonymized logs from this app, visible to the support team only."
+msgstr "Tämän sovelluksen anonymisoidut lokit, näkyvät vain tukitiimille."
+
+msgctxt "report-problem"
+msgid "Browsing (pages not loading, slow, broken sites)"
+msgstr "Selaaminen (sivut eivät lataudu, hitaus, rikkinäiset sivustot)"
+
+msgctxt "report-problem"
+msgid "Connection (cannot connect, drops, no internet)"
+msgstr "Yhteys (ei yhdistä, katkoksia, ei internetiä)"
+
+msgctxt "report-problem"
+msgid "Every time"
+msgstr "Joka kerta"
+
+msgctxt "report-problem"
+msgid "Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead."
+msgstr "Foorumille pääsy vaatii Warren-tilauksen. Tällä lompakolla ei ole koskaan ollut tilausta: käytä sen sijaan verkkosivuston ohjelomaketta."
+
+msgctxt "report-problem"
+msgid "How can we make it happen too? (optional)"
+msgstr "Miten voimme toistaa sen? (valinnainen)"
+
+msgctxt "report-problem"
+msgid "How often does it happen?"
+msgstr "Kuinka usein sitä tapahtuu?"
+
+msgctxt "report-problem"
+msgid "Include technical logs"
+msgstr "Sisällytä tekniset lokit"
+
+msgctxt "report-problem"
+msgid "Installing or updating Warren"
+msgstr "Warrenin asennus tai päivitys"
+
+msgctxt "report-problem"
+msgid "It happened once"
+msgstr "Se tapahtui kerran"
+
+msgctxt "report-problem"
+msgid "Open the help form"
+msgstr "Avaa ohjelomake"
+
+msgctxt "report-problem"
+msgid "Open the topic"
+msgstr "Avaa aihe"
+
+msgctxt "report-problem"
+msgid "Posted as %(handle)s."
+msgstr "Julkaistu nimellä %(handle)s."
+
+msgctxt "report-problem"
+msgid "Preparing the report, please wait."
+msgstr "Raporttia valmistellaan, odota hetki."
+
+msgctxt "report-problem"
+msgid "Report a problem"
+msgstr "Raportoi ongelma"
+
+msgctxt "report-problem"
+msgid "Send a description and your logs to the support team"
+msgstr "Lähetä kuvaus ja lokisi tukitiimille"
+
+msgctxt "report-problem"
+msgid "Send the report"
+msgstr "Lähetä raportti"
+
+msgctxt "report-problem"
+msgid "Send without the logs"
+msgstr "Lähetä ilman lokeja"
+
+msgctxt "report-problem"
+msgid "Sending the logs took too long on this connection."
+msgstr "Lokien lähettäminen kesti liian pitkään tällä yhteydellä."
+
+msgctxt "report-problem"
+msgid "Sending, please wait."
+msgstr "Lähetetään, odota hetki."
+
+msgctxt "report-problem"
+msgid "Some fields could not be accepted. Check the description and try again."
+msgstr "Joitakin kenttiä ei voitu hyväksyä. Tarkista kuvaus ja yritä uudelleen."
+
+msgctxt "report-problem"
+msgid "Something else"
+msgstr "Jokin muu"
+
+msgctxt "report-problem"
+msgid "Sometimes"
+msgstr "Joskus"
+
+msgctxt "report-problem"
+msgid "The forum could not take the report right now. Please try again later."
+msgstr "Foorumi ei voinut ottaa raporttia vastaan juuri nyt. Yritä myöhemmin uudelleen."
+
+msgctxt "report-problem"
+msgid "The logs are too large to send."
+msgstr "Lokit ovat liian suuria lähetettäviksi."
+
+msgctxt "report-problem"
+msgid "The logs could not be collected. You can still send the description."
+msgstr "Lokeja ei voitu kerätä. Voit silti lähettää kuvauksen."
+
+msgctxt "report-problem"
+msgid "The report could not be sent. Check the connection and try again."
+msgstr "Raporttia ei voitu lähettää. Tarkista yhteys ja yritä uudelleen."
+
+msgctxt "report-problem"
+msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgstr "Tämän laitteen kello on yli minuutin väärässä. Ota automaattinen päivämäärä ja aika käyttöön ja lähetä uudelleen."
+
+msgctxt "report-problem"
+msgid "Too many reports from this wallet for now. Please try again later."
+msgstr "Liikaa raportteja tästä lompakosta juuri nyt. Yritä myöhemmin uudelleen."
+
+msgctxt "report-problem"
+msgid "View the logs"
+msgstr "Näytä lokit"
+
+msgctxt "report-problem"
+msgid "Wallet, payment or subscription"
+msgstr "Lompakko, maksu tai tilaus"
+
+msgctxt "report-problem"
+msgid "What did you do just before? Step by step if you can."
+msgstr "Mitä teit juuri ennen? Vaihe vaiheelta, jos voit."
+
+msgctxt "report-problem"
+msgid "What did you see, and what did you expect instead? Copy any error message. Never include your wallet address."
+msgstr "Mitä näit ja mitä odotit sen sijaan? Kopioi mahdollinen virheilmoitus. Älä koskaan sisällytä lompakkosi osoitetta."
+
+msgctxt "report-problem"
+msgid "What happened?"
+msgstr "Mitä tapahtui?"
+
+msgctxt "report-problem"
+msgid "Where does the problem happen?"
+msgstr "Missä ongelma ilmenee?"
+
+msgctxt "report-problem"
+msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Kuvauksesi julkaistaan yhteisöfoorumilla anonyymillä foorumnimelläsi. Tekniset lokit menevät, jos sisällytät ne, yksityisesti tukitiimille eivätkä koskaan näy julkisesti."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum and your logs reached the support team."
+msgstr "Raporttisi on foorumilla ja lokisi ovat saapuneet tukitiimille."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum."
+msgstr "Raporttisi on foorumilla."
+
+msgctxt "report-problem"
+msgid "Your report is on the forum. The logs could only be delivered in part; the support team may ask for them again."
+msgstr "Raporttisi on foorumilla. Lokit toimitettiin vain osittain; tukitiimi voi pyytää niitä uudelleen."
+
+msgctxt "report-problem"
+msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
+msgstr "Warren-tilisi ei ole vielä valmis, joten raporttia ei voi allekirjoittaa. Viimeistele sovelluksen käyttöönotto ja lähetä sitten uudelleen."

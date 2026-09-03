@@ -12,6 +12,7 @@ import {
   FaqButton,
   ForumSignInCodeButton,
   RefundPolicyButton,
+  ReportProblemButton,
   TermsButton,
 } from './components';
 
@@ -36,6 +37,7 @@ export function SupportView() {
                 <FlexColumn>
                   <CommunityButton />
                   <ForumSignInCodeButton />
+                  <ReportProblemButton />
                   <FaqButton />
                   <TermsButton />
                   <RefundPolicyButton />

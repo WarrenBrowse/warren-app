@@ -10,6 +10,7 @@ import {
   systemPreferences,
 } from 'electron';
 import fs from 'fs';
+import os from 'os';
 import * as path from 'path';
 import util from 'util';
 import { gzipSync } from 'zlib';
@@ -33,7 +34,9 @@ import {
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
+import { ForumIdentity } from '../shared/forum-identity';
 import { IForumLoginRequest } from '../shared/forum-login';
+import { ForumReportResult, IForumReportForm } from '../shared/forum-report';
 import { messages, relayLocations } from '../shared/gettext';
 import { SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import { ITranslations, MacOsScrollbarVisibility } from '../shared/ipc-schema';
@@ -85,6 +88,12 @@ import {
   PendingForumRequest,
 } from './forum-login';
 import { fetchForumNotifications, markForumNotificationsSeen } from './forum-notifications';
+import {
+  desktopOsVersion,
+  ForumReportFacts,
+  forumReportPlatform,
+  sendForumReport,
+} from './forum-report';
 import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
@@ -486,26 +495,76 @@ class ApplicationMain
       usedReportId = report.reportId;
     } catch (error) {
       log.error(`Forum attach: could not collect or read the report: ${String(error)}`);
-      this.deleteForumAttachReport(request.reportId);
+      this.deleteCollectedReport(request.reportId);
       return 'error';
     }
     try {
       return await approveForumAttach(request, this.daemonRpc, logGz);
     } finally {
-      this.deleteForumAttachReport(usedReportId);
+      this.deleteCollectedReport(usedReportId);
       if (request.reportId && request.reportId !== usedReportId) {
-        this.deleteForumAttachReport(request.reportId);
+        this.deleteCollectedReport(request.reportId);
       }
     }
   }
 
   // Best-effort deletion of a collected problem-report temp file. A missing
   // file (already reaped, or never written) is not an error.
-  private deleteForumAttachReport(reportId: string | undefined) {
+  private deleteCollectedReport(reportId: string | undefined) {
     if (!reportId) {
       return;
     }
     fs.promises.unlink(problemReport.getProblemReportPath(reportId)).catch(() => undefined);
+  }
+
+  // The in-app report (doc 55). A send with logs always collects afresh: the
+  // report should describe the moment of the send, not the moment the form
+  // was opened. The gzip happens here in main; the renderer never handles the
+  // log content. A collection that fails sends the description alone, as the
+  // Android reporter does, rather than losing the report over its logs.
+  private async sendForumReportRequest(form: IForumReportForm): Promise<ForumReportResult> {
+    const platform = forumReportPlatform(process.platform);
+    if (platform === undefined) {
+      log.error('Forum report: no forum platform tag for this operating system');
+      return { kind: 'failed', reason: 'build' };
+    }
+    const facts: ForumReportFacts = {
+      platform,
+      appVersion: this.version.currentVersion.gui,
+      osVersion: desktopOsVersion(process.platform, os.release(), process.arch),
+      locale: this.detectLocale(),
+    };
+    let logGz: Buffer | undefined;
+    if (form.includeLogs) {
+      let reportId: string | undefined;
+      try {
+        reportId = await problemReport.collectLogs(this.loggedInPubkey());
+        logGz = gzipSync(await fs.promises.readFile(problemReport.getProblemReportPath(reportId)));
+      } catch (error) {
+        log.error(
+          `Forum report: could not collect the problem report, sending the description alone: ${String(error)}`,
+        );
+      } finally {
+        this.deleteCollectedReport(reportId);
+      }
+    }
+    const result = await sendForumReport(form, logGz, facts, this.daemonRpc);
+    if (result.kind === 'created' && result.identity !== undefined) {
+      this.adoptForumIdentity(result.identity);
+    }
+    return result;
+  }
+
+  // A forum identity learnt from any signed exchange (a login, a report)
+  // replaces the stored one and re-slots the activity monitor; the same
+  // values change nothing.
+  private adoptForumIdentity(identity: ForumIdentity) {
+    const stored = this.forumIdentityStore.get();
+    if (identity.handle !== stored?.handle || identity.notifySlot !== stored?.notifySlot) {
+      this.forumIdentityStore.set(identity);
+      this.forumActivityMonitor.setSlot(identity.notifySlot);
+      IpcMainEventChannel.forumLogin.notifyIdentity?.(identity);
+    }
   }
 
   private overrideAppPaths() {
@@ -1331,14 +1390,8 @@ class ApplicationMain
       if (result !== 'error') {
         this.pendingForumLogin.clear();
       }
-      const stored = this.forumIdentityStore.get();
-      if (
-        identity !== undefined &&
-        (identity.handle !== stored?.handle || identity.notifySlot !== stored?.notifySlot)
-      ) {
-        this.forumIdentityStore.set(identity);
-        this.forumActivityMonitor.setSlot(identity.notifySlot);
-        IpcMainEventChannel.forumLogin.notifyIdentity?.(identity);
+      if (identity !== undefined) {
+        this.adoptForumIdentity(identity);
       }
       if (result === 'approved') {
         // Same reason as the attach flow: the browser is finishing the login,
@@ -1385,9 +1438,25 @@ class ApplicationMain
       this.pendingForumAttach.clear();
       // Declining the prompt: drop the report collected at deep-link time so
       // it does not linger in the OS temp dir.
-      this.deleteForumAttachReport(request.reportId);
+      this.deleteCollectedReport(request.reportId);
       return cancelForumAttach(request);
     });
+
+    // Forum in-app report: "View the logs" collects a report the renderer
+    // opens by id; the send collects its own and signs through the daemon.
+    IpcMainEventChannel.forumReport.handleCollect(async () => {
+      try {
+        return await problemReport.collectLogs(this.loggedInPubkey());
+      } catch (error) {
+        log.error(`Forum report: could not collect the problem report: ${String(error)}`);
+        return undefined;
+      }
+    });
+    IpcMainEventChannel.forumReport.handleDiscard((reportId) => {
+      this.deleteCollectedReport(reportId);
+      return Promise.resolve();
+    });
+    IpcMainEventChannel.forumReport.handleSend((form) => this.sendForumReportRequest(form));
 
     IpcMainEventChannel.customLists.handleCreateCustomList((name) => {
       return this.daemonRpc.createCustomList(name);
