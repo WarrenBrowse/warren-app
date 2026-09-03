@@ -22,10 +22,7 @@ import com.warrenbrowse.vpn.R
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoMark
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoState
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoTone
-import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmark
+import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmarkLockup
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 
@@ -67,14 +64,9 @@ fun NoDaemonScreen(onNavigateToSettings: () -> Unit) {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    WarrenLogoMark(
-                        state = WarrenLogoState.Exposed,
-                        tone = WarrenLogoTone.Light,
-                        height = Dimens.splashLogoSize,
-                    )
-                    WarrenWordmark(
+                    WarrenWordmarkLockup(
                         color = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.padding(top = Dimens.mediumPadding),
+                        height = Dimens.splashLockupHeight,
                     )
                     Text(
                         text = stringResource(id = R.string.connecting_to_daemon),

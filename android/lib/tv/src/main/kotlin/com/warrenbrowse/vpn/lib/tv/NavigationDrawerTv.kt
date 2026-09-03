@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,10 +47,8 @@ import androidx.tv.material3.NavigationDrawerItem
 import androidx.tv.material3.NavigationDrawerItemDefaults
 import androidx.tv.material3.NavigationDrawerScope
 import androidx.tv.material3.rememberDrawerState
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoMark
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoState
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoTone
-import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmark
+import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmarkLockup
+import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 
@@ -217,18 +216,17 @@ private fun NavigationDrawerTvHeader(
                 else NavigationDrawerItemDefaults.CollapsedDrawerItemWidth
             )
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Dimens.tvMullvadLogoTextStartPadding),
-        ) {
-            WarrenLogoMark(
-                state = WarrenLogoState.Exposed,
-                tone = WarrenLogoTone.Light,
-                height = Dimens.mediumIconSize,
+        // The full lockup once there is room for the word; the ears mark alone
+        // (the same glyph the tile and the notification carry) while collapsed.
+        if (isExpanded) {
+            WarrenWordmarkLockup(color = Color.White, height = Dimens.mediumIconSize)
+        } else {
+            Icon(
+                painter = painterResource(R.drawable.small_logo_white),
+                contentDescription = null, // Decorative brand mark.
+                tint = Color.White,
+                modifier = Modifier.size(Dimens.mediumIconSize),
             )
-            if (isExpanded) {
-                WarrenWordmark(color = Color.White)
-            }
         }
         Spacer(Modifier.height(8.dp))
     }

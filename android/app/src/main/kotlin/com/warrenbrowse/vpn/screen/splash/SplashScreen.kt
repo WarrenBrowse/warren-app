@@ -23,10 +23,7 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.SceneryBitmaps
 import com.warrenbrowse.vpn.feature.login.api.OnboardingNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoMark
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoState
-import com.warrenbrowse.vpn.lib.ui.component.WarrenLogoTone
-import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmark
+import com.warrenbrowse.vpn.lib.ui.component.WarrenWordmarkLockup
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.screen.navigation.PrivacyDisclaimerNavKey
@@ -92,14 +89,9 @@ fun SplashScreen() {
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    WarrenLogoMark(
-                        state = WarrenLogoState.Exposed,
-                        tone = WarrenLogoTone.Light,
-                        height = Dimens.splashLogoSize,
-                    )
-                    WarrenWordmark(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = Dimens.mediumPadding),
+                    WarrenWordmarkLockup(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        height = Dimens.splashLockupHeight,
                     )
                     Text(
                         text = stringResource(id = R.string.connecting_to_daemon),

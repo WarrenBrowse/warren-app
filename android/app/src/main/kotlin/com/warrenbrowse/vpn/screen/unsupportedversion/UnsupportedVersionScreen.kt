@@ -76,7 +76,7 @@ private fun UnsupportedVersionContent(onUpdate: () -> Unit, onQuit: () -> Unit) 
         ) {
             WarrenWordmarkLockup(
                 color = MaterialTheme.colorScheme.onPrimary,
-                height = Dimens.splashLogoSize,
+                height = Dimens.splashLockupHeight,
             )
             Text(
                 text = stringResource(id = R.string.update_required_title),

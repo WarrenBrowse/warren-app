@@ -107,9 +107,10 @@ data class Dimensions(
     val smallIconSize: Dp = 16.dp,
     val smallPadding: Dp = 8.dp,
     val smallSpacer: Dp = 8.dp,
-    val splashLogoSize: Dp = 120.dp,
-    // Required to get the logo to look visually correct
-    val splashLogoTextHeight: Dp = 18.dp,
+    // The brand lockup on the splash, no-daemon and forced-update screens: tall
+    // enough to be the screen's subject, narrow enough for a 360 dp phone with
+    // the side margins (the lockup is about three times as wide as it is tall).
+    val splashLockupHeight: Dp = 72.dp,
     val switchIconSize: Dp = 24.dp,
     // The desktop ShuffleButton is 40 px wide for a pointer; a finger gets the
     // 48 dp floor, and the location button 1 dp away wins any tap left of it.
@@ -122,10 +123,6 @@ data class Dimensions(
     val tvDrawerHeaderStartPadding: Dp = 12.dp,
     val tvDrawerHeaderWithFocusStartPadding: Dp = 16.dp,
     val tvDrawerHorizontalPadding: Dp = 12.dp,
-    // Required to get the logo to look visually correct on TV
-    val tvMullvadLogoTextHeight: Dp = 13.dp,
-    // Required to get the logo to look visually correct on TV
-    val tvMullvadLogoTextStartPadding: Dp = 6.dp,
     val verticalSpace: Dp = 16.dp,
 )
 
