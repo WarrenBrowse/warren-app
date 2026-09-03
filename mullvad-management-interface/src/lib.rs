@@ -279,12 +279,29 @@ pub enum SocketSecurity {
     WorldAccessible,
 }
 
+/// Largest gzipped log a signed forum request carries: the broker's own cap on
+/// the base64 field translated back to bytes. Spelled here rather than
+/// imported, because this crate is the IPC layer and does not depend on the
+/// forum crate; `mullvad-daemon`'s `forum_rpc_size` test pins it equal to
+/// `warren_forum::MAX_LOG_GZ_BYTES`.
+const MAX_FORUM_LOG_GZ_BYTES: usize = 12_000_000;
+
+/// Headroom over that log for the rest of the request: the report fields, the
+/// sid, the topic id and the protobuf framing.
+pub const MAX_RPC_MESSAGE_OVERHEAD_BYTES: usize = 1024 * 1024;
+
 /// Largest request the management service decodes. tonic's default is 4 MiB,
-/// under the 12,000,000 gzip bytes a forum report or attach-logs request
-/// carries (`SignForumReport`, `SignForumAttachLogs`), so an at-cap report was
-/// refused here before the daemon ever saw it. Sized to the cap plus the
-/// report's own fields and the protobuf framing.
-const MAX_RPC_MESSAGE_BYTES: usize = 16 * 1024 * 1024;
+/// under the gzipped log a forum report or attach-logs request carries
+/// (`SignForumReport`, `SignForumAttachLogs`), so an at-cap report was refused
+/// here before the daemon ever saw it.
+///
+/// Derived from that log rather than rounded up to a power of two: this is the
+/// buffer EVERY method of the service gets, tonic fills it while decoding and
+/// therefore before a handler can run `authorize_wallet_access`, and the
+/// socket is world-accessible by default on Linux and macOS. So a round number
+/// picked by hand is a round amount of memory any local process can make the
+/// daemon hold, and the daemon owns the kill switch.
+pub const MAX_RPC_MESSAGE_BYTES: usize = MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAGE_OVERHEAD_BYTES;
 
 pub fn spawn_rpc_server(
     management_service: impl ManagementService,
@@ -636,5 +653,72 @@ mod socket_access_tests {
     fn configured_but_missing_group_fails_closed() {
         let result = plan_socket_access(Some("vpnadmins"), |_| Ok(None));
         assert!(matches!(result, Err(Error::NoGidError)));
+    }
+}
+
+/// The decoding cap against the forum request contract. That one number is at
+/// once a floor (the largest legal signed report has to fit, or the daemon
+/// refuses an at-cap report before it ever sees it) and a ceiling (it is the
+/// buffer every other method gets, filled while tonic decodes and therefore
+/// before a handler can authorize the caller), so both edges are pinned.
+#[cfg(test)]
+mod rpc_size_tests {
+    use super::{MAX_FORUM_LOG_GZ_BYTES, MAX_RPC_MESSAGE_BYTES, MAX_RPC_MESSAGE_OVERHEAD_BYTES};
+    use crate::types::{ForumAttachLogsRequest, ForumReportRequest};
+    use prost::Message;
+
+    /// tonic 0.13's own `DEFAULT_MAX_RECV_MESSAGE_SIZE`, the value the cap had
+    /// to be raised above.
+    const TONIC_DEFAULT_DECODING_BYTES: usize = 4 * 1024 * 1024;
+
+    /// The broker caps the description and the steps at 4,000 characters each;
+    /// the rest of the report is a handful of short enumerated fields.
+    fn largest_report_json() -> String {
+        format!(
+            r#"{{"area":"connectivity","frequency":"always","description":"{}","steps":"{}","platform":"linux","version":"9999.99.99"}}"#,
+            "d".repeat(4_000),
+            "s".repeat(4_000),
+        )
+    }
+
+    #[test]
+    fn the_largest_legal_signed_report_fits_the_cap_and_needs_it() {
+        let request = ForumReportRequest {
+            report_json: largest_report_json(),
+            log_gz: vec![0u8; MAX_FORUM_LOG_GZ_BYTES],
+        };
+        let encoded = request.encoded_len();
+        assert!(
+            encoded <= MAX_RPC_MESSAGE_BYTES,
+            "an at-cap report encodes to {encoded} bytes, over the {MAX_RPC_MESSAGE_BYTES} byte cap"
+        );
+        assert!(
+            encoded > TONIC_DEFAULT_DECODING_BYTES,
+            "the cap no longer needs raising over tonic's default, so drop the override"
+        );
+    }
+
+    #[test]
+    fn the_largest_legal_attach_logs_request_fits_the_cap() {
+        let request = ForumAttachLogsRequest {
+            sid: "a".repeat(32),
+            topic_id: u64::MAX,
+            log_gz: vec![0u8; MAX_FORUM_LOG_GZ_BYTES],
+        };
+        let encoded = request.encoded_len();
+        assert!(
+            encoded <= MAX_RPC_MESSAGE_BYTES,
+            "an at-cap attach-logs request encodes to {encoded} bytes, over the {MAX_RPC_MESSAGE_BYTES} byte cap"
+        );
+    }
+
+    #[test]
+    fn the_cap_is_the_forum_contract_plus_the_declared_headroom() {
+        // Widening it widens the buffer every method of a socket that is
+        // world-accessible by default hands to any local process.
+        assert_eq!(
+            MAX_RPC_MESSAGE_BYTES,
+            MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAGE_OVERHEAD_BYTES
+        );
     }
 }

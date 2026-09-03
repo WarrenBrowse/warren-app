@@ -1,6 +1,10 @@
 import { status as grpcStatus } from '@grpc/grpc-js';
 
-import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
+import {
+  BROKER_MAX_LOG_GZ_B64_CHARS,
+  ForumAttachResult,
+  IForumAttachRequest,
+} from '../shared/forum-attach';
 import log from '../shared/logging';
 import { DaemonRpc } from './daemon-rpc';
 import { ALLOWED_CONNECT_HOSTS, FORUM_DEEP_LINK_SCHEME, getForumSession } from './forum-login';
@@ -16,10 +20,6 @@ import { ALLOWED_CONNECT_HOSTS, FORUM_DEEP_LINK_SCHEME, getForumSession } from '
  * POSTs it to the connect host. The daemon builds the JSON body itself so the
  * signed bytes and the sent bytes are identical.
  */
-
-/** warren-connect's `MAX_LOG_GZ_B64_CHARS`: the broker caps the base64 FIELD
- * and answers 413 one character over it. */
-const BROKER_MAX_LOG_GZ_B64_CHARS = 16_000_000;
 
 /** Client-side cap on the gzipped report: the server rejects bigger uploads
  * (413), so a larger payload could only produce a doomed request.

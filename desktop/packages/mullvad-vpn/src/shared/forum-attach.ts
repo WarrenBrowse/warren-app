@@ -3,6 +3,14 @@
 // problem report to a forum topic; the app MUST show an explicit consent
 // prompt, with a way to view the exact report, before signing and sending.
 
+/** warren-connect's `MAX_LOG_GZ_B64_CHARS`: the broker caps the base64 FIELD
+ * and answers 413 one character over it. Both the gzip cap the app enforces
+ * before sending and the gRPC receive limit the signed body comes back under
+ * are derived from this one number, so it lives in the shared module: the two
+ * main-process readers are on a require cycle through `daemon-rpc`, and a
+ * constant read at module init cannot survive that. */
+export const BROKER_MAX_LOG_GZ_B64_CHARS = 16_000_000;
+
 export interface IForumAttachRequest {
   // Opaque 32-hex session id from the deep link.
   sid: string;

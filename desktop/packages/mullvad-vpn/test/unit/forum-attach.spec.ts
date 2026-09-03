@@ -19,6 +19,7 @@ import {
   PENDING_ATTACH_MAX_AGE_MS,
   PendingForumRequest,
 } from '../../src/main/forum-login';
+import { BROKER_MAX_LOG_GZ_B64_CHARS } from '../../src/shared/forum-attach';
 import { IForumAttachRequest } from '../../src/shared/forum-attach';
 
 const sid = 'a'.repeat(32);
@@ -295,5 +296,15 @@ describe('resolveApprovedReport', () => {
     const read = vi.fn();
     await expect(resolveApprovedReport(undefined, collect, read)).rejects.toThrow();
     expect(read).not.toHaveBeenCalled();
+  });
+});
+
+describe('the gzip cap the app enforces before it sends', () => {
+  it('is the broker character cap translated, never a guess', () => {
+    // The same log crosses two contracts: raw gzip on the way to the daemon,
+    // base64 inside the signed body coming back, and the gRPC receive limit is
+    // sized off the same shared constant. Deriving both from one number is
+    // what stops the app sending bytes no answer can come back through.
+    expect(MAX_LOG_GZ_BYTES).toBe((BROKER_MAX_LOG_GZ_B64_CHARS / 4) * 3);
   });
 });
