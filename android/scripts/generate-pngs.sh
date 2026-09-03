@@ -11,8 +11,6 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 ICON_SVG_PATH="../../graphics/icon.svg"
-# Icons used for notification and quick settings tile
-BLACK_MONO_ICON_PATH="../../graphics/icon-shaved.svg"
 
 # The following helper function converts an SVG image into a PNG image for a specific DPI
 #
@@ -87,17 +85,13 @@ for dpi_size in "mdpi-120" "hdpi-180" "xhdpi-240" "xxhdpi-360" "xxxhdpi-480"; do
     convert_image "$ICON_SVG_PATH" "$dpi_size" "launch_logo"
 done
 
-# The white icon is generated from the black one
-white_mono_icon_path="$(mktemp)"
-
-sed -e 's/\(\.st1{.*\);fill:#000000;/\1;fill:#FFFFFF;/' "$BLACK_MONO_ICON_PATH" > "$white_mono_icon_path"
-
-for dpi_size in "mdpi-24" "hdpi-36" "xhdpi-48" "xxhdpi-72" "xxxhdpi-96"; do
-    convert_image "$BLACK_MONO_ICON_PATH" "$dpi_size" "small_logo_black"
-    convert_image "$white_mono_icon_path" "$dpi_size" "small_logo_white"
-done
-
-rm "$white_mono_icon_path"
+# The status-bar and quick-settings mark is NOT generated here. It is the
+# hand-maintained vector lib/ui/resource/src/main/res/drawable/small_logo_*.xml,
+# carrying the current logo path; this script used to emit dpi-qualified PNGs of
+# the older shaved mark under the same names, and a dpi-qualified drawable beats
+# an unqualified one on every device that is not exactly mdpi. That would have
+# shadowed both the vector and the beta overlay
+# (android/scripts/generate-beta-small-logo.py).
 
 # Beta flavor adaptive-icon foreground: the mark recoloured to the sand tone
 # and shrunk to clear the amber BETA badge, sitting on the brown background set

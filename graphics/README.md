@@ -108,4 +108,5 @@ This is a simplified version of the logo with the whiskers and fur removed. This
 when rendering the Warren mark in tiny versions where the little details in the logo would not be visible
 anyway, and would just make the small assets look less clean.
 
-It is currently used to generate small icon assets for Android: `android/scripts/generate-pngs.sh`.
+Nothing generates from it today: the Android status-bar and quick-settings mark is the
+hand-maintained vector `android/lib/ui/resource/src/main/res/drawable/small_logo_*.xml`.
