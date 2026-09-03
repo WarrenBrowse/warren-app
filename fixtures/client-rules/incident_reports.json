@@ -1,0 +1,47 @@
+{
+  "about": "Incident telemetry every Warren client posts so an outage a client suffers reaches the operator feed. The exit-down budget is the rule that keeps one flapping client from drowning that feed, and it is pinned here because the desktop daemon and the Android engine each carry their own copy of it.",
+  "exit_down": {
+    "path": "/v1/incidents/exit-down",
+    "signed": true,
+    "reason_code": "HANDSHAKE_FAIL",
+    "budget": {
+      "burst": 3,
+      "refill_interval_secs": 1200,
+      "persisted": false,
+      "storms": [
+        {
+          "name": "burst_then_refusal",
+          "attempts_secs": [0, 0, 0, 0],
+          "sent": 3,
+          "why": "the first three reports of an incident pass back to back, the fourth is throttled"
+        },
+        {
+          "name": "the_window_reopens",
+          "attempts_secs": [0, 0, 0, 1140, 1201, 1202],
+          "sent": 4,
+          "why": "one token grows back per interval, and only one"
+        },
+        {
+          "name": "two_hour_flap_at_one_lap_per_150s",
+          "start_secs": 0,
+          "period_secs": 150,
+          "attempts": 49,
+          "sent": 9,
+          "why": "the 2026-08-27 feed signature: 21 reports from one client become burst (3) plus one per refill (6)"
+        },
+        {
+          "name": "idle_does_not_stockpile",
+          "attempts_secs": [86400, 86400, 86400, 86400],
+          "sent": 3,
+          "why": "a day of silence leaves the bucket at the burst, never above it"
+        }
+      ]
+    }
+  },
+  "pubkey_mismatch": {
+    "path": "/v1/incidents/pubkey-mismatch",
+    "signed": true,
+    "budgeted": false,
+    "why_unbudgeted": "one report per user decision on a modal that refuses the connect, so there is no loop to cap"
+  }
+}

@@ -68,6 +68,33 @@ impl ExitDownReportBudget {
 mod tests {
     use super::*;
 
+    /// The shared client rule both clients are held to. Android carries its
+    /// own copy of this bucket (`warren-jni/src/incidents.rs`), so the
+    /// constants live in one file and each copy replays it.
+    fn client_rule() -> serde_json::Value {
+        let path = format!(
+            "{}/../fixtures/client-rules/incident_reports.json",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        let raw = std::fs::read_to_string(&path).unwrap_or_else(|err| panic!("read {path}: {err}"));
+        serde_json::from_str(&raw).expect("incident_reports.json parses")
+    }
+
+    /// The one file both clients read. Android carries its own copy of this
+    /// bucket (`warren-jni/src/incidents.rs`), and the storm outcomes below
+    /// are a pure function of these two numbers, so holding them to the
+    /// shared rule is what keeps the two copies from drifting apart.
+    #[test]
+    fn the_bucket_is_the_one_the_shared_client_rule_states() {
+        let rule = client_rule();
+        let budget_rule = &rule["exit_down"]["budget"];
+        assert_eq!(budget_rule["burst"].as_u64(), Some(u64::from(BURST)));
+        assert_eq!(
+            budget_rule["refill_interval_secs"].as_u64(),
+            Some(REFILL_INTERVAL.as_secs())
+        );
+    }
+
     #[test]
     fn burst_of_three_passes_then_refuses() {
         let t0 = Instant::now();

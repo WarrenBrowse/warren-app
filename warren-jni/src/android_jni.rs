@@ -1526,6 +1526,182 @@ fn notices_fetch(current_version: &str) -> String {
     envelope(&state.display(now, client_version), refresh)
 }
 
+// ---------------------------------------------------------------------------
+// Incident telemetry (`/v1/incidents/*`)
+// ---------------------------------------------------------------------------
+
+/// The transport the two incident reports ride: the VpnService-protected one
+/// when the crate carries it, because both fire while the kill-switch
+/// blackhole is up (an exit-down report is posted from the retry that follows
+/// a drop, a mismatch report from a modal that refused the dial). A plain
+/// socket would be captured by that interface and time out; a protected one
+/// leaves on the physical network, which is where the desktop daemon's own
+/// reports go, its firewall holding the API open while the tunnel is down.
+#[cfg(feature = "tunnel")]
+type IncidentTransport = crate::protected_transport::ProtectedTransport;
+#[cfg(not(feature = "tunnel"))]
+type IncidentTransport = warren_api::reqwest_transport::ReqwestTransport;
+
+/// The token bucket over `POST /v1/incidents/exit-down`, one per process like
+/// the daemon's one per run. Built on first use because its epoch is an
+/// `Instant`, which no `static` can name.
+static EXIT_DOWN_BUDGET: Mutex<Option<crate::incidents::ExitDownReportBudget>> = Mutex::new(None);
+
+/// Reports an exit this client gave up on (`POST /v1/incidents/exit-down`),
+/// so a client-visible outage reaches `GET /v1/admin/exits/health` instead of
+/// dying on the device. Signed by the wallet; the server records no signer,
+/// only the exit and the count.
+///
+/// Best-effort and budgeted: the answer says whether the report left, and the
+/// caller acts on nothing. Returns `{"ok":true}` or
+/// `{"ok":false,"reason":"budget"|"malformed"|"identity"|"runtime"|"transport"|"rejected"}`.
+/// Blocks on a network POST: invoke off the main thread.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportExitDown<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    exit_pubkey_hex: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let exit_pubkey_hex = String::from_java(&jnix_env, exit_pubkey_hex);
+    let outcome = report_exit_down(&phrase, &exit_pubkey_hex);
+    log::info!("reportExitDown: {}", outcome_class(outcome));
+    match jnix_env.new_string(crate::incidents::envelope(outcome)) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn report_exit_down(
+    mnemonic: &str,
+    exit_pubkey_hex: &str,
+) -> Result<(), crate::incidents::NotSent> {
+    use crate::incidents::NotSent;
+
+    // Spent before the body is built, the daemon's order: a client whose
+    // failover loop keeps producing the same report is throttled whatever the
+    // report says.
+    let allowed = EXIT_DOWN_BUDGET
+        .lock()
+        .get_or_insert_with(crate::incidents::ExitDownReportBudget::new)
+        .try_acquire(std::time::Instant::now());
+    if !allowed {
+        return Err(NotSent::Budget);
+    }
+    let request = crate::incidents::exit_down_request(exit_pubkey_hex, unix_now())?;
+    let (runtime, client) = incident_client(mnemonic)?;
+    runtime
+        .block_on(client.report_exit_down(&request))
+        .map_err(client_error_class)
+}
+
+/// Reports a pinned exit key that changed (`POST /v1/incidents/pubkey-mismatch`),
+/// what the desktop's "Report to Warren" button on the same modal does. Every
+/// field is already public through the signed relay list, and the server
+/// records no signer, so the report says what changed and not who saw it.
+///
+/// Returns the same envelope as [`Java_com_warrenbrowse_vpn_jni_WarrenJni_reportExitDown`],
+/// minus the `budget` class (one report per user decision, so there is no
+/// loop to cap). Blocks on a network POST: invoke off the main thread.
+#[unsafe(no_mangle)]
+#[allow(clippy::too_many_arguments, reason = "the wire body has six fields")]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportPubkeyMismatch<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    exit_id_hex: JString<'local>,
+    old_pubkey_hex: JString<'local>,
+    new_pubkey_hex: JString<'local>,
+    country_code: JString<'local>,
+    city: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let request = crate::incidents::pubkey_mismatch_request(
+        &String::from_java(&jnix_env, exit_id_hex),
+        &String::from_java(&jnix_env, old_pubkey_hex),
+        &String::from_java(&jnix_env, new_pubkey_hex),
+        &String::from_java(&jnix_env, country_code),
+        &String::from_java(&jnix_env, city),
+        unix_now(),
+    );
+    let outcome = report_pubkey_mismatch(&phrase, &request);
+    log::info!("reportPubkeyMismatch: {}", outcome_class(outcome));
+    match jnix_env.new_string(crate::incidents::envelope(outcome)) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn report_pubkey_mismatch(
+    mnemonic: &str,
+    request: &warren_api::IncidentPubkeyMismatchRequest,
+) -> Result<(), crate::incidents::NotSent> {
+    let (runtime, client) = incident_client(mnemonic)?;
+    runtime
+        .block_on(client.report_pubkey_mismatch(request))
+        .map_err(client_error_class)
+}
+
+/// The runtime and a freshly-signed client for one incident report. The
+/// identity is per call (the mnemonic never lingers), and the transport is
+/// built per call rather than pooled: a report fires at most a handful of
+/// times per session, and the network under it has just changed.
+fn incident_client(
+    mnemonic: &str,
+) -> Result<
+    (
+        &'static tokio::runtime::Runtime,
+        warren_api::WarrenApiClient<IncidentTransport>,
+    ),
+    crate::incidents::NotSent,
+> {
+    use crate::incidents::NotSent;
+
+    let runtime = runtime().ok_or(NotSent::Runtime)?;
+    let identity =
+        warren_identity::WarrenIdentity::from_mnemonic(mnemonic).map_err(|_| NotSent::Identity)?;
+    let client = warren_api::WarrenApiClient::new(
+        PRODUCT_API_URL.to_owned(),
+        identity,
+        IncidentTransport::new(),
+    );
+    Ok((runtime, client))
+}
+
+/// A client failure as one of the report classes. The error itself is never
+/// rendered: a server body may echo identity material.
+fn client_error_class(error: warren_api::ClientError) -> crate::incidents::NotSent {
+    match error {
+        warren_api::ClientError::ServerStatus { .. } => crate::incidents::NotSent::Rejected,
+        _ => crate::incidents::NotSent::Transport,
+    }
+}
+
+/// The one word an incident log line carries.
+fn outcome_class(outcome: Result<(), crate::incidents::NotSent>) -> &'static str {
+    match outcome {
+        Ok(()) => "sent",
+        Err(crate::incidents::NotSent::Budget) => "suppressed by the local budget",
+        Err(crate::incidents::NotSent::Malformed) => "malformed",
+        Err(crate::incidents::NotSent::Identity) => "no identity",
+        Err(crate::incidents::NotSent::Runtime) => "runtime not up",
+        Err(crate::incidents::NotSent::Transport) => "transport failed",
+        Err(crate::incidents::NotSent::Rejected) => "refused by the server",
+    }
+}
+
+/// Unix seconds, `0` when the device clock predates the epoch. The server
+/// replaces the value with its own clock when it records, so a wrong one is
+/// carried for forward compatibility rather than trusted.
+fn unix_now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
+}
+
 // Device list/remove JNI exports were dropped: Warren's identity is the
 // BIP39 wallet (one wallet = one pubkey), not a Mullvad-style per-account
 // device registry. The backend has no `/v1/devices` list/delete endpoint;

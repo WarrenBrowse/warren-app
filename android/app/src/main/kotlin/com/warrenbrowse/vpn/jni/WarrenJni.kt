@@ -170,6 +170,33 @@ object WarrenJni {
     external fun forumNotificationsSeen(mnemonic: String): String
 
     /**
+     * Report an exit this client gave up on (`POST /v1/incidents/exit-down`), so an outage only
+     * this client can see reaches the operator's exit-health feed. Signed with the wallet key in
+     * Rust; the server records the exit and the count, never the signer. Fire and forget, and
+     * budgeted there (three back to back, then one per 20 minutes) so a client stuck in a failover
+     * loop cannot drown the feed. Returns `{"ok":true}` or
+     * `{"ok":false,"reason":"<class>"}`; nothing about the connection depends on the answer.
+     * Blocks on a network POST: invoke off the main thread. Never log the mnemonic.
+     */
+    external fun reportExitDown(mnemonic: String, exitPubkeyHex: String): String
+
+    /**
+     * Report a pinned exit key that changed (`POST /v1/incidents/pubkey-mismatch`), what the
+     * "Report to Warren" choice on the key-mismatch dialog sends. Every field is already public
+     * through the signed relay list and the server records no signer, so the report says what
+     * changed and not who saw it. Returns `{"ok":true}` or `{"ok":false,"reason":"<class>"}`.
+     * Blocks on a network POST: invoke off the main thread. Never log the mnemonic.
+     */
+    external fun reportPubkeyMismatch(
+        mnemonic: String,
+        exitIdHex: String,
+        oldPubkeyHex: String,
+        newPubkeyHex: String,
+        countryCode: String,
+        city: String,
+    ): String
+
+    /**
      * Collect the redacted problem report into `outputPath` with the shared desktop collector: Rust
      * log files, the Kotlin log directory, a logcat dump, plus the `metadataJson` facts in the
      * header and the strings of `redactJson` redacted. `forSend` runs the live network probes,

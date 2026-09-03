@@ -125,6 +125,13 @@ mod exit_pin;
 #[cfg(target_os = "android")]
 mod android_jni;
 
+// The two incident reports (an exit this client gave up on, a pinned exit key
+// that changed) and the token bucket that keeps one flapping client from
+// drowning the operator feed; host-tested, the JNI exports are in
+// `android_jni`.
+#[cfg(any(test, target_os = "android"))]
+mod incidents;
+
 // The verified operator broadcast notices and their anti-rollback and
 // freshness rules, host-tested; `android_jni` fetches them on Kotlin's
 // cadence.
