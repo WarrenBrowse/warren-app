@@ -3438,6 +3438,9 @@ impl Daemon {
         let account_manager = self.account_manager.clone();
         let settings_dir = self.settings_dir.clone();
         let identity = self.warren_identity.clone();
+        // Nothing published for the identity being left behind may reach the
+        // fresh one: a card carries an account's own voucher code.
+        self.warren_status_cache.forget_announcements();
         tokio::spawn(async move {
             let result = async {
                 if let Ok(data) = account_manager.data().await
@@ -3718,12 +3721,16 @@ impl Daemon {
             return;
         }
         let signer = self.warren_identity.signer();
+        let authorized_as = signer.pubkey_ss58();
         tokio::spawn(async move {
             let timestamp =
                 warren_forum_clock::signing_timestamp(warren_forum::connect_host()).await;
-            let signed = signed_forum_request(&signer, path, body, timestamp);
-            log::debug!("{flow}: signed");
-            if tx.send(Some(signed)).is_err() {
+            let signed = signed_forum_request_for(&signer, &authorized_as, path, body, timestamp);
+            match signed {
+                Some(_) => log::debug!("{flow}: signed"),
+                None => log::debug!("{flow}: not signed (the identity moved)"),
+            }
+            if tx.send(signed).is_err() {
                 log::warn!("Unable to send {flow} to the daemon command sender");
             }
         });
@@ -3761,10 +3768,17 @@ impl Daemon {
         // nothing else in the app works. The signer stays here, so what the
         // caller can influence is nothing.
         let signer = self.warren_identity.signer();
+        let authorized_as = signer.pubkey_ss58();
         tokio::spawn(async move {
             let timestamp =
                 warren_forum_clock::signing_timestamp(warren_forum::connect_host()).await;
-            let result = signed_forum_report(&signer, &report_json, log_gz.as_deref(), timestamp);
+            let result = signed_forum_report_for(
+                &signer,
+                &authorized_as,
+                &report_json,
+                log_gz.as_deref(),
+                timestamp,
+            );
             match &result {
                 Ok(_) => log::debug!("on_sign_forum_report: signed"),
                 Err(err) => log::debug!("on_sign_forum_report: not signed ({err:?})"),
@@ -3822,6 +3836,10 @@ impl Daemon {
         // touched, so the daemon keeps the pre-swap identity coherently
         // instead of ending up half-swapped.
         let new_pubkey_bytes = self.warren_identity.reload_from_disk(&self.settings_dir);
+
+        // The published card carries the code drawn for the identity that
+        // just went away. The next refresh republishes what this one holds.
+        self.warren_status_cache.forget_announcements();
 
         // Step 2 - determine whether a `login()` under the new pubkey
         // is needed before acknowledging, so the GUI does not observe a
@@ -4028,6 +4046,11 @@ impl Daemon {
     /// stays recoverable. This avoids irreversible data loss on a
     /// revocation the user did not initiate.
     async fn on_logout_account(&mut self, tx: ResponseTx<(), Error>, wipe_identity: bool) {
+        // Whatever the logout does to the stored identity, the account that
+        // was on screen is gone, and the published card carries the voucher
+        // code drawn for it. Done before the logout itself, so a failure
+        // halfway cannot leave one account's code in front of the next one.
+        self.warren_status_cache.forget_announcements();
         let logout_result = self.account_manager.logout().await.map_err(|error| {
             log::error!("{}", error.display_chain_with_msg("Logout failed"));
             Error::LogoutError(error)
@@ -6100,6 +6123,45 @@ fn signed_forum_report(
     Ok((headers, body))
 }
 
+/// The signed request, or `None` when the identity that authorized it is no
+/// longer the one the shared signer holds.
+///
+/// The identity gate runs on the daemon command loop and the signature runs
+/// up to eight seconds later, in a task, through the `Arc<WarrenAuthSigner>`
+/// the identity manager hot-swaps IN PLACE. A logout landing in that window
+/// would otherwise sign with the sentinel key, whose private half is in the
+/// published source, and hand the GUI a request to POST under an identity
+/// anyone can authenticate as. `warren_announcements_updater::claim` re-reads
+/// its source address after its own await for the same reason.
+fn signed_forum_request_for(
+    signer: &mullvad_api::warren_auth::WarrenAuthSigner,
+    authorized_as: &str,
+    path: &str,
+    body: String,
+    timestamp: u64,
+) -> Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)> {
+    if signer.pubkey_ss58() != authorized_as {
+        return None;
+    }
+    Some(signed_forum_request(signer, path, body, timestamp))
+}
+
+/// The signed report, refused with [`ForumReportSignError::NoIdentity`] when
+/// the identity moved while the broker's clock was being read. Same window,
+/// same reason, as [`signed_forum_request_for`].
+fn signed_forum_report_for(
+    signer: &mullvad_api::warren_auth::WarrenAuthSigner,
+    authorized_as: &str,
+    report_json: &str,
+    log_gz: Option<&[u8]>,
+    timestamp: u64,
+) -> Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError> {
+    if signer.pubkey_ss58() != authorized_as {
+        return Err(ForumReportSignError::NoIdentity);
+    }
+    signed_forum_report(signer, report_json, log_gz, timestamp)
+}
+
 /// Why the daemon could not sign an in-app report.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[non_exhaustive]
@@ -6142,6 +6204,70 @@ mod forum_report_tests {
         value[key]
             .as_str()
             .unwrap_or_else(|| panic!("`{key}` is a string in {value}"))
+    }
+
+    /// The window the guard exists for: the identity gate runs on the daemon
+    /// loop, the signature runs after up to eight seconds of network I/O, and
+    /// a logout in between swaps the shared signer to the sentinel key, whose
+    /// private half is in the published source.
+    #[test]
+    fn a_logout_during_the_clock_read_signs_nothing() {
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]));
+        let authorized_as = signer.pubkey_ss58();
+
+        // The logout: `WarrenIdentityManager::clear` swaps this very signer.
+        signer.replace_signing_key(SigningKey::from_bytes(&[0u8; 32]));
+
+        assert!(
+            super::signed_forum_request_for(
+                &signer,
+                &authorized_as,
+                "/v1/forum/login",
+                "{}".to_owned(),
+                1_700_000_000,
+            )
+            .is_none()
+        );
+        assert_eq!(
+            super::signed_forum_report_for(
+                &signer,
+                &authorized_as,
+                r#"{"area":"other"}"#,
+                None,
+                1_700_000_000,
+            ),
+            Err(ForumReportSignError::NoIdentity)
+        );
+    }
+
+    /// The identity that authorized the request is still the one holding the
+    /// signer: the request is signed, and by that identity.
+    #[test]
+    fn an_untouched_identity_signs_as_itself() {
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[7u8; 32]));
+        let authorized_as = signer.pubkey_ss58();
+
+        let (headers, body) = super::signed_forum_request_for(
+            &signer,
+            &authorized_as,
+            "/v1/forum/login",
+            "{}".to_owned(),
+            1_700_000_000,
+        )
+        .expect("the identity has not moved");
+
+        assert_eq!(headers.pubkey_ss58, authorized_as);
+        assert_eq!(body, "{}");
+        assert!(
+            super::signed_forum_report_for(
+                &signer,
+                &authorized_as,
+                r#"{"area":"other"}"#,
+                None,
+                1_700_000_000,
+            )
+            .is_ok()
+        );
     }
 
     #[test]

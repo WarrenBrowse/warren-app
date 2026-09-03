@@ -881,6 +881,18 @@ impl WarrenStatusCache {
         let _ = self.tx.send_replace(snapshot);
     }
 
+    /// Take the published announcements down because the identity moved.
+    ///
+    /// A card carries the code drawn for ONE account, and the snapshot every
+    /// client holds outlives a logout: on a shared machine the next person to
+    /// restore their wallet would read the previous account's code, under
+    /// "Your code", with a copy button, until the five minute refresh came
+    /// round. The next refresh republishes what the new identity is entitled
+    /// to, which is the empty set until it draws its own.
+    pub fn forget_announcements(&self) {
+        self.set_announcements(Vec::new());
+    }
+
     /// Record what the cross-environment watcher sees: every other product
     /// environment and the stand-down this build holds, if any.
     ///
@@ -1999,6 +2011,22 @@ mod tests {
         rx.borrow_and_update();
 
         cache.set_announcements(Vec::new());
+
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(rx.borrow_and_update().announcements.is_empty());
+    }
+
+    /// A code belongs to one account. The snapshot outlives a logout, so
+    /// nothing but this takes it off the screen before the next refresh.
+    #[test]
+    fn forgetting_the_announcements_takes_this_account_code_off_the_snapshot() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.set_announcements(vec![card("a1", Some("ABCDEFGHJKMNPQRS"))]);
+        rx.borrow_and_update();
+
+        cache.forget_announcements();
 
         assert!(rx.has_changed().unwrap_or(false));
         assert!(rx.borrow_and_update().announcements.is_empty());
