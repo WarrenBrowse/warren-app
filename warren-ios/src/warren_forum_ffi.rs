@@ -129,8 +129,9 @@ pub unsafe extern "C" fn warren_forum_login(
 /// Best-effort: notify the connect `host` that the user declined the forum login
 /// for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser page
 /// unblocks instead of polling to timeout. Unsigned (no seed / wallet material);
-/// mirrors the desktop `cancelForumLogin`. Failures are ignored (the server
-/// session expires on its own in 10 minutes). Blocking; call off the main thread.
+/// mirrors the desktop `cancelForumLogin`. Failures are ignored (connect drops
+/// a login session on its own after 5 minutes, the `pending_ttl_secs.login` of
+/// `fixtures/client-rules/forum_link.json`). Blocking; call off the main thread.
 ///
 /// # Safety
 /// `sid` and `host` must be valid NUL-terminated C strings.
