@@ -153,6 +153,32 @@ object WarrenJni {
     external fun noticesFetch(currentVersion: String): String
 
     /**
+     * One fetch of the launch announcements (`GET /v1/announcements` on the API host), verified in
+     * Rust against the pinned server key with the daemon's anti-rollback and freshness rules.
+     * Returns `{"announcements":[{"id":..,"headline":..,"body":..,"level":..,
+     * "cta":{"label":..,"url":..}|null,"voucher_campaign_id":..|null}],
+     * "fetch":"ok"|"rejected"|"transport"}`: the list is what the card must show right now, already
+     * filtered for the signed envelope expiry, each announcement's own TTL and [currentVersion]
+     * (`BuildConfig.VERSION_NAME`), with a call to action whose URL was refused already withheld.
+     * The route is public and unauthenticated, the document is byte-identical for every caller, and
+     * the request carries nothing about the account. Blocks on a network GET: invoke off the main
+     * thread.
+     */
+    external fun announcementsFetch(currentVersion: String): String
+
+    /**
+     * This account's code for the campaign an announcement offers
+     * (`GET /v1/campaign/{campaignId}/voucher`), signed with the wallet key and sent in Rust.
+     * Returns `{"ok":true,"code":".."}`, `{"ok":true,"code":null}` when the account is outside the
+     * cohort, or `{"ok":false,"code":null}` when the lookup failed. A per-account value cannot ride
+     * the broadcast document, which is byte-identical for every caller; this is the one request the
+     * offer makes that is tied to an account, and it is made only when an announcement carries a
+     * campaign. Blocks on a network GET: invoke off the main thread. Never log the mnemonic, and
+     * never log the code: it is a bearer token worth a month of service.
+     */
+    external fun campaignVoucher(mnemonic: String, campaignId: String): String
+
+    /**
      * The wallet's own forum notifications (`POST /v1/forum/notifications`), signed with the wallet
      * key and sent in Rust; the rows are validated there (kinds, pinned paths, bounded text) and
      * come back as `{"ok":true,"notifications":[{id,kind,unread,created_at,title,actor,excerpt,

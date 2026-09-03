@@ -611,4 +611,8 @@
     <string name="notice_title_notice">ประกาศ</string>
     <string name="notice_title_warren">WARREN</string>
     <string name="notice_read_in_full">อ่านประกาศฉบับเต็ม</string>
+    <string name="announcement_read_in_full">อ่านประกาศฉบับเต็ม</string>
+    <string name="announcement_voucher_label">รหัสของคุณ</string>
+    <string name="announcement_voucher_copied">คัดลอกแล้ว</string>
+    <string name="announcement_copy_code">คัดลอกรหัส</string>
 </resources>

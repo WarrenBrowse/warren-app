@@ -26,4 +26,10 @@ message UserPreferences {
   // notice standing for days would otherwise hide the update prompt and the
   // expiry warning under it for as long as the operator leaves it up.
   repeated string dismissed_notices = 9;
+  // Ids of the launch announcements the reader has put away, one entry per
+  // announcement. The id alone, unlike a notice key: an announcement is an
+  // event with a server-assigned id that stands for the life of the campaign,
+  // so a card put away must not come back on every launch with the code it
+  // already handed over.
+  repeated string dismissed_announcements = 10;
 }

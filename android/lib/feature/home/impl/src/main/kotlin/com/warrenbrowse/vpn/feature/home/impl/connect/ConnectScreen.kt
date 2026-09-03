@@ -607,6 +607,14 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                     connectViewModel.dismissNotice(it.notice.dismissalKey)
                 }
             },
+            // By announcement id, and for good: the card is an event rather
+            // than a live statement, and it may already have handed over a
+            // code.
+            onClickDismissAnnouncement = {
+                (uiState.inAppNotification as? InAppNotification.LaunchAnnouncement)?.let {
+                    connectViewModel.dismissAnnouncement(it.announcement.id)
+                }
+            },
             onClickReEnableAfterStandDown = connectViewModel::reEnableAfterStandDown,
             forumSlot = forumSlot,
             onForumClick =
@@ -737,6 +745,7 @@ fun ConnectScreen(
     onClickDismissUpdateAvailable: () -> Unit = {},
     onClickDismissExitSwitched: () -> Unit = {},
     onClickDismissNotice: () -> Unit = {},
+    onClickDismissAnnouncement: () -> Unit = {},
     onClickReEnableAfterStandDown: () -> Unit = {},
     // The desktop header's forum slot: the bell with its badge, the lifebuoy
     // for a wallet with no forum account, nothing when the setting is off.
@@ -784,6 +793,7 @@ fun ConnectScreen(
                 onClickDismissUpdateAvailable,
                 onClickDismissExitSwitched,
                 onClickDismissNotice,
+                onClickDismissAnnouncement,
                 onClickReEnableAfterStandDown,
             )
         }
@@ -858,6 +868,7 @@ private fun Content(
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
     onClickDismissNotice: () -> Unit,
+    onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
@@ -912,6 +923,7 @@ private fun Content(
                         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                         onClickDismissExitSwitched = onClickDismissExitSwitched,
                         onClickDismissNotice = onClickDismissNotice,
+                        onClickDismissAnnouncement = onClickDismissAnnouncement,
                         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                     )
                     if (showBetaBadge) {

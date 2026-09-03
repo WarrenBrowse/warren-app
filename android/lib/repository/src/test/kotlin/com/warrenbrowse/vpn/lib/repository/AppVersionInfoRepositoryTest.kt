@@ -44,6 +44,11 @@ class AppVersionInfoRepositoryTest {
 
         override fun noticesFetch(currentVersion: String): String = error("unused")
 
+        override fun announcementsFetch(currentVersion: String): String = error("unused")
+
+        override fun campaignVoucher(mnemonic: String, campaignId: String): String =
+            error("unused")
+
         override fun forumNotifications(mnemonic: String): String = error("unused")
 
         override fun forumNotificationsSeen(mnemonic: String): String = error("unused")

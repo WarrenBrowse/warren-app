@@ -84,6 +84,25 @@ class UserPreferencesRepository(
         }
     }
 
+    /** Ids of the launch announcements the reader has put away. */
+    fun dismissedAnnouncements(): Flow<List<String>> =
+        userPreferencesStore.data.map { it.dismissedAnnouncementsList }
+
+    /**
+     * Puts one announcement away for good. Append-only and de-duplicated, like
+     * the notices: the same announcement dismissed on two runs must not grow
+     * the file forever.
+     */
+    suspend fun dismissAnnouncement(id: String) {
+        userPreferencesStore.updateData { prefs ->
+            if (prefs.dismissedAnnouncementsList.contains(id)) {
+                prefs
+            } else {
+                prefs.toBuilder().addDismissedAnnouncements(id).build()
+            }
+        }
+    }
+
     fun showSystemAppsSplitTunneling(): Flow<Boolean> =
         userPreferencesStore.data.map { it.showSystemAppsSplitTunneling }
 

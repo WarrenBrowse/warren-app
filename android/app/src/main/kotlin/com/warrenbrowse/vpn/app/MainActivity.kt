@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
+import com.warrenbrowse.vpn.app.announcements.WarrenAnnouncementPoller
 import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
 import com.warrenbrowse.vpn.app.forum.forumDigestWanted
 import com.warrenbrowse.vpn.app.forum.ForumEvent
@@ -84,6 +85,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     private val forumEventsJournal by inject<ForumJournal>()
     private val forumDigestPoller by inject<ForumDigestPoller>()
     private val noticePoller by inject<WarrenNoticePoller>()
+    private val announcementPoller by inject<WarrenAnnouncementPoller>()
     private val forumActivityOpenRequests by inject<ForumActivityOpenRequests>()
     private val localSettings by inject<WarrenLocalSettingsRepository>()
     private val forumIdentityRepository by inject<ForumIdentityRepository>()
@@ -183,6 +185,21 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
                 noticePoller.runWhile(
+                    userPreferencesRepository.preferencesFlow().map {
+                        it.isPrivacyDisclosureAccepted
+                    }
+                )
+            }
+        }
+
+        // The announcement poll runs on the same terms as the notice one, and
+        // for the same reason: a card nobody is looking at is not worth waking
+        // the app for. The code an offer carries is drawn only when an
+        // announcement actually carries one, so an ordinary poll stays a fetch
+        // of a document identical for every client.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                announcementPoller.runWhile(
                     userPreferencesRepository.preferencesFlow().map {
                         it.isPrivacyDisclosureAccepted
                     }

@@ -64,6 +64,14 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         WarrenJni.noticesFetch(currentVersion)
     }
 
+    override fun announcementsFetch(currentVersion: String): String = ready {
+        WarrenJni.announcementsFetch(currentVersion)
+    }
+
+    override fun campaignVoucher(mnemonic: String, campaignId: String): String = ready {
+        WarrenJni.campaignVoucher(mnemonic, campaignId)
+    }
+
     override fun forumNotifications(mnemonic: String): String = ready {
         WarrenJni.forumNotifications(mnemonic)
     }

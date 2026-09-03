@@ -30,6 +30,7 @@ fun PreviewNotificationBannerTv() {
             onClickDismissUpdateAvailable = {},
             onClickDismissExitSwitched = {},
             onClickDismissNotice = {},
+            onClickDismissAnnouncement = {},
             onClickReEnableAfterStandDown = {},
         )
     }
@@ -50,6 +51,7 @@ fun NotificationBannerTv(
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
     onClickDismissNotice: () -> Unit,
+    onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) {
     AnimatedNotificationBanner(
@@ -77,6 +79,7 @@ fun NotificationBannerTv(
         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
         onClickDismissExitSwitched = onClickDismissExitSwitched,
         onClickDismissNotice = onClickDismissNotice,
+        onClickDismissAnnouncement = onClickDismissAnnouncement,
         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
     )
 }

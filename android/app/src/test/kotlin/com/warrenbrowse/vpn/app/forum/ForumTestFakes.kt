@@ -109,6 +109,10 @@ internal class FakeJniBridge(
     private val seenAnswer: () -> String = { """{"ok":true}""" },
     private val digestAnswer: () -> String = { """{"counts":null,"fetch":"transport"}""" },
     private val noticesAnswer: () -> String = { """{"notices":[],"fetch":"transport"}""" },
+    private val announcementsAnswer: () -> String = {
+        """{"announcements":[],"fetch":"transport"}"""
+    },
+    private val voucherAnswer: () -> String = { """{"ok":false,"code":null}""" },
 ) : WarrenJniBridge {
     var loginCalls = 0
     var cancelCalls = 0
@@ -118,6 +122,9 @@ internal class FakeJniBridge(
     var digestCalls = 0
     var noticesCalls = 0
     val noticesVersions = mutableListOf<String>()
+    var announcementsCalls = 0
+    val announcementsVersions = mutableListOf<String>()
+    val voucherCampaigns = mutableListOf<String>()
     val collectedMetadata = mutableListOf<String>()
     val collectedForSend = mutableListOf<Boolean>()
 
@@ -152,6 +159,17 @@ internal class FakeJniBridge(
         noticesCalls++
         noticesVersions += currentVersion
         return noticesAnswer()
+    }
+
+    override fun announcementsFetch(currentVersion: String): String {
+        announcementsCalls++
+        announcementsVersions += currentVersion
+        return announcementsAnswer()
+    }
+
+    override fun campaignVoucher(mnemonic: String, campaignId: String): String {
+        voucherCampaigns += campaignId
+        return voucherAnswer()
     }
 
     override fun forumNotifications(mnemonic: String): String {

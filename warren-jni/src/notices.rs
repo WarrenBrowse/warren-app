@@ -75,10 +75,11 @@ pub(crate) struct DisplayNotice {
     pub(crate) level: &'static str,
 }
 
-/// The wire enum as the FFI spells it. Kept as fixed tokens rather than the
-/// contract type's serde name so a rotation of the wire spelling cannot
-/// silently change what Kotlin matches on.
-fn level_token(level: warren_discovery_core::NoticeLevel) -> &'static str {
+/// The wire enum as the FFI spells it, shared with the announcements, which
+/// carry the same severity. Kept as fixed tokens rather than the contract
+/// type's serde name so a rotation of the wire spelling cannot silently change
+/// what Kotlin matches on.
+pub(crate) fn level_token(level: warren_discovery_core::NoticeLevel) -> &'static str {
     use warren_discovery_core::NoticeLevel as Wire;
     match level {
         Wire::Info => "info",

@@ -54,6 +54,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.LaunchAnnouncementNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.OperatorNoticeNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.StandDownSetting
@@ -134,9 +135,15 @@ val uiModule = module {
             isInstalledFromStore = installSourceProvider::isInstalledFromStore,
         )
     } bind InAppNotificationUseCase::class
-    // Ranked first of all: when the operator has published a notice, that
-    // message is the one thing the user must read, and the states it hides are
-    // still legible in the connect card's own status.
+    // Ranked first of all: an announcement steps aside the moment the reader
+    // puts it away, while a notice or a stand-down holds the slot for as long
+    // as the condition stands, and the code the card carries stops being worth
+    // anything once the campaign closes.
+    single { LaunchAnnouncementNotificationUseCase(get(), get()) } bind
+        InAppNotificationUseCase::class
+    // Then the operator broadcast: when the operator has published a notice,
+    // that message is the one thing the user must read, and the states it hides
+    // are still legible in the connect card's own status.
     single { OperatorNoticeNotificationUseCase(get(), get()) } bind
         InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class

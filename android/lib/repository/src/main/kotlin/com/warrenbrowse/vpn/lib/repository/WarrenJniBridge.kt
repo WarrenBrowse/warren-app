@@ -102,6 +102,31 @@ interface WarrenJniBridge {
     fun noticesFetch(currentVersion: String): String
 
     /**
+     * One fetch of the launch announcements, verified in Rust against the
+     * pinned server key. Returns
+     * `{"announcements":[{"id":..,"headline":..,"body":..,"level":..,`
+     * `"cta":{"label":..,"url":..}|null,"voucher_campaign_id":..|null}],`
+     * `"fetch":"ok"|"rejected"|"transport"}`: the list is what the card must
+     * show right now, already filtered for the signed expiry, each
+     * announcement's own TTL and [currentVersion], with an unsafe call to
+     * action already withheld, so nothing is filtered again here. The route is
+     * public and unauthenticated and the request carries nothing about the
+     * caller. Blocks on a network GET: invoke off the main thread.
+     */
+    fun announcementsFetch(currentVersion: String): String
+
+    /**
+     * This account's code for the campaign an announcement offers, drawn over
+     * a wallet-signed request in Rust. Returns `{"ok":true,"code":".."}`,
+     * `{"ok":true,"code":null}` when the account is outside the cohort, or
+     * `{"ok":false,"code":null}` when the lookup failed, which is retried
+     * rather than read as "you were never eligible". A pure server-side
+     * lookup: it never mints and never assigns, so repeating it is safe.
+     * Blocks on a network GET: invoke off the main thread.
+     */
+    fun campaignVoucher(mnemonic: String, campaignId: String): String
+
+    /**
      * The wallet's own forum notifications (`POST /v1/forum/notifications`),
      * signed and sent in Rust; the rows come back validated. Returns
      * `{"ok":true,"notifications":[..]}` or `{"ok":false,"error":..,"reason":..}`.

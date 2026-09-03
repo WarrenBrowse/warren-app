@@ -615,4 +615,8 @@
     <string name="notice_title_notice">DUYURU</string>
     <string name="notice_title_warren">WARREN</string>
     <string name="notice_read_in_full">Duyurunun tamamını oku</string>
+    <string name="announcement_read_in_full">Duyurunun tamamını oku</string>
+    <string name="announcement_voucher_label">Kodun</string>
+    <string name="announcement_voucher_copied">Kopyalandı</string>
+    <string name="announcement_copy_code">Kodu kopyala</string>
 </resources>

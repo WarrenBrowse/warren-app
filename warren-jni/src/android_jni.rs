@@ -1526,6 +1526,167 @@ fn notices_fetch(current_version: &str) -> String {
     envelope(&state.display(now, client_version), refresh)
 }
 
+/// The verified launch announcements held for this process, and the generation
+/// high-water mark that guards them. In memory only, like the daemon's: a
+/// withdrawn announcement must not come back off a disk cache.
+static ANNOUNCEMENTS: parking_lot::Mutex<crate::announcements::AnnouncementsState> =
+    parking_lot::Mutex::new(crate::announcements::AnnouncementsState::new());
+
+/// The campaign codes drawn for the wallet this process is running as; see
+/// [`crate::announcements::SessionCodes`].
+static CAMPAIGN_CODES: parking_lot::Mutex<crate::announcements::SessionCodes> =
+    parking_lot::Mutex::new(crate::announcements::SessionCodes::new());
+
+/// One fetch of the launch announcements (`GET /v1/announcements` on the API
+/// host), verified against the pinned server key with the anti-rollback and
+/// freshness rules of [`crate::announcements`]. Returns
+/// `{"announcements":[{"id":..,"headline":..,"body":..,"level":..,"cta":..,
+/// "voucher_campaign_id":..}],"fetch":"ok"|"rejected"|"transport"}`: the list
+/// is what the card must show right now, already filtered for the envelope
+/// expiry, each announcement's own TTL and `current_version`, with an unsafe
+/// call to action already withheld, so Kotlin renders it verbatim as plain
+/// text.
+///
+/// The route is public and unauthenticated and the document is byte-identical
+/// for every caller, so nothing about the account is sent and no cadence can be
+/// tied to one. A per-account code comes from the separate, wallet-signed
+/// [`Java_com_warrenbrowse_vpn_jni_WarrenJni_campaignVoucher`]. Kotlin owns the
+/// cadence (five minutes in the foreground, a fetch on resume). Blocks on a
+/// network GET: invoke off the main thread.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_announcementsFetch<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    current_version: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let current = String::from_java(&jnix_env, current_version);
+    let json = announcements_fetch(&current);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn announcements_fetch(current_version: &str) -> String {
+    use crate::announcements::{Fetched, Refresh, envelope};
+    use warren_api::transport::{HttpRequest, HttpTransport, Method};
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    // A version this build cannot state is `None`, which withholds every
+    // range-targeted announcement: a targeted card shown to an untargeted
+    // client is worse than one not shown.
+    let client_version = Some(current_version).filter(|v| !v.is_empty());
+    let Some(runtime) = RUNTIME.get() else {
+        log::warn!("announcements: initLogger must run first");
+        return envelope(&[], Refresh::Transport);
+    };
+    let transport = api_transport();
+    let request = HttpRequest {
+        method: Method::Get,
+        url: format!("{}/v1/announcements", PRODUCT_API_URL.trim_end_matches('/')),
+        headers: Vec::new(),
+        body: Vec::new(),
+        use_sni: true,
+    };
+    let fetched = match runtime.block_on(transport.execute(request)) {
+        Ok(response) if response.status == 200 => {
+            Fetched::Body(String::from_utf8(response.body).unwrap_or_default())
+        }
+        Ok(response) => Fetched::Status(response.status),
+        Err(_) => {
+            log::debug!("announcements: fetch failed");
+            Fetched::Transport
+        }
+    };
+    let pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
+    let mut state = ANNOUNCEMENTS.lock();
+    let refresh = state.accept(fetched, &pins);
+    envelope(&state.display(now, client_version), refresh)
+}
+
+/// This account's code for a campaign an announcement offers
+/// (`GET /v1/campaign/{campaign_id}/voucher`), signed with the wallet and sent
+/// here like every other signed call. Returns `{"ok":true,"code":"..."}`,
+/// `{"ok":true,"code":null}` when the account is outside the cohort (the
+/// server's `404`, a normal and quiet outcome), or `{"ok":false,"code":null}`
+/// when the lookup failed, which the caller retries rather than reading as
+/// "you were never eligible".
+///
+/// The lookup is a pure server-side read that never mints and never assigns, so
+/// repeating it is always safe; the answer is nevertheless held per identity for
+/// the life of the process, so a five minute poll does not become a signed
+/// request every five minutes. The code is a bearer token worth a month of
+/// service: it goes to the account's own screen and nowhere else, never to a
+/// log, an error or a problem report. Blocks on a network GET: invoke off the
+/// main thread.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_campaignVoucher<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    campaign_id: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let campaign = String::from_java(&jnix_env, campaign_id);
+    let json = crate::announcements::voucher_envelope(campaign_voucher(&phrase, &campaign));
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn campaign_voucher(mnemonic: &str, campaign_id: &str) -> Result<Option<String>, ()> {
+    use crate::announcements::Held;
+
+    let Some(runtime) = RUNTIME.get() else {
+        log::warn!("campaignVoucher: initLogger must run first");
+        return Err(());
+    };
+    let identity = warren_identity::WarrenIdentity::from_mnemonic(mnemonic).map_err(|_| {
+        log::warn!("campaignVoucher: wallet could not be derived");
+    })?;
+    // The identity is read BEFORE anything else and the whole cache is dropped
+    // when it changed: acting under a desynced identity would show one account
+    // the offer drawn for another.
+    let address = identity.address();
+    if let Held::Known(code) = CAMPAIGN_CODES.lock().held(&address, campaign_id) {
+        return Ok(code);
+    }
+    let client =
+        warren_api::WarrenApiClient::new(PRODUCT_API_URL.to_owned(), identity, api_transport());
+    let fetched = runtime
+        .block_on(client.campaign_voucher(campaign_id))
+        .map_err(|e| {
+            // The error itself is never rendered: a server body may echo
+            // identity material, and the code must never reach a log. Nothing
+            // is cached either, so the next poll asks again.
+            log::debug!(
+                "campaignVoucher: lookup failed ({})",
+                campaign_failure_class(&e)
+            );
+        })?;
+    CAMPAIGN_CODES
+        .lock()
+        .record(&address, campaign_id, fetched.clone());
+    Ok(fetched)
+}
+
+/// The one word a campaign-lookup failure is logged as. The `ClientError`
+/// itself carries a server body, which may echo identity material.
+#[cfg(target_os = "android")]
+fn campaign_failure_class(error: &warren_api::ClientError) -> &'static str {
+    match error {
+        warren_api::ClientError::ServerStatus { .. } => "refused by the server",
+        _ => "transport failed",
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Incident telemetry (`/v1/incidents/*`)
 // ---------------------------------------------------------------------------

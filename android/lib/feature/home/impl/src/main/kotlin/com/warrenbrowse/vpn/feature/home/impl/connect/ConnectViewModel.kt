@@ -246,6 +246,15 @@ class ConnectViewModel(
         userPreferencesRepository.dismissNotice(key)
     }
 
+    /**
+     * The reader has put a launch announcement away. Recorded against its id, so
+     * it never comes back: the card is an event, and the code it carried is
+     * already in the reader's hands.
+     */
+    fun dismissAnnouncement(id: String) = viewModelScope.launch {
+        userPreferencesRepository.dismissAnnouncement(id)
+    }
+
     /** The switch banner is read; the next failover raises it again. */
     fun acknowledgeExitSwitch() = exitSwitchedNotificationUseCase.acknowledge()
 

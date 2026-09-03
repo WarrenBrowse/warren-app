@@ -35,10 +35,12 @@ import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.ParameterGenerationError
 import com.warrenbrowse.vpn.lib.model.StatusLevel
+import com.warrenbrowse.vpn.lib.model.WarrenAnnouncement
 import com.warrenbrowse.vpn.lib.model.WarrenNotice
 import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
 import com.warrenbrowse.vpn.lib.ui.component.NotificationMessage.ClickableText
 import com.warrenbrowse.vpn.lib.ui.component.dialog.InfoDialog
+import com.warrenbrowse.vpn.lib.ui.component.dialog.WarrenAnnouncementDialog
 
 data class NotificationData(
     val title: AnnotatedString,
@@ -104,9 +106,12 @@ fun InAppNotification.toNotificationData(
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
     onClickDismissNotice: () -> Unit,
+    onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) =
     when (this) {
+        is InAppNotification.LaunchAnnouncement ->
+            launchAnnouncementBannerData(statusLevel, announcement, onClickDismissAnnouncement)
         InAppNotification.EnvStandDown ->
             NotificationData(
                 title = stringResource(id = R.string.env_stand_down_title),
@@ -311,6 +316,60 @@ fun InAppNotification.toNotificationData(
                     ),
             )
     }
+
+/**
+ * The compact entry of a launch announcement: the operator's headline as the
+ * title, the body clamped under it, and the whole announcement one tap away.
+ *
+ * The banner holds a two-line title and a clamped subtitle, which a headline, a
+ * body, a code and a link cannot share, so the card's substance lives in
+ * [WarrenAnnouncementDialog] and the single action slot is spent on the
+ * dismissal: of the two controls it could carry, only the dismissal frees the
+ * banner for the notice and the tunnel banners ranked under the announcement.
+ *
+ * Both strings are the operator's own, rendered as plain text and never through
+ * HtmlCompat: the signed channel exists so that what the operator wrote is what
+ * the user reads.
+ */
+@Composable
+private fun launchAnnouncementBannerData(
+    statusLevel: StatusLevel,
+    announcement: WarrenAnnouncement,
+    onDismiss: () -> Unit,
+): NotificationData {
+    // Keyed on the id so a second announcement replacing the first opens
+    // closed, rather than showing its text under the previous one's dialog.
+    var expanded by remember(announcement.id) { mutableStateOf(false) }
+    if (expanded) {
+        WarrenAnnouncementDialog(announcement = announcement, onDismiss = { expanded = false })
+    }
+    return NotificationData(
+        // The primary constructor, because the convenience ones do not carry
+        // the clamp; the title is the operator's headline, not a resource.
+        title = AnnotatedString(announcement.headline),
+        message =
+            ClickableText(
+                text = AnnotatedString(announcement.body),
+                onClick = { expanded = true },
+                contentDescription = stringResource(R.string.announcement_read_in_full),
+            ),
+        statusLevel = statusLevel,
+        action =
+            NotificationAction(
+                Icons.Rounded.Clear,
+                onClick = onDismiss,
+                contentDescription = stringResource(R.string.dismiss),
+            ),
+        messageMaxLines = ANNOUNCEMENT_BANNER_MAX_LINES,
+    )
+}
+
+/**
+ * Lines the banner gives an announcement body before the dialog carries the
+ * rest. Two: the headline already takes up to two of its own, and the connect
+ * card has to stay on screen under both.
+ */
+private const val ANNOUNCEMENT_BANNER_MAX_LINES = 2
 
 /**
  * The operator's own words, shown as authored. Only the severity label is

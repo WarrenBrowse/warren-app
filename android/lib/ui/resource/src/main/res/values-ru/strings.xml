@@ -623,4 +623,8 @@
     <string name="notice_title_notice">ОБЪЯВЛЕНИЕ</string>
     <string name="notice_title_warren">WARREN</string>
     <string name="notice_read_in_full">Читать объявление полностью</string>
+    <string name="announcement_read_in_full">Прочитать объявление полностью</string>
+    <string name="announcement_voucher_label">Ваш код</string>
+    <string name="announcement_voucher_copied">Скопировано</string>
+    <string name="announcement_copy_code">Копировать код</string>
 </resources>

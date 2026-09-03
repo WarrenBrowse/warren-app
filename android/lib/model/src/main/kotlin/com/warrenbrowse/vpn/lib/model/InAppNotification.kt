@@ -18,11 +18,31 @@ sealed class InAppNotification {
     abstract val priority: Long
 
     /**
-     * The operator has published a broadcast notice. Ranked above everything,
-     * the stand-down included: when the operator has something to say to every
-     * user, that message is the one thing they must read, and the states it
-     * hides (connecting, offline, blocked) are still legible in the connect
-     * card's own status.
+     * The operator has published a launch announcement, and it may carry the
+     * voucher code drawn for this account. First of all, above the operator
+     * notice itself (desktop `NotificationArea`): a warning or an error notice
+     * keeps the slot for as long as it stands, and the card carries a code that
+     * stops being worth anything once the campaign closes. The card steps aside
+     * on its own the moment the reader puts it away, and the notice is then the
+     * banner that shows.
+     */
+    data class LaunchAnnouncement(val announcement: WarrenAnnouncement) : InAppNotification() {
+        override val statusLevel =
+            when (announcement.level) {
+                WarrenNoticeLevel.ERROR -> StatusLevel.Error
+                WarrenNoticeLevel.WARNING -> StatusLevel.Warning
+                WarrenNoticeLevel.INFO -> StatusLevel.Info
+            }
+
+        override val priority: Long = 1010
+    }
+
+    /**
+     * The operator has published a broadcast notice. Ranked above every other
+     * banner but the launch announcement, the stand-down included: when the
+     * operator has something to say to every user, that message is the one
+     * thing they must read, and the states it hides (connecting, offline,
+     * blocked) are still legible in the connect card's own status.
      *
      * It clears from the signal that raised it: Rust hands over an empty list
      * as soon as the notice is erased or its signed envelope lapses (desktop

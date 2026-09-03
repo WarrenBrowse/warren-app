@@ -623,4 +623,8 @@
     <string name="notice_title_notice">ANUNȚ</string>
     <string name="notice_title_warren">WARREN</string>
     <string name="notice_read_in_full">Citește anunțul complet</string>
+    <string name="announcement_read_in_full">Citește anunțul integral</string>
+    <string name="announcement_voucher_label">Codul tău</string>
+    <string name="announcement_voucher_copied">Copiat</string>
+    <string name="announcement_copy_code">Copiază codul</string>
 </resources>

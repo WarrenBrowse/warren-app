@@ -611,4 +611,8 @@
     <string name="notice_title_notice">အသိပေးချက်</string>
     <string name="notice_title_warren">WARREN</string>
     <string name="notice_read_in_full">အသိပေးချက်အပြည့်အစုံ ဖတ်ရန်</string>
+    <string name="announcement_read_in_full">ကြေညာချက်အပြည့်အစုံကို ဖတ်ရန်</string>
+    <string name="announcement_voucher_label">သင့်ကုဒ်</string>
+    <string name="announcement_voucher_copied">ကူးယူပြီးပါပြီ</string>
+    <string name="announcement_copy_code">ကုဒ်ကို ကူးယူရန်</string>
 </resources>

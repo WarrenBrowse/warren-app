@@ -57,6 +57,7 @@ private fun PreviewNotificationBanner() {
                     onClickDismissUpdateAvailable = {},
                     onClickDismissExitSwitched = {},
                     onClickDismissNotice = {},
+                    onClickDismissAnnouncement = {},
                     onClickReEnableAfterStandDown = {},
                 )
                 Spacer(modifier = Modifier.size(16.dp))
@@ -80,6 +81,7 @@ fun NotificationBanner(
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
     onClickDismissNotice: () -> Unit,
+    onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) {
     if (isTv()) {
@@ -97,6 +99,7 @@ fun NotificationBanner(
             onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
             onClickDismissExitSwitched = onClickDismissExitSwitched,
             onClickDismissNotice = onClickDismissNotice,
+            onClickDismissAnnouncement = onClickDismissAnnouncement,
             onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
         )
     } else {
@@ -115,6 +118,7 @@ fun NotificationBanner(
             onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
             onClickDismissExitSwitched = onClickDismissExitSwitched,
             onClickDismissNotice = onClickDismissNotice,
+            onClickDismissAnnouncement = onClickDismissAnnouncement,
             onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
         )
     }

@@ -15,7 +15,10 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.InAppNotification
+import com.warrenbrowse.vpn.lib.model.WarrenAnnouncement
+import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.LaunchAnnouncementNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
@@ -34,6 +37,7 @@ class InAppNotificationControllerTest {
     private val versionNotifications = MutableStateFlow<InAppNotification.UnsupportedVersion?>(null)
     private val tunnelStateNotifications = MutableStateFlow<InAppNotification?>(null)
     private val envStandDownNotifications = MutableStateFlow<InAppNotification?>(null)
+    private val announcementNotifications = MutableStateFlow<InAppNotification?>(null)
 
     private lateinit var job: Job
 
@@ -45,11 +49,13 @@ class InAppNotificationControllerTest {
         val versionNotificationUseCase: VersionNotificationUseCase = mockk()
         val tunnelStateNotificationUseCase: TunnelStateNotificationUseCase = mockk()
         val envStandDownUseCase: EnvStandDownUseCase = mockk()
+        val announcementUseCase: LaunchAnnouncementNotificationUseCase = mockk()
         every { newVersionChangelogUseCase.invoke() } returns newVersionChangelogNotifications
         every { versionNotificationUseCase.invoke() } returns versionNotifications
         every { versionNotificationUseCase.invoke() } returns versionNotifications
         every { tunnelStateNotificationUseCase.invoke() } returns tunnelStateNotifications
         every { envStandDownUseCase.invoke() } returns envStandDownNotifications
+        every { announcementUseCase.invoke() } returns announcementNotifications
         job = Job()
 
         inAppNotificationController =
@@ -59,6 +65,7 @@ class InAppNotificationControllerTest {
                     versionNotificationUseCase,
                     tunnelStateNotificationUseCase,
                     envStandDownUseCase,
+                    announcementUseCase,
                 ),
                 CoroutineScope(job + UnconfinedTestDispatcher()),
             )
@@ -89,11 +96,28 @@ class InAppNotificationControllerTest {
         val envStandDown = InAppNotification.EnvStandDown
         envStandDownNotifications.value = envStandDown
 
+        // The launch announcement is first of all (desktop NotificationArea):
+        // it steps aside the moment the reader puts it away, while a notice or
+        // a stand-down holds the slot for as long as the condition stands, and
+        // the code it carries stops being worth anything once the campaign
+        // closes.
+        val announcement =
+            InAppNotification.LaunchAnnouncement(
+                WarrenAnnouncement(
+                    id = "a1",
+                    headline = "Production is open",
+                    body = "Your beta account gets a free month.",
+                    level = WarrenNoticeLevel.WARNING,
+                )
+            )
+        announcementNotifications.value = announcement
+
         inAppNotificationController.notifications.test {
             val notifications = awaitItem()
 
             assertEquals(
                 listOf(
+                    announcement,
                     envStandDown,
                     tunnelStateBlocked,
                     unsupportedVersion,

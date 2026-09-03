@@ -72,6 +72,7 @@ fun AnimatedNotificationBanner(
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
     onClickDismissNotice: () -> Unit,
+    onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) {
     // Fix for animating to invisible state
@@ -111,6 +112,7 @@ fun AnimatedNotificationBanner(
                     onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                     onClickDismissExitSwitched = onClickDismissExitSwitched,
                     onClickDismissNotice = onClickDismissNotice,
+                    onClickDismissAnnouncement = onClickDismissAnnouncement,
                     onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                 ),
             )

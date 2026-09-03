@@ -16,6 +16,7 @@ import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
+import com.warrenbrowse.vpn.app.announcements.WarrenAnnouncementPoller
 import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
@@ -65,6 +66,8 @@ import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementState
 import com.warrenbrowse.vpn.lib.repository.WarrenNoticeRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNoticeState
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
@@ -255,6 +258,21 @@ val appModule = module {
             jni = get(),
             state = get(),
             tunnelState = get(),
+            clientVersion = BuildConfig.VERSION_NAME,
+        )
+    }
+    // The launch announcement card: a signed broadcast document, plus the
+    // wallet-signed lookup of the code this account was pre-assigned. The state
+    // is in memory only, so a withdrawn card cannot come back off a disk cache
+    // and no code outlives the campaign on disk; only the reader's dismissal is
+    // persisted, in the user preferences.
+    single { WarrenAnnouncementRepository() } bind WarrenAnnouncementState::class
+    single {
+        WarrenAnnouncementPoller(
+            jni = get(),
+            state = get(),
+            tunnelState = get(),
+            wallet = get(),
             clientVersion = BuildConfig.VERSION_NAME,
         )
     }
