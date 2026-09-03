@@ -273,7 +273,9 @@ runs:
       #     Without this it fails "could not read Username for https://github.com"
       #     on any runner whose ~/.cargo/git cache does not already hold the rev.
       # Scoped to the WarrenBrowse org only; the bundled runner git is 2.30.x so
-      # GIT_CONFIG_* env is unavailable, `git config --global` is the portable form.
+      # GIT_CONFIG_* env is unavailable, `git config --global` is the portable form,
+      # through ci/git-config-global.sh because the Windows runners share one
+      # ~/.gitconfig across three concurrent jobs and a plain write dies on the lock.
       if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       shell: bash
       env:
@@ -284,15 +286,15 @@ runs:
         # multi-valued fails "cannot overwrite multiple values". Reset the key
         # first (--unset-all, tolerate absent on the very first run), then --add
         # both rewrites.
-        git config --global --unset-all url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf 2>/dev/null || true
-        git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
-        git config --global --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "https://github.com/WarrenBrowse/"
+        bash ci/git-config-global.sh --unset-all url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf 2>/dev/null || true
+        bash ci/git-config-global.sh --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
+        bash ci/git-config-global.sh --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "https://github.com/WarrenBrowse/"
         # Authenticated from the first request, for the same reason as the
         # sibling clones above: cargo's fetch of the quinn fork would otherwise
         # start anonymous and die on GitHub's per-IP throttle.
         auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
-        git config --global --unset-all http."https://github.com/WarrenBrowse/".extraheader 2>/dev/null || true
-        git config --global --add http."https://github.com/WarrenBrowse/".extraheader "AUTHORIZATION: basic ${auth}"
+        bash ci/git-config-global.sh --unset-all http."https://github.com/WarrenBrowse/".extraheader 2>/dev/null || true
+        bash ci/git-config-global.sh --add http."https://github.com/WarrenBrowse/".extraheader "AUTHORIZATION: basic ${auth}"
         echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
 
     - name: Assert Cargo.lock pins the quinn fork (prevents silent quinn-patch drop)
@@ -357,7 +359,7 @@ runs:
       if: runner.os != 'macOS'
       shell: bash
       run: |
-        git config --global --add safe.directory '*'
+        bash ci/git-config-global.sh --add safe.directory '*'
         git submodule update --init --depth=1 dist-assets/binaries
 
     - name: Checkout Windows libraries submodule
@@ -365,7 +367,7 @@ runs:
       if: runner.os == 'Windows'
       shell: bash
       run: |
-        git config --global --add safe.directory '*'
+        bash ci/git-config-global.sh --add safe.directory '*'
         git submodule update --init --depth=1 windows
 
     - name: Calculate Windows libraries cache hash
