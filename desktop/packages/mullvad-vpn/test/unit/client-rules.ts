@@ -61,7 +61,16 @@ export interface OutcomeCase {
   name: string;
   status: number;
   body: string;
-  expect: { kind: string; handle?: string; notify_slot?: number | null; reason?: string };
+  expect: {
+    kind: string;
+    handle?: string;
+    notify_slot?: number | null;
+    reason?: string;
+    // The report cases: the created topic and what the broker did with the logs.
+    topic_id?: number;
+    topic_url?: string | null;
+    logs?: string;
+  };
   envelope: string;
   skip?: string[];
 }
