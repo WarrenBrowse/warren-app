@@ -246,6 +246,44 @@ pub struct WarrenStatusSnapshot {
     /// so no part of the daemon, and nothing on the wire, ties the
     /// document to an account.
     pub forum_digest: Option<String>,
+    /// Every OTHER Warren product environment installed alongside this
+    /// build, as the cross-environment watcher last saw it. Empty until the
+    /// first observation, and on a machine that runs a single product it
+    /// stays a list of environments that are never asserting.
+    ///
+    /// Published so a GUI renders the whole picture from one snapshot: a
+    /// beta app can say prod holds the machine, and a prod app can say beta
+    /// holds a tunnel and will stand down.
+    pub foreign_environments: Vec<ForeignEnvSnapshot>,
+    /// Set while this build has stood down for a higher-priority
+    /// environment. `None` is the ordinary state.
+    pub env_yield: Option<EnvYieldSnapshot>,
+}
+
+/// One other product environment, as the watcher last saw it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ForeignEnvSnapshot {
+    /// Stable lowercase environment name ("prod", "staging", "beta").
+    pub name: String,
+    /// True when that environment outranks this build, so it is one this
+    /// build would stand down for.
+    pub outranks_us: bool,
+    /// True when it holds a tunnel in any state other than disconnected, or
+    /// has its kill switch armed. An environment that cannot be reached, or
+    /// whose socket the OS does not vouch for, reads as false.
+    pub asserting: bool,
+}
+
+/// The stand-down this build currently holds.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EnvYieldSnapshot {
+    /// Stable lowercase name of the environment that holds the machine.
+    pub yielded_to: String,
+    /// True when the manual re-enable would be accepted right now, which is
+    /// the only window the design promises: the higher environment stopped,
+    /// or disconnected with its kill switch off. A GUI enables the button on
+    /// this rather than guessing from the states above.
+    pub restorable: bool,
 }
 
 impl Default for WarrenStatusSnapshot {
@@ -269,6 +307,8 @@ impl Default for WarrenStatusSnapshot {
             network_info: None,
             notices: Vec::new(),
             forum_digest: None,
+            foreign_environments: Vec::new(),
+            env_yield: None,
         }
     }
 }
@@ -310,6 +350,8 @@ struct InternalState {
     network_info: Option<NetworkInfoSnapshot>,
     notices: Vec<crate::warren_notices_updater::DisplayNotice>,
     forum_digest: Option<String>,
+    foreign_environments: Vec<ForeignEnvSnapshot>,
+    env_yield: Option<EnvYieldSnapshot>,
 }
 
 impl Default for InternalState {
@@ -331,6 +373,8 @@ impl Default for InternalState {
             network_info: None,
             notices: Vec::new(),
             forum_digest: None,
+            foreign_environments: Vec::new(),
+            env_yield: None,
         }
     }
 }
@@ -401,6 +445,8 @@ impl WarrenStatusCache {
             network_info: inner.network_info.clone(),
             notices: inner.notices.clone(),
             forum_digest: inner.forum_digest.clone(),
+            foreign_environments: inner.foreign_environments.clone(),
+            env_yield: inner.env_yield.clone(),
         }
     }
 
@@ -790,6 +836,37 @@ impl WarrenStatusCache {
                 return;
             }
             inner.notices = notices;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Record what the cross-environment watcher sees: every other product
+    /// environment and the stand-down this build holds, if any.
+    ///
+    /// Idempotent, like [`Self::set_notices`]: the watcher recomputes on
+    /// every observation and most observations change nothing, so an equal
+    /// snapshot must not wake the UI.
+    ///
+    /// Written as one call rather than two setters because the two halves
+    /// are one decision: a client that saw the yield without the states that
+    /// produced it, or the reverse, would render a contradiction for the
+    /// length of one push.
+    pub fn set_env_arbitration(
+        &self,
+        foreign_environments: Vec<ForeignEnvSnapshot>,
+        env_yield: Option<EnvYieldSnapshot>,
+    ) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.foreign_environments == foreign_environments && inner.env_yield == env_yield {
+                return;
+            }
+            inner.foreign_environments = foreign_environments;
+            inner.env_yield = env_yield;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send_replace(snapshot);
@@ -1772,6 +1849,63 @@ mod tests {
             ),
             "failover must not touch nat_pmp state"
         );
+    }
+
+    fn foreign(name: &str, outranks_us: bool, asserting: bool) -> ForeignEnvSnapshot {
+        ForeignEnvSnapshot {
+            name: name.to_owned(),
+            outranks_us,
+            asserting,
+        }
+    }
+
+    /// The UI must be able to render the whole picture from one snapshot:
+    /// every other environment, whether it outranks this build, and whether
+    /// it is asserting, plus the yield and whether it can be cleared now.
+    #[test]
+    fn set_env_arbitration_publishes_every_environment_and_the_yield() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        let envs = vec![foreign("prod", true, true), foreign("staging", true, false)];
+        let held = Some(EnvYieldSnapshot {
+            yielded_to: "prod".to_owned(),
+            restorable: false,
+        });
+        cache.set_env_arbitration(envs.clone(), held.clone());
+
+        assert!(rx.has_changed().unwrap_or(false));
+        let snap = rx.borrow_and_update().clone();
+        assert_eq!(snap.foreign_environments, envs);
+        assert_eq!(snap.env_yield, held);
+    }
+
+    /// Idempotent like `set_notices`: the watcher republishes on every
+    /// observation, and most observations change nothing.
+    #[test]
+    fn set_env_arbitration_is_idempotent_on_an_unchanged_snapshot() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        let envs = vec![foreign("prod", true, false)];
+        cache.set_env_arbitration(envs.clone(), None);
+        rx.borrow_and_update();
+        cache.set_env_arbitration(envs, None);
+        assert!(
+            !rx.has_changed().unwrap_or(false),
+            "an unchanged arbitration snapshot must not wake the UI"
+        );
+    }
+
+    /// A fresh daemon has observed nothing and holds no yield, so the very
+    /// first snapshot a client reads says exactly that.
+    #[test]
+    fn default_snapshot_has_no_foreign_environments_and_no_yield() {
+        let snap = WarrenStatusSnapshot::default();
+        assert!(snap.foreign_environments.is_empty());
+        assert_eq!(snap.env_yield, None);
     }
 
     #[test]

@@ -175,6 +175,37 @@ pub struct Settings {
     /// because the user pinned the key explicitly by typing it.
     #[serde(default)]
     pub warren_custom_exit: WarrenCustomExitSettings,
+    /// Set while this build has stood down for a higher-priority product
+    /// environment that holds the machine (prod outranks staging outranks
+    /// beta). `None` is the ordinary state.
+    ///
+    /// Persisted rather than held in memory because the two settings it
+    /// records are themselves persisted: a daemon that forgot them across a
+    /// restart would leave the user's kill switch and auto-connect off with
+    /// nothing able to put them back.
+    #[serde(default)]
+    pub warren_env_yield: Option<WarrenEnvYield>,
+}
+
+/// What this build gave up when it stood down, and for whom.
+///
+/// The two booleans are the user's own values, captured at the instant of the
+/// stand-down, so clearing the yield restores exactly what they had rather
+/// than a default.
+#[derive(Debug, Clone, Eq, PartialEq, Serialize, Deserialize)]
+pub struct WarrenEnvYield {
+    /// Stable lowercase name of the environment being yielded to, as
+    /// `warren_product_env::ProductEnv::name` spells it ("prod", "staging").
+    ///
+    /// A name rather than an enum so `mullvad-types` keeps no dependency on
+    /// the product-env crate, and so a settings file written by a build that
+    /// knows one more environment still deserialises here.
+    pub yielded_to: String,
+    /// `Settings::auto_connect` at the moment of the stand-down.
+    pub restore_auto_connect: bool,
+    /// `Settings::lockdown_mode` at the moment of the stand-down. Always
+    /// false where the platform has no such setting.
+    pub restore_lockdown_mode: bool,
 }
 
 /// Warren two-relayed QUIC multi-hop settings. Persisted in
@@ -614,6 +645,7 @@ impl Default for Settings {
             warren_nat_pmp: WarrenNatPmpSettings::default(),
             warren_pinned_exit_pubkeys: WarrenPinnedExitPubkeys::default(),
             warren_custom_exit: WarrenCustomExitSettings::default(),
+            warren_env_yield: None,
         }
     }
 }
@@ -917,5 +949,39 @@ mod warren_settings_default_tests {
             "Warren is IPv4-only in /v1; enable_ipv6 must default to false \
              so IPv6 is blocked, not leaked outside the tunnel"
         );
+    }
+}
+
+#[cfg(test)]
+mod warren_env_yield_tests {
+    use super::*;
+
+    /// A settings file written before cross-environment arbitration
+    /// existed carries no `warren_env_yield` key. It must deserialise to
+    /// "not yielded" rather than fail, which is what lets the field ship
+    /// without a settings-version migration.
+    #[test]
+    fn settings_without_the_key_read_as_not_yielded() {
+        let json = serde_json::json!({ "auto_connect": true });
+        let settings: Settings = serde_json::from_value(json).expect("settings deserialise");
+        assert_eq!(settings.warren_env_yield, None);
+        assert!(settings.auto_connect, "the rest of the file still applies");
+    }
+
+    /// The recorded values are what a manual re-enable restores, so they
+    /// have to survive a daemon restart verbatim.
+    #[test]
+    fn a_recorded_yield_round_trips_through_json() {
+        let settings = Settings {
+            warren_env_yield: Some(WarrenEnvYield {
+                yielded_to: "prod".to_owned(),
+                restore_auto_connect: true,
+                restore_lockdown_mode: true,
+            }),
+            ..Default::default()
+        };
+        let json = serde_json::to_string(&settings).expect("serialise");
+        let back: Settings = serde_json::from_str(&json).expect("deserialise");
+        assert_eq!(back.warren_env_yield, settings.warren_env_yield);
     }
 }

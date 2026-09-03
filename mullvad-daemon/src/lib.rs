@@ -53,6 +53,11 @@ mod warren_api_transport;
 /// Shared policy pieces of the periodic signed-artifact refreshers
 /// (fast retry, ETag conditional GET, atomic cache write).
 mod warren_artifact_refresh;
+/// Cross-environment arbitration: while a higher-priority product
+/// environment (prod > staging > beta) holds the machine, this build stands
+/// down by itself. Holds the decision as pure functions and the watcher that
+/// observes the foreign daemons over their own management sockets.
+pub mod warren_env_arbitration;
 mod warren_forum_digest_updater;
 /// App-side wrapper around the SDK's `warren_api::WarrenApiClient` that
 /// rebuilds its owned `WarrenIdentity` from a shared, hot-swappable BIP39
@@ -380,7 +385,15 @@ pub enum Error {
 /// Enum representing commands that can be sent to the daemon.
 pub enum DaemonCommand {
     /// Set target state. Does nothing if the daemon already has the state that is being set.
-    SetTargetState(oneshot::Sender<bool>, TargetState),
+    ///
+    /// `Err` only ever refuses a connect, and only while this build has
+    /// stood down for a higher-priority product environment. A disconnect is
+    /// always accepted: the whole point of the stand-down is to reach the
+    /// disconnected state.
+    SetTargetState(
+        ResponseTx<bool, warren_env_arbitration::EnvYieldError>,
+        TargetState,
+    ),
     /// Reconnect the tunnel, if one is connecting/connected.
     Reconnect(oneshot::Sender<bool>),
     /// Request the current state.
@@ -532,6 +545,15 @@ pub enum DaemonCommand {
         ResponseTx<(), settings::Error>,
         mullvad_types::settings::WarrenNatPmpSettings,
     ),
+    /// Manual re-enable after this build stood down for a higher-priority
+    /// product environment: restore the recorded `lockdown_mode` and
+    /// `auto_connect`, then drop the yield. Refused while that environment
+    /// is still asserting the machine.
+    ///
+    /// Desktop only: neither mobile OS lets one app observe another app's
+    /// VPN state, so no watcher runs there and no yield is ever taken.
+    #[cfg(not(target_os = "android"))]
+    ClearEnvYield(ResponseTx<(), warren_env_arbitration::EnvYieldError>),
     /// Replace the pinned key for `exit_id_hex` with
     /// `new_pubkey_hex` (user accepted a key rotation from the modal).
     /// The daemon clears `WarrenStatusCache.pubkey_mismatch_pending`
@@ -770,6 +792,13 @@ pub(crate) enum InternalDaemonEvent {
     /// trust replacements / resets to the on-disk settings.json and
     /// (for mismatches) to the live `WarrenStatusCache`.
     WarrenPinUpdate(tunnel::WarrenPinUpdate),
+    /// Another product environment's daemon was observed, or went out of
+    /// reach (`None`). Drives the cross-environment arbitration.
+    #[cfg(not(target_os = "android"))]
+    WarrenForeignEnvObserved {
+        env: warren_product_env::ProductEnv,
+        state: Option<warren_env_arbitration::ForeignDaemonState>,
+    },
 }
 
 #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
@@ -1046,6 +1075,12 @@ pub struct Daemon {
     /// (it would use the generator's stale multi-hop circuit, flashing the
     /// wrong exit); the updater issues the single, correct reconnect.
     warren_multi_hop_directory_active: bool,
+    /// Every OTHER product environment installed alongside this build, as
+    /// the cross-environment watcher last saw it. Seeded with one entry per
+    /// environment, all out of reach, so a machine that runs a single
+    /// product publishes a complete and honest list from the first snapshot.
+    #[cfg(not(target_os = "android"))]
+    warren_foreign_envs: Vec<warren_env_arbitration::ForeignEnvObservation>,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -2116,7 +2151,33 @@ impl Daemon {
             warren_auto_recovery_pending: false,
             warren_identity,
             warren_multi_hop_directory_active,
+            #[cfg(not(target_os = "android"))]
+            warren_foreign_envs: warren_env_arbitration::seed_observations(
+                warren_product_env::CURRENT,
+            ),
         };
+
+        // Cross-environment arbitration: watch every OTHER product
+        // environment's daemon so this build can stand down while a
+        // higher-priority one holds the machine. Prod watches the lower ones
+        // too, read-only, so its GUI can say they will stand down; it never
+        // issues a command to them.
+        #[cfg(not(target_os = "android"))]
+        for observation in &daemon.warren_foreign_envs {
+            let env = observation.env;
+            let event_tx = daemon.tx.clone();
+            tokio::spawn(warren_env_arbitration::watch::observe(
+                env,
+                move |env, state| {
+                    event_tx
+                        .send(InternalDaemonEvent::WarrenForeignEnvObserved { env, state })
+                        .is_ok()
+                },
+            ));
+        }
+
+        #[cfg(not(target_os = "android"))]
+        daemon.publish_env_arbitration();
 
         api_availability.unsuspend();
 
@@ -2145,8 +2206,17 @@ impl Daemon {
 
     fn handle_initial_target_state(&mut self) {
         match self.target_state.to_strict() {
-            either::Either::Right(state) => {
+            either::Either::Right(state)
+                if warren_env_arbitration::may_restore_tunnel_on_boot(
+                    true,
+                    self.settings.settings().warren_env_yield.as_ref(),
+                ) =>
+            {
                 self.send_tunnel_command(Self::secured_state_to_tunnel_command(state));
+            }
+            either::Either::Right(_) => {
+                log::info!("not restoring the tunnel: this build has stood down");
+                self.fetch_am_i_mullvad();
             }
             either::Either::Left(_) => {
                 // Fetching GeoIpLocation is automatically done when connecting.
@@ -2256,8 +2326,192 @@ impl Daemon {
             #[cfg(not(target_os = "android"))]
             RestartLockdownDeadman => self.on_restart_lockdown_deadman(),
             WarrenPinUpdate(update) => self.handle_warren_pin_update(update).await,
+            #[cfg(not(target_os = "android"))]
+            WarrenForeignEnvObserved { env, state } => {
+                self.handle_warren_foreign_env_observed(env, state).await;
+            }
         }
         should_stop
+    }
+
+    /// Record what the cross-environment watcher saw and re-run the
+    /// arbitration.
+    ///
+    /// Never used on Android: neither mobile OS lets one app observe
+    /// another app's VPN state, so no watcher is spawned there and the
+    /// stand-down is driven by package presence instead.
+    #[cfg(not(target_os = "android"))]
+    async fn handle_warren_foreign_env_observed(
+        &mut self,
+        env: warren_product_env::ProductEnv,
+        state: Option<warren_env_arbitration::ForeignDaemonState>,
+    ) {
+        let Some(slot) = self
+            .warren_foreign_envs
+            .iter_mut()
+            .find(|obs| obs.env == env)
+        else {
+            return;
+        };
+        if slot.state == state {
+            return;
+        }
+        slot.state = state;
+
+        let held = self
+            .settings
+            .settings()
+            .warren_env_yield
+            .as_ref()
+            .map(|record| record.yielded_to.clone());
+        if let warren_env_arbitration::Arbitration::StandDown(to) =
+            warren_env_arbitration::arbitrate(&self.warren_foreign_envs, held.as_deref())
+        {
+            self.stand_down_for(to).await;
+        }
+        self.publish_env_arbitration();
+    }
+
+    /// Stand this build down for `to`, in the one order that keeps the
+    /// machine covered: record, disconnect, disarm, then stop auto-connect.
+    ///
+    /// The disconnect and the disarm both travel the tunnel state machine's
+    /// single command channel, so issuing them in this order is what keeps
+    /// the block armed until the tunnel is actually down.
+    #[cfg(not(target_os = "android"))]
+    async fn stand_down_for(&mut self, to: warren_product_env::ProductEnv) {
+        log::info!(
+            "the {} product environment holds this machine, standing down",
+            to.name()
+        );
+        let plan = {
+            let settings = self.settings.settings();
+            warren_env_arbitration::stand_down_plan(
+                to,
+                settings.auto_connect,
+                settings.lockdown_mode,
+            )
+        };
+        for step in plan {
+            match step {
+                warren_env_arbitration::StandDownStep::RecordYield(record) => {
+                    if let Err(error) = self
+                        .settings
+                        .update(move |settings| settings.warren_env_yield = Some(record))
+                        .await
+                    {
+                        // Without the record nothing can restore the user's
+                        // two settings, so the teardown must not proceed.
+                        log::error!(
+                            "{}",
+                            error.display_chain_with_msg("Unable to record the environment yield")
+                        );
+                        return;
+                    }
+                }
+                warren_env_arbitration::StandDownStep::Disconnect => {
+                    self.set_target_state(TargetState::Unsecured).await;
+                }
+                warren_env_arbitration::StandDownStep::DisarmLockdown => {
+                    match self
+                        .settings
+                        .update(|settings| settings.lockdown_mode = false)
+                        .await
+                    {
+                        Ok(true) => {
+                            let (tx, _rx) = oneshot::channel();
+                            self.send_tunnel_command(TunnelCommand::LockdownMode(
+                                LockdownMode::from(false),
+                                tx,
+                            ));
+                        }
+                        Ok(false) => (),
+                        Err(error) => log::error!(
+                            "{}",
+                            error.display_chain_with_msg("Unable to disarm lockdown mode")
+                        ),
+                    }
+                }
+                warren_env_arbitration::StandDownStep::DisableAutoConnect => {
+                    if let Err(error) = self
+                        .settings
+                        .update(|settings| settings.auto_connect = false)
+                        .await
+                    {
+                        log::error!(
+                            "{}",
+                            error.display_chain_with_msg("Unable to disable auto-connect")
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    /// Manual re-enable: put the two recorded settings back and drop the
+    /// yield. Refused while the higher environment still asserts, so the
+    /// window is the one the design promises.
+    #[cfg(not(target_os = "android"))]
+    async fn on_clear_env_yield(
+        &mut self,
+        tx: ResponseTx<(), warren_env_arbitration::EnvYieldError>,
+    ) {
+        let record = self.settings.settings().warren_env_yield.clone();
+        if let Err(refusal) =
+            warren_env_arbitration::may_clear_yield(&self.warren_foreign_envs, record.as_ref())
+        {
+            Self::oneshot_send(tx, Err(refusal), "clear_env_yield refused");
+            return;
+        }
+        let record = record.expect("may_clear_yield rejects an absent record");
+        for step in warren_env_arbitration::restore_plan(&record) {
+            let outcome = match step {
+                warren_env_arbitration::RestoreStep::RestoreLockdown(armed) => {
+                    let outcome = self
+                        .settings
+                        .update(move |settings| settings.lockdown_mode = armed)
+                        .await;
+                    if matches!(outcome, Ok(true)) {
+                        let (lockdown_tx, _rx) = oneshot::channel();
+                        self.send_tunnel_command(TunnelCommand::LockdownMode(
+                            LockdownMode::from(armed),
+                            lockdown_tx,
+                        ));
+                    }
+                    outcome
+                }
+                warren_env_arbitration::RestoreStep::RestoreAutoConnect(enabled) => {
+                    self.settings
+                        .update(move |settings| settings.auto_connect = enabled)
+                        .await
+                }
+                warren_env_arbitration::RestoreStep::ClearYield => {
+                    self.settings
+                        .update(|settings| settings.warren_env_yield = None)
+                        .await
+                }
+            };
+            if let Err(error) = outcome {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("Unable to clear the environment yield")
+                );
+            }
+        }
+        self.publish_env_arbitration();
+        Self::oneshot_send(tx, Ok(()), "clear_env_yield response");
+    }
+
+    /// Publish the whole coexistence picture in one snapshot, so no client
+    /// ever renders the yield without the states that produced it.
+    #[cfg(not(target_os = "android"))]
+    fn publish_env_arbitration(&self) {
+        let (environments, env_yield) = warren_env_arbitration::publication(
+            &self.warren_foreign_envs,
+            self.settings.settings().warren_env_yield.as_ref(),
+        );
+        self.warren_status_cache
+            .set_env_arbitration(environments, env_yield);
     }
 
     /// Route a verify-hook event to (a) the live
@@ -2720,6 +2974,8 @@ impl Daemon {
                 self.on_set_warren_multi_hop_settings(tx, settings).await
             }
             SetNatPmpSettings(tx, settings) => self.on_set_nat_pmp_settings(tx, settings).await,
+            #[cfg(not(target_os = "android"))]
+            ClearEnvYield(tx) => self.on_clear_env_yield(tx).await,
             TrustNewExitKey {
                 tx,
                 exit_id_hex,
@@ -3061,19 +3317,45 @@ impl Daemon {
 
     async fn on_set_target_state(
         &mut self,
-        tx: oneshot::Sender<bool>,
+        tx: ResponseTx<bool, warren_env_arbitration::EnvYieldError>,
         new_target_state: TargetState,
     ) {
+        // Refuse a connect while a higher-priority product environment holds
+        // the machine, and name it. A silent no-op would leave the user
+        // pressing connect with nothing on screen saying why nothing
+        // happens. A DISCONNECT is never refused: reaching the disconnected
+        // state is the whole point of the stand-down.
+        if let Err(refusal) = warren_env_arbitration::refuse_target_state(
+            new_target_state == TargetState::Secured,
+            self.settings.settings().warren_env_yield.as_ref(),
+        ) {
+            Self::oneshot_send(tx, Err(refusal), "state change refused");
+            return;
+        }
         // The user has taken control of the tunnel, so any explanation we
         // were holding for them about a restore they did not ask for is
         // spent. This is the only clearer: the flag has no timer.
         self.warren_status_cache
             .clear_restored_after_unclean_shutdown();
         let state_change_initated = self.set_target_state(new_target_state).await;
-        Self::oneshot_send(tx, state_change_initated, "state change initiated");
+        Self::oneshot_send(tx, Ok(state_change_initated), "state change initiated");
     }
 
     fn on_reconnect(&mut self, tx: oneshot::Sender<bool>) {
+        // The error-state arm below brings the tunnel up whatever the target
+        // state says, which is the one way a reconnect could put this build
+        // back on the machine after it stood down. The user-facing connect
+        // path answers with the typed refusal; here the yield is already on
+        // screen through `WarrenStatus`, so "no reconnect issued" is enough.
+        if warren_env_arbitration::refuse_target_state(
+            true,
+            self.settings.settings().warren_env_yield.as_ref(),
+        )
+        .is_err()
+        {
+            Self::oneshot_send(tx, false, "reconnect refused while stood down");
+            return;
+        }
         if *self.target_state == TargetState::Secured || self.tunnel_state.is_in_error_state() {
             self.connect_tunnel();
             Self::oneshot_send(tx, true, "reconnect issued");

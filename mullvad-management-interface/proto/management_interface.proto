@@ -173,6 +173,17 @@ service ManagementService {
   // this for live UI updates without polling.
   rpc WarrenStatusUpdates(google.protobuf.Empty) returns (stream WarrenStatus) {}
 
+  // Manual re-enable after this build stood down for a higher-priority
+  // product environment: restores the `auto_connect` and `lockdown_mode` the
+  // user had at the instant of the stand-down and drops the yield, so
+  // connects are accepted again. The tunnel is deliberately not reconnected.
+  //
+  // FAILED_PRECONDITION while that environment is still asserting the
+  // machine, so the re-enable is only ever available in the window the
+  // design promises: it stopped, or it disconnected with its kill switch
+  // off. This build re-yields on its own the moment it connects again.
+  rpc ClearEnvYield(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // Session H A.4: TOFU pubkey-pinning user actions. The daemon-side
   // verify hook refuses connects when the served Ed25519 pubkey for
   // a known `exit_id` differs from the locally pinned baseline; the
@@ -946,6 +957,42 @@ message WarrenStatus {
   // timer, because the machine may sit untouched for hours and the
   // explanation has to survive until someone looks.
   bool restored_after_unclean_shutdown = 15;
+  // Every OTHER Warren product environment installed alongside this build,
+  // as the cross-environment watcher last saw it. Empty until the first
+  // observation. A GUI renders the whole coexistence picture from this plus
+  // env_yield, with no second query.
+  repeated WarrenForeignEnv foreign_environments = 16;
+  // Set while this build has stood down for a higher-priority environment
+  // (prod outranks staging outranks beta). Absent in the ordinary state.
+  WarrenEnvYield env_yield = 17;
+}
+
+// One other product environment, as the cross-environment watcher last saw
+// it. An environment that cannot be reached, or whose socket the OS does not
+// vouch for, reports asserting = false: wrongly yielding would disarm this
+// build's own kill switch on no evidence.
+message WarrenForeignEnv {
+  // Stable lowercase environment name ("prod", "staging", "beta").
+  string name = 1;
+  // True when that environment outranks this build, so it is one this build
+  // would stand down for. False for a lower environment, which is watched
+  // only so the UI can say it will stand down.
+  bool outranks_us = 2;
+  // True when it holds a tunnel in any state other than disconnected, or has
+  // its kill switch armed. Nothing else counts: an installed but idle
+  // environment leaves the others alone.
+  bool asserting = 3;
+}
+
+// The stand-down this build currently holds.
+message WarrenEnvYield {
+  // Stable lowercase name of the environment that holds the machine.
+  string yielded_to = 1;
+  // True when ClearEnvYield would be accepted right now. That window opens
+  // only once the higher environment stopped, or disconnected with its kill
+  // switch off; a GUI enables its re-enable control on this flag rather than
+  // deducing it from the states above.
+  bool restorable = 2;
 }
 
 // One operator-published broadcast notice, ready to display. Carries no

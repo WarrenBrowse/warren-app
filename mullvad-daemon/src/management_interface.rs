@@ -245,6 +245,19 @@ fn warren_status_snapshot_to_proto(
             })
             .collect(),
         forum_digest: snap.forum_digest,
+        foreign_environments: snap
+            .foreign_environments
+            .into_iter()
+            .map(|env| types::WarrenForeignEnv {
+                name: env.name,
+                outranks_us: env.outranks_us,
+                asserting: env.asserting,
+            })
+            .collect(),
+        env_yield: snap.env_yield.map(|held| types::WarrenEnvYield {
+            yielded_to: held.yielded_to,
+            restorable: held.restorable,
+        }),
     }
 }
 
@@ -270,7 +283,10 @@ impl ManagementService for ManagementServiceImpl {
 
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SetTargetState(tx, TargetState::Secured))?;
-        let connect_issued = self.wait_for_result(rx).await?;
+        let connect_issued = self
+            .wait_for_result(rx)
+            .await?
+            .map_err(map_env_yield_error)?;
         Ok(Response::new(connect_issued))
     }
 
@@ -280,8 +296,33 @@ impl ManagementService for ManagementServiceImpl {
 
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SetTargetState(tx, TargetState::Unsecured))?;
-        let disconnect_issued = self.wait_for_result(rx).await?;
+        let disconnect_issued = self
+            .wait_for_result(rx)
+            .await?
+            .map_err(map_env_yield_error)?;
         Ok(Response::new(disconnect_issued))
+    }
+
+    /// Manual re-enable after a stand-down for a higher-priority product
+    /// environment. Never reachable on Android, where no watcher runs and
+    /// the yield is therefore always absent.
+    async fn clear_env_yield(&self, _: Request<()>) -> ServiceResult<()> {
+        log::debug!("clear_env_yield");
+
+        #[cfg(target_os = "android")]
+        return Err(Status::unimplemented(
+            "cross-environment arbitration is desktop-only",
+        ));
+
+        #[cfg(not(target_os = "android"))]
+        {
+            let (tx, rx) = oneshot::channel();
+            self.send_command_to_daemon(DaemonCommand::ClearEnvYield(tx))?;
+            self.wait_for_result(rx)
+                .await?
+                .map(Response::new)
+                .map_err(map_env_yield_error)
+        }
     }
 
     async fn reconnect_tunnel(&self, _: Request<()>) -> ServiceResult<bool> {
@@ -2324,6 +2365,15 @@ fn validate_forum_sid(sid: &str) -> Result<(), Status> {
 }
 
 /// Converts [`crate::Error`] into a tonic status.
+/// A refusal that comes from cross-environment arbitration is a precondition
+/// failure, not an internal error: the request was well formed and the daemon
+/// is healthy, another product environment simply holds the machine. The
+/// message names that environment so a client can say which one without
+/// parsing anything.
+fn map_env_yield_error(error: crate::warren_env_arbitration::EnvYieldError) -> Status {
+    Status::failed_precondition(error.to_string())
+}
+
 fn map_daemon_error(error: crate::Error) -> Status {
     use crate::Error as DaemonError;
 

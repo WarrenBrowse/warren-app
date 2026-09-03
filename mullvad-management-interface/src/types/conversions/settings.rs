@@ -421,6 +421,12 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             // the pin table). Default-initialise from a gRPC update;
             // the daemon retains its own copy.
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
+            // Same reason as the pin table: the cross-environment yield is
+            // daemon-internal, and it is the one record that decides whether
+            // a connect is refused. Round-tripping it through `SetSettings`
+            // would let any local client clear a stand-down without the
+            // `ClearEnvYield` guard, which is the whole check.
+            warren_env_yield: None,
         })
     }
 }
