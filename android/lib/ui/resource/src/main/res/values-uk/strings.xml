@@ -615,4 +615,7 @@
         <item quantity="many">%1$d нових сповіщень на форумі</item>
         <item quantity="other">%1$d нового сповіщення на форумі</item>
     </plurals>
+    <string name="env_stand_down_title">ПРІОРИТЕТ У ПРОДАКШЕНУ</string>
+    <string name="env_stand_down_message">На цьому пристрої встановлено Warren VPN, і він має пріоритет, тому ця збірка відключилася та вимкнула режим блокування.</string>
+    <string name="env_stand_down_re_enable">Усе одно використовувати цю збірку</string>
 </resources>

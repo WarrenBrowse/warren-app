@@ -607,4 +607,7 @@
         <item quantity="one">Neue Benachrichtigung im Forum</item>
         <item quantity="other">%1$d neue Benachrichtigungen im Forum</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUKTION HAT VORRANG</string>
+    <string name="env_stand_down_message">Warren VPN ist auf diesem Gerät installiert und hat Vorrang, daher hat diese Version die Verbindung getrennt und den Sperrmodus deaktiviert.</string>
+    <string name="env_stand_down_re_enable">Diese Version trotzdem verwenden</string>
 </resources>

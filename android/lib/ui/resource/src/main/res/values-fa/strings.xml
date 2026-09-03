@@ -607,4 +607,7 @@
         <item quantity="one">اعلان تازه در انجمن</item>
         <item quantity="other">%1$d اعلان تازه در انجمن</item>
     </plurals>
+    <string name="env_stand_down_title">نسخه نهایی اولویت دارد</string>
+    <string name="env_stand_down_message">Warren VPN روی این دستگاه نصب است و اولویت دارد، بنابراین این نسخه قطع شد و حالت قفل را خاموش کرد.</string>
+    <string name="env_stand_down_re_enable">به هر حال از این نسخه استفاده کن</string>
 </resources>

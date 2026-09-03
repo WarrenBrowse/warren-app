@@ -607,4 +607,7 @@
         <item quantity="one">Ny avisering på forumet</item>
         <item quantity="other">%1$d nya aviseringar på forumet</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUKTION HAR FÖRETRÄDE</string>
+    <string name="env_stand_down_message">Warren VPN är installerat på den här enheten och har företräde, så den här versionen kopplade från och stängde av låsningsläget.</string>
+    <string name="env_stand_down_re_enable">Använd den här versionen ändå</string>
 </resources>

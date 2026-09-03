@@ -603,4 +603,7 @@
     <plurals name="forum_activity_notification_several">
         <item quantity="other">论坛有 %1$d 条新通知</item>
     </plurals>
+    <string name="env_stand_down_title">正式版优先</string>
+    <string name="env_stand_down_message">本设备已安装 Warren VPN，它拥有优先权，因此此版本已断开连接并关闭了锁定模式。</string>
+    <string name="env_stand_down_re_enable">仍然使用此版本</string>
 </resources>

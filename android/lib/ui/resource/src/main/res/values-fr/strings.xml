@@ -607,4 +607,7 @@
         <item quantity="one">Nouvelle notification sur le forum</item>
         <item quantity="other">%1$d nouvelles notifications sur le forum</item>
     </plurals>
+    <string name="env_stand_down_title">LA PRODUCTION EST PRIORITAIRE</string>
+    <string name="env_stand_down_message">Warren VPN est installé sur cet appareil et il est prioritaire : cette version s’est déconnectée et a désactivé le mode verrouillage.</string>
+    <string name="env_stand_down_re_enable">Utiliser quand même cette version</string>
 </resources>

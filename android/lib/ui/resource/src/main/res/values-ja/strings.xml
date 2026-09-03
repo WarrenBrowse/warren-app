@@ -603,4 +603,7 @@
     <plurals name="forum_activity_notification_several">
         <item quantity="other">フォーラムに新着通知 %1$d 件</item>
     </plurals>
+    <string name="env_stand_down_title">本番版が優先されます</string>
+    <string name="env_stand_down_message">このデバイスには Warren VPN がインストールされており、そちらが優先されるため、このビルドは接続を切断し、ロックダウンモードをオフにしました。</string>
+    <string name="env_stand_down_re_enable">それでもこのビルドを使う</string>
 </resources>

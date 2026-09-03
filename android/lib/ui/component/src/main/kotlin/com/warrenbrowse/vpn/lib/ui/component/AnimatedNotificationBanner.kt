@@ -71,6 +71,7 @@ fun AnimatedNotificationBanner(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
+    onClickReEnableAfterStandDown: () -> Unit,
 ) {
     // Fix for animating to invisible state
     val previous = rememberPrevious(current = notification, shouldUpdate = { _, _ -> true })
@@ -108,6 +109,7 @@ fun AnimatedNotificationBanner(
                     onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
                     onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                     onClickDismissExitSwitched = onClickDismissExitSwitched,
+                    onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                 ),
             )
     }

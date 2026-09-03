@@ -93,8 +93,38 @@ fun InAppNotification.toNotificationData(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
+    onClickReEnableAfterStandDown: () -> Unit,
 ) =
     when (this) {
+        InAppNotification.EnvStandDown ->
+            NotificationData(
+                title = stringResource(id = R.string.env_stand_down_title),
+                // Two plain resources, rendered verbatim: no operator-authored
+                // text reaches this banner, so nothing here goes through
+                // HtmlCompat. The way back is the link rather than the single
+                // action slot, because an icon alone would carry no reason.
+                message =
+                    ClickableText(
+                        text =
+                            buildAnnotatedString {
+                                append(stringResource(id = R.string.env_stand_down_message))
+                                append(SPACE_CHAR)
+                                withStyle(
+                                    SpanStyle(
+                                        textDecoration = TextDecoration.Underline,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                ) {
+                                    append(stringResource(id = R.string.env_stand_down_re_enable))
+                                }
+                                append(DOT_CHAR)
+                            },
+                        onClick = onClickReEnableAfterStandDown,
+                        contentDescription =
+                            stringResource(id = R.string.env_stand_down_re_enable),
+                    ),
+                statusLevel = statusLevel,
+            )
         InAppNotification.HostOffline ->
             NotificationData(
                 title = stringResource(id = R.string.no_internet_connection),

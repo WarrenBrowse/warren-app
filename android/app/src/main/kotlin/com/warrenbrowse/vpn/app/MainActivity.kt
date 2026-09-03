@@ -18,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import androidx.metrics.performance.JankStats
 import arrow.core.merge
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.map
@@ -48,9 +49,11 @@ import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionState
+import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.android.inject
 import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
@@ -101,6 +104,15 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
         loadKoinModules(listOf(uiModule))
 
         lifecycle.addObserver(warrenAppViewModel)
+
+        // Coexistence: a higher-priority product environment installed on
+        // this device stands this build down, once, on the transition. Off
+        // the main thread, because the package lookup is a binder call and
+        // the settings it may rewrite are on disk. Here rather than in the
+        // Application, because the teardown dispatches a foreground service
+        // and the OS only accepts that from a foregrounded app.
+        val envStandDown = getKoin().get<EnvStandDownUseCase>()
+        lifecycleScope.launch(Dispatchers.IO) { envStandDown.refresh() }
 
         installSplashScreen().setKeepOnScreenCondition {
             val isReady = isReadyNextDraw

@@ -1,0 +1,13 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+        Package visibility for the production install. From Android 11 a
+        `getPackageInfo` for an undeclared package throws exactly the same
+        NameNotFoundException as a package that is genuinely absent, so without
+        this entry the stand-down would read "production is not installed"
+        forever and never fire. It lives in the flavor manifests rather than the
+        shared one: the production build has no higher environment to look for.
+    -->
+    <queries>
+        <package android:name="com.warrenbrowse.vpn" />
+    </queries>
+</manifest>

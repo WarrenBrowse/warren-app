@@ -645,4 +645,7 @@
         <item quantity="one">New notification on the forum</item>
         <item quantity="other">%1$d new notifications on the forum</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUCTION HAS PRIORITY</string>
+    <string name="env_stand_down_message">Warren VPN is installed on this device and takes priority, so this build disconnected and turned lockdown mode off.</string>
+    <string name="env_stand_down_re_enable">Use this build anyway</string>
 </resources>

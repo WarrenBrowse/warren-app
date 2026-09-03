@@ -15,6 +15,7 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.InAppNotification
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
@@ -32,6 +33,7 @@ class InAppNotificationControllerTest {
         MutableStateFlow<InAppNotification.NewVersionChangelog?>(null)
     private val versionNotifications = MutableStateFlow<InAppNotification.UnsupportedVersion?>(null)
     private val tunnelStateNotifications = MutableStateFlow<InAppNotification?>(null)
+    private val envStandDownNotifications = MutableStateFlow<InAppNotification?>(null)
 
     private lateinit var job: Job
 
@@ -42,10 +44,12 @@ class InAppNotificationControllerTest {
         val newVersionChangelogUseCase: NewChangelogNotificationUseCase = mockk()
         val versionNotificationUseCase: VersionNotificationUseCase = mockk()
         val tunnelStateNotificationUseCase: TunnelStateNotificationUseCase = mockk()
+        val envStandDownUseCase: EnvStandDownUseCase = mockk()
         every { newVersionChangelogUseCase.invoke() } returns newVersionChangelogNotifications
         every { versionNotificationUseCase.invoke() } returns versionNotifications
         every { versionNotificationUseCase.invoke() } returns versionNotifications
         every { tunnelStateNotificationUseCase.invoke() } returns tunnelStateNotifications
+        every { envStandDownUseCase.invoke() } returns envStandDownNotifications
         job = Job()
 
         inAppNotificationController =
@@ -54,6 +58,7 @@ class InAppNotificationControllerTest {
                     newVersionChangelogUseCase,
                     versionNotificationUseCase,
                     tunnelStateNotificationUseCase,
+                    envStandDownUseCase,
                 ),
                 CoroutineScope(job + UnconfinedTestDispatcher()),
             )
@@ -78,11 +83,18 @@ class InAppNotificationControllerTest {
         val unsupportedVersion = InAppNotification.UnsupportedVersion(mockk())
         versionNotifications.value = unsupportedVersion
 
+        // The stand-down says this build will not connect at all, so it takes
+        // the head of the ladder: any banner about the connection would be
+        // describing a state this build is no longer trying to reach.
+        val envStandDown = InAppNotification.EnvStandDown
+        envStandDownNotifications.value = envStandDown
+
         inAppNotificationController.notifications.test {
             val notifications = awaitItem()
 
             assertEquals(
                 listOf(
+                    envStandDown,
                     tunnelStateBlocked,
                     unsupportedVersion,
                     newVersionChangelog,

@@ -35,7 +35,7 @@ sealed interface ExitKeyVerdict {
  * so callers (e.g. [WarrenTunnelConfigBuilder]) can read them without
  * suspending.
  */
-class WarrenLocalSettingsRepository(context: Context) {
+class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore {
 
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -598,6 +598,24 @@ class WarrenLocalSettingsRepository(context: Context) {
         _onboardingCompleted.value = done
     }
 
+    override fun readEnvStandDown(): WarrenEnvStandDown =
+        WarrenEnvStandDown(
+            higherEnvironmentSeen = prefs.getBoolean(KEY_ENV_STAND_DOWN_SEEN, false),
+            reEnabled = prefs.getBoolean(KEY_ENV_STAND_DOWN_RE_ENABLED, false),
+            restoreAutoConnect = prefs.getBoolean(KEY_ENV_STAND_DOWN_RESTORE_AUTO_CONNECT, false),
+            restoreBlockingPolicy =
+                prefs.getBoolean(KEY_ENV_STAND_DOWN_RESTORE_BLOCKING_POLICY, false),
+        )
+
+    override fun writeEnvStandDown(record: WarrenEnvStandDown) {
+        prefs.edit()
+            .putBoolean(KEY_ENV_STAND_DOWN_SEEN, record.higherEnvironmentSeen)
+            .putBoolean(KEY_ENV_STAND_DOWN_RE_ENABLED, record.reEnabled)
+            .putBoolean(KEY_ENV_STAND_DOWN_RESTORE_AUTO_CONNECT, record.restoreAutoConnect)
+            .putBoolean(KEY_ENV_STAND_DOWN_RESTORE_BLOCKING_POLICY, record.restoreBlockingPolicy)
+            .apply()
+    }
+
     /** Set the TUN MTU, clamped to [MTU_MIN]..[MTU_MAX]. */
     fun setTunnelMtu(mtu: Int) {
         val clamped = mtu.coerceIn(MTU_MIN, MTU_MAX)
@@ -740,6 +758,12 @@ class WarrenLocalSettingsRepository(context: Context) {
         private const val MAX_RECENT_EXITS = 5
         private const val KEY_IPV6_ENABLED = "ipv6_enabled"
         private const val KEY_LOCKDOWN_MODE = "lockdown_mode"
+        private const val KEY_ENV_STAND_DOWN_SEEN = "env_stand_down_seen"
+        private const val KEY_ENV_STAND_DOWN_RE_ENABLED = "env_stand_down_re_enabled"
+        private const val KEY_ENV_STAND_DOWN_RESTORE_AUTO_CONNECT =
+            "env_stand_down_restore_auto_connect"
+        private const val KEY_ENV_STAND_DOWN_RESTORE_BLOCKING_POLICY =
+            "env_stand_down_restore_blocking_policy"
     private const val KEY_ALLOW_LAN = "allow_lan"
     private const val KEY_SPLIT_TUNNELING_ENABLED = "split_tunneling_enabled"
     private const val KEY_EXCLUDED_APPS = "split_tunneling_excluded_apps"

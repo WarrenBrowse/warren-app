@@ -607,4 +607,7 @@
         <item quantity="one">Forumda yeni bildirim</item>
         <item quantity="other">Forumda %1$d yeni bildirim</item>
     </plurals>
+    <string name="env_stand_down_title">ÜRETİM SÜRÜMÜ ÖNCELİKLİ</string>
+    <string name="env_stand_down_message">Bu cihazda Warren VPN kurulu ve önceliği var, bu nedenle bu sürüm bağlantıyı kesti ve kilitleme modunu kapattı.</string>
+    <string name="env_stand_down_re_enable">Yine de bu sürümü kullan</string>
 </resources>

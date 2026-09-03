@@ -596,6 +596,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 }
             },
             onClickDismissExitSwitched = connectViewModel::acknowledgeExitSwitch,
+            onClickReEnableAfterStandDown = connectViewModel::reEnableAfterStandDown,
             forumSlot = forumSlot,
             onForumClick =
                 dropUnlessResumed {
@@ -703,6 +704,7 @@ fun ConnectScreen(
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit = {},
     onClickDismissExitSwitched: () -> Unit = {},
+    onClickReEnableAfterStandDown: () -> Unit = {},
     // The desktop header's forum slot: the bell with its badge, the lifebuoy
     // for a wallet with no forum account, nothing when the setting is off.
     forumSlot: ForumHeaderSlot? = null,
@@ -748,6 +750,7 @@ fun ConnectScreen(
                 onClickShowAndroid16UpgradeInfo,
                 onClickDismissUpdateAvailable,
                 onClickDismissExitSwitched,
+                onClickReEnableAfterStandDown,
             )
         }
 
@@ -820,6 +823,7 @@ private fun Content(
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
+    onClickReEnableAfterStandDown: () -> Unit,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
     // time so the burrow foreground clears the card in every state, tracking
@@ -872,6 +876,7 @@ private fun Content(
                             onClickDismissAndroid16UpgradeWarning,
                         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                         onClickDismissExitSwitched = onClickDismissExitSwitched,
+                        onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                     )
                     if (showBetaBadge) {
                         // No vertical padding: the badge reserves its 48 dp touch

@@ -17,6 +17,18 @@ sealed class InAppNotification {
     abstract val statusLevel: StatusLevel
     abstract val priority: Long
 
+    // A higher-priority product environment (prod over staging over beta) is
+    // installed on this device, so this build took its tunnel down and will not
+    // bring it back until the user says so. Ranked above every tunnel banner
+    // because it explains why this build is not connecting at all: a banner
+    // about the connection would describe a state it is not trying to reach.
+    // A deliberate stand-down rather than a failure, so it is a warning, not an
+    // error.
+    data object EnvStandDown : InAppNotification() {
+        override val statusLevel = StatusLevel.Warning
+        override val priority: Long = 1008
+    }
+
     // Shown in every tunnel state while the device has no usable network:
     // the tunnel machinery can hold Connected through its redial window, so
     // the offline verdict must outrank every tunnel-state banner (desktop

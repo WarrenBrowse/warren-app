@@ -615,4 +615,7 @@
         <item quantity="few">%1$d notificări noi pe forum</item>
         <item quantity="other">%1$d de notificări noi pe forum</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUCȚIA ARE PRIORITATE</string>
+    <string name="env_stand_down_message">Warren VPN este instalat pe acest dispozitiv și are prioritate, așa că această versiune s-a deconectat și a dezactivat modul Blocare.</string>
+    <string name="env_stand_down_re_enable">Folosește totuși această versiune</string>
 </resources>

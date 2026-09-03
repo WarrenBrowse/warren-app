@@ -623,4 +623,7 @@
         <item quantity="many">%1$d إشعارًا جديدًا في المنتدى</item>
         <item quantity="other">%1$d إشعار جديد في المنتدى</item>
     </plurals>
+    <string name="env_stand_down_title">الإنتاج له الأولوية</string>
+    <string name="env_stand_down_message">Warren VPN مثبت على هذا الجهاز وله الأولوية، لذلك قطع هذا الإصدار الاتصال وأوقف وضع التأمين.</string>
+    <string name="env_stand_down_re_enable">استخدام هذا الإصدار على أي حال</string>
 </resources>

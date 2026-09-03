@@ -1,11 +1,14 @@
 package com.warrenbrowse.vpn.di
 
 import android.content.ComponentName
+import android.content.pm.PackageManager
 import android.os.Build
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
+import com.warrenbrowse.vpn.app.product.PROD_APPLICATION_ID
+import com.warrenbrowse.vpn.app.product.isApplicationInstalled
 import com.warrenbrowse.vpn.app.WarrenAppViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.AppInfoViewModel
 import com.warrenbrowse.vpn.feature.appinfo.impl.changelog.ChangelogViewModel
@@ -36,6 +39,10 @@ import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.RelayListRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
@@ -43,10 +50,12 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryNotificat
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ConnectingStuckNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitEgressNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.HostOfflineNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.StandDownSetting
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.UpdateAvailableNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.VersionNotificationUseCase
@@ -125,6 +134,44 @@ val uiModule = module {
         )
     } bind InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
+    // Coexistence with a higher-priority product environment (prod over
+    // staging over beta). Presence of the other install is the whole rule,
+    // because neither mobile OS lets one app read another app's VPN state;
+    // the production build looks for nothing, since no environment outranks
+    // it. Registered under its own type too: the connect screen brings this
+    // build back through it.
+    single {
+        val localSettings = get<WarrenLocalSettingsRepository>()
+        val autoStart = get<AutoStartAndConnectOnBootRepository>()
+        val packageManager = get<PackageManager>()
+        val tunnelState = get<WarrenTunnelStateProvider>()
+        val disconnect = get<WarrenQuinnDisconnectInvoker>()
+        EnvStandDownUseCase(
+            store = localSettings,
+            higherEnvironmentInstalled = {
+                BuildConfig.APPLICATION_ID != PROD_APPLICATION_ID &&
+                    packageManager.isApplicationInstalled(PROD_APPLICATION_ID)
+            },
+            // A disconnect dispatch starts the tunnel service when nothing is
+            // running, so the teardown only speaks when there is a tunnel to
+            // take down.
+            stopTunnel = {
+                if (tunnelState.connectedInfo.value !is WarrenConnectedInfo.Disconnected) {
+                    disconnect.disconnect()
+                }
+            },
+            autoConnect =
+                StandDownSetting(
+                    read = { autoStart.autoStartAndConnectOnBoot.value },
+                    write = autoStart::setAutoStartAndConnectOnBoot,
+                ),
+            blockingPolicy =
+                StandDownSetting(
+                    read = { localSettings.lockdownMode.value },
+                    write = localSettings::setLockdownMode,
+                ),
+        )
+    } bind InAppNotificationUseCase::class
     if (Build.VERSION.SDK_INT == Build.VERSION_CODES.BAKLAVA) {
         single { Android16UpdateWarningUseCase(get(), get()) } bind InAppNotificationUseCase::class
     }
@@ -169,6 +216,7 @@ val uiModule = module {
             hostOfflineProvider = get(),
             autoRecoveryProvider = get(),
             exitSwitchedNotificationUseCase = get(),
+            envStandDownUseCase = get(),
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }

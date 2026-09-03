@@ -607,4 +607,7 @@
         <item quantity="one">Uusi ilmoitus foorumilla</item>
         <item quantity="other">%1$d uutta ilmoitusta foorumilla</item>
     </plurals>
+    <string name="env_stand_down_title">TUOTANTO ON ETUSIJALLA</string>
+    <string name="env_stand_down_message">Warren VPN on asennettu tähän laitteeseen ja on etusijalla, joten tämä versio katkaisi yhteyden ja poisti lukitustilan käytöstä.</string>
+    <string name="env_stand_down_re_enable">Käytä silti tätä versiota</string>
 </resources>

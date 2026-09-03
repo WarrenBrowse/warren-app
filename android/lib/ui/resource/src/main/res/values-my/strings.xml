@@ -603,4 +603,7 @@
     <plurals name="forum_activity_notification_several">
         <item quantity="other">ဖိုရမ်တွင် အသိပေးချက်အသစ် %1$d ခု</item>
     </plurals>
+    <string name="env_stand_down_title">ထုတ်လုပ်မှုဗားရှင်းက ဦးစားပေးဖြစ်သည်</string>
+    <string name="env_stand_down_message">ဤစက်ပစ္စည်းတွင် Warren VPN ကို ထည့်သွင်းထားပြီး ၎င်းက ဦးစားပေးဖြစ်သောကြောင့် ဤဗားရှင်းသည် ချိတ်ဆက်မှုကို ဖြုတ်လိုက်ပြီး လော့ခ်ဒေါင်းစနစ်ကို ပိတ်လိုက်သည်။</string>
+    <string name="env_stand_down_re_enable">ဤဗားရှင်းကို ဆက်လက်အသုံးပြုရန်</string>
 </resources>

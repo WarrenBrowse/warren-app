@@ -603,4 +603,7 @@
     <plurals name="forum_activity_notification_several">
         <item quantity="other">มีการแจ้งเตือนใหม่ในฟอรัม %1$d รายการ</item>
     </plurals>
+    <string name="env_stand_down_title">รุ่นโปรดักชันมีลำดับความสำคัญสูงกว่า</string>
+    <string name="env_stand_down_message">มีการติดตั้ง Warren VPN บนอุปกรณ์นี้และมีลำดับความสำคัญสูงกว่า บิลด์นี้จึงตัดการเชื่อมต่อและปิดโหมดล็อกดาวน์</string>
+    <string name="env_stand_down_re_enable">ใช้บิลด์นี้ต่อไป</string>
 </resources>

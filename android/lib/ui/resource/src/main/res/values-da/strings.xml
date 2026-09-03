@@ -607,4 +607,7 @@
         <item quantity="one">Ny notifikation på forummet</item>
         <item quantity="other">%1$d nye notifikationer på forummet</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUKTION HAR PRIORITET</string>
+    <string name="env_stand_down_message">Warren VPN er installeret på denne enhed og har prioritet, så denne version afbrød forbindelsen og slog Lockdown-tilstand fra.</string>
+    <string name="env_stand_down_re_enable">Brug denne version alligevel</string>
 </resources>

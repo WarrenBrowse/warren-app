@@ -607,4 +607,7 @@
         <item quantity="one">Nieuwe melding op het forum</item>
         <item quantity="other">%1$d nieuwe meldingen op het forum</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUCTIE HEEFT VOORRANG</string>
+    <string name="env_stand_down_message">Warren VPN is op dit apparaat geïnstalleerd en heeft voorrang, dus deze versie heeft de verbinding verbroken en de lockdownmodus uitgeschakeld.</string>
+    <string name="env_stand_down_re_enable">Deze versie toch gebruiken</string>
 </resources>

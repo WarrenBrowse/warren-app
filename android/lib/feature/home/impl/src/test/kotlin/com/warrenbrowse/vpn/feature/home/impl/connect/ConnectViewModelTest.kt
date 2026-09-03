@@ -134,6 +134,7 @@ class ConnectViewModelTest {
                 hostOfflineProvider = mockHostOfflineProvider,
                 autoRecoveryProvider = mockAutoRecoveryProvider,
                 exitSwitchedNotificationUseCase = mockk(relaxed = true),
+                envStandDownUseCase = mockk(relaxed = true),
             )
     }
 

@@ -38,6 +38,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.EnvStandDownUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificationUseCase
 
 @Suppress("LongParameterList")
@@ -59,6 +60,7 @@ class ConnectViewModel(
     hostOfflineProvider: WarrenHostOfflineProvider,
     autoRecoveryProvider: WarrenAutoRecoveryProvider,
     private val exitSwitchedNotificationUseCase: ExitSwitchedNotificationUseCase,
+    private val envStandDownUseCase: EnvStandDownUseCase,
 ) : ViewModel() {
     private val _uiSideEffect = Channel<UiSideEffect>()
 
@@ -238,6 +240,12 @@ class ConnectViewModel(
 
     /** The switch banner is read; the next failover raises it again. */
     fun acknowledgeExitSwitch() = exitSwitchedNotificationUseCase.acknowledge()
+
+    /**
+     * The user wants this build back while the higher-priority install stays
+     * on the device. Sticky: no later start stands down for that same install.
+     */
+    fun reEnableAfterStandDown() = envStandDownUseCase.reEnable()
 
     private fun revokedDeviceEffect() =
         deviceRepository.deviceState.filterIsInstance<DeviceState.Revoked>().map {

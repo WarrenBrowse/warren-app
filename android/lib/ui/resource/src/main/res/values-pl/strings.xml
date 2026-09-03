@@ -615,4 +615,7 @@
         <item quantity="many">%1$d nowych powiadomień na forum</item>
         <item quantity="other">%1$d nowego powiadomienia na forum</item>
     </plurals>
+    <string name="env_stand_down_title">PRODUKCJA MA PIERWSZEŃSTWO</string>
+    <string name="env_stand_down_message">Warren VPN jest zainstalowany na tym urządzeniu i ma pierwszeństwo, więc ta wersja rozłączyła się i wyłączyła tryb Lockdown.</string>
+    <string name="env_stand_down_re_enable">Mimo to użyj tej wersji</string>
 </resources>
