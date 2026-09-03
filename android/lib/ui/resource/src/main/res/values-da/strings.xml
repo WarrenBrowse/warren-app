@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">Hvad skete der?</string>
     <string name="report_problem_what_happened_hint">Hvad så du, og hvad forventede du i stedet? Kopiér enhver fejlmeddelelse. Medtag aldrig din tegnebogsadresse.</string>
     <string name="report_problem_chars">%1$d tegn (mindst %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d tegn</string>
     <string name="report_problem_steps_label">Hvordan kan vi få det til at ske? (valgfrit)</string>
     <string name="report_problem_steps_hint">Hvad gjorde du lige før? Trin for trin, hvis du kan.</string>
     <string name="report_problem_frequency_label">Hvor ofte sker det?</string>

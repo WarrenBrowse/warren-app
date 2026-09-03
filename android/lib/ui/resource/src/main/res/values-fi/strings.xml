@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">Mitä tapahtui?</string>
     <string name="report_problem_what_happened_hint">Mitä näit ja mitä odotit sen sijaan? Kopioi mahdollinen virheilmoitus. Älä koskaan sisällytä lompakkosi osoitetta.</string>
     <string name="report_problem_chars">%1$d merkkiä (vähintään %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d merkkiä</string>
     <string name="report_problem_steps_label">Miten voimme toistaa sen? (valinnainen)</string>
     <string name="report_problem_steps_hint">Mitä teit juuri ennen? Vaihe vaiheelta, jos voit.</string>
     <string name="report_problem_frequency_label">Kuinka usein sitä tapahtuu?</string>

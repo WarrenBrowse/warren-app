@@ -543,6 +543,7 @@
     <string name="report_problem_what_happened_label">Что произошло?</string>
     <string name="report_problem_what_happened_hint">Что вы увидели и чего ожидали вместо этого? Скопируйте любое сообщение об ошибке. Никогда не указывайте адрес своего кошелька.</string>
     <string name="report_problem_chars">%1$d символов (не менее %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d символов</string>
     <string name="report_problem_steps_label">Как нам это воспроизвести? (необязательно)</string>
     <string name="report_problem_steps_hint">Что вы делали непосредственно перед этим? По шагам, если возможно.</string>
     <string name="report_problem_frequency_label">Как часто это происходит?</string>

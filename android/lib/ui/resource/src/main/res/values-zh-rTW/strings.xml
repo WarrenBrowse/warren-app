@@ -534,6 +534,7 @@
     <string name="report_problem_what_happened_label">發生了什麼事？</string>
     <string name="report_problem_what_happened_hint">您看到了什麼，原本期望什麼？請複製任何錯誤訊息。切勿包含您的錢包地址。</string>
     <string name="report_problem_chars">%1$d 個字元（至少 %2$d 個）</string>
+    <string name="report_problem_chars_optional">%1$d 個字元</string>
     <string name="report_problem_steps_label">如何重現此問題？（選填）</string>
     <string name="report_problem_steps_hint">此前您做了什麼？如果可以，請逐步說明。</string>
     <string name="report_problem_frequency_label">多久發生一次？</string>

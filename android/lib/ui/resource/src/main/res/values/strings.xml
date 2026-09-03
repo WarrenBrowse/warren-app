@@ -572,6 +572,7 @@
     <string name="report_problem_what_happened_label">What happened?</string>
     <string name="report_problem_what_happened_hint">What did you see, and what did you expect instead? Copy any error message. Never include your wallet address.</string>
     <string name="report_problem_chars">%1$d characters (at least %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d characters</string>
     <string name="report_problem_steps_label">How can we make it happen too? (optional)</string>
     <string name="report_problem_steps_hint">What did you do just before? Step by step if you can.</string>
     <string name="report_problem_frequency_label">How often does it happen?</string>

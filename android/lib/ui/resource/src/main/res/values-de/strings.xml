@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">Was ist passiert?</string>
     <string name="report_problem_what_happened_hint">Was hast du gesehen, und was hättest du stattdessen erwartet? Kopiere jede Fehlermeldung. Gib niemals deine Wallet-Adresse an.</string>
     <string name="report_problem_chars">%1$d Zeichen (mindestens %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d Zeichen</string>
     <string name="report_problem_steps_label">Wie können wir es nachstellen? (optional)</string>
     <string name="report_problem_steps_hint">Was hast du unmittelbar davor getan? Wenn möglich Schritt für Schritt.</string>
     <string name="report_problem_frequency_label">Wie oft tritt es auf?</string>

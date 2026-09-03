@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 
 /** Shortest description the forum accepts; the broker refuses less. */
 const val REPORT_MIN_DESCRIPTION_CHARS = 20
-/** Longest description the broker accepts. */
+/** Longest description, and longest steps, the broker accepts. */
 const val REPORT_MAX_DESCRIPTION_CHARS = 4_000
 
 /**
@@ -43,6 +43,9 @@ data class ReportProblemUiState(
     val descriptionChars: Int
         get() = whatHappened.trim().length
 
+    val stepsChars: Int
+        get() = steps.trim().length
+
     /** The form as the broker takes it, or null while [canSend] is false. */
     fun formIfSendable(): ReportForm? =
         if (canSend && area != null && frequency != null) {
@@ -61,6 +64,11 @@ data class ReportProblemUiState(
             area != null &&
                 frequency != null &&
                 descriptionChars in REPORT_MIN_DESCRIPTION_CHARS..REPORT_MAX_DESCRIPTION_CHARS &&
+                // The broker measures `steps` against the same cap. Left
+                // unchecked, an over-cap steps field spent the whole upload and
+                // came back as a 422 whose notice names the description, the
+                // field that was within bounds.
+                stepsChars <= REPORT_MAX_DESCRIPTION_CHARS &&
                 !sending &&
                 !collecting &&
                 outcome !is ReportSubmitOutcome.Created

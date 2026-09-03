@@ -5347,6 +5347,10 @@ msgid "Continue"
 msgstr "계속"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d자"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d자 (최소 %(min)d자)"
 

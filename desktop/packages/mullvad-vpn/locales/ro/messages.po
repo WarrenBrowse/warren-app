@@ -4524,6 +4524,10 @@ msgid "Continue"
 msgstr "Continuă"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d caractere"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d caractere (cel puțin %(min)d)"
 

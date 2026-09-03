@@ -63,6 +63,29 @@ class ReportProblemViewModelTest {
     }
 
     @Test
+    fun steps_over_the_broker_cap_close_the_send_the_way_a_long_description_does() {
+        // warren-connect `validate` measures `steps` against the same
+        // MAX_MESSAGE_CHARS as `what_happened`, so an over-cap steps field is a
+        // 422 whose notice names the description, the field that was fine.
+        val viewModel = ReportProblemViewModel(FakeReporter(ForumPreflight.Proceed))
+        filledIn(viewModel)
+
+        viewModel.setSteps("s".repeat(REPORT_MAX_DESCRIPTION_CHARS))
+        assertTrue(viewModel.state.value.canSend)
+        assertEquals(REPORT_MAX_DESCRIPTION_CHARS, viewModel.state.value.stepsChars)
+
+        viewModel.setSteps("s".repeat(REPORT_MAX_DESCRIPTION_CHARS + 1))
+        assertFalse(viewModel.state.value.canSend)
+    }
+
+    @Test
+    fun the_steps_counter_measures_them_trimmed_the_way_the_broker_does() {
+        val viewModel = ReportProblemViewModel(FakeReporter(ForumPreflight.Proceed))
+        viewModel.setSteps("  abc  ")
+        assertEquals(3, viewModel.state.value.stepsChars)
+    }
+
+    @Test
     fun a_send_while_the_tunnel_is_between_states_is_deferred_before_anything_is_collected() =
         runTest {
             val reporter = FakeReporter(ForumPreflight.Defer("blocking"))

@@ -29,6 +29,7 @@ import {
   setReportWhatHappened,
   settleReportCollect,
   settleReportSend,
+  stepsChars,
 } from '../../../features/report-problem/form-state';
 import { Button, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
@@ -246,6 +247,9 @@ export function ReportProblemView() {
   const handleOpenHelpForm = useCallback(() => openUrl(urls.help), [openUrl]);
 
   const chars = descriptionChars(state);
+  // The broker caps the steps at the same length; without a counter the sole
+  // symptom of an over-cap paste is a 422 whose notice names the description.
+  const steps = stepsChars(state);
   const result = state.result;
   // Main kept the URL only when it points at the forum origin the app vouches
   // for, which is what the Url type spells.
@@ -358,6 +362,17 @@ export function ReportProblemView() {
                       )
                     }
                   />
+                  <Text variant="labelTiny" color="whiteOnDarkBlue60">
+                    {sprintf(
+                      // TRANSLATORS: Character counter under the optional
+                      // TRANSLATORS: steps-to-reproduce field, which has a
+                      // TRANSLATORS: maximum but no minimum.
+                      // TRANSLATORS: Available placeholders:
+                      // TRANSLATORS: %(count)d - characters typed so far
+                      messages.pgettext('report-problem', '%(count)d characters'),
+                      { count: steps },
+                    )}
+                  </Text>
                 </StyledField>
 
                 <Listbox value={state.frequency} onValueChange={handleFrequency}>

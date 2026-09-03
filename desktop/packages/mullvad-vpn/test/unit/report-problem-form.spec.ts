@@ -19,6 +19,7 @@ import {
   setReportWhatHappened,
   settleReportCollect,
   settleReportSend,
+  stepsChars,
 } from '../../src/renderer/features/report-problem/form-state';
 import {
   FORUM_REPORT_MAX_DESCRIPTION_CHARS,
@@ -83,6 +84,23 @@ describe('the report form gate', () => {
         setReportWhatHappened(filled, 'x'.repeat(FORUM_REPORT_MAX_DESCRIPTION_CHARS + 1)),
       ),
     ).toBe(false);
+  });
+
+  it('refuses steps over the broker cap, which it caps exactly as the description', () => {
+    // warren-connect `validate` measures `steps` against the same
+    // MAX_MESSAGE_CHARS as `what_happened`, so an over-cap steps field is a
+    // 422 the notice blames the description for.
+    expect(
+      canSendReport(setReportSteps(filled, 'x'.repeat(FORUM_REPORT_MAX_DESCRIPTION_CHARS))),
+    ).toBe(true);
+    expect(
+      canSendReport(setReportSteps(filled, 'x'.repeat(FORUM_REPORT_MAX_DESCRIPTION_CHARS + 1))),
+    ).toBe(false);
+  });
+
+  it('measures both fields the way the broker does, trimmed and in characters', () => {
+    expect(stepsChars(setReportSteps(filled, '  abc  '))).toBe(3);
+    expect(descriptionChars(setReportWhatHappened(filled, '  abc  '))).toBe(3);
   });
 
   it('keeps taking keys a little past the cap so the counter shows what to trim', () => {

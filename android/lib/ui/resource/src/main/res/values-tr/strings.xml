@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">Ne oldu?</string>
     <string name="report_problem_what_happened_hint">Ne gördünüz ve bunun yerine ne bekliyordunuz? Varsa hata mesajını kopyalayın. Cüzdan adresinizi asla eklemeyin.</string>
     <string name="report_problem_chars">%1$d karakter (en az %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d karakter</string>
     <string name="report_problem_steps_label">Bunu nasıl yeniden oluşturabiliriz? (isteğe bağlı)</string>
     <string name="report_problem_steps_hint">Hemen öncesinde ne yaptınız? Mümkünse adım adım.</string>
     <string name="report_problem_frequency_label">Ne sıklıkla oluyor?</string>

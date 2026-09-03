@@ -5362,6 +5362,10 @@ msgid "Continue"
 msgstr "ادامه"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d نویسه"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d نویسه (دست‌کم %(min)d)"
 

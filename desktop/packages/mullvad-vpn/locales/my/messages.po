@@ -5350,6 +5350,10 @@ msgid "Continue"
 msgstr "ဆက်လုပ်ပါ"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "စာလုံး %(count)d လုံး"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "စာလုံး %(count)d လုံး (အနည်းဆုံး %(min)d)"
 

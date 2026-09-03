@@ -5375,6 +5375,10 @@ msgid "Continue"
 msgstr "Devam et"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d karakter"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d karakter (en az %(min)d)"
 

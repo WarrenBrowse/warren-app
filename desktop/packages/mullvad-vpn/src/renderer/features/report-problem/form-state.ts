@@ -61,6 +61,11 @@ export function descriptionChars(state: ReportProblemFormState): number {
   return Array.from(state.whatHappened.trim()).length;
 }
 
+/** The steps as the broker measures them: trimmed, in characters. */
+export function stepsChars(state: ReportProblemFormState): number {
+  return Array.from(state.steps.trim()).length;
+}
+
 export function canSendReport(state: ReportProblemFormState): boolean {
   const chars = descriptionChars(state);
   return (
@@ -68,6 +73,10 @@ export function canSendReport(state: ReportProblemFormState): boolean {
     state.frequency !== undefined &&
     chars >= FORUM_REPORT_MIN_DESCRIPTION_CHARS &&
     chars <= FORUM_REPORT_MAX_DESCRIPTION_CHARS &&
+    // The broker measures `steps` against the same cap. Left unchecked, an
+    // over-cap steps field spent the whole upload and came back as a 422 whose
+    // notice names the description, the field that was within bounds.
+    stepsChars(state) <= FORUM_REPORT_MAX_DESCRIPTION_CHARS &&
     !state.sending &&
     !state.collecting &&
     state.result?.kind !== 'created'

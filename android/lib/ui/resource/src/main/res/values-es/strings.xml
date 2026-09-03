@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">¿Qué ocurrió?</string>
     <string name="report_problem_what_happened_hint">¿Qué viste y qué esperabas en su lugar? Copia cualquier mensaje de error. Nunca incluyas la dirección de tu monedero.</string>
     <string name="report_problem_chars">%1$d caracteres (mínimo %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d caracteres</string>
     <string name="report_problem_steps_label">¿Cómo podemos reproducirlo? (opcional)</string>
     <string name="report_problem_steps_hint">¿Qué hiciste justo antes? Paso a paso si puedes.</string>
     <string name="report_problem_frequency_label">¿Con qué frecuencia ocurre?</string>

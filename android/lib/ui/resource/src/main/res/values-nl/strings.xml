@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">Wat is er gebeurd?</string>
     <string name="report_problem_what_happened_hint">Wat zag je, en wat had je in plaats daarvan verwacht? Kopieer elke foutmelding. Vermeld nooit je walletadres.</string>
     <string name="report_problem_chars">%1$d tekens (minimaal %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d tekens</string>
     <string name="report_problem_steps_label">Hoe kunnen wij het ook laten gebeuren? (optioneel)</string>
     <string name="report_problem_steps_hint">Wat deed je vlak daarvoor? Stap voor stap als het kan.</string>
     <string name="report_problem_frequency_label">Hoe vaak gebeurt het?</string>

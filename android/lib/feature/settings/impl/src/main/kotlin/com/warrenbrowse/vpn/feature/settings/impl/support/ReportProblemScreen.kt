@@ -185,6 +185,12 @@ private fun ReportDescriptionFields(state: ReportProblemUiState, viewModel: Repo
         modifier = Modifier.fillMaxWidth(),
         label = { Text(stringResource(R.string.report_problem_steps_label)) },
         placeholder = { Text(stringResource(R.string.report_problem_steps_hint)) },
+        // The broker caps the steps at the description's length; without a
+        // counter the sole symptom of an over-cap paste is a refusal whose
+        // notice names the description.
+        supportingText = {
+            Text(text = stringResource(R.string.report_problem_chars_optional, state.stepsChars))
+        },
         minLines = 2,
         enabled = !state.sending,
     )

@@ -544,6 +544,7 @@
     <string name="report_problem_what_happened_label">Ce s-a întâmplat?</string>
     <string name="report_problem_what_happened_hint">Ce ai văzut și la ce te așteptai în schimb? Copiază orice mesaj de eroare. Nu include niciodată adresa portofelului tău.</string>
     <string name="report_problem_chars">%1$d caractere (cel puțin %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d caractere</string>
     <string name="report_problem_steps_label">Cum putem reproduce problema? (opțional)</string>
     <string name="report_problem_steps_hint">Ce ai făcut chiar înainte? Pas cu pas, dacă poți.</string>
     <string name="report_problem_frequency_label">Cât de des se întâmplă?</string>

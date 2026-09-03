@@ -543,6 +543,7 @@
     <string name="report_problem_what_happened_label">Що сталося?</string>
     <string name="report_problem_what_happened_hint">Що ви побачили і чого очікували натомість? Скопіюйте будь-яке повідомлення про помилку. Ніколи не вказуйте адресу свого гаманця.</string>
     <string name="report_problem_chars">%1$d символів (щонайменше %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d символів</string>
     <string name="report_problem_steps_label">Як нам це відтворити? (необов\'язково)</string>
     <string name="report_problem_steps_hint">Що ви робили безпосередньо перед цим? Крок за кроком, якщо можливо.</string>
     <string name="report_problem_frequency_label">Як часто це трапляється?</string>

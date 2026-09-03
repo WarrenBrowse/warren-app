@@ -5422,6 +5422,10 @@ msgid "Continue"
 msgstr "متابعة"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d حرفًا"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d حرفًا (%(min)d على الأقل)"
 

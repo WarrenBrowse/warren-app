@@ -534,6 +534,7 @@
     <string name="report_problem_what_happened_label">何が起きましたか？</string>
     <string name="report_problem_what_happened_hint">何が表示され、代わりに何を期待していましたか？エラーメッセージがあればコピーしてください。ウォレットアドレスは絶対に含めないでください。</string>
     <string name="report_problem_chars">%1$d 文字（%2$d 文字以上）</string>
+    <string name="report_problem_chars_optional">%1$d 文字</string>
     <string name="report_problem_steps_label">再現手順（任意）</string>
     <string name="report_problem_steps_hint">その直前に何をしましたか？できれば順を追って。</string>
     <string name="report_problem_frequency_label">どのくらいの頻度で起きますか？</string>

@@ -5375,6 +5375,10 @@ msgid "Continue"
 msgstr "Fortsett"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d tegn"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d tegn (minst %(min)d)"
 

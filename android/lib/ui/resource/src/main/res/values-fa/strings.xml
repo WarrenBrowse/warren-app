@@ -537,6 +537,7 @@
     <string name="report_problem_what_happened_label">چه اتفاقی افتاد؟</string>
     <string name="report_problem_what_happened_hint">چه دیدید و به‌جای آن انتظار چه چیزی را داشتید؟ هر پیام خطایی را کپی کنید. هرگز نشانی کیف پول خود را وارد نکنید.</string>
     <string name="report_problem_chars">%1$d نویسه (دست‌کم %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d نویسه</string>
     <string name="report_problem_steps_label">چگونه می‌توانیم آن را بازتولید کنیم؟ (اختیاری)</string>
     <string name="report_problem_steps_hint">درست پیش از آن چه کردید؟ در صورت امکان گام‌به‌گام.</string>
     <string name="report_problem_frequency_label">هر چند وقت یک‌بار رخ می‌دهد؟</string>

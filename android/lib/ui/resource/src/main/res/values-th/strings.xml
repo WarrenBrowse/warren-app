@@ -534,6 +534,7 @@
     <string name="report_problem_what_happened_label">เกิดอะไรขึ้น</string>
     <string name="report_problem_what_happened_hint">คุณเห็นอะไร และคาดหวังอะไรแทน คัดลอกข้อความแสดงข้อผิดพลาดใดๆ อย่าใส่ที่อยู่กระเป๋าเงินของคุณเด็ดขาด</string>
     <string name="report_problem_chars">%1$d ตัวอักษร (อย่างน้อย %2$d)</string>
+    <string name="report_problem_chars_optional">%1$d ตัวอักษร</string>
     <string name="report_problem_steps_label">เราจะทำให้เกิดขึ้นซ้ำได้อย่างไร (ไม่บังคับ)</string>
     <string name="report_problem_steps_hint">คุณทำอะไรก่อนหน้านั้น ทีละขั้นตอนถ้าทำได้</string>
     <string name="report_problem_frequency_label">เกิดขึ้นบ่อยแค่ไหน</string>

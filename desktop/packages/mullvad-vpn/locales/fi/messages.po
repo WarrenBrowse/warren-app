@@ -5375,6 +5375,10 @@ msgid "Continue"
 msgstr "Jatka"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d merkkiä"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d merkkiä (vähintään %(min)d)"
 

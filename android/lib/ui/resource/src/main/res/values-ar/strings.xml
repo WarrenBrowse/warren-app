@@ -549,6 +549,7 @@
     <string name="report_problem_what_happened_label">ماذا حدث؟</string>
     <string name="report_problem_what_happened_hint">ماذا رأيت، وماذا كنت تتوقع بدلًا من ذلك؟ انسخ أي رسالة خطأ. لا تُدرج عنوان محفظتك أبدًا.</string>
     <string name="report_problem_chars">%1$d حرفًا (%2$d على الأقل)</string>
+    <string name="report_problem_chars_optional">%1$d حرفًا</string>
     <string name="report_problem_steps_label">كيف يمكننا إعادة إحداثها؟ (اختياري)</string>
     <string name="report_problem_steps_hint">ماذا فعلت قبل ذلك مباشرة؟ خطوة بخطوة إن أمكن.</string>
     <string name="report_problem_frequency_label">كم مرة يحدث ذلك؟</string>

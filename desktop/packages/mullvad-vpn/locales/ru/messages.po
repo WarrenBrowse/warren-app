@@ -5405,6 +5405,10 @@ msgid "Continue"
 msgstr "Продолжить"
 
 msgctxt "report-problem"
+msgid "%(count)d characters"
+msgstr "%(count)d символов"
+
+msgctxt "report-problem"
 msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d символов (не менее %(min)d)"
 
