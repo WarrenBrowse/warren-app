@@ -141,16 +141,14 @@ pub(crate) async fn grpc_transport_channel() -> Result<Channel, Error> {
     grpc_transport_channel_at(mullvad_paths::get_rpc_socket_path()).await
 }
 
-/// Create a [Channel] to the management interface listening at `ipc_path`.
+/// Create a [Channel] to this environment's own management interface at
+/// `ipc_path`.
 ///
-/// A caller passing a path it did NOT derive from its own product environment
-/// (`mullvad_paths::rpc_socket_path_for` for another environment) MUST gate
-/// the dial on [`foreign_socket_is_privileged`] first. The management socket
-/// is world-accessible by design (`0o766` on unix, `allow_everyone_create` on
-/// the Windows pipe), so any local process can bind a lookalike path and
-/// answer whatever it likes.
+/// Crate-private on purpose: the only paths outside this crate that make sense
+/// belong to ANOTHER product environment, and those go through
+/// [`grpc_transport_channel_to`], which cannot be handed an unvouched one.
 #[cfg(not(target_os = "android"))]
-pub async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
+pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
     use futures::TryFutureExt;
 
     // The URI will be ignored
@@ -160,6 +158,15 @@ pub async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Err
         }))
         .await
         .map_err(Error::GrpcTransportError)
+}
+
+/// Create a [Channel] to another product environment's management interface.
+///
+/// Takes a [`PrivilegedSocketPath`] rather than a path, so the ownership check
+/// cannot be forgotten: see that type for why it is load-bearing.
+#[cfg(not(target_os = "android"))]
+pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Channel, Error> {
+    grpc_transport_channel_at(path.as_path().to_path_buf()).await
 }
 
 /// Whether the OS vouches that the management endpoint at `path` belongs to a
@@ -180,7 +187,7 @@ pub async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Err
 /// read as "nothing to yield to" rather than as an error.
 #[cfg(all(unix, not(target_os = "android")))]
 #[must_use]
-pub fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
+fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
     use std::os::unix::fs::{FileTypeExt, MetadataExt};
 
     // symlink_metadata, not metadata: a symlink an unprivileged user planted
@@ -194,11 +201,40 @@ pub fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
 /// desktop main process.
 #[cfg(windows)]
 #[must_use]
-pub fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
+fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
     let Ok(pipe) = std::fs::File::options().read(true).open(path) else {
         return false;
     };
     talpid_windows::fs::is_admin_owned(pipe).unwrap_or(false)
+}
+
+/// A management-endpoint path the OS has vouched for, the only thing a
+/// cross-environment dial accepts.
+///
+/// The check exists as a type rather than as a rule in a doc comment because
+/// the rule is load-bearing and the wrong call would otherwise compile: the
+/// management socket is world-accessible and its disconnect, lockdown and
+/// auto-connect RPCs are unauthenticated, so believing an unvouched endpoint
+/// is a documented way for any local process to talk an environment into
+/// standing down. [`Self::vouched_for`] is the only constructor, so there is
+/// no spelling of a foreign dial that skips it.
+#[cfg(not(target_os = "android"))]
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PrivilegedSocketPath(PathBuf);
+
+#[cfg(not(target_os = "android"))]
+impl PrivilegedSocketPath {
+    /// `Some` when the OS says the endpoint at `path` belongs to a privileged
+    /// process, `None` for everything else, an absent path included.
+    #[must_use]
+    pub fn vouched_for(path: PathBuf) -> Option<Self> {
+        foreign_socket_is_privileged(&path).then_some(Self(path))
+    }
+
+    #[must_use]
+    pub fn as_path(&self) -> &std::path::Path {
+        &self.0
+    }
 }
 
 #[cfg(not(target_os = "android"))]
@@ -473,7 +509,13 @@ impl<T: AsyncRead + AsyncWrite + Unpin> AsyncWrite for StreamBox<T> {
 
 #[cfg(all(test, not(target_os = "android")))]
 mod foreign_socket_tests {
-    use super::foreign_socket_is_privileged;
+    use super::PrivilegedSocketPath;
+
+    /// The gate as its only public spelling: a path is admitted exactly when a
+    /// `PrivilegedSocketPath` can be built from it.
+    fn vouched(path: &std::path::Path) -> bool {
+        PrivilegedSocketPath::vouched_for(path.to_path_buf()).is_some()
+    }
 
     /// A private directory under the system temp dir, removed on drop.
     ///
@@ -511,9 +553,7 @@ mod foreign_socket_tests {
         // that is not installed simply has no socket, and the caller reads a
         // false here as "nothing to yield to".
         let scratch = Scratch::new("a");
-        assert!(!foreign_socket_is_privileged(
-            &scratch.join("no-such-socket")
-        ));
+        assert!(!vouched(&scratch.join("no-such-socket")));
     }
 
     #[test]
@@ -523,7 +563,7 @@ mod foreign_socket_tests {
         let scratch = Scratch::new("r");
         let path = scratch.join("not-a-socket");
         std::fs::write(&path, b"not a socket").expect("write file");
-        assert!(!foreign_socket_is_privileged(&path));
+        assert!(!vouched(&path));
     }
 
     #[cfg(unix)]
@@ -544,7 +584,23 @@ mod foreign_socket_tests {
         // accepting branch instead of producing a spurious red. Every gated
         // runner (CI and dev) is unprivileged, so this is the rejecting case.
         let owner_is_root = nix::unistd::geteuid().is_root();
-        assert_eq!(foreign_socket_is_privileged(&path), owner_is_root);
+        assert_eq!(vouched(&path), owner_is_root);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_vouched_path_carries_the_path_it_was_admitted_with() {
+        // The newtype is the only way to name a foreign endpoint, so it has to
+        // hand back exactly what was checked. A constructor that normalised or
+        // re-derived the path would dial something the gate never saw.
+        if !nix::unistd::geteuid().is_root() {
+            return;
+        }
+        let scratch = Scratch::new("v");
+        let path = scratch.join("s");
+        let _listener = std::os::unix::net::UnixListener::bind(&path).expect("bind test socket");
+        let vouched = PrivilegedSocketPath::vouched_for(path.clone()).expect("root-owned socket");
+        assert_eq!(vouched.as_path(), path);
     }
 }
 

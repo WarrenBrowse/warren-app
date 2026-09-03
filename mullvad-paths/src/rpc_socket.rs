@@ -25,7 +25,7 @@ pub fn get_rpc_socket_path() -> PathBuf {
 /// for, and the path alone proves nothing: the management socket is
 /// world-accessible, so a caller dialing a foreign path must first have the
 /// OS vouch for its ownership
-/// (`mullvad_management_interface::foreign_socket_is_privileged`).
+/// (`mullvad_management_interface::PrivilegedSocketPath::vouched_for`).
 // Renamed for the Warren fork - anti-collision with Mullvad upstream
 // (see `unix.rs::PRODUCT_NAME`). The override env var keeps its name
 // `MULLVAD_RPC_SOCKET_PATH` to preserve compatibility with ops

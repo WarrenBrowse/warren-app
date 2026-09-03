@@ -217,9 +217,12 @@ function generate_lock_png() {
     fi
 }
 
-# Stamps the beta pip onto the top-left of an already generated icon. The
-# corner is forced: the notification dot is an amber circle at the bottom right
-# of the same canvas, and the two must not be confusable.
+# Stamps the beta pip onto the bottom-left of an already generated icon, and
+# cuts a gap out of the lock around it first. Both are forced: the notification
+# dot is an amber circle at the bottom RIGHT of the same canvas, so only the
+# shape and the corner keep the two apart, and without the gap they fuse into
+# one blob in every monochrome variant. See the constants block for why this
+# corner and not the top one.
 function overlay_beta_pip() {
     local png_target_path="$1"
     local canvas_size="$2"

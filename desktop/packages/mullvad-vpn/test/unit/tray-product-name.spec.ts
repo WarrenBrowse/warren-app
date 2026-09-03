@@ -48,17 +48,21 @@ describe('the product the tray names', () => {
     }
   });
 
-  it('is the environment display name in the tooltip fallback and the tray context menu', () => {
-    // Both sites sit in a class whose constructor opens a BrowserWindow, so
+  it('is the environment display name on every surface that names the product', () => {
+    // These sites sit in a class whose constructor opens a BrowserWindow, so
     // they cannot be reached from a suite that has no Electron. The gate is
-    // that neither of them still names the prod product. The split-tunneling
-    // and dock entries elsewhere in the file are deliberately left alone: they
+    // that none of them still names the prod product. The split-tunneling and
+    // dock entries elsewhere in the file are deliberately left alone: they
     // match the packaged executable name, not the display name.
     const source = fs.readFileSync(USER_INTERFACE_SOURCE, 'utf8');
 
     expect(source).not.toMatch(/^\s*return 'Warren VPN';$/m);
     expect(source).not.toMatch(/mullvadVpn: 'Warren VPN',/);
+    // The application menu, which Linux actually renders whenever the window
+    // is unpinned and therefore framed.
+    expect(source).not.toMatch(/^\s*label: 'Warren VPN',$/m);
     expect(source).toMatch(/^\s*return productAnchors\.displayName;$/m);
     expect(source).toMatch(/mullvadVpn: productAnchors\.displayName,/);
+    expect(source.match(/^\s*label: productAnchors\.displayName,$/gm)).toHaveLength(2);
   });
 });

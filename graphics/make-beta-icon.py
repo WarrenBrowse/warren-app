@@ -37,7 +37,7 @@ MARK_SHIFT_Y = -12 / 126
 
 MARK_ANCHOR = '<g transform="translate('
 
-# The tray pip is a rounded SQUARE, and it sits at the icon's top-left. Both
+# The tray pip is a rounded SQUARE, and it sits at the icon's bottom-left. Both
 # halves are forced: the forum-activity dot is already an amber circle overlaid
 # at the bottom-right of the same tray icon, so a second amber circle would read
 # as a second notification, and on macOS the menu-bar asset is a template image

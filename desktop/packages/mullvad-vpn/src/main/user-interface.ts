@@ -530,7 +530,7 @@ export default class UserInterface implements WindowControllerDelegate {
 
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Warren VPN',
+        label: productAnchors.displayName,
         submenu: mullvadVpnSubmenu,
       },
       {
@@ -550,7 +550,7 @@ export default class UserInterface implements WindowControllerDelegate {
   private setLinuxAppMenu() {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: 'Warren VPN',
+        label: productAnchors.displayName,
         submenu: [{ role: 'quit' }],
       },
     ];

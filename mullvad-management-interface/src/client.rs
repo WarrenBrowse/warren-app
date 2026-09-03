@@ -94,15 +94,20 @@ impl MullvadProxyClient {
         Self::new_at(mullvad_paths::get_rpc_socket_path()).await
     }
 
-    /// Connect to the daemon listening at `rpc_socket_path`.
-    ///
-    /// A caller reaching for another product environment's socket
-    /// (`mullvad_paths::rpc_socket_path_for`) MUST first require
-    /// [`crate::foreign_socket_is_privileged`] of that path: the management
-    /// socket is world-accessible, so an unprivileged local process can bind
-    /// a lookalike and answer whatever it likes.
-    pub async fn new_at(rpc_socket_path: std::path::PathBuf) -> Result<Self> {
+    /// Connect to this environment's own daemon at `rpc_socket_path`.
+    pub(crate) async fn new_at(rpc_socket_path: std::path::PathBuf) -> Result<Self> {
         crate::grpc_transport_channel_at(rpc_socket_path)
+            .await
+            .map(crate::ManagementServiceClient::new)
+            .map(Self)
+    }
+
+    /// Connect to ANOTHER product environment's daemon.
+    ///
+    /// Takes a [`crate::PrivilegedSocketPath`], so the ownership check that
+    /// makes a foreign daemon's state worth believing cannot be skipped.
+    pub async fn new_foreign(rpc_socket_path: &crate::PrivilegedSocketPath) -> Result<Self> {
+        crate::grpc_transport_channel_to(rpc_socket_path)
             .await
             .map(crate::ManagementServiceClient::new)
             .map(Self)
