@@ -152,6 +152,24 @@ impl ProductEnv {
         }
     }
 
+    /// Suffix an OS scheduler job of this environment carries, so two
+    /// installed environments never register, fire or unschedule each
+    /// other's timer. Prod is empty, which keeps the job name a prod install
+    /// already registered unchanged.
+    ///
+    /// The update dead-man is the job this exists for: it is armed by an
+    /// installer and disarmed by the daemon it guards, so two environments
+    /// sharing a name means either install cancelling the other's guard and
+    /// leaving a machine sealed with nothing scheduled to unseal it.
+    #[must_use]
+    pub const fn scheduler_job_suffix(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "",
+            ProductEnv::Staging => ".staging",
+            ProductEnv::Beta => ".beta",
+        }
+    }
+
     /// URL scheme this environment registers with the OS for its deep links
     /// (`<scheme>://forum-login?...`). Per environment, so a beta and a prod
     /// install on one device never fight over the registration, and a link

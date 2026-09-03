@@ -35,7 +35,8 @@ use std::path::{Path, PathBuf};
 pub const DEADMAN_DELAY_SECS: u64 = 600;
 
 /// Label / unit / task name the OS scheduler knows the guard by. Carries the
-/// channel so a beta and a prod install on one machine never disarm each other.
+/// product environment's suffix so two environments installed on one machine
+/// never unschedule each other's guard.
 #[must_use]
 pub fn deadman_job_name(channel_suffix: &str) -> String {
     format!("net.warrenbrowse.deadman{channel_suffix}")
@@ -114,11 +115,38 @@ mod tests {
         );
     }
 
-    /// Two channels can be installed side by side, and each update must disarm
-    /// only its own guard.
+    /// Every product environment can be installed side by side with every
+    /// other, and each update must disarm only its own guard. Driven through
+    /// the suffix the binary actually derives, not through hand-written
+    /// suffixes: a gate that spells out `""` and `".beta"` itself passes
+    /// while a staging install silently shares prod's job name and the two
+    /// unschedule each other.
     #[test]
-    fn each_channel_owns_a_distinct_job_name() {
-        assert_ne!(deadman_job_name(""), deadman_job_name(".beta"));
+    fn every_product_environment_owns_a_distinct_guard_job_name() {
+        for env in warren_product_env::ALL {
+            for other in warren_product_env::ALL {
+                if env == other {
+                    continue;
+                }
+                assert_ne!(
+                    deadman_job_name(env.scheduler_job_suffix()),
+                    deadman_job_name(other.scheduler_job_suffix()),
+                    "{} and {} share a guard job name, so each disarms the other",
+                    env.name(),
+                    other.name()
+                );
+            }
+        }
+    }
+
+    /// The suffix this binary bakes in is its own environment's, read from
+    /// the compile-time selector like every other product anchor.
+    #[test]
+    fn the_guard_job_name_follows_the_compiled_product_environment() {
+        assert_eq!(
+            channel_suffix(),
+            warren_product_env::CURRENT.scheduler_job_suffix()
+        );
     }
 }
 
@@ -171,15 +199,15 @@ fn unstage() -> Result<(), Error> {
     }
 }
 
-/// Channel suffix baked into the job name, so a beta and a prod install on one
-/// machine never disarm each other.
+/// Suffix baked into the job name, so two product environments installed on
+/// one machine never disarm each other's guard.
+///
+/// Read off the compiled environment rather than sniffed out of a product
+/// name: a substring test for `beta` answers the same empty suffix for prod
+/// and for staging, so a staging install and a prod install would share one
+/// job name and each unschedule the other's guard.
 fn channel_suffix() -> &'static str {
-    // The daemon's own directories already carry it; reuse the same shape.
-    if mullvad_paths::PRODUCT_NAME.contains("beta") {
-        ".beta"
-    } else {
-        ""
-    }
+    warren_product_env::CURRENT.scheduler_job_suffix()
 }
 
 /// Stages the guard and arms its one-shot timer.

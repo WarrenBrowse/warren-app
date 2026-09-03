@@ -3395,6 +3395,7 @@ dependencies = [
  "tokio",
  "tracing",
  "tracing-subscriber",
+ "warren-product-env",
  "windows-service",
  "windows-sys 0.61.2",
 ]

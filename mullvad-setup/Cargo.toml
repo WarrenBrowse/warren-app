@@ -26,6 +26,7 @@ thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread"] }
 tracing = "0.1.44"
 tracing-subscriber = { workspace = true }
+warren-product-env = { path = "../warren-product-env" }
 
 [target.'cfg(windows)'.dependencies]
 windows-service = "0.6.0"
