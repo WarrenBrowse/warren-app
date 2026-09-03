@@ -1,0 +1,54 @@
+{
+  "_comment": "Whether a wallet-signed forum request (the sign-in, the in-app report, the activity read) may leave the device now, from the tunnel's state alone. The POST rides a protected socket that bypasses the tunnel, but the connect host name is still resolved by the system resolver, which no protector covers: while the tunnel is coming up or going down the resolver points at the tunnel DNS and the lookup times out, and while the kill switch holds a blocking interface there is no resolver at all. Those states defer, and the deferral names its class for the journal and nothing else. Written against the behaviour at HEAD; readers and skip lists in README.md.",
+  "version": 1,
+  "_verdicts": ["proceed", "defer"],
+  "_classes": ["connecting", "reconnecting", "disconnecting", "blocking"],
+  "cases": [
+    {
+      "name": "disconnected",
+      "_comment": "No tunnel at all: the physical resolver answers.",
+      "tunnel": "disconnected",
+      "expect": { "verdict": "proceed" }
+    },
+    {
+      "name": "connected",
+      "_comment": "Settled: the protected socket leaves and the resolver answers.",
+      "tunnel": "connected",
+      "expect": { "verdict": "proceed" }
+    },
+    {
+      "name": "connecting",
+      "tunnel": "connecting",
+      "expect": { "verdict": "defer", "class": "connecting" }
+    },
+    {
+      "name": "reconnecting",
+      "tunnel": "reconnecting",
+      "expect": { "verdict": "defer", "class": "reconnecting" }
+    },
+    {
+      "name": "disconnecting",
+      "tunnel": "disconnecting",
+      "expect": { "verdict": "defer", "class": "disconnecting" }
+    },
+    {
+      "name": "disconnecting_to_reconnect",
+      "_comment": "A disconnect that is the first half of a reconnect is named for where it is going, not for the half it is in.",
+      "tunnel": "disconnecting_to_reconnect",
+      "expect": { "verdict": "defer", "class": "reconnecting" }
+    },
+    {
+      "name": "blocking",
+      "_comment": "The kill switch holds a blocking interface: no resolver at all, so the lookup fails at once.",
+      "tunnel": "blocking",
+      "expect": { "verdict": "defer", "class": "blocking" }
+    },
+    {
+      "name": "failed_released",
+      "_comment": "Terminal and released: the tunnel is closed, no reconnect is scheduled and the physical resolver answers. It is also the state a person most wants to report from, and deferring it refused the report in exactly the failure it described. iOS has no such state: its error state blocks rather than releasing, and is the `blocking` case.",
+      "tunnel": "failed_released",
+      "expect": { "verdict": "proceed" },
+      "skip": ["ios"]
+    }
+  ]
+}

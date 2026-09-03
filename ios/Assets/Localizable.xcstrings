@@ -72930,6 +72930,154 @@
         }
       }
     },
+    "The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشبكة الافتراضية الخاصة قيد الاتصال أو محظورة. انتظر حتى تتصل، أو افصلها، ثم حاول مرة أخرى."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN'en er ved at oprette forbindelse eller er blokeret. Vent, til den er forbundet, eller afbryd den, og prøv igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das VPN verbindet sich gerade oder ist blockiert. Warte, bis es verbunden ist, oder trenne es, und versuche es dann erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La VPN se está conectando o está bloqueada. Espera a que se conecte, o desconéctala, y vuelve a intentarlo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN در حال اتصال یا مسدود است. صبر کنید تا متصل شود، یا آن را قطع کنید، سپس دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN muodostaa yhteyttä tai on estetty. Odota, kunnes yhteys on muodostettu, tai katkaise yhteys, ja yritä sitten uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le VPN est en cours de connexion ou bloqué. Attendez qu'il soit connecté, ou déconnectez-le, puis réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La VPN si sta connettendo o è bloccata. Attendi che si connetta, oppure disconnettila, poi riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPNは接続中またはブロック中です。接続されるまで待つか、切断してから、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN이 연결 중이거나 차단된 상태입니다. 연결될 때까지 기다리거나 연결을 해제한 다음 다시 시도하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN သည် ချိတ်ဆက်နေဆဲ သို့မဟုတ် ပိတ်ဆို့ထားသည်။ ချိတ်ဆက်ပြီးသည်အထိ စောင့်ပါ၊ သို့မဟုတ် ချိတ်ဆက်မှုကို ဖြုတ်ပြီး ထပ်မံကြိုးစားပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN-et kobler til eller er blokkert. Vent til det er tilkoblet, eller koble det fra, og prøv igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De VPN maakt verbinding of is geblokkeerd. Wacht tot de verbinding er is, of verbreek de verbinding, en probeer het dan opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN łączy się lub jest zablokowany. Poczekaj, aż się połączy, albo rozłącz go, a następnie spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A VPN está a ligar ou está bloqueada. Aguarda até que ligue, ou desliga-a, e tenta novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN-ul se conectează sau este blocat. Așteaptă să se conecteze, sau deconectează-l, apoi încearcă din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN подключается или заблокирован. Дождитесь подключения или отключите его, затем повторите попытку."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN-anslutningen håller på att upprättas eller är blockerad. Vänta tills den är ansluten, eller koppla från den, och försök sedan igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN กำลังเชื่อมต่อหรือถูกบล็อกอยู่ โปรดรอจนกว่าจะเชื่อมต่อ หรือตัดการเชื่อมต่อ แล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN bağlanıyor veya engellenmiş durumda. Bağlanmasını bekleyin veya bağlantıyı kesin, sonra tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN підключається або заблокований. Зачекайте на підключення або відключіть його, потім спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN 正在连接或已被阻止。请等待其连接，或断开连接，然后重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VPN 正在連線或已被封鎖。請等待其連線，或中斷連線，然後再試一次。"
+          }
+        }
+      }
+    },
     "The version of settings stored on device is unrecognized.Settings will be reset to defaults and the device will be logged out.": {
       "localizations": {
         "ar": {

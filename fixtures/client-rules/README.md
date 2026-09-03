@@ -30,6 +30,7 @@ everywhere is the definition of parity.
 | `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | `WarrenForumLoginOutcomeTests` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminal`) |
 | `forum_outcomes.json` report | `client_rules.rs` (`report_outcome_for_response`, `report_envelope`) | `ReportOutcomeTest` (decodes `envelope`) | `forum-report.spec.ts` (`forumReportResultForResponse`, the `expect` column: kind, topic, trusted URL, logs, identity) | none |
 | `product_env.json` | `warren-product-env/tests/client_rules.rs` (every column, and `ProductEnv::anchors_json()` equals the row), `warren-product-env/tests/platform_lockstep.rs` (`product-env.ts`, `tasks/distribution.cjs`, `android/app/build.gradle.kts` and `ios/Configurations/ProductEnv.xcconfig` read as text and held to the crate, and the iOS `Info.plist` URL scheme held to the xcconfig selector), `warren-forum` `client_rules.rs` (connect host, forum origin) | `ProductEnvBuildConfigTest` (`BuildConfig` of the running flavor against the row, and against the row decoded as the native table `WarrenJni.productAnchorsJson()` returns; `testAllUnitTests` runs the **prod flavor only**, so the beta and staging rows are covered by `platform_lockstep.rs` alone); `ProductAnchorsJniTest` (instrumented, the real native table against `BuildConfig`) | `product-env.spec.ts` (`product-env.ts`, `tasks/distribution.cjs`, the `urls.forum` origin) | `WarrenProductAnchorsTests` (the live table `warren_product_anchors()` returns against the row of the compiled environment, and every row through the Swift decoder) |
+| `forum_preflight.json` | none (the verdict reads a platform tunnel type, so the crate has no reader) | `ForumPreflightFixtureTest` (`ForumPreflight.of` over `WarrenConnectedInfo`), plus `ForumPreflightTest` for the states only this platform has | none (the desktop daemon owns its own connection state and files no forum request of its own) | `WarrenForumPreflightTests` (`WarrenForumPreflight.verdict(for:)` over `TunnelState`, plus its own platform-only states) |
 | `incident_reports.json` | `mullvad-daemon` `warren_report_budget.rs` (the two budget constants, which the storm outcomes are a pure function of), `warren-jni` `incidents.rs` (every storm replayed through the Android copy of the bucket, and the exit-down reason code through the payload builder) | none (the reports are built and sent in Rust) | none (the daemon is the desktop's engine) | none (no incident reports on iOS yet) |
 
 The exit choice has its vector in the contract sibling rather than here:
@@ -59,6 +60,7 @@ the checkout through the simulator; run them locally with
 | fixture | case | skipped | why |
 |---|---|---|---|
 | `forum_link.json` | `no_data` | desktop, ios | an Android intent can carry no data; the desktop is handed argv strings and iOS a URL, so the input does not exist there |
+| `forum_preflight.json` | `failed_released` | ios | a tunnel that failed and released the traffic is an Android state; the iOS packet tunnel enters the blocked state instead, which is the `blocking` case |
 
 ## Schema
 
@@ -111,6 +113,23 @@ which readers ignore. A case may carry `"skip": ["desktop", "android", "ios",
   without a link (the envelope carries no `topic_url`; the Kotlin decoder reads
   it as the empty string).
 - `report.client_side_failures.cases[]`: as for login.
+
+### `forum_preflight.json`
+
+Whether a wallet-signed forum request may leave the device now, from the
+tunnel's state alone. The POST rides a socket that bypasses the tunnel, but
+the broker's host name is still resolved by the system resolver, which no
+protector covers, so a tunnel between states swallows the lookup.
+
+- `_verdicts` and `_classes`: the vocabulary, `proceed` or `defer` with one of
+  `connecting`, `reconnecting`, `disconnecting`, `blocking`. A deferral names
+  the class and nothing else: it reaches a log and a bug report.
+- `cases[]`: `{name, tunnel, expect, skip?}` where `tunnel` is the
+  platform-neutral state name each reader maps onto its own type
+  (`disconnected`, `connected`, `connecting`, `reconnecting`, `disconnecting`,
+  `disconnecting_to_reconnect`, `blocking`, `failed_released`) and `expect` is
+  `{verdict, class?}`. A state only one platform has stays out of the file and
+  is covered by that platform's own test.
 
 ### `product_env.json`
 

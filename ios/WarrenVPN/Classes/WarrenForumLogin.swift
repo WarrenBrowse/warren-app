@@ -120,6 +120,12 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
     /// time so the prompt lands over whatever is on screen.
     @MainActor var presenter: (() -> UIViewController?)?
 
+    /// The tunnel's state at the moment of the signature, read through the
+    /// app delegate's tunnel manager. Unset (a flow with no tunnel behind it,
+    /// and the tests) reads as settled, which is what it was before the
+    /// preflight existed.
+    @MainActor var tunnelState: (() -> TunnelState)?
+
     init(anchors: WarrenProductAnchors = .current) {
         self.anchors = anchors
     }
@@ -213,6 +219,19 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
     /// An approved answer's identity is stored for the account screen.
     @MainActor
     private func perform(_ link: ForumLoginLink) {
+        // The POST leaves over the ordinary stack, but the broker's host name
+        // is resolved by the system resolver, which points at the tunnel's
+        // DNS while it is coming up or going down and at nothing at all while
+        // it blocks. Signing then spends the session on a request that cannot
+        // arrive, and the browser page waits for an approval that never
+        // lands. Android defers on the same verdict.
+        if case let .deferred(tunnelClass) = WarrenForumPreflight.verdict(
+            for: tunnelState?() ?? .disconnected)
+        {
+            logger.info("forum login deferred: tunnel \(tunnelClass)")
+            presentTunnelBusy()
+            return
+        }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let outcome: WarrenForumLoginOutcome
             if let mnemonic = try? WarrenWalletKeychain.load(),
@@ -244,6 +263,24 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
         case .expired: "expired"
         case .failed(let reason): "failed (\(reason))"
         }
+    }
+
+    /// Nothing was signed and the session is untouched: the person can start
+    /// again from the browser page, or from the code, once the tunnel settles.
+    @MainActor
+    private func presentTunnelBusy() {
+        guard let presenter = presenter?() else { return }
+        let alert = UIAlertController(
+            title: nil,
+            message: NSLocalizedString(
+                "The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again.",
+                comment: "Forum request not attempted, the tunnel is between states"),
+            preferredStyle: .alert)
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString("OK", comment: "Forum login result alert, the dismissing button"),
+                style: .default))
+        presenter.present(alert, animated: true)
     }
 
     @MainActor
