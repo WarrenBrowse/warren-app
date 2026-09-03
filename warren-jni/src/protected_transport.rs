@@ -23,7 +23,7 @@
 
 use std::net::SocketAddr;
 use std::os::raw::c_int;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::Duration;
 
 use bytes::Bytes;
@@ -70,9 +70,10 @@ impl ProtectedTransport {
     }
 
     pub(crate) fn with_protect(protect: ProtectFn) -> Self {
+        let (tls, tls_no_sni) = tls_configs();
         Self {
-            tls: Arc::new(tls_config(true)),
-            tls_no_sni: Arc::new(tls_config(false)),
+            tls,
+            tls_no_sni,
             protect,
         }
     }
@@ -236,6 +237,19 @@ impl ProtectedTransport {
             .await
             .map_err(|_| TransportError::Io("request timed out".to_owned()))?
     }
+}
+
+/// The two TLS configurations (SNI on, SNI off), built once per process.
+/// Each one parses the whole webpki root store, and a transport is built per
+/// forum request (login preflight, signed POST, report upload, mint tick), so
+/// building them per transport spent milliseconds of CPU on every call for a
+/// value that never changes.
+fn tls_configs() -> (Arc<rustls::ClientConfig>, Arc<rustls::ClientConfig>) {
+    static CONFIGS: OnceLock<(Arc<rustls::ClientConfig>, Arc<rustls::ClientConfig>)> =
+        OnceLock::new();
+    CONFIGS
+        .get_or_init(|| (Arc::new(tls_config(true)), Arc::new(tls_config(false))))
+        .clone()
 }
 
 fn tls_config(sni: bool) -> rustls::ClientConfig {
@@ -440,6 +454,24 @@ mod tests {
 
     use super::loopback::serve_one;
     use super::{ProtectFn, ProtectedTransport};
+
+    #[test]
+    fn the_tls_configs_are_built_once_per_process() {
+        // A transport is built per forum request; each build used to parse
+        // the whole root store twice.
+        let pass: ProtectFn = Arc::new(|_| true);
+        let a = ProtectedTransport::with_protect(pass.clone());
+        let b = ProtectedTransport::with_protect(pass);
+
+        assert!(
+            Arc::ptr_eq(&a.tls, &b.tls),
+            "one SNI root store per process"
+        );
+        assert!(
+            Arc::ptr_eq(&a.tls_no_sni, &b.tls_no_sni),
+            "one no-SNI root store per process"
+        );
+    }
 
     const CANNED_OK: &str = "HTTP/1.1 200 OK\r\ncontent-length: 2\r\nconnection: close\r\n\r\nhi";
 
