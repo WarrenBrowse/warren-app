@@ -984,8 +984,26 @@ fn fetch_multihop_directory_raw() -> String {
     };
     let client = unsigned_warren_client();
     runtime
-        .block_on(DIRECTORY_CACHE.fetch_or_cached(client, now_unix_secs()))
+        .block_on(DIRECTORY_CACHE.fetch_or_cached(client, now_unix_secs(), verify_directory))
         .unwrap_or_default()
+}
+
+/// The verification `tunnel::run_multi_hop_session` runs at dial time, on the
+/// same pins, so the cache never remembers a blob the dial would reject.
+#[cfg(target_os = "android")]
+fn verify_directory(raw: &str) -> bool {
+    let server_pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
+    match warren_discovery_core::verify_multihop_directory_any(
+        raw,
+        &server_pins,
+        &[crate::tunnel::WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
+    ) {
+        Ok(_) => true,
+        Err(e) => {
+            log::warn!("fetchMultihopDirectory: directory verify failed: {e}");
+            false
+        }
+    }
 }
 
 /// Seconds since the Unix epoch, 0 on a clock before it (the cache then

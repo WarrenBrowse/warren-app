@@ -233,7 +233,7 @@ pub async fn run_session(
 /// Warren multi-hop directory root signing key (baked pin). Mirrors
 /// `mullvad-daemon::warren_multi_hop_directory::WARREN_MULTIHOP_ROOT_PUBKEY_BAKED`.
 /// The directory envelope must chain to this root in addition to the server pin.
-const WARREN_MULTIHOP_ROOT_PUBKEY_HEX: &str =
+pub(crate) const WARREN_MULTIHOP_ROOT_PUBKEY_HEX: &str =
     "33cd9279ad06d1ee884235e763b876fa70598094944bdcfb82375bd9aaa67b08";
 
 /// Drive a multi-hop tunnel (entry relay -> exit) from start to teardown.

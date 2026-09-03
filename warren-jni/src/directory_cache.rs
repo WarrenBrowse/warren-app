@@ -5,10 +5,14 @@
 //! old (`mullvad-daemon/src/warren_relay_list_updater.rs`, `UPDATE_INTERVAL`)
 //! and serves the last good copy in between. The Android connect flow fetched
 //! the directory on every dial, so an exit switch paid the round trip for a
-//! blob the engine had verified seconds earlier. The engine still verifies the
-//! signature and the `expires_at` of every blob it dials with
-//! (`tunnel::run_multi_hop_session`), so a cached copy carries no trust of its
-//! own; the cache only decides whether a fetch is worth issuing.
+//! blob the engine had verified seconds earlier. A fetched blob is verified
+//! before it is remembered, as the daemon's `decide_outcome` verifies before
+//! it hands a list to its cache: a blob the engine would reject at dial time
+//! is never served back for an hour, and a rejected refetch falls back to
+//! the last good copy the way a failed one does. The engine still verifies
+//! the signature and the `expires_at` of every blob it dials with
+//! (`tunnel::run_multi_hop_session`), so the cache decides only whether a
+//! fetch is worth issuing.
 
 use parking_lot::Mutex;
 use warren_api::{HttpTransport, WarrenApiClient};
@@ -93,19 +97,31 @@ impl DirectoryCache {
         true
     }
 
-    /// The directory for a dial: the fresh copy, else one fetch, else the
-    /// unexpired copy. `None` when nothing usable exists, which the caller
-    /// turns into an empty blob (the connect flow fails closed on it).
+    /// The directory for a dial: the fresh copy, else one fetch that
+    /// [`verify`] must accept, else the unexpired copy. `None` when nothing
+    /// usable exists, which the caller turns into an empty blob (the connect
+    /// flow fails closed on it).
+    ///
+    /// The verifier is a parameter so the cache stays host-testable without
+    /// the pinned keys; the JNI passes the same verification the engine runs
+    /// at dial time.
     pub(crate) async fn fetch_or_cached<T: HttpTransport>(
         &self,
         client: &WarrenApiClient<T>,
         now_unix: u64,
+        verify: impl Fn(&str) -> bool,
     ) -> Option<String> {
         if let Some(raw) = self.fresh(now_unix) {
             return Some(raw);
         }
         match client.fetch_multihop_directory().await {
             Ok(Some(raw)) => {
+                if !verify(&raw) {
+                    log::warn!(
+                        "fetchMultihopDirectory: directory rejected; keeping the last good copy"
+                    );
+                    return self.unexpired(now_unix);
+                }
                 if !self.store(&raw, now_unix) {
                     log::warn!("multihop directory carries no readable expires_at; not cached");
                 }
@@ -123,9 +139,9 @@ impl DirectoryCache {
     }
 }
 
-/// The signed `expires_at` of a directory blob, read without verifying it:
-/// verification is the engine's job at dial time, the cache only needs the
-/// validity window.
+/// The signed `expires_at` of a verified directory blob: the cache only
+/// needs the validity window, and the caller's verifier has already checked
+/// the signature that covers it.
 fn expires_at_of(raw: &str) -> Option<u64> {
     serde_json::from_str::<serde_json::Value>(raw)
         .ok()?
@@ -210,6 +226,11 @@ mod tests {
         )
     }
 
+    /// The verifier of every test that is not about verification.
+    fn accept(_raw: &str) -> bool {
+        true
+    }
+
     fn client(transport: &CountingTransport) -> WarrenApiClient<CountingTransport> {
         WarrenApiClient::new(
             "https://api.example.test",
@@ -224,8 +245,8 @@ mod tests {
         let client = client(&transport);
         let cache = DirectoryCache::new();
 
-        let first = cache.fetch_or_cached(&client, NOW).await;
-        let second = cache.fetch_or_cached(&client, NOW + 3599).await;
+        let first = cache.fetch_or_cached(&client, NOW, accept).await;
+        let second = cache.fetch_or_cached(&client, NOW + 3599, accept).await;
 
         assert_eq!(
             transport.calls(),
@@ -242,8 +263,8 @@ mod tests {
         let client = client(&transport);
         let cache = DirectoryCache::new();
 
-        cache.fetch_or_cached(&client, NOW).await;
-        cache.fetch_or_cached(&client, NOW + 3600).await;
+        cache.fetch_or_cached(&client, NOW, accept).await;
+        cache.fetch_or_cached(&client, NOW + 3600, accept).await;
 
         assert_eq!(
             transport.calls(),
@@ -260,8 +281,8 @@ mod tests {
         let client = client(&transport);
         let cache = DirectoryCache::new();
 
-        cache.fetch_or_cached(&client, NOW).await;
-        cache.fetch_or_cached(&client, NOW + 1).await;
+        cache.fetch_or_cached(&client, NOW, accept).await;
+        cache.fetch_or_cached(&client, NOW + 1, accept).await;
 
         assert_eq!(transport.calls(), 2);
     }
@@ -271,10 +292,10 @@ mod tests {
         let transport = CountingTransport::answering(directory(NOW + 6 * 3600));
         let client = client(&transport);
         let cache = DirectoryCache::new();
-        let first = cache.fetch_or_cached(&client, NOW).await;
+        let first = cache.fetch_or_cached(&client, NOW, accept).await;
 
         transport.set(Answer::Down);
-        let later = cache.fetch_or_cached(&client, NOW + 3600).await;
+        let later = cache.fetch_or_cached(&client, NOW + 3600, accept).await;
 
         assert_eq!(transport.calls(), 2, "the refetch was attempted");
         assert_eq!(
@@ -288,10 +309,10 @@ mod tests {
         let transport = CountingTransport::answering(directory(NOW + 6 * 3600));
         let client = client(&transport);
         let cache = DirectoryCache::new();
-        let first = cache.fetch_or_cached(&client, NOW).await;
+        let first = cache.fetch_or_cached(&client, NOW, accept).await;
 
         transport.set(Answer::NotFound);
-        let later = cache.fetch_or_cached(&client, NOW + 3600).await;
+        let later = cache.fetch_or_cached(&client, NOW + 3600, accept).await;
 
         assert_eq!(later, first);
     }
@@ -301,10 +322,10 @@ mod tests {
         let transport = CountingTransport::answering(directory(NOW + 3700));
         let client = client(&transport);
         let cache = DirectoryCache::new();
-        cache.fetch_or_cached(&client, NOW).await;
+        cache.fetch_or_cached(&client, NOW, accept).await;
 
         transport.set(Answer::Down);
-        let later = cache.fetch_or_cached(&client, NOW + 3700).await;
+        let later = cache.fetch_or_cached(&client, NOW + 3700, accept).await;
 
         assert_eq!(
             later, None,
@@ -318,8 +339,8 @@ mod tests {
         let client = client(&transport);
         let cache = DirectoryCache::new();
 
-        let first = cache.fetch_or_cached(&client, NOW).await;
-        cache.fetch_or_cached(&client, NOW + 1).await;
+        let first = cache.fetch_or_cached(&client, NOW, accept).await;
+        cache.fetch_or_cached(&client, NOW + 1, accept).await;
 
         assert_eq!(
             first.as_deref(),
@@ -334,13 +355,56 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_rejected_directory_is_not_cached_and_the_last_good_copy_is_served() {
+        // The daemon's `decide_outcome`: a list that fails verification never
+        // reaches the cache, and the updater keeps serving the last good one.
+        // Caching the rejected blob would repeat the engine's dial-time
+        // rejection for an hour after the server was fixed.
+        let transport = CountingTransport::answering(directory(NOW + 6 * 3600));
+        let client = client(&transport);
+        let cache = DirectoryCache::new();
+        let good = cache.fetch_or_cached(&client, NOW, accept).await;
+
+        transport.set(Answer::Body(
+            r#"{"forged":true,"expires_at":9999999999}"#.to_owned(),
+        ));
+        let rejects = |raw: &str| !raw.contains("forged");
+        let later = cache.fetch_or_cached(&client, NOW + 3600, rejects).await;
+        cache.fetch_or_cached(&client, NOW + 3601, rejects).await;
+
+        assert_eq!(
+            later, good,
+            "the last good copy is served, never the rejected one"
+        );
+        assert_eq!(
+            transport.calls(),
+            3,
+            "the rejected blob is not remembered, so the next dial fetches again"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_rejected_directory_with_no_good_copy_yields_nothing() {
+        let transport = CountingTransport::answering(directory(NOW + 6 * 3600));
+        let client = client(&transport);
+        let cache = DirectoryCache::new();
+
+        let first = cache.fetch_or_cached(&client, NOW, |_| false).await;
+
+        assert_eq!(
+            first, None,
+            "a blob the engine would reject is not handed out"
+        );
+    }
+
+    #[tokio::test]
     async fn a_clock_that_went_backwards_refetches() {
         let transport = CountingTransport::answering(directory(NOW + 6 * 3600));
         let client = client(&transport);
         let cache = DirectoryCache::new();
 
-        cache.fetch_or_cached(&client, NOW).await;
-        cache.fetch_or_cached(&client, NOW - 10).await;
+        cache.fetch_or_cached(&client, NOW, accept).await;
+        cache.fetch_or_cached(&client, NOW - 10, accept).await;
 
         assert_eq!(
             transport.calls(),
