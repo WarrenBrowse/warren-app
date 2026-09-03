@@ -117,9 +117,6 @@
             <intent-filter>
                 <action android:name="com.warrenbrowse.vpn.disconnect_action" />
             </intent-filter>
-            <intent-filter>
-                <action android:name="com.warrenbrowse.vpn.quit_action" />
-            </intent-filter>
         </service>
         <!--
             WarrenTileService
