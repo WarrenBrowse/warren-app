@@ -217,6 +217,13 @@ pub async fn run_session(
     // drained, no issuance) keeps the v6 wallet-signed path.
     let session_tokens = crate::token_provider::provider_for(signing_key.clone());
 
+    // Port entitlements ride the same wallet and the same coarse refresh
+    // (warren-core doc 99): without one, the exit falls back to its per-client
+    // quota and a subscriber's forwarded ports multiply by the number of
+    // sessions it holds. Built even when port forwarding is off, so issuance
+    // timing never mirrors the moment the user turns it on.
+    let port_entitlements = crate::port_entitlements::provider_for(signing_key.clone());
+
     // The production fleet speaks only the multi-hop wire, so a valid config
     // always carries an entry hop: the Kotlin builder sets it even when the
     // multi-hop toggle is off (a 1-hop circuit with the exit collapsed onto
@@ -227,7 +234,16 @@ pub async fn run_session(
         status.store(SessionStatus::Disconnected as i32);
         return;
     }
-    run_multi_hop_session(tun, signing_key, session_tokens, config, status, cancel_rx).await;
+    run_multi_hop_session(
+        tun,
+        signing_key,
+        session_tokens,
+        port_entitlements,
+        config,
+        status,
+        cancel_rx,
+    )
+    .await;
 }
 
 /// Warren multi-hop directory root signing key (baked pin). Mirrors
@@ -251,6 +267,7 @@ async fn run_multi_hop_session(
     tun: AndroidTun,
     signing: SigningKey,
     session_tokens: SessionTokenProvider,
+    port_entitlements: crate::port_entitlements::CredentialSource,
     config: WarrenTunnelConfig,
     status: &'static crate::status_watch::StatusCell,
     mut cancel_rx: oneshot::Receiver<()>,
@@ -537,7 +554,8 @@ async fn run_multi_hop_session(
         // NAT-PMP over multi-hop: bind the refresh socket to LOCAL_TUN_IPV4 so
         // the request routes through the tunnel (RemapTun rewrites it to the
         // assigned source) to the exit gateway. Guard lives for this attempt.
-        let _nat_pmp_guard = maybe_spawn_nat_pmp(&config, LOCAL_TUN_IPV4);
+        let _nat_pmp_guard =
+            maybe_spawn_nat_pmp(&config, LOCAL_TUN_IPV4, port_entitlements.clone());
 
         // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4/IPV6 (set in
         // Kotlin and immutable after establish()), so wrap it in a 1:1 NAT that
@@ -826,6 +844,7 @@ static LAST_GRANTED_NATPMP_IS_TCP: AtomicBool = AtomicBool::new(false);
 fn maybe_spawn_nat_pmp(
     config: &WarrenTunnelConfig,
     bind_ipv4: std::net::Ipv4Addr,
+    entitlements: crate::port_entitlements::CredentialSource,
 ) -> Option<NatPmpGuard> {
     if !config.nat_pmp_enabled.unwrap_or(false) {
         return None;
@@ -865,15 +884,32 @@ fn maybe_spawn_nat_pmp(
     let lifetime_secs = config.nat_pmp_lifetime_secs.unwrap_or(3600);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
-    let refresh = warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
-        server,
-        proto,
-        0,
-        suggested_external_port,
-        lifetime_secs,
-        suggestion,
+    // Assigning the slot here (rather than only on the first cycle) is what
+    // lets the log say whether this session rides the doc 99 chain at all.
+    // Idempotent: the slot keeps that credential for the whole epoch.
+    let entitlement_present = entitlements().is_some();
+    // The entitlement is consulted once per refresh cycle rather than captured
+    // once: a credential is valid for its own epoch only, so a mapping that
+    // outlives an epoch presents the next batch at its next renewal. An
+    // exhausted batch or an unreachable API answers `None` and the request goes
+    // out bare, which leaves the exit on its per-client quota (degrade, never
+    // refuse).
+    let refresh = warrenguard_natpmp_client::spawn_refresh_loop_with(
+        warrenguard_natpmp_client::RefreshLoopConfig {
+            server,
+            protos: if is_tcp {
+                warrenguard_natpmp_client::ForwardProtos::Tcp
+            } else {
+                warrenguard_natpmp_client::ForwardProtos::Udp
+            },
+            internal_port: 0,
+            suggested_external_port,
+            lifetime_secs,
+            suggestion,
+            bind_addr: Some(bind_addr),
+            credential: Some(entitlements),
+        },
         tx,
-        Some(bind_addr),
     );
     // Publish the initial "requesting" state so Kotlin shows progress
     // immediately after the toggle takes effect.
@@ -896,7 +932,13 @@ fn maybe_spawn_nat_pmp(
             }
         }
     });
-    log::info!("NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr})");
+    // Presence only: a credential is bearer material and never reaches a log.
+    // `false` here is the documented degrade (the exit applies its per-client
+    // quota), which is otherwise indistinguishable from a working chain.
+    log::info!(
+        "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr}, entitlement={})",
+        entitlement_present
+    );
     Some(NatPmpGuard { refresh, drain })
 }
 

@@ -80,6 +80,13 @@ mod circuit_select;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod token_provider;
 
+// Port-forwarding entitlements (warren-core doc 99): the per-wallet, per-slot
+// credential mint is host-tested with a mock issuer against the engine's real
+// NAT-PMP loop; the provider that feeds the mapping request is Android-gated
+// inside.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod port_entitlements;
+
 // VpnService-protected HTTP transport for the token mint: host-testable
 // (injected protector), wired to `VpnService.protect` on Android.
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]

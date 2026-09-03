@@ -103,6 +103,12 @@ warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
 quinn = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn" }
 # Paused-time (`start_paused`) tests for the token-provider timers.
 tokio = { workspace = true, features = ["test-util"] }
+# The engine's real NAT-PMP refresh loop and wire codec, so the port-entitlement
+# mint is observed where the exit reads it (the credential trailer on the
+# datagram) rather than at the closure that hands it over. Both build on the
+# host; the Android target section pulls the client crate for the datapath.
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client" }
+warrenguard-natpmp-protocol = { path = "../../warrenguard/crates/warrenguard-natpmp-protocol" }
 # Fake token issuer for the `token_provider` tests: real engine blind-RSA
 # signatures with only the HTTP transport mocked (the system boundary),
 # mirroring warren-api's own `tokens_mint` test suite. `rand010` matches the
