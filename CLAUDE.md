@@ -45,6 +45,16 @@ detekt regression, run `./gradlew detekt --rerun-tasks` once before your change
 and once after, and compare the two weighted counts; a plain `detekt` prints
 nothing when up-to-date, which reads as a false clean.
 
+## Android performance: measure before and after, on the release-shaped build
+
+Never profile a debug build (StrictMode, Compose diagnostics, an 18 MB
+unoptimised `.so`). The measurable build is `betaBenchmarkRelease` (R8,
+profileable, release Rust), and the baseline every performance change is
+compared against, scenario by scenario with the exact commands, is
+[`android/docs/PERF-BASELINE.md`](android/docs/PERF-BASELINE.md); the
+scripts that produced it live in `android/scripts/perf/`. Its thresholds are
+proposals, not gates, until a lot promotes one.
+
 ## Desktop unit tests run on a Node-only machine, and must stay that way
 
 `warren-tests.yml` runs the vitest suite (`npm run test -w mullvad-vpn`) on a
