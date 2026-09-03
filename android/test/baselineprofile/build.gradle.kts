@@ -58,6 +58,17 @@ android {
                 value = "\"warrenbrowse.com\"",
             )
         }
+        // The app's beta benchmark variant needs a producer with the same
+        // flavor, or the baseline-profile plugin has no test module to pair
+        // it with.
+        create(Flavors.BETA) {
+            dimension = FlavorDimensions.INFRASTRUCTURE
+            buildConfigField(
+                type = "String",
+                name = "INFRASTRUCTURE_BASE_DOMAIN",
+                value = "\"beta.warrenbrowse.com\"",
+            )
+        }
     }
     buildFeatures { buildConfig = true }
 

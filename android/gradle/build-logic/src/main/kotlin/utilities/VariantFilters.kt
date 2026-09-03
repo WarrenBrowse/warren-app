@@ -21,9 +21,12 @@ val prodDebugReleaseVariants =
         },
     )
 
+// Beta is the channel users run today, so the release-shaped build the
+// macrobenchmarks and the performance baseline measure must exist for it too;
+// a prod-only benchmark variant measures an APK nobody installs.
 val baselineFilter =
     VariantFilter(
-        infrastructurePredicate = { it == PROD },
+        infrastructurePredicate = { it == PROD || it == BETA },
         buildTypePredicate = {
             if (it == null) return@VariantFilter false
             val isBaselineBuildType =
