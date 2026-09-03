@@ -716,6 +716,48 @@ class WarrenQuinnAdapterTest {
             }
         }
 
+    /**
+     * Releasing traffic is the one drop path that hands the device back to the
+     * bare network: a flapping tunnel with lockdown off. The native session
+     * must be retired there like on every other teardown: its API connection
+     * pool was opened through the interface that just went away, and a pool
+     * left standing serves those dead sockets to the next request.
+     */
+    @Test
+    fun `ensure a flapping tunnel without lockdown retires the native session before releasing`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
+                adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+                awaitReal("the session must reach Connected") {
+                    adapter.state.value is WarrenTunnelState.Connected
+                }
+
+                // Every redial dies on arrival: the flap guard trips and, with
+                // lockdown off, the policy releases traffic.
+                platform.statusOnConnect = STATUS_DISCONNECTED
+                platform.status = STATUS_DISCONNECTED
+                awaitReal("the flapping tunnel must release traffic") {
+                    adapter.state.value is WarrenTunnelState.Failed
+                }
+
+                val calls = platform.calls.toList()
+                val lastDial = calls.lastIndexOf(CONNECT_TUNNEL)
+                val released = calls.lastIndexOf(CLOSE_ACTIVE)
+                assertTrue(released > lastDial, "the release closes the live TUN, got: $calls")
+                assertTrue(
+                    DISCONNECT_TUNNEL in calls.subList(lastDial, released),
+                    "the release must retire the native session before dropping the TUN, got: " +
+                        calls.subList(lastDial, calls.size),
+                )
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
+
     /** The "Last" row needs the moment the count moved, not only the count. */
     @Test
     fun `ensure a landed recovery stamps the time of the last recovery`() = runTest {

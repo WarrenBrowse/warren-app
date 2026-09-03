@@ -563,12 +563,7 @@ class WarrenQuinnAdapter(
                 // TUN (this is the only path that returns traffic to the bare
                 // network, and only on explicit intent).
                 Logger.w("WarrenQuinnAdapter: releasing traffic ($reason)")
-                activeFd?.close()
-                activeFd = null
-                exitBlockingMode()
-                unregisterNetworkCallback()
-                activeMnemonic?.close()
-                activeMnemonic = null
+                releaseTraffic()
                 _state.value = WarrenTunnelState.Failed(reason)
             }
             KillSwitchAction.PARK -> {
@@ -646,14 +641,28 @@ class WarrenQuinnAdapter(
             enterBlockingMode(config, "subscription expired", flapping = false, expired = true)
         } else {
             Logger.w("WarrenQuinnAdapter: account unauthorized; releasing (subscription expired)")
-            activeFd?.close()
-            activeFd = null
-            exitBlockingMode()
-            unregisterNetworkCallback()
-            activeMnemonic?.close()
-            activeMnemonic = null
+            releaseTraffic()
             _state.value = WarrenTunnelState.Failed("subscription expired", expired = true)
         }
+    }
+
+    /**
+     * Hand traffic back to the bare network. Must be called holding [lock].
+     * The native session is retired first, as on every other teardown: the
+     * engine's slot must be clear for the next connect, and the API connection
+     * pool it retires was opened through the interface about to go, so a pool
+     * left standing would serve those dead sockets to the next request made
+     * before the user reconnects. Then the TUN and any blackhole are dropped,
+     * and the session's recovery phrase is wiped with them.
+     */
+    private fun releaseTraffic() {
+        platform.disconnectTunnel()
+        activeFd?.close()
+        activeFd = null
+        exitBlockingMode()
+        unregisterNetworkCallback()
+        activeMnemonic?.close()
+        activeMnemonic = null
     }
 
     /** Tear down the kill-switch blackhole interface, if any. */
