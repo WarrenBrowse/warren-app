@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
@@ -83,19 +84,29 @@ private const val BULA_FEET_FRACTION = 1332f / 1706f
 private val FOREGROUND_CARD_GAP = 16.dp
 
 // Hiding slides Bula 3% of the height down into the burrow while fading.
-private const val BULA_HIDE_DROP = 0.03f
+internal const val BULA_HIDE_DROP = 0.03f
 
-// Animation timings, matching the desktop CSS transitions.
-private const val CROSSFADE_MILLIS = 700
-private const val BLUR_MILLIS = 900
-private const val ZOOM_MILLIS = 6000
-private const val BULA_MILLIS = 550
+// Animation timings, matching the desktop CSS transitions (CountryBackdrop);
+// SceneryParityTest pins them to the generated desktop tokens.
+internal const val CROSSFADE_MILLIS = 700
+internal const val BLUR_MILLIS = 900
+internal const val ZOOM_MILLIS = 6000
+internal const val BULA_MILLIS = 550
 
-private const val CONNECTING_ZOOM = 1.08f
-private const val WASH_ALPHA = 0.14f
+internal const val CONNECTING_ZOOM = 1.08f
+// The desktop dims the connecting landscape to brightness(0.92); over opaque
+// art that is a black overlay at 8 %, animated on the blur's own clock.
+internal const val CONNECTING_DIM = 0.08f
+internal const val WASH_ALPHA = 0.14f
+internal const val WASH_TOP_STOP = 0.22f
+internal const val WASH_BOTTOM_STOP = 0.78f
+// Desktop `mix-blend-mode: soft-light`: the tint keys the mood without a flat
+// veil over the art. Below API 29 the canvas has no soft-light and the wash
+// composites as plain alpha, the same overlay as before.
+internal val WASH_BLEND = BlendMode.Softlight
 private const val SCRIM_START = 0.66f
 private const val SCRIM_ALPHA = 0.6f
-private val LANDSCAPE_BLUR_RADIUS = 14.dp
+internal val LANDSCAPE_BLUR_RADIUS = 14.dp
 
 /**
  * The full-bleed illustrated backdrop of the home screen: a per-country
@@ -140,6 +151,12 @@ fun SceneryBackdrop(
             animationSpec = tween(ZOOM_MILLIS, easing = EaseOut),
             label = "scenery_zoom",
         )
+    val dim by
+        animateFloatAsState(
+            targetValue = if (scenery.blurred) CONNECTING_DIM else 0f,
+            animationSpec = tween(BLUR_MILLIS),
+            label = "scenery_dim",
+        )
     val bulaAlpha by
         animateFloatAsState(
             targetValue = if (scenery.showBula) 1f else 0f,
@@ -165,6 +182,11 @@ fun SceneryBackdrop(
             zoom = { zoom },
             blurRadius = { blurRadius },
         )
+        // The connecting dim covers the landscape only: the burrow and Bula
+        // stay at full brightness, as on desktop where the filter sits on the
+        // scene wrapper under them. Read at draw time so the fade costs no
+        // recomposition.
+        Box(Modifier.fillMaxSize().drawBehind { drawRect(Color.Black, alpha = dim) })
 
         // Foreground layers stay sharp and registered to EACH OTHER (Bula's
         // shadow is painted in the burrow layer), drawn at the same full-width
@@ -215,10 +237,10 @@ private fun androidx.compose.ui.graphics.GraphicsLayerScope.foregroundShift(
 
 /**
  * The two full-bleed overlays: a faint phase-tinted wash on the top and bottom
- * edges (enough to key the mood to the connection state without washing out the
- * art), then one continuous bottom scrim to the very screen edge (desktop
- * AppMainFooter) that grounds the card and footer over the blurred
- * continuation band.
+ * edges, blended soft-light so it keys the mood to the connection state
+ * without veiling the art, then one continuous bottom scrim to the very screen
+ * edge (desktop AppMainFooter) that grounds the card and footer over the
+ * blurred continuation band.
  *
  * Both brushes are memoized: a full-screen gradient reallocated on every frame
  * of the 700ms wash is pure garbage, and the scrim never changes at all.
@@ -229,12 +251,12 @@ private fun PhaseWash(washColor: Color) {
         remember(washColor) {
             Brush.verticalGradient(
                 0f to washColor.copy(alpha = WASH_ALPHA),
-                0.22f to Color.Transparent,
-                0.78f to Color.Transparent,
+                WASH_TOP_STOP to Color.Transparent,
+                WASH_BOTTOM_STOP to Color.Transparent,
                 1f to washColor.copy(alpha = WASH_ALPHA),
             )
         }
-    Box(Modifier.fillMaxSize().background(washBrush))
+    Box(Modifier.fillMaxSize().drawBehind { drawRect(brush = washBrush, blendMode = WASH_BLEND) })
     val scrimBrush =
         remember {
             Brush.verticalGradient(
