@@ -616,6 +616,9 @@ dependencies {
     }
     implementation(libs.accompanist.permissions)
     implementation(libs.androidx.activity.compose)
+    // AppCompat delegate: the per-app language picker below API 33, and the
+    // AppCompatActivity host MainActivity needs for it.
+    implementation(libs.androidx.appcompat)
     // FragmentActivity baseline for MainActivity (BiometricPrompt host).
     implementation(libs.androidx.fragment)
     implementation(libs.androidx.datastore)

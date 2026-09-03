@@ -134,6 +134,18 @@
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>
         </service>
+        <!--
+            AppCompat stores the per-app language itself below API 33 (from 33
+            up it delegates to the framework LocaleManager). Without this
+            metadata the picker applies a language for the current process only
+            and the app reverts to the system locale on the next cold start.
+            The holder service is never started; it exists to carry the flag.
+            -->
+        <service android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+                 android:enabled="false"
+                 android:exported="false">
+            <meta-data android:name="autoStoreLocales" android:value="true" />
+        </service>
         <receiver android:name=".receiver.LocaleChangedBroadcastReceiver"
                   android:exported="false">
             <intent-filter>

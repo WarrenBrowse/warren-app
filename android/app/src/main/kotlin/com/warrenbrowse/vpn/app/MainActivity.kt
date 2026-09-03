@@ -10,7 +10,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.util.Consumer
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -60,11 +60,15 @@ import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
 import org.koin.core.context.loadKoinModules
 
-// `FragmentActivity` rather than `ComponentActivity`: `BiometricPrompt`
-// (used by `BiometricPromptAuthorizer` for D.5 wallet unlock) requires a
-// FragmentActivity host. FragmentActivity extends ComponentActivity, so
-// this is a compatible upgrade for all existing Compose plumbing.
-class MainActivity : FragmentActivity(), AndroidScopeComponent {
+// `AppCompatActivity` rather than `ComponentActivity`: two things need more
+// than the bare activity. `BiometricPrompt` (used by `BiometricPromptAuthorizer`
+// for wallet unlock) requires a FragmentActivity host, and the per-app language
+// picker needs AppCompat's delegate to apply a chosen locale below API 33,
+// where the framework `LocaleManager` does not exist. AppCompatActivity extends
+// FragmentActivity extends ComponentActivity, so every existing Compose,
+// splash-screen and edge-to-edge path is unchanged; the post-splash theme is
+// already an AppCompat theme (`AppTheme`, styles.xml).
+class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     override val scope by activityScope()
 
     private val launchVpnPermission =

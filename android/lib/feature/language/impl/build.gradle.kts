@@ -11,5 +11,8 @@ android { namespace = "com.warrenbrowse.vpn.feature.language.impl" }
 dependencies {
     implementation(projects.lib.feature.language.api)
 
+    // AppCompat carries the per-app language below API 33, where the framework
+    // LocaleManager does not exist.
+    implementation(libs.androidx.appcompat)
     implementation(libs.koin.compose)
 }

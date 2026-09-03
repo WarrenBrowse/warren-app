@@ -190,9 +190,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         autoConnectEntry(nav3)
         changelogEntry(nav3)
         homeEntry(nav3)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            languageEntry(nav3)
-        }
+        languageEntry(nav3)
         // First-run onboarding continues the post-wallet step into the
         // subscription -> done wizard (beta flavor: the auto-granted beta
         // access step, no payment surface); every other wallet entry goes

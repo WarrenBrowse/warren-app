@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.feature.language.impl
 
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.util.Locale
@@ -14,7 +13,6 @@ import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.toLc
 
-@RequiresApi(android.os.Build.VERSION_CODES.TIRAMISU)
 class LanguageViewModel(private val languageRepository: LanguageRepository) : ViewModel() {
 
     private val supportedLocales = languageRepository.getSupportedLocales()

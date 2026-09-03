@@ -1,38 +1,35 @@
 package com.warrenbrowse.vpn.feature.language.impl
 
-import android.app.LocaleConfig
-import android.app.LocaleManager
 import android.content.Context
-import android.os.LocaleList
-import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import java.util.Locale
+import com.warrenbrowse.vpn.lib.ui.resource.R
 
-@RequiresApi(android.os.Build.VERSION_CODES.TIRAMISU)
+/**
+ * Per-app language through AppCompat rather than the framework `LocaleManager`.
+ *
+ * The framework API lands only on API 33, which left every older device with no
+ * language picker at all. AppCompat applies the same choice on those releases
+ * and delegates to `LocaleManager` from 33 up, so behaviour above the line is
+ * unchanged and the row can be offered unconditionally. Persistence below 33 is
+ * AppCompat's, enabled by the `autoStoreLocales` metadata in the app manifest.
+ */
 class LanguageRepository(private val context: Context) {
 
-    private val localeManager: LocaleManager = context.getSystemService(LocaleManager::class.java)
+    fun getSupportedLocales(): List<Locale> =
+        supportedLocalesFromTags(readLocaleConfigTags(context.resources, R.xml.locales_config))
 
-    fun getSupportedLocales(): List<Locale> {
-        val localeList = LocaleConfig(context).supportedLocales ?: return emptyList()
-        return buildList {
-                for (i in 0 until localeList.size()) {
-                    add(localeList.get(i))
-                }
-            }
-            .sortedBy { it.getDisplayName(it).lowercase() }
-    }
-
-    fun getAppLocale(): Locale? {
-        val locales = localeManager.applicationLocales
-        return if (locales.isEmpty) null else locales.get(0)
-    }
+    fun getAppLocale(): Locale? =
+        AppCompatDelegate.getApplicationLocales().takeIf { !it.isEmpty }?.get(0)
 
     fun setAppLocale(locale: Locale?) {
-        localeManager.applicationLocales =
+        AppCompatDelegate.setApplicationLocales(
             if (locale == null) {
-                LocaleList.getEmptyLocaleList()
+                LocaleListCompat.getEmptyLocaleList()
             } else {
-                LocaleList.forLanguageTags(locale.toLanguageTag())
+                LocaleListCompat.forLanguageTags(locale.toLanguageTag())
             }
+        )
     }
 }

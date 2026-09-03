@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Spacer
@@ -134,14 +133,10 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(NotificationSettingsNavKey) },
         // Language and Notifications form desktop's "User interface settings"
         // group, kept as a flat group here instead of a container page (the
-        // two rows do not earn a passthrough on mobile). Per-app language
-        // requires API 33, so the row is hidden below that.
+        // two rows do not earn a passthrough on mobile). AppCompat carries the
+        // per-app language below API 33, so the row is offered on every device.
         onLanguageClick =
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                dropUnlessResumed { navigator.navigateReplaceIfDetailPane(LanguageNavKey) }
-            } else {
-                null
-            },
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(LanguageNavKey) },
         onWalletClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenWalletSettingsNavKey) },
         onReportProblemClick =

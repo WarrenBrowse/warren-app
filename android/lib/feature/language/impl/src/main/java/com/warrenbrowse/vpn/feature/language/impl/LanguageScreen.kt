@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.feature.language.impl
 
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -61,7 +60,6 @@ private fun PreviewLanguageScreen() {
 }
 
 @Composable
-@RequiresApi(android.os.Build.VERSION_CODES.TIRAMISU)
 fun Language(navigator: Navigator) {
     val viewModel = koinViewModel<LanguageViewModel>()
     val state by viewModel.uiState.collectAsStateWithLifecycle()
