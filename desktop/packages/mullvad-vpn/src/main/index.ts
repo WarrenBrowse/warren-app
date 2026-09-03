@@ -132,6 +132,7 @@ import TunnelStateHandler, {
 } from './tunnel-state';
 import UserInterface, { UserInterfaceDelegate } from './user-interface';
 import Version, { GUI_VERSION } from './version';
+import { announcementUrlToOpen } from './warren-announcement-links';
 
 const execAsync = util.promisify(exec);
 
@@ -1374,6 +1375,12 @@ class ApplicationMain
     IpcMainEventChannel.app.handleOpenUrl(async (url) => {
       if (Object.values(urls).find((allowedUrl) => url.startsWith(allowedUrl))) {
         await shell.openExternal(url);
+      }
+    });
+    IpcMainEventChannel.app.handleOpenAnnouncementUrl(async (url) => {
+      const destination = announcementUrlToOpen(url, this.warrenStatus?.announcements);
+      if (destination !== undefined) {
+        await shell.openExternal(destination);
       }
     });
     IpcMainEventChannel.account.handleBuyCredit(() => {

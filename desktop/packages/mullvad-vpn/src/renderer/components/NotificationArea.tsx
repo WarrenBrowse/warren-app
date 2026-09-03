@@ -110,7 +110,8 @@ export default function NotificationArea(props: IProps) {
   const hostOffline = useHostOffline();
   const connectingStuck = useConnectingStuck();
   const exitEgressDead = useExitEgressDead();
-  const { clearEnvYield, dismissAnnouncement, dismissNotice, openUrl } = useAppContext();
+  const { clearEnvYield, dismissAnnouncement, dismissNotice, openAnnouncementUrl } =
+    useAppContext();
   const dismissedAnnouncements = useSelector(
     (state: IReduxState) => state.settings.guiSettings.dismissedAnnouncements ?? [],
   );
@@ -119,9 +120,9 @@ export default function NotificationArea(props: IProps) {
   );
   const openAnnouncementCta = useCallback(
     (url: Url) => {
-      void openUrl(url);
+      void openAnnouncementUrl(url);
     },
-    [openUrl],
+    [openAnnouncementUrl],
   );
   const clearEnvYieldNow = useCallback(() => {
     clearEnvYield().catch((error: Error) => {

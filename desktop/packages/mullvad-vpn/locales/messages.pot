@@ -2852,6 +2852,7 @@ msgctxt "report-problem"
 msgid "The logs could not be saved."
 msgstr ""
 
+#. Shown once the logs have been written to the chosen file.
 msgctxt "report-problem"
 msgid "The logs were saved. You can attach them to the help form on the website."
 msgstr ""

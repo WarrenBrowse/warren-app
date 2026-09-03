@@ -266,6 +266,11 @@ export const ipcSchema = {
   app: {
     quit: send<DisconnectSource>(),
     openUrl: invoke<string, void>(),
+    // A launch announcement's destination is the operator's own, so it can
+    // never be on the fixed `urls` allowlist `openUrl` enforces. It is admitted
+    // against the verified announcement snapshot instead
+    // (`main/warren-announcement-links`).
+    openAnnouncementUrl: invoke<string, void>(),
     openRoute: notifyRenderer<RoutePath>(),
     showOpenDialog: invoke<Electron.OpenDialogOptions, Electron.OpenDialogReturnValue>(),
     showLaunchDaemonSettings: invoke<void, void>(),

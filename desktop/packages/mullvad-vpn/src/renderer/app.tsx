@@ -542,6 +542,10 @@ export default class AppRenderer {
     IpcRendererEventChannel.settings.setDaitaDirectOnly(value);
   public quit = (source: DisconnectSource) => IpcRendererEventChannel.app.quit(source);
   public openUrl = (url: Url) => IpcRendererEventChannel.app.openUrl(url);
+  // The operator's own destination, admitted by the verified announcement
+  // snapshot rather than by the app's fixed link allowlist.
+  public openAnnouncementUrl = (url: string) =>
+    IpcRendererEventChannel.app.openAnnouncementUrl(url);
   public getPathBaseName = (path: string) => IpcRendererEventChannel.app.getPathBaseName(path);
   public showOpenDialog = (options: Electron.OpenDialogOptions) =>
     IpcRendererEventChannel.app.showOpenDialog(options);
