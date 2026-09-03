@@ -15,7 +15,15 @@ import org.junit.jupiter.api.Test
  * The Android reader of `fixtures/client-rules/product_env.json`: the flavor
  * this test binary was compiled for must carry the fixture's row, so the
  * Gradle table cannot drift from the Rust crate and the desktop tables that
- * replay the same file. Runs once per flavor under `testAllUnitTests`.
+ * replay the same file.
+ *
+ * `testAllUnitTests` resolves to `testProdDebugUnitTest` for a flavored module
+ * (`UnitTestPlugin`), so on CI this reader only ever runs for the prod flavor.
+ * The beta and staging rows are held by
+ * `warren-product-env/tests/platform_lockstep.rs::the_android_flavor_table_is_the_crates`,
+ * which reads `android/app/build.gradle.kts` as text for every environment. Do
+ * not add a reader here for a per-flavor fact that only exists at runtime: it
+ * would never run for two of the three rows.
  */
 class ProductEnvBuildConfigTest {
     private val row =
