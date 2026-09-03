@@ -164,14 +164,122 @@ pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Chann
 ///
 /// Takes a [`PrivilegedSocketPath`] rather than a path, so the ownership check
 /// cannot be forgotten: see that type for why it is load-bearing.
-#[cfg(not(target_os = "android"))]
+#[cfg(all(unix, not(target_os = "android")))]
 pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Channel, Error> {
+    // The unix ownership question is settled by the path itself (see
+    // [`PrivilegedSocketPath`]), so the ordinary connector is enough here.
     grpc_transport_channel_at(path.as_path().to_path_buf()).await
 }
 
+/// Create a [Channel] to another product environment's management interface.
+///
+/// Deliberately NOT [`grpc_transport_channel_at`]: on Windows the ownership
+/// question has to be asked of the pipe instance this channel carries its
+/// bytes over, and it is asked again for every connection the channel opens,
+/// reconnects included. See [`PrivilegedSocketPath`] for why a check made on
+/// a handle that is then dropped gates nothing here.
+#[cfg(windows)]
+pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Channel, Error> {
+    let ipc_path = path.as_path().to_path_buf();
+    Endpoint::from_static("lttp://[::]:50051")
+        .connect_with_connector(service_fn(move |_: Uri| {
+            let ipc_path = ipc_path.clone();
+            async move {
+                connect_admin_owned_pipe(&ipc_path)
+                    .await
+                    .map(hyper_util::rt::tokio::TokioIo::new)
+            }
+        }))
+        .await
+        .map_err(Error::GrpcTransportError)
+}
+
+/// Open the named pipe at `path` and hand it back only if the OS says a
+/// privileged account owns THAT instance.
+///
+/// The verification and the connection are one operation on purpose: two
+/// separate opens of the same pipe name can land on two different instances,
+/// and an unprivileged process is allowed to own one of them (see
+/// [`PrivilegedSocketPath`]).
+#[cfg(windows)]
+async fn connect_admin_owned_pipe(
+    path: &std::path::Path,
+) -> io::Result<tokio::net::windows::named_pipe::NamedPipeClient> {
+    use std::os::windows::io::AsHandle;
+    use std::time::{Duration, Instant};
+
+    /// `ERROR_PIPE_BUSY`, spelled out rather than imported so this crate does
+    /// not grow a `windows-sys` edge for one integer.
+    const ERROR_PIPE_BUSY: i32 = 231;
+    /// How long to wait for a free instance, matching what `tipsy` does for
+    /// this crate's other dials: the daemon creates the next free instance
+    /// only after accepting, so a dial landing in that window is busy rather
+    /// than refused.
+    const PIPE_AVAILABILITY_TIMEOUT: Duration = Duration::from_secs(5);
+
+    let deadline = Instant::now() + PIPE_AVAILABILITY_TIMEOUT;
+    let pipe = loop {
+        match tokio::net::windows::named_pipe::ClientOptions::new()
+            .read(true)
+            .write(true)
+            .open(path)
+        {
+            Ok(pipe) => break pipe,
+            Err(error)
+                if error.raw_os_error() == Some(ERROR_PIPE_BUSY) && Instant::now() < deadline =>
+            {
+                tokio::time::sleep(Duration::from_millis(50)).await;
+            }
+            Err(error) => return Err(error),
+        }
+    };
+
+    if endpoint_admits(talpid_windows::fs::is_admin_owned(pipe.as_handle()).ok()) {
+        Ok(pipe)
+    } else {
+        Err(io::Error::new(
+            io::ErrorKind::PermissionDenied,
+            "the management pipe instance is not owned by a privileged account",
+        ))
+    }
+}
+
+/// The admission decision every cross-environment dial turns on, given what
+/// the OS said about the endpoint: `Some(true)` a privileged owner (uid 0 on
+/// unix, SYSTEM or the built-in administrators on Windows), `Some(false)`
+/// anybody else, `None` nothing observable at all.
+///
+/// One function for both platforms so the ACCEPTING direction is drivable by
+/// a test that owns no root-owned endpoint: an implementation that stopped
+/// admitting a genuine one would leave every refusal gate green while
+/// silently deciding that no environment is ever asserting the machine, and
+/// the whole stand-down would quietly do nothing.
+///
+/// `None` is refused like an unprivileged owner. An environment that is not
+/// installed has no endpoint, and a probe that cannot see one must read as
+/// "nothing to yield to" rather than as evidence.
+#[cfg(not(target_os = "android"))]
+#[must_use]
+fn endpoint_admits(privileged_owner: Option<bool>) -> bool {
+    privileged_owner == Some(true)
+}
+
+/// What the OS says about the owner of the management endpoint at `path`, or
+/// `None` when there is nothing there to ask about.
+#[cfg(all(unix, not(target_os = "android")))]
+#[must_use]
+fn unix_endpoint_owner_is_privileged(path: &std::path::Path) -> Option<bool> {
+    use std::os::unix::fs::{FileTypeExt, MetadataExt};
+
+    // symlink_metadata, not metadata: a symlink an unprivileged user planted
+    // at the derived path must never inherit the target's ownership.
+    let meta = std::fs::symlink_metadata(path).ok()?;
+    // A path that is not a socket is not an endpoint, whoever owns it.
+    meta.file_type().is_socket().then(|| meta.uid() == 0)
+}
+
 /// Whether the OS vouches that the management endpoint at `path` belongs to a
-/// privileged process: owned by uid 0 on unix, owned by SYSTEM or the
-/// built-in administrators on Windows.
+/// privileged process: owned by uid 0.
 ///
 /// This is the admission gate for every cross-environment dial, and it is the
 /// same check the desktop GUI runs on its own daemon in `verifyOwnership()`.
@@ -180,52 +288,69 @@ pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Ch
 /// `SetLockdownMode` and `SetAutoConnect` are unauthenticated, so an
 /// unprivileged process that binds prod's path could hold a kill switch open
 /// forever and any environment that believed it would stand down on command.
-///
-/// Answers `false` for anything it cannot verify: an absent path, a path that
-/// is not an endpoint at all, an ownership query that failed. An environment
-/// that is not installed has no socket, and a probe that cannot see one must
-/// read as "nothing to yield to" rather than as an error.
 #[cfg(all(unix, not(target_os = "android")))]
 #[must_use]
 fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
-    use std::os::unix::fs::{FileTypeExt, MetadataExt};
-
-    // symlink_metadata, not metadata: a symlink an unprivileged user planted
-    // at the derived path must never inherit the target's ownership.
-    std::fs::symlink_metadata(path)
-        .is_ok_and(|meta| meta.file_type().is_socket() && meta.uid() == 0)
+    endpoint_admits(unix_endpoint_owner_is_privileged(path))
 }
 
-/// Windows variant of the unix gate above: open the named pipe and ask the
-/// security descriptor who owns it, mirroring `pipeIsAdminOwned` in the
-/// desktop main process.
+/// Windows arm of the gate above: open the named pipe and ask the security
+/// descriptor who owns it, mirroring `pipeIsAdminOwned` in the desktop main
+/// process.
+///
+/// An early rejection, not the gate. The pipe name can carry another
+/// process's instance (see [`PrivilegedSocketPath`]), so the answer that
+/// binds is the one [`connect_admin_owned_pipe`] gets about the instance the
+/// channel actually holds.
 #[cfg(windows)]
 #[must_use]
 fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
     let Ok(pipe) = std::fs::File::options().read(true).open(path) else {
         return false;
     };
-    talpid_windows::fs::is_admin_owned(pipe).unwrap_or(false)
+    endpoint_admits(talpid_windows::fs::is_admin_owned(pipe).ok())
 }
 
-/// A management-endpoint path the OS has vouched for, the only thing a
-/// cross-environment dial accepts.
+/// A management endpoint of ANOTHER product environment that a
+/// cross-environment dial is allowed to attempt.
 ///
-/// The check exists as a type rather than as a rule in a doc comment because
-/// the rule is load-bearing and the wrong call would otherwise compile: the
+/// The rule exists as a type rather than as a line in a doc comment because
+/// it is load-bearing and the wrong call would otherwise compile: the
 /// management socket is world-accessible and its disconnect, lockdown and
 /// auto-connect RPCs are unauthenticated, so believing an unvouched endpoint
 /// is a documented way for any local process to talk an environment into
-/// standing down. [`Self::vouched_for`] is the only constructor, so there is
-/// no spelling of a foreign dial that skips it.
+/// standing down.
+///
+/// WHERE the ownership question is settled differs by platform, and the
+/// difference is not cosmetic:
+///
+/// - unix: the PATH is the evidence. The socket lives in a root-owned
+///   directory an unprivileged user cannot create an entry in, so a
+///   root-owned socket at the derived path can only be that environment's
+///   daemon, and [`Self::vouched_for`] settles it once at construction.
+/// - Windows: the path carries no evidence at all. The daemon's pipe is
+///   created with `allow_everyone_create`, whose Everyone ACE grants
+///   `FILE_GENERIC_WRITE` and therefore `FILE_CREATE_PIPE_INSTANCE`, so any
+///   local process may keep its own instance of `\\.\pipe\Warren VPN`
+///   listening and serve a connection. Asking a handle and then dropping it
+///   settles nothing, because the next connect can land on a different
+///   instance. So [`Self::vouched_for`] is only a cheap early rejection
+///   there, and the binding check is made on the pipe instance the channel
+///   actually holds, inside [`grpc_transport_channel_to`].
 #[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivilegedSocketPath(PathBuf);
 
 #[cfg(not(target_os = "android"))]
 impl PrivilegedSocketPath {
-    /// `Some` when the OS says the endpoint at `path` belongs to a privileged
-    /// process, `None` for everything else, an absent path included.
+    /// The only constructor, so there is no spelling of a foreign dial that
+    /// skips the gate: `Some` when the OS says the endpoint at `path` belongs
+    /// to a privileged process, `None` for everything else, an absent path
+    /// included.
+    ///
+    /// On unix this settles the question. On Windows it is an early
+    /// rejection and the binding check is made again, on the pipe instance
+    /// the dial lands on, in [`grpc_transport_channel_to`]. See the type.
     #[must_use]
     pub fn vouched_for(path: PathBuf) -> Option<Self> {
         foreign_socket_is_privileged(&path).then_some(Self(path))
@@ -606,6 +731,19 @@ mod foreign_socket_tests {
 
     #[cfg(unix)]
     #[test]
+    fn a_symlink_does_not_borrow_the_ownership_of_what_it_points_at() {
+        // `symlink_metadata`, not `metadata`. Following the link would let an
+        // unprivileged user plant a link at the derived path, aim it at
+        // something root owns, and borrow its vouch.
+        let scratch = Scratch::new("l");
+        let link = scratch.join("s");
+        std::os::unix::fs::symlink(std::path::Path::new("/dev/null"), &link)
+            .expect("plant a symlink");
+        assert!(!vouched(&link));
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn a_vouched_path_carries_the_path_it_was_admitted_with() {
         // The newtype is the only way to name a foreign endpoint, so it has to
         // hand back exactly what was checked. A constructor that normalised or
@@ -720,5 +858,44 @@ mod rpc_size_tests {
             MAX_RPC_MESSAGE_BYTES,
             MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAGE_OVERHEAD_BYTES
         );
+    }
+}
+
+/// The admission gate every cross-environment dial turns on.
+///
+/// CI runs unprivileged and owns no root-owned endpoint, so the accepting
+/// direction is driven through [`endpoint_admits`] rather than through a real
+/// one. That direction needs a gate as much as the refusing one does: a build
+/// that stopped admitting a genuine root-owned endpoint would keep every
+/// refusal test green while quietly deciding that no other environment ever
+/// asserts the machine, and the whole stand-down would do nothing at all.
+#[cfg(all(test, not(target_os = "android")))]
+mod foreign_endpoint_tests {
+    use super::endpoint_admits;
+
+    #[test]
+    fn an_endpoint_a_privileged_account_owns_is_admitted() {
+        assert!(
+            endpoint_admits(Some(true)),
+            "refusing a genuine root-owned endpoint disables the whole \
+             cross-environment stand-down, silently and with every other gate green"
+        );
+    }
+
+    #[test]
+    fn an_endpoint_anybody_else_owns_is_refused() {
+        // The socket is world-accessible and its disconnect, lockdown and
+        // auto-connect RPCs are unauthenticated, so an unprivileged process
+        // holding a look-alike endpoint could otherwise talk this build into
+        // standing down on demand.
+        assert!(!endpoint_admits(Some(false)));
+    }
+
+    #[test]
+    fn an_endpoint_nothing_could_be_asked_about_is_refused() {
+        // An environment that is not installed has no endpoint, and a probe
+        // that cannot see one must read as "nothing to yield to", never as
+        // evidence.
+        assert!(!endpoint_admits(None));
     }
 }
