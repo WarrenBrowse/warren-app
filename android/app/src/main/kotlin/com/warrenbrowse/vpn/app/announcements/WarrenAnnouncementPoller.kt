@@ -148,42 +148,47 @@ class WarrenAnnouncementPoller(
         announcements: List<WarrenAnnouncement>
     ): List<WarrenAnnouncement> {
         val campaigns = announcements.mapNotNull { it.voucherCampaignId }.distinct()
-        if (campaigns.isEmpty()) {
-            return announcements
-        }
-        val identity = walletIdentity() ?: return announcements
-        if (identity != heldFor) {
-            // A code belongs to the account it was drawn for.
-            held.clear()
-            heldFor = identity
-        }
-        val unanswered = campaigns.filter { held[it] == null }
-        if (unanswered.isNotEmpty()) {
-            val mnemonic =
-                try {
-                    wallet.readMnemonic()
-                } catch (e: Exception) {
-                    // A wallet that cannot be read is a card with no code,
-                    // never a card withheld: the operator's text still reaches
-                    // the reader.
-                    Logger.w(throwable = e) { "WarrenAnnouncementPoller: mnemonic read failed" }
-                    return announcements
-                }
-            mnemonic.use { m ->
-                unanswered.forEach { campaign ->
-                    val answer = withContext(io) { claim(m.phrase, campaign) }
-                    // A lookup that did not happen is retried on the next
-                    // cycle; a server answer, code or no code, is final.
-                    if (answer != VoucherAnswer.Unanswered) {
-                        held[campaign] = answer
-                    }
-                }
+        val identity = walletIdentity()
+        if (campaigns.isNotEmpty() && identity != null) {
+            if (identity != heldFor) {
+                // A code belongs to the account it was drawn for.
+                held.clear()
+                heldFor = identity
             }
+            draw(campaigns.filter { held[it] == null })
         }
         return announcements.map { announcement ->
             when (val answer = held[announcement.voucherCampaignId]) {
                 is VoucherAnswer.Drawn -> announcement.copy(voucherCode = answer.code)
                 else -> announcement
+            }
+        }
+    }
+
+    /**
+     * Draws the code for each campaign this identity has no answer for, on one
+     * read of the wallet. A wallet that cannot be read is a card with no code,
+     * never a card withheld: the operator's text still reaches the reader.
+     */
+    private suspend fun draw(campaigns: List<String>) {
+        if (campaigns.isEmpty()) {
+            return
+        }
+        val mnemonic =
+            try {
+                wallet.readMnemonic()
+            } catch (e: Exception) {
+                Logger.w(throwable = e) { "WarrenAnnouncementPoller: mnemonic read failed" }
+                return
+            }
+        mnemonic.use { m ->
+            campaigns.forEach { campaign ->
+                val answer = withContext(io) { claim(m.phrase, campaign) }
+                // A lookup that did not happen is retried on the next cycle; a
+                // server answer, code or no code, is final.
+                if (answer != VoucherAnswer.Unanswered) {
+                    held[campaign] = answer
+                }
             }
         }
     }
