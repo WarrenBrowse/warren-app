@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.app.connect
 import androidx.fragment.app.FragmentActivity
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -62,6 +63,7 @@ class WarrenSubscriptionUseCase(
         }
 
         return withContext(Dispatchers.IO) {
+            WarrenNativeRuntime.awaitReadyBlocking()
             mnemonic.use { m ->
                 val rawJson = try {
                     WarrenJni.getSubscription(m.phrase)
@@ -100,6 +102,7 @@ class WarrenSubscriptionUseCase(
         }
 
         return withContext(Dispatchers.IO) {
+            WarrenNativeRuntime.awaitReadyBlocking()
             mnemonic.use { m ->
                 val rawJson = try {
                     WarrenJni.redeemVoucher(m.phrase, voucher)
@@ -147,6 +150,7 @@ class WarrenSubscriptionUseCase(
                 val deadline = System.currentTimeMillis() + deadlineMs
                 while (System.currentTimeMillis() < deadline) {
                     val outcome = withContext(Dispatchers.IO) {
+                        WarrenNativeRuntime.awaitReadyBlocking()
                         try {
                             parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, wpid))
                         } catch (e: Exception) {

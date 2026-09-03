@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
 
 class SplashViewModelTest {
@@ -38,9 +39,43 @@ class SplashViewModelTest {
         return SplashViewModel(
             userPreferencesRepository = mockPrefs,
             splashCompleteRepository = mockSplashComplete,
-            walletRepository = mockWalletRepository,
-            localSettings = mockLocalSettings,
+            walletRepository = lazyOf(mockWalletRepository),
+            localSettings = lazyOf(mockLocalSettings),
         )
+    }
+
+    @Test
+    fun `the wallet and the settings are resolved off the calling thread`() = runTest {
+        // Both repositories load a preferences file when they are first
+        // constructed, and the view model is built on the main thread: the
+        // decision has to be the one to construct them, somewhere else.
+        val prefs: UserPreferences = mockk { every { isPrivacyDisclosureAccepted } returns true }
+        coEvery { mockPrefs.preferences() } returns prefs
+        every { mockWalletRepository.state } returns MutableStateFlow(WalletState.Absent)
+        every { mockLocalSettings.onboardingCompleted } returns MutableStateFlow(true)
+        val caller = Thread.currentThread().name
+        var walletThread: String? = null
+        var settingsThread: String? = null
+        val vm =
+            SplashViewModel(
+                userPreferencesRepository = mockPrefs,
+                splashCompleteRepository = mockSplashComplete,
+                walletRepository =
+                    lazy {
+                        walletThread = Thread.currentThread().name
+                        mockWalletRepository
+                    },
+                localSettings =
+                    lazy {
+                        settingsThread = Thread.currentThread().name
+                        mockLocalSettings
+                    },
+            )
+
+        assertEquals(SplashUiSideEffect.NavigateToWallet, vm.uiSideEffect.first())
+
+        assertNotEquals(caller, walletThread, "the wallet must not be constructed on the caller")
+        assertNotEquals(caller, settingsThread, "the settings must not be constructed on the caller")
     }
 
     @Test

@@ -8,6 +8,7 @@ import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 
 /**
  * Every platform and native call [WarrenQuinnAdapter] makes, behind one seam.
@@ -131,8 +132,12 @@ class AndroidTunnelPlatform(
         }
     }
 
-    override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int =
-        WarrenJni.connectTunnel(vpnService, tunFd, mnemonic, configJson)
+    override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int {
+        // The engine runtime is what the session runs on; the adapter calls
+        // this on its own dispatcher, so the wait never touches the main thread.
+        WarrenNativeRuntime.awaitReadyBlocking()
+        return WarrenJni.connectTunnel(vpnService, tunFd, mnemonic, configJson)
+    }
 
     override fun disconnectTunnel() = WarrenJni.disconnectTunnel()
 

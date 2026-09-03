@@ -1,9 +1,11 @@
 package com.warrenbrowse.vpn.screen.splash
 
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
@@ -30,12 +32,17 @@ data class SplashScreenState(val splashComplete: Boolean = false)
  * overlays the main flow after this routing settles. There is still no
  * "revoked device" branch: the BIP39 wallet identity model has no per-device
  * registry to revoke.
+ *
+ * The wallet and the local settings are [Lazy]: both read their preferences
+ * file when constructed, and this view model is built on the main thread, so
+ * they are resolved inside the decision, on IO, where a first construction
+ * costs no frame.
  */
 class SplashViewModel(
     private val userPreferencesRepository: UserPreferencesRepository,
     private val splashCompleteRepository: SplashCompleteRepository,
-    private val walletRepository: WalletRepository,
-    private val localSettings: WarrenLocalSettingsRepository,
+    private val walletRepository: Lazy<WalletRepository>,
+    private val localSettings: Lazy<WarrenLocalSettingsRepository>,
 ) : ViewModel() {
 
     val uiSideEffect = flow {
@@ -50,12 +57,14 @@ class SplashViewModel(
         if (!userPreferencesRepository.preferences().isPrivacyDisclosureAccepted) {
             return SplashUiSideEffect.NavigateToPrivacyDisclaimer
         }
-        val walletAbsent = walletRepository.state.value is WalletState.Absent
-        return when {
-            walletAbsent && !localSettings.onboardingCompleted.value ->
-                SplashUiSideEffect.NavigateToOnboarding
-            walletAbsent -> SplashUiSideEffect.NavigateToWallet
-            else -> SplashUiSideEffect.NavigateToConnect
+        return withContext(Dispatchers.IO) {
+            val walletAbsent = walletRepository.value.state.value is WalletState.Absent
+            when {
+                walletAbsent && !localSettings.value.onboardingCompleted.value ->
+                    SplashUiSideEffect.NavigateToOnboarding
+                walletAbsent -> SplashUiSideEffect.NavigateToWallet
+                else -> SplashUiSideEffect.NavigateToConnect
+            }
         }
     }
 }

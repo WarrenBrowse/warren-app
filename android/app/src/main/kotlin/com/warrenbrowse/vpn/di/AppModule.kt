@@ -161,7 +161,10 @@ val appModule = module {
     // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.
     single { ForumLoginController() }
     single<ForumIdentityRepository> { SharedPreferencesForumIdentityRepository(androidContext()) }
-    // Erasing the wallet erases the forum name learnt under it.
+    // Erasing the wallet erases the forum name learnt under it. Resolved by
+    // the application's IO warm-up rather than at Koin start: both
+    // repositories it needs read their preferences at construction, and Koin
+    // start runs on the main thread.
     single {
         ForumIdentityWalletBinding(
                 wallet = get(),
@@ -169,8 +172,6 @@ val appModule = module {
                 scope = get<ApplicationScope>(),
             )
             .also { it.start() }
-    } withOptions {
-        createdAtStart()
     }
     single<ForumJournal> {
         ForumEventsJournal(

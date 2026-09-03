@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.app.connect
 
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -29,7 +30,10 @@ class WarrenTunnelConfigBuilder(
     // the physical network before the TUN is up); tests pass a stub. Wrapped in
     // a lambda (not a `::` reference) so constructing the builder never triggers
     // WarrenJni's static loadLibrary in a JVM test.
-    private val fetchMultihopDirectory: () -> String = { WarrenJni.fetchMultihopDirectory() },
+    private val fetchMultihopDirectory: () -> String = {
+        WarrenNativeRuntime.awaitReadyBlocking()
+        WarrenJni.fetchMultihopDirectory()
+    },
 ) {
 
     /**

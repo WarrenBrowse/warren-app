@@ -173,7 +173,7 @@ val uiModule = module {
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { ReportProblemViewModel(get()) }
-    viewModel { SplashViewModel(get(), get(), get(), get()) }
+    viewModel { SplashViewModel(get(), get(), inject(), inject()) }
     viewModel { NotificationSettingsViewModel(get()) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         viewModel { LanguageViewModel(get()) }

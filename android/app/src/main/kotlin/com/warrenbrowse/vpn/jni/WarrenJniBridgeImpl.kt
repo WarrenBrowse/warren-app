@@ -14,19 +14,26 @@ import kotlinx.serialization.json.jsonPrimitive
  * [WarrenJni] (which holds the `System.loadLibrary("warren_jni")`
  * static-init block) lives here too.
  *
+ * Every call first waits at [WarrenNativeRuntime]: the native init runs on
+ * its own thread at process start, and these calls are all made off the main
+ * thread, so the wait is a no-op once the init has run and the only way a
+ * call is served before it otherwise.
+ *
  * Lifecycle-coupled exports of [WarrenJni] (initLogger, connectTunnel,
  * etc.) intentionally do NOT appear here; they stay app-private.
  */
 class WarrenJniBridgeImpl : WarrenJniBridge {
-    override fun generateMnemonic(): String = WarrenJni.generateMnemonic()
+    override fun generateMnemonic(): String = ready { WarrenJni.generateMnemonic() }
 
-    override fun mnemonicPubkeySs58(mnemonic: String): String =
+    override fun mnemonicPubkeySs58(mnemonic: String): String = ready {
         WarrenJni.mnemonicPubkeySs58(mnemonic)
-
+    }
 
     override fun fetchVersionInfo(currentVersion: String): WarrenVersionVerdict =
         try {
-            val obj = Json.parseToJsonElement(WarrenJni.fetchVersionInfo(currentVersion)).jsonObject
+            val obj =
+                Json.parseToJsonElement(ready { WarrenJni.fetchVersionInfo(currentVersion) })
+                    .jsonObject
             WarrenVersionVerdict(
                 isSupported = obj["supported"]?.jsonPrimitive?.booleanOrNull ?: true,
                 latestAvailable = obj["latest"]?.jsonPrimitive?.contentOrNull?.ifEmpty { null },
@@ -37,15 +44,18 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
             WarrenVersionVerdict.UNKNOWN
         }
 
-    override fun fetchNetworkInfo(): String = WarrenJni.fetchNetworkInfo()
+    override fun fetchNetworkInfo(): String = ready { WarrenJni.fetchNetworkInfo() }
 
-    override fun forumLogin(mnemonic: String, sid: String, host: String): String =
+    override fun forumLogin(mnemonic: String, sid: String, host: String): String = ready {
         WarrenJni.forumLogin(mnemonic, sid, host)
+    }
 
-    override fun forumLoginCancel(sid: String, host: String) = WarrenJni.forumLoginCancel(sid, host)
+    override fun forumLoginCancel(sid: String, host: String) = ready {
+        WarrenJni.forumLoginCancel(sid, host)
+    }
 
     override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
-        WarrenJni.forumReport(mnemonic, reportJson, logGz)
+        ready { WarrenJni.forumReport(mnemonic, reportJson, logGz) }
 
     override fun collectProblemReport(
         metadataJson: String,
@@ -53,5 +63,12 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         appLogDir: String,
         outputPath: String,
         forSend: Boolean,
-    ): String = WarrenJni.collectProblemReport(metadataJson, redactJson, appLogDir, outputPath, forSend)
+    ): String = ready {
+        WarrenJni.collectProblemReport(metadataJson, redactJson, appLogDir, outputPath, forSend)
+    }
+
+    private inline fun <T> ready(call: () -> T): T {
+        WarrenNativeRuntime.awaitReadyBlocking()
+        return call()
+    }
 }

@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.app.connect
 
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import kotlin.time.ComparableTimeMark
@@ -37,7 +38,10 @@ import kotlinx.serialization.json.Json
 class RelayCatalog(
     // Injectable so a test can age the snapshot without waiting an hour.
     private val timeSource: TimeSource.WithComparableMarks = TimeSource.Monotonic,
-    private val fetchRelaysJson: () -> String = { WarrenJni.listRelays() },
+    private val fetchRelaysJson: () -> String = {
+        WarrenNativeRuntime.awaitReadyBlocking()
+        WarrenJni.listRelays()
+    },
 ) : WarrenRelayProvider {
     private val json = Json { ignoreUnknownKeys = true }
 

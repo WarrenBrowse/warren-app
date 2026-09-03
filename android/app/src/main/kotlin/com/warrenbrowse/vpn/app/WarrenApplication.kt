@@ -19,9 +19,14 @@ import com.warrenbrowse.vpn.di.ApplicationScope
 import com.warrenbrowse.vpn.di.KERMIT_FILE_LOG_DIR_NAME
 import com.warrenbrowse.vpn.di.appModule
 import com.warrenbrowse.vpn.feature.home.impl.connect.SceneryBitmaps
-import com.warrenbrowse.vpn.jni.WarrenJni
+import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
+import com.warrenbrowse.vpn.app.forum.ForumJournal
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import org.koin.android.ext.android.getKoin
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.loadKoinModules
@@ -40,12 +45,10 @@ class WarrenApplication : Application() {
         // The Rust runtime and its log file exist from the first instant of
         // the process, not from the first VPN service: a forum deep link that
         // cold-starts the app signs through that runtime, and the failure it
-        // may meet is written to a file the user can send.
-        try {
-            WarrenJni.initLogger(filesDir.absolutePath)
-        } catch (e: RuntimeException) {
-            Logger.e(throwable = e) { "Rust logger init failed" }
-        }
+        // may meet is written to a file the user can send. The init (a 10 MB
+        // library load, the tokio runtime, the log file) runs on its own
+        // thread; the first call that needs it waits at the gate, off main.
+        WarrenNativeRuntime.start(filesDir.absolutePath)
         if (BuildConfig.DEBUG) {
             // Improve compose stack traces
             // Comes with a performance penalty, so only enable in debug builds
@@ -57,7 +60,31 @@ class WarrenApplication : Application() {
         with(getKoin()) {
             get<NotificationChannelFactory>()
             get<NotificationManager>()
-            initFileLogger(get<ApplicationScope>())
+            val scope = get<ApplicationScope>()
+            initFileLogger(scope)
+            warmPreferenceRepositories(scope)
+        }
+    }
+
+    /**
+     * Construct the SharedPreferences-backed singletons on IO before the first
+     * screen injects them on the main thread: each one loads its XML at
+     * construction, and the splash and the Connect screen were the first to
+     * ask. Koin serialises the construction, so a main-thread injection racing
+     * this waits for the finished instance instead of reading the disk itself.
+     * The wallet binding, which needs two of them, is started here for the
+     * same reason instead of at Koin start, and the forum journal because
+     * resolving its directory is itself a disk read.
+     */
+    private fun warmPreferenceRepositories(scope: CoroutineScope) {
+        scope.launch(Dispatchers.IO) {
+            with(getKoin()) {
+                get<WarrenLocalSettingsRepository>()
+                get<WalletRepository>()
+                get<ForumIdentityRepository>()
+                get<ForumIdentityWalletBinding>()
+                get<ForumJournal>()
+            }
         }
     }
 
