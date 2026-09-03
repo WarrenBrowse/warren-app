@@ -27,9 +27,9 @@ internal fun supportedLocalesFromTags(tags: List<String>): List<Locale> =
         .sortedBy { it.getDisplayName(it).lowercase() }
 
 /**
- * Reads the locale tags out of the `<locale-config>` resource. A malformed or
- * unreadable config yields an empty offer rather than throwing: the picker
- * then shows the system-default row alone, which still applies a language.
+ * Reads the locale tags out of the `<locale-config>` resource. A missing
+ * resource yields an empty offer rather than throwing: the picker then shows
+ * the system-default row alone, which still applies a language.
  */
 internal fun readLocaleConfigTags(resources: Resources, localeConfigResId: Int): List<String> {
     val parser =
@@ -39,6 +39,26 @@ internal fun readLocaleConfigTags(resources: Resources, localeConfigResId: Int):
             return emptyList()
         }
     return try {
+        readLocaleConfigTags(parser)
+    } finally {
+        parser.close()
+    }
+}
+
+/**
+ * The tags declared by a `<locale-config>` document, in declaration order.
+ *
+ * Takes the parser rather than the resource so the whole offer the picker rests
+ * on is exercised against real XML: a wrong attribute namespace, a tag name
+ * that never matches or an exception class not caught here all silently empty
+ * the picker on every device, which is exactly what the framework
+ * `LocaleConfig` reader was replaced to avoid.
+ *
+ * A malformed or unreadable document yields an empty offer rather than
+ * throwing, for the same reason as above.
+ */
+internal fun readLocaleConfigTags(parser: XmlPullParser): List<String> =
+    try {
         buildList {
             var event = parser.eventType
             while (event != XmlPullParser.END_DOCUMENT) {
@@ -52,7 +72,4 @@ internal fun readLocaleConfigTags(resources: Resources, localeConfigResId: Int):
         emptyList()
     } catch (e: IOException) {
         emptyList()
-    } finally {
-        parser.close()
     }
-}
