@@ -11,6 +11,7 @@ import com.warrenbrowse.vpn.lib.model.NotificationChannel
 import com.warrenbrowse.vpn.lib.model.NotificationTunnelState
 import com.warrenbrowse.vpn.lib.model.NotificationUpdate
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
+import com.warrenbrowse.vpn.lib.pushnotification.withAppLocale
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.toNotification
 
 class ForegroundNotificationManager(
@@ -39,7 +40,9 @@ class ForegroundNotificationManager(
 
     private fun notifyForeground(tunnelStateNotification: Notification.Tunnel) {
 
-        val androidNotification = tunnelStateNotification.toNotification(vpnService)
+        // The service context resolves the system language below API 33,
+        // whatever the picker says.
+        val androidNotification = tunnelStateNotification.toNotification(vpnService.withAppLocale())
         if (vpnService.prepareVpnSafe().isLeft()) {
             // Got connect/disconnect intent, but we  don't have permission to go in foreground.
             // tunnel state will return permission and we will eventually get stopped by system.

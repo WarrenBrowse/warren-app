@@ -38,7 +38,10 @@ class NotificationManager(
 
                         is NotificationUpdate.Notify -> {
                             val notification = notificationUpdate.value
-                            val androidNotification = notification.toAndroidNotification(context)
+                            // The application context resolves the system
+                            // language below API 33, whatever the picker says.
+                            val androidNotification =
+                                notification.toAndroidNotification(context.withAppLocale())
                             if (
                                 ActivityCompat.checkSelfPermission(
                                     context,
