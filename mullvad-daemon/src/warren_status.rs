@@ -258,6 +258,15 @@ pub struct WarrenStatusSnapshot {
     /// Set while this build has stood down for a higher-priority
     /// environment. `None` is the ordinary state.
     pub env_yield: Option<EnvYieldSnapshot>,
+    /// Launch announcements the operator has published, already verified
+    /// against the pinned server key, filtered for expiry and this app's
+    /// version, with an unsafe call to action already withheld and this
+    /// account's campaign code already drawn. Empty in the steady state.
+    ///
+    /// Everything the card needs travels here, the code included: the
+    /// renderer has no second query to make, and the daemon is the only
+    /// side that holds the wallet the code was drawn for.
+    pub announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
 }
 
 /// One other product environment, as the watcher last saw it.
@@ -309,6 +318,7 @@ impl Default for WarrenStatusSnapshot {
             forum_digest: None,
             foreign_environments: Vec::new(),
             env_yield: None,
+            announcements: Vec::new(),
         }
     }
 }
@@ -352,6 +362,7 @@ struct InternalState {
     forum_digest: Option<String>,
     foreign_environments: Vec<ForeignEnvSnapshot>,
     env_yield: Option<EnvYieldSnapshot>,
+    announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
 }
 
 impl Default for InternalState {
@@ -375,6 +386,7 @@ impl Default for InternalState {
             forum_digest: None,
             foreign_environments: Vec::new(),
             env_yield: None,
+            announcements: Vec::new(),
         }
     }
 }
@@ -447,6 +459,7 @@ impl WarrenStatusCache {
             forum_digest: inner.forum_digest.clone(),
             foreign_environments: inner.foreign_environments.clone(),
             env_yield: inner.env_yield.clone(),
+            announcements: inner.announcements.clone(),
         }
     }
 
@@ -836,6 +849,33 @@ impl WarrenStatusCache {
                 return;
             }
             inner.notices = notices;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Record the launch announcements the client must display, as
+    /// published by the announcements updater after signature
+    /// verification and after this account's campaign code was drawn.
+    /// Idempotent, like [`Self::set_notices`]: the updater re-publishes on
+    /// every refresh (including every `304`), so re-pushing an identical
+    /// set must not wake the UI.
+    ///
+    /// The empty vector is a meaningful value, not a no-op: it is how a
+    /// withdrawal, an expiry or a failed verification clears the card.
+    pub fn set_announcements(
+        &self,
+        announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
+    ) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.announcements == announcements {
+                return;
+            }
+            inner.announcements = announcements;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send_replace(snapshot);
@@ -1897,6 +1937,76 @@ mod tests {
             !rx.has_changed().unwrap_or(false),
             "an unchanged arbitration snapshot must not wake the UI"
         );
+    }
+
+    fn card(
+        id: &str,
+        code: Option<&str>,
+    ) -> crate::warren_announcements_updater::DisplayAnnouncement {
+        crate::warren_announcements_updater::DisplayAnnouncement {
+            id: id.to_owned(),
+            headline: "Warren production is open".to_owned(),
+            body: "One free month on production.".to_owned(),
+            level: crate::warren_notices_updater::NoticeLevel::Info,
+            cta: None,
+            voucher_code: code.map(str::to_owned),
+        }
+    }
+
+    /// The renderer needs the whole card from one snapshot, the account's
+    /// own code included, because there is no second query it could make.
+    #[test]
+    fn set_announcements_publishes_the_cards_and_the_account_code() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        let cards = vec![card("a1", Some("ABCDEFGHJKMNPQRS"))];
+        cache.set_announcements(cards.clone());
+
+        assert!(rx.has_changed().unwrap_or(false));
+        assert_eq!(rx.borrow_and_update().announcements, cards);
+    }
+
+    /// Idempotent like `set_notices`: the updater re-publishes on every
+    /// refresh, including every `304`, and an identical set must not wake
+    /// the UI.
+    #[test]
+    fn set_announcements_is_idempotent_on_an_unchanged_set() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        let cards = vec![card("a1", None)];
+        cache.set_announcements(cards.clone());
+        rx.borrow_and_update();
+        cache.set_announcements(cards);
+
+        assert!(
+            !rx.has_changed().unwrap_or(false),
+            "an unchanged announcement set must not wake the UI"
+        );
+    }
+
+    /// The empty vector is a meaningful value: it is how a withdrawal, an
+    /// expiry or a failed verification clears the card.
+    #[test]
+    fn set_announcements_clears_the_card_with_the_empty_set() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.set_announcements(vec![card("a1", None)]);
+        rx.borrow_and_update();
+
+        cache.set_announcements(Vec::new());
+
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(rx.borrow_and_update().announcements.is_empty());
+    }
+
+    #[test]
+    fn default_snapshot_has_no_announcements() {
+        assert!(WarrenStatusSnapshot::default().announcements.is_empty());
     }
 
     /// A fresh daemon has observed nothing and holds no yield, so the very

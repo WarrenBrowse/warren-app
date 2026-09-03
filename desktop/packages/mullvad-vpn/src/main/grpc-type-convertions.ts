@@ -61,6 +61,7 @@ import {
   TunnelParameterError,
   TunnelState,
   TunnelType,
+  WarrenAnnouncement,
   WarrenCustomExitSettings,
   WarrenEnvYield,
   WarrenForeignEnv,
@@ -677,6 +678,24 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     forumDigest: status.hasForumDigest() ? (status.getForumDigest() ?? null) : null,
     foreignEnvironments: status.getForeignEnvironmentsList().map(convertFromWarrenForeignEnv),
     envYield: convertFromWarrenEnvYield(status.getEnvYield()),
+    announcements: status.getAnnouncementsList().map(convertFromWarrenAnnouncement),
+  };
+}
+
+function convertFromWarrenAnnouncement(
+  announcement: grpcTypes.WarrenAnnouncement,
+): WarrenAnnouncement {
+  const cta = announcement.getCta();
+  return {
+    id: announcement.getId(),
+    headline: announcement.getHeadline(),
+    body: announcement.getBody(),
+    level: warrenNoticeLevel(announcement.getLevel()),
+    cta: cta ? { label: cta.getLabel(), url: cta.getUrl() } : null,
+    // `hasVoucherCode` rather than the getter's empty-string default: an
+    // account outside the cohort must read as "no offer to show", not as an
+    // offer whose code happens to be blank.
+    voucherCode: announcement.hasVoucherCode() ? (announcement.getVoucherCode() ?? null) : null,
   };
 }
 

@@ -822,6 +822,46 @@ export interface WarrenStatus {
   // `null` is the ordinary state. The daemon refuses connect requests while
   // it is set, so every control that would issue one reads it first.
   envYield: WarrenEnvYield | null;
+  // Launch announcements the operator published, verified against the pinned
+  // server key by the daemon and already filtered for expiry and this app's
+  // version. Each one carries everything the card renders, this account's
+  // voucher code included. Empty in the steady state, and the empty list is
+  // also how a withdrawal clears the card.
+  announcements: WarrenAnnouncement[];
+}
+
+// One operator-published launch announcement, ready to render as a card: the
+// daemon has already applied the expiry and the version range, already
+// withheld an unsafe call to action, and already drawn this account's code.
+export interface WarrenAnnouncement {
+  // Stable for the life of the announcement, so a dismissal persisted
+  // against it survives a restart.
+  id: string;
+  // Plain text, rendered verbatim and escaped. Operator-authored text on
+  // every home screen is exactly the phishing surface the daemon-side
+  // signature check exists to bound, so it never becomes markup.
+  headline: string;
+  body: string;
+  level: 'info' | 'warning' | 'error';
+  // `null` when the announcement carries no call to action AND when its URL
+  // failed the safety check: the text still reaches the reader, the link
+  // never becomes clickable.
+  cta: WarrenAnnouncementCta | null;
+  // The voucher code granted to THIS account, `null` when the announcement
+  // carries no offer or when this account is outside the cohort (created
+  // after publication, which is the offer's stated shape).
+  //
+  // A bearer token worth a month of service on the other deployment: it
+  // belongs on the account's own screen and nowhere else, never in a log, an
+  // error or a problem report.
+  voucherCode: string | null;
+}
+
+// The clickable control under an announcement.
+export interface WarrenAnnouncementCta {
+  label: string;
+  // Always https, checked daemon-side before it reaches here.
+  url: string;
 }
 
 // One other product environment, as the daemon's watcher last saw it. An

@@ -54,6 +54,7 @@ const BASE_STATUS: WarrenStatus = {
   forumDigest: null,
   foreignEnvironments: [],
   envYield: null,
+  announcements: [],
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

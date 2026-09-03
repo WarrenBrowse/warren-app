@@ -109,6 +109,12 @@ impl SharedWarrenApiClient {
         self.client().subscription().await
     }
 
+    /// Signed `GET /v1/campaign/{campaign_id}/voucher`. `None` = this
+    /// account is outside the campaign's cohort.
+    pub async fn campaign_voucher(&self, campaign_id: &str) -> Result<Option<String>, ClientError> {
+        self.client().campaign_voucher(campaign_id).await
+    }
+
     /// Signed `DELETE /v1/account`.
     pub async fn delete_account(&self) -> Result<(), ClientError> {
         self.client().delete_account().await

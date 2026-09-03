@@ -42,6 +42,9 @@ pub mod version;
 /// Authorization for wallet/secret management RPCs against the calling
 /// process' Unix credentials (`SO_PEERCRED`).
 pub mod wallet_access;
+/// Periodic refresher for the server-signed launch announcements, plus the
+/// second, wallet-signed call that draws this account's campaign voucher.
+mod warren_announcements_updater;
 /// DNS for the daemon's own Warren fetchers: answers the API host from the
 /// address cache the firewall's allowed endpoint is built from, so a recovery
 /// fetch survives the blocking state that drops system DNS.
@@ -1937,6 +1940,37 @@ impl Daemon {
                 warren_api_url.clone(),
                 warren_server_pubkey.clone(),
                 move |counts| digest_status.set_forum_digest(counts),
+            );
+        }
+
+        // Launch announcements: the same signed-artifact discipline as the
+        // notices, over its OWN envelope. It has to be its own: notice
+        // verification re-serializes the canonical preimage from the
+        // client's own struct, so a field a deployed client does not know
+        // makes EVERY notice fail verification and that client then shows
+        // nothing at all.
+        //
+        // The announcement can carry an offer, and a per-account code
+        // cannot ride a document that is byte-identical for every caller,
+        // so the campaign lookup goes through the signed SDK client the
+        // daemon already holds.
+        {
+            let announcements_status = warren_status_cache.clone();
+            let voucher_source: Option<
+                std::sync::Arc<dyn warren_announcements_updater::CampaignVoucherSource>,
+            > = warren_shared_seed.clone().map(|seed| {
+                std::sync::Arc::new(warren_sdk_client::SharedWarrenApiClient::new(
+                    warren_api_url.clone(),
+                    seed,
+                ))
+                    as std::sync::Arc<dyn warren_announcements_updater::CampaignVoucherSource>
+            });
+            warren_announcements_updater::WarrenAnnouncementsUpdater::spawn(
+                warren_api_url.clone(),
+                warren_server_pubkey.clone(),
+                Some(mullvad_version::VERSION.to_owned()),
+                voucher_source,
+                move |announcements| announcements_status.set_announcements(announcements),
             );
         }
 

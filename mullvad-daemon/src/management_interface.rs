@@ -258,6 +258,25 @@ fn warren_status_snapshot_to_proto(
             yielded_to: held.yielded_to,
             restorable: held.restorable,
         }),
+        announcements: snap
+            .announcements
+            .into_iter()
+            .map(|a| types::WarrenAnnouncement {
+                id: a.id,
+                headline: a.headline,
+                body: a.body,
+                level: i32::from(match a.level {
+                    NoticeLevel::Info => types::WarrenNoticeLevel::WarrenNoticeInfo,
+                    NoticeLevel::Warning => types::WarrenNoticeLevel::WarrenNoticeWarning,
+                    NoticeLevel::Error => types::WarrenNoticeLevel::WarrenNoticeError,
+                }),
+                cta: a.cta.map(|cta| types::WarrenAnnouncementCta {
+                    label: cta.label,
+                    url: cta.url,
+                }),
+                voucher_code: a.voucher_code,
+            })
+            .collect(),
     }
 }
 

@@ -965,6 +965,49 @@ message WarrenStatus {
   // Set while this build has stood down for a higher-priority environment
   // (prod outranks staging outranks beta). Absent in the ordinary state.
   WarrenEnvYield env_yield = 17;
+  // Launch announcements published by the operator, verified against the
+  // pinned server key and already filtered by the daemon for expiry and
+  // this app's version. Each one carries everything the card needs,
+  // including this account's voucher code when the campaign granted it
+  // one. Empty in the steady state; the empty list is also how a
+  // withdrawal clears the card.
+  repeated WarrenAnnouncement announcements = 18;
+}
+
+// One operator-published launch announcement, ready to render as a card.
+// Carries no expiry and no version range: the daemon has already applied
+// both, so the UI shows exactly what it receives.
+message WarrenAnnouncement {
+  // Server-assigned id. Stable for the life of the announcement, so a
+  // dismissal persisted against it survives a restart.
+  string id = 1;
+  // One-line title, plain text rendered verbatim, never as markup.
+  string headline = 2;
+  // Body text, plain text rendered verbatim, never as markup.
+  string body = 3;
+  // Severity, shared with the notices.
+  WarrenNoticeLevel level = 4;
+  // Call to action. Absent when the announcement carries none AND when its
+  // URL failed the contract's safety check: the operator's text still
+  // reaches the reader, an unsafe link never becomes clickable.
+  WarrenAnnouncementCta cta = 5;
+  // The voucher code granted to THIS account for the announcement's
+  // campaign. Absent when the announcement carries no offer, and absent
+  // when this account is outside the cohort (an account created after
+  // publication, which is the offer's stated shape).
+  //
+  // A bearer token worth a month of service on the other deployment: it
+  // belongs on the account's own screen and nowhere else, never in a log,
+  // an error or a problem report.
+  optional string voucher_code = 6;
+}
+
+// The clickable control under an announcement.
+message WarrenAnnouncementCta {
+  // Button caption, plain text.
+  string label = 1;
+  // Destination opened in the system browser, https only.
+  string url = 2;
 }
 
 // One other product environment, as the cross-environment watcher last saw

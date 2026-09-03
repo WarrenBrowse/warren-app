@@ -2181,6 +2181,10 @@ export class WarrenStatus extends jspb.Message {
     clearEnvYield(): void;
     getEnvYield(): WarrenEnvYield | undefined;
     setEnvYield(value?: WarrenEnvYield): WarrenStatus;
+    clearAnnouncementsList(): void;
+    getAnnouncementsList(): Array<WarrenAnnouncement>;
+    setAnnouncementsList(value: Array<WarrenAnnouncement>): WarrenStatus;
+    addAnnouncements(value?: WarrenAnnouncement, index?: number): WarrenAnnouncement;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2211,6 +2215,7 @@ export namespace WarrenStatus {
         restoredAfterUncleanShutdown: boolean,
         foreignEnvironmentsList: Array<WarrenForeignEnv.AsObject>,
         envYield?: WarrenEnvYield.AsObject,
+        announcementsList: Array<WarrenAnnouncement.AsObject>,
     }
 }
 
@@ -2286,6 +2291,70 @@ export namespace WarrenNotice {
         id: string,
         message: string,
         level: WarrenNoticeLevel,
+    }
+}
+
+export class WarrenAnnouncement extends jspb.Message { 
+    getId(): string;
+    setId(value: string): WarrenAnnouncement;
+    getHeadline(): string;
+    setHeadline(value: string): WarrenAnnouncement;
+    getBody(): string;
+    setBody(value: string): WarrenAnnouncement;
+    getLevel(): WarrenNoticeLevel;
+    setLevel(value: WarrenNoticeLevel): WarrenAnnouncement;
+
+    hasCta(): boolean;
+    clearCta(): void;
+    getCta(): WarrenAnnouncementCta | undefined;
+    setCta(value?: WarrenAnnouncementCta): WarrenAnnouncement;
+
+    hasVoucherCode(): boolean;
+    clearVoucherCode(): void;
+    getVoucherCode(): string | undefined;
+    setVoucherCode(value: string): WarrenAnnouncement;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAnnouncement.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAnnouncement): WarrenAnnouncement.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAnnouncement, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAnnouncement;
+    static deserializeBinaryFromReader(message: WarrenAnnouncement, reader: jspb.BinaryReader): WarrenAnnouncement;
+}
+
+export namespace WarrenAnnouncement {
+    export type AsObject = {
+        id: string,
+        headline: string,
+        body: string,
+        level: WarrenNoticeLevel,
+        cta?: WarrenAnnouncementCta.AsObject,
+        voucherCode?: string,
+    }
+}
+
+export class WarrenAnnouncementCta extends jspb.Message { 
+    getLabel(): string;
+    setLabel(value: string): WarrenAnnouncementCta;
+    getUrl(): string;
+    setUrl(value: string): WarrenAnnouncementCta;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAnnouncementCta.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAnnouncementCta): WarrenAnnouncementCta.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAnnouncementCta, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAnnouncementCta;
+    static deserializeBinaryFromReader(message: WarrenAnnouncementCta, reader: jspb.BinaryReader): WarrenAnnouncementCta;
+}
+
+export namespace WarrenAnnouncementCta {
+    export type AsObject = {
+        label: string,
+        url: string,
     }
 }
 
