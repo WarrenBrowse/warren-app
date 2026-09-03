@@ -1,11 +1,15 @@
 package com.warrenbrowse.vpn.app.announcements
 
+import co.touchlab.kermit.LogWriter
+import co.touchlab.kermit.Logger
+import co.touchlab.kermit.Severity
 import com.warrenbrowse.vpn.app.forum.FakeJniBridge
 import com.warrenbrowse.vpn.app.forum.FakeTunnelStateProvider
 import com.warrenbrowse.vpn.app.forum.FakeWalletRepository
 import com.warrenbrowse.vpn.lib.model.WarrenAnnouncement
 import com.warrenbrowse.vpn.lib.model.WarrenAnnouncementCta
 import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
+import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
@@ -326,10 +330,124 @@ class WarrenAnnouncementPollerTest {
     }
 
     @Test
-    fun the_voucher_parser_yields_no_code_for_a_refusal_or_a_malformed_answer() {
-        assertEquals("ABCD", parseVoucherEnvelope("""{"ok":true,"code":"ABCD"}"""))
-        assertNull(parseVoucherEnvelope("""{"ok":true,"code":null}"""))
-        assertNull(parseVoucherEnvelope("""{"ok":false,"code":null}"""))
-        assertNull(parseVoucherEnvelope("nonsense"))
+    fun the_voucher_parser_tells_a_refusal_apart_from_an_account_outside_the_cohort() {
+        // The two differ for the poller alone: an account outside the cohort
+        // has a final answer and is never asked again, while a refusal is a
+        // lookup that has not happened yet.
+        assertEquals(VoucherAnswer.Drawn("ABCD"), parseVoucherEnvelope("""{"ok":true,"code":"ABCD"}"""))
+        assertEquals(VoucherAnswer.Outside, parseVoucherEnvelope("""{"ok":true,"code":null}"""))
+        assertEquals(VoucherAnswer.Unanswered, parseVoucherEnvelope("""{"ok":false,"code":null}"""))
+        assertEquals(VoucherAnswer.Unanswered, parseVoucherEnvelope("nonsense"))
+    }
+
+    @Test
+    fun a_malformed_voucher_envelope_never_reaches_the_log_with_its_code() {
+        // A JSON decoder quotes the input it choked on in its message, and
+        // that input is the envelope carrying the code. logcat is collected
+        // verbatim into the problem report the user uploads.
+        val captured = CapturingLogWriter()
+        val restore = Logger.config.logWriterList
+        Logger.setLogWriters(captured)
+        try {
+            parseVoucherEnvelope("""{"ok":true,"code":"ABCD1234EFGH5678"""")
+        } finally {
+            Logger.setLogWriters(restore)
+        }
+
+        assertTrue(captured.lines.isNotEmpty(), "a malformed envelope is still worth a line")
+        captured.lines.forEach {
+            assertTrue(!it.contains("ABCD1234EFGH5678"), "the code reached the log: $it")
+        }
+    }
+
+    @Test
+    fun a_held_code_is_not_drawn_from_the_wallet_again_on_every_poll() {
+        // Rust answers a second lookup from its own per-identity cache, so the
+        // only effect of asking again is the cleartext seed crossing the FFI
+        // twelve times an hour for the whole campaign.
+        runTest {
+            val state = WarrenAnnouncementRepository()
+            val wallet = FakeWalletRepository()
+            val jni =
+                FakeJniBridge(
+                    announcementsAnswer = { LAUNCH_CARD },
+                    voucherAnswer = { """{"ok":true,"code":"ABCD1234EFGH5678"}""" },
+                )
+            val poller = poller(jni, state, wallet, scheduler = testScheduler)
+
+            poller.fetchOnce()
+            poller.fetchOnce()
+            poller.fetchOnce()
+
+            assertEquals(1, wallet.mnemonicReads)
+            assertEquals(listOf("prod-launch"), jni.voucherCampaigns)
+            assertEquals("ABCD1234EFGH5678", state.announcements.value.single().voucherCode)
+        }
+    }
+
+    @Test
+    fun an_account_outside_the_cohort_is_not_asked_again() = runTest {
+        val state = WarrenAnnouncementRepository()
+        val wallet = FakeWalletRepository()
+        val jni =
+            FakeJniBridge(
+                announcementsAnswer = { LAUNCH_CARD },
+                voucherAnswer = { """{"ok":true,"code":null}""" },
+            )
+        val poller = poller(jni, state, wallet, scheduler = testScheduler)
+
+        poller.fetchOnce()
+        poller.fetchOnce()
+
+        assertEquals(1, wallet.mnemonicReads, "the server already said no, for good")
+        assertEquals(listOf("prod-launch"), jni.voucherCampaigns)
+        assertNull(state.announcements.value.single().voucherCode)
+    }
+
+    @Test
+    fun a_lookup_that_did_not_happen_is_tried_again_on_the_next_poll() = runTest {
+        val state = WarrenAnnouncementRepository()
+        val wallet = FakeWalletRepository()
+        val jni =
+            FakeJniBridge(
+                announcementsAnswer = { LAUNCH_CARD },
+                voucherAnswer = { """{"ok":false,"code":null}""" },
+            )
+        val poller = poller(jni, state, wallet, scheduler = testScheduler)
+
+        poller.fetchOnce()
+        poller.fetchOnce()
+
+        assertEquals(listOf("prod-launch", "prod-launch"), jni.voucherCampaigns)
+    }
+
+    @Test
+    fun another_wallet_draws_its_own_code() = runTest {
+        // A code belongs to the account it was drawn for, so the held answer
+        // goes with the identity it was drawn under.
+        val state = WarrenAnnouncementRepository()
+        val wallet = FakeWalletRepository()
+        val jni =
+            FakeJniBridge(
+                announcementsAnswer = { LAUNCH_CARD },
+                voucherAnswer = { """{"ok":true,"code":"ABCD1234EFGH5678"}""" },
+            )
+        val poller = poller(jni, state, wallet, scheduler = testScheduler)
+        poller.fetchOnce()
+
+        wallet.stateFlow.value = WalletState.Ready(WalletAddress("wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3Xh999"))
+        poller.fetchOnce()
+
+        assertEquals(2, wallet.mnemonicReads)
+        assertEquals(listOf("prod-launch", "prod-launch"), jni.voucherCampaigns)
+    }
+}
+
+/** Kermit sink that keeps what was rendered, message and throwable together. */
+private class CapturingLogWriter : LogWriter() {
+    val lines = mutableListOf<String>()
+
+    override fun log(severity: Severity, message: String, tag: String, throwable: Throwable?) {
+        lines += message + (throwable?.let { " ${it::class.simpleName}: ${it.message}" } ?: "")
     }
 }

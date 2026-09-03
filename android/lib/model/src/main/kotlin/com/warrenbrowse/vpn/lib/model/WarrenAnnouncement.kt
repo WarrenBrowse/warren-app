@@ -25,7 +25,17 @@ data class WarrenAnnouncement(
     val cta: WarrenAnnouncementCta? = null,
     val voucherCampaignId: String? = null,
     val voucherCode: String? = null,
-)
+) {
+    /**
+     * Renders no part of the code, the way the Rust twin's hand-written
+     * `Debug` does. A data class renders every field it holds, and a single
+     * interpolated announcement in a log line puts a bearer token in logcat,
+     * which `collectProblemReport` uploads verbatim.
+     */
+    override fun toString(): String =
+        "WarrenAnnouncement(id=$id, headline=$headline, level=$level, " +
+            "hasVoucherCode=${voucherCode != null})"
+}
 
 /**
  * The call to action an announcement carries, present only when the URL passed

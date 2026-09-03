@@ -125,58 +125,94 @@ class WarrenAnnouncementPoller(
     }
 
     /**
+     * The answers this identity already has, keyed by campaign, and the wallet
+     * they were drawn under. The seed is read from the Keystore and crossed
+     * over the FFI once per campaign rather than on every five minute cycle:
+     * Rust answers a repeat lookup from its own per-identity cache, so the
+     * only thing those repeats produce is the cleartext seed materialised as a
+     * JVM string twelve times an hour for the length of the campaign.
+     */
+    private val held = mutableMapOf<String, VoucherAnswer>()
+    private var heldFor: String? = null
+
+    /**
      * The same announcements with this account's code attached to each one that
      * offers a campaign.
      *
-     * The wallet is read only when an announcement actually carries an offer,
-     * and only once for the whole set: the signed lookup is the one request
-     * here that is tied to an account, so it is not made speculatively.
+     * The wallet is read only when an announcement carries an offer this
+     * identity has no answer for yet, and only once for the whole set: the
+     * signed lookup is the one request here that is tied to an account, so it
+     * is not made speculatively.
      */
     private suspend fun withCodes(
         announcements: List<WarrenAnnouncement>
     ): List<WarrenAnnouncement> {
-        if (announcements.none { it.voucherCampaignId != null }) {
+        val campaigns = announcements.mapNotNull { it.voucherCampaignId }.distinct()
+        if (campaigns.isEmpty()) {
             return announcements
         }
-        if (wallet.state.value is WalletState.Absent) {
-            return announcements
+        val identity = walletIdentity() ?: return announcements
+        if (identity != heldFor) {
+            // A code belongs to the account it was drawn for.
+            held.clear()
+            heldFor = identity
         }
-        val mnemonic =
-            try {
-                wallet.readMnemonic()
-            } catch (e: Exception) {
-                // A wallet that cannot be read is a card with no code, never a
-                // card withheld: the operator's text still reaches the reader.
-                Logger.w(throwable = e) { "WarrenAnnouncementPoller: mnemonic read failed" }
-                return announcements
-            }
-        return mnemonic.use { m ->
-            announcements.map { announcement ->
-                val campaign = announcement.voucherCampaignId
-                if (campaign == null) {
-                    announcement
-                } else {
-                    announcement.copy(voucherCode = withContext(io) { claim(m.phrase, campaign) })
+        val unanswered = campaigns.filter { held[it] == null }
+        if (unanswered.isNotEmpty()) {
+            val mnemonic =
+                try {
+                    wallet.readMnemonic()
+                } catch (e: Exception) {
+                    // A wallet that cannot be read is a card with no code,
+                    // never a card withheld: the operator's text still reaches
+                    // the reader.
+                    Logger.w(throwable = e) { "WarrenAnnouncementPoller: mnemonic read failed" }
+                    return announcements
                 }
+            mnemonic.use { m ->
+                unanswered.forEach { campaign ->
+                    val answer = withContext(io) { claim(m.phrase, campaign) }
+                    // A lookup that did not happen is retried on the next
+                    // cycle; a server answer, code or no code, is final.
+                    if (answer != VoucherAnswer.Unanswered) {
+                        held[campaign] = answer
+                    }
+                }
+            }
+        }
+        return announcements.map { announcement ->
+            when (val answer = held[announcement.voucherCampaignId]) {
+                is VoucherAnswer.Drawn -> announcement.copy(voucherCode = answer.code)
+                else -> announcement
             }
         }
     }
 
     /**
-     * The code drawn for this account, `null` when the account is outside the
-     * cohort and `null` when the lookup failed. Rust holds the answer per
-     * identity, so a five minute poll is not a signed request every five
-     * minutes.
+     * The account the held answers belong to, `null` when this device holds no
+     * wallet at all. The address is a key in memory and never logged.
+     */
+    private fun walletIdentity(): String? =
+        when (val state = wallet.state.value) {
+            is WalletState.Locked -> state.pubkey.value
+            is WalletState.Ready -> state.pubkey.value
+            else -> null
+        }
+
+    /**
+     * The answer to the wallet-signed lookup for this account. Rust holds it
+     * per identity, so a repeat is not a signed request, and the poller holds
+     * it too so a repeat is not a Keystore read either.
      */
     // The JNI call is a system boundary: whatever crosses it as a throwable is
     // one card without its code, never a crash.
     @Suppress("TooGenericExceptionCaught")
-    private fun claim(mnemonic: String, campaignId: String): String? =
+    private fun claim(mnemonic: String, campaignId: String): VoucherAnswer =
         try {
             parseVoucherEnvelope(jni.campaignVoucher(mnemonic, campaignId))
         } catch (e: Exception) {
             Logger.w(throwable = e) { "WarrenJniBridge.campaignVoucher threw" }
-            null
+            VoucherAnswer.Unanswered
         }
 
     // The JNI call is a system boundary: whatever crosses it as a throwable is
@@ -252,20 +288,36 @@ private fun cta(element: kotlinx.serialization.json.JsonElement?): WarrenAnnounc
 }
 
 /**
- * The `{"ok":..,"code":..}` envelope of the wallet-signed lookup: the code, or
- * null both for an account outside the cohort and for a failed lookup. The two
- * differ for the caller only in that nothing is cached on a failure, which Rust
- * owns; on this side both are simply a card with no code.
+ * What the wallet-signed lookup answered for this account. A card with no code
+ * either way, and the difference is only whether asking again could ever change
+ * the answer.
  */
-internal fun parseVoucherEnvelope(rawJson: String): String? =
+internal sealed interface VoucherAnswer {
+    /** The code drawn for this account. */
+    data class Drawn(val code: String) : VoucherAnswer
+
+    /** The server answered: this account is outside the cohort, for good. */
+    data object Outside : VoucherAnswer
+
+    /** No answer came back, so the next cycle asks again. */
+    data object Unanswered : VoucherAnswer
+}
+
+/** The `{"ok":..,"code":..}` envelope of the wallet-signed lookup. */
+internal fun parseVoucherEnvelope(rawJson: String): VoucherAnswer =
     try {
         val root = Json.parseToJsonElement(rawJson).jsonObject
         if (root["ok"]?.jsonPrimitive?.booleanOrNull == true) {
-            root["code"]?.jsonPrimitive?.contentOrNull
+            root["code"]?.jsonPrimitive?.contentOrNull?.let(VoucherAnswer::Drawn)
+                ?: VoucherAnswer.Outside
         } else {
-            null
+            VoucherAnswer.Unanswered
         }
     } catch (e: IllegalArgumentException) {
-        Logger.w(throwable = e) { "campaignVoucher answered a malformed envelope" }
-        null
+        // Only the class of the failure: a JSON decoder quotes the input it
+        // choked on in its message, and that input is the envelope carrying
+        // the code. The announcements and notices envelopes carry only
+        // operator-authored text, so they still log the throwable.
+        Logger.w { "campaignVoucher answered a malformed envelope (${e::class.simpleName})" }
+        VoucherAnswer.Unanswered
     }
