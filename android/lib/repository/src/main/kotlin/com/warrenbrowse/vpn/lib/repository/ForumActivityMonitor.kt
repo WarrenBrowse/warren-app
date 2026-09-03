@@ -81,9 +81,14 @@ class ForumActivityMonitor(private val delegate: Delegate) {
     fun setSlot(slot: Int?) {
         if (slot == this.slot) return
         // Another forum account, or none: its predecessor's count says
-        // nothing about this one.
+        // nothing about this one, and neither does what the app observed for
+        // it. An observation kept past the account would drive the badge and
+        // the notification for an account this installation no longer holds,
+        // then be read as the next account's count until the digest document
+        // happens to change.
         this.slot = slot
         acknowledged = null
+        observed = null
         refresh()
     }
 

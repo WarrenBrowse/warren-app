@@ -77,9 +77,13 @@ export default class ForumActivityMonitor {
       return;
     }
     // Another forum account, or none: its predecessor's count says nothing
-    // about this one.
+    // about this one, and neither does what the app observed for it. An
+    // observation kept past the account would drive the dot and the banner
+    // for an account this installation no longer holds, then be read as the
+    // next account's count until the digest document happens to change.
     this.slot = slot;
     this.acknowledged = undefined;
+    this.observed = undefined;
     this.refresh();
   }
 

@@ -133,6 +133,20 @@ describe('the forum activity monitor', () => {
     expect(h.indicator).toEqual([true, false]);
   });
 
+  it('forgets what it observed for the account that is gone', () => {
+    // An observation belongs to the account it was made for. Kept past the
+    // erase, it would keep the dot and the banner up for an account this
+    // installation no longer holds, and then be read as the next account's
+    // count until the digest document happens to change.
+    h.monitor.setDigest(TWO);
+    h.monitor.setObservedUnread(2);
+
+    h.monitor.setSlot(null);
+
+    expect(h.indicator).toEqual([true, false]);
+    expect(h.published.at(-1)).toBe(0);
+  });
+
   it('counts one notification and several differently', () => {
     h.monitor.setDigest(NOTHING);
     h.monitor.setDigest(ONE);

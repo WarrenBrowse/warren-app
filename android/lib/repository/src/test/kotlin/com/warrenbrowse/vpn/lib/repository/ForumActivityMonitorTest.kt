@@ -152,6 +152,21 @@ class ForumActivityMonitorTest {
     }
 
     @Test
+    fun forgets_what_it_observed_for_the_account_that_is_gone() {
+        // An observation belongs to the account it was made for. Kept past the
+        // erase, it would keep the badge and the notification up for an
+        // account this installation no longer holds, and then be read as the
+        // next account's count until the digest document happens to change.
+        monitor.setDigest(TWO)
+        monitor.setObservedUnread(2)
+
+        monitor.setSlot(null)
+
+        assertEquals(listOf(true, false), indicator)
+        assertEquals(0, published.last())
+    }
+
+    @Test
     fun publishes_the_count_the_app_must_show() {
         // The leading zero is the boot state: the UI is told the count is
         // known and empty, rather than left guessing.
