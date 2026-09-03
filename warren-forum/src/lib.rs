@@ -553,6 +553,316 @@ pub fn report_envelope(outcome: &ReportOutcome) -> String {
     }
 }
 
+/// The frozen body of the panel read and of the mark-seen: empty by design.
+/// The account is derived from the signature, so a field here could only
+/// ever be one a caller might point at somebody else. The desktop daemon
+/// signs the same two bytes (`forum_notifications_body`).
+const NOTIFICATIONS_BODY: &[u8] = b"{}";
+
+/// Build the signed panel read `POST /v1/forum/notifications`: the caller's
+/// own forum notifications, for the activity panel. Called when the user opens
+/// the panel, never on a timer: the badge comes from the broadcast digest,
+/// which asks the server nothing about anybody, so this is the only request
+/// tied to an account.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the OS RNG is unavailable.
+pub fn build_signed_notifications_request(
+    signing_key: &SigningKey,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    signed_post(
+        signing_key,
+        ALLOWED_CONNECT_HOST,
+        "/v1/forum/notifications",
+        NOTIFICATIONS_BODY.to_vec(),
+        timestamp,
+    )
+}
+
+/// Build the signed mark-seen `POST /v1/forum/notifications/seen`, what
+/// opening the forum bell does there. Signed over its own path, so a signature
+/// minted for the read can never be replayed as this write.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the OS RNG is unavailable.
+pub fn build_signed_notifications_seen_request(
+    signing_key: &SigningKey,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    signed_post(
+        signing_key,
+        ALLOWED_CONNECT_HOST,
+        "/v1/forum/notifications/seen",
+        NOTIFICATIONS_BODY.to_vec(),
+        timestamp,
+    )
+}
+
+/// What happened, as far as the panel needs to distinguish it. Mirrors the
+/// desktop `ForumNotificationKind`; the tokens are warren-connect's.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ForumNotificationKind {
+    Mentioned,
+    Replied,
+    Quoted,
+    Liked,
+    PrivateMessage,
+    Posted,
+    Linked,
+    GrantedBadge,
+    WatchingFirstPost,
+    Announcement,
+    /// A kind this version has no wording of its own for. A Discourse
+    /// upgrade adding a type must not make a notification vanish.
+    Other,
+}
+
+impl ForumNotificationKind {
+    const ALL: [ForumNotificationKind; 11] = [
+        ForumNotificationKind::Mentioned,
+        ForumNotificationKind::Replied,
+        ForumNotificationKind::Quoted,
+        ForumNotificationKind::Liked,
+        ForumNotificationKind::PrivateMessage,
+        ForumNotificationKind::Posted,
+        ForumNotificationKind::Linked,
+        ForumNotificationKind::GrantedBadge,
+        ForumNotificationKind::WatchingFirstPost,
+        ForumNotificationKind::Announcement,
+        ForumNotificationKind::Other,
+    ];
+
+    /// The stable token, as the provider spells it and as the FFI envelope
+    /// carries it.
+    #[must_use]
+    pub fn token(self) -> &'static str {
+        match self {
+            ForumNotificationKind::Mentioned => "mentioned",
+            ForumNotificationKind::Replied => "replied",
+            ForumNotificationKind::Quoted => "quoted",
+            ForumNotificationKind::Liked => "liked",
+            ForumNotificationKind::PrivateMessage => "private_message",
+            ForumNotificationKind::Posted => "posted",
+            ForumNotificationKind::Linked => "linked",
+            ForumNotificationKind::GrantedBadge => "granted_badge",
+            ForumNotificationKind::WatchingFirstPost => "watching_first_post",
+            ForumNotificationKind::Announcement => "announcement",
+            ForumNotificationKind::Other => "other",
+        }
+    }
+
+    /// The kind for a provider token; anything unknown is [`Self::Other`].
+    #[must_use]
+    pub fn from_token(token: &str) -> Self {
+        Self::ALL
+            .into_iter()
+            .find(|kind| kind.token() == token)
+            .unwrap_or(ForumNotificationKind::Other)
+    }
+}
+
+/// One row of the forum activity panel. Every field was validated rather than
+/// cast: the provider is ours, but a compromised or confused one must not be
+/// able to put arbitrary markup, or a link to somewhere else entirely, in
+/// front of the user. Mirrors the desktop `ForumNotification`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ForumNotification {
+    /// Discourse's notification id.
+    pub id: i64,
+    /// What happened.
+    pub kind: ForumNotificationKind,
+    /// Unread by Discourse's own rule, so an unread row is one the header
+    /// badge counted.
+    pub unread: bool,
+    /// Unix epoch seconds.
+    pub created_at: i64,
+    /// Topic title, at most [`MAX_NOTIFICATION_LABEL_CHARS`].
+    pub title: Option<String>,
+    /// The member's public name, at most [`MAX_NOTIFICATION_LABEL_CHARS`].
+    pub actor: Option<String>,
+    /// Post excerpt, at most [`MAX_NOTIFICATION_EXCERPT_CHARS`].
+    pub excerpt: Option<String>,
+    /// Forum-relative path the row opens (`/t/86/4`, or a group inbox),
+    /// pinned to the shapes the forum produces. Absent when the notification
+    /// points at nothing openable.
+    pub path: Option<String>,
+}
+
+/// Longest title or actor kept, so one row cannot flood the panel.
+pub const MAX_NOTIFICATION_LABEL_CHARS: usize = 200;
+
+/// Longest excerpt kept. The provider already caps it; this is the guard.
+pub const MAX_NOTIFICATION_EXCERPT_CHARS: usize = 400;
+
+/// True iff `path` is one of the two shapes the forum produces: a post
+/// (`/t/<id>` or `/t/<id>/<n>`) or a group's message list
+/// (`/u/<handle>/messages/group/<name>`). Anchored at both ends with no
+/// slash inside a segment, so neither can climb out of the forum.
+fn is_forum_path(path: &str) -> bool {
+    fn digits(s: &str) -> bool {
+        !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit())
+    }
+    fn word(s: &str) -> bool {
+        !s.is_empty()
+            && s.chars()
+                .all(|c| c.is_alphanumeric() || c == '_' || c == '.' || c == '-')
+    }
+    let Some(rest) = path.strip_prefix('/') else {
+        return false;
+    };
+    let segments: Vec<&str> = rest.split('/').collect();
+    match segments.as_slice() {
+        ["t", id] => digits(id),
+        ["t", id, n] => digits(id) && digits(n),
+        ["u", handle, "messages", "group", name] => word(handle) && word(name),
+        _ => false,
+    }
+}
+
+/// Reads the provider's answer into rows, dropping anything malformed rather
+/// than rendering it. A body that is not a list at all yields an empty panel,
+/// which reads as "nothing here" and never as an error the user can act on.
+#[must_use]
+pub fn parse_forum_notifications(body: &[u8]) -> Vec<ForumNotification> {
+    let Ok(value) = serde_json::from_slice::<serde_json::Value>(body) else {
+        return Vec::new();
+    };
+    let Some(list) = value
+        .get("notifications")
+        .and_then(serde_json::Value::as_array)
+    else {
+        return Vec::new();
+    };
+    list.iter().filter_map(parse_one).collect()
+}
+
+fn parse_one(raw: &serde_json::Value) -> Option<ForumNotification> {
+    let row = raw.as_object()?;
+    let id = row.get("id")?.as_i64()?;
+    let created_at = row.get("created_at")?.as_i64()?;
+    let kind = row.get("kind").and_then(serde_json::Value::as_str).map_or(
+        ForumNotificationKind::Other,
+        ForumNotificationKind::from_token,
+    );
+    let path = row
+        .get("path")
+        .and_then(serde_json::Value::as_str)
+        .filter(|p| is_forum_path(p))
+        .map(str::to_owned);
+    Some(ForumNotification {
+        id,
+        kind,
+        unread: row.get("unread").and_then(serde_json::Value::as_bool) == Some(true),
+        created_at,
+        title: text(row.get("title"), MAX_NOTIFICATION_LABEL_CHARS),
+        actor: text(row.get("actor"), MAX_NOTIFICATION_LABEL_CHARS),
+        excerpt: text(row.get("excerpt"), MAX_NOTIFICATION_EXCERPT_CHARS),
+        path,
+    })
+}
+
+/// A trimmed, bounded string, or nothing for a blank or non-string value.
+fn text(value: Option<&serde_json::Value>, max_chars: usize) -> Option<String> {
+    let trimmed = value?.as_str()?.trim();
+    if trimmed.is_empty() {
+        return None;
+    }
+    Some(trimmed.chars().take(max_chars).collect())
+}
+
+/// Outcome of one panel read.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ForumNotificationsOutcome {
+    /// The provider answered; the rows it carried, malformed ones dropped.
+    Ok(Vec<ForumNotification>),
+    /// Any failure, with its class.
+    Failed(FailReason),
+}
+
+/// Map the provider's answer to the panel outcome: any 2xx is the list it
+/// carries (an empty or unreadable one is an empty panel), anything else a
+/// failure with its status.
+#[must_use]
+pub fn notifications_outcome_for_response(status: u16, body: &[u8]) -> ForumNotificationsOutcome {
+    match status {
+        200..=299 => ForumNotificationsOutcome::Ok(parse_forum_notifications(body)),
+        other => ForumNotificationsOutcome::Failed(FailReason::Http(other)),
+    }
+}
+
+/// The FFI envelope of a panel read: `{"ok":true,"notifications":[..]}` with
+/// one object per validated row (the optional fields absent when empty), or
+/// the `ok`/`error`/`reason` shape of the other flows. The rows have already
+/// been validated here, so Kotlin and Swift only map tokens to strings.
+#[must_use]
+pub fn notifications_envelope(outcome: &ForumNotificationsOutcome) -> String {
+    match outcome {
+        ForumNotificationsOutcome::Ok(rows) => {
+            let list: Vec<serde_json::Value> = rows
+                .iter()
+                .map(|row| {
+                    let mut map = serde_json::Map::new();
+                    map.insert("id".into(), serde_json::Value::from(row.id));
+                    map.insert("kind".into(), serde_json::Value::from(row.kind.token()));
+                    map.insert("unread".into(), serde_json::Value::Bool(row.unread));
+                    map.insert("created_at".into(), serde_json::Value::from(row.created_at));
+                    for (key, value) in [
+                        ("title", &row.title),
+                        ("actor", &row.actor),
+                        ("excerpt", &row.excerpt),
+                        ("path", &row.path),
+                    ] {
+                        if let Some(value) = value {
+                            map.insert(key.into(), serde_json::Value::String(value.clone()));
+                        }
+                    }
+                    serde_json::Value::Object(map)
+                })
+                .collect();
+            let mut envelope = serde_json::Map::new();
+            envelope.insert("ok".into(), serde_json::Value::Bool(true));
+            envelope.insert("notifications".into(), serde_json::Value::Array(list));
+            serde_json::Value::Object(envelope).to_string()
+        }
+        ForumNotificationsOutcome::Failed(reason) => failed_envelope(*reason),
+    }
+}
+
+/// Map the provider's answer to the mark-seen: any 2xx is done, anything else
+/// a failure with its status. Nothing is read back: the write is idempotent and
+/// monotonic on the server, so a failure only means the next open will mark
+/// again.
+///
+/// # Errors
+///
+/// [`FailReason::Http`] with the status for anything but a 2xx.
+pub fn seen_outcome_for_response(status: u16) -> Result<(), FailReason> {
+    match status {
+        200..=299 => Ok(()),
+        other => Err(FailReason::Http(other)),
+    }
+}
+
+/// The FFI envelope of a mark-seen: `{"ok":true}` or the classed failure.
+#[must_use]
+pub fn seen_envelope(outcome: &Result<(), FailReason>) -> String {
+    match outcome {
+        Ok(()) => r#"{"ok":true}"#.to_owned(),
+        Err(reason) => failed_envelope(*reason),
+    }
+}
+
+/// The classed failure envelope every forum flow shares.
+fn failed_envelope(reason: FailReason) -> String {
+    format!(
+        r#"{{"ok":false,"error":"error","reason":"{}"}}"#,
+        reason.token()
+    )
+}
+
 /// 16 bytes of OS entropy for the request nonce. `None` only if the OS RNG is
 /// unavailable.
 fn nonce_16() -> Option<[u8; 16]> {
@@ -1103,6 +1413,211 @@ mod tests {
                 }
             ),
             "{odd:?}"
+        );
+    }
+
+    #[test]
+    fn the_panel_read_and_the_mark_seen_sign_their_own_paths_over_an_empty_body() {
+        // The account read is derived from the signature: the body carries
+        // nothing a caller could point at somebody else, and the two writes
+        // sign different paths so one signature can never stand in for the
+        // other (the daemon pins the same two bodies).
+        let read =
+            build_signed_notifications_request(&signing_key(), 1_800_000_000).expect("builds");
+        assert_eq!(
+            read.url,
+            "https://connect.warrenbrowse.com/v1/forum/notifications"
+        );
+        assert_eq!(read.body, b"{}");
+        assert_wire_parity(&read, "/v1/forum/notifications");
+
+        let seen =
+            build_signed_notifications_seen_request(&signing_key(), 1_800_000_000).expect("builds");
+        assert_eq!(
+            seen.url,
+            "https://connect.warrenbrowse.com/v1/forum/notifications/seen"
+        );
+        assert_eq!(seen.body, b"{}");
+        assert_wire_parity(&seen, "/v1/forum/notifications/seen");
+        assert_eq!(header(&seen, "X-Warren-Timestamp"), "1800000000");
+    }
+
+    fn row() -> serde_json::Value {
+        serde_json::json!({
+            "id": 7,
+            "kind": "replied",
+            "unread": true,
+            "created_at": 1_700_000_000,
+            "title": "Port forwarding",
+            "actor": "rudop-tijub-sozom",
+            "excerpt": "Have you checked the firewall?",
+            "path": "/t/86/4"
+        })
+    }
+
+    fn rows(list: serde_json::Value) -> Vec<ForumNotification> {
+        let body = serde_json::json!({ "notifications": list }).to_string();
+        parse_forum_notifications(body.as_bytes())
+    }
+
+    fn row_with(field: &str, value: serde_json::Value) -> serde_json::Value {
+        let mut r = row();
+        r[field] = value;
+        r
+    }
+
+    #[test]
+    fn a_well_formed_row_is_read_whole() {
+        assert_eq!(
+            rows(serde_json::json!([row()])),
+            vec![ForumNotification {
+                id: 7,
+                kind: ForumNotificationKind::Replied,
+                unread: true,
+                created_at: 1_700_000_000,
+                title: Some("Port forwarding".into()),
+                actor: Some("rudop-tijub-sozom".into()),
+                excerpt: Some("Have you checked the firewall?".into()),
+                path: Some("/t/86/4".into()),
+            }]
+        );
+    }
+
+    #[test]
+    fn an_unknown_kind_becomes_a_row_rather_than_being_dropped() {
+        // A Discourse upgrade adding a type must not make a notification
+        // vanish from the panel.
+        let parsed = rows(serde_json::json!([row_with("kind", "chat_mention".into())]));
+        assert_eq!(parsed[0].kind, ForumNotificationKind::Other);
+        assert_eq!(
+            ForumNotificationKind::from_token("liked"),
+            ForumNotificationKind::Liked
+        );
+        assert_eq!(ForumNotificationKind::Liked.token(), "liked");
+        assert_eq!(ForumNotificationKind::from_token("nope").token(), "other");
+    }
+
+    #[test]
+    fn a_path_that_is_not_a_forum_post_is_refused() {
+        // The path is opened in the user's browser, so anything but the
+        // shapes the forum produces would be a way to send them elsewhere.
+        for path in [
+            "https://evil.example/phish",
+            "//evil.example",
+            "/t/86/4/../../admin",
+            "javascript:alert(1)",
+            "/u/someone",
+            "/u/someone/messages/group/staff/../../admin",
+            "/u/someone/messages/group/staff/extra",
+            "/u/someone/messages/group/",
+            "/u/someone/messages",
+            "//evil.example/messages/group/staff",
+        ] {
+            let parsed = rows(serde_json::json!([row_with("path", path.into())]));
+            assert_eq!(parsed[0].path, None, "must refuse {path}");
+        }
+    }
+
+    #[test]
+    fn the_shapes_the_forum_does_produce_are_kept() {
+        for path in [
+            "/t/86",
+            "/t/86/4",
+            "/u/gunak-sibuf-havon/messages/group/staff",
+        ] {
+            let parsed = rows(serde_json::json!([row_with("path", path.into())]));
+            assert_eq!(parsed[0].path.as_deref(), Some(path));
+        }
+    }
+
+    #[test]
+    fn a_row_with_no_usable_identity_or_timestamp_is_dropped() {
+        assert!(rows(serde_json::json!([row_with("id", "seven".into())])).is_empty());
+        assert!(
+            rows(serde_json::json!([row_with(
+                "created_at",
+                serde_json::Value::Null
+            )]))
+            .is_empty()
+        );
+    }
+
+    #[test]
+    fn the_text_a_single_row_can_carry_is_bounded() {
+        let flood = "x".repeat(5000);
+        let parsed = rows(serde_json::json!([row_with("title", flood.clone().into())
+            .as_object()
+            .cloned()
+            .map(|mut m| {
+                m.insert("excerpt".into(), flood.clone().into());
+                serde_json::Value::Object(m)
+            })
+            .unwrap()]));
+        assert_eq!(parsed[0].title.as_ref().map(String::len), Some(200));
+        assert_eq!(parsed[0].excerpt.as_ref().map(String::len), Some(400));
+        // Blank text is no text; the panel falls back to its own wording.
+        let blank = rows(serde_json::json!([row_with("actor", "   ".into())]));
+        assert_eq!(blank[0].actor, None);
+    }
+
+    #[test]
+    fn a_body_that_is_not_a_list_reads_as_an_empty_panel() {
+        // "Nothing here" is the honest rendering of a malformed answer; an
+        // error the user cannot act on is not.
+        assert!(parse_forum_notifications(b"{}").is_empty());
+        assert!(parse_forum_notifications(b"null").is_empty());
+        assert!(parse_forum_notifications(b"not json").is_empty());
+        assert!(parse_forum_notifications(br#"{"notifications":"nope"}"#).is_empty());
+    }
+
+    #[test]
+    fn only_the_malformed_rows_of_an_otherwise_usable_answer_are_dropped() {
+        let parsed = rows(serde_json::json!([
+            row(),
+            42,
+            null,
+            row_with("id", 9.into())
+        ]));
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed[1].id, 9);
+    }
+
+    #[test]
+    fn the_panel_read_follows_the_status_and_its_envelope_carries_the_rows() {
+        let ok = notifications_outcome_for_response(
+            200,
+            serde_json::json!({ "notifications": [row_with("excerpt", serde_json::Value::Null)] })
+                .to_string()
+                .as_bytes(),
+        );
+        assert_eq!(
+            notifications_envelope(&ok),
+            r#"{"notifications":[{"actor":"rudop-tijub-sozom","created_at":1700000000,"id":7,"kind":"replied","path":"/t/86/4","title":"Port forwarding","unread":true}],"ok":true}"#
+        );
+        assert_eq!(
+            notifications_outcome_for_response(200, b"{}"),
+            ForumNotificationsOutcome::Ok(Vec::new()),
+            "an empty answer is an empty panel, never an error"
+        );
+        assert_eq!(
+            notifications_outcome_for_response(502, b""),
+            ForumNotificationsOutcome::Failed(FailReason::Http(502))
+        );
+        assert_eq!(
+            notifications_envelope(&ForumNotificationsOutcome::Failed(FailReason::Transport)),
+            r#"{"ok":false,"error":"error","reason":"transport"}"#
+        );
+    }
+
+    #[test]
+    fn marking_seen_is_a_yes_or_a_classed_no() {
+        assert_eq!(seen_outcome_for_response(204), Ok(()));
+        assert_eq!(seen_outcome_for_response(200), Ok(()));
+        assert_eq!(seen_outcome_for_response(401), Err(FailReason::Http(401)));
+        assert_eq!(seen_envelope(&Ok(())), r#"{"ok":true}"#);
+        assert_eq!(
+            seen_envelope(&Err(FailReason::Transport)),
+            r#"{"ok":false,"error":"error","reason":"transport"}"#
         );
     }
 }
