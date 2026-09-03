@@ -215,6 +215,30 @@ impl WarrenAuthSigner {
         }
     }
 
+    /// Signs a request at a `timestamp` the caller has established, with a
+    /// freshly minted nonce.
+    ///
+    /// For the flows that correct the machine clock before signing: the
+    /// Warren API refuses a signature more than a minute from its own clock,
+    /// so a machine that has never synchronised its time is refused on every
+    /// attempt, and the user has no way to act on it from inside the app. The
+    /// caller measures the offset against a server answer it authenticated
+    /// (the `Date` header of a TLS response) and signs at the corrected
+    /// instant. The nonce stays minted here: the server refuses one it has
+    /// already seen, so it can never come from the caller.
+    #[must_use]
+    pub fn sign_request_with_timestamp(
+        &self,
+        method: &str,
+        path: &str,
+        body: &[u8],
+        timestamp: u64,
+    ) -> WarrenAuthHeaders {
+        let mut nonce = [0u8; NONCE_BYTES];
+        rand::rng().fill_bytes(&mut nonce);
+        self.sign_request_at(method, path, body, timestamp, nonce)
+    }
+
     /// Signs a request with `timestamp = now()` and a random nonce
     /// (cryptographically secure, via `rand::rng()`).
     ///
@@ -364,6 +388,28 @@ mod tests {
         );
         assert_eq!(h1.signature_hex, h2.signature_hex);
         assert_eq!(h1.pubkey_ss58, h2.pubkey_ss58);
+    }
+
+    #[test]
+    fn signing_at_a_corrected_timestamp_keeps_a_fresh_nonce() {
+        // The forum broker refuses a signature more than a minute off its own
+        // clock, so a machine whose clock never synchronised is refused on
+        // every attempt whatever the user does. The caller corrects the stamp
+        // against the server's `Date` and signs at that instant; the nonce
+        // stays minted here, because the broker refuses one it has seen.
+        let signer = fixed_signer();
+        let corrected = 1_700_000_000;
+        let first =
+            signer.sign_request_with_timestamp("POST", "/v1/forum/report", b"{}", corrected);
+        let second =
+            signer.sign_request_with_timestamp("POST", "/v1/forum/report", b"{}", corrected);
+        assert_eq!(first.timestamp, corrected);
+        assert_eq!(second.timestamp, corrected);
+        assert_ne!(
+            first.nonce_hex, second.nonce_hex,
+            "a replayed nonce is refused: every signature mints its own"
+        );
+        assert_ne!(first.signature_hex, second.signature_hex);
     }
 
     #[test]

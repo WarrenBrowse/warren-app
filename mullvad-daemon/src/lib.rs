@@ -61,6 +61,10 @@ mod warren_artifact_refresh;
 /// down by itself. Holds the decision as pure functions and the watcher that
 /// observes the foreign daemons over their own management sockets.
 pub mod warren_env_arbitration;
+/// The broker's clock, read before a wallet-signed forum request is stamped,
+/// so a machine whose own clock never synchronised is not refused on every
+/// attempt.
+mod warren_forum_clock;
 mod warren_forum_digest_updater;
 /// App-side wrapper around the SDK's `warren_api::WarrenApiClient` that
 /// rebuilds its owned `WarrenIdentity` from a shared, hot-swappable BIP39
@@ -3728,25 +3732,33 @@ impl Daemon {
         report_json: String,
         log_gz: Option<Vec<u8>>,
     ) {
-        let result = if self.warren_identity.has_user_identity() {
-            forum_report_body(&report_json, log_gz.as_deref())
-                .map(|body| {
-                    let headers = self.warren_identity.signer().sign_request(
-                        "POST",
-                        FORUM_REPORT_PATH,
-                        body.as_bytes(),
-                    );
-                    (headers, body)
-                })
-                .map_err(ForumReportSignError::Build)
-        } else {
-            Err(ForumReportSignError::NoIdentity)
-        };
-        match &result {
-            Ok(_) => log::debug!("on_sign_forum_report: signed"),
-            Err(err) => log::debug!("on_sign_forum_report: not signed ({err:?})"),
+        if !self.warren_identity.has_user_identity() {
+            log::debug!("on_sign_forum_report: not signed (no identity)");
+            Self::oneshot_send(
+                tx,
+                Err(ForumReportSignError::NoIdentity),
+                "sign_forum_report",
+            );
+            return;
         }
-        Self::oneshot_send(tx, result, "sign_forum_report");
+        // Read the broker's clock before stamping, off the daemon loop: a
+        // machine whose own clock never synchronised is otherwise refused on
+        // every attempt, and a bug report is exactly what a user files when
+        // nothing else in the app works. The signer stays here, so what the
+        // caller can influence is nothing.
+        let signer = self.warren_identity.signer();
+        tokio::spawn(async move {
+            let timestamp =
+                warren_forum_clock::signing_timestamp(warren_forum::connect_host()).await;
+            let result = signed_forum_report(&signer, &report_json, log_gz.as_deref(), timestamp);
+            match &result {
+                Ok(_) => log::debug!("on_sign_forum_report: signed"),
+                Err(err) => log::debug!("on_sign_forum_report: not signed ({err:?})"),
+            }
+            if tx.send(result).is_err() {
+                log::warn!("Unable to send sign_forum_report to the daemon command sender");
+            }
+        });
     }
 
     /// Restores the mnemonic via
@@ -6040,6 +6052,27 @@ fn forum_report_body(
     String::from_utf8(body).map_err(|_| warren_forum::ForumRequestError::Invalid)
 }
 
+/// Signs the canonical in-app report body at `timestamp` with the daemon's
+/// Warren identity key, returning the header values and the exact bytes the
+/// GUI POSTs. Kept out of the command handler so the corrected stamp is
+/// testable without a broker.
+///
+/// # Errors
+///
+/// [`ForumReportSignError::Build`] when the shared builder refuses the fields
+/// or the log size.
+fn signed_forum_report(
+    signer: &mullvad_api::warren_auth::WarrenAuthSigner,
+    report_json: &str,
+    log_gz: Option<&[u8]>,
+    timestamp: u64,
+) -> Result<(mullvad_api::warren_auth::WarrenAuthHeaders, String), ForumReportSignError> {
+    let body = forum_report_body(report_json, log_gz).map_err(ForumReportSignError::Build)?;
+    let headers =
+        signer.sign_request_with_timestamp("POST", FORUM_REPORT_PATH, body.as_bytes(), timestamp);
+    Ok((headers, body))
+}
+
 /// Why the daemon could not sign an in-app report.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
 #[non_exhaustive]
@@ -6186,6 +6219,53 @@ mod forum_report_tests {
         assert_eq!(
             replayed, 2,
             "the vector pins a report with and without logs"
+        );
+    }
+
+    #[test]
+    fn a_skewed_machine_signs_the_report_at_the_brokers_clock() {
+        // The class this exists for: a machine five minutes slow is inside
+        // nobody's notice and outside the broker's 60 s window, so every
+        // report it filed came back refused for the clock, with nothing the
+        // reporter could do about it from the app. The daemon reads the
+        // broker's `Date` first and stamps the signature with it, and the
+        // signer stays here: the GUI never chooses the instant a wallet
+        // signs at.
+        const SERVER_NOW: u64 = 1_700_000_000;
+        const BROKER_WINDOW_SECS: u64 = 60;
+        let device_now = SERVER_NOW - 300;
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[9u8; 32]));
+
+        let offset = crate::warren_forum_clock::offset_from_date(
+            Some("Tue, 14 Nov 2023 22:13:20 GMT"),
+            device_now,
+        );
+        let timestamp = crate::warren_forum_clock::corrected_timestamp(device_now, offset);
+        let (headers, body) =
+            super::signed_forum_report(&signer, r#"{"area":"other"}"#, None, timestamp)
+                .expect("the report signs");
+
+        assert_eq!(headers.timestamp, SERVER_NOW);
+        assert!(
+            headers.timestamp.abs_diff(SERVER_NOW) <= BROKER_WINDOW_SECS,
+            "the stamp must land inside the window the broker accepts"
+        );
+        assert!(
+            device_now.abs_diff(SERVER_NOW) > BROKER_WINDOW_SECS,
+            "the uncorrected clock would have been refused, which is the point"
+        );
+        // The signature covers the corrected stamp, so it verifies for the
+        // broker exactly as it was built here.
+        assert_eq!(body, r#"{"area":"other"}"#);
+        assert_eq!(headers.signature_hex.len(), 128);
+    }
+
+    #[test]
+    fn a_report_that_cannot_be_built_is_refused_before_anything_is_signed() {
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[9u8; 32]));
+        assert_eq!(
+            super::signed_forum_report(&signer, "[1,2]", None, 1_700_000_000),
+            Err(ForumReportSignError::Build(ForumRequestError::Invalid))
         );
     }
 
