@@ -70,8 +70,10 @@ on:
       # The update-metadata generator decides the installer URLs that go inside
       # the signed manifests, and its unit tests run in this scope. Nothing else
       # gates the file, so an edit touching only it reached main untested.
-      - "ci/build-version-metadata.py"
-      - "ci/test_build_version_metadata.py"
+      # Everything under ci/ that this scope tests: the update-metadata
+      # generator, and the `git config --global` wrapper the build-env action
+      # runs on every job of every OS.
+      - "ci/**"
       # The macOS installer scripts decide whether an install proceeds at all,
       # and nothing else gated them: an abort that should not have happened is
       # only visible to a user running the installer. Their behaviour test runs

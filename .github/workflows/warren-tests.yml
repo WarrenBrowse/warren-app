@@ -116,6 +116,12 @@ jobs:
         # tests: warren-jni only compiles them, so a broken forum test (the size
         # cap, the outcome envelopes) stayed green here. Same for clippy below.
         #
+        # warren-ios was in exactly that position one step further along: this
+        # step only `cargo check`ed it, so its host-runnable tests (the FFI
+        # product-anchor table Swift dials, the corrected-clock report stamp)
+        # ran nowhere. The iOS-gated modules of the crate are compiled by the
+        # macOS job below, which builds it for the device target.
+        #
         # mullvad-paths and mullvad-setup ran nowhere at all, in any scope. They
         # are where the per-environment runtime paths and the update dead-man
         # live, so a change that made two product environments share an RPC
@@ -129,9 +135,8 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p warren-jni \
-            -p warren-forum -p warren-product-env \
+            -p warren-forum -p warren-product-env -p warren-ios \
             -p mullvad-update -p mullvad-release
-          cargo check --locked -p warren-ios
 
       - name: cargo clippy Warren scope
         # --no-deps: lint only these Warren crates, not their entire upstream
@@ -141,7 +146,7 @@ jobs:
         timeout-minutes: 20
         run: |
           crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns"
-          crates="$crates warren-jni warren-forum warren-product-env"
+          crates="$crates warren-jni warren-forum warren-product-env warren-ios"
           crates="$crates mullvad-paths mullvad-setup"
           crates="$crates mullvad-update mullvad-release"
           for crate in $crates; do
@@ -173,6 +178,18 @@ jobs:
       - name: cargo clippy talpid-dns (macOS implementation)
         timeout-minutes: 10
         run: cargo clippy --no-deps --locked -p talpid-dns --all-targets -- -D warnings
+
+      # warren-ios's FFI modules are `#![cfg(target_os = "ios")]`, so the Linux
+      # job above compiles none of them: the whole forum login preflight (the
+      # reqwest client, the SessionPreflight match, the corrected timestamp)
+      # was compiled by nothing but a dispatch-only Xcode workflow. This is the
+      # only leg with the iOS SDK, so it is where the device target belongs.
+      - name: Add the iOS Rust target
+        run: rustup target add aarch64-apple-ios
+
+      - name: cargo check warren-ios (device target)
+        timeout-minutes: 20
+        run: cargo check --locked -p warren-ios --target aarch64-apple-ios
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
@@ -258,3 +275,16 @@ jobs:
         working-directory: .
         shell: bash
         run: scripts/ci/test-macos-pkg-preinstall.sh
+
+      # `ci/git-config-global.sh` now fronts every `git config --global` of the
+      # build-env action, on every OS, including the two that install the
+      # WarrenBrowse token rewrites. A regression in its retry loop, its lock
+      # grep or its stale-lock removal breaks the sibling checkouts and the
+      # quinn fork fetch for every job in the fleet, and its own tests ran
+      # nowhere: the script had to be typed by hand to be exercised at all. The
+      # stale-lock arm, which deletes another process's lock after a minute, is
+      # the branch most worth holding.
+      - name: git config --global wrapper behaviour
+        working-directory: .
+        shell: bash
+        run: bash ci/test-git-config-global.sh
