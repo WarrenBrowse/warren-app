@@ -56,6 +56,22 @@ class ForumActivityTest {
     }
 
     @Test
+    fun the_rise_wording_counts_one_several_and_the_saturated_ceiling_differently() {
+        assertEquals(ForumActivityWording.Single, forumActivityWording(1))
+        assertEquals(ForumActivityWording.Several(2), forumActivityWording(2))
+        // "15" would be a number the user can check and find wrong.
+        assertEquals(ForumActivityWording.MoreThan(14), forumActivityWording(15))
+    }
+
+    @Test
+    fun an_age_reads_relative_for_a_week_then_as_a_date() {
+        val now = 1_800_000_000L
+        assertTrue(forumNotificationAgeIsRelative(now - 2 * 3600, now))
+        assertTrue(forumNotificationAgeIsRelative(now - 6 * 86_400, now))
+        assertFalse(forumNotificationAgeIsRelative(now - 40 * 86_400, now))
+    }
+
+    @Test
     fun a_notification_kind_maps_from_its_token_and_unknown_tokens_stay_generic() {
         assertEquals(ForumNotificationKind.REPLIED, ForumNotificationKind.fromToken("replied"))
         assertEquals(ForumNotificationKind.PRIVATE_MESSAGE, ForumNotificationKind.fromToken("private_message"))

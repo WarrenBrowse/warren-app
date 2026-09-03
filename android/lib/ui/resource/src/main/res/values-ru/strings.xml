@@ -581,4 +581,37 @@
     <string name="connection_details_last">Последняя</string>
     <string name="connection_details_never">никогда</string>
     <string name="connection_details_age">%1$s назад</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Уведомления форума</string>
+    <string name="forum_notifications_setting_description">Получайте уведомление, когда вам отвечают на форуме сообщества. Выключение также скрывает колокольчик форума.</string>
+    <string name="forum_activity_channel_name">Уведомления форума</string>
+    <string name="forum_activity_channel_description">Получайте уведомление, когда вам отвечают на форуме сообщества. Выключение также скрывает колокольчик форума.</string>
+    <string name="forum_activity_notification_one">1 новое уведомление на форуме</string>
+    <string name="forum_activity_notification_more_than">Более %1$d новых уведомлений на форуме</string>
+    <string name="forum_activity_title">Форум</string>
+    <string name="forum_activity_header_unread">Форум, новых: %1$s</string>
+    <string name="forum_activity_mark_all_read">Отметить все как прочитанные</string>
+    <string name="forum_activity_error">Не удалось связаться с форумом. Проверьте соединение и попробуйте снова.</string>
+    <string name="forum_activity_try_again">Повторить</string>
+    <string name="forum_activity_empty">На форуме ничего нового. Задайте вопрос или помогите кому-нибудь.</string>
+    <string name="forum_activity_open_forum">Открыть форум</string>
+    <string name="forum_activity_you_post_as">Вы пишете под именем %1$s</string>
+    <string name="forum_activity_someone">Кто-то</string>
+    <string name="forum_activity_replied">%1$s ответил(а)</string>
+    <string name="forum_activity_liked">%1$s оценил(а) ваше сообщение</string>
+    <string name="forum_activity_mentioned">%1$s упомянул(а) вас</string>
+    <string name="forum_activity_quoted">%1$s процитировал(а) вас</string>
+    <string name="forum_activity_message">%1$s отправил(а) вам сообщение</string>
+    <string name="forum_activity_linked">%1$s сослался(лась) на ваше сообщение</string>
+    <string name="forum_activity_badge">Вы получили значок</string>
+    <string name="forum_activity_new_topic">%1$s создал(а) новую тему</string>
+    <string name="forum_activity_forum_updated">Форум обновлён</string>
+    <string name="forum_activity_generic">Новая активность на форуме</string>
+    <string name="opens_externally">Открыть в браузере</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">%1$d новое уведомление на форуме</item>
+        <item quantity="few">%1$d новых уведомления на форуме</item>
+        <item quantity="many">%1$d новых уведомлений на форуме</item>
+        <item quantity="other">%1$d новых уведомления на форуме</item>
+    </plurals>
 </resources>

@@ -29,7 +29,10 @@ import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.focusRestorer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,6 +79,10 @@ fun NavigationDrawerTv(
     initialDrawerValue: DrawerValue = DrawerValue.Closed,
     onSettingsClick: (() -> Unit),
     onAccountClick: (() -> Unit),
+    // The header's forum slot on TV: the activity panel for a forum account,
+    // the forum itself otherwise, nothing when the setting removed it.
+    forumItem: TvForumItem? = null,
+    onForumClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val drawerState = rememberDrawerState(initialDrawerValue)
@@ -119,12 +126,30 @@ fun NavigationDrawerTv(
                         Modifier.align(Alignment.TopStart).padding(start = animatedPadding.value),
                     isExpanded = hasFocus,
                 )
-                DrawerItemTv(
-                    modifier = Modifier.align(Alignment.CenterStart),
-                    icon = Icons.Rounded.AccountCircle,
-                    text = stringResource(R.string.settings_account),
-                    onClick = onAccountClick,
-                )
+                Column(modifier = Modifier.align(Alignment.CenterStart)) {
+                    if (forumItem != null && onForumClick != null) {
+                        DrawerItemTv(
+                            painter =
+                                painterResource(
+                                    when (forumItem) {
+                                        TvForumItem.ACTIVITY -> R.drawable.ic_bell_outline
+                                        TvForumItem.COMMUNITY -> R.drawable.ic_lifebuoy_outline
+                                    }
+                                ),
+                            text =
+                                when (forumItem) {
+                                    TvForumItem.ACTIVITY -> stringResource(R.string.forum_activity_title)
+                                    TvForumItem.COMMUNITY -> stringResource(R.string.community_forum)
+                                },
+                            onClick = onForumClick,
+                        )
+                    }
+                    DrawerItemTv(
+                        icon = Icons.Rounded.AccountCircle,
+                        text = stringResource(R.string.settings_account),
+                        onClick = onAccountClick,
+                    )
+                }
                 DrawerItemTv(
                     modifier = Modifier.align(Alignment.BottomStart),
                     icon = Icons.Rounded.Settings,
@@ -137,10 +162,24 @@ fun NavigationDrawerTv(
     )
 }
 
+/** What the TV drawer's forum item stands for. */
+enum class TvForumItem {
+    ACTIVITY,
+    COMMUNITY,
+}
+
 @Composable
 private fun NavigationDrawerScope.DrawerItemTv(
     modifier: Modifier = Modifier,
     icon: ImageVector,
+    text: String,
+    onClick: () -> Unit,
+) = DrawerItemTv(modifier, rememberVectorPainter(icon), text, onClick)
+
+@Composable
+private fun NavigationDrawerScope.DrawerItemTv(
+    modifier: Modifier = Modifier,
+    painter: Painter,
     text: String,
     onClick: () -> Unit,
 ) {
@@ -151,7 +190,7 @@ private fun NavigationDrawerScope.DrawerItemTv(
         leadingContent = {
             Icon(
                 tint = MaterialTheme.colorScheme.onPrimary,
-                imageVector = icon,
+                painter = painter,
                 contentDescription = null,
             )
         },

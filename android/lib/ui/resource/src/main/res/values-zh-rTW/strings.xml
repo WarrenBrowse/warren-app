@@ -572,4 +572,34 @@
     <string name="connection_details_last">上次</string>
     <string name="connection_details_never">從未</string>
     <string name="connection_details_age">%1$s前</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">論壇通知</string>
+    <string name="forum_notifications_setting_description">有人在社群論壇回覆你時提醒你。關閉後也會隱藏論壇鈴鐺。</string>
+    <string name="forum_activity_channel_name">論壇通知</string>
+    <string name="forum_activity_channel_description">有人在社群論壇回覆你時提醒你。關閉後也會隱藏論壇鈴鐺。</string>
+    <string name="forum_activity_notification_one">論壇有 1 則新通知</string>
+    <string name="forum_activity_notification_more_than">論壇有超過 %1$d 則新通知</string>
+    <string name="forum_activity_title">論壇</string>
+    <string name="forum_activity_header_unread">論壇，%1$s 則新訊息</string>
+    <string name="forum_activity_mark_all_read">全部標為已讀</string>
+    <string name="forum_activity_error">無法連線論壇。請檢查網路連線後重試。</string>
+    <string name="forum_activity_try_again">重試</string>
+    <string name="forum_activity_empty">論壇暫時沒有新內容。來提個問題，或者幫別人解答一下。</string>
+    <string name="forum_activity_open_forum">開啟論壇</string>
+    <string name="forum_activity_you_post_as">你以 %1$s 的身分發文</string>
+    <string name="forum_activity_someone">有人</string>
+    <string name="forum_activity_replied">%1$s 回覆了</string>
+    <string name="forum_activity_liked">%1$s 讚了你的貼文</string>
+    <string name="forum_activity_mentioned">%1$s 提到了你</string>
+    <string name="forum_activity_quoted">%1$s 引用了你</string>
+    <string name="forum_activity_message">%1$s 傳了訊息給你</string>
+    <string name="forum_activity_linked">%1$s 連結了你的貼文</string>
+    <string name="forum_activity_badge">你獲得了一枚徽章</string>
+    <string name="forum_activity_new_topic">%1$s 發起了新主題</string>
+    <string name="forum_activity_forum_updated">論壇已更新</string>
+    <string name="forum_activity_generic">論壇有新動態</string>
+    <string name="opens_externally">在外部開啟</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="other">論壇有 %1$d 則新通知</item>
+    </plurals>
 </resources>

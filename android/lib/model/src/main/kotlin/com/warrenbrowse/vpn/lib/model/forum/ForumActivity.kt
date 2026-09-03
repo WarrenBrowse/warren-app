@@ -19,10 +19,8 @@ const val UNREAD_SATURATED = 15
  * that registered since the last rebuild). The Rust side has already checked
  * the signature and the freshness, so this only indexes.
  */
-fun unreadForSlot(digest: String?, slot: Int?): Int {
-    if (digest.isNullOrEmpty() || slot == null || slot < 0 || slot >= digest.length) return 0
-    return digest[slot].digitToIntOrNull(radix = 16) ?: 0
-}
+fun unreadForSlot(digest: String?, slot: Int?): Int =
+    digest?.getOrNull(slot ?: -1)?.digitToIntOrNull(radix = 16) ?: 0
 
 /** The count as shown, saturating rather than growing the badge. */
 fun unreadLabel(unread: Int): String =
@@ -71,6 +69,16 @@ sealed interface ForumActivityWording {
 
     data class MoreThan(val count: Int) : ForumActivityWording
 }
+
+/**
+ * Whether a notification's age still reads better as "2 h ago" than as a
+ * date: past a week, "5 weeks ago" tells a reader less than the day it
+ * happened (the desktop `relativeTime` threshold).
+ */
+fun forumNotificationAgeIsRelative(createdAtSecs: Long, nowSecs: Long): Boolean =
+    nowSecs - createdAtSecs < RELATIVE_AGE_LIMIT_SECS
+
+private const val RELATIVE_AGE_LIMIT_SECS = 7L * 24 * 3600
 
 fun forumActivityWording(unread: Int): ForumActivityWording =
     when {

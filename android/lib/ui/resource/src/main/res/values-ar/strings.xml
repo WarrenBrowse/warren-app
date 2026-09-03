@@ -587,4 +587,39 @@
     <string name="connection_details_last">الأخير</string>
     <string name="connection_details_never">أبدًا</string>
     <string name="connection_details_age">منذ %1$s</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">إشعارات المنتدى</string>
+    <string name="forum_notifications_setting_description">أعلمني عندما يرد عليك أحد في منتدى المجتمع. إيقاف هذا يخفي أيضًا جرس المنتدى.</string>
+    <string name="forum_activity_channel_name">إشعارات المنتدى</string>
+    <string name="forum_activity_channel_description">أعلمني عندما يرد عليك أحد في منتدى المجتمع. إيقاف هذا يخفي أيضًا جرس المنتدى.</string>
+    <string name="forum_activity_notification_one">لا إشعارات جديدة في المنتدى</string>
+    <string name="forum_activity_notification_more_than">أكثر من %1$d إشعار جديد في المنتدى</string>
+    <string name="forum_activity_title">المنتدى</string>
+    <string name="forum_activity_header_unread">المنتدى، %1$s جديد</string>
+    <string name="forum_activity_mark_all_read">تعليم الكل كمقروء</string>
+    <string name="forum_activity_error">تعذر الوصول إلى المنتدى. تحقق من اتصالك وأعد المحاولة.</string>
+    <string name="forum_activity_try_again">أعد المحاولة</string>
+    <string name="forum_activity_empty">لا جديد في المنتدى. تعال واطرح سؤالًا، أو ساعد شخصًا آخر.</string>
+    <string name="forum_activity_open_forum">فتح المنتدى</string>
+    <string name="forum_activity_you_post_as">تنشر باسم %1$s</string>
+    <string name="forum_activity_someone">أحدهم</string>
+    <string name="forum_activity_replied">رد %1$s</string>
+    <string name="forum_activity_liked">أعجب %1$s بمشاركتك</string>
+    <string name="forum_activity_mentioned">أشار إليك %1$s</string>
+    <string name="forum_activity_quoted">اقتبس %1$s كلامك</string>
+    <string name="forum_activity_message">أرسل إليك %1$s رسالة</string>
+    <string name="forum_activity_linked">أشار %1$s إلى مشاركتك برابط</string>
+    <string name="forum_activity_badge">حصلت على شارة</string>
+    <string name="forum_activity_new_topic">فتح %1$s موضوعًا جديدًا</string>
+    <string name="forum_activity_forum_updated">تم تحديث المنتدى</string>
+    <string name="forum_activity_generic">نشاط جديد في المنتدى</string>
+    <string name="opens_externally">يفتح خارجيًا</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="zero">لا إشعارات جديدة في المنتدى</item>
+        <item quantity="one">إشعار جديد في المنتدى</item>
+        <item quantity="two">إشعاران جديدان في المنتدى</item>
+        <item quantity="few">%1$d إشعارات جديدة في المنتدى</item>
+        <item quantity="many">%1$d إشعارًا جديدًا في المنتدى</item>
+        <item quantity="other">%1$d إشعار جديد في المنتدى</item>
+    </plurals>
 </resources>

@@ -575,4 +575,35 @@
     <string name="connection_details_last">Sidst</string>
     <string name="connection_details_never">aldrig</string>
     <string name="connection_details_age">%1$s siden</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Forumnotifikationer</string>
+    <string name="forum_notifications_setting_description">Få besked, når nogen svarer dig på fællesskabsforummet. Slår du det fra, skjules forumklokken også.</string>
+    <string name="forum_activity_channel_name">Forumnotifikationer</string>
+    <string name="forum_activity_channel_description">Få besked, når nogen svarer dig på fællesskabsforummet. Slår du det fra, skjules forumklokken også.</string>
+    <string name="forum_activity_notification_one">Ny notifikation på forummet</string>
+    <string name="forum_activity_notification_more_than">Mere end %1$d nye notifikationer på forummet</string>
+    <string name="forum_activity_title">Forum</string>
+    <string name="forum_activity_header_unread">Forum, %1$s nye</string>
+    <string name="forum_activity_mark_all_read">Markér alle som læst</string>
+    <string name="forum_activity_error">Kunne ikke nå forummet. Tjek din forbindelse, og prøv igen.</string>
+    <string name="forum_activity_try_again">Prøv igen</string>
+    <string name="forum_activity_empty">Intet nyt på forummet. Kom og stil et spørgsmål, eller hjælp en anden.</string>
+    <string name="forum_activity_open_forum">Åbn forummet</string>
+    <string name="forum_activity_you_post_as">Du skriver som %1$s</string>
+    <string name="forum_activity_someone">Nogen</string>
+    <string name="forum_activity_replied">%1$s svarede</string>
+    <string name="forum_activity_liked">%1$s syntes godt om dit indlæg</string>
+    <string name="forum_activity_mentioned">%1$s nævnte dig</string>
+    <string name="forum_activity_quoted">%1$s citerede dig</string>
+    <string name="forum_activity_message">%1$s sendte dig en besked</string>
+    <string name="forum_activity_linked">%1$s linkede til dit indlæg</string>
+    <string name="forum_activity_badge">Du har optjent et mærke</string>
+    <string name="forum_activity_new_topic">%1$s oprettede et nyt emne</string>
+    <string name="forum_activity_forum_updated">Forummet er opdateret</string>
+    <string name="forum_activity_generic">Ny aktivitet på forummet</string>
+    <string name="opens_externally">Åbner eksternt</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">Ny notifikation på forummet</item>
+        <item quantity="other">%1$d nye notifikationer på forummet</item>
+    </plurals>
 </resources>

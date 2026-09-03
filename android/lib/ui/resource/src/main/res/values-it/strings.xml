@@ -575,4 +575,35 @@
     <string name="connection_details_last">Ultima</string>
     <string name="connection_details_never">mai</string>
     <string name="connection_details_age">%1$s fa</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Notifiche del forum</string>
+    <string name="forum_notifications_setting_description">Ricevi un avviso quando qualcuno ti risponde sul forum della comunità. Disattivandolo si nasconde anche la campanella del forum.</string>
+    <string name="forum_activity_channel_name">Notifiche del forum</string>
+    <string name="forum_activity_channel_description">Ricevi un avviso quando qualcuno ti risponde sul forum della comunità. Disattivandolo si nasconde anche la campanella del forum.</string>
+    <string name="forum_activity_notification_one">Nuova notifica sul forum</string>
+    <string name="forum_activity_notification_more_than">Più di %1$d nuove notifiche sul forum</string>
+    <string name="forum_activity_title">Forum</string>
+    <string name="forum_activity_header_unread">Forum, %1$s nuove</string>
+    <string name="forum_activity_mark_all_read">Segna tutto come letto</string>
+    <string name="forum_activity_error">Impossibile raggiungere il forum. Controlla la connessione e riprova.</string>
+    <string name="forum_activity_try_again">Riprova</string>
+    <string name="forum_activity_empty">Nulla di nuovo sul forum. Vieni a fare una domanda, o dai una mano a qualcuno.</string>
+    <string name="forum_activity_open_forum">Apri il forum</string>
+    <string name="forum_activity_you_post_as">Pubblichi come %1$s</string>
+    <string name="forum_activity_someone">Qualcuno</string>
+    <string name="forum_activity_replied">%1$s ha risposto</string>
+    <string name="forum_activity_liked">A %1$s piace il tuo messaggio</string>
+    <string name="forum_activity_mentioned">%1$s ti ha menzionato</string>
+    <string name="forum_activity_quoted">%1$s ti ha citato</string>
+    <string name="forum_activity_message">%1$s ti ha inviato un messaggio</string>
+    <string name="forum_activity_linked">%1$s ha collegato il tuo messaggio</string>
+    <string name="forum_activity_badge">Hai ottenuto un distintivo</string>
+    <string name="forum_activity_new_topic">%1$s ha aperto una nuova discussione</string>
+    <string name="forum_activity_forum_updated">Il forum è stato aggiornato</string>
+    <string name="forum_activity_generic">Nuova attività sul forum</string>
+    <string name="opens_externally">Si apre all\'esterno</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">Nuova notifica sul forum</item>
+        <item quantity="other">%1$d nuove notifiche sul forum</item>
+    </plurals>
 </resources>

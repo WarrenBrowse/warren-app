@@ -575,4 +575,35 @@
     <string name="connection_details_last">آخرین</string>
     <string name="connection_details_never">هرگز</string>
     <string name="connection_details_age">%1$s پیش</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">اعلان‌های انجمن</string>
+    <string name="forum_notifications_setting_description">وقتی کسی در انجمن جامعه به شما پاسخ داد، باخبر شوید. خاموش کردن آن، زنگ انجمن را هم پنهان می‌کند.</string>
+    <string name="forum_activity_channel_name">اعلان‌های انجمن</string>
+    <string name="forum_activity_channel_description">وقتی کسی در انجمن جامعه به شما پاسخ داد، باخبر شوید. خاموش کردن آن، زنگ انجمن را هم پنهان می‌کند.</string>
+    <string name="forum_activity_notification_one">اعلان تازه در انجمن</string>
+    <string name="forum_activity_notification_more_than">بیش از %1$d اعلان تازه در انجمن</string>
+    <string name="forum_activity_title">انجمن</string>
+    <string name="forum_activity_header_unread">انجمن، %1$s مورد جدید</string>
+    <string name="forum_activity_mark_all_read">علامت‌گذاری همه به عنوان خوانده‌شده</string>
+    <string name="forum_activity_error">دسترسی به انجمن ممکن نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="forum_activity_try_again">تلاش دوباره</string>
+    <string name="forum_activity_empty">چیز تازه‌ای در انجمن نیست. بیایید پرسشی بپرسید یا به کسی کمک کنید.</string>
+    <string name="forum_activity_open_forum">باز کردن انجمن</string>
+    <string name="forum_activity_you_post_as">با نام %1$s می‌نویسید</string>
+    <string name="forum_activity_someone">کسی</string>
+    <string name="forum_activity_replied">%1$s پاسخ داد</string>
+    <string name="forum_activity_liked">%1$s نوشتهٔ شما را پسندید</string>
+    <string name="forum_activity_mentioned">%1$s از شما نام برد</string>
+    <string name="forum_activity_quoted">%1$s از شما نقل‌قول کرد</string>
+    <string name="forum_activity_message">%1$s برای شما پیام فرستاد</string>
+    <string name="forum_activity_linked">%1$s به نوشتهٔ شما پیوند داد</string>
+    <string name="forum_activity_badge">نشانی به دست آوردید</string>
+    <string name="forum_activity_new_topic">%1$s موضوع تازه‌ای باز کرد</string>
+    <string name="forum_activity_forum_updated">انجمن به‌روزرسانی شد</string>
+    <string name="forum_activity_generic">فعالیت تازه در انجمن</string>
+    <string name="opens_externally">در پنجرهٔ خارجی باز می‌شود</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">اعلان تازه در انجمن</item>
+        <item quantity="other">%1$d اعلان تازه در انجمن</item>
+    </plurals>
 </resources>

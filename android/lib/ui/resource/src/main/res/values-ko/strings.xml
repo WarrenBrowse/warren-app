@@ -572,4 +572,34 @@
     <string name="connection_details_last">마지막</string>
     <string name="connection_details_never">없음</string>
     <string name="connection_details_age">%1$s 전</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">포럼 알림</string>
+    <string name="forum_notifications_setting_description">커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 끄면 포럼 종 아이콘도 숨겨집니다.</string>
+    <string name="forum_activity_channel_name">포럼 알림</string>
+    <string name="forum_activity_channel_description">커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 끄면 포럼 종 아이콘도 숨겨집니다.</string>
+    <string name="forum_activity_notification_one">포럼에 새 알림 1개</string>
+    <string name="forum_activity_notification_more_than">포럼에 새 알림 %1$d개 이상</string>
+    <string name="forum_activity_title">포럼</string>
+    <string name="forum_activity_header_unread">포럼, 새 알림 %1$s개</string>
+    <string name="forum_activity_mark_all_read">모두 읽음으로 표시</string>
+    <string name="forum_activity_error">포럼에 연결하지 못했습니다. 연결을 확인한 뒤 다시 시도하세요.</string>
+    <string name="forum_activity_try_again">다시 시도</string>
+    <string name="forum_activity_empty">포럼에 새 소식이 없습니다. 질문을 올리거나 다른 분을 도와보세요.</string>
+    <string name="forum_activity_open_forum">포럼 열기</string>
+    <string name="forum_activity_you_post_as">회원님은 %1$s(으)로 글을 씁니다</string>
+    <string name="forum_activity_someone">누군가</string>
+    <string name="forum_activity_replied">%1$s님이 답글을 남겼습니다</string>
+    <string name="forum_activity_liked">%1$s님이 회원님의 글을 좋아합니다</string>
+    <string name="forum_activity_mentioned">%1$s님이 회원님을 언급했습니다</string>
+    <string name="forum_activity_quoted">%1$s님이 회원님을 인용했습니다</string>
+    <string name="forum_activity_message">%1$s님이 메시지를 보냈습니다</string>
+    <string name="forum_activity_linked">%1$s님이 회원님의 글을 링크했습니다</string>
+    <string name="forum_activity_badge">배지를 획득했습니다</string>
+    <string name="forum_activity_new_topic">%1$s님이 새 주제를 열었습니다</string>
+    <string name="forum_activity_forum_updated">포럼이 업데이트되었습니다</string>
+    <string name="forum_activity_generic">포럼의 새 활동</string>
+    <string name="opens_externally">외부에서 열립니다</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="other">포럼에 새 알림 %1$d개</item>
+    </plurals>
 </resources>

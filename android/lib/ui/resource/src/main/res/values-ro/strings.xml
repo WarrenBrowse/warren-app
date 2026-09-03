@@ -582,4 +582,36 @@
     <string name="connection_details_last">Ultimul</string>
     <string name="connection_details_never">niciodată</string>
     <string name="connection_details_age">cu %1$s în urmă</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Notificări de pe forum</string>
+    <string name="forum_notifications_setting_description">Află când îți răspunde cineva pe forumul comunității. Dezactivarea ascunde și clopoțelul forumului.</string>
+    <string name="forum_activity_channel_name">Notificări de pe forum</string>
+    <string name="forum_activity_channel_description">Află când îți răspunde cineva pe forumul comunității. Dezactivarea ascunde și clopoțelul forumului.</string>
+    <string name="forum_activity_notification_one">Notificare nouă pe forum</string>
+    <string name="forum_activity_notification_more_than">Mai mult de %1$d notificări noi pe forum</string>
+    <string name="forum_activity_title">Forum</string>
+    <string name="forum_activity_header_unread">Forum, %1$s noi</string>
+    <string name="forum_activity_mark_all_read">Marchează tot ca citit</string>
+    <string name="forum_activity_error">Forumul nu a putut fi contactat. Verifică conexiunea și încearcă din nou.</string>
+    <string name="forum_activity_try_again">Încearcă din nou</string>
+    <string name="forum_activity_empty">Nimic nou pe forum. Vino să pui o întrebare, sau dă o mână de ajutor cuiva.</string>
+    <string name="forum_activity_open_forum">Deschide forumul</string>
+    <string name="forum_activity_you_post_as">Publici ca %1$s</string>
+    <string name="forum_activity_someone">Cineva</string>
+    <string name="forum_activity_replied">%1$s a răspuns</string>
+    <string name="forum_activity_liked">%1$s a apreciat mesajul tău</string>
+    <string name="forum_activity_mentioned">%1$s te-a menționat</string>
+    <string name="forum_activity_quoted">%1$s te-a citat</string>
+    <string name="forum_activity_message">%1$s ți-a trimis un mesaj</string>
+    <string name="forum_activity_linked">%1$s a pus un link către mesajul tău</string>
+    <string name="forum_activity_badge">Ai primit o insignă</string>
+    <string name="forum_activity_new_topic">%1$s a deschis un subiect nou</string>
+    <string name="forum_activity_forum_updated">Forumul a fost actualizat</string>
+    <string name="forum_activity_generic">Activitate nouă pe forum</string>
+    <string name="opens_externally">Se deschide într-o fereastră separată</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">Notificare nouă pe forum</item>
+        <item quantity="few">%1$d notificări noi pe forum</item>
+        <item quantity="other">%1$d de notificări noi pe forum</item>
+    </plurals>
 </resources>

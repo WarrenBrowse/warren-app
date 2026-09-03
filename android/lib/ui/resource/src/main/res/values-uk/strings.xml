@@ -581,4 +581,37 @@
     <string name="connection_details_last">Остання</string>
     <string name="connection_details_never">ніколи</string>
     <string name="connection_details_age">%1$s тому</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Сповіщення форуму</string>
+    <string name="forum_notifications_setting_description">Отримуйте сповіщення, коли вам відповідають на форумі спільноти. Вимкнення також ховає дзвіночок форуму.</string>
+    <string name="forum_activity_channel_name">Сповіщення форуму</string>
+    <string name="forum_activity_channel_description">Отримуйте сповіщення, коли вам відповідають на форумі спільноти. Вимкнення також ховає дзвіночок форуму.</string>
+    <string name="forum_activity_notification_one">1 нове сповіщення на форумі</string>
+    <string name="forum_activity_notification_more_than">Понад %1$d нових сповіщень на форумі</string>
+    <string name="forum_activity_title">Форум</string>
+    <string name="forum_activity_header_unread">Форум, нових: %1$s</string>
+    <string name="forum_activity_mark_all_read">Позначити все як прочитане</string>
+    <string name="forum_activity_error">Не вдалося зв\'язатися з форумом. Перевірте з\'єднання та спробуйте ще раз.</string>
+    <string name="forum_activity_try_again">Повторити</string>
+    <string name="forum_activity_empty">На форумі нічого нового. Поставте запитання або допоможіть комусь.</string>
+    <string name="forum_activity_open_forum">Відкрити форум</string>
+    <string name="forum_activity_you_post_as">Ви пишете під іменем %1$s</string>
+    <string name="forum_activity_someone">Хтось</string>
+    <string name="forum_activity_replied">%1$s відповів(ла)</string>
+    <string name="forum_activity_liked">%1$s оцінив(ла) ваше повідомлення</string>
+    <string name="forum_activity_mentioned">%1$s згадав(ла) вас</string>
+    <string name="forum_activity_quoted">%1$s процитував(ла) вас</string>
+    <string name="forum_activity_message">%1$s надіслав(ла) вам повідомлення</string>
+    <string name="forum_activity_linked">%1$s послався(лась) на ваше повідомлення</string>
+    <string name="forum_activity_badge">Ви отримали значок</string>
+    <string name="forum_activity_new_topic">%1$s створив(ла) нову тему</string>
+    <string name="forum_activity_forum_updated">Форум оновлено</string>
+    <string name="forum_activity_generic">Нова активність на форумі</string>
+    <string name="opens_externally">Відкрити в браузері</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">%1$d нове сповіщення на форумі</item>
+        <item quantity="few">%1$d нові сповіщення на форумі</item>
+        <item quantity="many">%1$d нових сповіщень на форумі</item>
+        <item quantity="other">%1$d нового сповіщення на форумі</item>
+    </plurals>
 </resources>

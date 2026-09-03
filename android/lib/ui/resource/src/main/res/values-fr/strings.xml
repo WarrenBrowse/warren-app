@@ -575,4 +575,35 @@
     <string name="connection_details_last">Dernier</string>
     <string name="connection_details_never">jamais</string>
     <string name="connection_details_age">il y a %1$s</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Notifications du forum</string>
+    <string name="forum_notifications_setting_description">Soyez prévenu quand quelqu\'un vous répond sur le forum communautaire. Désactiver masque aussi la cloche du forum.</string>
+    <string name="forum_activity_channel_name">Notifications du forum</string>
+    <string name="forum_activity_channel_description">Soyez prévenu quand quelqu\'un vous répond sur le forum communautaire. Désactiver masque aussi la cloche du forum.</string>
+    <string name="forum_activity_notification_one">Nouvelle notification sur le forum</string>
+    <string name="forum_activity_notification_more_than">Plus de %1$d nouvelles notifications sur le forum</string>
+    <string name="forum_activity_title">Forum</string>
+    <string name="forum_activity_header_unread">Forum, %1$s nouvelles</string>
+    <string name="forum_activity_mark_all_read">Tout marquer comme lu</string>
+    <string name="forum_activity_error">Le forum n\'a pas pu être joint. Vérifiez votre connexion et réessayez.</string>
+    <string name="forum_activity_try_again">Réessayer</string>
+    <string name="forum_activity_empty">Rien de nouveau sur le forum. Venez poser une question, ou donner un coup de main à quelqu\'un.</string>
+    <string name="forum_activity_open_forum">Ouvrir le forum</string>
+    <string name="forum_activity_you_post_as">Vous publiez sous le nom %1$s</string>
+    <string name="forum_activity_someone">Quelqu\'un</string>
+    <string name="forum_activity_replied">%1$s a répondu</string>
+    <string name="forum_activity_liked">%1$s a aimé votre message</string>
+    <string name="forum_activity_mentioned">%1$s vous a mentionné</string>
+    <string name="forum_activity_quoted">%1$s vous a cité</string>
+    <string name="forum_activity_message">%1$s vous a envoyé un message</string>
+    <string name="forum_activity_linked">%1$s a mis un lien vers votre message</string>
+    <string name="forum_activity_badge">Vous avez obtenu un badge</string>
+    <string name="forum_activity_new_topic">%1$s a ouvert un nouveau sujet</string>
+    <string name="forum_activity_forum_updated">Le forum a été mis à jour</string>
+    <string name="forum_activity_generic">Nouvelle activité sur le forum</string>
+    <string name="opens_externally">S\'ouvre extérieurement</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">Nouvelle notification sur le forum</item>
+        <item quantity="other">%1$d nouvelles notifications sur le forum</item>
+    </plurals>
 </resources>

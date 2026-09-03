@@ -156,7 +156,12 @@ import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
 import com.warrenbrowse.vpn.lib.ui.component.BetaBadge
 import com.warrenbrowse.vpn.lib.ui.component.BetaBadgeVariant
 import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
+import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderSlot
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
+import com.warrenbrowse.vpn.lib.model.forum.ForumHeaderButton
+import com.warrenbrowse.vpn.lib.repository.ForumActivityState
+import com.warrenbrowse.vpn.feature.settings.api.ForumActivityNavKey
+import com.warrenbrowse.vpn.lib.tv.TvForumItem
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenSnackbar
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -229,6 +234,18 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val betaCapBps = if (networkInfo != null) networkInfo?.defaultRateBps else cachedRateBps
     val cachedExpiry by localSettings.cachedSubscriptionExpiry.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    // The forum slot: one number and one verdict computed once for every
+    // surface (the monitor in `lib/repository`), read here for the header.
+    val forumActivity = koinInject<ForumActivityState>()
+    val forumUnread by forumActivity.unread.collectAsStateWithLifecycle()
+    val forumHeaderButton by forumActivity.headerButton.collectAsStateWithLifecycle()
+    val forumSlot =
+        when (forumHeaderButton) {
+            ForumHeaderButton.ACTIVITY -> ForumHeaderSlot.Activity(forumUnread)
+            ForumHeaderButton.COMMUNITY -> ForumHeaderSlot.Community
+            ForumHeaderButton.NONE -> null
+        }
+    val forumUrl = stringResource(R.string.community_forum_url)
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
     // Time-to-fully-drawn ends at this screen's first frame: `am start -W`
@@ -577,6 +594,15 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 }
             },
             onClickDismissExitSwitched = connectViewModel::acknowledgeExitSwitch,
+            forumSlot = forumSlot,
+            onForumClick =
+                dropUnlessResumed {
+                    when (forumHeaderButton) {
+                        ForumHeaderButton.ACTIVITY -> navigator.navigate(ForumActivityNavKey)
+                        ForumHeaderButton.COMMUNITY -> uriHandler.openUri(forumUrl)
+                        ForumHeaderButton.NONE -> Unit
+                    }
+                },
             )
 
             pubkeyMismatch?.let { mismatch ->
@@ -675,6 +701,10 @@ fun ConnectScreen(
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit = {},
     onClickDismissExitSwitched: () -> Unit = {},
+    // The desktop header's forum slot: the bell with its badge, the lifebuoy
+    // for a wallet with no forum account, nothing when the setting is off.
+    forumSlot: ForumHeaderSlot? = null,
+    onForumClick: () -> Unit = {},
 ) {
     // The header paints its own glyphs black over the pale scenery sky; the
     // OS status bar right above it must follow (desktop header tone "dark"),
@@ -731,6 +761,13 @@ fun ConnectScreen(
             NavigationDrawerTv(
                 onSettingsClick = onSettingsClick,
                 onAccountClick = onAccountClick,
+                forumItem =
+                    when (forumSlot) {
+                        is ForumHeaderSlot.Activity -> TvForumItem.ACTIVITY
+                        ForumHeaderSlot.Community -> TvForumItem.COMMUNITY
+                        null -> null
+                    },
+                onForumClick = onForumClick,
             ) {
                 content(it)
             }
@@ -745,6 +782,8 @@ fun ConnectScreen(
             iconTintColor = Color.Black,
             onSettingsClicked = onSettingsClick,
             onAccountClicked = onAccountClick,
+            forumSlot = forumSlot,
+            onForumClicked = onForumClick,
             snackbarHostState = snackbarHostState,
         ) {
             content(it)

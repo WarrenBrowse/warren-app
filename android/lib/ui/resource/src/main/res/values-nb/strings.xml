@@ -575,4 +575,35 @@
     <string name="connection_details_last">Sist</string>
     <string name="connection_details_never">aldri</string>
     <string name="connection_details_age">%1$s siden</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Forumvarsler</string>
+    <string name="forum_notifications_setting_description">Få beskjed når noen svarer deg på fellesskapsforumet. Slår du det av, skjules også forumklokken.</string>
+    <string name="forum_activity_channel_name">Forumvarsler</string>
+    <string name="forum_activity_channel_description">Få beskjed når noen svarer deg på fellesskapsforumet. Slår du det av, skjules også forumklokken.</string>
+    <string name="forum_activity_notification_one">Nytt varsel på forumet</string>
+    <string name="forum_activity_notification_more_than">Mer enn %1$d nye varsler på forumet</string>
+    <string name="forum_activity_title">Forum</string>
+    <string name="forum_activity_header_unread">Forum, %1$s nye</string>
+    <string name="forum_activity_mark_all_read">Merk alle som lest</string>
+    <string name="forum_activity_error">Kunne ikke nå forumet. Sjekk tilkoblingen og prøv igjen.</string>
+    <string name="forum_activity_try_again">Prøv igjen</string>
+    <string name="forum_activity_empty">Ingenting nytt på forumet. Kom og still et spørsmål, eller hjelp noen andre.</string>
+    <string name="forum_activity_open_forum">Åpne forumet</string>
+    <string name="forum_activity_you_post_as">Du skriver som %1$s</string>
+    <string name="forum_activity_someone">Noen</string>
+    <string name="forum_activity_replied">%1$s svarte</string>
+    <string name="forum_activity_liked">%1$s likte innlegget ditt</string>
+    <string name="forum_activity_mentioned">%1$s nevnte deg</string>
+    <string name="forum_activity_quoted">%1$s siterte deg</string>
+    <string name="forum_activity_message">%1$s sendte deg en melding</string>
+    <string name="forum_activity_linked">%1$s lenket til innlegget ditt</string>
+    <string name="forum_activity_badge">Du har fått et merke</string>
+    <string name="forum_activity_new_topic">%1$s opprettet et nytt emne</string>
+    <string name="forum_activity_forum_updated">Forumet er oppdatert</string>
+    <string name="forum_activity_generic">Ny aktivitet på forumet</string>
+    <string name="opens_externally">Åpnes i et nytt vindu</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">Nytt varsel på forumet</item>
+        <item quantity="other">%1$d nye varsler på forumet</item>
+    </plurals>
 </resources>

@@ -107,6 +107,10 @@ fun WarrenTopBar(
     enabled: Boolean = true,
     iconTintColor: Color,
     isIconAndLogoVisible: Boolean = true,
+    // The desktop header's first slot: the forum bell or lifebuoy, before the
+    // account and settings glyphs. Null when the setting removed it.
+    forumSlot: ForumHeaderSlot? = null,
+    onForumClicked: (() -> Unit)? = null,
     // Wizard steps need a back affordance without losing the brand lockup this
     // bar exists for, so the slot lives here rather than forcing them onto the
     // titled small top bar.
@@ -135,6 +139,15 @@ fun WarrenTopBar(
             }
         },
         actions = {
+            if (forumSlot != null && onForumClicked != null) {
+                ForumHeaderButton(
+                    slot = forumSlot,
+                    tint = iconTintColor,
+                    enabled = enabled,
+                    onClick = onForumClicked,
+                )
+            }
+
             if (onAccountClicked != null) {
                 IconButton(
                     modifier = Modifier.testTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG),

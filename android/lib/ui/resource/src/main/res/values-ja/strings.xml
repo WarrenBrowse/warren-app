@@ -572,4 +572,34 @@
     <string name="connection_details_last">最終</string>
     <string name="connection_details_never">なし</string>
     <string name="connection_details_age">%1$s前</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">フォーラムの通知</string>
+    <string name="forum_notifications_setting_description">コミュニティフォーラムで誰かが返信したときに知らせます。オフにするとフォーラムのベルも非表示になります。</string>
+    <string name="forum_activity_channel_name">フォーラムの通知</string>
+    <string name="forum_activity_channel_description">コミュニティフォーラムで誰かが返信したときに知らせます。オフにするとフォーラムのベルも非表示になります。</string>
+    <string name="forum_activity_notification_one">フォーラムに新着通知 1 件</string>
+    <string name="forum_activity_notification_more_than">フォーラムに %1$d 件を超える新着通知</string>
+    <string name="forum_activity_title">フォーラム</string>
+    <string name="forum_activity_header_unread">フォーラム、新着 %1$s 件</string>
+    <string name="forum_activity_mark_all_read">すべて既読にする</string>
+    <string name="forum_activity_error">フォーラムに接続できませんでした。接続を確認して、もう一度お試しください。</string>
+    <string name="forum_activity_try_again">再試行</string>
+    <string name="forum_activity_empty">フォーラムに新しい動きはありません。質問してみるか、誰かの手助けをしてみてください。</string>
+    <string name="forum_activity_open_forum">フォーラムを開く</string>
+    <string name="forum_activity_you_post_as">あなたは %1$s として投稿しています</string>
+    <string name="forum_activity_someone">誰か</string>
+    <string name="forum_activity_replied">%1$s さんが返信しました</string>
+    <string name="forum_activity_liked">%1$s さんがあなたの投稿にいいねしました</string>
+    <string name="forum_activity_mentioned">%1$s さんがあなたに言及しました</string>
+    <string name="forum_activity_quoted">%1$s さんがあなたを引用しました</string>
+    <string name="forum_activity_message">%1$s さんからメッセージが届きました</string>
+    <string name="forum_activity_linked">%1$s さんがあなたの投稿にリンクしました</string>
+    <string name="forum_activity_badge">バッジを獲得しました</string>
+    <string name="forum_activity_new_topic">%1$s さんが新しいトピックを作成しました</string>
+    <string name="forum_activity_forum_updated">フォーラムが更新されました</string>
+    <string name="forum_activity_generic">フォーラムの新しい動き</string>
+    <string name="opens_externally">外部ブラウザで開く</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="other">フォーラムに新着通知 %1$d 件</item>
+    </plurals>
 </resources>

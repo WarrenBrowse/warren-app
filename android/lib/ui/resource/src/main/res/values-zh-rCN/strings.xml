@@ -572,4 +572,34 @@
     <string name="connection_details_last">最近一次</string>
     <string name="connection_details_never">从未</string>
     <string name="connection_details_age">%1$s前</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">论坛通知</string>
+    <string name="forum_notifications_setting_description">有人在社区论坛回复你时提醒你。关闭后也会隐藏论坛铃铛。</string>
+    <string name="forum_activity_channel_name">论坛通知</string>
+    <string name="forum_activity_channel_description">有人在社区论坛回复你时提醒你。关闭后也会隐藏论坛铃铛。</string>
+    <string name="forum_activity_notification_one">论坛有 1 条新通知</string>
+    <string name="forum_activity_notification_more_than">论坛有超过 %1$d 条新通知</string>
+    <string name="forum_activity_title">论坛</string>
+    <string name="forum_activity_header_unread">论坛，%1$s 条新消息</string>
+    <string name="forum_activity_mark_all_read">全部标为已读</string>
+    <string name="forum_activity_error">无法连接论坛。请检查网络连接后重试。</string>
+    <string name="forum_activity_try_again">重试</string>
+    <string name="forum_activity_empty">论坛暂时没有新内容。来提个问题，或者帮别人解答一下。</string>
+    <string name="forum_activity_open_forum">打开论坛</string>
+    <string name="forum_activity_you_post_as">你以 %1$s 的身份发帖</string>
+    <string name="forum_activity_someone">有人</string>
+    <string name="forum_activity_replied">%1$s 回复了</string>
+    <string name="forum_activity_liked">%1$s 赞了你的帖子</string>
+    <string name="forum_activity_mentioned">%1$s 提到了你</string>
+    <string name="forum_activity_quoted">%1$s 引用了你</string>
+    <string name="forum_activity_message">%1$s 给你发了私信</string>
+    <string name="forum_activity_linked">%1$s 链接了你的帖子</string>
+    <string name="forum_activity_badge">你获得了一枚徽章</string>
+    <string name="forum_activity_new_topic">%1$s 发起了新话题</string>
+    <string name="forum_activity_forum_updated">论坛已更新</string>
+    <string name="forum_activity_generic">论坛有新动态</string>
+    <string name="opens_externally">在外部打开</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="other">论坛有 %1$d 条新通知</item>
+    </plurals>
 </resources>

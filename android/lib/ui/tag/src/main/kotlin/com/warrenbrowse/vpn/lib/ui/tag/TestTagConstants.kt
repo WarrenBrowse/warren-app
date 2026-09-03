@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.lib.ui.tag
 // Top Bar
 const val TOP_BAR_ACCOUNT_BUTTON_TEST_TAG = "top_bar_account_button_test_tag"
 const val TOP_BAR_SETTINGS_BUTTON_TEST_TAG = "top_bar_settings_button_test_tag"
+const val TOP_BAR_FORUM_BUTTON_TEST_TAG = "top_bar_forum_button_test_tag"
 const val TOP_BAR_TEST_TAG = "top_bar_test_tag"
 
 // Settings screen

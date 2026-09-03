@@ -572,4 +572,34 @@
     <string name="connection_details_last">နောက်ဆုံး</string>
     <string name="connection_details_never">ဘယ်တော့မှ</string>
     <string name="connection_details_age">%1$s အကြာက</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">ဖိုရမ် အသိပေးချက်များ</string>
+    <string name="forum_notifications_setting_description">အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ ပိတ်လိုက်ပါက ဖိုရမ်ခေါင်းလောင်းကိုပါ ဖျောက်ထားမည်။</string>
+    <string name="forum_activity_channel_name">ဖိုရမ် အသိပေးချက်များ</string>
+    <string name="forum_activity_channel_description">အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ ပိတ်လိုက်ပါက ဖိုရမ်ခေါင်းလောင်းကိုပါ ဖျောက်ထားမည်။</string>
+    <string name="forum_activity_notification_one">ဖိုရမ်တွင် အသိပေးချက်အသစ် 1 ခု</string>
+    <string name="forum_activity_notification_more_than">ဖိုရမ်တွင် အသိပေးချက်အသစ် %1$d ခုကျော်</string>
+    <string name="forum_activity_title">ဖိုရမ်</string>
+    <string name="forum_activity_header_unread">ဖိုရမ်၊ အသစ် %1$s ခု</string>
+    <string name="forum_activity_mark_all_read">အားလုံးကို ဖတ်ပြီးအဖြစ် မှတ်ရန်</string>
+    <string name="forum_activity_error">ဖိုရမ်သို့ မဆက်သွယ်နိုင်ပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။</string>
+    <string name="forum_activity_try_again">ထပ်ကြိုးစားရန်</string>
+    <string name="forum_activity_empty">ဖိုရမ်တွင် အသစ်မရှိပါ။ မေးခွန်းတစ်ခု လာမေးပါ၊ သို့မဟုတ် တစ်ယောက်ယောက်ကို ကူညီပါ။</string>
+    <string name="forum_activity_open_forum">ဖိုရမ်ကို ဖွင့်ရန်</string>
+    <string name="forum_activity_you_post_as">သင်သည် %1$s အဖြစ် ပို့စ်တင်သည်</string>
+    <string name="forum_activity_someone">တစ်ဦးတစ်ယောက်</string>
+    <string name="forum_activity_replied">%1$s က ပြန်စာပေးခဲ့သည်</string>
+    <string name="forum_activity_liked">%1$s က သင့်ပို့စ်ကို နှစ်သက်သည်</string>
+    <string name="forum_activity_mentioned">%1$s က သင့်ကို ဖော်ပြခဲ့သည်</string>
+    <string name="forum_activity_quoted">%1$s က သင့်စကားကို ကိုးကားခဲ့သည်</string>
+    <string name="forum_activity_message">%1$s က သင့်ထံ စာပို့ခဲ့သည်</string>
+    <string name="forum_activity_linked">%1$s က သင့်ပို့စ်ကို လင့်ခ်ချိတ်ထားသည်</string>
+    <string name="forum_activity_badge">တံဆိပ်တစ်ခု ရရှိခဲ့သည်</string>
+    <string name="forum_activity_new_topic">%1$s က ခေါင်းစဉ်အသစ် ဖွင့်လိုက်သည်</string>
+    <string name="forum_activity_forum_updated">ဖိုရမ်ကို အပ်ဒိတ်လုပ်ပြီးပါပြီ</string>
+    <string name="forum_activity_generic">ဖိုရမ်တွင် လှုပ်ရှားမှုအသစ်</string>
+    <string name="opens_externally">ပြင်ပတွင် ဖွင့်ရန်</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="other">ဖိုရမ်တွင် အသိပေးချက်အသစ် %1$d ခု</item>
+    </plurals>
 </resources>

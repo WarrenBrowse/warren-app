@@ -18,3 +18,9 @@ import kotlinx.parcelize.Parcelize
  * same consent prompt a `forum-login` deep link raises.
  */
 @Parcelize data object ForumSignInCodeNavKey : NavKey2
+
+/**
+ * The community-forum activity panel (desktop `ForumActivityView`), opened
+ * from the header bell and from the forum notification.
+ */
+@Parcelize data object ForumActivityNavKey : NavKey2

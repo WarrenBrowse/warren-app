@@ -572,4 +572,34 @@
     <string name="connection_details_last">ล่าสุด</string>
     <string name="connection_details_never">ไม่เคย</string>
     <string name="connection_details_age">%1$s ที่แล้ว</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">การแจ้งเตือนจากฟอรัม</string>
+    <string name="forum_notifications_setting_description">รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน การปิดจะซ่อนกระดิ่งฟอรัมด้วย</string>
+    <string name="forum_activity_channel_name">การแจ้งเตือนจากฟอรัม</string>
+    <string name="forum_activity_channel_description">รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน การปิดจะซ่อนกระดิ่งฟอรัมด้วย</string>
+    <string name="forum_activity_notification_one">มีการแจ้งเตือนใหม่ในฟอรัม 1 รายการ</string>
+    <string name="forum_activity_notification_more_than">มีการแจ้งเตือนใหม่ในฟอรัมมากกว่า %1$d รายการ</string>
+    <string name="forum_activity_title">ฟอรัม</string>
+    <string name="forum_activity_header_unread">ฟอรัม %1$s รายการใหม่</string>
+    <string name="forum_activity_mark_all_read">ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</string>
+    <string name="forum_activity_error">ติดต่อฟอรัมไม่ได้ ตรวจสอบการเชื่อมต่อแล้วลองใหม่อีกครั้ง</string>
+    <string name="forum_activity_try_again">ลองใหม่</string>
+    <string name="forum_activity_empty">ยังไม่มีอะไรใหม่ในฟอรัม มาตั้งคำถาม หรือช่วยเหลือคนอื่นดูสิ</string>
+    <string name="forum_activity_open_forum">เปิดฟอรัม</string>
+    <string name="forum_activity_you_post_as">คุณโพสต์ในชื่อ %1$s</string>
+    <string name="forum_activity_someone">มีคน</string>
+    <string name="forum_activity_replied">%1$s ตอบกลับ</string>
+    <string name="forum_activity_liked">%1$s ถูกใจโพสต์ของคุณ</string>
+    <string name="forum_activity_mentioned">%1$s กล่าวถึงคุณ</string>
+    <string name="forum_activity_quoted">%1$s อ้างอิงคุณ</string>
+    <string name="forum_activity_message">%1$s ส่งข้อความถึงคุณ</string>
+    <string name="forum_activity_linked">%1$s ลิงก์มาที่โพสต์ของคุณ</string>
+    <string name="forum_activity_badge">คุณได้รับตราสัญลักษณ์</string>
+    <string name="forum_activity_new_topic">%1$s เปิดกระทู้ใหม่</string>
+    <string name="forum_activity_forum_updated">ฟอรัมได้รับการอัปเดตแล้ว</string>
+    <string name="forum_activity_generic">ความเคลื่อนไหวใหม่ในฟอรัม</string>
+    <string name="opens_externally">เปิดจากภายนอก</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="other">มีการแจ้งเตือนใหม่ในฟอรัม %1$d รายการ</item>
+    </plurals>
 </resources>

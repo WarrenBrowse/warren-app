@@ -32,6 +32,11 @@ val ColorScheme.onSelected: Color
 val ColorScheme.warning: Color
     @Composable get() = PaletteTokens.Yellow
 
+// The brand ocre (desktop `fur`): the one accent that says nothing about the
+// tunnel state, for the marks that must not read as one (the forum badge).
+val ColorScheme.brand: Color
+    @Composable get() = PaletteTokens.Fur
+
 // Static defined connecting/in-progress color (desktop `orange` accent)
 val ColorScheme.pending: Color
     @Composable get() = PaletteTokens.Orange

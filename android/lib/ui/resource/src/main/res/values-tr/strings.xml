@@ -575,4 +575,35 @@
     <string name="connection_details_last">Son</string>
     <string name="connection_details_never">asla</string>
     <string name="connection_details_age">%1$s önce</string>
+    <!-- Community-forum activity: the header bell, the notification on a rise, the activity panel, the setting. -->
+    <string name="forum_notifications_setting">Forum bildirimleri</string>
+    <string name="forum_notifications_setting_description">Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Kapatmak forum zilini de gizler.</string>
+    <string name="forum_activity_channel_name">Forum bildirimleri</string>
+    <string name="forum_activity_channel_description">Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Kapatmak forum zilini de gizler.</string>
+    <string name="forum_activity_notification_one">Forumda yeni bildirim</string>
+    <string name="forum_activity_notification_more_than">Forumda %1$d taneden fazla yeni bildirim</string>
+    <string name="forum_activity_title">Forum</string>
+    <string name="forum_activity_header_unread">Forum, %1$s yeni</string>
+    <string name="forum_activity_mark_all_read">Tümünü okundu olarak işaretle</string>
+    <string name="forum_activity_error">Foruma ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.</string>
+    <string name="forum_activity_try_again">Yeniden dene</string>
+    <string name="forum_activity_empty">Forumda yeni bir şey yok. Gelip bir soru sorun, ya da başka birine yardım edin.</string>
+    <string name="forum_activity_open_forum">Forumu aç</string>
+    <string name="forum_activity_you_post_as">%1$s adıyla gönderi paylaşıyorsunuz</string>
+    <string name="forum_activity_someone">Biri</string>
+    <string name="forum_activity_replied">%1$s yanıtladı</string>
+    <string name="forum_activity_liked">%1$s gönderinizi beğendi</string>
+    <string name="forum_activity_mentioned">%1$s sizden bahsetti</string>
+    <string name="forum_activity_quoted">%1$s sizden alıntı yaptı</string>
+    <string name="forum_activity_message">%1$s size bir mesaj gönderdi</string>
+    <string name="forum_activity_linked">%1$s gönderinize bağlantı verdi</string>
+    <string name="forum_activity_badge">Bir rozet kazandınız</string>
+    <string name="forum_activity_new_topic">%1$s yeni bir konu açtı</string>
+    <string name="forum_activity_forum_updated">Forum güncellendi</string>
+    <string name="forum_activity_generic">Forumda yeni hareket</string>
+    <string name="opens_externally">Harici bir tarayıcı penceresini açar</string>
+    <plurals name="forum_activity_notification_several">
+        <item quantity="one">Forumda yeni bildirim</item>
+        <item quantity="other">Forumda %1$d yeni bildirim</item>
+    </plurals>
 </resources>
