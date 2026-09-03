@@ -596,11 +596,26 @@ int64_t warren_pin_reset(const char *pin_store_path);
 char *warren_product_anchors(void);
 
 /**
- * Frees a string previously returned by `warren_product_anchors`. No-op on
- * null.
+ * The anchor tables of the environments that outrank the compiled one,
+ * strongest first, as a heap-allocated JSON array C string.
+ *
+ * This is the one table Swift cannot derive from `warren_product_anchors`:
+ * coexistence needs the URL scheme of ANOTHER install to look for it with
+ * `canOpenURL`, and the compiled row only ever names this build. The order
+ * and the membership are `warren_product_env::PRECEDENCE`, so no client
+ * spells a foreign scheme on its own. Prod gets `[]` and watches nothing.
+ *
+ * The returned pointer must be passed to `warren_product_anchors_free`
+ * exactly once.
+ */
+char *warren_higher_priority_product_anchors(void);
+
+/**
+ * Frees a string previously returned by `warren_product_anchors` or
+ * `warren_higher_priority_product_anchors`. No-op on null.
  *
  * # Safety
- * `ptr` must have been returned by `warren_product_anchors` and must not
+ * `ptr` must have been returned by one of those two renderers and must not
  * have been freed already.
  */
 void warren_product_anchors_free(char *ptr);

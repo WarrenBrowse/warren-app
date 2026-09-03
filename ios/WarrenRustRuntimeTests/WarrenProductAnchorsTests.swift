@@ -58,6 +58,48 @@ final class WarrenProductAnchorsTests: XCTestCase {
         }
     }
 
+    /// The list a build watches for coexistence: the environments that
+    /// OUTRANK it, strongest first. It is the one thing the compiled row
+    /// cannot answer, since it names another install, so it comes from the
+    /// crate's precedence order through its own FFI call.
+    func testTheHigherPriorityListHoldsOnlyStrongerEnvironments() {
+        let higher = WarrenProductAnchors.higherPriority
+        let current = WarrenProductAnchors.current
+
+        if current.isProd {
+            XCTAssertTrue(higher.isEmpty, "prod outranks everything and watches nothing")
+        } else {
+            XCTAssertEqual(higher.first?.name, "prod", "prod is the strongest claim on the device")
+        }
+        for row in higher {
+            XCTAssertNotEqual(row.name, current.name, "a build never watches for itself")
+            XCTAssertFalse(row.deepLinkScheme.isEmpty)
+        }
+    }
+
+    /// The array decoder is the row decoder applied in order, so a list read
+    /// from the FFI carries the same columns as a single table.
+    func testTheHigherPriorityListDecodesRowsInOrder() throws {
+        let fixture = try ClientRulesFixtures.load("product_env.json")
+        let environments = try ClientRulesFixtures.object(fixture, "environments")
+        let ordered = try [
+            ClientRulesFixtures.object(environments, "prod"),
+            ClientRulesFixtures.object(environments, "staging"),
+        ]
+        let data = try JSONSerialization.data(withJSONObject: ordered)
+
+        let decoded = try XCTUnwrap(WarrenProductAnchors.decodeAll(String(decoding: data, as: UTF8.self)))
+
+        XCTAssertEqual(decoded.map(\.name), ["prod", "staging"])
+        XCTAssertEqual(decoded.first?.deepLinkScheme, "warren")
+    }
+
+    func testAnEmptyHigherPriorityListDecodesAndAMalformedOneIsRefused() {
+        XCTAssertEqual(WarrenProductAnchors.decodeAll("[]")?.count, 0)
+        XCTAssertNil(WarrenProductAnchors.decodeAll(#"[{"name":"prod"}]"#))
+        XCTAssertNil(WarrenProductAnchors.decodeAll("not json"))
+    }
+
     func testATableMissingAColumnIsRefused() {
         XCTAssertNil(WarrenProductAnchors.decode(#"{"name":"prod"}"#))
         XCTAssertNil(WarrenProductAnchors.decode("not json"))

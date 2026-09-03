@@ -13,6 +13,11 @@ public enum NotificationPriority: Int, Comparable {
     case medium = 2
     case high = 3
     case critical = 4
+    /// Above everything, because only the highest-priority descriptor reaches
+    /// the banner (`NotificationController.setNotifications` renders
+    /// `first`). Reserved for the case where every other message would
+    /// describe a tunnel this build no longer holds.
+    case exclusive = 5
 
     public static func < (lhs: NotificationPriority, rhs: NotificationPriority) -> Bool {
         lhs.rawValue < rhs.rawValue
@@ -27,6 +32,7 @@ public enum NotificationProviderIdentifier: String {
     case tunnelStatusNotificationProvider = "TunnelStatusNotificationProvider"
     case latestChangesInAppNotificationProvider = "LatestChangesInAppNotificationProvider"
     case warrenFailoverInAppNotification = "WarrenFailoverInAppNotification"
+    case warrenEnvStandDownInAppNotification = "WarrenEnvStandDownInAppNotification"
     case `default` = "default"
 
     public var domainIdentifier: String {

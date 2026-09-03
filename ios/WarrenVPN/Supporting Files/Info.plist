@@ -15,6 +15,17 @@
 			</array>
 		</dict>
 	</array>
+	<!-- The schemes of the environments that outrank this build, so
+	     `canOpenURL` can tell whether one of them is installed beside it
+	     (WarrenEnvStandDown). Without the declaration iOS answers false for
+	     an app that IS there, which reads exactly like an absent one. Prod
+	     declares them too and does nothing with the answer: its
+	     higher-priority list is empty, so it never asks. -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>$(WARREN_DEEP_LINK_SCHEME_prod)</string>
+		<string>$(WARREN_DEEP_LINK_SCHEME_staging)</string>
+	</array>
 	<key>HostName</key>
 	<string>$(HOST_NAME)</string>
 	<key>NSLocalNetworkUsageDescription</key>

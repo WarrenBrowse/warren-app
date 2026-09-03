@@ -33,11 +33,42 @@ pub extern "C" fn warren_product_anchors() -> *mut c_char {
     }
 }
 
-/// Frees a string previously returned by `warren_product_anchors`. No-op on
-/// null.
+/// The anchor tables of every environment that OUTRANKS `current`, strongest
+/// first, as a JSON array of the objects `warren_product_anchors` renders one
+/// of. `[]` for prod, which outranks everything.
+fn higher_priority_anchors_json(current: warren_product_env::ProductEnv) -> String {
+    let rows = warren_product_env::environments_with_priority_over(current)
+        .into_iter()
+        .map(warren_product_env::ProductEnv::anchors_json)
+        .collect::<Vec<_>>()
+        .join(",");
+    format!("[{rows}]")
+}
+
+/// The anchor tables of the environments that outrank the compiled one,
+/// strongest first, as a heap-allocated JSON array C string.
+///
+/// This is the one table Swift cannot derive from `warren_product_anchors`:
+/// coexistence needs the URL scheme of ANOTHER install to look for it with
+/// `canOpenURL`, and the compiled row only ever names this build. The order
+/// and the membership are `warren_product_env::PRECEDENCE`, so no client
+/// spells a foreign scheme on its own. Prod gets `[]` and watches nothing.
+///
+/// The returned pointer must be passed to `warren_product_anchors_free`
+/// exactly once.
+#[unsafe(no_mangle)]
+pub extern "C" fn warren_higher_priority_product_anchors() -> *mut c_char {
+    match CString::new(higher_priority_anchors_json(warren_product_env::CURRENT)) {
+        Ok(json) => json.into_raw(),
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Frees a string previously returned by `warren_product_anchors` or
+/// `warren_higher_priority_product_anchors`. No-op on null.
 ///
 /// # Safety
-/// `ptr` must have been returned by `warren_product_anchors` and must not
+/// `ptr` must have been returned by one of those two renderers and must not
 /// have been freed already.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn warren_product_anchors_free(ptr: *mut c_char) {
@@ -52,23 +83,31 @@ pub unsafe extern "C" fn warren_product_anchors_free(ptr: *mut c_char) {
 mod tests {
     use std::ffi::CStr;
 
-    use super::{warren_product_anchors, warren_product_anchors_free};
+    use warren_product_env::ProductEnv;
 
-    /// The table Swift decodes is the compiled environment's row, read back
-    /// through the same two calls Swift makes.
-    #[test]
-    fn the_ffi_table_is_the_compiled_environments_row() {
-        let ptr = warren_product_anchors();
+    use super::{
+        warren_higher_priority_product_anchors, warren_product_anchors, warren_product_anchors_free,
+    };
+
+    /// Reads a table back through the same two calls Swift makes and frees it.
+    fn read_and_free(ptr: *mut std::ffi::c_char) -> String {
         assert!(!ptr.is_null());
-        // SAFETY: a non-null pointer from `warren_product_anchors` is a valid
-        // C string until freed below.
+        // SAFETY: a non-null pointer from either renderer is a valid C string
+        // until freed below.
         let json = unsafe { CStr::from_ptr(ptr) }
             .to_str()
             .expect("the table is UTF-8")
             .to_owned();
         // SAFETY: freed exactly once, after the copy above.
         unsafe { warren_product_anchors_free(ptr) };
+        json
+    }
 
+    /// The table Swift decodes is the compiled environment's row, read back
+    /// through the same two calls Swift makes.
+    #[test]
+    fn the_ffi_table_is_the_compiled_environments_row() {
+        let json = read_and_free(warren_product_anchors());
         let table: serde_json::Value = serde_json::from_str(&json).expect("the table is JSON");
         assert_eq!(table["name"], warren_product_env::ENV_NAME);
         assert_eq!(table["api_url"], warren_product_env::API_URL);
@@ -80,6 +119,49 @@ mod tests {
         assert_eq!(
             table["forum_public_url"],
             warren_product_env::FORUM_PUBLIC_URL
+        );
+    }
+
+    /// The list Swift watches for is the crate's precedence order, not a
+    /// second table spelled in Swift: iOS has to name ANOTHER environment's
+    /// URL scheme to look for its app, and the compiled row can only ever name
+    /// this build's own.
+    #[test]
+    fn the_higher_priority_table_is_the_precedence_list_strongest_first() {
+        let rows: Vec<serde_json::Value> =
+            serde_json::from_str(&super::higher_priority_anchors_json(ProductEnv::Beta))
+                .expect("the table is JSON");
+
+        let names: Vec<&str> = rows
+            .iter()
+            .map(|row| row["name"].as_str().unwrap())
+            .collect();
+        assert_eq!(names, ["prod", "staging"]);
+        assert_eq!(
+            rows[0]["deep_link_scheme"],
+            ProductEnv::Prod.deep_link_scheme()
+        );
+        assert_eq!(
+            rows[1]["deep_link_scheme"],
+            ProductEnv::Staging.deep_link_scheme()
+        );
+    }
+
+    /// Prod outranks everything, so it watches nothing and its stand-down can
+    /// never fire.
+    #[test]
+    fn prod_has_no_higher_priority_table() {
+        assert_eq!(super::higher_priority_anchors_json(ProductEnv::Prod), "[]");
+    }
+
+    /// The FFI renders the compiled environment's list, read back the way
+    /// Swift reads it.
+    #[test]
+    fn the_higher_priority_ffi_renders_the_compiled_environments_list() {
+        let json = read_and_free(warren_higher_priority_product_anchors());
+        assert_eq!(
+            json,
+            super::higher_priority_anchors_json(warren_product_env::CURRENT)
         );
     }
 

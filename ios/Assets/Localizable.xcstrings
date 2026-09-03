@@ -97206,6 +97206,432 @@
           }
         }
       }
+    },
+    "PRODUCTION HAS PRIORITY": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإنتاج له الأولوية"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUKTION HAR PRIORITET"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUKTION HAT VORRANG"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUCCIÓN TIENE PRIORIDAD"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخه نهایی اولویت دارد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TUOTANTO ON ETUSIJALLA"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA PRODUCTION EST PRIORITAIRE"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA PRODUZIONE HA LA PRIORITÀ"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本番版が優先されます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "프로덕션이 우선합니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထုတ်လုပ်မှုဗားရှင်းက ဦးစားပေးဖြစ်သည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUKSJON HAR PRIORITET"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUCTIE HEEFT VOORRANG"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUKCJA MA PIERWSZEŃSTWO"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A PRODUÇÃO TEM PRIORIDADE"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUCȚIA ARE PRIORITATE"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ПРИОРИТЕТ У ПРОДАКШЕНА"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PRODUKTION HAR FÖRETRÄDE"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รุ่นโปรดักชันมีลำดับความสำคัญสูงกว่า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ÜRETİM SÜRÜMÜ ÖNCELİKLİ"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ПРІОРИТЕТ У ПРОДАКШЕНУ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正式版优先"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正式版優先"
+          }
+        }
+      }
+    },
+    "Warren VPN is installed on this device and takes priority, so this build disconnected, stopped connecting on demand and turned “Force all apps” off.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‏Warren VPN مثبت على هذا الجهاز وله الأولوية، لذلك قطع هذا الإصدار الاتصال، وأوقف الاتصال عند الطلب، وأوقف «إلزام جميع التطبيقات»."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN er installeret på denne enhed og har prioritet, så denne version afbrød forbindelsen, stoppede med at forbinde efter behov og slog “Tving alle apps” fra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN ist auf diesem Gerät installiert und hat Vorrang, daher hat diese Version die Verbindung getrennt, die Verbindung bei Bedarf beendet und „Alle Apps zwingen“ deaktiviert."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN está instalado en este dispositivo y tiene prioridad, por lo que esta versión se ha desconectado, ha dejado de conectarse a demanda y ha desactivado «Forzar todas las aplicaciones»."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‏Warren VPN روی این دستگاه نصب است و اولویت دارد، بنابراین این نسخه قطع شد، اتصال درخواستی را متوقف کرد و «اجبار همهٔ برنامه‌ها» را خاموش کرد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN on asennettu tähän laitteeseen ja on etusijalla, joten tämä versio katkaisi yhteyden, lopetti pyynnöstä yhdistämisen ja poisti ”Pakota kaikki sovellukset” käytöstä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN est installé sur cet appareil et il est prioritaire : cette version s’est déconnectée, a cessé de se connecter à la demande et a désactivé « Forcer toutes les applications »."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN è installato su questo dispositivo e ha la priorità, quindi questa versione si è disconnessa, ha smesso di connettersi su richiesta e ha disattivato “Forza tutte le app”."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスには Warren VPN がインストールされており、そちらが優先されるため、このビルドは接続を切断し、オンデマンド接続をやめ、「すべてのアプリに強制適用」をオフにしました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에 Warren VPN이 설치되어 있어 우선하므로, 이 빌드는 연결을 끊고 온디맨드 연결을 중지했으며 ‘모든 앱에 강제 적용’을 껐습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်ပစ္စည်းတွင် Warren VPN ကို ထည့်သွင်းထားပြီး ၎င်းက ဦးစားပေးဖြစ်သောကြောင့် ဤဗားရှင်းသည် ချိတ်ဆက်မှုကို ဖြုတ်လိုက်ပြီး လိုအပ်သည့်အခါ အလိုအလျောက်ချိတ်ဆက်ခြင်းကို ရပ်ကာ “အက်ပ်အားလုံး၌ မဖြစ်မနေ လုပ်ဆောင်ရန်” ကို ပိတ်လိုက်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN er installert på denne enheten og har prioritet, så denne versjonen koblet fra, sluttet å koble til ved behov og slo av “Tving alle apper”."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN is op dit apparaat geïnstalleerd en heeft voorrang, dus deze versie heeft de verbinding verbroken, is gestopt met verbinden op verzoek en heeft “Alle apps forceren” uitgeschakeld."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN jest zainstalowany na tym urządzeniu i ma pierwszeństwo, więc ta wersja rozłączyła się, przestała łączyć się na żądanie i wyłączyła „Wymuszaj na wszystkich aplikacjach”."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Warren VPN está instalado neste dispositivo e tem prioridade, por isso esta versão desligou-se, deixou de ligar a pedido e desativou «Forçar todas as aplicações»."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN este instalat pe acest dispozitiv și are prioritate, așa că această versiune s-a deconectat, a încetat să se conecteze la cerere și a dezactivat „Forțați toate aplicațiile”."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этом устройстве установлен Warren VPN, и он имеет приоритет, поэтому эта сборка отключилась, перестала подключаться по требованию и выключила «Принудительно для всех приложений»."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN är installerat på den här enheten och har företräde, så den här versionen kopplade från, slutade ansluta vid behov och stängde av ”Tvinga alla appar”."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีการติดตั้ง Warren VPN บนอุปกรณ์นี้และมีลำดับความสำคัญสูงกว่า บิลด์นี้จึงตัดการเชื่อมต่อ หยุดเชื่อมต่อตามต้องการ และปิด “บังคับทุกแอป”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazda Warren VPN kurulu ve önceliği var, bu nedenle bu sürüm bağlantıyı kesti, istek üzerine bağlanmayı durdurdu ve “Tüm uygulamaları IAN tünelini kullanmaya zorla” seçeneğini kapattı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На цьому пристрої встановлено Warren VPN, і він має пріоритет, тому ця збірка відключилася, припинила підключатися за потреби та вимкнула «Примусово для всіх застосунків»."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本设备已安装 Warren VPN，它拥有优先权，因此此版本已断开连接、停止按需连接，并关闭了“强制所有 App”。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本裝置已安裝 Warren VPN，它擁有優先權，因此此版本已中斷連線、停止按需連線，並關閉了「強制所有應用程式」。"
+          }
+        }
+      }
+    },
+    "Tap here to use this build anyway.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط هنا لاستخدام هذا الإصدار على أي حال."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryk her for at bruge denne version alligevel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hier tippen, um diese Version trotzdem zu verwenden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toca aquí para usar esta versión de todos modos."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای استفاده از این نسخه به هر حال، اینجا را بزنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käytä silti tätä versiota napauttamalla tästä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Touchez ici pour utiliser quand même cette version."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tocca qui per usare comunque questa versione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "それでもこのビルドを使うには、ここをタップしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "그래도 이 빌드를 사용하려면 여기를 누르세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤဗားရှင်းကို ဆက်လက်အသုံးပြုရန် ဤနေရာကို တို့ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trykk her for å bruke denne versjonen likevel."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tik hier om deze versie toch te gebruiken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dotknij tutaj, aby mimo to użyć tej wersji."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toque aqui para usar esta versão mesmo assim."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atingeți aici pentru a folosi totuși această versiune."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нажмите здесь, чтобы всё равно использовать эту сборку."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tryck här för att använda den här versionen ändå."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แตะที่นี่เพื่อใช้บิลด์นี้ต่อไป"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu sürümü yine de kullanmak için buraya dokunun."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Натисніть тут, щоб усе одно використовувати цю збірку."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "点按这里仍然使用此版本。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點一下這裡仍然使用此版本。"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

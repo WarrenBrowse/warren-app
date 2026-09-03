@@ -35,6 +35,18 @@ public struct WarrenProductAnchors: Equatable, Sendable {
     /// The table of the environment this binary was compiled for.
     public static let current: WarrenProductAnchors = load()
 
+    /// The tables of the environments that OUTRANK this build, strongest
+    /// first (prod, then staging), empty on prod. The one thing [`current`]
+    /// cannot answer: coexistence needs another install's URL scheme to look
+    /// for it, and the compiled row only ever names this build.
+    ///
+    /// FAIL-SAFE DIRECTION: a list that cannot be read is EMPTY, so this
+    /// build keeps running. Wrongly yielding disarms its own kill switch on
+    /// no evidence, while wrongly staying up only leaves two idle installs.
+    /// That is the direction `environments_with_priority_over` documents in
+    /// the Rust crate, and the opposite of the orphan-firewall sweep.
+    public static let higherPriority: [WarrenProductAnchors] = loadHigherPriority()
+
     /// The shipped production build. Prod carries no marker anywhere and none
     /// of its strings may move: a rename reaches every existing install.
     public var isProd: Bool { name == "prod" }
@@ -49,8 +61,32 @@ public struct WarrenProductAnchors: Equatable, Sendable {
     /// unit test decodes the fixture rows through the same path.
     static func decode(_ json: String) -> WarrenProductAnchors? {
         guard let data = json.data(using: .utf8),
-            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let name = object["name"] as? String,
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return nil
+        }
+        return decode(object)
+    }
+
+    /// Decodes the JSON array of rows the higher-priority FFI returns. `nil`
+    /// when the array, or any row in it, has an unexpected shape: a partial
+    /// list would silently drop an environment this build must watch.
+    static func decodeAll(_ json: String) -> [WarrenProductAnchors]? {
+        guard let data = json.data(using: .utf8),
+            let rows = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+        else {
+            return nil
+        }
+        var decoded: [WarrenProductAnchors] = []
+        for row in rows {
+            guard let anchors = decode(row) else { return nil }
+            decoded.append(anchors)
+        }
+        return decoded
+    }
+
+    private static func decode(_ object: [String: Any]) -> WarrenProductAnchors? {
+        guard let name = object["name"] as? String,
             let apiURL = object["api_url"] as? String,
             let apiHost = object["api_host"] as? String,
             let displayName = object["display_name"] as? String,
@@ -82,5 +118,11 @@ public struct WarrenProductAnchors: Equatable, Sendable {
             fatalError("warren_product_anchors: the Rust product table has an unexpected shape")
         }
         return anchors
+    }
+
+    private static func loadHigherPriority() -> [WarrenProductAnchors] {
+        guard let raw = warren_higher_priority_product_anchors() else { return [] }
+        defer { warren_product_anchors_free(raw) }
+        return decodeAll(String(cString: raw)) ?? []
     }
 }

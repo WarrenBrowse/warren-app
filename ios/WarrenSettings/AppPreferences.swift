@@ -8,6 +8,43 @@
 
 import Foundation
 
+/// What this build gave up when a higher-priority product environment took
+/// the device, and whether the user has asked for it back.
+///
+/// Persisted because the mobile rule is a TRANSITION, not a live state: the
+/// other install is still there at every later launch, so a stand-down that
+/// re-decided from scratch would tear this build down again and undo the
+/// manual re-enable every time the app starts.
+public struct WarrenEnvStandDownRecord: Codable, Equatable, Sendable {
+    /// The environment last observed on the device (`prod`, `staging`), `nil`
+    /// while none has been seen. Dropped whole when that install goes away,
+    /// so a later reinstall reads as the new transition it is.
+    public var higherEnvironmentSeen: String?
+
+    /// The user asked for this build back. Sticky by construction: the
+    /// environment stays marked as seen, so no later launch stands down for
+    /// the same install again.
+    public var reEnabled: Bool
+
+    /// The "Force all apps" state to put back on a manual re-enable, snapshot
+    /// before the stand-down turned it off.
+    public var restoreIncludeAllNetworks: Bool
+
+    /// Whether the stand-down banner is up: an environment was seen and the
+    /// user has not overridden it.
+    public var isStandingDown: Bool { higherEnvironmentSeen != nil && !reEnabled }
+
+    public init(
+        higherEnvironmentSeen: String? = nil,
+        reEnabled: Bool = false,
+        restoreIncludeAllNetworks: Bool = false
+    ) {
+        self.higherEnvironmentSeen = higherEnvironmentSeen
+        self.reEnabled = reEnabled
+        self.restoreIncludeAllNetworks = restoreIncludeAllNetworks
+    }
+}
+
 public protocol AppPreferencesDataSource {
     var hasDoneFirstTimeLaunch: Bool { get set }
     var hasDoneFirstTimeLogin: Bool { get set }
@@ -34,6 +71,7 @@ enum AppStorageKey: String {
     case includeAllNetworksConsent
     case hasCompletedWarrenOnboarding
     case warrenAcknowledgedFailoverCount
+    case warrenEnvStandDown
 }
 
 public final class AppPreferences: AppPreferencesDataSource {
@@ -81,4 +119,10 @@ public final class AppPreferences: AppPreferencesDataSource {
     /// until another failover lands.
     @PrimitiveStorage(key: AppStorageKey.warrenAcknowledgedFailoverCount.rawValue, container: .standard)
     public var warrenAcknowledgedFailoverCount: Int = 0
+
+    /// The coexistence record: which higher-priority environment took this
+    /// device, what this build gave up for it, and whether the user asked for
+    /// this build back anyway.
+    @CompositeStorage(key: AppStorageKey.warrenEnvStandDown.rawValue, container: .standard)
+    public var warrenEnvStandDown = WarrenEnvStandDownRecord()
 }

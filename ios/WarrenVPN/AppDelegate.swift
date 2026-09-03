@@ -55,6 +55,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// The community-forum wallet login (doc 55), from a deep link or a typed
     /// code; the scene that owns the window supplies its presenter.
     let forumLogin = WarrenForumLoginFlow()
+    /// Coexistence: this build stands down when a higher-priority product
+    /// environment is installed beside it. Nil on prod, which outranks
+    /// everything and watches nothing.
+    nonisolated(unsafe) private var envStandDown: WarrenEnvStandDown?
 
     let notificationSettingsListener = NotificationSettingsListener()
     private var notificationSettingsUpdater: NotificationSettingsUpdater!
@@ -437,8 +441,48 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                 appVersionService: appVersionService
             ),
             WarrenFailoverNotificationProvider(acknowledgeStore: appPreferences),
+            makeEnvStandDownNotificationProvider(),
         ]
         UNUserNotificationCenter.current().delegate = self
+    }
+
+    /// The coexistence stand-down and its banner. Built together so the
+    /// provider can be invalidated the moment the record moves, which is the
+    /// only thing that changes what the banner shows.
+    private func makeEnvStandDownNotificationProvider() -> WarrenEnvStandDownNotificationProvider {
+        let standDown = WarrenEnvStandDown(
+            store: appPreferences,
+            device: WarrenEnvStandDown.Device(
+                isInstalled: { scheme in
+                    guard let url = URL(string: "\(scheme)://") else { return false }
+                    return MainActor.assumeIsolated { UIApplication.shared.canOpenURL(url) }
+                },
+                stopTunnelAndClearOnDemand: { [weak self] completion in
+                    guard let self else {
+                        completion()
+                        return
+                    }
+                    tunnelManager.stopTunnel(isOnDemandEnabled: false) { _ in completion() }
+                },
+                readKillSwitch: { [weak self] in
+                    self?.tunnelManager.settings.includeAllNetworks.includeAllNetworksIsEnabled ?? false
+                },
+                writeKillSwitch: { [weak self] isOn in
+                    guard let self else { return }
+                    var settings = tunnelManager.settings.includeAllNetworks
+                    settings.includeAllNetworksState = isOn ? .on : .off
+                    tunnelManager.updateSettings([.includeAllNetworks(settings)])
+                }
+            )
+        )
+        envStandDown = standDown
+
+        let provider = WarrenEnvStandDownNotificationProvider(
+            store: appPreferences,
+            reEnable: { [weak standDown] in standDown?.reEnable() }
+        )
+        standDown.didChange = { [weak provider] in provider?.invalidate() }
+        return provider
     }
 
     private func startInitialization(application: UIApplication) {
@@ -540,6 +584,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             }
             self.tunnelManager.loadConfiguration {
                 self.logger.debug("Finished initialization.")
+
+                // Observe the device once the tunnel is loaded: the stand-down
+                // stops the tunnel and reads the settings, and neither answers
+                // before this point.
+                self.envStandDown?.refresh()
 
                 NotificationManager.shared.updateNotifications()
 

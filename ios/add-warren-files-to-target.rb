@@ -135,6 +135,15 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumIdentityStoreTests.swift" => "WarrenVPNTests",
   "WarrenRustRuntimeTests/WarrenProductAnchorsTests.swift" => "WarrenRustRuntimeTests",
 
+  # Coexistence: this build stands down when a higher-priority product
+  # environment (prod, then staging) is installed beside it.
+  "WarrenVPN/Classes/WarrenEnvStandDown.swift" => "WarrenVPN",
+  "WarrenVPN/Notifications/Notification Providers/WarrenEnvStandDownNotificationProvider.swift" =>
+    "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenEnvStandDownTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Notifications/WarrenEnvStandDownNotificationProviderTests.swift" =>
+    "WarrenVPNTests",
+
   # The non-prod markers: the name iOS gives the VPN configuration in
   # Settings, General, VPN and Device Management, and the header chip.
   "WarrenVPNTests/MullvadVPN/TunnelManager/TunnelConfigurationTests.swift" => "WarrenVPNTests",
