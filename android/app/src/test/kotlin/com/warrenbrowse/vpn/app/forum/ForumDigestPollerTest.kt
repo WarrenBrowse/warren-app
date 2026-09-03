@@ -1,13 +1,19 @@
 package com.warrenbrowse.vpn.app.forum
 
 import com.warrenbrowse.vpn.lib.model.forum.ForumHeaderButton
+import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -74,6 +80,49 @@ class ForumDigestPollerTest {
 
         assertEquals(0, jni.digestCalls)
         assertEquals(emptyList<String?>(), activity.digests)
+    }
+
+    @Test
+    fun the_poll_runs_only_while_the_digest_is_wanted() = runTest {
+        val activity = RecordingActivity()
+        val jni = FakeJniBridge(digestAnswer = { """{"counts":"000","fetch":"ok"}""" })
+        val poller =
+            ForumDigestPoller(jni, activity, FakeTunnelStateProvider(), UnconfinedTestDispatcher(testScheduler))
+        val wanted = MutableStateFlow(false)
+        val loop = launch { poller.runWhile(wanted) }
+
+        advanceTimeBy(5.minutes)
+        assertEquals(0, jni.digestCalls, "nothing is fetched for a digest nobody reads")
+
+        wanted.value = true
+        runCurrent()
+        assertEquals(1, jni.digestCalls, "the poll starts with a fetch the moment it is wanted")
+        advanceTimeBy(61.seconds)
+        assertEquals(2, jni.digestCalls, "then one a minute")
+
+        wanted.value = false
+        runCurrent()
+        advanceTimeBy(5.minutes)
+        assertEquals(2, jni.digestCalls, "the poll stops the moment the digest has no reader")
+        loop.cancel()
+    }
+
+    @Test
+    fun the_digest_is_wanted_only_with_consent_the_setting_and_a_forum_account() = runTest {
+        val accepted = MutableStateFlow(true)
+        val enabled = MutableStateFlow(true)
+        val identity = MutableStateFlow<ForumIdentity?>(ForumIdentity("lusab-babad-dovok", 2))
+        val wanted = forumDigestWanted(accepted, enabled, identity)
+        assertEquals(true, wanted.first())
+
+        enabled.value = false
+        assertEquals(false, wanted.first(), "off hides the bell, so nothing would show the count")
+        enabled.value = true
+        identity.value = null
+        assertEquals(false, wanted.first(), "no forum account, nothing to index the digest by")
+        identity.value = ForumIdentity("lusab-babad-dovok", 2)
+        accepted.value = false
+        assertEquals(false, wanted.first(), "nothing leaves the device before the disclosure")
     }
 
     @Test

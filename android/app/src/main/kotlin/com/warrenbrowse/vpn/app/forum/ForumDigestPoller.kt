@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.app.forum
 
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
 import com.warrenbrowse.vpn.lib.repository.ForumPreflight
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
@@ -10,6 +11,10 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.contentOrNull
@@ -78,6 +83,16 @@ class ForumDigestPoller(
         }
     }
 
+    /**
+     * [run] while [wanted] is true and nothing while it is false, so the
+     * digest is fetched only while something on this installation reads it
+     * ([forumDigestWanted]). Turning it back on fetches at once: a badge is
+     * never a minute late after the feature comes back.
+     */
+    suspend fun runWhile(wanted: Flow<Boolean>) {
+        wanted.distinctUntilChanged().collectLatest { if (it) run() }
+    }
+
     /** One fetch fed into the activity state; returns the fetch class. */
     suspend fun fetchOnce(): String {
         if (ForumPreflight.of(tunnelState.connectedInfo.value) is ForumPreflight.Defer) {
@@ -104,6 +119,29 @@ class ForumDigestPoller(
             null
         }
 }
+
+/**
+ * Whether the broadcast digest has a reader on this installation: the privacy
+ * disclosure accepted (nothing leaves the device before it), the forum
+ * notifications setting on (off hides the bell, so no surface would show the
+ * count) and a forum account, whose slot is what indexes the digest. Without
+ * all three the fetch is a periodic handshake with the API host, from the
+ * physical network since the forum flows ride the VpnService-protected
+ * transport, for a number nobody displays.
+ *
+ * The desktop daemon polls the digest unconditionally, beside its relay-list
+ * and notices refreshes on the channel its own API traffic already uses, and
+ * the GUI setting does not reach it; here the loop is the app's own, so the
+ * gate costs nothing and is applied.
+ */
+fun forumDigestWanted(
+    disclosureAccepted: Flow<Boolean>,
+    notificationsEnabled: Flow<Boolean>,
+    identity: Flow<ForumIdentity?>,
+): Flow<Boolean> =
+    combine(disclosureAccepted, notificationsEnabled, identity) { accepted, enabled, forumIdentity ->
+        accepted && enabled && forumIdentity != null
+    }
 
 /**
  * The `{"counts":..,"fetch":..}` JNI envelope: the verified counts (null while

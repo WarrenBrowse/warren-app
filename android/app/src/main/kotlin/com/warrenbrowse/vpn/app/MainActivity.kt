@@ -20,8 +20,10 @@ import arrow.core.merge
 import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
+import com.warrenbrowse.vpn.app.forum.forumDigestWanted
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumJournal
 import com.warrenbrowse.vpn.app.forum.JournalField
@@ -41,8 +43,10 @@ import com.warrenbrowse.vpn.lib.endpoint.getApiEndpointConfigurationExtras
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.Prepared
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.serviceconnection.ServiceConnectionManager
@@ -72,6 +76,8 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val forumEventsJournal by inject<ForumJournal>()
     private val forumDigestPoller by inject<ForumDigestPoller>()
     private val forumActivityOpenRequests by inject<ForumActivityOpenRequests>()
+    private val localSettings by inject<WarrenLocalSettingsRepository>()
+    private val forumIdentityRepository by inject<ForumIdentityRepository>()
 
     private fun dispatchWarrenConnect() {
         // Route the post-VPN-profile-grant connect (and the already-prepared
@@ -148,12 +154,23 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
             }
         }
 
-        // The forum digest poll lives exactly as long as the window is visible:
-        // a fetch on every start (what the app missed while away), then one a
-        // minute, cancelled at stop. Nothing polls in the background, so the
-        // badge never turns the app into a periodic presence signal.
+        // The forum digest poll lives exactly as long as the window is visible
+        // and the digest has a reader (`forumDigestWanted`): a fetch on every
+        // start (what the app missed while away), then one a minute, cancelled
+        // at stop. Nothing polls in the background, so the badge never turns
+        // the app into a periodic presence signal.
         lifecycleScope.launch {
-            repeatOnLifecycle(Lifecycle.State.STARTED) { forumDigestPoller.run() }
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                forumDigestPoller.runWhile(
+                    forumDigestWanted(
+                        userPreferencesRepository.preferencesFlow().map {
+                            it.isPrivacyDisclosureAccepted
+                        },
+                        localSettings.forumNotificationsEnabled,
+                        forumIdentityRepository.identity,
+                    )
+                )
+            }
         }
     }
 
