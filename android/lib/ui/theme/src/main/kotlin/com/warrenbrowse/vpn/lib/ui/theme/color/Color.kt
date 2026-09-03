@@ -20,6 +20,12 @@ const val AlphaScrollbar = 0.6f
 const val AlphaInvisible = 0f
 const val Alpha80 = 0.8f
 
+// The connect-card status well (desktop ConnectionStatus): the phase accent at
+// 22 % fills the well and at 45 % draws its hairline, so the colour has a
+// filled shape to live in while the glyph and the title keep the full tint.
+const val AlphaStatusWellFill = 0.22f
+const val AlphaStatusWellBorder = 0.45f
+
 // Special colors
 // Static defined positive/success/selected color
 val ColorScheme.positive: Color

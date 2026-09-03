@@ -1,27 +1,32 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Visibility
-import androidx.compose.material.icons.rounded.VisibilityOff
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.TunnelState
@@ -29,6 +34,9 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
+import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaStatusWellBorder
+import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaStatusWellFill
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 
 @Preview
 @Composable
@@ -85,8 +93,8 @@ private fun statusCopy(state: TunnelState, hostOffline: Boolean): StatusCopy =
 
 /**
  * The connection card status header: a phase-colored eye (open while the user
- * is visible to the network, crossed once hidden) beside the accent-colored
- * status title and its factual subtitle.
+ * is visible to the network, crossed once hidden) in its tinted well, beside the
+ * accent-colored status title and its factual subtitle.
  */
 @Composable
 fun ConnectionStatusText(
@@ -105,15 +113,9 @@ fun ConnectionStatusText(
         // subtitle are announced as one sentence.
         modifier =
             modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
-        verticalAlignment = Alignment.Top,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            imageVector =
-                if (phase.isEyeOpen()) Icons.Rounded.Visibility else Icons.Rounded.VisibilityOff,
-            contentDescription = null, // The status title carries the meaning.
-            tint = accent,
-            modifier = Modifier.padding(top = 2.dp).size(28.dp),
-        )
+        StatusEyeWell(accent = accent, eyeOpen = phase.isEyeOpen())
         Column(modifier = Modifier.padding(start = Dimens.connectionStatusGap)) {
             Text(
                 text = stringResource(id = copy.title),
@@ -141,5 +143,44 @@ fun ConnectionStatusText(
                 )
             }
         }
+    }
+}
+
+/**
+ * The eye sits in a well tinted with the phase accent rather than bare on the
+ * card (desktop StyledIconWell): the colour gets a filled shape to live in,
+ * which is what carries the state at a glance, so the title only has to be
+ * readable. Fill and hairline follow a phase change on the desktop's 300 ms
+ * ease-out.
+ */
+@Composable
+private fun StatusEyeWell(accent: Color, eyeOpen: Boolean) {
+    val fill by
+        animateColorAsState(
+            targetValue = accent.copy(alpha = AlphaStatusWellFill),
+            animationSpec = tween(DesignTokens.ConnectionStatus.WellTransition, easing = EaseOut),
+            label = "status_well_fill",
+        )
+    val hairline by
+        animateColorAsState(
+            targetValue = accent.copy(alpha = AlphaStatusWellBorder),
+            animationSpec = tween(DesignTokens.ConnectionStatus.WellTransition, easing = EaseOut),
+            label = "status_well_border",
+        )
+    val shape = RoundedCornerShape(Dimens.connectionStatusWellRadius)
+    Box(
+        modifier =
+            Modifier.size(Dimens.connectionStatusWellSize)
+                .background(fill, shape)
+                .border(Dimens.thinBorderWidth, hairline, shape),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter =
+                painterResource(if (eyeOpen) R.drawable.ic_eye_show else R.drawable.ic_eye_hide),
+            contentDescription = null, // The status title carries the meaning.
+            tint = accent,
+            modifier = Modifier.size(Dimens.connectionStatusIconSize),
+        )
     }
 }

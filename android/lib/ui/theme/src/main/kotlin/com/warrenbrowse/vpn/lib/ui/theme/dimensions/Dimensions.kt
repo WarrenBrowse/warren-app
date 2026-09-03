@@ -44,8 +44,12 @@ data class Dimensions(
     val dialogCornerRadius: Dp = 12.dp,
     // Desktop ConnectionPanel: 14 px vertical, 16 px horizontal.
     val connectionCardVerticalPadding: Dp = 14.dp,
-    // Desktop ConnectionStatus: 12 px between the eye and the text.
+    // Desktop ConnectionStatus: 12 px between the eye and the text; the eye is
+    // an 18 px glyph in a 36 px well of radius 11.
     val connectionStatusGap: Dp = 12.dp,
+    val connectionStatusWellSize: Dp = 36.dp,
+    val connectionStatusWellRadius: Dp = 11.dp,
+    val connectionStatusIconSize: Dp = 18.dp,
     val deleteIconSize: Dp = 24.dp,
     val dialogIconHeight: Dp = 48.dp,
     val fabSpacing: Dp = 16.dp, // Copied from the private val FabSpacing in Scaffold.kt

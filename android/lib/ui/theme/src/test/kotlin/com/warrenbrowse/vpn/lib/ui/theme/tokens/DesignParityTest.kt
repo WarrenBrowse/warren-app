@@ -5,6 +5,8 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha40
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
+import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaStatusWellBorder
+import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaStatusWellFill
 import com.warrenbrowse.vpn.lib.ui.theme.color.ColorDarkTokens
 import com.warrenbrowse.vpn.lib.ui.theme.dimensions.defaultDimensions
 import kotlin.test.assertEquals
@@ -75,7 +77,13 @@ class DesignParityTest {
     }
 
     @Test
-    fun `the status subtitle alpha is the desktop whiteAlpha80`() {
+    fun `the status eye sits in the desktop well`() {
+        assertEquals(DesignTokens.ConnectionStatus.RowGap, dims.connectionStatusGap)
+        assertEquals(DesignTokens.ConnectionStatus.WellSize, dims.connectionStatusWellSize)
+        assertEquals(DesignTokens.ConnectionStatus.WellRadius, dims.connectionStatusWellRadius)
+        assertEquals(DesignTokens.ConnectionStatus.IconSize, dims.connectionStatusIconSize)
+        assertEquals(DesignTokens.ConnectionStatus.WellFillAlpha, AlphaStatusWellFill)
+        assertEquals(DesignTokens.ConnectionStatus.WellBorderAlpha, AlphaStatusWellBorder)
         assertEquals(DesignTokens.ConnectionStatus.SubtitleAlpha, Alpha80)
     }
 
