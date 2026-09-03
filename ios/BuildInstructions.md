@@ -69,6 +69,14 @@ of another environment overrides the setting on the command line:
 xcodebuild -project WarrenVPN.xcodeproj -scheme WarrenVPN WARREN_PRODUCT_ENV=beta ...
 ```
 
+The row also carries the bundle-id suffix and the address-cache seed, so a
+non-prod build is a separate product: `com.warrenbrowse.vpn.ios.beta` with the
+app group `group.com.warrenbrowse.vpn.beta`, installed beside the prod app and
+reading its own Keychain rather than the prod wallet and forum identity, and
+seeded with an IP of its OWN API host. Signing a non-prod build for
+distribution needs the suffixed ids added to `ExportOptions.plist` and to
+`App.xcconfig` / `PacketTunnel.xcconfig` first.
+
 The per-environment values in that file are copies of the Rust table;
 `warren-product-env/tests/platform_lockstep.rs` fails on drift.
 

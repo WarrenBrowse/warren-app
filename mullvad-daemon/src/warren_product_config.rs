@@ -129,6 +129,19 @@ mod ios_endpoint_drift_gate {
             !has_release_override(&api, "API_HOST_NAME"),
             "API_HOST_NAME must not be overridden per build configuration"
         );
+        // The address-cache seed follows the same environment as the host it
+        // is a seed FOR. Left keyed on the build configuration, a beta build
+        // resolved api.beta and dialed the production box, which no test could
+        // see for as long as both names answered alike.
+        assert_eq!(
+            value(&api, "API_ENDPOINT"),
+            Some("$(WARREN_API_ENDPOINT)"),
+            "API_ENDPOINT must resolve through WARREN_API_ENDPOINT in Api.xcconfig.template"
+        );
+        assert!(
+            !has_release_override(&api, "API_ENDPOINT"),
+            "API_ENDPOINT must not be overridden per build configuration"
+        );
         // The Release configuration resolves the default environment.
         let default_env = value(&product_env, "WARREN_PRODUCT_ENV")
             .expect("WARREN_PRODUCT_ENV must have an unconditional default in ProductEnv.xcconfig");
@@ -140,6 +153,14 @@ mod ios_endpoint_drift_gate {
             .unwrap_or_else(|| {
                 panic!("WARREN_API_HOST_{default_env} must be present in ProductEnv.xcconfig")
             });
+        let resolved_seed = value(&product_env, &format!("WARREN_API_ENDPOINT_{default_env}"))
+            .unwrap_or_else(|| {
+                panic!("WARREN_API_ENDPOINT_{default_env} must be present in ProductEnv.xcconfig")
+            });
+        assert!(
+            resolved_seed.ends_with(":443"),
+            "the iOS address-cache seed dials the API on 443, got {resolved_seed}"
+        );
 
         let anchor_host = url_host(warren_contract::product::API_URL);
 

@@ -10,11 +10,12 @@ DEVELOPMENT_TEAM = XXXXXXXXXX
 // Product display name, per product environment (ProductEnv.xcconfig)
 DISPLAY_NAME = $(WARREN_DISPLAY_NAME)
 
-// Bundle ID
-APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios
+// Bundle ID, per product environment (ProductEnv.xcconfig). The suffix is what
+// makes a non-prod build a separate install with a Keychain of its own.
+APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios$(WARREN_APP_ID_SUFFIX)
 
-// Shared container security group ID
-SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn
+// Shared container security group ID, per product environment
+SECURITY_GROUP_IDENTIFIER = group.com.warrenbrowse.vpn$(WARREN_APP_ID_SUFFIX)
 
 // Code signing style
 // Possible values: Manual or Automatic

@@ -18,11 +18,11 @@ ENCRYPTED_DNS_HOST_NAME[config=Staging] = dns.warrenbrowse.com
 
 // Bootstrap seed the iOS address cache dials before it self-populates (its
 // resolver has no system-DNS fallback), so it must be a live IP of the
-// configured API host, not desktop's 0.0.0.0 no-pin sentinel.
-API_ENDPOINT[config=Debug] = 204.168.244.76:443
-API_ENDPOINT[config=Release] = 204.168.244.76:443
-API_ENDPOINT[config=MockRelease] = 204.168.244.76:443
-API_ENDPOINT[config=Staging] = 37.27.198.240:443
+// configured API host, not desktop's 0.0.0.0 no-pin sentinel. It follows the
+// product environment for the same reason API_HOST_NAME does: keyed on the
+// build configuration, a beta build resolved the beta host and seeded itself
+// with the production box.
+API_ENDPOINT = $(WARREN_API_ENDPOINT)
 
 AM_I_JSON_URL[config=Debug] = https:/${}/am.i.warrenbrowse.com/json
 AM_I_JSON_URL[config=Release] = https:/${}/am.i.warrenbrowse.com/json

@@ -30,3 +30,27 @@ WARREN_DISPLAY_NAME_prod = Warren VPN
 WARREN_DISPLAY_NAME_staging = Warren VPN Staging
 WARREN_DISPLAY_NAME_beta = Warren VPN Beta
 WARREN_DISPLAY_NAME = $(WARREN_DISPLAY_NAME_$(WARREN_PRODUCT_ENV))
+
+// The bundle id and the app group carry the same suffix, so a non-prod build
+// is a separate product: it installs BESIDE the prod app instead of replacing
+// it, and gets its own Keychain (the default access group is
+// teamID.bundleID), so a beta binary cannot read the prod wallet mnemonic or
+// the prod forum identity and sign beta-API requests with them. Prod keeps the
+// shipped identity, so its suffix is empty. A non-prod build needs its own
+// provisioning profiles: add the suffixed ids to ExportOptions.plist and to
+// App.xcconfig / PacketTunnel.xcconfig before signing one for distribution.
+WARREN_APP_ID_SUFFIX_prod =
+WARREN_APP_ID_SUFFIX_staging = .staging
+WARREN_APP_ID_SUFFIX_beta = .beta
+WARREN_APP_ID_SUFFIX = $(WARREN_APP_ID_SUFFIX_$(WARREN_PRODUCT_ENV))
+
+// The bootstrap seed the iOS address cache dials before it self-populates. Its
+// resolver has no system-DNS fallback, so this must be a LIVE IP of the API
+// host of the same row, never desktop's 0.0.0.0 no-pin sentinel. Keyed on the
+// environment rather than on the build configuration: `Api.xcconfig` used to
+// key it on Debug / Release / MockRelease, so a beta build resolved
+// api.beta.warrenbrowse.com and then seeded itself with the production box.
+WARREN_API_ENDPOINT_prod = 204.168.244.76:443
+WARREN_API_ENDPOINT_staging = 37.27.198.240:443
+WARREN_API_ENDPOINT_beta = 185.146.232.126:443
+WARREN_API_ENDPOINT = $(WARREN_API_ENDPOINT_$(WARREN_PRODUCT_ENV))

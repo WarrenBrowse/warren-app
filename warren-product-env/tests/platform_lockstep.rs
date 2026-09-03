@@ -18,6 +18,8 @@ const DISTRIBUTION_CJS: &str = "desktop/packages/mullvad-vpn/tasks/distribution.
 const BUILD_GRADLE: &str = "android/app/build.gradle.kts";
 const IOS_PRODUCT_ENV_XCCONFIG: &str = "ios/Configurations/ProductEnv.xcconfig";
 const IOS_INFO_PLIST: &str = "ios/WarrenVPN/Supporting Files/Info.plist";
+const IOS_BASE_XCCONFIG: &str = "ios/Configurations/Base.xcconfig.template";
+const IOS_API_XCCONFIG: &str = "ios/Configurations/Api.xcconfig.template";
 
 fn repo_file(relative: &str) -> String {
     let path = format!("{}/../{relative}", env!("CARGO_MANIFEST_DIR"));
@@ -204,18 +206,26 @@ fn the_android_flavor_table_is_the_crates() {
 
 /// The value of the one `<name>_<env> = <value>` line of the iOS xcconfig
 /// table (a build setting value runs to the end of its line, unquoted).
+///
+/// Read line by line rather than with a multiline regex: `\s` matches a
+/// newline, so a pattern ending in `\s*$` walks past an EMPTY value onto the
+/// next line and reports that line's value instead. Prod's empty app-id suffix
+/// is exactly such a value.
 fn xcconfig_value(source: &str, name: &str, env: ProductEnv) -> String {
     let key = format!("{name}_{}", env.name());
-    let re = Regex::new(&format!(r"(?m)^{key}\s*=\s*(.*?)\s*$")).expect("regex");
-    let mut matches = re.captures_iter(source);
-    let first = matches
+    let mut values = source.lines().filter_map(|line| {
+        let rest = line.strip_prefix(&key)?;
+        let rest = rest.trim_start_matches([' ', '\t']);
+        Some(rest.strip_prefix('=')?.trim().to_owned())
+    });
+    let first = values
         .next()
         .unwrap_or_else(|| panic!("no `{key}` line in {IOS_PRODUCT_ENV_XCCONFIG}"));
     assert!(
-        matches.next().is_none(),
+        values.next().is_none(),
         "`{key}` is set twice in {IOS_PRODUCT_ENV_XCCONFIG}"
     );
-    first[1].to_owned()
+    first
 }
 
 /// The iOS build cannot read the crate before Xcode resolves its settings, so
@@ -249,6 +259,8 @@ fn the_ios_xcconfig_table_is_the_crates() {
         "WARREN_DEEP_LINK_SCHEME",
         "WARREN_API_HOST",
         "WARREN_DISPLAY_NAME",
+        "WARREN_APP_ID_SUFFIX",
+        "WARREN_API_ENDPOINT",
     ] {
         let line = format!("\n{selector} = $({selector}_$(WARREN_PRODUCT_ENV))\n");
         assert!(
@@ -259,6 +271,88 @@ fn the_ios_xcconfig_table_is_the_crates() {
     // Prod is the default everywhere (rule 50); no other line may set it
     // unconditionally.
     assert!(source.contains("\nWARREN_PRODUCT_ENV = prod\n"));
+}
+
+/// A beta build is a separate product or it is not a beta build: the bundle
+/// id and the app group follow the environment, so it installs beside the prod
+/// app instead of over it, and reads its own Keychain rather than the prod
+/// wallet and the prod forum identity. The per-environment URL scheme exists
+/// precisely so two installs on one device never fight over the registration,
+/// which they cannot do while both claim one install slot.
+#[test]
+fn the_ios_bundle_identity_follows_the_product_environment() {
+    let product_env = repo_file(IOS_PRODUCT_ENV_XCCONFIG);
+    let base = repo_file(IOS_BASE_XCCONFIG);
+
+    let mut suffixes: Vec<String> = Vec::new();
+    for env in ALL {
+        let suffix = xcconfig_value(&product_env, "WARREN_APP_ID_SUFFIX", env);
+        let name = env.name();
+        if env == ProductEnv::Prod {
+            assert!(
+                suffix.is_empty(),
+                "prod keeps the shipped identity, so its suffix is empty"
+            );
+        } else {
+            assert_eq!(suffix, format!(".{name}"), "{name}: WARREN_APP_ID_SUFFIX");
+        }
+        assert!(!suffixes.contains(&suffix), "{name}: suffix is not its own");
+        suffixes.push(suffix);
+    }
+
+    for key in ["APPLICATION_IDENTIFIER", "SECURITY_GROUP_IDENTIFIER"] {
+        let line = base
+            .lines()
+            .find(|l| l.trim_start().starts_with(&format!("{key} ")))
+            .unwrap_or_else(|| panic!("no `{key}` line in {IOS_BASE_XCCONFIG}"));
+        assert!(
+            line.ends_with("$(WARREN_APP_ID_SUFFIX)"),
+            "{key} must resolve through WARREN_APP_ID_SUFFIX, not a fixed id: {line}"
+        );
+        assert!(
+            !base.contains(&format!("{key}[config=")),
+            "{key} must not be overridden per build configuration"
+        );
+    }
+}
+
+/// The address-cache seed the iOS resolver dials before it self-populates has
+/// to be a live IP of the CONFIGURED API host: it has no system-DNS fallback,
+/// so a seed keyed on the build configuration sends a beta build to the
+/// production box. Rule 50 forbids exactly that, and it stays invisible for as
+/// long as the two names answer alike.
+#[test]
+fn the_ios_api_seed_follows_the_product_environment() {
+    let api = repo_file(IOS_API_XCCONFIG);
+    let product_env = repo_file(IOS_PRODUCT_ENV_XCCONFIG);
+
+    assert!(
+        !api.contains("API_ENDPOINT[config="),
+        "API_ENDPOINT must not be keyed on a build configuration"
+    );
+    assert!(
+        api.contains("\nAPI_ENDPOINT = $(WARREN_API_ENDPOINT)\n"),
+        "API_ENDPOINT must resolve through WARREN_API_ENDPOINT"
+    );
+
+    let mut seeds: Vec<String> = Vec::new();
+    for env in ALL {
+        let seed = xcconfig_value(&product_env, "WARREN_API_ENDPOINT", env);
+        let name = env.name();
+        let (host, port) = seed.rsplit_once(':').unwrap_or_else(|| {
+            panic!("{name}: WARREN_API_ENDPOINT is `<ip>:<port>`, got `{seed}`")
+        });
+        assert_eq!(port, "443", "{name}: the API is dialed on 443");
+        assert!(
+            host.split('.').count() == 4 && host.split('.').all(|o| o.parse::<u8>().is_ok()),
+            "{name}: the seed is a literal IPv4 of the environment's API host, got `{host}`"
+        );
+        assert!(
+            !seeds.contains(&seed),
+            "{name}: shares the production seed, so a build of it dials the prod box"
+        );
+        seeds.push(seed);
+    }
 }
 
 /// The URL scheme the OS registers for the app is the resolved selector, so
