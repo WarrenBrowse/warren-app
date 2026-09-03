@@ -65,16 +65,22 @@ private val SEAM_FEATHER = 56.dp
 // The continuation below the canvas is the canvas itself mirrored around its
 // bottom edge and blurred: a reflection continues the exact colors it meets,
 // so the seam cannot band whatever the art.
-private val CONTINUATION_BLUR_RADIUS = 28.dp
+internal val CONTINUATION_BLUR_RADIUS = 28.dp
+
+// The connecting blur of the landscape, which the continuation layer adds to
+// its own; SceneryParityTest pins it to the desktop token.
+internal val LANDSCAPE_BLUR_RADIUS = 14.dp
 
 // The continuation's blur layer is cut down to the rows of the canvas the
 // mirror actually shows below the seam, plus this much above them. The
 // layer's edge treatment is Decal (a transparent outside) and a Gaussian of
 // radius r fades about 1.5 r inward from an edge, so the top rows of the
-// band fade; the margin, twice the largest radius, puts that fade past the
-// bottom of the screen once the band is mirrored, and every visible pixel
-// is the one the full-screen layer produced.
-private val CONTINUATION_BAND_MARGIN = 84.dp
+// band fade; the margin, twice the widest radius the layer blurs with, puts
+// that fade past the bottom of the screen once the band is mirrored, and
+// every visible pixel is the one the full-screen layer produced. Derived from
+// the radii so a token change cannot bring the fade back on screen
+// (SceneryBandTest).
+internal val CONTINUATION_BAND_MARGIN = (CONTINUATION_BLUR_RADIUS + LANDSCAPE_BLUR_RADIUS) * 2
 
 // Bula's feet row in the 1140x1706 masters (alpha bounding box of
 // scenery_bula). The foreground pair (burrow + Bula, registered to each other,
@@ -109,7 +115,6 @@ internal const val WASH_BOTTOM_STOP = 0.78f
 internal val WASH_BLEND = BlendMode.Softlight
 private const val SCRIM_START = 0.66f
 private const val SCRIM_ALPHA = 0.6f
-internal val LANDSCAPE_BLUR_RADIUS = 14.dp
 
 /**
  * The full-bleed illustrated backdrop of the home screen: a per-country
@@ -182,7 +187,7 @@ fun SceneryBackdrop(
             animationSpec = tween(BULA_MILLIS),
             label = "bula_drop",
         )
-    val washColor by
+    val washColor =
         animateColorAsState(
             targetValue = phase.accentColor(),
             animationSpec = tween(CROSSFADE_MILLIS),
@@ -229,7 +234,7 @@ fun SceneryBackdrop(
                 },
         )
 
-        PhaseWash(washColor)
+        PhaseWash { washColor.value }
     }
 }
 
@@ -255,21 +260,28 @@ private fun androidx.compose.ui.graphics.GraphicsLayerScope.foregroundShift(
  * edge (desktop AppMainFooter) that grounds the card and footer over the
  * blurred continuation band.
  *
- * Both brushes are memoized: a full-screen gradient reallocated on every frame
- * of the 700ms wash is pure garbage, and the scrim never changes at all.
+ * The tint is read in the draw lambda: a colour that animates for 700 ms
+ * would otherwise recompose the whole backdrop on each of its frames. The
+ * gradient is rebuilt on the frames the colour moves, and only those; the
+ * scrim never changes and is remembered.
  */
 @Composable
-private fun PhaseWash(washColor: Color) {
-    val washBrush =
-        remember(washColor) {
-            Brush.verticalGradient(
-                0f to washColor.copy(alpha = WASH_ALPHA),
-                WASH_TOP_STOP to Color.Transparent,
-                WASH_BOTTOM_STOP to Color.Transparent,
-                1f to washColor.copy(alpha = WASH_ALPHA),
+private fun PhaseWash(washColor: () -> Color) {
+    Box(
+        Modifier.fillMaxSize().drawBehind {
+            val tint = washColor()
+            drawRect(
+                brush =
+                    Brush.verticalGradient(
+                        0f to tint.copy(alpha = WASH_ALPHA),
+                        WASH_TOP_STOP to Color.Transparent,
+                        WASH_BOTTOM_STOP to Color.Transparent,
+                        1f to tint.copy(alpha = WASH_ALPHA),
+                    ),
+                blendMode = WASH_BLEND,
             )
         }
-    Box(Modifier.fillMaxSize().drawBehind { drawRect(brush = washBrush, blendMode = WASH_BLEND) })
+    )
     val scrimBrush =
         remember {
             Brush.verticalGradient(
