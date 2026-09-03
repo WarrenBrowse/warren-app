@@ -42,11 +42,50 @@ home="$(fresh_home)"
 touch "$home/.gitconfig.lock"
 # Ten minutes old: no writer can still hold it.
 touch -t "$(date -v-10M +%Y%m%d%H%M.%S 2>/dev/null || date -d '10 minutes ago' +%Y%m%d%H%M.%S)" "$home/.gitconfig.lock"
+# The aging above runs through two `date` dialects. Assert it landed, or the
+# two checks below would pass a fresh lock off as a cleared stale one.
+[ -n "$(find "$home" -name .gitconfig.lock -mmin +5)" ]
+check "the lock under test really is old" 0 "$?"
 HOME="$home" WARREN_GIT_CONFIG_ATTEMPTS=5 WARREN_GIT_CONFIG_STALE_SECONDS=60 bash "$WRAPPER" warren.test stale >/dev/null 2>&1
 check "the write lands after the stale lock is cleared" 0 "$?"
 [ -e "$home/.gitconfig.lock" ]
 check "the stale lock is gone" 1 "$?"
 rm -rf "$home"
+
+# The runners are not all one platform, and the two `stat` dialects do not
+# simply fail on each other's spelling, so the age is read under each in turn
+# with a stub on PATH. GNU answering the BSD spelling with a filesystem field
+# is what left every Linux runner unable to clear a stale lock.
+stub_dir() { # stub_dir <the stat dialect to imitate> <the mtime it reports>
+	local dir="$1" dialect="$2" mtime="$3"
+	mkdir -p "$dir"
+	{
+		echo '#!/bin/sh'
+		if [ "$dialect" = gnu ]; then
+			echo '[ "$1" = "-c" ] && [ "$2" = "%Y" ] && { printf "'"$mtime"'\n"; exit 0; }'
+			# `-f` is --file-system here: an answer, and not an mtime.
+			echo '[ "$1" = "-f" ] && { printf "%%m\n"; exit 0; }'
+		else
+			echo '[ "$1" = "-f" ] && [ "$2" = "%m" ] && { printf "'"$mtime"'\n"; exit 0; }'
+		fi
+		echo 'exit 1'
+	} > "$dir/stat"
+	chmod +x "$dir/stat"
+}
+
+for dialect in gnu bsd; do
+	echo "a stale lock is removed under the $dialect stat dialect"
+	home="$(fresh_home)"
+	bin="$home/bin"
+	touch "$home/.gitconfig.lock"
+	stub_dir "$bin" "$dialect" "$(($(date +%s) - 600))"
+	PATH="$bin:$PATH" HOME="$home" WARREN_GIT_CONFIG_ATTEMPTS=5 \
+		WARREN_GIT_CONFIG_STALE_SECONDS=60 bash "$WRAPPER" warren.test stale >/dev/null 2>&1
+	check "the write lands after the stale lock is cleared" 0 "$?"
+	[ -e "$home/.gitconfig.lock" ]
+	check "the stale lock is gone" 1 "$?"
+	rm -rf "$home"
+done
 
 echo "a lock nobody releases fails after the attempts"
 home="$(fresh_home)"

@@ -28,9 +28,20 @@ lock_file() {
 lock_age_seconds() { # lock_age_seconds <path>
 	local now mtime
 	now="$(date +%s)"
-	# BSD stat first (macOS), then GNU stat (Linux, Git for Windows).
-	mtime="$(stat -f %m "$1" 2> /dev/null || stat -c %Y "$1" 2> /dev/null)" || return 1
-	printf '%s' "$((now - mtime))"
+	# The two stat dialects do not simply fail on each other's spelling: GNU's
+	# `-f` is --file-system, so it ANSWERS the BSD `-f %m` with a filesystem
+	# field and exit 0. Asking BSD first therefore read a non-number as the
+	# lock's age on every Linux runner, and no stale lock was ever cleared. So
+	# take the first answer that is a plain count of seconds rather than trust
+	# an exit status.
+	for mtime in "$(stat -c %Y "$1" 2> /dev/null)" "$(stat -f %m "$1" 2> /dev/null)"; do
+		case "$mtime" in
+			'' | *[!0-9]*) continue ;;
+		esac
+		printf '%s' "$((now - mtime))"
+		return 0
+	done
+	return 1
 }
 
 attempt=1
