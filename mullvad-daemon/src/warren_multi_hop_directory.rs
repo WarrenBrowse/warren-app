@@ -26,8 +26,9 @@ use std::time::Duration;
 use futures::FutureExt;
 use talpid_warren_tunnel::MultiHopConfig;
 use warren_discovery_core::{
-    DEFAULT_RTT_TTL_SECS, DirectoryError, PATH_QUALITY_VERSION, PathAwareParams,
-    PathQualityAdvisory, RttCache, VerifiedMultiHopDirectory, node_rtt_from,
+    Continent, DEFAULT_RTT_TTL_SECS, DirectoryError, ExitCandidate, PATH_QUALITY_VERSION,
+    PathAwareParams, PathQualityAdvisory, RttCache, VerifiedMultiHopDirectory,
+    continent_of_country, node_rtt_from, pick_exit, prefer_client_continent,
     select_circuit_path_aware, valid_circuits, verify_multihop_directory_any,
 };
 
@@ -279,52 +280,6 @@ pub fn same_country_migration_alternates(
 /// two hops.
 fn circuit_identity(cfg: &MultiHopConfig) -> ([u8; 16], [u8; 16]) {
     (cfg.relay.relay_id, *cfg.exit.exit_id.as_bytes())
-}
-
-/// Coarse continent grouping for the latency-aware entry ranking.
-/// Continent-level is deliberate: it is derivable from purely local
-/// signals (no probe, no geolocation call, nothing observable on the
-/// wire) and it already separates the pathological picks (an
-/// intercontinental entry hop taxes every serialized connect round
-/// trip and every steady-state packet with ~10x the RTT).
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum Continent {
-    Europe,
-    Americas,
-    Asia,
-    Africa,
-    Oceania,
-}
-
-/// Continent of an ISO 3166-1 alpha-2 country code, covering plausible
-/// fleet countries. `None` (unknown code) disables the proximity
-/// preference for that node rather than guessing.
-fn continent_of_country(cc: &str) -> Option<Continent> {
-    let mut buf = [0u8; 2];
-    let bytes = cc.as_bytes();
-    if bytes.len() != 2 {
-        return None;
-    }
-    buf[0] = bytes[0].to_ascii_lowercase();
-    buf[1] = bytes[1].to_ascii_lowercase();
-    match &buf {
-        b"at" | b"be" | b"bg" | b"ch" | b"cz" | b"de" | b"dk" | b"ee" | b"es" | b"fi" | b"fr"
-        | b"gb" | b"gr" | b"hr" | b"hu" | b"ie" | b"is" | b"it" | b"lt" | b"lu" | b"lv" | b"md"
-        | b"mt" | b"nl" | b"no" | b"pl" | b"pt" | b"ro" | b"rs" | b"se" | b"si" | b"sk" | b"ua" => {
-            Some(Continent::Europe)
-        }
-        b"ar" | b"br" | b"ca" | b"cl" | b"co" | b"mx" | b"pe" | b"us" => Some(Continent::Americas),
-        // `tr` sits with Europe to stay consistent with the IANA area
-        // of its timezone (`Europe/Istanbul`): the tz side of the match
-        // must agree with the country side or Turkish clients would
-        // never see a TR entry as local.
-        b"tr" => Some(Continent::Europe),
-        b"ae" | b"hk" | b"id" | b"il" | b"in" | b"jp" | b"kr" | b"my" | b"ph" | b"sg" | b"th"
-        | b"tw" | b"vn" => Some(Continent::Asia),
-        b"eg" | b"ke" | b"ma" | b"ng" | b"za" => Some(Continent::Africa),
-        b"au" | b"nz" => Some(Continent::Oceania),
-        _ => None,
-    }
 }
 
 /// Continent from an IANA timezone name's area prefix
@@ -636,16 +591,18 @@ fn leg_freshly_degraded(
 /// connect latency and steady-state latency), then the shared path-aware
 /// ranking within that partition. `None` on empty `pairs`.
 ///
-/// The ranking is single-homed in warren-discovery-core: with no path
-/// signal `select_circuit_path_aware` is bit-identical to
-/// `pick_circuit_by_weight` (the daemon's historical weight ranking,
-/// promoted there), so this decomposition preserves the legacy
-/// `(continent, weight, ids)` order exactly. The continent pre-filter
-/// stays daemon-side on purpose: it derives from purely local signals
-/// (timezone vs advertised node country), while the shared selector
-/// ranks by measured path quality only. Both sides are deterministic;
-/// do NOT reintroduce per-call randomness (a weighted RNG here once
-/// churned the tunnel into a reconnect loop on every updater poll).
+/// Both halves are single-homed in warren-discovery-core: the partition is
+/// `prefer_client_continent` (applied here to the pairs through their entry
+/// node, so the SDK's `pick_entry` and this pair ranking cannot narrow
+/// differently), and with no path signal `select_circuit_path_aware` is
+/// bit-identical to `pick_circuit_by_weight` (the daemon's historical
+/// weight ranking, promoted there), so the legacy `(continent, weight,
+/// ids)` order is preserved exactly. The client continent itself stays a
+/// daemon input on purpose: it derives from purely local signals (the
+/// timezone), while the shared code only compares it to the advertised
+/// node country. Both sides are deterministic; do NOT reintroduce per-call
+/// randomness (a weighted RNG here once churned the tunnel into a
+/// reconnect loop on every updater poll).
 fn pick_pair_path_aware(
     dir: &VerifiedMultiHopDirectory,
     pairs: &[(usize, usize)],
@@ -654,19 +611,18 @@ fn pick_pair_path_aware(
     entry_rtt: &RttCache,
     now_unix: u64,
 ) -> Option<(usize, usize)> {
-    let local: Vec<(usize, usize)> = client_continent
-        .map(|client| {
-            pairs
-                .iter()
-                .copied()
-                .filter(|&(i, _)| continent_of_country(&dir.nodes[i].country) == Some(client))
-                .collect()
-        })
-        .unwrap_or_default();
-    let scoped = if local.is_empty() { pairs } else { &local[..] };
+    let entry_countries: Vec<&str> = pairs
+        .iter()
+        .map(|&(i, _)| dir.nodes[i].country.as_str())
+        .collect();
+    let scoped: Vec<(usize, usize)> =
+        prefer_client_continent(&entry_countries, client_continent, |c| c)
+            .into_iter()
+            .map(|k| pairs[k])
+            .collect();
     select_circuit_path_aware(
         dir,
-        scoped,
+        &scoped,
         advisory,
         node_rtt_from(entry_rtt, now_unix, DEFAULT_RTT_TTL_SECS),
         now_unix,
@@ -713,8 +669,8 @@ fn pick_one_hop_circuit(
 
 /// Selects a **1-hop** circuit: one node serves as both the entry relay
 /// and the exit, both reached on the node's unified `:443` dispatcher
-/// (doc 33). Honors the `exit_country` hint and weights the random pick
-/// by node weight.
+/// (doc 33). Honors the `exit_country` hint and picks the heaviest node,
+/// deterministically.
 ///
 /// Toggle OFF uses this. The fleet is multi-hop only, so OFF must still
 /// ride the multi-hop wire protocol, it just collapses the circuit onto a
@@ -740,29 +696,21 @@ pub fn select_one_hop_circuit(
         .filter(|(_, n)| !exclude_exit_ids.contains(n.exit.exit_id.as_bytes()))
         .map(|(i, _)| i)
         .collect();
-    if candidates.is_empty() {
-        return None;
-    }
-    // Deterministic pick: highest weight, ties broken by smallest exit_id.
-    // Previously this rolled a weighted RNG on every call, so when more than
-    // one node was a candidate (notably when the exit-country hint is empty,
-    // which makes every node match) the selection changed on each poll. The
-    // directory updater saw a "different" circuit each time and tore the
-    // tunnel down to reconnect - an endless reconnect loop that blocked all
-    // traffic. A stable selection means re-evaluating the same inputs always
-    // yields the same circuit, so the updater only reconnects on a real
-    // change. Do NOT reintroduce per-call randomness here.
-    let mut ranked = candidates;
-    ranked.sort_by(|&a, &b| {
-        dir.nodes[b].weight.cmp(&dir.nodes[a].weight).then_with(|| {
-            dir.nodes[a]
-                .exit
-                .exit_id
-                .as_bytes()
-                .cmp(dir.nodes[b].exit.exit_id.as_bytes())
-        })
-    });
-    let idx = ranked[0];
+    // The pick is the shared deterministic rule (highest weight, ties broken
+    // by the smallest exit_id): `warren_discovery_core::pick_exit`, promoted
+    // from this very function so every client family lands on the same node
+    // for the same directory. Previously this rolled a weighted RNG on every
+    // call, so when more than one node was a candidate (notably when the
+    // exit-country hint is empty, which makes every node match) the
+    // selection changed on each poll. The directory updater saw a
+    // "different" circuit each time and tore the tunnel down to reconnect,
+    // an endless reconnect loop that blocked all traffic. Do NOT reintroduce
+    // per-call randomness here or in the shared crate.
+    let ranked: Vec<ExitCandidate> = candidates
+        .iter()
+        .map(|&i| ExitCandidate::from(&dir.nodes[i]))
+        .collect();
+    let idx = candidates[pick_exit(&ranked)?];
     assemble(dir, idx, idx, enable_gso, use_warren_obfuscation)
 }
 
@@ -2116,15 +2064,16 @@ mod tests {
     }
 
     #[test]
-    fn continent_mappings_cover_the_fleet_and_stay_conservative() {
-        assert_eq!(continent_of_country("de"), Some(Continent::Europe));
-        assert_eq!(continent_of_country("NL"), Some(Continent::Europe));
-        assert_eq!(continent_of_country("sg"), Some(Continent::Asia));
-        assert_eq!(continent_of_country("us"), Some(Continent::Americas));
+    fn timezone_areas_map_onto_the_shared_continents() {
+        // The country side of the match lives in warren-discovery-core
+        // (`continent_of_country`, pinned by its exit_pick vector); this
+        // half derives the CLIENT's continent from the timezone and must
+        // land in the same enum, or a Turkish client would never see a TR
+        // entry as local.
         assert_eq!(
-            continent_of_country("zz"),
-            None,
-            "an unknown country must disable the preference, not guess"
+            continent_of_timezone("Europe/Istanbul"),
+            continent_of_country("tr"),
+            "the tz area and the country table must agree on Turkey"
         );
         assert_eq!(
             continent_of_timezone("Europe/Paris"),
@@ -2531,6 +2480,104 @@ mod tests {
             assert_eq!(
                 first, again,
                 "1-hop fallback selection must be stable across calls (no churn)"
+            );
+        }
+    }
+
+    /// The shared crate's `exit_pick.json` vector. warren-discovery-core
+    /// replays it against `pick_exit` / `pick_entry`; these two tests replay
+    /// it through the daemon's OWN selection path (the candidate projection,
+    /// the pair partition, the path-aware ranking with no signal), so "the
+    /// shared rule" and "what the production daemon dials" cannot drift
+    /// apart without one of the two readers going red.
+    fn exit_pick_fixture() -> serde_json::Value {
+        serde_json::from_str(include_str!(
+            "../../../warren-contract/warren-discovery/tests/fixtures/exit_pick.json"
+        ))
+        .expect("exit_pick.json must parse")
+    }
+
+    fn id16(hex_id: &str) -> [u8; 16] {
+        hex::decode(hex_id)
+            .expect("fixture ids are hex")
+            .try_into()
+            .expect("fixture ids are 16 bytes")
+    }
+
+    #[test]
+    fn exit_vectors_replay_through_the_one_hop_selection() {
+        let op = op_key();
+        let fixture = exit_pick_fixture();
+        let cases = fixture["exit"].as_array().expect("exit section");
+        assert!(cases.len() >= 8, "the exit section must keep its cases");
+        for case in cases {
+            let name = case["name"].as_str().expect("case name");
+            // The tag numbers the node (endpoint, pubkeys, relay id) while the
+            // exit id comes from the vector, so a full-tie case with duplicate
+            // exit ids is still told apart by the relay id of the pick.
+            let nodes: Vec<NodeEntry> = case["candidates"]
+                .as_array()
+                .expect("candidates")
+                .iter()
+                .enumerate()
+                .map(|(i, c)| {
+                    let tag = u8::try_from(i + 1).expect("small fixtures");
+                    let mut n = node(&op, tag, "de", 0, c["weight"].as_u64().expect("weight"));
+                    n.exit.exit_id = ExitId::from_bytes(id16(c["exit_id"].as_str().expect("id")));
+                    n
+                })
+                .collect();
+            let d = dir(nodes);
+            let picked =
+                select_one_hop_circuit(&d, "", true, true, &[]).map(|cfg| cfg.relay.relay_id);
+            let expected = case["expected"]
+                .as_u64()
+                .map(|i| d.nodes[usize::try_from(i).expect("index")].relay.relay_id);
+            assert_eq!(
+                picked, expected,
+                "exit vector `{name}` diverged from the daemon's 1-hop pick"
+            );
+        }
+    }
+
+    #[test]
+    fn entry_vectors_replay_through_the_pair_ranking() {
+        let op = op_key();
+        let fixture = exit_pick_fixture();
+        let cases = fixture["entry"].as_array().expect("entry section");
+        assert!(cases.len() >= 14, "the entry section must keep its cases");
+        for case in cases {
+            let name = case["name"].as_str().expect("case name");
+            let client_continent: Option<Continent> =
+                serde_json::from_value(case["client_continent"].clone())
+                    .expect("continent spelling");
+            let mut nodes: Vec<NodeEntry> = case["candidates"]
+                .as_array()
+                .expect("candidates")
+                .iter()
+                .enumerate()
+                .map(|(i, c)| {
+                    let tag = u8::try_from(i + 1).expect("small fixtures");
+                    let country = c["country"].as_str().expect("country");
+                    let mut n = node(&op, tag, country, 0, c["weight"].as_u64().expect("weight"));
+                    n.relay.relay_id = id16(c["node_id"].as_str().expect("id"));
+                    n
+                })
+                .collect();
+            // The exit every candidate fronts: weight 1, so the pair product
+            // the ranking scores is the entry's own weight.
+            let exit_idx = nodes.len();
+            nodes.push(node(&op, 0xF0, "zz", 0, 1));
+            let d = dir(nodes);
+            let pairs: Vec<(usize, usize)> = (0..exit_idx).map(|i| (i, exit_idx)).collect();
+            let picked =
+                pick_pair_path_aware(&d, &pairs, client_continent, None, &RttCache::new(), 0);
+            let expected = case["expected"]
+                .as_u64()
+                .map(|i| (usize::try_from(i).expect("index"), exit_idx));
+            assert_eq!(
+                picked, expected,
+                "entry vector `{name}` diverged from the daemon's pair ranking"
             );
         }
     }
