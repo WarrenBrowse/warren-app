@@ -48,8 +48,9 @@ import com.warrenbrowse.vpn.common.compose.accessibilityDataSensitive
 import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.core.animation.ENTER_TRANSITION_SLIDE_FACTOR
 import com.warrenbrowse.vpn.core.animation.TRANSITION_DEFAULT_DURATION_MS
+import com.warrenbrowse.vpn.core.animation.screenPopTransform
+import com.warrenbrowse.vpn.core.animation.screenPushTransform
 import com.warrenbrowse.vpn.core.rememberNavigationState
 import com.warrenbrowse.vpn.core.rememberResultStore
 import com.warrenbrowse.vpn.core.scene.SingleOverlaySceneStrategy
@@ -337,27 +338,16 @@ private fun AnimatedContentTransitionScope<AppGate>.appGateTransitionSpec(): Con
         )
     }
 
-// Fallback for an entry that declares no transition metadata: still directional, so a screen
-// added later reads as going deeper and coming back rather than as an undirected crossfade.
+// Fallback for an entry that declares no transition metadata: the same push as every
+// screen, so a screen added later reads as going deeper and coming back rather than as an
+// undirected crossfade.
 private fun AnimatedContentTransitionScope<Scene<NavKey2>>.forwardNavDisplayTransitionSpec():
-    ContentTransform =
-    fadeIn(tween(TRANSITION_DEFAULT_DURATION_MS)) +
-        slideIntoContainer(
-            animationSpec = tween(TRANSITION_DEFAULT_DURATION_MS),
-            towards = AnimatedContentTransitionScope.SlideDirection.Start,
-            initialOffset = { (it * ENTER_TRANSITION_SLIDE_FACTOR).toInt() },
-        ) togetherWith ExitTransition.None
+    ContentTransform = screenPushTransform()
 
 // Exact mirror of the forward spec, shared by the button and the predictive back gesture so
 // the gesture preview shows the same movement the pop will finish.
 private fun AnimatedContentTransitionScope<Scene<NavKey2>>.popNavDisplayTransitionSpec():
-    ContentTransform =
-    EnterTransition.None togetherWith
-        slideOutOfContainer(
-            animationSpec = tween(TRANSITION_DEFAULT_DURATION_MS),
-            towards = AnimatedContentTransitionScope.SlideDirection.End,
-            targetOffset = { (it * ENTER_TRANSITION_SLIDE_FACTOR).toInt() },
-        ) + fadeOut(tween(TRANSITION_DEFAULT_DURATION_MS))
+    ContentTransform = screenPopTransform()
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable

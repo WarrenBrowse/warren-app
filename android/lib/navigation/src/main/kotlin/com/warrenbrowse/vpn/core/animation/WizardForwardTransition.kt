@@ -35,7 +35,7 @@ fun wizardForwardTransition(crossfadeOnEnter: () -> Boolean = { false }): Map<St
                     slideOutOfContainer(
                         animationSpec = tween(TRANSITION_DEFAULT_DURATION_MS),
                         towards = AnimatedContentTransitionScope.SlideDirection.Start,
-                        targetOffset = { (it * WIZARD_RECEDE_SLIDE_FACTOR).toInt() },
+                        targetOffset = { (it * RECEDE_SLIDE_FACTOR).toInt() },
                     ) + fadeOut(tween(TRANSITION_DEFAULT_DURATION_MS))
             }
         }
@@ -51,7 +51,7 @@ private fun AnimatedContentTransitionScope<*>.wizardBackTransform() =
         slideIntoContainer(
             animationSpec = tween(TRANSITION_DEFAULT_DURATION_MS),
             towards = AnimatedContentTransitionScope.SlideDirection.End,
-            initialOffset = { (it * WIZARD_RECEDE_SLIDE_FACTOR).toInt() },
+            initialOffset = { (it * RECEDE_SLIDE_FACTOR).toInt() },
         ) togetherWith
         slideOutOfContainer(
             animationSpec = tween(TRANSITION_DEFAULT_DURATION_MS),
