@@ -6778,6 +6778,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "warren-identity",
+ "warren-product-env",
 ]
 
 [[package]]
@@ -6910,6 +6911,7 @@ dependencies = [
 name = "warren-product-env"
 version = "0.0.0"
 dependencies = [
+ "regex",
  "serde_json",
 ]
 

@@ -51,6 +51,11 @@ on:
       - "fixtures/client-rules/**"
       - "vectors"
       - ".gitmodules"
+      # The warren-product-env lockstep test reads the Android flavor table
+      # (the scheme, the application id, the API host per flavor), so an edit
+      # to it must run the Warren test scope; the desktop copies it reads are
+      # under desktop/** already.
+      - "android/app/build.gradle.kts"
       # The iOS endpoint xcconfig is drift-gated against the product anchors by
       # a mullvad-daemon test, so an edit here must run the Warren test scope.
       - "ios/Configurations/**"

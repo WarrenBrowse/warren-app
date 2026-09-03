@@ -3,10 +3,17 @@
 //! One binary is compiled for exactly one environment, selected with the
 //! `WARREN_PRODUCT_ENV` env var at BUILD time (unset means prod). Every
 //! product anchor that differs between environments (API URL, update
-//! channel, on-disk product names) resolves through [`CURRENT`], so a beta
-//! build is a fully separate product that coexists with a prod install:
-//! distinct API host, distinct update channel, distinct settings/cache/RPC
-//! paths.
+//! channel, on-disk product names, deep-link scheme, application id)
+//! resolves through [`CURRENT`], so a beta build is a fully separate product
+//! that coexists with a prod install: distinct API host, distinct update
+//! channel, distinct settings/cache/RPC paths, its own URL scheme. The two
+//! anchors one broker and one forum serve for every stack (the connect host,
+//! the forum origin) are rows of the same table, so a split is one edit here.
+//!
+//! This crate is the reference; the copies a build tool needs before any
+//! Rust runs (the desktop TypeScript table, the Electron packaging config,
+//! the Android flavors) are held to it by `tests/platform_lockstep.rs`, and
+//! the whole table crosses the mobile FFI as [`ProductEnv::anchors_json`].
 //!
 //! The server signing pubkey is intentionally NOT here: all environments
 //! are signed by the same key, and its canonical anchor stays
@@ -144,6 +151,84 @@ impl ProductEnv {
             ProductEnv::Beta => "WarrenVPNBeta",
         }
     }
+
+    /// URL scheme this environment registers with the OS for its deep links
+    /// (`<scheme>://forum-login?...`). Per environment, so a beta and a prod
+    /// install on one device never fight over the registration, and a link
+    /// the beta broker mints cannot land in the prod app.
+    ///
+    /// The desktop TypeScript table, the Electron packaging config and the
+    /// Android flavors spell this value again because their build tools
+    /// cannot read this crate; `tests/platform_lockstep.rs` reads those files
+    /// and fails on drift.
+    #[must_use]
+    pub const fn deep_link_scheme(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "warren",
+            ProductEnv::Staging => "warren-staging",
+            ProductEnv::Beta => "warren-beta",
+        }
+    }
+
+    /// Application identifier of this environment: the Electron `appId`
+    /// (macOS bundle id, Windows AppUserModelID) and the Android
+    /// `applicationId`, which is what makes each environment a separately
+    /// installable app.
+    #[must_use]
+    pub const fn application_id(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "com.warrenbrowse.vpn",
+            ProductEnv::Staging => "com.warrenbrowse.vpn.staging",
+            ProductEnv::Beta => "com.warrenbrowse.vpn.beta",
+        }
+    }
+
+    /// Host of the wallet-to-forum identity broker (warren-connect): the only
+    /// host a forum deep link may name, and where the in-app report and the
+    /// typed sign-in code go. One broker serves every stack today, so the
+    /// value is the same in every row; it is a row so a split is one edit.
+    #[must_use]
+    pub const fn connect_host(self) -> &'static str {
+        match self {
+            ProductEnv::Prod | ProductEnv::Staging | ProductEnv::Beta => "connect.warrenbrowse.com",
+        }
+    }
+
+    /// Public origin of the community forum, the one origin a topic link the
+    /// app vouches for may point at. A bare https origin (no path, no port):
+    /// the forum crate takes its host out of it. One forum serves every
+    /// stack today.
+    #[must_use]
+    pub const fn forum_public_url(self) -> &'static str {
+        match self {
+            ProductEnv::Prod | ProductEnv::Staging | ProductEnv::Beta => {
+                "https://forum.warrenbrowse.com"
+            }
+        }
+    }
+
+    /// Every anchor of this environment as one JSON object: the table the
+    /// mobile FFI hands Kotlin (`WarrenJni.productAnchorsJson`) and Swift
+    /// (`warren_product_anchors`). Its keys are the columns of
+    /// `fixtures/client-rules/product_env.json`, and the fixture replay pins
+    /// the rendering to the row, so every decoder reads the shape the
+    /// fixture documents.
+    #[must_use]
+    pub fn anchors_json(self) -> String {
+        serde_json::json!({
+            "name": self.name(),
+            "api_url": self.api_url(),
+            "api_host": self.api_host(),
+            "desktop_update_url": self.desktop_update_url(),
+            "display_name": self.display_name(),
+            "unix_product_dir": self.unix_product_dir(),
+            "application_id": self.application_id(),
+            "deep_link_scheme": self.deep_link_scheme(),
+            "connect_host": self.connect_host(),
+            "forum_public_url": self.forum_public_url(),
+        })
+        .to_string()
+    }
 }
 
 /// WFP GUID salts of every environment other than `current` whose product is
@@ -237,6 +322,18 @@ pub const NM_VPN_SERVICE: &str = CURRENT.nm_vpn_service();
 /// User-facing product name (and Windows/macOS per-install directory name)
 /// for [`CURRENT`].
 pub const DISPLAY_NAME: &str = CURRENT.display_name();
+
+/// [`ProductEnv::deep_link_scheme`] of the compiled environment.
+pub const DEEP_LINK_SCHEME: &str = CURRENT.deep_link_scheme();
+
+/// [`ProductEnv::application_id`] of the compiled environment.
+pub const APPLICATION_ID: &str = CURRENT.application_id();
+
+/// [`ProductEnv::connect_host`] of the compiled environment.
+pub const CONNECT_HOST: &str = CURRENT.connect_host();
+
+/// [`ProductEnv::forum_public_url`] of the compiled environment.
+pub const FORUM_PUBLIC_URL: &str = CURRENT.forum_public_url();
 
 #[cfg(test)]
 mod tests {
@@ -333,42 +430,86 @@ mod tests {
     /// which environment the test binary itself was compiled for.
     #[test]
     fn per_environment_anchor_table() {
-        let cases = [
-            (
-                ProductEnv::Prod,
-                "prod",
-                "https://api.warrenbrowse.com",
-                "api.warrenbrowse.com",
-                "https://api.warrenbrowse.com/updates/desktop",
-                "warren-vpn",
-                "Warren VPN",
-            ),
-            (
-                ProductEnv::Staging,
-                "staging",
-                "https://api.staging.warrenbrowse.com",
-                "api.staging.warrenbrowse.com",
-                "https://api.staging.warrenbrowse.com/updates/desktop",
-                "warren-vpn-staging",
-                "Warren VPN Staging",
-            ),
-            (
-                ProductEnv::Beta,
-                "beta",
-                "https://api.beta.warrenbrowse.com",
-                "api.beta.warrenbrowse.com",
-                "https://api.beta.warrenbrowse.com/updates/desktop",
-                "warren-vpn-beta",
-                "Warren VPN Beta",
-            ),
+        struct Row {
+            env: ProductEnv,
+            name: &'static str,
+            api_url: &'static str,
+            api_host: &'static str,
+            update_url: &'static str,
+            unix_dir: &'static str,
+            display: &'static str,
+            scheme: &'static str,
+            app_id: &'static str,
+        }
+        let rows = [
+            Row {
+                env: ProductEnv::Prod,
+                name: "prod",
+                api_url: "https://api.warrenbrowse.com",
+                api_host: "api.warrenbrowse.com",
+                update_url: "https://api.warrenbrowse.com/updates/desktop",
+                unix_dir: "warren-vpn",
+                display: "Warren VPN",
+                scheme: "warren",
+                app_id: "com.warrenbrowse.vpn",
+            },
+            Row {
+                env: ProductEnv::Staging,
+                name: "staging",
+                api_url: "https://api.staging.warrenbrowse.com",
+                api_host: "api.staging.warrenbrowse.com",
+                update_url: "https://api.staging.warrenbrowse.com/updates/desktop",
+                unix_dir: "warren-vpn-staging",
+                display: "Warren VPN Staging",
+                scheme: "warren-staging",
+                app_id: "com.warrenbrowse.vpn.staging",
+            },
+            Row {
+                env: ProductEnv::Beta,
+                name: "beta",
+                api_url: "https://api.beta.warrenbrowse.com",
+                api_host: "api.beta.warrenbrowse.com",
+                update_url: "https://api.beta.warrenbrowse.com/updates/desktop",
+                unix_dir: "warren-vpn-beta",
+                display: "Warren VPN Beta",
+                scheme: "warren-beta",
+                app_id: "com.warrenbrowse.vpn.beta",
+            },
         ];
-        for (env, name, api_url, api_host, update_url, unix_dir, display) in cases {
-            assert_eq!(env.name(), name);
-            assert_eq!(env.api_url(), api_url);
-            assert_eq!(env.api_host(), api_host);
-            assert_eq!(env.desktop_update_url(), update_url);
-            assert_eq!(env.unix_product_dir(), unix_dir);
-            assert_eq!(env.display_name(), display);
+        for row in rows {
+            let env = row.env;
+            assert_eq!(env.name(), row.name);
+            assert_eq!(env.api_url(), row.api_url);
+            assert_eq!(env.api_host(), row.api_host);
+            assert_eq!(env.desktop_update_url(), row.update_url);
+            assert_eq!(env.unix_product_dir(), row.unix_dir);
+            assert_eq!(env.display_name(), row.display);
+            assert_eq!(env.deep_link_scheme(), row.scheme);
+            assert_eq!(env.application_id(), row.app_id);
+        }
+    }
+
+    /// One broker and one forum serve every stack today, so the two are the
+    /// same in every row; the forum origin is a bare https origin because the
+    /// forum crate derives the one host a vouched-for topic link may name from
+    /// it, and a path or a port there would leak into that comparison.
+    #[test]
+    fn the_broker_and_the_forum_are_shared_by_every_environment() {
+        for env in ALL {
+            assert_eq!(env.connect_host(), "connect.warrenbrowse.com", "{env:?}");
+            assert_eq!(
+                env.forum_public_url(),
+                "https://forum.warrenbrowse.com",
+                "{env:?}"
+            );
+            let origin_host = env
+                .forum_public_url()
+                .strip_prefix("https://")
+                .expect("the forum origin is https");
+            assert!(
+                !origin_host.is_empty() && !origin_host.contains(['/', ':', '?', '#']),
+                "the forum origin is a bare host, got {origin_host}"
+            );
         }
     }
 
@@ -405,6 +546,10 @@ mod tests {
         assert_eq!(DESKTOP_UPDATE_URL, CURRENT.desktop_update_url());
         assert_eq!(UNIX_PRODUCT_DIR, CURRENT.unix_product_dir());
         assert_eq!(DISPLAY_NAME, CURRENT.display_name());
+        assert_eq!(DEEP_LINK_SCHEME, CURRENT.deep_link_scheme());
+        assert_eq!(APPLICATION_ID, CURRENT.application_id());
+        assert_eq!(CONNECT_HOST, CURRENT.connect_host());
+        assert_eq!(FORUM_PUBLIC_URL, CURRENT.forum_public_url());
     }
 
     /// Non-prod environments must differ from prod on every axis that
@@ -421,6 +566,10 @@ mod tests {
             );
             assert_ne!(env.unix_product_dir(), ProductEnv::Prod.unix_product_dir());
             assert_ne!(env.display_name(), ProductEnv::Prod.display_name());
+            // A shared scheme would hand one install's forum links to the
+            // other; a shared application id is not two installs at all.
+            assert_ne!(env.deep_link_scheme(), ProductEnv::Prod.deep_link_scheme());
+            assert_ne!(env.application_id(), ProductEnv::Prod.application_id());
         }
         assert_ne!(
             ProductEnv::Beta.unix_product_dir(),
@@ -542,7 +691,8 @@ mod tests {
         let script = std::fs::read_to_string(SCRIPT_PATH)
             .expect("scripts/utils/product-env.sh must exist at the expected path");
 
-        let table: [(&str, fn(ProductEnv) -> &'static str); 2] = [
+        type Anchor = fn(ProductEnv) -> &'static str;
+        let table: [(&str, Anchor); 2] = [
             ("warren_env_api_host", ProductEnv::api_host),
             ("warren_env_product_dir", ProductEnv::unix_product_dir),
         ];
@@ -563,7 +713,12 @@ mod tests {
     #[test]
     fn no_environment_references_mullvad() {
         for env in [ProductEnv::Prod, ProductEnv::Staging, ProductEnv::Beta] {
-            for value in [env.api_url(), env.desktop_update_url()] {
+            for value in [
+                env.api_url(),
+                env.desktop_update_url(),
+                env.connect_host(),
+                env.forum_public_url(),
+            ] {
                 assert!(
                     !value.contains("mullvad"),
                     "{value} must not point at Mullvad infrastructure"

@@ -582,6 +582,30 @@ int warren_pin_trust(const char *pin_store_path,
 int64_t warren_pin_reset(const char *pin_store_path);
 
 /**
+ * The compiled product environment's anchor table as a heap-allocated JSON
+ * C string: one object whose keys are the columns of
+ * `fixtures/client-rules/product_env.json` (`deep_link_scheme`,
+ * `connect_host`, `forum_public_url`, `api_url`, `application_id`, ...), so
+ * Swift reads the scheme and the hosts from the Rust reference instead of
+ * spelling them again. Null only if the table could not be rendered, which
+ * the crate's own tests rule out.
+ *
+ * The returned pointer must be passed to `warren_product_anchors_free`
+ * exactly once.
+ */
+char *warren_product_anchors(void);
+
+/**
+ * Frees a string previously returned by `warren_product_anchors`. No-op on
+ * null.
+ *
+ * # Safety
+ * `ptr` must have been returned by `warren_product_anchors` and must not
+ * have been freed already.
+ */
+void warren_product_anchors_free(char *ptr);
+
+/**
  * Generates a new BIP39 mnemonic with `word_count` words (12 or 24).
  *
  * Returns a heap-allocated C string. Caller MUST free via

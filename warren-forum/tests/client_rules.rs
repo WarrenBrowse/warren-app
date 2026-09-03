@@ -156,7 +156,8 @@ fn the_connect_host_and_the_forum_origin_of_every_environment_are_the_crates() {
     let environments = env["environments"].as_object().expect("environments");
     assert_eq!(environments.len(), 3);
     for (name, row) in environments {
-        // The crate is environment-blind: one broker serves every stack.
+        // The crate reads the compiled environment's row, and every row names
+        // the same broker today.
         assert_eq!(str_of(row, "connect_host"), connect_host(), "{name}");
         // A topic URL under the forum origin keeps its link, which is the
         // crate's whole knowledge of the forum host.

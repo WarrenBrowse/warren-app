@@ -18,6 +18,15 @@ object WarrenJni {
      */
     external fun initLogger(filesDirectory: String)
 
+    /**
+     * The per-environment product anchors compiled into the native library (the Rust
+     * `warren-product-env` crate) as one JSON object, decoded by
+     * [com.warrenbrowse.vpn.app.product.ProductAnchors]: the scheme, the application id, the API
+     * host, the connect host and the forum origin of the environment `libwarren_jni.so` was built
+     * for. Pure: needs neither [initLogger] nor the runtime.
+     */
+    external fun productAnchorsJson(): String
+
     // -- BIP39 mnemonic + Ed25519 wallet -----------------------------------
     //
     // Backed by warren-identity (`warren-jni/src/wallet.rs`). The three

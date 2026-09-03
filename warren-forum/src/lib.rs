@@ -17,22 +17,20 @@
 use warren_identity::ed25519_dalek::SigningKey;
 use warren_identity::signing::sign_request;
 
-/// The single connect host accepted from a forum-login deep link. A hard
-/// allowlist: a hostile link must not be able to point the wallet-signed request
-/// at an attacker-controlled server (mirrors the desktop `ALLOWED_CONNECT_HOSTS`).
-const ALLOWED_CONNECT_HOST: &str = "connect.warrenbrowse.com";
-
-/// True iff `host` is the allowlisted connect host.
+/// True iff `host` is the allowlisted connect host: the one the product table
+/// names for the compiled environment. A hard allowlist: a hostile link must
+/// not be able to point the wallet-signed request at an attacker-controlled
+/// server (mirrors the desktop `ALLOWED_CONNECT_HOSTS`).
 #[must_use]
 pub fn is_allowed_connect_host(host: &str) -> bool {
-    host == ALLOWED_CONNECT_HOST
+    host == connect_host()
 }
 
 /// The allowlisted connect host, for the flows that carry no deep link (the
 /// in-app report, the sign-in code typed by hand).
 #[must_use]
 pub fn connect_host() -> &'static str {
-    ALLOWED_CONNECT_HOST
+    warren_product_env::CONNECT_HOST
 }
 
 /// True iff `sid` is exactly 32 lowercase hex chars (the forum SSO session id
@@ -236,7 +234,7 @@ pub fn build_signed_report_request_with_nonce(
         .map_err(|_| ForumRequestError::Invalid)?;
     signed_post_with_nonce(
         signing_key,
-        ALLOWED_CONNECT_HOST,
+        warren_product_env::CONNECT_HOST,
         "/v1/forum/report",
         body,
         timestamp,
@@ -490,19 +488,20 @@ pub enum ReportOutcome {
     Failed(FailReason),
 }
 
-/// The registrable domain the broker's public surfaces live under, derived
-/// from the allowlisted connect host so this crate still names no forum host
-/// of its own.
-fn trusted_domain() -> &'static str {
-    ALLOWED_CONNECT_HOST
-        .split_once('.')
-        .map_or(ALLOWED_CONNECT_HOST, |(_, rest)| rest)
+/// Host of the forum origin the product table names for the compiled
+/// environment (`warren_product_env::FORUM_PUBLIC_URL` is a bare https
+/// origin, which that crate's tests pin).
+fn forum_host() -> &'static str {
+    warren_product_env::FORUM_PUBLIC_URL
+        .strip_prefix("https://")
+        .unwrap_or(warren_product_env::FORUM_PUBLIC_URL)
 }
 
-/// True iff `url` is an https URL whose authority is a plain host under the
-/// trusted domain: no userinfo (`host@evil`), no port, no look-alike suffix.
-/// The UI opens the topic URL with one tap as a link the app vouched for, so
-/// a broker answer steered to a foreign origin must not become that link.
+/// True iff `url` is an https URL whose authority is exactly the forum host:
+/// no userinfo (`host@evil`), no port, no look-alike suffix, no sibling host
+/// under the same domain. The UI opens the topic URL with one tap as a link
+/// the app vouched for, so a broker answer steered anywhere else must not
+/// become that link.
 fn is_trusted_topic_url(url: &str) -> bool {
     let Some(rest) = url.strip_prefix("https://") else {
         return false;
@@ -511,12 +510,7 @@ fn is_trusted_topic_url(url: &str) -> bool {
     if authority.is_empty() || authority.contains('@') || authority.contains(':') {
         return false;
     }
-    let host = authority.to_ascii_lowercase();
-    let domain = trusted_domain();
-    host == domain
-        || host
-            .strip_suffix(domain)
-            .is_some_and(|prefix| prefix.ends_with('.') && prefix.len() > 1)
+    authority.eq_ignore_ascii_case(forum_host())
 }
 
 /// Map the provider's answer to the report outcome.
@@ -633,7 +627,7 @@ pub fn build_signed_notifications_request(
 ) -> Result<SignedForumRequest, ForumRequestError> {
     signed_post(
         signing_key,
-        ALLOWED_CONNECT_HOST,
+        warren_product_env::CONNECT_HOST,
         "/v1/forum/notifications",
         NOTIFICATIONS_BODY.to_vec(),
         timestamp,
@@ -653,7 +647,7 @@ pub fn build_signed_notifications_seen_request(
 ) -> Result<SignedForumRequest, ForumRequestError> {
     signed_post(
         signing_key,
-        ALLOWED_CONNECT_HOST,
+        warren_product_env::CONNECT_HOST,
         "/v1/forum/notifications/seen",
         NOTIFICATIONS_BODY.to_vec(),
         timestamp,
@@ -1433,6 +1427,11 @@ mod tests {
             "https://forum.warrenbrowse.com:8443/t/1",
             "https:///t/1",
             "http://forum.warrenbrowse.com/t/1",
+            // The product table names one forum origin; a sibling host under
+            // the same domain (the API, the broker, the bare domain) is not it.
+            "https://api.warrenbrowse.com/t/1",
+            "https://connect.warrenbrowse.com/t/1",
+            "https://warrenbrowse.com/t/1",
         ] {
             assert_eq!(link_of(created(foreign)), None, "{foreign}");
         }

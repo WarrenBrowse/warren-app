@@ -163,7 +163,10 @@ android {
             buildConfigField("String", "API_ENDPOINT", "\"\"")
             buildConfigField("String", "API_IP", "\"\"")
             // Per-flavor deep-link scheme so the beta and prod apps never
-            // fight over the same URL registration on one device.
+            // fight over the same URL registration on one device. The scheme,
+            // the id suffix and the endpoint of every flavor are copies of the
+            // Rust `warren-product-env` table, whose `platform_lockstep` test
+            // reads this file and fails on drift.
             manifestPlaceholders["warrenDeepLinkScheme"] = "warren"
             buildConfigField("String", "DEEP_LINK_SCHEME", "\"warren\"")
         }

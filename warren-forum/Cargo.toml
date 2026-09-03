@@ -13,6 +13,9 @@ license.workspace = true
 # format + validation + outcome mapping instead of duplicating them.
 [dependencies]
 warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# The connect host every signed request goes to and the forum origin a topic
+# link may name are rows of the product table, not constants of this crate.
+warren-product-env = { path = "../warren-product-env" }
 # 16 bytes of OS entropy for the request nonce (the one call site that mints its
 # own nonce; the warren-api client nonces internally for every other call).
 getrandom = "0.2"

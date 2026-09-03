@@ -746,6 +746,21 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getNatPmpStatus(
     }
 }
 
+/// The compiled product environment's anchor table
+/// (`crate::product::product_anchors_json`), so Kotlin can hold the flavor's
+/// `BuildConfig` copies of the scheme, the application id and the hosts to
+/// the Rust reference. Pure: needs neither the logger nor the runtime.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_productAnchorsJson(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    match env.new_string(crate::product::product_anchors_json()) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// Returns 0 = disconnected, 1 = connecting, 2 = connected, 3 = reconnecting.
 /// Matches the `WarrenTunnelState` Kotlin enum. Reads `SESSION_STATUS`
 /// without taking the `ACTIVE_TUNNEL` mutex, so a read on every wake is

@@ -26,6 +26,16 @@ pub const PRODUCT_API_URL: &str = warren_product_env::API_URL;
 pub const SERVER_PUBKEY_HEX: Option<&str> =
     Some("4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e");
 
+/// The compiled environment's anchor table as the JSON `productAnchorsJson`
+/// hands Kotlin: one object whose keys are the columns of
+/// `fixtures/client-rules/product_env.json`. The Gradle flavor spells the
+/// scheme and the application id again because the manifest needs them
+/// before any native code runs; Kotlin holds those copies to this table.
+#[must_use]
+pub fn product_anchors_json() -> String {
+    warren_product_env::CURRENT.anchors_json()
+}
+
 #[cfg(test)]
 mod product_env_drift_gate {
     use warren_product_env::ProductEnv;
@@ -40,6 +50,22 @@ mod product_env_drift_gate {
                 "a prod build's API URL drifted from the canonical contract anchor"
             );
         }
+    }
+
+    /// The table Kotlin decodes is the compiled environment's row, so a
+    /// `.so` built for one environment inside an APK flavored for another is
+    /// caught by the on-device comparison against `BuildConfig`.
+    #[test]
+    fn product_anchors_json_is_the_compiled_environments_row() {
+        let table: serde_json::Value =
+            serde_json::from_str(&super::product_anchors_json()).expect("the table is JSON");
+        assert_eq!(table["name"], warren_product_env::ENV_NAME);
+        assert_eq!(table["api_url"], super::PRODUCT_API_URL);
+        assert_eq!(
+            table["deep_link_scheme"],
+            warren_product_env::DEEP_LINK_SCHEME
+        );
+        assert_eq!(table["connect_host"], warren_forum::connect_host());
     }
 
     #[test]

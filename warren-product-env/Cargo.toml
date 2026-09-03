@@ -7,10 +7,15 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+# The anchor table crosses the mobile FFI as one JSON object
+# (`ProductEnv::anchors_json`), rendered here so Kotlin and Swift decode the
+# same bytes and neither FFI crate keeps a rendering of its own.
+serde_json = { workspace = true }
 
 [lints]
 workspace = true
 
 [dev-dependencies]
-# The client-rule fixture replay reads fixtures/client-rules/product_env.json.
-serde_json = { workspace = true }
+# The platform lockstep test reads the TypeScript, packaging and Gradle copies
+# of the table as text.
+regex = "1"

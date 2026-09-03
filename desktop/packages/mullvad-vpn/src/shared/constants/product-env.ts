@@ -32,8 +32,10 @@ export const productEnvironment: ProductEnvironment = resolveProductEnvironment(
 export const isBetaBuild: boolean =
   (typeof WARREN_PRODUCT_ENV === 'string' ? WARREN_PRODUCT_ENV : 'prod') === 'beta';
 
-// Per-environment anchors, mirroring the Rust `warren-product-env` crate
-// (the daemon side of the same values); keep the two tables in lockstep.
+// Per-environment anchors, a copy of the Rust `warren-product-env` crate's
+// table (the daemon side of the same values). The crate is the reference:
+// its `tests/platform_lockstep.rs` reads this file and fails on drift, and
+// `test/unit/product-env.spec.ts` replays the shared fixture from this side.
 const productAnchorsByEnvironment = {
   prod: {
     // Trailing slash: consumers append relative paths (`${api}v1/...`).

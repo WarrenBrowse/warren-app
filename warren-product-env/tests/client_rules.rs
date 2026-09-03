@@ -1,9 +1,7 @@
 //! Replays `fixtures/client-rules/product_env.json` against the crate, which
 //! is the reference table every other copy of the product anchors (the
-//! desktop TypeScript and packaging tables, the Android flavors) is pinned
-//! to through the same file. The scheme, the application id, the connect
-//! host and the forum origin are not this crate's anchors yet; their readers
-//! are the platform tests.
+//! desktop TypeScript and packaging tables, the Android flavors, the Kotlin
+//! and Swift decoders of the FFI table) is pinned to through the same file.
 
 use warren_product_env::{ALL, ProductEnv};
 
@@ -33,25 +31,37 @@ fn every_environment_row_is_the_crates_anchor_table() {
     );
     for env in ALL {
         let row = &environments[env.name()];
-        assert_eq!(str_of(row, "name"), env.name());
-        assert_eq!(str_of(row, "api_url"), env.api_url(), "{}", env.name());
-        assert_eq!(str_of(row, "api_host"), env.api_host(), "{}", env.name());
+        let columns: [(&str, &str); 10] = [
+            ("name", env.name()),
+            ("api_url", env.api_url()),
+            ("api_host", env.api_host()),
+            ("desktop_update_url", env.desktop_update_url()),
+            ("display_name", env.display_name()),
+            ("unix_product_dir", env.unix_product_dir()),
+            ("application_id", env.application_id()),
+            ("deep_link_scheme", env.deep_link_scheme()),
+            ("connect_host", env.connect_host()),
+            ("forum_public_url", env.forum_public_url()),
+        ];
+        for (column, anchor) in columns {
+            assert_eq!(str_of(row, column), anchor, "{}: {column}", env.name());
+        }
+    }
+}
+
+/// The JSON the mobile FFI hands Kotlin and Swift is the fixture row, key for
+/// key and value for value: a column added to one side without the other is a
+/// decoder reading a field the table does not carry.
+#[test]
+fn the_anchors_json_of_every_environment_is_its_fixture_row() {
+    let fixture = fixture();
+    for env in ALL {
+        let rendered: serde_json::Value =
+            serde_json::from_str(&env.anchors_json()).expect("anchors_json is JSON");
         assert_eq!(
-            str_of(row, "desktop_update_url"),
-            env.desktop_update_url(),
-            "{}",
-            env.name()
-        );
-        assert_eq!(
-            str_of(row, "display_name"),
-            env.display_name(),
-            "{}",
-            env.name()
-        );
-        assert_eq!(
-            str_of(row, "unix_product_dir"),
-            env.unix_product_dir(),
-            "{}",
+            rendered,
+            fixture["environments"][env.name()],
+            "{}: the FFI table drifted from the fixture row",
             env.name()
         );
     }

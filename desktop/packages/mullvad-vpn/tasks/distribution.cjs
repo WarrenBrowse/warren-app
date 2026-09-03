@@ -24,8 +24,9 @@ function getOptionValue(option) {
 // separately installable app: own appId/bundle id, own product name (which
 // also namespaces the Electron userData dir), own package/executable name,
 // own artifact names and its own NSIS upgrade GUID, so it coexists with the
-// prod install. Mirrors the Rust `warren-product-env` crate and
-// src/shared/constants/product-env.ts; keep the tables in lockstep.
+// prod install. A copy of the Rust `warren-product-env` crate's table, like
+// src/shared/constants/product-env.ts; the crate's `tests/platform_lockstep.rs`
+// reads this file and fails on drift.
 const PRODUCT_ENVIRONMENTS = {
   prod: {
     appId: 'com.warrenbrowse.vpn',
