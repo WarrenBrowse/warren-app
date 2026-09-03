@@ -69,6 +69,16 @@ final class TunnelManager: @unchecked Sendable {
 
     private var observer: TunnelObserver?
 
+    /// Coexistence: the record this build stood down under, the same one the
+    /// banner and the connect screen read, so the tunnel can never hold a
+    /// state the banner denies. Left unset in tests and never written on prod,
+    /// which outranks everything and therefore never stands down.
+    var envStandDownStore: (any WarrenEnvStandDownStoring)?
+
+    var envStandDownRecord: WarrenEnvStandDownRecord {
+        envStandDownStore?.warrenEnvStandDown ?? WarrenEnvStandDownRecord()
+    }
+
     // MARK: - Initialization
 
     init(
@@ -140,6 +150,7 @@ final class TunnelManager: @unchecked Sendable {
         let operation = StartTunnelOperation(
             dispatchQueue: internalQueue,
             interactor: TunnelInteractorProxy(self),
+            standDownRecord: { [weak self] in self?.envStandDownRecord ?? WarrenEnvStandDownRecord() },
             completionHandler: { [weak self] result in
                 guard let self else { return }
                 if let error = result.error {
@@ -286,14 +297,19 @@ final class TunnelManager: @unchecked Sendable {
             addObserver(observer)
             self.observer = observer
 
+            let standDown = envStandDownRecord
             let configuration = TunnelConfiguration(
                 includeAllNetworks: settings.includeAllNetworks.includeAllNetworksIsEnabled,
-                excludeLocalNetworks: settings.includeAllNetworks.localNetworkSharingIsEnabled
+                excludeLocalNetworks: settings.includeAllNetworks.localNetworkSharingIsEnabled,
+                standDown: standDown
             )
 
             tunnel.setConfiguration(configuration)
             tunnel.saveToPreferences { _ in
-                self.stopTunnel(isOnDemandEnabled: true)
+                // A hard reconnect ends by leaving the on-demand rule armed so
+                // the system brings the tunnel straight back. While this build
+                // has stood down, that rearm is exactly what must not happen.
+                self.stopTunnel(isOnDemandEnabled: !standDown.isStandingDown)
             }
         }
     }

@@ -84,6 +84,11 @@ class ConnectionViewViewModel: ObservableObject {
     @Published private(set) var tunnelStatus: TunnelStatus
     @Published var showsActivityIndicator = false
 
+    /// Coexistence: this build has stood down for a higher-priority product
+    /// environment. Pushed in rather than read, so every change of the record
+    /// publishes and the buttons are redrawn with it.
+    @Published var isStandingDownForHigherEnvironment = false
+
     @Published var relayConstraints: RelayConstraints
     let destinationDescriber: DestinationDescribing
 
@@ -145,11 +150,17 @@ extension ConnectionViewViewModel {
     }
 
     var disableButtons: Bool {
-        if case .waitingForConnectivity(.noNetwork) = tunnelStatus.state {
-            true
-        } else {
-            false
+        // The tunnel refuses to arm while this build has stood down, and the
+        // refusal reaches no banner: the stand-down banner is the exclusive
+        // one, so it is the only thing rendered, and it is what carries the
+        // way back. A pressable Connect here would just do nothing.
+        if isStandingDownForHigherEnvironment {
+            return true
         }
+        if case .waitingForConnectivity(.noNetwork) = tunnelStatus.state {
+            return true
+        }
+        return false
     }
 
     // Status copy mirrors the desktop connection card: a bold truth statement

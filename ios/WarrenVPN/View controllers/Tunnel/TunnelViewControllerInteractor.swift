@@ -31,6 +31,12 @@ final class TunnelViewControllerInteractor: @unchecked Sendable {
         tunnelManager.settings
     }
 
+    /// Coexistence: whether this build has stood down for a higher-priority
+    /// product environment, from the same record the tunnel refuses on.
+    var isStandingDownForHigherEnvironment: Bool {
+        tunnelManager.envStandDownRecord.isStandingDown
+    }
+
     init(
         tunnelManager: TunnelManager,
         relayCacheTracker: RelayCacheTrackerProtocol

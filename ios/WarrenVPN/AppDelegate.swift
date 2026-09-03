@@ -161,6 +161,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             backgroundTaskProvider: backgroundTaskProvider,
             relaySelector: relaySelector
         )
+        // Coexistence: the tunnel refuses to arm while this build has stood
+        // down for a higher-priority environment, and it reads the very record
+        // the banner and the connect screen read, so the three cannot disagree.
+        tunnelManager.envStandDownStore = appPreferences
 
         settingsObserver = TunnelBlockObserver(didUpdateTunnelSettings: { _, settings in
             tunnelSettingsListener.onNewSettings?(settings)

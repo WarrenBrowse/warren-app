@@ -8,8 +8,11 @@
 import Foundation
 import XCTest
 
+@testable import WarrenMockData
+@testable import WarrenREST
 @testable import WarrenRustRuntime
 @testable import WarrenSettings
+@testable import WarrenTypes
 @testable import WarrenVPN
 
 private final class FakeEnvStandDownStore: WarrenEnvStandDownStoring {
@@ -228,5 +231,40 @@ final class WarrenEnvStandDownTests: XCTestCase {
         second.refresh()
 
         XCTAssertEqual(secondStore.warrenEnvStandDown.higherEnvironmentSeen, "prod")
+    }
+
+    // MARK: the connect screen
+
+    private func connectScreenModel() -> ConnectionViewViewModel {
+        ConnectionViewViewModel(
+            tunnelStatus: TunnelStatus(state: .disconnected),
+            relayConstraints: RelayConstraints(),
+            relayCache: MockRelayCache(),
+            customListRepository: CustomListRepository()
+        )
+    }
+
+    /// The tunnel refuses to arm while the record stands, so a pressable
+    /// Connect could only ever answer with a refusal the user never sees: the
+    /// stand-down banner outranks every other, and it is what carries the way
+    /// back.
+    func testTheConnectScreenTurnsItsButtonsOffWhileStandingDown() {
+        let viewModel = connectScreenModel()
+
+        viewModel.isStandingDownForHigherEnvironment = true
+
+        XCTAssertTrue(viewModel.disableButtons)
+    }
+
+    func testTheConnectScreenComesBackOnceThisBuildIsReEnabled() {
+        let viewModel = connectScreenModel()
+        viewModel.isStandingDownForHigherEnvironment = true
+
+        viewModel.isStandingDownForHigherEnvironment = false
+
+        XCTAssertFalse(viewModel.disableButtons)
+        guard case .connect = viewModel.actionButton else {
+            return XCTFail("The action button is not Connect")
+        }
     }
 }

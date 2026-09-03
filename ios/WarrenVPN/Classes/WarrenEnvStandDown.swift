@@ -17,6 +17,24 @@ protocol WarrenEnvStandDownStoring: AnyObject {
 
 extension AppPreferences: WarrenEnvStandDownStoring {}
 
+/// A connect request refused because this build has stood down for a
+/// higher-priority product environment. Typed, like the desktop daemon's
+/// refusal, so a caller cannot read it as a transport failure worth retrying:
+/// the banner's re-enable is the only way back, as `ClearEnvYield` is there.
+///
+/// Deliberately not localized. While the record stands, the stand-down banner
+/// is the exclusive one on the connect screen, so no other banner is rendered
+/// and this text reaches the log alone.
+struct WarrenEnvStandDownRefusal: LocalizedError {
+    /// The environment this build stood down for (`prod`, `staging`). An
+    /// environment name, never an account, an address or a key.
+    let environment: String
+
+    var errorDescription: String? {
+        "This build stood down for \(environment) and will not connect until it is re-enabled."
+    }
+}
+
 /// Coexistence with a higher-priority product environment: prod outranks
 /// staging, staging outranks beta, and the outranked build is the one that
 /// stands down. Nothing here ever commands the other install, and the

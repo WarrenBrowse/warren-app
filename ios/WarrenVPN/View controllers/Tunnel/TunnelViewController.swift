@@ -179,6 +179,8 @@ class TunnelViewController: UIViewController, RootContainment {
             relayCache: RelayCache(cacheDirectory: ApplicationConfiguration.containerURL),
             customListRepository: CustomListRepository()
         )
+        connectionViewViewModel.isStandingDownForHigherEnvironment =
+            interactor.isStandingDownForHigherEnvironment
         indicatorsViewViewModel = FeatureIndicatorsViewModel(
             tunnelSettings: interactor.tunnelSettings,
             tunnelStatus: interactor.tunnelStatus
@@ -216,8 +218,14 @@ class TunnelViewController: UIViewController, RootContainment {
         }
 
         interactor.didUpdateTunnelSettings = { [weak self] tunnelSettings in
-            self?.indicatorsViewViewModel.tunnelSettings = tunnelSettings
-            self?.connectionViewViewModel.relayConstraints = tunnelSettings.relayConstraints
+            guard let self else { return }
+            indicatorsViewViewModel.tunnelSettings = tunnelSettings
+            connectionViewViewModel.relayConstraints = tunnelSettings.relayConstraints
+            // Standing down and re-enabling both write the kill-switch
+            // setting, so this is the settling point where the buttons learn
+            // the record moved.
+            connectionViewViewModel.isStandingDownForHigherEnvironment =
+                interactor.isStandingDownForHigherEnvironment
         }
 
         connectionView.action = { [weak self] action in

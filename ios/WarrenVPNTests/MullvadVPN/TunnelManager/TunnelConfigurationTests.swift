@@ -9,6 +9,7 @@ import NetworkExtension
 import XCTest
 
 @testable import WarrenRustRuntime
+@testable import WarrenSettings
 @testable import WarrenVPN
 
 /// The VPN row iOS shows in Settings, General, VPN and Device Management is the
@@ -60,5 +61,43 @@ final class TunnelConfigurationTests: XCTestCase {
         XCTAssertEqual(manager.localizedDescription, configuration.localizedDescription)
         XCTAssertEqual(manager.isEnabled, configuration.isEnabled)
         XCTAssertEqual(manager.isOnDemandEnabled, configuration.isOnDemandEnabled)
+    }
+
+    /// An armed `NEOnDemandRuleConnect` brings the tunnel up with no tap at
+    /// all, so a build that has stood down for a higher-priority environment
+    /// would come straight back under its own stand-down banner.
+    func testAConfigurationWrittenWhileStandingDownArmsNoOnDemandRule() {
+        let manager = TunnelProviderManagerType()
+        let configuration = TunnelConfiguration(
+            includeAllNetworks: false,
+            excludeLocalNetworks: false,
+            standDown: WarrenEnvStandDownRecord(
+                higherEnvironmentSeen: "prod",
+                reEnabled: false,
+                restoreIncludeAllNetworks: false
+            )
+        )
+
+        configuration.apply(to: manager)
+
+        XCTAssertFalse(configuration.isOnDemandEnabled)
+        XCTAssertFalse(manager.isOnDemandEnabled)
+    }
+
+    /// The user asked for this build back, so the rule that reconnects it
+    /// without a tap comes back with it: a re-enabled record is not a
+    /// stand-down.
+    func testAReEnabledRecordArmsTheOnDemandRuleAgain() {
+        let configuration = TunnelConfiguration(
+            includeAllNetworks: false,
+            excludeLocalNetworks: false,
+            standDown: WarrenEnvStandDownRecord(
+                higherEnvironmentSeen: "prod",
+                reEnabled: true,
+                restoreIncludeAllNetworks: false
+            )
+        )
+
+        XCTAssertTrue(configuration.isOnDemandEnabled)
     }
 }

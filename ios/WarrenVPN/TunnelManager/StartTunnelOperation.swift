@@ -18,14 +18,20 @@ class StartTunnelOperation: ResultOperation<Void>, @unchecked Sendable {
     typealias EncodeErrorHandler = (Error) -> Void
 
     private let interactor: TunnelInteractor
+    private let standDownRecord: () -> WarrenEnvStandDownRecord
     private let logger = Logger(label: "StartTunnelOperation")
 
+    /// `standDownRecord` is read when the operation runs, not when it is
+    /// queued: a stand-down that lands while the operation waits its turn must
+    /// still refuse it.
     init(
         dispatchQueue: DispatchQueue,
         interactor: TunnelInteractor,
+        standDownRecord: @escaping () -> WarrenEnvStandDownRecord = { WarrenEnvStandDownRecord() },
         completionHandler: @escaping CompletionHandler
     ) {
         self.interactor = interactor
+        self.standDownRecord = standDownRecord
 
         super.init(
             dispatchQueue: dispatchQueue,
@@ -35,6 +41,24 @@ class StartTunnelOperation: ResultOperation<Void>, @unchecked Sendable {
     }
 
     override func main() {
+        // Coexistence, first of all: a build that has stood down for a
+        // higher-priority product environment must not answer a connect by
+        // quietly bringing the tunnel up. It would hold a tunnel under a
+        // banner that says it stood down, and the configuration written on the
+        // way up would re-arm the on-demand rule the stand-down cleared. The
+        // banner's re-enable is the way back, as `ClearEnvYield` is on the
+        // desktop, and it has to stay the only one: a refusal that a login or
+        // a tunnel state could step around is not a rule.
+        let standDown = standDownRecord()
+        guard !standDown.isStandingDown else {
+            finish(
+                result: .failure(
+                    WarrenEnvStandDownRefusal(environment: standDown.higherEnvironmentSeen ?? "")
+                )
+            )
+            return
+        }
+
         guard case .loggedIn = interactor.deviceState else {
             finish(result: .failure(InvalidDeviceStateError()))
             return
@@ -110,7 +134,8 @@ class StartTunnelOperation: ResultOperation<Void>, @unchecked Sendable {
         let tunnel = persistentTunnels.first ?? interactor.createNewTunnel()
         let configuration = TunnelConfiguration(
             includeAllNetworks: interactor.settings.includeAllNetworks.includeAllNetworksIsEnabled,
-            excludeLocalNetworks: interactor.settings.includeAllNetworks.localNetworkSharingIsEnabled
+            excludeLocalNetworks: interactor.settings.includeAllNetworks.localNetworkSharingIsEnabled,
+            standDown: standDownRecord()
         )
 
         tunnel.setConfiguration(configuration)
