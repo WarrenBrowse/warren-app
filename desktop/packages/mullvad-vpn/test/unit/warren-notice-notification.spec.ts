@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { WarrenNoticeNotificationProvider } from '../../src/renderer/lib/notifications';
+import {
+  noticeDismissalKey,
+  WarrenNoticeNotificationProvider,
+} from '../../src/renderer/lib/notifications/warren-notice';
 import { WarrenNotice } from '../../src/shared/daemon-rpc-types';
 
 function notice(overrides: Partial<WarrenNotice> = {}): WarrenNotice {
@@ -12,23 +15,25 @@ function notice(overrides: Partial<WarrenNotice> = {}): WarrenNotice {
   };
 }
 
+function provider(
+  notices: WarrenNotice[],
+  dismissedKeys: string[] = [],
+  dismiss: (key: string) => void = () => undefined,
+) {
+  return new WarrenNoticeNotificationProvider({ notices, dismissedKeys, dismiss });
+}
+
 describe('Warren broadcast notice banner', () => {
   it('stays hidden when the operator has published nothing', () => {
-    const provider = new WarrenNoticeNotificationProvider({ notices: [] });
-    expect(provider.mayDisplay()).to.be.false;
+    expect(provider([]).mayDisplay()).to.be.false;
   });
 
   it('shows the operator message verbatim', () => {
-    const provider = new WarrenNoticeNotificationProvider({
-      notices: [notice({ message: 'Payments are down, we are on it.' })],
-    });
-    expect(provider.mayDisplay()).to.be.true;
+    const banner = provider([notice({ message: 'Payments are down, we are on it.' })]);
+    expect(banner.mayDisplay()).to.be.true;
 
-    const notification = provider.getInAppNotification();
+    const notification = banner.getInAppNotification();
     expect(notification.subtitle).to.equal('Payments are down, we are on it.');
-    // No close action: the banner clears when the daemon pushes an empty
-    // list (erased or expired), never because the user dismissed it. The one
-    // action it carries opens the full text.
     expect(notification.action?.type).to.equal('expand-text');
   });
 
@@ -37,17 +42,15 @@ describe('Warren broadcast notice banner', () => {
     // to read the rest, so the untruncated text travels with the
     // notification and the view decides whether to offer it.
     const long = 'Lorem ipsum dolor sit amet. '.repeat(20);
-    const provider = new WarrenNoticeNotificationProvider({
-      notices: [notice({ message: long, level: 'warning' })],
-    });
+    const banner = provider([notice({ message: long, level: 'warning' })]);
 
-    const action = provider.getInAppNotification().action;
+    const action = banner.getInAppNotification().action;
 
     expect(action?.type).to.equal('expand-text');
     if (action?.type === 'expand-text') {
       expect(action.expand.content).to.equal(long);
       expect(action.expand.title).to.equal(
-        provider.getInAppNotification().title,
+        banner.getInAppNotification().title,
         'the modal reuses the banner label so the two cannot drift',
       );
     }
@@ -55,9 +58,7 @@ describe('Warren broadcast notice banner', () => {
 
   it('maps the level onto the banner indicator', () => {
     const indicatorFor = (level: WarrenNotice['level']) =>
-      new WarrenNoticeNotificationProvider({
-        notices: [notice({ level })],
-      }).getInAppNotification().indicator;
+      provider([notice({ level })]).getInAppNotification().indicator;
 
     expect(indicatorFor('error')).to.equal('error');
     expect(indicatorFor('warning')).to.equal('warning');
@@ -67,9 +68,65 @@ describe('Warren broadcast notice banner', () => {
   it('shows the first notice when several are published', () => {
     // The banner area renders exactly one notification, so a second
     // notice must not silently replace the first one published.
-    const provider = new WarrenNoticeNotificationProvider({
-      notices: [notice({ message: 'first' }), notice({ id: 'b2', message: 'second' })],
-    });
-    expect(provider.getInAppNotification().subtitle).to.equal('first');
+    const banner = provider([
+      notice({ message: 'first' }),
+      notice({ id: 'b2', message: 'second' }),
+    ]);
+    expect(banner.getInAppNotification().subtitle).to.equal('first');
+  });
+
+  it('yields the slot once the reader puts an informational notice away', () => {
+    // The provider is ranked first of all, so a message the operator leaves
+    // up for a week would otherwise hide the update prompt and the expiry
+    // warning for that whole week.
+    const read = notice({ message: 'The free beta runs one more month.' });
+
+    expect(provider([read]).mayDisplay()).to.be.true;
+    expect(provider([read], [noticeDismissalKey(read)]).mayDisplay()).to.be.false;
+  });
+
+  it('reveals the next notice when the first is put away', () => {
+    const first = notice({ message: 'first' });
+    const second = notice({ id: 'b2', message: 'second' });
+
+    const banner = provider([first, second], [noticeDismissalKey(first)]);
+
+    expect(banner.getInAppNotification().subtitle).to.equal('second');
+  });
+
+  it('raises a notice the operator rewrote in place', () => {
+    const read = notice({ message: 'The free beta runs one more month.' });
+    const rewritten = notice({ message: 'The free beta runs one more week.' });
+
+    expect(provider([rewritten], [noticeDismissalKey(read)]).mayDisplay()).to.be.true;
+  });
+
+  it('keeps the slot for a warning or an error whatever the reader put away', () => {
+    // Both describe something live that the user cannot act on by hiding it.
+    for (const level of ['warning', 'error'] as const) {
+      const alarm = notice({ level });
+      const banner = provider([alarm], [noticeDismissalKey(alarm)]);
+
+      expect(banner.mayDisplay(), level).to.be.true;
+
+      const action = banner.getInAppNotification().action;
+      expect(action?.type).to.equal('expand-text');
+      if (action?.type === 'expand-text') {
+        expect(action.dismiss, level).to.be.undefined;
+      }
+    }
+  });
+
+  it('carries a dismiss the banner can render for an informational notice', () => {
+    const read = notice();
+    const dismissed: string[] = [];
+
+    const action = provider([read], [], (key) => dismissed.push(key)).getInAppNotification().action;
+
+    expect(action?.type).to.equal('expand-text');
+    if (action?.type === 'expand-text') {
+      action.dismiss?.();
+    }
+    expect(dismissed).to.deep.equal([noticeDismissalKey(read)]);
   });
 });

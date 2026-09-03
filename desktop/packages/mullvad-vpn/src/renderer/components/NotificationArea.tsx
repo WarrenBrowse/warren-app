@@ -110,9 +110,12 @@ export default function NotificationArea(props: IProps) {
   const hostOffline = useHostOffline();
   const connectingStuck = useConnectingStuck();
   const exitEgressDead = useExitEgressDead();
-  const { clearEnvYield, dismissAnnouncement, openUrl } = useAppContext();
+  const { clearEnvYield, dismissAnnouncement, dismissNotice, openUrl } = useAppContext();
   const dismissedAnnouncements = useSelector(
     (state: IReduxState) => state.settings.guiSettings.dismissedAnnouncements ?? [],
+  );
+  const dismissedNotices = useSelector(
+    (state: IReduxState) => state.settings.guiSettings.dismissedNotices ?? [],
   );
   const openAnnouncementCta = useCallback(
     (url: Url) => {
@@ -160,12 +163,12 @@ export default function NotificationArea(props: IProps) {
   const appUpgradeStep = convertEventTypeToStep(appUpgradeEventType);
 
   const notificationProviders: InAppNotificationProvider[] = [
-    // First, above the operator notice itself. A notice is not dismissible, so
-    // ranking it higher would let a long-lived operator statement bury the
-    // card for as long as it stands, and the card carries a code that stops
-    // being worth anything once the campaign closes. The card steps aside on
-    // its own the moment the user dismisses it, and the notice is then the
-    // banner that shows.
+    // First, above the operator notice itself. A warning or an error notice is
+    // not dismissible, so ranking it higher would let a long-lived operator
+    // statement bury the card for as long as it stands, and the card carries a
+    // code that stops being worth anything once the campaign closes. The card
+    // steps aside on its own the moment the user dismisses it, and the notice
+    // is then the banner that shows.
     new WarrenAnnouncementNotificationProvider({
       announcements: warrenStatus?.announcements ?? [],
       dismissedIds: dismissedAnnouncements,
@@ -176,7 +179,11 @@ export default function NotificationArea(props: IProps) {
     // user must read. The states it covers are still legible in the
     // connect view's own status, and the daemon clears the notice (empty
     // list) as soon as it is erased or lapses.
-    new WarrenNoticeNotificationProvider({ notices: warrenStatus?.notices ?? [] }),
+    new WarrenNoticeNotificationProvider({
+      notices: warrenStatus?.notices ?? [],
+      dismissedKeys: dismissedNotices,
+      dismiss: dismissNotice,
+    }),
     // Then the coexistence banners, above every connection-state one: while
     // this build has stood down for a higher-priority install, it is not
     // trying to connect at all, so "connecting", "blocked" or "no internet"
@@ -414,6 +421,13 @@ function NotificationActionWrapper({
     return Promise.resolve();
   }, [action, setIsModalOpen, openUrl]);
 
+  const dismissBanner = useCallback(() => {
+    if (action.type === 'expand-text') {
+      action.dismiss?.();
+    }
+    return Promise.resolve();
+  }, [action]);
+
   const openForum = useCallback(() => {
     closeTroubleshootModal();
     void openUrl(urls.forum);
@@ -437,9 +451,19 @@ function NotificationActionWrapper({
     }
   }
 
-  if (action.type === 'expand-text' || action.type === 'announcement-card') {
-    // The controls live inside the text or the card itself, so the action
-    // column would only add an empty box next to them.
+  if (action.type === 'expand-text') {
+    // The expand control lives under the text, so the column holds only the
+    // close, and nothing at all when the banner may not be put away.
+    return action.dismiss ? (
+      <NotificationActions>
+        <NotificationCloseAction onClick={dismissBanner} />
+      </NotificationActions>
+    ) : null;
+  }
+
+  if (action.type === 'announcement-card') {
+    // The card carries its own controls, so the action column would only add
+    // an empty box next to it.
     return null;
   }
 

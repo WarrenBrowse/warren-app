@@ -70,11 +70,18 @@ export interface IGuiSettingsState {
   // Ids of the launch announcements the user has put away. An announcement is
   // an event: once it has been read, and its code copied, it must not come
   // back on every launch, so the dismissal is keyed by the announcement id and
-  // outlives the process. Notices have no equivalent field on purpose, because
-  // a notice is a live operator statement and clears from the same signal that
-  // raised it. Optional so settings files written by older versions keep
-  // validating.
+  // outlives the process. Optional so settings files written by older versions
+  // keep validating.
   dismissedAnnouncements?: Array<string>;
+
+  // Keys of the operator notices the user has put away, one per notice. A
+  // notice still clears on its own when the operator erases it or it lapses,
+  // but the banner holds one card and ranks the notice on top, so an
+  // informational message left up for a week would otherwise hide the update
+  // prompt and the expiry warning for that whole week. The key carries the
+  // wording as well as the id (see the notice provider), so a notice rewritten
+  // in place comes back.
+  dismissedNotices?: Array<string>;
 
   // App-initiated purchases (doc 35) awaiting their webhook voucher,
   // as `${wpid}:${startedUnixMs}` entries. Persisted so a purchase

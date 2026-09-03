@@ -861,6 +861,13 @@ export default class AppRenderer {
     IpcRendererEventChannel.guiSettings.dismissAnnouncement(id);
   };
 
+  // Puts an informational operator notice away, freeing the single banner slot
+  // for the cards ranked under it. The key carries the notice's wording, so a
+  // notice the operator rewrites in place is raised again.
+  public dismissNotice = (key: string): void => {
+    IpcRendererEventChannel.guiSettings.dismissNotice(key);
+  };
+
   public setDismissedUpgrade = (): void => {
     IpcRendererEventChannel.upgradeVersion.dismissedUpgrade(
       this.reduxStore.getState().version.suggestedUpgrade?.version ?? '',

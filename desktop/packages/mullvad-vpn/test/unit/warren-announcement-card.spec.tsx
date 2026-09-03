@@ -132,6 +132,8 @@ describe('Warren launch announcement card', () => {
       const noticeTitles = (['info', 'warning', 'error'] as const).map(
         (level) =>
           new WarrenNoticeNotificationProvider({
+            dismissedKeys: [],
+            dismiss: () => undefined,
             notices: [{ id: 'n1', message: 'anything', level }],
           }).getInAppNotification().title,
       );
@@ -203,10 +205,13 @@ describe('Warren launch announcement card', () => {
       expect(dismiss).toHaveBeenCalledExactlyOnceWith('a1');
     });
 
-    it('leaves the operator notice non-dismissible', () => {
-      // A notice is a live operator statement and clears from the same signal
-      // that raised it; an announcement is an event the reader is done with.
+    it('does not render an operator notice as a card', () => {
+      // A notice is the operator's own sentence in the one-line banner shape;
+      // an announcement is an event with a headline, a code and a call to
+      // action, and only the card can hold those.
       const notice = new WarrenNoticeNotificationProvider({
+        dismissedKeys: [],
+        dismiss: () => undefined,
         notices: [{ id: 'n1', message: 'Payments are down, we are on it.', level: 'warning' }],
       }).getInAppNotification();
       expect(notice.action?.type).to.not.equal('announcement-card');
@@ -214,8 +219,9 @@ describe('Warren launch announcement card', () => {
     });
 
     it('outranks the notice and every connection-state banner', () => {
-      // A notice is not dismissible, so ranking it above the card would let a
-      // long-lived operator statement bury a card whose code expires.
+      // A warning or an error notice is not dismissible, so ranking it above
+      // the card would let a long-lived operator statement bury a card whose
+      // code expires.
       const source = fs.readFileSync(NOTIFICATION_AREA_SOURCE, 'utf8');
       const rankOf = (name: string) => {
         const rank = source.indexOf(`new ${name}(`);

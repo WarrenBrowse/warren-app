@@ -386,10 +386,12 @@ export const ipcSchema = {
     // confirmed, so a GUI restart mid-backup can re-route to the
     // backup-pending state instead of the main view.
     setBackupPending: send<boolean>(),
-    // Put a launch announcement away for good, keyed by its id. Notices have
-    // no counterpart: they are live operator statements and clear from the
-    // same signal that raised them.
+    // Put a launch announcement away for good, keyed by its id.
     dismissAnnouncement: send<string>(),
+    // Put an informational operator notice away, keyed by its id and wording.
+    // A warning or an error has no counterpart: it describes something live
+    // that the user cannot act on by hiding it.
+    dismissNotice: send<string>(),
   },
   account: {
     '': notifyRenderer<IAccountData | undefined>(),

@@ -61,6 +61,9 @@ export type InAppNotificationAction =
       // modal independent of how the subtitle happens to be rendered.
       type: 'expand-text';
       expand: { title: string; content: string };
+      // The expand control lives under the text, so the action column is free
+      // for a close when the banner may be put away.
+      dismiss?: () => void;
     }
   | {
       // A launch announcement is a card rather than a one-line banner: it

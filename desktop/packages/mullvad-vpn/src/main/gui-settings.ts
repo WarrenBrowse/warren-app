@@ -21,6 +21,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   backupPending: 'boolean',
   pendingPurchases: 'Array<string>',
   dismissedAnnouncements: 'Array<string>',
+  dismissedNotices: 'Array<string>',
 };
 
 const defaultSettings: IGuiSettingsState = {
@@ -39,6 +40,7 @@ const defaultSettings: IGuiSettingsState = {
   backupPending: false,
   pendingPurchases: [],
   dismissedAnnouncements: [],
+  dismissedNotices: [],
 };
 
 export default class GuiSettings {
@@ -204,6 +206,22 @@ export default class GuiSettings {
 
   get dismissedAnnouncements(): Array<string> {
     return this.stateValue.dismissedAnnouncements ?? [];
+  }
+
+  // Operator notices the user has put away (see gui-settings-state.ts).
+  // Append-only and de-duplicated, like the announcements above.
+  public dismissNotice(key: string) {
+    if (this.dismissedNotices.includes(key)) {
+      return;
+    }
+    this.changeStateAndNotify({
+      ...this.stateValue,
+      dismissedNotices: [...this.dismissedNotices, key],
+    });
+  }
+
+  get dismissedNotices(): Array<string> {
+    return this.stateValue.dismissedNotices ?? [];
   }
 
   public load() {

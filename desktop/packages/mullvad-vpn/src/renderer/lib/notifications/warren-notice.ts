@@ -7,6 +7,23 @@ interface WarrenNoticeNotificationContext {
   // server key, and filtered for expiry and this app's version. Already
   // display-ready: the renderer shows them verbatim.
   notices: WarrenNotice[];
+  // Keys of the notices this user has put away, from the GUI settings.
+  dismissedKeys: string[];
+  dismiss: (key: string) => void;
+}
+
+/**
+ * Key a dismissal is recorded under. The wording is part of it, not just the
+ * id: an operator who rewrites a notice in place keeps its id, and a key on
+ * the id alone would bury the new words for everyone who had put the old ones
+ * away. Any stable digest does, this one is the classic djb2.
+ */
+export function noticeDismissalKey(notice: WarrenNotice): string {
+  let hash = 5381;
+  for (let i = 0; i < notice.message.length; i++) {
+    hash = ((hash << 5) + hash + notice.message.charCodeAt(i)) | 0;
+  }
+  return `${notice.id}:${hash}`;
 }
 
 // Operator broadcast banner. Ranked FIRST among the in-app notification
@@ -15,16 +32,21 @@ interface WarrenNoticeNotificationContext {
 // thing the user must see, and the states it hides (connecting, offline,
 // error) are already visible in the connect view's own status.
 //
-// It clears from the same signal that raised it: the daemon pushes an
-// empty list when the notice is erased or lapses, so there is no dismiss
-// button and no renderer-side timer.
+// It clears from the signal that raised it: the daemon pushes an empty list
+// when the notice is erased or lapses, so there is no renderer-side timer.
+//
+// An informational notice can also be put away by the reader, and only that
+// one: ranked on top of a slot that holds one card, a message the operator
+// leaves up for a week would otherwise hide the update prompt and the expiry
+// warning for that whole week. A warning or an error keeps the slot, because
+// it describes something live that the user cannot act on by hiding it.
 export class WarrenNoticeNotificationProvider implements InAppNotificationProvider {
   public constructor(private context: WarrenNoticeNotificationContext) {}
 
-  public mayDisplay = () => this.context.notices.length > 0;
+  public mayDisplay = () => this.displayable() !== undefined;
 
   public getInAppNotification(): InAppNotification {
-    const notice = this.context.notices[0];
+    const notice = this.displayable()!;
     const title = titleFor(notice.level);
     return {
       indicator: indicatorFor(notice.level),
@@ -35,8 +57,22 @@ export class WarrenNoticeNotificationProvider implements InAppNotificationProvid
       // A notice can be as long as the publication cap allows, so the banner
       // clamps it and offers the full text in a scrollable modal. The banner
       // renders the affordance only when the text actually overflows.
-      action: { type: 'expand-text', expand: { title, content: notice.message } },
+      action: {
+        type: 'expand-text',
+        expand: { title, content: notice.message },
+        dismiss:
+          notice.level === 'info'
+            ? () => this.context.dismiss(noticeDismissalKey(notice))
+            : undefined,
+      },
     };
+  }
+
+  private displayable(): WarrenNotice | undefined {
+    return this.context.notices.find(
+      (notice) =>
+        notice.level !== 'info' || !this.context.dismissedKeys.includes(noticeDismissalKey(notice)),
+    );
   }
 }
 
