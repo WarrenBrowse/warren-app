@@ -19,16 +19,22 @@ import java.util.concurrent.CountDownLatch
  * asked for cold is decoded on the spot, so an empty cache costs exactly what
  * `painterResource` cost and never more.
  *
- * Bounded to the masters one screen can show at once (the plain, the burrow,
- * Bula, the current landscape and the one it cross-fades from): the seven
- * masters together are 55 MB of ARGB, more than a 2 GB phone should keep for
- * art it is not drawing.
+ * Bounded to the masters one screen can show at once: the [pinned] ones every
+ * frame draws (the plain, the burrow, Bula) are kept for the life of the
+ * cache, and the landscapes, which come and go with the exit, cycle through
+ * [capacity] slots (the current one and the one it cross-fades from). The
+ * seven masters together are 55 MB of ARGB, more than a 2 GB phone should
+ * keep for art it is not drawing; an LRU over all seven would instead let two
+ * exit switches evict the three always drawn while landscapes nobody draws
+ * stayed.
  */
 internal class SceneryBitmapCache(
     private val decode: (Int) -> ImageBitmap,
     private val capacity: Int = DEFAULT_CAPACITY,
+    private val pinned: Set<Int> = emptySet(),
 ) {
     private val lock = Any()
+    private val pinnedEntries = HashMap<Int, ImageBitmap>()
     private val entries =
         object : LinkedHashMap<Int, ImageBitmap>(capacity, LOAD_FACTOR, true) {
             override fun removeEldestEntry(eldest: MutableMap.MutableEntry<Int, ImageBitmap>) =
@@ -43,7 +49,7 @@ internal class SceneryBitmapCache(
         val pending: CountDownLatch?
         val own: CountDownLatch?
         synchronized(lock) {
-            entries[id]?.let {
+            cached(id)?.let {
                 return it
             }
             pending = inFlight[id]
@@ -54,16 +60,20 @@ internal class SceneryBitmapCache(
         if (own != null) return decodeAndStore(id, own)
         pending?.await()
         // The other decode failed if this is still empty; try it here.
-        synchronized(lock) { entries[id] }?.let {
+        synchronized(lock) { cached(id) }?.let {
             return it
         }
         return get(id)
     }
 
+    private fun cached(id: Int): ImageBitmap? = pinnedEntries[id] ?: entries[id]
+
     private fun decodeAndStore(id: Int, latch: CountDownLatch): ImageBitmap {
         try {
             val decoded = decode(id)
-            synchronized(lock) { entries[id] = decoded }
+            synchronized(lock) {
+                if (id in pinned) pinnedEntries[id] = decoded else entries[id] = decoded
+            }
             return decoded
         } finally {
             synchronized(lock) { inFlight.remove(id) }
@@ -76,12 +86,17 @@ internal class SceneryBitmapCache(
         get(id)
     }
 
-    fun isWarm(@DrawableRes id: Int): Boolean = synchronized(lock) { entries.containsKey(id) }
+    fun isWarm(@DrawableRes id: Int): Boolean = synchronized(lock) { cached(id) != null }
 
-    fun clear() = synchronized(lock) { entries.clear() }
+    fun clear() =
+        synchronized(lock) {
+            pinnedEntries.clear()
+            entries.clear()
+        }
 
     private companion object {
-        const val DEFAULT_CAPACITY = 5
+        /** The landscapes a cross-fade shows at once. */
+        const val DEFAULT_CAPACITY = 2
         const val LOAD_FACTOR = 0.75f
     }
 }
@@ -96,7 +111,10 @@ object SceneryBitmaps {
                 cache
                     ?: run {
                         val resources = context.applicationContext.resources
-                        SceneryBitmapCache(decode = { id -> ImageBitmap.imageResource(resources, id) })
+                        SceneryBitmapCache(
+                                decode = { id -> ImageBitmap.imageResource(resources, id) },
+                                pinned = firstFrameMasters().toSet(),
+                            )
                             .also { cache = it }
                     }
             }

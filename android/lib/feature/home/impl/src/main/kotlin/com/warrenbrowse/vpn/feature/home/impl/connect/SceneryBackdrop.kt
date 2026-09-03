@@ -42,6 +42,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
@@ -133,10 +136,20 @@ fun SceneryBackdrop(
 
     // The exit's landscape is decoded on IO as soon as the exit is known (the
     // pin names it while disconnected), so the first connecting frame finds it
-    // warm instead of decoding 7.8 MB on the main thread.
+    // warm instead of decoding 7.8 MB on the main thread; and again on every
+    // return to the foreground, the pinned exit unchanged, because a memory
+    // trim while the app was away drops every master. The always-drawn ones
+    // are re-warmed for the same reason.
     val context = LocalContext.current
-    LaunchedEffect(exitCountry) {
-        withContext(Dispatchers.IO) { SceneryBitmaps.of(context).warm(countryLandscape(exitCountry)) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(exitCountry, lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            withContext(Dispatchers.IO) {
+                val bitmaps = SceneryBitmaps.of(context)
+                firstFrameMasters().forEach(bitmaps::warm)
+                bitmaps.warm(countryLandscape(exitCountry))
+            }
+        }
     }
 
     val blurRadius by

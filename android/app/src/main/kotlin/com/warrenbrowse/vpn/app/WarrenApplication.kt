@@ -91,9 +91,12 @@ class WarrenApplication : Application() {
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         // The decoded scenery masters are the largest thing the app keeps for
-        // art it may not be drawing; the next frame that needs one decodes it
-        // again, so dropping them under pressure costs one decode, not a frame.
-        if (level >= TRIM_MEMORY_UI_HIDDEN) SceneryBitmaps.clear()
+        // art it may not be drawing; the backdrop re-warms them on the next
+        // foreground, so dropping them under pressure costs one decode off the
+        // main thread, not a frame. Under pressure only: UI_HIDDEN arrives on
+        // every trip to the background and is not a memory signal, and a user
+        // switching apps and back would otherwise pay three decodes each time.
+        if (level >= TRIM_MEMORY_BACKGROUND) SceneryBitmaps.clear()
     }
 
     private fun initFileLogger(scope: CoroutineScope) {

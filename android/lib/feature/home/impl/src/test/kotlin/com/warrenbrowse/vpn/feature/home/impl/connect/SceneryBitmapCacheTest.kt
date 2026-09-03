@@ -145,6 +145,28 @@ class SceneryBitmapCacheTest {
     }
 
     @Test
+    fun `the masters every frame draws survive the eviction`() {
+        // The burrow, Bula and the plain are drawn on every home frame; only
+        // the landscapes come and go with the exit. An LRU keyed on painter
+        // creation would evict the three after two exit switches and decode
+        // them again, 7.8 MB each on the main thread, at the next composition
+        // from scratch, while landscapes nobody draws stayed cached.
+        val cache = SceneryBitmapCache(decode = { id -> FakeBitmap(id) }, capacity = 2, pinned = setOf(1, 2))
+
+        cache.get(1)
+        cache.get(2)
+        cache.get(10)
+        cache.get(11)
+        cache.get(12)
+
+        assertTrue(cache.isWarm(1), "always drawn, never evicted")
+        assertTrue(cache.isWarm(2), "always drawn, never evicted")
+        assertFalse(cache.isWarm(10), "the landscape two switches back goes")
+        assertTrue(cache.isWarm(11), "the cross-fade source stays")
+        assertTrue(cache.isWarm(12), "the current landscape stays")
+    }
+
+    @Test
     fun `clearing drops every master`() {
         val cache = SceneryBitmapCache(decode = { id -> FakeBitmap(id) })
         cache.warm(1)
