@@ -5317,3 +5317,7 @@ msgstr "모두 읽음으로 표시"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 끄면 포럼 종 아이콘도 숨겨집니다."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "이 로그인 요청이 만료되었습니다. 브라우저 페이지에서 다시 시작하세요."

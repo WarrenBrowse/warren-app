@@ -5317,3 +5317,7 @@ msgstr "すべて既読にする"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "コミュニティフォーラムで誰かが返信したときに知らせます。オフにするとフォーラムのベルも非表示になります。"
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "このサインイン要求は期限切れです。ブラウザのページからやり直してください。"

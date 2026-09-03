@@ -5346,3 +5346,7 @@ msgstr "Alle als gelesen markieren"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Erfahre, wenn dir jemand im Community-Forum antwortet. Ausgeschaltet wird auch die Forumsglocke ausgeblendet."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Diese Anmeldeanfrage ist abgelaufen. Beginnen Sie erneut auf der Browserseite."

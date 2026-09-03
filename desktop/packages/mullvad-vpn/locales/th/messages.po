@@ -5317,3 +5317,7 @@ msgstr "ทำเครื่องหมายว่าอ่านแล้ว
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน การปิดจะซ่อนกระดิ่งฟอรัมด้วย"
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "คำขอลงชื่อเข้าใช้นี้หมดอายุแล้ว เริ่มใหม่จากหน้าเบราว์เซอร์"

@@ -5345,3 +5345,7 @@ msgstr "Merk alle som lest"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Få beskjed når noen svarer deg på fellesskapsforumet. Slår du det av, skjules også forumklokken."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Denne påloggingsforespørselen er utløpt. Start på nytt fra nettlesersiden."

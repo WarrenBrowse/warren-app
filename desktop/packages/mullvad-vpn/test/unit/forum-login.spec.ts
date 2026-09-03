@@ -12,7 +12,11 @@ import {
   resultForProviderResponse,
 } from '../../src/main/forum-login';
 import { ForumIdentity } from '../../src/shared/forum-identity';
-import { ForumLoginResult, IForumLoginRequest } from '../../src/shared/forum-login';
+import {
+  ForumLoginResult,
+  IForumLoginRequest,
+  isTerminalForumLoginResult,
+} from '../../src/shared/forum-login';
 import {
   ForumLinkFixture,
   ForumOutcomesFixture,
@@ -184,6 +188,25 @@ describe('provider response mapping', () => {
     expect(resultForProviderResponse(200, '')).toBe('approved');
     expect(resultForProviderResponse(204, '')).toBe('approved');
   });
+
+  it('maps 404 to expired, the session connect no longer knows', () => {
+    // Expired, cancelled or already consumed: a retry on the same sid can
+    // only answer 404 again, so the prompt must end rather than offer one.
+    expect(resultForProviderResponse(404, 'unknown or expired session')).toBe('expired');
+  });
+});
+
+describe('the terminal outcomes', () => {
+  it('disarm the prompt after a refusal connect closed the session on', () => {
+    expect(isTerminalForumLoginResult('subscription-required')).toBe(true);
+    expect(isTerminalForumLoginResult('clock-skew')).toBe(true);
+    expect(isTerminalForumLoginResult('expired')).toBe(true);
+  });
+
+  it('leave a transient failure and a success alone', () => {
+    expect(isTerminalForumLoginResult('error')).toBe(false);
+    expect(isTerminalForumLoginResult('approved')).toBe(false);
+  });
 });
 
 // The cross-platform fixtures: one file each, replayed here, in the Rust
@@ -282,6 +305,7 @@ describe('forum_outcomes.json, the desktop reader', () => {
       case 'approved':
       case 'subscription-required':
       case 'clock-skew':
+      case 'expired':
         return kind;
       case 'failed':
         return 'error';
@@ -312,6 +336,21 @@ describe('forum_outcomes.json, the desktop reader', () => {
           ? undefined
           : { handle: expected.handle, notifySlot: expected.notify_slot ?? null };
       expect(identity, name).toEqual(wanted);
+    }
+  });
+
+  it('leaves no desktop skip on a login case: the desktop knows every outcome kind', () => {
+    expect(outcomes.login.cases.filter(skippedOnDesktop)).toEqual([]);
+  });
+
+  it('disarms the prompt on exactly the terminal kinds', () => {
+    expect(outcomes.login.terminal_kinds.length).toBeGreaterThan(0);
+    for (const fixtureCase of outcomes.login.cases) {
+      const { name, expect: expected } = fixtureCase;
+      const result = desktopResultFor(expected.kind, name);
+      expect(isTerminalForumLoginResult(result), name).toBe(
+        outcomes.login.terminal_kinds.includes(expected.kind),
+      );
     }
   });
 });

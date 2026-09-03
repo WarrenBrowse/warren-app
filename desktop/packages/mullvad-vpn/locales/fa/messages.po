@@ -5332,3 +5332,7 @@ msgstr "علامت‌گذاری همه به عنوان خوانده‌شده"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "وقتی کسی در انجمن جامعه به شما پاسخ داد، باخبر شوید. خاموش کردن آن، زنگ انجمن را هم پنهان می‌کند."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "این درخواست ورود منقضی شده است. از صفحه مرورگر دوباره شروع کنید."

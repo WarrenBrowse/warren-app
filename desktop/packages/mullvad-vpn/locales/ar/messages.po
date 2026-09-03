@@ -5392,3 +5392,7 @@ msgstr "تعليم الكل كمقروء"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "أعلمني عندما يرد عليك أحد في منتدى المجتمع. إيقاف هذا يخفي أيضًا جرس المنتدى."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "انتهت صلاحية طلب تسجيل الدخول هذا. ابدأ من جديد من صفحة المتصفح."

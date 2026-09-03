@@ -5345,3 +5345,7 @@ msgstr "Alles als gelezen markeren"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Krijg bericht wanneer iemand je antwoordt op het communityforum. Uitschakelen verbergt ook de forumbel."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Dit aanmeldverzoek is verlopen. Begin opnieuw vanaf de browserpagina."

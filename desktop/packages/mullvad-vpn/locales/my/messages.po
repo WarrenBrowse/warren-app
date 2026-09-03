@@ -5320,3 +5320,7 @@ msgstr "အားလုံးကို ဖတ်ပြီးအဖြစ် မ�
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ ပိတ်လိုက်ပါက ဖိုရမ်ခေါင်းလောင်းကိုပါ ဖျောက်ထားမည်။"
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "ဤဝင်ရောက်မှုတောင်းဆိုချက် သက်တမ်းကုန်သွားပါပြီ။ ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။"

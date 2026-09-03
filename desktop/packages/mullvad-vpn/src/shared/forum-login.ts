@@ -23,5 +23,19 @@ export type ForumLoginResult =
   // The provider refused the signature because this machine's clock is off by
   // more than its accepted window. The one failure the user repairs themselves.
   | 'clock-skew'
+  // The provider no longer knows the session (expired, cancelled, or already
+  // consumed): a retry on the same sid can only fail the same way.
+  | 'expired'
   // Any other failure (no identity, network error, provider error).
   | 'error';
+
+/**
+ * True when the provider has closed the session behind this result, so the
+ * same sid cannot be approved any more whatever the user changes on the
+ * machine: connect cancels the session on a clock-skew or subscription
+ * refusal, and an expired one is gone by definition. The prompt disarms
+ * Approve on these; a transient `error` keeps it armed for a retry.
+ */
+export function isTerminalForumLoginResult(result: ForumLoginResult): boolean {
+  return result === 'subscription-required' || result === 'clock-skew' || result === 'expired';
+}

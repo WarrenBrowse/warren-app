@@ -27,7 +27,7 @@ everywhere is the definition of parity.
 | `forum_link.json` attach cases | none (no attach builder in the crate yet) | none (no attach-logs handler on Android) | `forum-login.spec.ts` (`parseForumAttachUrl`) | none |
 | `forum_link.json` sign-in codes | `warren-forum/tests/client_rules.rs` (`normalize_sign_in_code`) | `ForumLoginLinkTest` (`normalizeForumSignInCode`) | none (no sign-in code entry on desktop yet) | none |
 | `forum_link.json` `allowed_hosts`, `schemes`, `pending_ttl_secs` | `client_rules.rs` (hosts, schemes against `product_env.json`) | `ForumLoginLinkTest` (host, login TTL), `ProductEnvBuildConfigTest` (scheme) | `forum-login.spec.ts` (hosts, both TTLs), `product-env.spec.ts` (schemes) | none |
-| `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`) | none yet (`WarrenForumLoginOutcomeTests` pins four envelopes by hand) |
+| `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | none yet (`WarrenForumLoginOutcomeTests` pins four envelopes by hand) |
 | `forum_outcomes.json` report | `client_rules.rs` (`report_outcome_for_response`, `report_envelope`) | `ReportOutcomeTest` (decodes `envelope`) | none (no in-app report on desktop) | none |
 | `product_env.json` | `warren-product-env/tests/client_rules.rs` (every column, and `ProductEnv::anchors_json()` equals the row), `warren-product-env/tests/platform_lockstep.rs` (`product-env.ts`, `tasks/distribution.cjs` and `android/app/build.gradle.kts` read as text and held to the crate), `warren-forum` `client_rules.rs` (connect host, forum origin) | `ProductEnvBuildConfigTest` (`BuildConfig` of the running flavor against the row, and against the row decoded as the native table `WarrenJni.productAnchorsJson()` returns); `ProductAnchorsJniTest` (instrumented, the real native table against `BuildConfig`) | `product-env.spec.ts` (`product-env.ts`, `tasks/distribution.cjs`) | none yet (`warren_product_anchors()` exposes the table; no Swift reader, no product-env plumbing in the Xcode build) |
 
@@ -43,7 +43,7 @@ triggers all three.
 | `forum_link.json` | `no_data` | desktop, ios | an Android intent can carry no data; the desktop is handed argv strings and iOS a URL, so the input does not exist there |
 | `forum_link.json` | `beta_link_on_beta_build`, `prod_link_on_beta_build` | ios | iOS registers and parses the prod scheme only; a beta install cannot answer the beta broker (shared-code step 4) |
 | `forum_outcomes.json` login | `approved_with_identity`, `approved_without_slot` | ios | the iOS decoder drops the handle and the slot (shared-code step 1) |
-| `forum_outcomes.json` login | `expired` | desktop, ios | desktop and iOS collapse the 404 into the generic failure and keep the prompt armed for a doomed retry (shared-code step 1) |
+| `forum_outcomes.json` login | `expired` | ios | iOS collapses the 404 into the generic failure and keeps the prompt armed for a doomed retry (shared-code step 1) |
 
 ## Schema
 

@@ -5345,3 +5345,7 @@ msgstr "Tümünü okundu olarak işaretle"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Kapatmak forum zilini de gizler."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Bu oturum açma isteğinin süresi doldu. Tarayıcı sayfasından yeniden başlayın."

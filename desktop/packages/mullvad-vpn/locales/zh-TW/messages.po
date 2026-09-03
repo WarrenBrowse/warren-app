@@ -5317,3 +5317,7 @@ msgstr "全部標為已讀"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "有人在社群論壇回覆你時提醒你。關閉後也會隱藏論壇鈴鐺。"
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "此登入要求已過期。請從瀏覽器頁面重新開始。"

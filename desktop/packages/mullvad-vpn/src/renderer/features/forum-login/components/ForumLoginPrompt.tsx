@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
-import { IForumLoginRequest } from '../../../../shared/forum-login';
 import { messages } from '../../../../shared/gettext';
 import { ModalAlert, ModalAlertType } from '../../../components/Modal';
 import { Button } from '../../../lib/components';
 import { colors } from '../../../lib/foundations';
+import {
+  beginForumLoginAttempt,
+  bindForumLoginRequest,
+  ForumLoginPromptState,
+  initialForumLoginPromptState,
+  noticeForForumLoginResult,
+  settleForumLoginAttempt,
+} from '../prompt-state';
 
 // Readable red for the refusal/error notice: the default modal message color
 // (whiteAlpha60) is too dim to read on the dark modal background.
@@ -39,59 +46,39 @@ const StatusText = styled.div({
 // wallet key happens only after the user explicitly approves here. Declining
 // notifies the connect provider so the waiting browser page unblocks.
 export function ForumLoginPrompt() {
-  const [request, setRequest] = useState<IForumLoginRequest | undefined>(undefined);
-  const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string | undefined>(undefined);
+  const [state, setState] = useState<ForumLoginPromptState>(initialForumLoginPromptState);
+  const { request, busy, terminal } = state;
+  const notice = state.notice === undefined ? undefined : noticeForForumLoginResult(state.notice);
 
   useEffect(() => {
     const unsubscribe = window.ipc.forumLogin.listenRequest((req) => {
-      setNotice(undefined);
-      setBusy(false);
-      setRequest(req);
+      setState((current) => bindForumLoginRequest(current, req));
     });
     // A deep link that arrived before this component mounted (cold start,
     // window reopen) was buffered in the main process; a live push racing
-    // this fetch wins via the functional update.
+    // this fetch wins because binding the same sid again changes nothing.
     void window.ipc.forumLogin.getPending().then((req) => {
       if (req) {
-        setRequest((current) => current ?? req);
+        setState((current) => bindForumLoginRequest(current, req));
       }
     });
     return unsubscribe;
   }, []);
 
   const close = useCallback(() => {
-    setRequest(undefined);
-    setBusy(false);
-    setNotice(undefined);
+    setState(initialForumLoginPromptState);
   }, []);
 
   const handleApprove = useCallback(async () => {
     if (!request) {
       return;
     }
-    setBusy(true);
-    setNotice(undefined);
+    setState((current) => beginForumLoginAttempt(current));
     const result = await window.ipc.forumLogin.approve(request);
-    setBusy(false);
     if (result === 'approved') {
       close();
-    } else if (result === 'subscription-required') {
-      setNotice(
-        messages.pgettext(
-          'forum-login',
-          'Forum access requires a Warren subscription. This wallet has never subscribed.',
-        ),
-      );
-    } else if (result === 'clock-skew') {
-      setNotice(
-        messages.pgettext(
-          'forum-login',
-          "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
-        ),
-      );
     } else {
-      setNotice(messages.pgettext('forum-login', 'Sign-in failed. Please try again in a moment.'));
+      setState((current) => settleForumLoginAttempt(current, result));
     }
   }, [request, close]);
 
@@ -142,7 +129,7 @@ export function ForumLoginPrompt() {
         <Button
           key="approve"
           variant="success"
-          disabled={busy}
+          disabled={busy || terminal}
           onClick={handleApprove}
           aria-label={messages.pgettext('forum-login', 'Approve sign-in')}>
           <Button.Text>{messages.pgettext('forum-login', 'Approve sign-in')}</Button.Text>

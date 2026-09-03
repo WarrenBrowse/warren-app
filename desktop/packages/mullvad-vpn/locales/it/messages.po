@@ -5345,3 +5345,7 @@ msgstr "Segna tutto come letto"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Ricevi un avviso quando qualcuno ti risponde sul forum della comunità. Disattivandolo si nasconde anche la campanella del forum."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Questa richiesta di accesso è scaduta. Ricomincia dalla pagina del browser."

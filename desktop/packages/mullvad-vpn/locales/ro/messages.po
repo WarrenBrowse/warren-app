@@ -4494,3 +4494,7 @@ msgstr "Marchează tot ca citit"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Află când îți răspunde cineva pe forumul comunității. Dezactivarea ascunde și clopoțelul forumului."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Această cerere de autentificare a expirat. Reia de la pagina din browser."

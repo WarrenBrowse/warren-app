@@ -190,7 +190,10 @@ export class PendingForumRequest<T> {
  * Maps the provider's HTTP response to the login result. The clock_skew token
  * is a frozen wire detail (warren-connect's sso_flow test asserts the exact
  * response bytes `{"error":"clock_skew"}`) and is only honored on a 401, where
- * it is the auth verifier speaking.
+ * it is the auth verifier speaking. A 404 is the session store speaking: the
+ * sid is unknown (expired, cancelled or already consumed), which no retry on
+ * the same link can change. The table is pinned by
+ * `fixtures/client-rules/forum_outcomes.json`, shared with the Rust crate.
  */
 export function resultForProviderResponse(status: number, bodyText: string): ForumLoginResult {
   if (status >= 200 && status < 300) {
@@ -201,6 +204,9 @@ export function resultForProviderResponse(status: number, bodyText: string): For
   }
   if (status === 401 && bodyText.includes('"error":"clock_skew"')) {
     return 'clock-skew';
+  }
+  if (status === 404) {
+    return 'expired';
   }
   return 'error';
 }
@@ -256,6 +262,10 @@ export async function approveForumLogin(
     if (result === 'clock-skew') {
       // A duration-class cause, no identity material: safe to name in the log.
       log.info("Forum login: refused (this machine's clock is outside the accepted window)");
+      return { result };
+    }
+    if (result === 'expired') {
+      log.info('Forum login: the provider no longer knows this session (expired or cancelled)');
       return { result };
     }
     if (result === 'error') {

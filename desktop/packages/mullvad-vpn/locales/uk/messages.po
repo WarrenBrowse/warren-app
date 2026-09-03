@@ -5375,3 +5375,7 @@ msgstr "Позначити все як прочитане"
 msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr "Отримуйте сповіщення, коли вам відповідають на форумі спільноти. Вимкнення також ховає дзвіночок форуму."
+
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr "Цей запит на вхід прострочено. Почніть знову зі сторінки браузера."

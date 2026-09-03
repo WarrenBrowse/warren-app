@@ -1642,6 +1642,10 @@ msgctxt "forum-login"
 msgid "This request came from a QR code, so the browser being signed in is on another device, not this one. Your app will sign a one-time challenge with your wallet key to prove it is you."
 msgstr ""
 
+msgctxt "forum-login"
+msgid "This sign-in request has expired. Start again from the browser page."
+msgstr ""
+
 msgctxt "in-app-notifications"
 msgid "%(duration)s. Buy more credit."
 msgstr ""

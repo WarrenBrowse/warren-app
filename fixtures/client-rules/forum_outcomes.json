@@ -102,7 +102,7 @@
         "body": "unknown or expired session",
         "expect": { "kind": "expired" },
         "envelope": "{\"ok\":false,\"error\":\"expired\"}",
-        "skip": ["desktop", "ios"]
+        "skip": ["ios"]
       },
       {
         "name": "forum_unavailable",
