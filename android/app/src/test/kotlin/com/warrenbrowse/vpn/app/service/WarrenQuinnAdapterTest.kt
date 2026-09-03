@@ -203,6 +203,14 @@ class WarrenQuinnAdapterTest {
 
         override fun effectiveMtu(): Int = mtuVerdict
 
+        /** The exit key of every exit-down report the adapter posted, in order. */
+        val exitDownReports = mutableListOf<String>()
+
+        override fun reportExitDown(mnemonic: String, exitPubkeyHex: String): String {
+            exitDownReports += exitPubkeyHex
+            return """{"ok":true}"""
+        }
+
         override fun registerNetworkCallback(
             callback: ConnectivityManager.NetworkCallback
         ): Boolean {
@@ -701,6 +709,81 @@ class WarrenQuinnAdapterTest {
         } finally {
             unmockkStatic(SystemClock::class)
         }
+    }
+
+    /**
+     * Desktop parity (`record_failover` in the daemon's tunnel state machine):
+     * the retry that follows an unexpected drop tells the operator which exit
+     * this client could not reach, so an Android-only outage shows up in the
+     * exit-health feed instead of dying on the device. The report names the
+     * exit that dropped, never the alternative being dialled: the alternative
+     * is the one exit this client has no complaint about.
+     */
+    @Test
+    fun `ensure a drop retry reports the exit it gave up on`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val alternative =
+                config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+            val adapter =
+                adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 0L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            assertTrue(
+                platform.exitDownReports.isEmpty(),
+                "a session that came up reports nothing"
+            )
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the drop retry must report the dead exit") {
+                platform.exitDownReports.isNotEmpty()
+            }
+            assertEquals(listOf("ab".repeat(32)), platform.exitDownReports.toList())
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
+
+    /**
+     * A handover is the phone changing network, not the exit failing, and the
+     * daemon reports nothing on that edge either. Reporting here would file an
+     * incident against a healthy exit every time a user walks out of Wi-Fi
+     * range, which is exactly the noise the operator feed must not carry.
+     */
+    @Test
+    fun `ensure the handover fallback reports no exit as down`() = runTest {
+        val platform = RecordingPlatform()
+        val (adapter, callback) = connectedAdapter(platform)
+
+        callback.onAvailable(mockk<Network>())
+        // The watchdog could neither migrate nor redial, so it ended the
+        // session: the adapter runs its handover fallback.
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the escalation must trigger the handover fallback") {
+            CLOSE_ACTIVE in platform.calls.toList()
+        }
+
+        assertEquals(emptyList<String>(), platform.exitDownReports.toList())
+        adapter.disconnect()
+    }
+
+    /** A user asking for a reconnect is not an outage, so nothing is filed. */
+    @Test
+    fun `ensure a user reconnect reports no exit as down`() = runTest {
+        val platform = RecordingPlatform()
+        val (adapter, _) = connectedAdapter(platform)
+
+        adapter.reconnect()
+        awaitReal("the reconnect must dial again") { platform.configs.size == 2 }
+
+        assertEquals(emptyList<String>(), platform.exitDownReports.toList())
+        adapter.disconnect()
     }
 
     /**

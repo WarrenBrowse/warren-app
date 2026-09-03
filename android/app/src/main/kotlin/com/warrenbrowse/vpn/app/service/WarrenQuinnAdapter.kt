@@ -706,6 +706,12 @@ class WarrenQuinnAdapter(
             // and redialled when it does not (desktop
             // `assemble_failover_for_attempt`).
             val next = failoverConfig(config) ?: config
+            // The operator learns about this exit here, on the edge the daemon
+            // reports from (`record_failover`): the retry has resolved, so the
+            // exit that dropped is known and the report can name it. Fired
+            // beside the dial rather than before it, so a slow POST never
+            // delays the reconnect.
+            reportExitDown(config, mnemonic)
             lock.withLock {
                 if (userInitiatedDisconnect) return@withLock
                 statusWatchJob?.cancel()
@@ -715,6 +721,31 @@ class WarrenQuinnAdapter(
                 pendingFailover = next.exitPubkeyHex != config.exitPubkeyHex
             }
             if (!userInitiatedDisconnect) connectLocked(next, mnemonic)
+        }
+    }
+
+    /**
+     * Tell the operator this client gave up on [dead]'s exit
+     * (`POST /v1/incidents/exit-down`), so an Android-only outage reaches the
+     * exit-health feed instead of dying on the device. Best effort in every
+     * sense: it runs off the retry's own coroutine, the native side budgets it
+     * (three back to back, then one per 20 minutes) and answers a class, and
+     * nothing here can affect the reconnect. A user teardown racing the report
+     * wipes the phrase under it, which is a dropped telemetry point and not an
+     * error.
+     */
+    private fun reportExitDown(dead: WarrenTunnelConfig, mnemonic: Mnemonic) {
+        scope.launch(Dispatchers.IO) {
+            val outcome = runCatching {
+                mnemonic.useAsString { phrase ->
+                    platform.reportExitDown(phrase, dead.exitPubkeyHex)
+                }
+            }
+            // The envelope carries a class and nothing the report named, so it
+            // is safe to log whole; a failure to read the phrase is not.
+            Logger.i(
+                "WarrenQuinnAdapter: exit-down report ${outcome.getOrNull() ?: "not attempted"}"
+            )
         }
     }
 

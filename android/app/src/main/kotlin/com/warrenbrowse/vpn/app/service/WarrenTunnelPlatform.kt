@@ -70,6 +70,16 @@ interface WarrenTunnelPlatform {
     fun awaitTunnelClosed(timeoutMs: Long): Boolean
 
     /**
+     * Report the exit this client just gave up on (`POST /v1/incidents/exit-down`), so an outage
+     * only this client can see reaches the operator's exit-health feed instead of dying on the
+     * device. Fire and forget: the answer is a class the caller logs and nothing more, and the
+     * native side budgets the call so a failover loop cannot drown the feed. Blocks on a network
+     * POST, and rides the VpnService-protected socket because it fires with the kill-switch
+     * blackhole up.
+     */
+    fun reportExitDown(mnemonic: String, exitPubkeyHex: String): String
+
+    /**
      * Watch for underlying-network changes. Returns false when the platform denied the
      * registration, in which case the handover path is inert.
      */
@@ -161,6 +171,11 @@ class AndroidTunnelPlatform(
 
     override fun awaitTunnelClosed(timeoutMs: Long): Boolean =
         WarrenJni.awaitTunnelClosed(timeoutMs.toInt()) == 1
+
+    override fun reportExitDown(mnemonic: String, exitPubkeyHex: String): String {
+        WarrenNativeRuntime.awaitReadyBlocking()
+        return WarrenJni.reportExitDown(mnemonic, exitPubkeyHex)
+    }
 
     override fun registerNetworkCallback(callback: ConnectivityManager.NetworkCallback): Boolean {
         // NET_CAPABILITY_NOT_VPN keeps our own TUN out of the stream, so the
