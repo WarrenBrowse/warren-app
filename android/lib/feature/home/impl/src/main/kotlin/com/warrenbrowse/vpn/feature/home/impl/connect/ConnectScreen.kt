@@ -240,10 +240,12 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val forumUnread by forumActivity.unread.collectAsStateWithLifecycle()
     val forumHeaderButton by forumActivity.headerButton.collectAsStateWithLifecycle()
     val forumSlot =
-        when (forumHeaderButton) {
-            ForumHeaderButton.ACTIVITY -> ForumHeaderSlot.Activity(forumUnread)
-            ForumHeaderButton.COMMUNITY -> ForumHeaderSlot.Community
-            ForumHeaderButton.NONE -> null
+        remember(forumHeaderButton, forumUnread) {
+            when (forumHeaderButton) {
+                ForumHeaderButton.ACTIVITY -> ForumHeaderSlot.Activity(forumUnread)
+                ForumHeaderButton.COMMUNITY -> ForumHeaderSlot.Community
+                ForumHeaderButton.NONE -> null
+            }
         }
     val forumUrl = stringResource(R.string.community_forum_url)
 
