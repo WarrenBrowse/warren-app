@@ -1,5 +1,14 @@
 package com.warrenbrowse.vpn.app.forum
 
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.cases
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.stringOrNull
+import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -131,5 +140,47 @@ class ForumLoginOutcomeTest {
             WarrenForumLoginOutcome.Failure("unknown"),
             parseForumLoginOutcome("""{"ok":false,"error":"error"}"""),
         )
+    }
+
+    // The cross-platform fixture (fixtures/client-rules/README.md): the JNI
+    // envelope of every login outcome, decoded here exactly as the Rust crate
+    // emits it, so the two sides of the FFI cannot drift.
+    @Test
+    fun the_shared_outcome_fixture_replays_every_login_envelope() {
+        val login = ClientRulesFixtures.load("forum_outcomes.json")["login"]!!.jsonObject
+        val terminalKinds = login["terminal_kinds"]!!.jsonArray.map { it.jsonPrimitive.content }
+        val cases = login.cases("cases").filterNot(ClientRulesFixtures::skippedOnAndroid)
+        assertTrue(cases.size >= 10, "only ${cases.size} login cases reached this reader")
+        for (case in cases) {
+            val name = case.string("name")
+            val expect = case["expect"]!!.jsonObject
+            val kind = expect.string("kind")
+            val expected: WarrenForumLoginOutcome =
+                when (kind) {
+                    "approved" ->
+                        WarrenForumLoginOutcome.Approved(
+                            expect.stringOrNull("handle")?.let {
+                                ForumIdentity(it, expect["notify_slot"]?.jsonPrimitive?.intOrNull)
+                            }
+                        )
+                    "subscription-required" -> WarrenForumLoginOutcome.SubscriptionRequired
+                    "clock-skew" -> WarrenForumLoginOutcome.ClockSkew
+                    "expired" -> WarrenForumLoginOutcome.Expired
+                    "failed" -> WarrenForumLoginOutcome.Failure(expect.string("reason"))
+                    else -> error("$name: unknown login kind $kind")
+                }
+            val outcome = parseForumLoginOutcome(case.string("envelope"))
+            assertEquals(expected, outcome, name)
+            assertEquals(kind in terminalKinds, isTerminalOutcome(outcome), "$name: terminal")
+        }
+        val clientSide = login["client_side_failures"]!!.jsonObject.cases("cases")
+        assertTrue(clientSide.isNotEmpty())
+        for (case in clientSide) {
+            assertEquals(
+                WarrenForumLoginOutcome.Failure(case.string("reason")),
+                parseForumLoginOutcome(case.string("envelope")),
+                case.string("name"),
+            )
+        }
     }
 }

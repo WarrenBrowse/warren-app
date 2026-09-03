@@ -1,14 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  ALLOWED_CONNECT_HOSTS,
   findForumDeepLinkArg,
   parseForumHandle,
+  parseForumIdentityResponse,
   parseForumLoginUrl,
+  PENDING_ATTACH_MAX_AGE_MS,
   PENDING_LOGIN_MAX_AGE_MS,
   PendingForumRequest,
   resultForProviderResponse,
 } from '../../src/main/forum-login';
-import { IForumLoginRequest } from '../../src/shared/forum-login';
+import { ForumIdentity } from '../../src/shared/forum-identity';
+import { ForumLoginResult, IForumLoginRequest } from '../../src/shared/forum-login';
+import {
+  ForumLinkFixture,
+  ForumOutcomesFixture,
+  importForProductEnv,
+  LinkCase,
+  loadClientRules,
+  skippedOnDesktop,
+} from './client-rules';
 
 describe('forum-login deep link parsing', () => {
   const sid = 'a'.repeat(32);
@@ -171,5 +183,135 @@ describe('provider response mapping', () => {
     expect(resultForProviderResponse(403, '')).toBe('subscription-required');
     expect(resultForProviderResponse(200, '')).toBe('approved');
     expect(resultForProviderResponse(204, '')).toBe('approved');
+  });
+});
+
+// The cross-platform fixtures: one file each, replayed here, in the Rust
+// crates and in the Android JVM suite (fixtures/client-rules/README.md).
+describe('forum_link.json, the desktop reader', () => {
+  const link = loadClientRules<ForumLinkFixture>('forum_link.json');
+
+  it('pins the host allowlist and the two pending lifetimes', () => {
+    expect(ALLOWED_CONNECT_HOSTS).toEqual(link.allowed_hosts);
+    expect(PENDING_LOGIN_MAX_AGE_MS).toBe(link.pending_ttl_secs.login * 1000);
+    expect(PENDING_ATTACH_MAX_AGE_MS).toBe(link.pending_ttl_secs.attach * 1000);
+  });
+
+  // The parsers answer the scheme the build registers, so the cases are
+  // replayed per scheme against the modules loaded for that environment.
+  function environmentOf(scheme: string): string {
+    const entry = Object.entries(link.schemes).find(([, s]) => s === scheme);
+    if (entry === undefined) {
+      throw new Error(`no product environment registers the scheme ${scheme}`);
+    }
+    return entry[0];
+  }
+
+  function urlOf(fixtureCase: LinkCase<unknown>): string {
+    if (fixtureCase.url === null) {
+      throw new Error(`${fixtureCase.name}: a null link has no desktop input, skip it`);
+    }
+    return fixtureCase.url;
+  }
+
+  const schemes = [...new Set(link.login_cases.map((c) => c.expected_scheme))];
+
+  it.each(schemes)('classifies every login case a %s build receives', async (scheme) => {
+    const login = await importForProductEnv<typeof import('../../src/main/forum-login')>(
+      environmentOf(scheme),
+      '../../src/main/forum-login',
+    );
+    expect(login.FORUM_DEEP_LINK_SCHEME).toBe(scheme);
+    const cases = link.login_cases.filter(
+      (c) => c.expected_scheme === scheme && !skippedOnDesktop(c),
+    );
+    expect(cases.length).toBeGreaterThan(0);
+    for (const fixtureCase of cases) {
+      const parsed = login.parseForumLoginUrl(urlOf(fixtureCase));
+      const accepted = fixtureCase.expect.accepted;
+      if (accepted !== undefined) {
+        expect(parsed, fixtureCase.name).toEqual({
+          sid: accepted.sid,
+          host: accepted.host,
+          crossDevice: accepted.cross_device,
+        });
+      } else {
+        // The desktop has no rejection classes: a rejected link is undefined.
+        expect(fixtureCase.expect.rejected, fixtureCase.name).toBeDefined();
+        expect(parsed, fixtureCase.name).toBeUndefined();
+      }
+    }
+  });
+
+  const attachSchemes = [...new Set(link.attach_cases.map((c) => c.expected_scheme))];
+
+  it.each(attachSchemes)('classifies every attach case a %s build receives', async (scheme) => {
+    const attach = await importForProductEnv<typeof import('../../src/main/forum-attach')>(
+      environmentOf(scheme),
+      '../../src/main/forum-attach',
+    );
+    const cases = link.attach_cases.filter(
+      (c) => c.expected_scheme === scheme && !skippedOnDesktop(c),
+    );
+    expect(cases.length).toBeGreaterThan(0);
+    for (const fixtureCase of cases) {
+      const parsed = attach.parseForumAttachUrl(urlOf(fixtureCase));
+      const accepted = fixtureCase.expect.accepted;
+      if (accepted !== undefined) {
+        expect(parsed, fixtureCase.name).toEqual({
+          sid: accepted.sid,
+          host: accepted.host,
+          topicId: accepted.topic_id,
+        });
+      } else {
+        expect(fixtureCase.expect.rejected, fixtureCase.name).toBeDefined();
+        expect(parsed, fixtureCase.name).toBeUndefined();
+      }
+    }
+  });
+});
+
+describe('forum_outcomes.json, the desktop reader', () => {
+  const outcomes = loadClientRules<ForumOutcomesFixture>('forum_outcomes.json');
+
+  // The desktop result for a fixture kind. A kind with no desktop result yet
+  // is a divergence the fixture names in a skip list; reaching it here means
+  // the skip list and the desktop drifted apart.
+  function desktopResultFor(kind: string, name: string): ForumLoginResult {
+    switch (kind) {
+      case 'approved':
+      case 'subscription-required':
+      case 'clock-skew':
+        return kind;
+      case 'failed':
+        return 'error';
+      default:
+        throw new Error(`${name}: the desktop has no result for the ${kind} outcome`);
+    }
+  }
+
+  it('maps every login answer to the desktop result and reads the identity it carries', () => {
+    const cases = outcomes.login.cases.filter((c) => !skippedOnDesktop(c));
+    expect(cases.length).toBeGreaterThanOrEqual(10);
+    for (const fixtureCase of cases) {
+      const { name, status, body, expect: expected } = fixtureCase;
+      expect(resultForProviderResponse(status, body), name).toBe(
+        desktopResultFor(expected.kind, name),
+      );
+      if (expected.kind !== 'approved') {
+        continue;
+      }
+      let identity: ForumIdentity | undefined;
+      try {
+        identity = parseForumIdentityResponse(JSON.parse(body));
+      } catch {
+        identity = undefined;
+      }
+      const wanted =
+        expected.handle === undefined
+          ? undefined
+          : { handle: expected.handle, notifySlot: expected.notify_slot ?? null };
+      expect(identity, name).toEqual(wanted);
+    }
   });
 });

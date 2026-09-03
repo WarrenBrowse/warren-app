@@ -44,6 +44,13 @@ on:
       # so an edit touching only them must run it.
       - "warren-forum/**"
       - "warren-product-env/**"
+      # The client-rule fixtures are replayed by the warren-forum and
+      # warren-product-env suites and by the desktop unit suite, all in this
+      # scope; the golden-vector submodule pin and its declaration decide what
+      # the forum wire replay reads.
+      - "fixtures/client-rules/**"
+      - "vectors"
+      - ".gitmodules"
       # The iOS endpoint xcconfig is drift-gated against the product anchors by
       # a mullvad-daemon test, so an edit here must run the Warren test scope.
       - "ios/Configurations/**"

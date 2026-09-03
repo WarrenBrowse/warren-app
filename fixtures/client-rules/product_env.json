@@ -1,0 +1,42 @@
+{
+  "_comment": "The per-environment product anchors every client compiles in, one row per WARREN_PRODUCT_ENV value. The Rust warren-product-env crate is the reference for the API and on-disk anchors; the deep-link scheme, the application id, the connect host and the forum origin are spelled per platform today and pinned here so the copies cannot drift apart. The connect host and the forum origin are the same in every environment because one broker and one forum serve all three stacks. Real product anchors on purpose: this is app data, not a warren-vectors vector.",
+  "version": 1,
+  "environments": {
+    "prod": {
+      "name": "prod",
+      "api_url": "https://api.warrenbrowse.com",
+      "api_host": "api.warrenbrowse.com",
+      "desktop_update_url": "https://api.warrenbrowse.com/updates/desktop",
+      "display_name": "Warren VPN",
+      "unix_product_dir": "warren-vpn",
+      "application_id": "com.warrenbrowse.vpn",
+      "deep_link_scheme": "warren",
+      "connect_host": "connect.warrenbrowse.com",
+      "forum_public_url": "https://forum.warrenbrowse.com"
+    },
+    "staging": {
+      "name": "staging",
+      "api_url": "https://api.staging.warrenbrowse.com",
+      "api_host": "api.staging.warrenbrowse.com",
+      "desktop_update_url": "https://api.staging.warrenbrowse.com/updates/desktop",
+      "display_name": "Warren VPN Staging",
+      "unix_product_dir": "warren-vpn-staging",
+      "application_id": "com.warrenbrowse.vpn.staging",
+      "deep_link_scheme": "warren-staging",
+      "connect_host": "connect.warrenbrowse.com",
+      "forum_public_url": "https://forum.warrenbrowse.com"
+    },
+    "beta": {
+      "name": "beta",
+      "api_url": "https://api.beta.warrenbrowse.com",
+      "api_host": "api.beta.warrenbrowse.com",
+      "desktop_update_url": "https://api.beta.warrenbrowse.com/updates/desktop",
+      "display_name": "Warren VPN Beta",
+      "unix_product_dir": "warren-vpn-beta",
+      "application_id": "com.warrenbrowse.vpn.beta",
+      "deep_link_scheme": "warren-beta",
+      "connect_host": "connect.warrenbrowse.com",
+      "forum_public_url": "https://forum.warrenbrowse.com"
+    }
+  }
+}

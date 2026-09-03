@@ -1,0 +1,304 @@
+{
+  "_comment": "Forum deep-link semantics shared by every Warren client: the per-environment scheme, the connect host allowlist, the sid shape, the xd flag, the rejection classes, the attach-link fields and the typed sign-in code. Written against the behaviour at HEAD; the readers and the skip lists are described in README.md. Real product anchors are allowed here (this is app data, not a warren-vectors vector).",
+  "version": 1,
+  "schemes": {
+    "prod": "warren",
+    "staging": "warren-staging",
+    "beta": "warren-beta"
+  },
+  "allowed_hosts": ["connect.warrenbrowse.com"],
+  "pending_ttl_secs": {
+    "login": 300,
+    "attach": 1800
+  },
+  "login_cases": [
+    {
+      "name": "well_formed",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "cross_device": false
+        }
+      }
+    },
+    {
+      "name": "qr_cross_device",
+      "_comment": "The provider sets xd=1 on the QR link only: the browser signing in is on another device, which is also what a relayed approval looks like, so the prompt must say so.",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com&xd=1",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "cross_device": true
+        }
+      }
+    },
+    {
+      "name": "xd_zero_is_same_device",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com&xd=0",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "cross_device": false
+        }
+      }
+    },
+    {
+      "name": "xd_true_is_same_device",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com&xd=true",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "cross_device": false
+        }
+      }
+    },
+    {
+      "name": "xd_empty_is_same_device",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com&xd=",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "cross_device": false
+        }
+      }
+    },
+    {
+      "name": "beta_link_on_beta_build",
+      "url": "warren-beta://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren-beta",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "cross_device": false
+        }
+      },
+      "skip": ["ios"]
+    },
+    {
+      "name": "beta_link_on_prod_build",
+      "_comment": "A prod install must never answer the beta broker's link, nor the reverse; the received scheme is the one fact that identifies the mismatch, so the class carries it.",
+      "url": "warren-beta://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "wrong-scheme:warren-beta" }
+    },
+    {
+      "name": "prod_link_on_beta_build",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren-beta",
+      "expect": { "rejected": "wrong-scheme:warren" },
+      "skip": ["ios"]
+    },
+    {
+      "name": "https_is_not_the_scheme",
+      "url": "https://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "wrong-scheme:https" }
+    },
+    {
+      "name": "wrong_action",
+      "url": "warren://something-else?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "wrong-action" }
+    },
+    {
+      "name": "attach_link_is_not_a_login",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "wrong-action" }
+    },
+    {
+      "name": "missing_sid",
+      "url": "warren://forum-login?host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "missing-sid" }
+    },
+    {
+      "name": "missing_host",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "missing-host" }
+    },
+    {
+      "name": "uppercase_sid",
+      "url": "warren://forum-login?sid=0123456789ABCDEF0123456789ABCDEF&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-sid-shape" }
+    },
+    {
+      "name": "short_sid",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcde&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-sid-shape" }
+    },
+    {
+      "name": "non_hex_sid",
+      "url": "warren://forum-login?sid=NOTHEX&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-sid-shape" }
+    },
+    {
+      "name": "evil_host",
+      "_comment": "A hostile link must not be able to point the wallet-signed request at an attacker-controlled server.",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=evil.example.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "host-not-allowlisted" }
+    },
+    {
+      "name": "host_suffix_attack",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com.evil.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "host-not-allowlisted" }
+    },
+    {
+      "name": "api_host_is_not_the_connect_host",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&host=api.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "host-not-allowlisted" }
+    },
+    {
+      "name": "not_a_uri",
+      "url": "::not a uri::",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "not-a-uri" }
+    },
+    {
+      "name": "plain_text",
+      "url": "not a url",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "not-a-uri" }
+    },
+    {
+      "name": "no_data",
+      "_comment": "An Android intent can arrive with no data at all; the desktop is handed argv strings and iOS a URL, so neither has this input.",
+      "url": null,
+      "expected_scheme": "warren",
+      "expect": { "rejected": "no-data" },
+      "skip": ["desktop", "ios"]
+    }
+  ],
+  "attach_cases": [
+    {
+      "name": "well_formed",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=42&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "topic_id": 42
+        }
+      }
+    },
+    {
+      "name": "pre_topic_zero",
+      "_comment": "Topic 0 is the pre-topic variant: the report is still being composed and the forum binds the logs to the topic after creation.",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=0&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": {
+        "accepted": {
+          "sid": "0123456789abcdef0123456789abcdef",
+          "host": "connect.warrenbrowse.com",
+          "topic_id": 0
+        }
+      }
+    },
+    {
+      "name": "negative_topic",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=-1&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-topic" }
+    },
+    {
+      "name": "non_numeric_topic",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=abc&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-topic" }
+    },
+    {
+      "name": "topic_beyond_a_safe_integer",
+      "_comment": "The topic id crosses a JavaScript number on the desktop, so the rule caps it at 2^53 - 1 on every platform; 2^53 + 1 is the first value that does not survive.",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=9007199254740993&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-topic" }
+    },
+    {
+      "name": "missing_topic",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "missing-topic" }
+    },
+    {
+      "name": "login_link_is_not_an_attach",
+      "url": "warren://forum-login?sid=0123456789abcdef0123456789abcdef&topic=42&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "wrong-action" }
+    },
+    {
+      "name": "beta_link_on_prod_build",
+      "url": "warren-beta://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=42&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "wrong-scheme:warren-beta" }
+    },
+    {
+      "name": "bad_sid",
+      "url": "warren://attach-logs?sid=NOTHEX&topic=42&host=connect.warrenbrowse.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "bad-sid-shape" }
+    },
+    {
+      "name": "evil_host",
+      "url": "warren://attach-logs?sid=0123456789abcdef0123456789abcdef&topic=42&host=evil.example.com",
+      "expected_scheme": "warren",
+      "expect": { "rejected": "host-not-allowlisted" }
+    }
+  ],
+  "sign_in_code_cases": [
+    {
+      "name": "canonical_passes_through",
+      "typed": "0123456789abcdef0123456789abcdef",
+      "expect": "0123456789abcdef0123456789abcdef"
+    },
+    {
+      "name": "grouping_and_case_are_normalized_away",
+      "typed": " 0123 4567-89AB cdef\n0123456789abcdef ",
+      "expect": "0123456789abcdef0123456789abcdef"
+    },
+    {
+      "name": "dash_groups",
+      "typed": "0123-4567-89ab-cdef-0123-4567-89ab-cdef",
+      "expect": "0123456789abcdef0123456789abcdef"
+    },
+    {
+      "name": "too_short",
+      "typed": "0123456789abcdef",
+      "expect": null
+    },
+    {
+      "name": "too_long",
+      "typed": "0123456789abcdef0123456789abcdef0",
+      "expect": null
+    },
+    {
+      "name": "non_hex",
+      "typed": "0123456789abcdef0123456789abcdeg",
+      "expect": null
+    },
+    {
+      "name": "empty",
+      "typed": "",
+      "expect": null
+    }
+  ]
+}

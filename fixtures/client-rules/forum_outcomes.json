@@ -1,0 +1,349 @@
+{
+  "_comment": "How every client classes the connect broker's answer to a forum login and to an in-app report, and the FFI envelope the shared Rust crate hands the mobile decoders for each outcome. status and body are the broker's HTTP answer (the bodies are the ones warren-vectors/forum_login_v1.json pins, with the production forum origin where a topic URL is involved); expect is the outcome; envelope is the exact JSON the warren-forum crate emits for it, decoded by Kotlin and Swift. Written against the behaviour at HEAD; readers and skip lists in README.md.",
+  "version": 1,
+  "login": {
+    "_kinds": ["approved", "subscription-required", "clock-skew", "expired", "failed"],
+    "terminal_kinds": ["subscription-required", "clock-skew", "expired"],
+    "cases": [
+      {
+        "name": "approved_with_identity",
+        "status": 200,
+        "body": "{\"handle\":\"jugop-lobab-virar\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "jugop-lobab-virar", "notify_slot": 1 },
+        "envelope": "{\"ok\":true,\"handle\":\"jugop-lobab-virar\",\"notify_slot\":1}",
+        "skip": ["ios"]
+      },
+      {
+        "name": "approved_without_slot",
+        "_comment": "The slot is drawn server side and absent when the allocator had no room: it costs the badge and nothing else.",
+        "status": 200,
+        "body": "{\"handle\":\"jugop-lobab-virar\",\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "jugop-lobab-virar", "notify_slot": null },
+        "envelope": "{\"ok\":true,\"handle\":\"jugop-lobab-virar\"}",
+        "skip": ["ios"]
+      },
+      {
+        "name": "approved_empty_body",
+        "status": 200,
+        "body": "",
+        "expect": { "kind": "approved" },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "approved_204",
+        "status": 204,
+        "body": "",
+        "expect": { "kind": "approved" },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "approved_body_without_handle",
+        "_comment": "An older provider answers without an identity; the login is still approved and the identity simply unknown.",
+        "status": 200,
+        "body": "{\"status\":\"approved\"}",
+        "expect": { "kind": "approved" },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "approved_foreign_handle_is_dropped",
+        "_comment": "The handle is persisted and rendered, so anything but the derived three-quint proquint shape is dropped rather than displayed.",
+        "status": 200,
+        "body": "{\"handle\":\"Admin Bob\",\"notify_slot\":3,\"status\":\"approved\"}",
+        "expect": { "kind": "approved" },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "approved_slot_without_handle_is_no_identity",
+        "status": 200,
+        "body": "{\"notify_slot\":3,\"status\":\"approved\"}",
+        "expect": { "kind": "approved" },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "clock_token_on_200_is_approved",
+        "status": 200,
+        "body": "{\"error\":\"clock_skew\"}",
+        "expect": { "kind": "approved" },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "subscription_required",
+        "status": 403,
+        "body": "forum access requires a Warren subscription",
+        "expect": { "kind": "subscription-required" },
+        "envelope": "{\"ok\":false,\"error\":\"subscription-required\"}"
+      },
+      {
+        "name": "clock_skew",
+        "_comment": "The one failure the user can repair themselves: connect names it with the frozen body token, honoured on a 401 only.",
+        "status": 401,
+        "body": "{\"error\":\"clock_skew\"}",
+        "expect": { "kind": "clock-skew" },
+        "envelope": "{\"ok\":false,\"error\":\"clock-skew\"}"
+      },
+      {
+        "name": "other_401_is_generic",
+        "status": 401,
+        "body": "timestamp outside accepted window",
+        "expect": { "kind": "failed", "reason": "http-401" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-401\"}"
+      },
+      {
+        "name": "clock_token_on_500_is_not_a_skew",
+        "status": 500,
+        "body": "{\"error\":\"clock_skew\"}",
+        "expect": { "kind": "failed", "reason": "http-500" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-500\"}"
+      },
+      {
+        "name": "expired",
+        "_comment": "The session is gone (expired, cancelled or already consumed): a retry on the same sid can only fail again, so the prompt ends.",
+        "status": 404,
+        "body": "unknown or expired session",
+        "expect": { "kind": "expired" },
+        "envelope": "{\"ok\":false,\"error\":\"expired\"}",
+        "skip": ["desktop", "ios"]
+      },
+      {
+        "name": "forum_unavailable",
+        "status": 502,
+        "body": "forum backend error",
+        "expect": { "kind": "failed", "reason": "http-502" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-502\"}"
+      },
+      {
+        "name": "feature_disabled",
+        "status": 503,
+        "body": "feature disabled",
+        "expect": { "kind": "failed", "reason": "http-503" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-503\"}"
+      }
+    ],
+    "client_side_failures": {
+      "_comment": "Failures that never reach the broker, keyed by the reason class the envelope carries; no HTTP status stands behind them.",
+      "cases": [
+        {
+          "name": "transport",
+          "reason": "transport",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"transport\"}"
+        },
+        {
+          "name": "runtime",
+          "reason": "runtime",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"runtime\"}"
+        },
+        {
+          "name": "build",
+          "reason": "build",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"build\"}"
+        }
+      ]
+    }
+  },
+  "report": {
+    "_kinds": ["created", "subscription-required", "clock-skew", "rate-limited", "too-large", "invalid", "server-error", "failed"],
+    "cases": [
+      {
+        "name": "created_with_logs",
+        "status": 201,
+        "body": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"attached\",\"notify_slot\":1,\"status\":\"created\",\"topic_id\":4242,\"topic_url\":\"https://forum.warrenbrowse.com/t/4242\"}",
+        "expect": {
+          "kind": "created",
+          "topic_id": 4242,
+          "topic_url": "https://forum.warrenbrowse.com/t/4242",
+          "logs": "attached",
+          "handle": "jugop-lobab-virar",
+          "notify_slot": 1
+        },
+        "envelope": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"attached\",\"notify_slot\":1,\"ok\":true,\"topic_id\":4242,\"topic_url\":\"https://forum.warrenbrowse.com/t/4242\"}"
+      },
+      {
+        "name": "created_without_logs",
+        "status": 201,
+        "body": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"none\",\"notify_slot\":1,\"status\":\"created\",\"topic_id\":4242,\"topic_url\":\"https://forum.warrenbrowse.com/t/4242\"}",
+        "expect": {
+          "kind": "created",
+          "topic_id": 4242,
+          "topic_url": "https://forum.warrenbrowse.com/t/4242",
+          "logs": "none",
+          "handle": "jugop-lobab-virar",
+          "notify_slot": 1
+        },
+        "envelope": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"none\",\"notify_slot\":1,\"ok\":true,\"topic_id\":4242,\"topic_url\":\"https://forum.warrenbrowse.com/t/4242\"}"
+      },
+      {
+        "name": "created_logs_partial",
+        "_comment": "The topic exists but the staff delivery of the logs did not complete; the screen must say so.",
+        "status": 201,
+        "body": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"partial\",\"notify_slot\":1,\"status\":\"created\",\"topic_id\":4242,\"topic_url\":\"https://forum.warrenbrowse.com/t/4242\"}",
+        "expect": {
+          "kind": "created",
+          "topic_id": 4242,
+          "topic_url": "https://forum.warrenbrowse.com/t/4242",
+          "logs": "partial",
+          "handle": "jugop-lobab-virar",
+          "notify_slot": 1
+        },
+        "envelope": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"partial\",\"notify_slot\":1,\"ok\":true,\"topic_id\":4242,\"topic_url\":\"https://forum.warrenbrowse.com/t/4242\"}"
+      },
+      {
+        "name": "created_without_identity",
+        "status": 201,
+        "body": "{\"status\":\"created\",\"topic_id\":7,\"topic_url\":\"https://forum.warrenbrowse.com/t/7\",\"logs\":\"none\"}",
+        "expect": {
+          "kind": "created",
+          "topic_id": 7,
+          "topic_url": "https://forum.warrenbrowse.com/t/7",
+          "logs": "none"
+        },
+        "envelope": "{\"logs\":\"none\",\"ok\":true,\"topic_id\":7,\"topic_url\":\"https://forum.warrenbrowse.com/t/7\"}"
+      },
+      {
+        "name": "created_without_a_logs_field_reads_as_none",
+        "status": 201,
+        "body": "{\"status\":\"created\",\"topic_id\":7,\"topic_url\":\"https://forum.warrenbrowse.com/t/7\"}",
+        "expect": {
+          "kind": "created",
+          "topic_id": 7,
+          "topic_url": "https://forum.warrenbrowse.com/t/7",
+          "logs": "none"
+        },
+        "envelope": "{\"logs\":\"none\",\"ok\":true,\"topic_id\":7,\"topic_url\":\"https://forum.warrenbrowse.com/t/7\"}"
+      },
+      {
+        "name": "created_without_a_topic_url",
+        "_comment": "The client names no forum host of its own: a body without a link yields a topic without a link.",
+        "status": 201,
+        "body": "{\"status\":\"created\",\"topic_id\":142,\"logs\":\"none\"}",
+        "expect": { "kind": "created", "topic_id": 142, "topic_url": null, "logs": "none" },
+        "envelope": "{\"logs\":\"none\",\"ok\":true,\"topic_id\":142}"
+      },
+      {
+        "name": "created_foreign_topic_url_loses_its_link",
+        "_comment": "The screen opens the value on one tap as a link the app vouched for: a broker answer steered to a foreign origin keeps the topic and loses the link.",
+        "status": 201,
+        "body": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"attached\",\"notify_slot\":1,\"status\":\"created\",\"topic_id\":1,\"topic_url\":\"https://evil.example/t/1\"}",
+        "expect": {
+          "kind": "created",
+          "topic_id": 1,
+          "topic_url": null,
+          "logs": "attached",
+          "handle": "jugop-lobab-virar",
+          "notify_slot": 1
+        },
+        "envelope": "{\"handle\":\"jugop-lobab-virar\",\"logs\":\"attached\",\"notify_slot\":1,\"ok\":true,\"topic_id\":1}"
+      },
+      {
+        "name": "created_suffix_attack_topic_url_loses_its_link",
+        "status": 201,
+        "body": "{\"status\":\"created\",\"topic_id\":1,\"topic_url\":\"https://forum.warrenbrowse.com.evil.example/t/1\",\"logs\":\"none\"}",
+        "expect": { "kind": "created", "topic_id": 1, "topic_url": null, "logs": "none" },
+        "envelope": "{\"logs\":\"none\",\"ok\":true,\"topic_id\":1}"
+      },
+      {
+        "name": "created_userinfo_topic_url_loses_its_link",
+        "status": 201,
+        "body": "{\"status\":\"created\",\"topic_id\":1,\"topic_url\":\"https://forum.warrenbrowse.com@evil.example/t/1\",\"logs\":\"none\"}",
+        "expect": { "kind": "created", "topic_id": 1, "topic_url": null, "logs": "none" },
+        "envelope": "{\"logs\":\"none\",\"ok\":true,\"topic_id\":1}"
+      },
+      {
+        "name": "created_plain_http_topic_url_loses_its_link",
+        "status": 201,
+        "body": "{\"status\":\"created\",\"topic_id\":1,\"topic_url\":\"http://forum.warrenbrowse.com/t/1\",\"logs\":\"none\"}",
+        "expect": { "kind": "created", "topic_id": 1, "topic_url": null, "logs": "none" },
+        "envelope": "{\"logs\":\"none\",\"ok\":true,\"topic_id\":1}"
+      },
+      {
+        "name": "success_without_a_topic_id_is_not_created",
+        "status": 201,
+        "body": "{}",
+        "expect": { "kind": "failed", "reason": "http-201" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-201\"}"
+      },
+      {
+        "name": "subscription_required",
+        "status": 403,
+        "body": "forum access requires a Warren subscription",
+        "expect": { "kind": "subscription-required" },
+        "envelope": "{\"ok\":false,\"error\":\"subscription-required\"}"
+      },
+      {
+        "name": "clock_skew",
+        "status": 401,
+        "body": "{\"error\":\"clock_skew\"}",
+        "expect": { "kind": "clock-skew" },
+        "envelope": "{\"ok\":false,\"error\":\"clock-skew\"}"
+      },
+      {
+        "name": "other_401_is_generic",
+        "status": 401,
+        "body": "",
+        "expect": { "kind": "failed", "reason": "http-401" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-401\"}"
+      },
+      {
+        "name": "rate_limited",
+        "status": 429,
+        "body": "rate limited",
+        "expect": { "kind": "rate-limited" },
+        "envelope": "{\"ok\":false,\"error\":\"rate-limited\"}"
+      },
+      {
+        "name": "payload_too_large",
+        "status": 413,
+        "body": "payload too large",
+        "expect": { "kind": "too-large" },
+        "envelope": "{\"ok\":false,\"error\":\"too-large\"}"
+      },
+      {
+        "name": "invalid_report",
+        "status": 422,
+        "body": "{\"error\":\"invalid_report\"}",
+        "expect": { "kind": "invalid" },
+        "envelope": "{\"ok\":false,\"error\":\"invalid\"}"
+      },
+      {
+        "name": "forum_unavailable",
+        "status": 502,
+        "body": "forum backend error",
+        "expect": { "kind": "server-error" },
+        "envelope": "{\"ok\":false,\"error\":\"server-error\"}"
+      },
+      {
+        "name": "feature_disabled",
+        "status": 503,
+        "body": "feature disabled",
+        "expect": { "kind": "server-error" },
+        "envelope": "{\"ok\":false,\"error\":\"server-error\"}"
+      },
+      {
+        "name": "unexpected_status_keeps_its_number",
+        "status": 418,
+        "body": "",
+        "expect": { "kind": "failed", "reason": "http-418" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-418\"}"
+      }
+    ],
+    "client_side_failures": {
+      "cases": [
+        {
+          "name": "transport",
+          "reason": "transport",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"transport\"}"
+        },
+        {
+          "name": "upload_timeout",
+          "_comment": "A report carrying logs ran past its body-sized upload deadline; the client offers a resend without the logs on this token.",
+          "reason": "upload-timeout",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"upload-timeout\"}"
+        },
+        {
+          "name": "build",
+          "reason": "build",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"build\"}"
+        }
+      ]
+    }
+  }
+}

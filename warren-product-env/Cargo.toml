@@ -10,3 +10,7 @@ license.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+# The client-rule fixture replay reads fixtures/client-rules/product_env.json.
+serde_json = { workspace = true }

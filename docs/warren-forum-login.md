@@ -188,3 +188,21 @@ retry cadence.
   for the history; both are inside every in-app report.
 - Forum host: `docker logs warren-warren-connect-1 | grep -E "forum login|in-app report"`,
   and the connect edge log for a POST that never arrived.
+
+## The contract, pinned
+
+Two files keep the four implementations (Rust, Kotlin, TypeScript, Swift)
+from drifting, each replayed by every platform's own unit tests:
+
+- `vectors/forum_login_v1.json` (the warren-vectors submodule): the exact
+  signed bytes of a login and of a report, and the broker's exact answer per
+  outcome; synthetic host and key. Replayed by
+  `warren-forum/tests/forum_login_vector.rs` through the nonce-taking
+  builders (`build_signed_request_with_nonce`,
+  `build_signed_report_request_with_nonce`), and by warren-connect on the
+  other side of the wire.
+- `fixtures/client-rules/` (this repo): the deep-link classes per scheme,
+  the outcome table with the FFI envelope of every outcome, the product
+  anchors per environment. Readers, schema and the skip lists still in force
+  are in its README; the skip lists are the measure of the remaining
+  desktop and iOS divergence.

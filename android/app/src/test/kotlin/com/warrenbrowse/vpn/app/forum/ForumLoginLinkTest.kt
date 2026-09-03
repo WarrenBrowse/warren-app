@@ -1,5 +1,16 @@
 package com.warrenbrowse.vpn.app.forum
 
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.cases
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.stringOrNull
+import com.warrenbrowse.vpn.lib.model.forum.normalizeForumSignInCode
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
@@ -108,5 +119,53 @@ class ForumLoginLinkTest {
     fun a_typed_code_stands_for_the_same_device_link_on_the_allowlisted_host() {
         val sid = "0123456789abcdef0123456789abcdef"
         assertEquals(ForumLoginLink(sid, "connect.warrenbrowse.com", crossDevice = false), forumLoginLinkFromCode(sid))
+    }
+
+    // The cross-platform fixture (fixtures/client-rules/README.md), replayed
+    // here with the full rejection-class vocabulary, and by the Rust crate and
+    // the desktop suite on their side of the same file.
+    private val fixture = ClientRulesFixtures.load("forum_link.json")
+
+    @Test
+    fun the_shared_link_fixture_replays_case_for_case() {
+        val cases = fixture.cases("login_cases").filterNot(ClientRulesFixtures::skippedOnAndroid)
+        assertTrue(cases.size >= 20, "only ${cases.size} login cases reached this reader")
+        for (case in cases) {
+            val name = case.string("name")
+            val verdict =
+                classifyForumLoginLink(case.stringOrNull("url"), expectedScheme = case.string("expected_scheme"))
+            val expect = case["expect"]!!.jsonObject
+            val accepted = expect["accepted"]?.jsonObject
+            val expected =
+                if (accepted != null) {
+                    ForumLinkVerdict.Accepted(
+                        ForumLoginLink(
+                            accepted.string("sid"),
+                            accepted.string("host"),
+                            crossDevice = accepted["cross_device"]!!.jsonPrimitive.boolean,
+                        )
+                    )
+                } else {
+                    ForumLinkVerdict.Rejected(expect.string("rejected"))
+                }
+            assertEquals(expected, verdict, name)
+        }
+    }
+
+    @Test
+    fun the_allowlist_and_the_login_lifetime_are_the_fixtures() {
+        val hosts = fixture["allowed_hosts"]!!.jsonArray.map { it.jsonPrimitive.content }
+        assertEquals(listOf(forumLoginLinkFromCode(sid).host), hosts)
+        val loginTtlSecs = fixture["pending_ttl_secs"]!!.jsonObject["login"]!!.jsonPrimitive.long
+        assertEquals(loginTtlSecs * 1000, ForumLoginController.PENDING_LINK_TTL_MILLIS)
+    }
+
+    @Test
+    fun the_sign_in_code_cases_replay_through_the_normaliser() {
+        val cases = fixture.cases("sign_in_code_cases").filterNot(ClientRulesFixtures::skippedOnAndroid)
+        assertTrue(cases.isNotEmpty())
+        for (case in cases) {
+            assertEquals(case.stringOrNull("expect"), normalizeForumSignInCode(case.string("typed")), case.string("name"))
+        }
     }
 }

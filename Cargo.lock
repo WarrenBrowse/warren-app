@@ -6909,6 +6909,9 @@ dependencies = [
 [[package]]
 name = "warren-product-env"
 version = "0.0.0"
+dependencies = [
+ "serde_json",
+]
 
 [[package]]
 name = "warren-quinn"

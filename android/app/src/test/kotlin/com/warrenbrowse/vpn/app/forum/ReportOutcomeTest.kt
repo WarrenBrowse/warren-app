@@ -1,5 +1,13 @@
 package com.warrenbrowse.vpn.app.forum
 
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.cases
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.stringOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import com.warrenbrowse.vpn.lib.model.forum.ForumIdentity
 import com.warrenbrowse.vpn.lib.repository.ReportSubmitOutcome
 import java.time.Instant
@@ -77,5 +85,52 @@ class ReportOutcomeTest {
             """{"seq":3,"at":"2026-09-02T18:07:05Z","event":"login.result","class":"transport","elapsed_ms":"5012"}""",
             line,
         )
+    }
+
+    // The cross-platform fixture (fixtures/client-rules/README.md): the JNI
+    // envelope of every report outcome, decoded here exactly as the Rust crate
+    // emits it.
+    @Test
+    fun the_shared_outcome_fixture_replays_every_report_envelope() {
+        val report = ClientRulesFixtures.load("forum_outcomes.json")["report"]!!.jsonObject
+        val cases = report.cases("cases").filterNot(ClientRulesFixtures::skippedOnAndroid)
+        assertTrue(cases.size >= 15, "only ${cases.size} report cases reached this reader")
+        for (case in cases) {
+            val name = case.string("name")
+            val expect = case["expect"]!!.jsonObject
+            val kind = expect.string("kind")
+            val expected: ReportSubmitOutcome =
+                when (kind) {
+                    "created" ->
+                        ReportSubmitOutcome.Created(
+                            topicId = expect["topic_id"]!!.jsonPrimitive.long,
+                            // A dropped link is the empty string on this side.
+                            topicUrl = expect.stringOrNull("topic_url") ?: "",
+                            identity =
+                                expect.stringOrNull("handle")?.let {
+                                    ForumIdentity(it, expect["notify_slot"]?.jsonPrimitive?.intOrNull)
+                                },
+                            logs = expect.string("logs"),
+                        )
+                    "subscription-required" -> ReportSubmitOutcome.SubscriptionRequired
+                    "clock-skew" -> ReportSubmitOutcome.ClockSkew
+                    "rate-limited" -> ReportSubmitOutcome.RateLimited
+                    "too-large" -> ReportSubmitOutcome.TooLarge
+                    "invalid" -> ReportSubmitOutcome.Invalid
+                    "server-error" -> ReportSubmitOutcome.ServerError
+                    "failed" -> ReportSubmitOutcome.Failure(expect.string("reason"))
+                    else -> error("$name: unknown report kind $kind")
+                }
+            assertEquals(expected, parseReportOutcome(case.string("envelope")), name)
+        }
+        val clientSide = report["client_side_failures"]!!.jsonObject.cases("cases")
+        assertTrue(clientSide.isNotEmpty())
+        for (case in clientSide) {
+            val reason = case.string("reason")
+            val expected =
+                if (reason == "upload-timeout") ReportSubmitOutcome.UploadTimedOut
+                else ReportSubmitOutcome.Failure(reason)
+            assertEquals(expected, parseReportOutcome(case.string("envelope")), case.string("name"))
+        }
     }
 }
