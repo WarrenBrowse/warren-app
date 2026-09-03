@@ -48,6 +48,13 @@ interface WarrenTunnelPlatform {
      */
     fun notifyNetworkChanged()
 
+    /**
+     * Blocks until the native status generation differs from [lastSeen] or
+     * [timeoutMs] elapsed, and returns the generation now seen. Every fact
+     * below changes the generation, so one wait covers them all.
+     */
+    fun awaitStatusChange(lastSeen: Long, timeoutMs: Long): Long
+
     fun tunnelStatus(): Int
 
     fun natPmpStatus(): String
@@ -130,6 +137,9 @@ class AndroidTunnelPlatform(
     override fun disconnectTunnel() = WarrenJni.disconnectTunnel()
 
     override fun notifyNetworkChanged() = WarrenJni.notifyNetworkChanged()
+
+    override fun awaitStatusChange(lastSeen: Long, timeoutMs: Long): Long =
+        WarrenJni.awaitStatusChange(lastSeen, timeoutMs.toInt())
 
     override fun tunnelStatus(): Int = WarrenJni.getTunnelStatus()
 

@@ -176,7 +176,8 @@ object WarrenJni {
      *  NAT-PMP toggle, wallet pubkey).
      * @return 0 on success, negative on synchronous error (exception
      *  also thrown). Long-running connect + handshake happens
-     *  asynchronously; poll [getTunnelStatus] for transitions.
+     *  asynchronously; wait on [awaitStatusChange] and read
+     *  [getTunnelStatus] for transitions.
      */
     external fun connectTunnel(
         vpnService: VpnService,
@@ -213,6 +214,20 @@ object WarrenJni {
     external fun notifyNetworkChanged()
 
     /**
+     * Blocks until the native status generation differs from [lastSeen] (a
+     * tunnel state edge, a datapath verdict, a NAT-PMP transition or a landed
+     * redial), or [timeoutMs] elapsed, and returns the generation now seen.
+     * Passing back the value received sleeps until the next change; passing a
+     * stale one returns at once, so no change is ever missed between two
+     * reads. Read [getTunnelStatus], [getPathHealth], [getNatPmpStatus] and
+     * [getAutoRecoveryCount] on every return.
+     *
+     * Parks the calling thread on the engine runtime: call it from a thread
+     * that may block, never from the main thread.
+     */
+    external fun awaitStatusChange(lastSeen: Long, timeoutMs: Int): Long
+
+    /**
      * Returns the current tunnel state:
      * - 0: disconnected
      * - 1: connecting
@@ -227,7 +242,7 @@ object WarrenJni {
     /**
      * Returns the number of automatic in-session recoveries (a native
      * redial that landed after a session loss) since process start.
-     * Monotonic; polled alongside [getTunnelStatus] and summed with the
+     * Monotonic; read on every [awaitStatusChange] wake and summed with the
      * Kotlin-side retry-loop accounting for the "Reconnections" row.
      */
     external fun getAutoRecoveryCount(): Int
@@ -236,7 +251,7 @@ object WarrenJni {
      * Returns the engine's current datapath verdict: `0` healthy, `1` large
      * frames dying (a last-mile shrink, handled by the MSS/PMTU machinery),
      * `2` both probe sizes dying, which is a wedged datapath: the transport is
-     * up and nothing crosses it. Polled alongside [getTunnelStatus].
+     * up and nothing crosses it. Read on every [awaitStatusChange] wake.
      */
     external fun getPathHealth(): Int
 
@@ -246,7 +261,7 @@ object WarrenJni {
      *     "external_port": Int?, "lifetime_secs": Int?,
      *     "retry_after_secs": Int?, "reason": String?}`
      *
-     * Polled alongside [getTunnelStatus]. `idle` when port forwarding is
+     * Read on every [awaitStatusChange] wake. `idle` when port forwarding is
      * off or no mapping is active.
      */
     external fun getNatPmpStatus(): String

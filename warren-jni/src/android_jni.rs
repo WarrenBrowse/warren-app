@@ -36,7 +36,7 @@ use jnix::{
     jni::{
         JNIEnv,
         objects::{JClass, JObject, JString, JValue},
-        sys::{jbyteArray, jint, jstring},
+        sys::{jbyteArray, jint, jlong, jstring},
     },
 };
 use tokio::sync::oneshot;
@@ -97,23 +97,30 @@ pub(crate) fn rust_log_dir() -> Option<PathBuf> {
 /// upstream VpnService model).
 static ACTIVE_TUNNEL: Mutex<Option<TunnelHandle>> = Mutex::new(None);
 
-/// Atomic mirror of the active session status (cf.
-/// [`crate::tunnel::SessionStatus`]). Read by [`getTunnelStatus`] without
-/// taking the `ACTIVE_TUNNEL` mutex, so polling from Kotlin is cheap.
-static SESSION_STATUS: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
+/// The active session status (cf. [`crate::redial::SessionStatus`]) and the
+/// generation counter Kotlin waits on. Read by [`getTunnelStatus`] without
+/// taking the `ACTIVE_TUNNEL` mutex; every sibling fact Kotlin reads on the
+/// same wake (the datapath verdicts, the NAT-PMP mapping, the recovery
+/// counter) bumps this cell when it changes, so one `awaitStatusChange` covers
+/// them all.
+static SESSION_STATUS: crate::status_watch::StatusCell = crate::status_watch::StatusCell::new(0);
 
-/// Count of automatic in-session recoveries since process start, polled by
+/// Count of automatic in-session recoveries since process start, read by
 /// Kotlin through `getAutoRecoveryCount` and combined with the Kotlin-side
 /// accounting of its own automatic reconnects (blackhole retry loop,
 /// handover). Fed by the session supervisor's reconnect observer: one bump per
 /// redial that lands, never on the initial connect.
 static AUTO_RECOVERY_COUNT: std::sync::atomic::AtomicI32 = std::sync::atomic::AtomicI32::new(0);
 
-/// The counter [`Java_..._getAutoRecoveryCount`] publishes, so the session
-/// supervisor's reconnect observer can be bound to it from [`crate::tunnel`].
+/// The supervisor's per-redial observer: advances the counter
+/// [`Java_..._getAutoRecoveryCount`] publishes and wakes the Kotlin waiter,
+/// since a redial that lands has no status edge of its own on this side.
 #[cfg(feature = "tunnel")]
-pub(crate) fn auto_recovery_counter() -> &'static std::sync::atomic::AtomicI32 {
-    &AUTO_RECOVERY_COUNT
+pub(crate) fn auto_recovery_observer() -> warrenguard_transport::supervisor::ReconnectObserver {
+    std::sync::Arc::new(|| {
+        AUTO_RECOVERY_COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        SESSION_STATUS.bump();
+    })
 }
 
 /// Latest datapath verdict of the engine's goodput prober, polled by Kotlin
@@ -138,12 +145,14 @@ pub(crate) const PATH_HEALTH_DEGRADED_BOTH: i32 = 2;
 #[cfg(feature = "tunnel")]
 pub(crate) fn set_path_health(value: i32) {
     PATH_HEALTH.store(value, std::sync::atomic::Ordering::Relaxed);
+    SESSION_STATUS.bump();
 }
 
 /// Clear the verdict on teardown so a stale degraded value never colours the
 /// next session (or a disconnected UI).
 pub(crate) fn reset_path_health() {
     PATH_HEALTH.store(PATH_HEALTH_HEALTHY, std::sync::atomic::Ordering::Relaxed);
+    SESSION_STATUS.bump();
 }
 
 /// Latest in-tunnel egress verdict: `true` while the exit answers the client
@@ -158,22 +167,24 @@ static EGRESS_DEAD: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBoo
 #[cfg(feature = "tunnel")]
 pub(crate) fn set_egress_dead(dead: bool) {
     EGRESS_DEAD.store(dead, std::sync::atomic::Ordering::Relaxed);
+    SESSION_STATUS.bump();
 }
 
 /// Clear the egress verdict.
 ///
 /// Deliberately NOT reset by the per-session teardown guard that clears
 /// [`PATH_HEALTH`]: this verdict ENDS the session it fires on, and a flag
-/// cleared by that very teardown would be invisible to a 250 ms poller. It
-/// survives until a fresh connect attempt re-arms the probe, or the user tears
-/// the tunnel down.
+/// cleared by that very teardown would be gone before the Kotlin waiter reads
+/// the drop. It survives until a fresh connect attempt re-arms the probe, or
+/// the user tears the tunnel down.
 pub(crate) fn reset_egress_dead() {
     EGRESS_DEAD.store(false, std::sync::atomic::Ordering::Relaxed);
+    SESSION_STATUS.bump();
 }
 
-/// Latest NAT-PMP port-forwarding status as a JSON string, polled by
-/// Kotlin via `getNatPmpStatus()`. Empty = idle (no active mapping). The
-/// session-side NAT-PMP refresh loop writes transitions here via
+/// Latest NAT-PMP port-forwarding status as a JSON string, read by Kotlin
+/// via `getNatPmpStatus()` on every status wake. Empty = idle (no active
+/// mapping). The session-side NAT-PMP refresh loop writes transitions here via
 /// [`set_natpmp_status`]; teardown clears it via [`reset_natpmp_status`].
 /// `parking_lot::Mutex::new` is const, so no lazy init is needed.
 static NATPMP_STATUS: Mutex<String> = Mutex::new(String::new());
@@ -183,12 +194,14 @@ static NATPMP_STATUS: Mutex<String> = Mutex::new(String::new());
 #[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
 pub(crate) fn set_natpmp_status(json: String) {
     *NATPMP_STATUS.lock() = json;
+    SESSION_STATUS.bump();
 }
 
 /// Reset the NAT-PMP status to idle (empty). Called on teardown.
 #[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]
 pub(crate) fn reset_natpmp_status() {
     NATPMP_STATUS.lock().clear();
+    SESSION_STATUS.bump();
 }
 
 /// Opaque handle stored while a tunnel is alive. The cancel sender lets
@@ -404,7 +417,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_signCanonicalRequ
     mnemonic: JString<'local>,
     method: JString<'local>,
     path: JString<'local>,
-    timestamp: jnix::jni::sys::jlong,
+    timestamp: jlong,
     nonce_hex: JString<'local>,
     body_hash_hex: JString<'local>,
 ) -> jbyteArray {
@@ -491,7 +504,8 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
     #[cfg(feature = "tunnel")]
     {
         use std::os::fd::{FromRawFd, OwnedFd};
-        use std::sync::atomic::Ordering;
+
+        use crate::redial::SessionStatus;
 
         if tun_fd < 0 {
             let _ = jnix_env.throw(format!("invalid tun_fd: {tun_fd}"));
@@ -562,9 +576,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         }
 
         let (cancel_tx, cancel_rx) = oneshot::channel();
-        // Reset status to Connecting before spawning so the Kotlin side can
-        // poll it deterministically right after this JNI returns.
-        SESSION_STATUS.store(1, Ordering::SeqCst);
+        // Reset status to Connecting before spawning so the Kotlin side reads
+        // it deterministically right after this JNI returns.
+        SESSION_STATUS.store(SessionStatus::Connecting as i32);
 
         let task = runtime.spawn(crate::tunnel::run_session(
             tun,
@@ -653,7 +667,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_disconnectTunnel(
         // task itself flips `SESSION_STATUS` back to Disconnected when its
         // `tokio::select!` falls through; we also do it here for symmetry
         // so the status flip is observable even before the task wakes.
-        SESSION_STATUS.store(0, std::sync::atomic::Ordering::SeqCst);
+        SESSION_STATUS.store(crate::redial::SessionStatus::Disconnected as i32);
         reset_natpmp_status();
         reset_path_health();
         reset_egress_dead();
@@ -686,7 +700,8 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_notifyNetworkChan
 /// Returns the latest NAT-PMP port-forwarding status as a JSON string.
 /// Shape: `{"state":"idle"|"requesting"|"mapped"|"rate_limited"|"failed",
 /// "external_port":u16?, "lifetime_secs":u32?, "retry_after_secs":u16?,
-/// "reason":"..."?}`. Polled by Kotlin alongside `getTunnelStatus()`.
+/// "reason":"..."?}`. Read by Kotlin alongside `getTunnelStatus()` on every
+/// status wake.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getNatPmpStatus(
     env: JNIEnv<'_>,
@@ -708,19 +723,51 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getNatPmpStatus(
 
 /// Returns 0 = disconnected, 1 = connecting, 2 = connected, 3 = reconnecting.
 /// Matches the `WarrenTunnelState` Kotlin enum. Reads `SESSION_STATUS`
-/// without taking the `ACTIVE_TUNNEL` mutex so polling from Kotlin is
+/// without taking the `ACTIVE_TUNNEL` mutex, so a read on every wake is
 /// cheap.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getTunnelStatus(
     _env: JNIEnv<'_>,
     _class: JClass<'_>,
 ) -> jint {
-    SESSION_STATUS.load(std::sync::atomic::Ordering::SeqCst)
+    SESSION_STATUS.load()
+}
+
+/// Blocks until the status generation differs from `last_seen` (a status
+/// edge, a datapath verdict, a NAT-PMP transition or a landed redial), or
+/// `timeout_ms` elapsed, and returns the generation the caller has now seen.
+/// A caller that passes back what it received sleeps between changes; one
+/// that passes a stale value returns at once, so nothing is ever missed
+/// between two reads.
+///
+/// The wait parks the calling Java thread on the shared runtime, the same
+/// way `awaitTunnelClosed` does: call it from a thread that may block, never
+/// from the main thread. Without a runtime (no `initLogger` yet) the call
+/// sleeps for the timeout so a caller cannot spin.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_awaitStatusChange(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+    last_seen: jlong,
+    timeout_ms: jint,
+) -> jlong {
+    let timeout = std::time::Duration::from_millis(timeout_ms.max(0) as u64);
+    let last_seen = last_seen.max(0) as u64;
+    let Some(runtime) = RUNTIME.get() else {
+        std::thread::sleep(timeout);
+        return SESSION_STATUS.generation() as jlong;
+    };
+    runtime.block_on(async {
+        tokio::time::timeout(timeout, SESSION_STATUS.changed_since(last_seen))
+            .await
+            .unwrap_or_else(|_| SESSION_STATUS.generation())
+    }) as jlong
 }
 
 /// Returns the number of automatic in-session recoveries (redial success
-/// after a session loss) since process start. Monotonic; polled by Kotlin
-/// alongside `getTunnelStatus()` to drive the "Reconnections" detail row.
+/// after a session loss) since process start. Monotonic; read by Kotlin
+/// alongside `getTunnelStatus()` on every status wake to drive the
+/// "Reconnections" detail row.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getAutoRecoveryCount(
     _env: JNIEnv<'_>,
@@ -763,8 +810,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_awaitTunnelClosed
 /// Returns the engine's current datapath verdict: `0` healthy, `1` large
 /// frames dying (last-mile shrink), `2` both probe sizes dying (a wedged
 /// datapath), `3` the exit answers the client but forwards nothing to the
-/// internet. Polled by Kotlin alongside `getTunnelStatus()` so the UI can
-/// stop claiming protection on a tunnel that carries nothing.
+/// internet. Read by Kotlin alongside `getTunnelStatus()` on every status
+/// wake so the UI can stop claiming protection on a tunnel that carries
+/// nothing.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getPathHealth(
     _env: JNIEnv<'_>,

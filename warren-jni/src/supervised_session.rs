@@ -25,6 +25,7 @@
 #![cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 
 use std::sync::Arc;
+#[cfg(test)]
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::time::Duration;
 
@@ -34,10 +35,13 @@ use warrenguard_transport::IpAssignSpec;
 use warrenguard_transport::supervised_pump::{
     DaitaShared, run_downlink_with_daita, run_uplink_with_daita,
 };
-use warrenguard_transport::supervisor::{ClientWatch, ReconnectObserver};
+use warrenguard_transport::supervisor::ClientWatch;
+#[cfg(test)]
+use warrenguard_transport::supervisor::ReconnectObserver;
 use warrenguard_transport_core::PacketDevice;
 
 use crate::redial::SessionStatus;
+use crate::status_watch::StatusCell;
 
 /// How long the datapath may stay without a published session before the
 /// Kotlin fail-closed policy is handed back control.
@@ -92,10 +96,13 @@ pub(crate) enum SessionEnd {
     AddressChanged,
 }
 
-/// Bind the supervisor's per-redial observer to the counter Kotlin polls
-/// through `getAutoRecoveryCount()`. The engine fires it once per successful
-/// reconnect and never on the initial connect, which is exactly the counter's
-/// documented meaning (automatic recoveries, never user actions).
+/// Bind the supervisor's per-redial observer to a counter standing in for the
+/// one Kotlin reads through `getAutoRecoveryCount()`. The engine fires it once
+/// per successful reconnect and never on the initial connect, which is exactly
+/// the counter's documented meaning (automatic recoveries, never user actions).
+/// The production observer lives in `android_jni`, where it also wakes the
+/// Kotlin waiter.
+#[cfg(test)]
 pub(crate) fn reconnect_observer(counter: &'static AtomicI32) -> ReconnectObserver {
     Arc::new(move || {
         counter.fetch_add(1, Ordering::Relaxed);
@@ -156,7 +163,8 @@ impl Drop for AbortOnDrop {
 
 /// Run one supervised session to its end: wait for the exit-allocated address,
 /// wrap the TUN with it, pump both directions against the supervisor's live
-/// session, and publish the Kotlin-facing status until something ends it.
+/// session, and publish the Kotlin-facing status (waking its waiter on every
+/// edge) until something ends it.
 ///
 /// `wrap_tun` receives the first [`IpAssignSpec`] and returns the packet device
 /// the pumps drive (on Android, the 1:1 NAT remap onto the exit-assigned
@@ -166,7 +174,7 @@ pub(crate) async fn run_supervised<T, F>(
     mut inputs: SupervisedInputs,
     wrap_tun: F,
     daita: DaitaShared,
-    status: &AtomicI32,
+    status: &StatusCell,
     grace: Duration,
 ) -> SessionEnd
 where
@@ -239,7 +247,7 @@ async fn await_first_assign(
 async fn drive_status(
     mut inputs: SupervisedInputs,
     pinned: IpAssignSpec,
-    status: &AtomicI32,
+    status: &StatusCell,
     grace: Duration,
 ) -> SessionEnd {
     let mut was_connected = false;
@@ -280,11 +288,11 @@ async fn drive_status(
         match session_edge(live, was_connected) {
             SessionEdge::Connected => {
                 was_connected = true;
-                status.store(SessionStatus::Connected as i32, Ordering::SeqCst);
+                status.store(SessionStatus::Connected as i32);
             }
             SessionEdge::Reconnecting => {
                 was_connected = false;
-                status.store(SessionStatus::Reconnecting as i32, Ordering::SeqCst);
+                status.store(SessionStatus::Reconnecting as i32);
             }
             SessionEdge::Idle => {}
         }
@@ -356,17 +364,20 @@ mod tests {
     /// for the JNI layer's `AUTO_RECOVERY_COUNT` static.
     static RECOVERIES: AtomicI32 = AtomicI32::new(0);
 
-    /// Await `status` reaching `want` (or fail the test), so the assertions
-    /// read as the i32 sequence Kotlin polls.
-    async fn await_status(status: &AtomicI32, want: SessionStatus, what: &str) {
+    /// Await `status` reaching `want` (or fail the test) the way Kotlin does:
+    /// woken by the cell on every edge, never by a timer.
+    async fn await_status(status: &StatusCell, want: SessionStatus, what: &str) {
         let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
-        while status.load(Ordering::SeqCst) != want as i32 {
-            assert!(
-                tokio::time::Instant::now() < deadline,
-                "{what}: status stayed {} instead of reaching {want:?}",
-                status.load(Ordering::SeqCst)
-            );
-            tokio::time::sleep(Duration::from_millis(20)).await;
+        let mut seen = 0;
+        while status.load() != want as i32 {
+            let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
+            match tokio::time::timeout(remaining, status.changed_since(seen)).await {
+                Ok(generation) => seen = generation,
+                Err(_) => panic!(
+                    "{what}: status stayed {} instead of reaching {want:?}",
+                    status.load()
+                ),
+            }
         }
     }
 
@@ -401,8 +412,8 @@ mod tests {
         let supervisor_task = tokio::spawn(supervisor.run());
 
         RECOVERIES.store(0, Ordering::Relaxed);
-        static STATUS: AtomicI32 = AtomicI32::new(SessionStatus::Connecting as i32);
-        STATUS.store(SessionStatus::Connecting as i32, Ordering::SeqCst);
+        static STATUS: StatusCell = StatusCell::new(SessionStatus::Connecting as i32);
+        STATUS.store(SessionStatus::Connecting as i32);
         let daita: DaitaShared = Arc::new(parking_lot::Mutex::new(DaitaState::disabled()));
         let driver = tokio::spawn(async move {
             run_supervised(
@@ -521,7 +532,7 @@ mod tests {
     async fn a_closed_egress_channel_never_ends_a_session() {
         let scripted = scripted();
         drop(scripted.egress_dead);
-        let status = AtomicI32::new(SessionStatus::Connected as i32);
+        let status = StatusCell::new(SessionStatus::Connected as i32);
         // The grace is out of reach, so returning at all within the timeout can
         // only be the closed channel being mistaken for a terminal signal.
         let outcome = tokio::time::timeout(
@@ -548,7 +559,7 @@ mod tests {
     async fn an_egress_dead_verdict_hands_back_to_the_fail_closed_policy() {
         let scripted = scripted();
         scripted.egress_dead.send(true).expect("receiver alive");
-        let status = AtomicI32::new(SessionStatus::Connected as i32);
+        let status = StatusCell::new(SessionStatus::Connected as i32);
         // The grace is deliberately out of reach: only the verdict itself can
         // end this session, so a driver that ignored it would hang here instead
         // of quietly passing on the timeout.
@@ -573,7 +584,7 @@ mod tests {
     async fn a_dead_datapath_hands_back_to_the_fail_closed_policy() {
         let scripted = scripted();
         scripted.datapath_dead.send(true).expect("receiver alive");
-        let status = AtomicI32::new(SessionStatus::Connecting as i32);
+        let status = StatusCell::new(SessionStatus::Connecting as i32);
         // The grace is deliberately out of reach: only the escalation itself
         // can end this session, so a driver that ignored the signal would hang
         // here instead of quietly passing on the timeout.
@@ -600,7 +611,7 @@ mod tests {
     async fn a_watchdog_escalation_hands_back_to_the_fail_closed_policy() {
         let scripted = scripted();
         scripted.escalated.send(true).expect("receiver alive");
-        let status = AtomicI32::new(SessionStatus::Connected as i32);
+        let status = StatusCell::new(SessionStatus::Connected as i32);
         // The grace is deliberately out of reach: only the escalation itself
         // can end this session, so a driver that ignored the signal would hang
         // here instead of quietly passing on the timeout.
@@ -624,7 +635,7 @@ mod tests {
     #[tokio::test]
     async fn a_session_that_never_returns_hands_back_to_the_fail_closed_policy() {
         let scripted = scripted();
-        let status = AtomicI32::new(SessionStatus::Connecting as i32);
+        let status = StatusCell::new(SessionStatus::Connecting as i32);
         let end = drive_status(
             scripted.inputs,
             spec([10, 77, 0, 2]),
@@ -634,7 +645,7 @@ mod tests {
         .await;
         assert_eq!(end, SessionEnd::Down);
         assert_eq!(
-            status.load(Ordering::SeqCst),
+            status.load(),
             SessionStatus::Connecting as i32,
             "a session that never came up must not be reported as a reconnect"
         );
@@ -650,7 +661,7 @@ mod tests {
             .fatal
             .send(Some(RejectionReason::NotAllowlisted))
             .expect("receiver alive");
-        let status = AtomicI32::new(SessionStatus::Connecting as i32);
+        let status = StatusCell::new(SessionStatus::Connecting as i32);
         let end = drive_status(
             scripted.inputs,
             spec([10, 77, 0, 2]),
@@ -671,7 +682,7 @@ mod tests {
             .assigns
             .send(Some(spec([10, 77, 0, 9])))
             .expect("receiver alive");
-        let status = AtomicI32::new(SessionStatus::Connecting as i32);
+        let status = StatusCell::new(SessionStatus::Connecting as i32);
         let end = drive_status(
             scripted.inputs,
             spec([10, 77, 0, 2]),

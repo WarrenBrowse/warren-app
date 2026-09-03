@@ -75,8 +75,8 @@ class WarrenQuinnAdapter(
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
     val state: StateFlow<WarrenTunnelState> = _state.asStateFlow()
 
-    // Live NAT-PMP port-forwarding status (raw JSON from the Rust side),
-    // polled alongside the tunnel status. `idle` when no mapping is active.
+    // Live NAT-PMP port-forwarding status (raw JSON from the Rust side), read
+    // on every status wake. `idle` when no mapping is active.
     private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
     val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
 
@@ -103,7 +103,7 @@ class WarrenQuinnAdapter(
     // Do NOT switch this back to a String, it would defeat zeroization.
     private var activeMnemonic: Mnemonic? = null
     private var activeFd: ParcelFileDescriptor? = null
-    private var statusPollJob: Job? = null
+    private var statusWatchJob: Job? = null
     private var networkCallback: ConnectivityManager.NetworkCallback? = null
     // The network believed to carry the datapath, `null` once it is lost and
     // before its replacement shows up. A change of THIS is what the migration
@@ -204,10 +204,11 @@ class WarrenQuinnAdapter(
         // Retain a dup of the TUN fd so the VPN interface stays established even
         // after the native side closes its copy on an unexpected session death:
         // traffic keeps entering the now-unread TUN (blocked, not leaked) until
-        // the status poll installs the real blackhole. Without this the interface
-        // tears down the instant Rust drops the fd, leaking clear traffic on the
-        // physical link for up to one poll interval. The fail-closed logic below
-        // relies on activeFd being a LIVE handle to the interface.
+        // the status watch installs the real blackhole. Without this the
+        // interface tears down the instant Rust drops the fd, leaking clear
+        // traffic on the physical link until the drop is observed. The
+        // fail-closed logic below relies on activeFd being a LIVE handle to the
+        // interface.
         activeFd = try {
             fd.dup()
         } catch (e: IOException) {
@@ -245,16 +246,22 @@ class WarrenQuinnAdapter(
         // interface left over from a previous lockdown drop.
         exitBlockingMode()
 
-        // Poll the Rust-side session status atomic and translate transitions
-        // back to `WarrenTunnelState`. A JNI callback channel would avoid the
-        // busy-poll but requires JVM ref management gymnastics. The poll
-        // cadence (250 ms) is fast enough to keep the UI responsive without
-        // burning battery: the Rust side updates the atomic only once per
-        // transition.
+        // Follow the Rust-side session status and translate transitions back
+        // to `WarrenTunnelState`. The native side wakes this loop on every
+        // change it publishes (a status edge, a datapath verdict, a NAT-PMP
+        // transition, a landed redial), so a transition reaches the UI the
+        // moment it happens and an idle session costs no wakeups; the bounded
+        // wait is only the safety net for a wake that never came.
         val sessionConfig = config
-        statusPollJob = scope.launch {
+        statusWatchJob = scope.launch(Dispatchers.IO) {
             var lastSeen = STATUS_CONNECTING
+            var seenGeneration = 0L
             while (isActive) {
+                // Parks the thread in the engine for up to the fallback period,
+                // which is why this loop runs on IO and not on [dispatcher]: a
+                // single-thread dispatcher would starve every other transition.
+                seenGeneration = platform.awaitStatusChange(seenGeneration, STATUS_WAKE_FALLBACK_MS)
+                if (!isActive) break
                 val code = platform.tunnelStatus()
                 // Read the datapath verdict BEFORE acting on the status. The
                 // egress verdict ends the session it fires on, in the same
@@ -272,6 +279,7 @@ class WarrenQuinnAdapter(
                 if (wedged != _pathWedged.value) _pathWedged.value = wedged
                 if (code != lastSeen) {
                     lastSeen = code
+                    Logger.i("WarrenQuinnAdapter: native status $code")
                     if (code == STATUS_DISCONNECTED || code < 0) {
                         // Rust task ended (clean exit or error). Engage the
                         // kill switch on an unexpected drop under lockdown;
@@ -333,18 +341,17 @@ class WarrenQuinnAdapter(
                     }
                     _state.value = statusFromCode(code, sessionConfig)
                 }
-                // Mirror the live NAT-PMP status (cheap static read).
+                // Mirror the live NAT-PMP status; its transitions ride the
+                // same wake.
                 val np = platform.natPmpStatus()
                 if (np != _natPmpStatus.value) _natPmpStatus.value = np
                 // Sum the native in-session redials with the adapter's own
-                // retry-loop recoveries. Polled (not event-driven) because a
-                // sub-poll-interval native redial has no observable status
-                // transition on this side.
+                // retry-loop recoveries; a redial that lands wakes this loop
+                // even though it has no status edge of its own.
                 val recoveries = platform.autoRecoveryCount() + autoRecovery.count
                 if (recoveries != _autoRecoveryCount.value) {
                     _autoRecoveryCount.value = recoveries
                 }
-                delay(STATUS_POLL_INTERVAL_MS)
             }
         }
 
@@ -473,8 +480,8 @@ class WarrenQuinnAdapter(
         pendingHandover?.cancel()
         pendingHandover = null
         platform.disconnectTunnel()
-        statusPollJob?.cancel()
-        statusPollJob = null
+        statusWatchJob?.cancel()
+        statusWatchJob = null
         activeFd?.close()
         activeFd = null
         exitBlockingMode()
@@ -629,8 +636,8 @@ class WarrenQuinnAdapter(
             awaitDialableNetwork()
             lock.withLock {
                 if (userInitiatedDisconnect) return@withLock
-                statusPollJob?.cancel()
-                statusPollJob = null
+                statusWatchJob?.cancel()
+                statusWatchJob = null
                 // Reset so connect()'s guard passes; the blackhole stays up.
                 _state.value = WarrenTunnelState.Disconnected
             }
@@ -733,11 +740,11 @@ class WarrenQuinnAdapter(
                         Logger.w("scheduleHandoverReconnect: blackhole establish failed; brief leak possible")
                     }
                 }
-                // Stop polling before the intentional teardown so the status
+                // Stop the watch before the intentional teardown so the status
                 // loop does not observe the DISCONNECTED transition and trip the
                 // kill switch (this is an expected handover, not a drop).
-                statusPollJob?.cancel()
-                statusPollJob = null
+                statusWatchJob?.cancel()
+                statusWatchJob = null
                 platform.disconnectTunnel()
                 activeFd?.close()
                 activeFd = null
@@ -819,7 +826,15 @@ class WarrenQuinnAdapter(
         // The exit refused the setup (not authorized: lapsed / revoked
         // subscription). Mirrors `warren_jni::tunnel::SessionStatus::Unauthorized`.
         const val STATUS_UNAUTHORIZED = 4
-        const val STATUS_POLL_INTERVAL_MS = 250L
+
+        /**
+         * Ceiling on one wait for a native status wake. The engine wakes the
+         * watch on every change, so this only bounds the damage of a wake that
+         * was never delivered: long enough that an idle session wakes about
+         * once a second instead of four times, short enough that a lost
+         * transition still reaches the card within a blink.
+         */
+        const val STATUS_WAKE_FALLBACK_MS = 1_000L
 
         /**
          * Ceiling on the wait for a torn-down session to finish. Generous

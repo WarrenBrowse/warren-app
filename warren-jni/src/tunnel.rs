@@ -19,7 +19,7 @@
 #![cfg(all(target_os = "android", feature = "tunnel"))]
 
 use std::net::{Ipv4Addr, Ipv6Addr, SocketAddr};
-use std::sync::atomic::{AtomicBool, AtomicI32, AtomicU16, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU16, Ordering};
 use std::time::Instant;
 
 /// Tunnel-inner addresses the Android `VpnService` interface is configured
@@ -180,12 +180,13 @@ pub enum TunnelStartError {
 /// Drive a single Warren Quinn tunnel from start to teardown.
 ///
 /// Runs on the caller's tokio runtime (the JNI-shared `RUNTIME`). The
-/// `status` atomic is updated as the session progresses; the `cancel_rx`
-/// oneshot is selected against the pump so a `WarrenJni.disconnectTunnel()`
-/// call from Kotlin terminates the task promptly. `status` is held as a
-/// `'static` reference because the JNI side parks the underlying atomic
-/// in a `static AtomicI32`; this keeps `run_session` `'static`-bounded
-/// for `runtime.spawn(...)` without an extra `Arc` allocation.
+/// `status` cell is updated as the session progresses, waking the Kotlin
+/// waiter on every edge; the `cancel_rx` oneshot is selected against the
+/// pump so a `WarrenJni.disconnectTunnel()` call from Kotlin terminates the
+/// task promptly. `status` is held as a `'static` reference because the JNI
+/// side parks the cell in a `static`; this keeps `run_session`
+/// `'static`-bounded for `runtime.spawn(...)` without an extra `Arc`
+/// allocation.
 ///
 /// The function accepts a pre-derived `signing_key` rather than a raw
 /// mnemonic string: key derivation happens at the JNI boundary
@@ -195,10 +196,10 @@ pub async fn run_session(
     tun: AndroidTun,
     signing_key: SigningKey,
     config: WarrenTunnelConfig,
-    status: &'static AtomicI32,
+    status: &'static crate::status_watch::StatusCell,
     cancel_rx: oneshot::Receiver<()>,
 ) {
-    status.store(SessionStatus::Connecting as i32, Ordering::SeqCst);
+    status.store(SessionStatus::Connecting as i32);
     // Re-arm the egress verdict: it deliberately outlives the session it ended
     // (see `android_jni::reset_egress_dead`), so a fresh connect is what clears
     // it, not the teardown it caused.
@@ -217,7 +218,7 @@ pub async fn run_session(
     // request, so fail closed instead of guessing.
     if config.entry_hop.is_none() {
         log::error!("multi-hop entry hop missing from config; failing closed");
-        status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+        status.store(SessionStatus::Disconnected as i32);
         return;
     }
     run_multi_hop_session(tun, signing_key, session_tokens, config, status, cancel_rx).await;
@@ -245,7 +246,7 @@ async fn run_multi_hop_session(
     signing: SigningKey,
     session_tokens: SessionTokenProvider,
     config: WarrenTunnelConfig,
-    status: &'static AtomicI32,
+    status: &'static crate::status_watch::StatusCell,
     mut cancel_rx: oneshot::Receiver<()>,
 ) {
     use std::sync::Arc;
@@ -260,7 +261,7 @@ async fn run_multi_hop_session(
         Ok(p) => p,
         Err(e) => {
             log::error!("multi-hop: invalid exit pubkey: {e}");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            status.store(SessionStatus::Disconnected as i32);
             return;
         }
     };
@@ -283,7 +284,7 @@ async fn run_multi_hop_session(
                 "multi-hop: no directory supplied in config (Kotlin must prefetch it pre-TUN); \
                  failing closed"
             );
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            status.store(SessionStatus::Disconnected as i32);
             return;
         }
     };
@@ -296,7 +297,7 @@ async fn run_multi_hop_session(
         Ok(d) => d,
         Err(e) => {
             log::error!("multi-hop: directory verify failed: {e}");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            status.store(SessionStatus::Disconnected as i32);
             return;
         }
     };
@@ -330,12 +331,12 @@ async fn run_multi_hop_session(
         // No-logs: state the failure category, never the exit/entry identity.
         Err(crate::circuit_select::CircuitSelectError::ExitNotInDirectory) => {
             log::error!("multi-hop: chosen exit not in directory; failing closed");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            status.store(SessionStatus::Disconnected as i32);
             return;
         }
         Err(crate::circuit_select::CircuitSelectError::NoDistinctEntry) => {
             log::error!("multi-hop: no distinct entry relay available; failing closed");
-            status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+            status.store(SessionStatus::Disconnected as i32);
             return;
         }
     };
@@ -434,9 +435,7 @@ async fn run_multi_hop_session(
                 base: std::time::Duration::from_millis(300),
                 max: std::time::Duration::from_secs(2),
             },
-            on_reconnect: Some(crate::supervised_session::reconnect_observer(
-                crate::android_jni::auto_recovery_counter(),
-            )),
+            on_reconnect: Some(crate::android_jni::auto_recovery_observer()),
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6: config.enable_ipv6.unwrap_or(false),
             // One connection: the mobile radio path does not benefit from
@@ -589,7 +588,7 @@ async fn run_multi_hop_session(
             // same rejection.
             Some(SessionEnd::Rejected(RejectionReason::NotAllowlisted)) => {
                 log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
-                status.store(SessionStatus::Unauthorized as i32, Ordering::SeqCst);
+                status.store(SessionStatus::Unauthorized as i32);
                 return;
             }
             Some(end) => {
@@ -601,7 +600,7 @@ async fn run_multi_hop_session(
         }
     }
 
-    status.store(SessionStatus::Disconnected as i32, Ordering::SeqCst);
+    status.store(SessionStatus::Disconnected as i32);
 }
 
 /// Spawn the in-tunnel egress probe for one connect attempt.

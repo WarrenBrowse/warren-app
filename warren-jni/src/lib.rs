@@ -107,6 +107,11 @@ mod api_transport;
 #[cfg(any(test, target_os = "android"))]
 mod version_check;
 
+// The status cell Kotlin waits on (`awaitStatusChange`) instead of polling
+// four JNI getters four times a second; the wake contract is host-tested.
+#[cfg(any(test, target_os = "android"))]
+mod status_watch;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

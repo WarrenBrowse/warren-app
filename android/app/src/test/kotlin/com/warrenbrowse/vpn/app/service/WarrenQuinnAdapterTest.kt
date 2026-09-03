@@ -13,6 +13,9 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -53,17 +56,25 @@ class WarrenQuinnAdapterTest {
 
         const val STATUS_CONNECTED = 2
         const val STATUS_DISCONNECTED = 0
+        const val STATUS_RECONNECTING = 3
 
         const val PHRASE =
             "abandon abandon abandon abandon abandon abandon " +
                 "abandon abandon abandon abandon abandon about"
+
+        const val NANOS_PER_MILLI = 1_000_000L
     }
 
     /**
      * Records every platform call in order and lets a test drive the native
-     * status the adapter polls. The file descriptors are mocks that record
+     * status the adapter watches. The file descriptors are mocks that record
      * their own `close()`, which is how the ordering assertion sees the live
      * TUN being dropped.
+     *
+     * The status generation mirrors the engine's: every published change
+     * advances it and wakes a parked `awaitStatusChange`, and the native
+     * connect and teardown publish too. [wakeOnChange] off models a wake that
+     * was never delivered, so only the caller's timeout can return.
      */
     private class RecordingPlatform : WarrenTunnelPlatform {
         val calls = mutableListOf<String>()
@@ -71,9 +82,30 @@ class WarrenQuinnAdapterTest {
         /** The thread each platform call ran on, by call name (last one wins). */
         val threads = mutableMapOf<String, String>()
 
+        /** How many times the adapter read the native status. */
+        val statusReads = AtomicInteger()
+
+        @Volatile
+        var wakeOnChange = true
+
+        private val lock = ReentrantLock()
+        private val changed = lock.newCondition()
+        private var generation = 0L
+
         @Volatile
         var status: Int = STATUS_CONNECTED
+            set(value) {
+                field = value
+                publish()
+            }
+
         var callback: ConnectivityManager.NetworkCallback? = null
+
+        private fun publish() =
+            lock.withLock {
+                generation++
+                if (wakeOnChange) changed.signalAll()
+            }
 
         /** The fd the adapter keeps as `activeFd` (a dup of the live one). */
         private val activeTun: ParcelFileDescriptor = fd("activeTun")
@@ -98,12 +130,14 @@ class WarrenQuinnAdapterTest {
         override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int {
             calls += CONNECT_TUNNEL
             threads[CONNECT_TUNNEL] = Thread.currentThread().name
+            publish()
             return 0
         }
 
         override fun disconnectTunnel() {
             calls += DISCONNECT_TUNNEL
             threads[DISCONNECT_TUNNEL] = Thread.currentThread().name
+            publish()
         }
 
         override fun awaitTunnelClosed(timeoutMs: Long): Boolean {
@@ -115,8 +149,20 @@ class WarrenQuinnAdapterTest {
             calls += NOTIFY_NETWORK_CHANGED
         }
 
-        // Polled every 250 ms: recording them would drown the sequence.
-        override fun tunnelStatus(): Int = status
+        override fun awaitStatusChange(lastSeen: Long, timeoutMs: Long): Long =
+            lock.withLock {
+                var remainingNanos = timeoutMs * NANOS_PER_MILLI
+                while (generation == lastSeen && remainingNanos > 0) {
+                    remainingNanos = changed.awaitNanos(remainingNanos)
+                }
+                generation
+            }
+
+        // Read on every wake: recording them would drown the sequence.
+        override fun tunnelStatus(): Int {
+            statusReads.incrementAndGet()
+            return status
+        }
 
         override fun natPmpStatus(): String = "{\"state\":\"idle\"}"
 
@@ -124,6 +170,10 @@ class WarrenQuinnAdapterTest {
 
         @Volatile
         var health: Int = PATH_HEALTH_HEALTHY
+            set(value) {
+                field = value
+                publish()
+            }
 
         override fun pathHealth(): Int = health
 
@@ -181,7 +231,7 @@ class WarrenQuinnAdapterTest {
         adapter.connect(config(), Mnemonic(PHRASE))
         val callback = platform.callback
         checkNotNull(callback) { "connect() must register a network callback" }
-        // The status poll runs on the adapter's own IO scope; let it settle on
+        // The status watch runs on its own IO thread; let it settle on
         // Connected first, so a handover is never raced by the very transition
         // that clears its pending flag.
         awaitReal("the session must reach Connected") {
@@ -195,7 +245,7 @@ class WarrenQuinnAdapterTest {
 
     /**
      * Await [predicate] in REAL time, or fail with what was recorded. The
-     * adapter polls the native status on its own `Dispatchers.IO` scope, which
+     * adapter watches the native status on `Dispatchers.IO`, which
      * `runTest`'s virtual clock does not drive.
      */
     private suspend fun awaitReal(what: String, predicate: () -> Boolean) {
@@ -366,6 +416,7 @@ class WarrenQuinnAdapterTest {
 
         platform.health = PATH_HEALTH_HEALTHY
         awaitReal("recovery must clear the wedge") { !adapter.pathWedged.value }
+        adapter.disconnect()
     }
 
     @Test
@@ -384,6 +435,7 @@ class WarrenQuinnAdapterTest {
 
         platform.health = PATH_HEALTH_HEALTHY
         awaitReal("recovery must clear the wedge") { !adapter.pathWedged.value }
+        adapter.disconnect()
     }
 
     @Test
@@ -407,6 +459,10 @@ class WarrenQuinnAdapterTest {
             awaitReal("the verdict must survive the teardown it caused") {
                 adapter.pathWedged.value
             }
+            // The drop armed a 15 s retry that would redial, read the same
+            // dead status and stamp the clock again once it is unmocked below,
+            // in whichever test class happens to be running by then.
+            adapter.disconnect()
         } finally {
             unmockkStatic(SystemClock::class)
         }
@@ -433,6 +489,68 @@ class WarrenQuinnAdapterTest {
             closed < dialled,
             "must await the close BEFORE dialling, got ${platform.calls}",
         )
+        adapter.disconnect()
+    }
+
+    /**
+     * The status used to be polled four times a second for the life of the
+     * session, which is a permanent wake source on a phone that is otherwise
+     * idle. The engine now wakes the watch on every change, so with nothing
+     * changing the adapter must read nothing.
+     */
+    @Test
+    fun `ensure an idle session reads the native status only on a wake`() = runTest {
+        val platform = RecordingPlatform()
+        val (adapter, _) = connectedAdapter(platform)
+        platform.statusReads.set(0)
+
+        withContext(Dispatchers.Default) { delay(700) }
+
+        val reads = platform.statusReads.get()
+        assertTrue(reads <= 1, "an idle session must not poll the status: $reads reads in 700 ms")
+        adapter.disconnect()
+    }
+
+    /**
+     * A transition the engine publishes must land on its wake, not on the
+     * bounded fallback wait that only exists for a wake that was never
+     * delivered.
+     */
+    @Test
+    fun `ensure a native transition reaches the adapter on its wake`() = runTest {
+        val platform = RecordingPlatform()
+        val (adapter, _) = connectedAdapter(platform)
+
+        val started = System.nanoTime()
+        platform.status = STATUS_RECONNECTING
+        awaitReal("the redial must reach the adapter") {
+            adapter.state.value is WarrenTunnelState.Reconnecting
+        }
+
+        val elapsedMs = (System.nanoTime() - started) / NANOS_PER_MILLI
+        assertTrue(
+            elapsedMs < 400,
+            "the transition must land on the wake, not after the fallback wait: $elapsedMs ms",
+        )
+        adapter.disconnect()
+    }
+
+    /**
+     * The fallback is the whole safety net: a wake that never arrives must
+     * still leave the card telling the truth within a bounded time.
+     */
+    @Test
+    fun `ensure a lost wake is covered by the fallback read`() = runTest {
+        val platform = RecordingPlatform()
+        platform.wakeOnChange = false
+        val (adapter, _) = connectedAdapter(platform)
+
+        platform.status = STATUS_RECONNECTING
+
+        awaitReal("the fallback read must pick the transition up") {
+            adapter.state.value is WarrenTunnelState.Reconnecting
+        }
+        adapter.disconnect()
     }
 
     /**
