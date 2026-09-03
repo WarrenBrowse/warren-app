@@ -158,17 +158,27 @@ pub enum StandDownStep {
 /// the order decides the exposure: disarming first would leave the machine
 /// with no tunnel and no block for the whole teardown, while disconnecting
 /// first keeps the block armed until the tunnel is actually down.
+/// `held` is the record this build already carries, if any. When it is
+/// present the two recorded values are KEPT and only the environment being
+/// yielded to moves: `auto_connect` and `lockdown_mode` have already been
+/// neutralised by the first stand-down, so recording them again would save
+/// the neutralised values as the ones to restore and quietly destroy the
+/// user's kill-switch setting. That happens whenever a SECOND higher
+/// environment takes over from the first, for example staging connecting
+/// after prod has let go but before the user has re-enabled.
 #[must_use]
 pub fn stand_down_plan(
     to: ProductEnv,
     auto_connect: bool,
     lockdown_mode: bool,
+    held: Option<&mullvad_types::settings::WarrenEnvYield>,
 ) -> Vec<StandDownStep> {
     vec![
         StandDownStep::RecordYield(mullvad_types::settings::WarrenEnvYield {
             yielded_to: to.name().to_owned(),
-            restore_auto_connect: auto_connect,
-            restore_lockdown_mode: lockdown_mode,
+            restore_auto_connect: held.map_or(auto_connect, |record| record.restore_auto_connect),
+            restore_lockdown_mode: held
+                .map_or(lockdown_mode, |record| record.restore_lockdown_mode),
         }),
         StandDownStep::Disconnect,
         StandDownStep::DisarmLockdown,
@@ -441,7 +451,7 @@ mod tests {
     fn the_stand_down_records_first_disconnects_next_and_disarms_only_then() {
         // The order IS the property: disarming before the tunnel is down
         // puts the machine in the clear for the length of the teardown.
-        let plan = stand_down_plan(ProductEnv::Prod, true, true);
+        let plan = stand_down_plan(ProductEnv::Prod, true, true, None);
         assert_eq!(
             plan,
             vec![
@@ -462,7 +472,7 @@ mod tests {
         for (auto_connect, lockdown_mode) in
             [(false, false), (false, true), (true, false), (true, true)]
         {
-            let plan = stand_down_plan(ProductEnv::Staging, auto_connect, lockdown_mode);
+            let plan = stand_down_plan(ProductEnv::Staging, auto_connect, lockdown_mode, None);
             let disconnect = plan
                 .iter()
                 .position(|step| *step == StandDownStep::Disconnect)
@@ -481,7 +491,7 @@ mod tests {
 
     #[test]
     fn the_stand_down_records_the_settings_it_is_about_to_change() {
-        let plan = stand_down_plan(ProductEnv::Prod, false, true);
+        let plan = stand_down_plan(ProductEnv::Prod, false, true, None);
         assert_eq!(
             plan.first(),
             Some(&StandDownStep::RecordYield(WarrenEnvYield {
@@ -491,6 +501,33 @@ mod tests {
             })),
             "the record has to land before anything is changed, or a crash \
              mid-teardown loses the values nothing else can recover"
+        );
+    }
+
+    #[test]
+    fn a_second_stand_down_keeps_the_settings_the_first_one_recorded() {
+        // Reachable whenever a second higher environment takes over from the
+        // first: prod lets go, the user has not re-enabled yet, staging
+        // connects. By then auto_connect and lockdown_mode already hold the
+        // neutralised values this build wrote, so recording them again would
+        // save "false, false" as the pair to restore and destroy the user's
+        // kill-switch setting with nothing to warn them.
+        let held = WarrenEnvYield {
+            yielded_to: "prod".to_owned(),
+            restore_auto_connect: true,
+            restore_lockdown_mode: true,
+        };
+
+        let plan = stand_down_plan(ProductEnv::Staging, false, false, Some(&held));
+
+        assert_eq!(
+            plan.first(),
+            Some(&StandDownStep::RecordYield(WarrenEnvYield {
+                yielded_to: "staging".to_owned(),
+                restore_auto_connect: true,
+                restore_lockdown_mode: true,
+            })),
+            "only the environment held may move, the recorded settings must survive"
         );
     }
 

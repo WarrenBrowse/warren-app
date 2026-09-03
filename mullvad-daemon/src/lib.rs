@@ -2390,6 +2390,7 @@ impl Daemon {
                 to,
                 settings.auto_connect,
                 settings.lockdown_mode,
+                settings.warren_env_yield.as_ref(),
             )
         };
         for step in plan {
