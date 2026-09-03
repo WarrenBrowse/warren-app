@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">자동 연결 및 잠금 모드</string>
     <string name="go_to_vpn_settings">VPN 설정으로 이동</string>
     <string name="auto_connect_carousel_first_slide_top_text">자동 연결 및 잠금 모드 설정은 Android 시스템 설정에서 찾을 수 있습니다. 이 가이드에 따라 하나 또는 둘 다를 활성화하세요.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. 아래의 \"VPN 설정으로 이동\" 버튼을 클릭한 후 \"Warren VPN\" 이름 옆의 톱니바퀴를 클릭합니다.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. 아래의 \"VPN 설정으로 이동\" 버튼을 클릭한 후 \"%1$s\" 이름 옆의 톱니바퀴를 클릭합니다.</string>
     <string name="auto_connect_carousel_second_slide_top_text">자동 연결은 Android 시스템 설정에서 상시 접속 VPN이라고 하며 VPN 터널에 지속적으로 연결되고 다시 시작한 후 자동 연결되게 해줍니다.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. 자동 연결을 활성화하려면 \"상시 접속 VPN\" 옆에 있는 토글을 클릭합니다.</string>
     <string name="auto_connect_carousel_third_slide_top_text">잠금 모드는 Android 시스템 설정에서 \"VPN 없이 연결 차단\"이라고 합니다. 유출을 최소화하는 데 도움이 되지만, 몇 가지 알려진 제한 사항이 있습니다. 다음에서 자세한 내용을 확인하세요.</string>

@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Automaattinen yhdistäminen ja lukitustila</string>
     <string name="go_to_vpn_settings">Siirry VPN-asetuksiin</string>
     <string name="auto_connect_carousel_first_slide_top_text">Automaattisen yhdistämisen ja lukitustilan asetukset löytyvät Androidin järjestelmäasetuksista. Voit ottaa jommankumman tai molemmat käyttöön tämän oppaan ohjeilla.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Napsautettuasi alla olevaa \"Siirry VPN-asetuksiin\" -painiketta napsauta Warren VPN:n nimen vierestä löytyvää hammaspyöräkuvaketta.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Napsautettuasi alla olevaa \"Siirry VPN-asetuksiin\" -painiketta napsauta %1$s:n nimen vierestä löytyvää hammaspyöräkuvaketta.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automaattista yhdistämistä kutsutaan aina päällä olevaksi VPN-yhteydeksi Androidin järjestelmäasetuksissa. Se varmistaa, että olet jatkuvasti yhteydessä VPN-tunneliin, sekä muodostaa yhteyden automaattisesti aina uudelleenkäynnistyksen jälkeen.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Ota automaattinen yhteyden muodostus käyttöön napsauttamalla \"Aina päällä oleva VPN\" -kohdan vieressä olevaa valintapainiketta.</string>
     <string name="auto_connect_carousel_third_slide_top_text">Lukitustila löytyy Android-järjestelmäasetuksista nimellä \"Estä yhteydet ilman VPN:ää\". Lukitustila auttaa minimoimaan vuodot, mutta siihen liittyy myös muutamia tunnettuja rajoituksia. Voit lukea niistä lisää</string>

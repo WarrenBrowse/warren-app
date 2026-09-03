@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Automatyczne łączenie i tryb Lockdown</string>
     <string name="go_to_vpn_settings">Przejdź do ustawień VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">Ustawienia trybu automatycznego łączenia i trybu Lockdown można znaleźć w ustawieniach systemu Android. Aby włączyć jeden lub oba tryby, postępuj zgodnie z niniejszym poradnikiem.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Po kliknięciu poniższego przycisku Przejdź do ustawień VPN, kliknij ikonę koła zębatego obok nazwy Warren VPN.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Po kliknięciu poniższego przycisku Przejdź do ustawień VPN, kliknij ikonę koła zębatego obok nazwy %1$s.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automatyczne łączenie w ustawieniach systemu Android nazywa się „Zawsze włączony VPN” i zapewnia stałe połączenie z tunelem VPN oraz automatyczne łączenie po ponownym uruchomieniu.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Aby włączyć automatyczne łączenie, kliknij przełącznik obok opcji Zawsze włączony VPN.</string>
     <string name="auto_connect_carousel_third_slide_top_text">Tryb Lockdown w ustawieniach systemu Android nazywa się Blokuj połączenia bez pośrednictwa sieci VPN. Pomaga zminimalizować wycieki, jednak ma pewne znane ograniczenia, o których można przeczytać więcej</string>

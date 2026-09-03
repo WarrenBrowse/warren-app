@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">الاتصال التلقائي ووضع التأمين</string>
     <string name="go_to_vpn_settings">الانتقال إلى إعدادات VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">يمكن العثور على إعدادات \"الاتصال التلقائي\" و\"وضع التأمين\" في إعدادات نظام Android. اتَّبع هذا الدليل لتفعيل أحدهما أو كليهما.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. بعد النقر على الزر \"الانتقال إلى إعدادات VPN\" أدناه، انقر على الترس الموجود بجوار اسم \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">يُطلق على الاتصال التلقائي اسم \"تشغيل VPN دائمًا\" في إعدادات نظام Android، ويتأكد من اتصالك الدائم بنفق VPN ويتصل تلقائيًا بعد إعادة التشغيل.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. لتفعيل الاتصال التلقائي، انقر على زر التبديل بجوار \"تشغيل VPN دائمًا\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">يُسمَّى \"وضع التأمين\" باسم \"حظر الاتصالات دون VPN\" في إعدادات نظام Android. يساعد هذا الوضع في تقليل التسريبات، لكن لديه بعض القيود المعروفة التي يمكنك قراءة المزيد عنها</string>

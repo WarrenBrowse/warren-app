@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Auto-tilslutning og Lockdown-tilstand</string>
     <string name="go_to_vpn_settings">Gå til VPN-indstillinger</string>
     <string name="auto_connect_carousel_first_slide_top_text">Indstillingerne for automatisk forbindelse og Lockdown-tilstand kan findes i Android- systemindstillingerne. Følg denne vejledning for at aktivere en eller begge.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Når du har klikket på knappen \"Gå til VPN-indstillinger \"nedenfor, skal du klikke på tandhjulet ved siden af navnet \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Når du har klikket på knappen \"Gå til VPN-indstillinger \"nedenfor, skal du klikke på tandhjulet ved siden af navnet \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Auto-tilslutning kaldes Altid-til VPN i Android-systemindstillingerne, og det sørger for, at du konstant er forbundet til VPN-tunnelen og automatisk forbinder efter genstart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. For at aktivere automatisk forbindelse skal du klikke på knappen ved siden af \"Altid-til VPN\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">Lockdown-tilstanden kaldes \"Bloker forbindelser uden VPN\" i Android-systemindstillingerne. Det hjælper med at minimere lækager, men det har nogle kendte begrænsninger, som du kan læse mere om</string>

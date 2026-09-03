@@ -20,7 +20,7 @@
     <string name="auto_connect_and_lockdown_mode">Auto-connect &amp; Lockdown mode</string>
     <string name="go_to_vpn_settings">Go to VPN settings</string>
     <string name="auto_connect_carousel_first_slide_top_text">The Auto-connect and Lockdown mode settings can be found in the Android system settings, follow this guide to enable one or both.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"Warren VPN\" name.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. After clicking on the \"Go to VPN settings\" button below, click on the cogwheel next to the \"%1$s\" name.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Auto-connect is called Always-on VPN in the Android system settings and it makes sure you are constantly connected to the VPN tunnel and auto connects after restart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. To enable Auto-connect, click on the toggle next to \"Always-on VPN\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">The Lockdown mode is called \"Block connections without VPN\" in the Android system settings. It helps minimize leaks, however it has some known limitations which you can read more about</string>

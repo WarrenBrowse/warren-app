@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">自动连接和锁定模式</string>
     <string name="go_to_vpn_settings">前往“VPN 设置”</string>
     <string name="auto_connect_carousel_first_slide_top_text">自动连接和锁定模式设置可以在 Android 系统设置中找到，请按照本指南启用其中一项或两项。</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. 点击下方的“前往 VPN 设置”按钮后，点击“Warren VPN”名称旁边的齿轮。</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. 点击下方的“前往 VPN 设置”按钮后，点击“%1$s”名称旁边的齿轮。</string>
     <string name="auto_connect_carousel_second_slide_top_text">自动连接在 Android 系统设置中称为“始终开启 VPN”，此功能可确保您始终连接到 VPN 隧道并在重新启动后自动连接。</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. 要启用自动连接，请点击“始终开启 VPN”旁边的开关。</string>
     <string name="auto_connect_carousel_third_slide_top_text">在 Android 系统设置中，锁定模式被称为“屏蔽未使用 VPN 的所有连接”。该模式可以最大限度地减少泄露，但是也有一些已知的限制，要了解详情，请点击</string>

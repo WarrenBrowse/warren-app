@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Automatisch verbinden en lockdownmodus</string>
     <string name="go_to_vpn_settings">Naar VPN-instellingen</string>
     <string name="auto_connect_carousel_first_slide_top_text">De instellingen Automatisch verbinden en Lockdownmodus zijn te vinden in de Android-systeeminstellingen, volg deze gids om een of beide in te schakelen.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Klik, nadat u op de knop \"Naar VPN-instellingen\" hebt geklikt, op het tandwiel naast de naam \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Klik, nadat u op de knop \"Naar VPN-instellingen\" hebt geklikt, op het tandwiel naast de naam \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automatisch verbinden heet Altijd-aan VPN in de Android-systeeminstellingen en zorgt ervoor dat u altijd verbonden bent met de VPN-tunnel en automatisch verbinding maakt na een herstart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Klik om Automatisch verbinden in te schakelen op de schakelaar naast \"Altijd-aan VPN\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">De Lockdownmodus heet \"Verbindingen zonder VPN blokkeren\" in de Android-systeeminstellingen. Deze helpt om lekken te minimaliseren, maar heeft enkele bekende beperkingen. Meer daarover leest u</string>

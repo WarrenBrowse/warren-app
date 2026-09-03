@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Automatische Verbindung &amp; Sperrmodus</string>
     <string name="go_to_vpn_settings">VPN-Einstellungen öffnen</string>
     <string name="auto_connect_carousel_first_slide_top_text">Die Einstellungen für die automatische Verbindung und den Sperrmodus finden Sie in den Android-Systemeinstellungen. Folgen Sie dieser Anleitung, um eine oder beide Einstellungen zu aktivieren.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Nachdem Sie unten auf „VPN-Einstellungen öffnen“ geklickt haben, klicken Sie auf das Zahnrad neben „Warren-VPN“.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Nachdem Sie unten auf „VPN-Einstellungen öffnen“ geklickt haben, klicken Sie auf das Zahnrad neben „%1$s“.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Die automatische Verbindung wird in den Android-Systemeinstellungen als „Always-on VPN“ bezeichnet und sorgt dafür, dass Sie ständig mit dem VPN-Tunnel verbunden sind und sich nach einem Neustart automatisch verbinden.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Um die automatische Verbindung zu aktivieren, klicken Sie auf den Kippschalter neben „Always-on VPN“.</string>
     <string name="auto_connect_carousel_third_slide_top_text">Der Sperrmodus heißt in den Android-Systemeinstellungen „Verbindungen ohne VPN blockieren“. Dieser trägt dazu bei, Lecks zu minimieren, hat jedoch einige bekannte Einschränkungen. Mehr dazu finden Sie</string>

@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Connexion automatique et mode Verrouillage</string>
     <string name="go_to_vpn_settings">Aller aux paramètres VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">Les paramètres de la connexion automatique et du mode Verrouillage se trouvent dans les paramètres du système Android, suivez ce guide pour activer l\'un, l\'autre ou les deux.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Après avoir cliqué sur le bouton « Aller aux paramètres VPN » ci-dessous, cliquez sur l\'engrenage à côté du nom « Warren VPN ».</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Après avoir cliqué sur le bouton « Aller aux paramètres VPN » ci-dessous, cliquez sur l\'engrenage à côté du nom « %1$s ».</string>
     <string name="auto_connect_carousel_second_slide_top_text">La connexion automatique est appelée VPN toujours actif dans les paramètres du système Android et elle s\'assure que vous êtes constamment connecté au tunnel VPN et se connecte automatiquement après le redémarrage.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Pour activer la connexion automatique, cliquez sur l\'interrupteur situé à côté de « Toujours exiger un VPN ».</string>
     <string name="auto_connect_carousel_third_slide_top_text">Le mode Verrouillage est appelé « Bloquer les connexions sans VPN » dans les paramètres système d\'Android. Il permet de minimiser les fuites, mais présente des limites connues sur lesquelles vous pouvez en savoir plus</string>

@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Ligação automática e modo de bloqueio</string>
     <string name="go_to_vpn_settings">Ir para as definições de VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">As definições da ligação automática e do modo de bloqueio podem ser encontradas nas definições do sistema Android. Siga este guia para ativar uma ou ambas as funcionalidades.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Após clicar no botão \"Ir para as definições de VPN\" abaixo, clique na roda dentada junto ao nome \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Após clicar no botão \"Ir para as definições de VPN\" abaixo, clique na roda dentada junto ao nome \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">A ligação automática é designada por VPN sempre ligada nas definições do sistema Android e assegura que está constantemente ligado ao túnel VPN e ligar-se-á automaticamente após o reinício.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Para ativar a ligação automática, clique no botão de alternar junto a \"VPN sempre ligada\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">O modo de bloqueio é designado por \"Bloquear ligações sem VPN\" nas definições do sistema Android. Ajuda a minimizar fugas, mas tem algumas limitações conhecidas sobre as quais pode ler mais</string>

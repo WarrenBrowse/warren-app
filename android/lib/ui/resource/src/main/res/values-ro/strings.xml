@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Conectare automată &amp; Mod blocare</string>
     <string name="go_to_vpn_settings">Mergeți la setările VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">Setările pentru Conectare automată și Mod blocare se găsesc în setările de sistem Android, urmați acest ghid pentru a activa una dintre ele sau pe ambele.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. După ce apăsați butonul \"Mergeți la setările VPN\" de mai jos, apăsați pe roata dințată de lângă numele \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. După ce apăsați butonul \"Mergeți la setările VPN\" de mai jos, apăsați pe roata dințată de lângă numele \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Conectarea automată se numește VPN permanent în setările de sistem Android și asigură conectarea permanentă la tunelul VPN și conectarea automată după repornire.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Pentru a activa Conectarea automată, apăsați comutatorul de lângă \"VPN permanent\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">Modul blocare se numește \"Blocați conexiunile fără VPN\" în setările de sistem Android. Ajută la reducerea scurgerilor de date, însă are unele limitări cunoscute despre care puteți citi mai multe</string>

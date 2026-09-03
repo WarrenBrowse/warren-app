@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">اتصال خودکار و حالت قفل</string>
     <string name="go_to_vpn_settings">رفتن به تنظیمات VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">تنظیمات اتصال خودکار و حالت قفل در تنظیمات سیستمی اندروید قرار دارند. برای فعال‌کردن یکی یا هر دو، این راهنما را دنبال کنید.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. پس از کلیک روی دکمهٔ «رفتن به تنظیمات VPN» در پایین، روی آیکون چرخ‌دندهٔ کنار نام «Warren VPN» کلیک کنید.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. پس از کلیک روی دکمهٔ «رفتن به تنظیمات VPN» در پایین، روی آیکون چرخ‌دندهٔ کنار نام «%1$s» کلیک کنید.</string>
     <string name="auto_connect_carousel_second_slide_top_text">در تنظیمات سیستم اندروید، «اتصال خودکار» با نام «VPN همیشه‌فعال» شناخته می‌شود و باعث می‌شود دستگاه شما همیشه به تونل VPN وصل بماند و پس از راه‌اندازی مجدد نیز به‌طور خودکار دوباره متصل شود.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. برای فعال کردن «اتصال خودکار»، روی دکمهٔ تغییر وضعیت کنار «VPN همیشه‌فعال» کلیک کنید.</string>
     <string name="auto_connect_carousel_third_slide_top_text">حالت قفل در تنظیمات سیستمی اندروید با نام «مسدود کردن اتصال‌ها بدون VPN» نمایش داده می‌شود. این حالت به کاهش نشت ارتباطات کمک می‌کند، اما محدودیت‌های شناخته‌شده‌ای دارد که می‌توانید بیشتر دربارهٔ آن بخوانید</string>

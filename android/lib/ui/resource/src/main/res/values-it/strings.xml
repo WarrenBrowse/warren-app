@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Modalità di connessione automatica e blocco</string>
     <string name="go_to_vpn_settings">Vai alle impostazioni VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">Le impostazioni della modalità di Connessione automatica e di Blocco si trovano nelle impostazioni del sistema Android. Segui questa guida per abilitare una o entrambe.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Dopo aver cliccato sul pulsante \"Vai alle impostazioni VPN\" in basso, clicca sulla rotella accanto al nome \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Dopo aver cliccato sul pulsante \"Vai alle impostazioni VPN\" in basso, clicca sulla rotella accanto al nome \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">La connessione automatica è denominata VPN sempre attiva nelle impostazioni del sistema Android e garantisce di essere costantemente connessi al tunnel VPN e di connettersi automaticamente dopo il riavvio.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Per abilitare la connessione automatica, clicca sull\'interruttore accanto a \"VPN sempre attiva\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">La Modalità Blocco si chiama \"Blocca connessioni senza VPN\" nelle impostazioni del sistema Android. Aiuta a ridurre al minimo le perdite, tuttavia presenta alcune limitazioni su cui consigliamo di approfondire</string>

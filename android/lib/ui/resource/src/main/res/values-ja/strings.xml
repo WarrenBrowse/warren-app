@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">自動接続とロックダウンモード</string>
     <string name="go_to_vpn_settings">VPN設定に移動</string>
     <string name="auto_connect_carousel_first_slide_top_text">自動接続とロックダウンモードの設定はAndroidシステム設定にあります。どちらか、または両方をこのガイドに従って有効にしてください。</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. 下の [VPN設定に移動] ボタンをクリックし、[Warren VPN] 名の横にある歯車をクリックします。</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. 下の [VPN設定に移動] ボタンをクリックし、[%1$s] 名の横にある歯車をクリックします。</string>
     <string name="auto_connect_carousel_second_slide_top_text">自動接続はAndroidシステム設定で「Always-on VPN」と呼ばれており、確実に一貫してVPNトンネルに接続し、再起動の後に自動接続を行う機能です。</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. 自動接続を有効にするには、[Always-on VPN] の横のトグルボタンをクリックします。</string>
     <string name="auto_connect_carousel_third_slide_top_text">このロックダウンモードは、Androidのシステム設定では [VPN以外の接続のブロック] と呼ばれています。情報漏洩の可能性を低減することが可能ですが、既知の制限がいくつかあります。制限については、</string>

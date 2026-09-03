@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">အော်တို ချိတ်ဆက်မှု နှင့် လော့ခ်ဒေါင်းစနစ်</string>
     <string name="go_to_vpn_settings">VPN ဆက်တင်များသို့ သွားရန်</string>
     <string name="auto_connect_carousel_first_slide_top_text">အော်တို ချိတ်ဆက်မှုနှင့် လော့ခ်ဒေါင်းစနစ် ဆက်တင်များကို Android စနစ် ဆက်တင်များတွင် ရှာတွေ့နိုင်ပြီး တစ်ခု သို့မဟုတ် နှစ်ခုလုံးကို ဖွင့်ရန် ဤလမ်းညွှန်ချက်ကို လိုက်နာပါ။</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. အောက်ရှိ \"VPN ဆက်တင်များသို့ သွားရန်\" ခလုတ်ကိုနှိပ်ပြီးနောက် \"Warren VPN\" အမည်ဘေးရှိ ခွေးသွားစိတ်ပုံကို နှိပ်ပါ။</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. အောက်ရှိ \"VPN ဆက်တင်များသို့ သွားရန်\" ခလုတ်ကိုနှိပ်ပြီးနောက် \"%1$s\" အမည်ဘေးရှိ ခွေးသွားစိတ်ပုံကို နှိပ်ပါ။</string>
     <string name="auto_connect_carousel_second_slide_top_text">Android စနစ် ဆက်တင်တွင် အော်တိုချိတ်ဆက်မှုကို အမြဲဖွင့် VPN ဟုခေါ်ပြီး VPN Tunnel ကို အမြဲချိတ်ဆက်ထားကြောင်း သေချာစေပြီး အစမှ ပြန်ဖွင့်ပြီးနောက် အော်တို ချိတ်ဆက်ပါသည်။</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. အော်တို ချိတ်ဆက်မှုကို ဖွင့်ရန် \"အမြဲဖွင့် VPN\" ဘေးရှိ ဖွင့်/ပိတ် ခလုတ်ကို နှိပ်ပါ။</string>
     <string name="auto_connect_carousel_third_slide_top_text">လော့ခ်ဒေါင်းစနစ်ကို Android စနစ်ဆက်တင်များတွင် \"VPN မသုံးဘဲ ချိတ်ဆက်မှုများကို ပိတ်ဆို့ရန်\"ဟု ခေါ်ဆိုပါသည်။ ၎င်းသည် ပေါက်ကြားမှုများကို လျှော့ချနိုင်အောင် ကူညီပေးနိုင်သော်လည်း အများသိ အကန့်အသတ်များရှိပြီး ၎င်းတို့အကြောင်းကို ဖော်ပြပါတွင် ဖတ်ရှုနိုင်သည်</string>

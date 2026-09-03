@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Automatisk tilkobling og låsemodus</string>
     <string name="go_to_vpn_settings">Gå til VPN-innstillinger</string>
     <string name="auto_connect_carousel_first_slide_top_text">Du finner innstillingene for automatisk tilkobling og låsemodus i Androids systeminnstillinger. Følg denne veiledningen for å aktivere én eller begge.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Etter at du har klikket på «Gå til VPN-innstillinger»-knappen nedenfor, trykker du på tannhjulet ved siden av navnet «Warren VPN».</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Etter at du har klikket på «Gå til VPN-innstillinger»-knappen nedenfor, trykker du på tannhjulet ved siden av navnet «%1$s».</string>
     <string name="auto_connect_carousel_second_slide_top_text">Automatisk tilkobling heter «Alltid-på-VPN» i Androids systeminnstillinger og sørger for at du alltid er tilkoblet VPN-tunnelen og automatisk tilkobling etter omstart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. For å aktivere «Automatisk tilkobling» klikker du på bryteren ved siden av «VPN alltid på».</string>
     <string name="auto_connect_carousel_third_slide_top_text">Låsemodusen kalles «Blokker tilkoblinger uten VPN» i systeminnstillingene for Android. Den bidrar til å minimere lekkasjer, men den har noen kjente begrensninger som du kan lese mer om</string>

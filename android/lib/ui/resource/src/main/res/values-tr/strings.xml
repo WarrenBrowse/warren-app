@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Otomatik bağlantı ve Kilitleme modu</string>
     <string name="go_to_vpn_settings">VPN ayarlarına git</string>
     <string name="auto_connect_carousel_first_slide_top_text">Otomatik Bağlantı ve Kilitleme modu ayarları Android sistem ayarlarında yer alır. Bu ayarlardan birini veya her ikisini de etkinleştirmek için bu kılavuza göz atın.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Aşağıdaki \"VPN ayarlarına git\" düğmesine tıkladıktan sonra \"Warren VPN\" adının yanındaki dişli çarka tıklayın.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Aşağıdaki \"VPN ayarlarına git\" düğmesine tıkladıktan sonra \"%1$s\" adının yanındaki dişli çarka tıklayın.</string>
     <string name="auto_connect_carousel_second_slide_top_text">Otomatik bağlantı, Android sistem ayarlarında VPN her zaman açık olarak gösterilir ve VPN tüneline sürekli bağlı olmanızı ve yeniden başlatma sonrası otomatik olarak bağlanmanızı sağlar.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Otomatik bağlantıyı etkinleştirmek için \"VPN her zaman açık\" seçeneğinin yanındaki düğmeye tıklayın.</string>
     <string name="auto_connect_carousel_third_slide_top_text">Android sistem ayarlarında \"Kilitleme modu VPN üzerinden olmayan bağlantıları engelle\" olarak adlandırılmıştır. Bu özellik, sızıntıları en aza indirmeye yardımcı olsa da ayrıntılar konusunda bilgi edinmeniz gereken bazı bilinen sınırlamaları vardır</string>

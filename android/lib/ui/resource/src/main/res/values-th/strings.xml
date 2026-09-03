@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">เชื่อมต่ออัตโนมัติและโหมดล็อกดาวน์</string>
     <string name="go_to_vpn_settings">ไปที่การตั้งค่า VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">การตั้งค่าการเชื่อมต่ออัตโนมัติและโหมดล็อกดาวน์ อยู่ในการตั้งค่าระบบ Android โปรดทำตามคำแนะนำนี้ เพื่อเปิดใช้งานโหมดใดโหมดหนึ่ง หรือทั้งสองโหมด</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"Warren VPN\"</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. หลังจากคลิกปุ่ม \"ไปที่การตั้งค่า VPN\" ที่ด้านล่าง ให้คลิกล้อเฟืองที่อยู่ถัดจากชื่อ \"%1$s\"</string>
     <string name="auto_connect_carousel_second_slide_top_text">การเชื่อมต่ออัตโนมัติเรียกว่า Always-on VPN ในการตั้งค่าระบบ Android ซึ่งจะช่วยให้คุณมั่นใจได้ว่า คุณเชื่อมต่อกับช่องทาง VPN อย่างต่อเนื่อง และมีการเชื่อมต่ออัตโนมัติหลังจากรีสตาร์ต</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. ในการเปิดใช้การเชื่อมต่ออัตโนมัติ ให้คลิกปุ่มเปิด/ปิดที่อยู่ถัดจาก \"VPN เปิดอยู่เสมอ\"</string>
     <string name="auto_connect_carousel_third_slide_top_text">โหมดล็อกดาวน์ถูกเรียกว่า \"ปิดกั้นการเชื่อมต่อที่ไม่ใช้ VPN\" ในการตั้งค่าระบบ Android ซึ่งจะช่วยลดการรั่วไหล แต่ก็มีข้อจำกัดบางประการ ซึ่งคุณสามารถอ่านข้อมูลเพิ่มเติมเกี่ยวกับเรื่องดังกล่าวได้</string>

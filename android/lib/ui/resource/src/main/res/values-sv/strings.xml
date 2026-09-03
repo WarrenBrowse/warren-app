@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Anslut automatiskt och Låsningsläge</string>
     <string name="go_to_vpn_settings">Gå till VPN-inställningar</string>
     <string name="auto_connect_carousel_first_slide_top_text">Inställningar för Anslut automatiskt och Låsningsläge finns i Androids systeminställningar. Följ guiden för att aktivera en av dem eller båda.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"Warren VPN\".</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Efter att du har klickat på \"Gå till VPN-inställningar\" nedan klickar du på kugghjulet bredvid namnet \"%1$s\".</string>
     <string name="auto_connect_carousel_second_slide_top_text">Anslut automatiskt kallas Alltid på-VPN i Androids systeminställningar och ser till att du är ansluten till VPN-tunneln oavbrutet och ansluter automatiskt efter omstart.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Om du vill aktivera Anslut automatiskt klickar du på växlingsknappen bredvid \"Alltid på-VPN\".</string>
     <string name="auto_connect_carousel_third_slide_top_text">Låsningsläget kallas \"Blockera anslutningar utan VPN\" i systeminställningarna på Android. Det minimerar läckor men det finns några kända begränsningar som du kan läsa mer om</string>

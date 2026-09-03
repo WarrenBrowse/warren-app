@@ -21,7 +21,7 @@
     <string name="auto_connect_and_lockdown_mode">Автопідключення і режим блокування</string>
     <string name="go_to_vpn_settings">До налаштувань VPN</string>
     <string name="auto_connect_carousel_first_slide_top_text">Налаштування автопідключення та режиму блокування можна знайти в системних налаштуваннях Android. Скористайтеся цією інструкцією, щоб увімкнути один або обидва параметри.</string>
-    <string name="auto_connect_carousel_first_slide_bottom_text">1. Після натискання кнопки «До налаштувань VPN» нижче натисніть значок шестерні поруч із пунктом Warren VPN.</string>
+    <string name="auto_connect_carousel_first_slide_bottom_text">1. Після натискання кнопки «До налаштувань VPN» нижче натисніть значок шестерні поруч із пунктом %1$s.</string>
     <string name="auto_connect_carousel_second_slide_top_text">В налаштуваннях системи Android автопідключення називається «Завжди увімкнений VPN». Ця функція підтримує постійне з’єднання з VPN-тунелем і автоматично відновлює підключення після перезавантаження.</string>
     <string name="auto_connect_carousel_second_slide_bottom_text">2. Щоб увімкнути автопідключення, натисніть перемикач поруч із пунктом «Завжди увімкнений VPN».</string>
     <string name="auto_connect_carousel_third_slide_top_text">У системних налаштуваннях Android режим блокування називається «Блокувати з’єднання без VPN». Він допомагає мінімізувати витоки, хоча має деякі обмеження, про які ви можете прочитати</string>

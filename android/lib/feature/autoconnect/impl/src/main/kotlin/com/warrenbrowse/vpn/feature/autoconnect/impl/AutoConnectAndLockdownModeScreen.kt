@@ -243,7 +243,7 @@ private fun ConstraintLayoutScope.AutoConnectCarousel(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 text =
                     HtmlCompat.fromHtml(
-                            stringResource(id = page.bottomText),
+                            page.bottomText(),
                             HtmlCompat.FROM_HTML_MODE_COMPACT,
                         )
                         .toAnnotatedString(
@@ -338,7 +338,20 @@ private fun buildLockdownTopText(isPlayBuild: Boolean) = buildAnnotatedString {
     }
 }
 
-private enum class PAGES(val image: Int, val bottomText: Int) {
+/**
+ * The first slide walks the user through a list Android labels with the app's own name, which the
+ * three product environments spell differently, so the caption takes it rather than spelling one
+ * of them out. The slide images carry the same name and are regenerated per environment
+ * (`scripts/vpn-settings-guide/make.py`).
+ */
+@Composable
+private fun PAGES.bottomText(): String =
+    when (this) {
+        PAGES.FIRST -> stringResource(id = bottomTextRes, stringResource(id = R.string.app_name))
+        else -> stringResource(id = bottomTextRes)
+    }
+
+private enum class PAGES(val image: Int, val bottomTextRes: Int) {
     FIRST(
         R.drawable.carousel_slide_1_cogwheel,
         R.string.auto_connect_carousel_first_slide_bottom_text,
