@@ -422,6 +422,31 @@ class WarrenAnnouncementPollerTest {
     }
 
     @Test
+    fun a_wallet_that_leaves_takes_its_card_off_the_screen_at_once() = runTest {
+        // The card carries the code drawn for one account and the published
+        // set outlives a logout: the next person to restore their wallet on
+        // this device must not read the previous account's code.
+        val state = WarrenAnnouncementRepository()
+        val wallet = FakeWalletRepository()
+        val jni =
+            FakeJniBridge(
+                announcementsAnswer = { LAUNCH_CARD },
+                voucherAnswer = { """{"ok":true,"code":"ABCD1234EFGH5678"}""" },
+            )
+        val accepted = MutableStateFlow(true)
+        val job = launch { poller(jni, state, wallet, scheduler = testScheduler).runWhile(accepted) }
+        runCurrent()
+        assertEquals("ABCD1234EFGH5678", state.announcements.value.single().voucherCode)
+
+        wallet.stateFlow.value = WalletState.Absent
+        runCurrent()
+
+        assertEquals(emptyList<WarrenAnnouncement>(), state.announcements.value)
+
+        job.cancel()
+    }
+
+    @Test
     fun another_wallet_draws_its_own_code() = runTest {
         // A code belongs to the account it was drawn for, so the held answer
         // goes with the identity it was drawn under.

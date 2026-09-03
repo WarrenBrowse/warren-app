@@ -15,10 +15,14 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
@@ -99,8 +103,32 @@ class WarrenAnnouncementPoller(
      * accepted it, and an announcement is worth no exception. Accepting fetches
      * at once, so the first card is never five minutes late.
      */
-    suspend fun runWhile(wanted: Flow<Boolean>) {
+    suspend fun runWhile(wanted: Flow<Boolean>) = coroutineScope {
+        // The identity watch lives exactly as long as the poll: a card that is
+        // on screen is a card that can be read by whoever holds the device.
+        launch { forgetTheCardsOfADepartedWallet() }
         wanted.distinctUntilChanged().collectLatest { if (it) run() }
+    }
+
+    /**
+     * Takes the published cards down the moment the wallet changes.
+     *
+     * A card carries the code drawn for ONE account and the published set
+     * outlives a logout, so without this the next person to restore their
+     * wallet on this device would read the previous account's code, under
+     * "Your code", with a copy button, until the five minute refresh came
+     * round. The next fetch republishes what the new identity holds.
+     */
+    private suspend fun forgetTheCardsOfADepartedWallet() {
+        wallet.state
+            .map { identityOf(it) }
+            .distinctUntilChanged()
+            .drop(1)
+            .collect {
+                held.clear()
+                heldFor = null
+                state.setAnnouncements(emptyList())
+            }
     }
 
     /** One fetch published to [WarrenAnnouncementState]; returns the fetch class. */
@@ -197,8 +225,10 @@ class WarrenAnnouncementPoller(
      * The account the held answers belong to, `null` when this device holds no
      * wallet at all. The address is a key in memory and never logged.
      */
-    private fun walletIdentity(): String? =
-        when (val state = wallet.state.value) {
+    private fun walletIdentity(): String? = identityOf(wallet.state.value)
+
+    private fun identityOf(state: WalletState): String? =
+        when (state) {
             is WalletState.Locked -> state.pubkey.value
             is WalletState.Ready -> state.pubkey.value
             else -> null
