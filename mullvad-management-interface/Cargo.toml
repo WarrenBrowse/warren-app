@@ -32,5 +32,11 @@ tonic-build = { workspace = true, default-features = false, features = [
 [target.'cfg(unix)'.dependencies]
 nix = { workspace = true, features = ["fs", "user"] }
 
+# The cross-environment ownership gate asks the Windows security descriptor
+# who owns a named pipe, which is the same query `pipeIsAdminOwned` runs in
+# the desktop main process.
+[target.'cfg(windows)'.dependencies]
+talpid-windows = { path = "../talpid-windows" }
+
 [lints]
 workspace = true

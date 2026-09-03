@@ -127,6 +127,59 @@ fn product_environments_never_share_runtime_paths() {
 }
 
 #[test]
+fn every_environment_gets_its_own_rpc_socket_path() {
+    // Cross-environment arbitration dials a foreign environment's socket by
+    // deriving its path, so two environments resolving to the same path would
+    // make a build watch itself and stand down for its own tunnel.
+    let paths: Vec<_> = warren_product_env::ALL
+        .iter()
+        .map(|env| (*env, mullvad_paths::rpc_socket_path_for(*env)))
+        .collect();
+    for (i, (env_a, a)) in paths.iter().enumerate() {
+        assert!(
+            !path_contains_mullvad(a),
+            "{} rpc socket {} collides with the upstream daemon",
+            env_a.name(),
+            a.display()
+        );
+        for (env_b, b) in &paths[i + 1..] {
+            assert_ne!(
+                a,
+                b,
+                "{} and {} share an RPC socket path",
+                env_a.name(),
+                env_b.name()
+            );
+        }
+    }
+    // The derived path must carry that environment's own product name, not
+    // the compiled one.
+    for (env, path) in &paths {
+        let expected = if cfg!(windows) {
+            env.display_name()
+        } else {
+            env.unix_product_dir()
+        };
+        assert!(
+            path.to_string_lossy().contains(expected),
+            "{} rpc socket {} does not carry its own product name",
+            env.name(),
+            path.display()
+        );
+    }
+}
+
+#[test]
+fn the_default_rpc_socket_path_is_the_current_environments_derived_path() {
+    // One spelling of the format: the compiled default is nothing more than
+    // the per-environment derivation applied to the compiled environment.
+    assert_eq!(
+        mullvad_paths::rpc_socket_path_for(warren_product_env::CURRENT),
+        mullvad_paths::get_default_rpc_socket_path()
+    );
+}
+
+#[test]
 fn log_dir_path_isolates_from_mullvad_upstream() {
     let path = mullvad_paths::get_default_log_dir().expect("get log dir");
     assert!(

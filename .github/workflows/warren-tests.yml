@@ -80,7 +80,8 @@ jobs:
         run: |
           cargo fmt \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli \
+            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
+            -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns \
             -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
             -p mullvad-update -p mullvad-release \
@@ -114,11 +115,19 @@ jobs:
         # sat in the workspace and in the fmt scope while nothing ran their
         # tests: warren-jni only compiles them, so a broken forum test (the size
         # cap, the outcome envelopes) stayed green here. Same for clippy below.
+        #
+        # mullvad-paths and mullvad-setup ran nowhere at all, in any scope. They
+        # are where the per-environment runtime paths and the update dead-man
+        # live, so a change that made two product environments share an RPC
+        # socket, or that renamed a dead-man job, passed every gate. Their deps
+        # are already built here (mullvad-daemon pulls both), so they cost a
+        # compile of two small crates.
         timeout-minutes: 30
         run: |
           cargo nextest run --locked --profile warren-ci \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli \
+            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
+            -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p warren-jni \
             -p warren-forum -p warren-product-env \
             -p mullvad-update -p mullvad-release
@@ -133,6 +142,7 @@ jobs:
         run: |
           crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns"
           crates="$crates warren-jni warren-forum warren-product-env"
+          crates="$crates mullvad-paths mullvad-setup"
           crates="$crates mullvad-update mullvad-release"
           for crate in $crates; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings

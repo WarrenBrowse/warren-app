@@ -243,11 +243,15 @@ impl ProductEnv {
 /// what makes that class self-healing. An environment that IS installed keeps
 /// its objects: they are that daemon's live kill switch, not garbage.
 ///
-/// `is_installed` answers `None` when it could not tell (an SCM query that
-/// errored, for example). An unanswerable environment counts as INSTALLED and
-/// is never swept: wrongly sweeping disarms a kill switch someone relies on,
-/// wrongly skipping only defers the sweep to the next daemon start. The fold
-/// lives here, next to its tests, so no caller can get its direction wrong.
+/// FAIL-SAFE DIRECTION: unknown means PRESENT. `is_installed` answers `None`
+/// when it could not tell (an SCM query that errored, for example), and an
+/// unanswerable environment counts as INSTALLED and is never swept: wrongly
+/// sweeping disarms a kill switch someone relies on, wrongly skipping only
+/// defers the sweep to the next daemon start. The fold lives here, next to
+/// its tests, so no caller can get its direction wrong.
+///
+/// [`environments_with_priority_over`] leans the other way (unknown means
+/// ABSENT), so the two must never share an implementation.
 pub fn orphan_generation_salts(
     current: ProductEnv,
     is_installed: impl Fn(ProductEnv) -> Option<bool>,
@@ -268,6 +272,42 @@ pub fn orphan_generation_salts(
 /// remove. Any new environment must be added here, and the tests enforce that
 /// the set stays complete.
 pub const ALL: [ProductEnv; 3] = [ProductEnv::Prod, ProductEnv::Staging, ProductEnv::Beta];
+
+/// Every environment ranked from the strongest claim on the machine to the
+/// weakest: prod outranks staging, staging outranks beta.
+///
+/// Two environments installed side by side both want the machine's single
+/// tunnel, and the arbitration is one-directional by design: the WEAKER one
+/// observes the stronger and stands down by itself. The stronger one is never
+/// modified, and never issues a command, because the management socket is
+/// world-accessible and a push design would hand any local process a
+/// documented way to disarm a kill switch.
+///
+/// The order is declared once, here, so no call site invents its own
+/// comparison. Any new environment takes a place in this list.
+pub const PRECEDENCE: [ProductEnv; 3] = [ProductEnv::Prod, ProductEnv::Staging, ProductEnv::Beta];
+
+/// The environments that outrank `current`, strongest first.
+///
+/// A build asks this which foreign environments it must watch, and stands
+/// down while any of them asserts the machine. Prod gets an empty list, so
+/// prod never watches anything.
+///
+/// FAIL-SAFE DIRECTION: unknown means ABSENT. The probe a caller builds on
+/// top of this list must treat an environment it cannot reach, or whose
+/// socket the OS does not vouch for, as NOT asserting. Wrongly yielding
+/// disarms this build's own kill switch on no evidence, while wrongly staying
+/// up only leaves two idle daemons. That is the opposite of
+/// [`orphan_generation_salts`], which treats an unanswerable environment as
+/// present; keep the two folds separate or the inversion is lost.
+#[must_use]
+pub fn environments_with_priority_over(current: ProductEnv) -> Vec<ProductEnv> {
+    PRECEDENCE
+        .iter()
+        .take_while(|env| **env != current)
+        .copied()
+        .collect()
+}
 
 const fn parse(name: &str) -> ProductEnv {
     // const-compatible string compare; build.rs already validated the value.
@@ -402,6 +442,84 @@ mod tests {
             _ => Some(false),
         });
         assert_eq!(salts, vec![ProductEnv::Staging.guid_salt()]);
+    }
+
+    #[test]
+    fn prod_yields_to_nobody() {
+        // Prod is the top of the order, so it never stands down for another
+        // environment. The whole coexistence design leans on this: prod is
+        // never modified by a lower environment.
+        assert!(environments_with_priority_over(ProductEnv::Prod).is_empty());
+    }
+
+    #[test]
+    fn beta_yields_to_prod_then_staging() {
+        // Highest first, so a caller that stops at the first asserting
+        // environment reports the strongest one.
+        assert_eq!(
+            environments_with_priority_over(ProductEnv::Beta),
+            vec![ProductEnv::Prod, ProductEnv::Staging]
+        );
+    }
+
+    #[test]
+    fn staging_yields_to_prod_only() {
+        assert_eq!(
+            environments_with_priority_over(ProductEnv::Staging),
+            vec![ProductEnv::Prod]
+        );
+    }
+
+    #[test]
+    fn precedence_is_total_and_antisymmetric() {
+        // Total: every environment this product ships is ranked, so no
+        // environment is left without a place in the order.
+        for env in ALL {
+            assert!(
+                PRECEDENCE.contains(&env),
+                "{} is missing from PRECEDENCE",
+                env.name()
+            );
+        }
+        assert_eq!(PRECEDENCE.len(), ALL.len());
+
+        // Antisymmetric and irreflexive: for any two distinct environments
+        // exactly one outranks the other, and none outranks itself. Without
+        // this two environments could each stand down for the other and the
+        // machine would end up with no tunnel at all.
+        for a in PRECEDENCE {
+            assert!(
+                !environments_with_priority_over(a).contains(&a),
+                "{} outranks itself",
+                a.name()
+            );
+            for b in PRECEDENCE {
+                if a == b {
+                    continue;
+                }
+                let a_over_b = environments_with_priority_over(b).contains(&a);
+                let b_over_a = environments_with_priority_over(a).contains(&b);
+                assert!(
+                    a_over_b ^ b_over_a,
+                    "{} and {} must be strictly ordered",
+                    a.name(),
+                    b.name()
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn precedence_never_reorders_the_orphan_sweep() {
+        // The two folds have opposite fail-safe directions and must stay
+        // separate: the sweep keeps an unanswerable environment, the yield
+        // ignores one. Sharing an implementation is how that inversion gets
+        // lost, so pin that the yield fold ignores installation entirely.
+        assert_eq!(
+            environments_with_priority_over(ProductEnv::Beta),
+            vec![ProductEnv::Prod, ProductEnv::Staging]
+        );
+        assert!(orphan_generation_salts(ProductEnv::Beta, |_| None).is_empty());
     }
 
     #[test]

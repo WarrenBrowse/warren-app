@@ -83,7 +83,9 @@ pub mod resources;
 pub use crate::resources::{get_default_resource_dir, get_resource_dir};
 
 mod rpc_socket;
-pub use crate::rpc_socket::{get_default_rpc_socket_path, get_rpc_socket_path};
+pub use crate::rpc_socket::{
+    get_default_rpc_socket_path, get_rpc_socket_path, rpc_socket_path_for,
+};
 
 mod settings;
 pub use crate::settings::{get_default_settings_dir, settings_dir};

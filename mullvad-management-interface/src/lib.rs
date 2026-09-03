@@ -135,12 +135,23 @@ pub async fn new_management_service_client() -> Result<ManagementServiceClient, 
 }
 
 /// Create a [Channel] for communication between any of the available gRPC clients (e.g.
-/// [ManagementServiceClient]) and the management interface gRPC service.
+/// [ManagementServiceClient]) and this environment's management interface gRPC service.
 #[cfg(not(target_os = "android"))]
 pub(crate) async fn grpc_transport_channel() -> Result<Channel, Error> {
-    use futures::TryFutureExt;
+    grpc_transport_channel_at(mullvad_paths::get_rpc_socket_path()).await
+}
 
-    let ipc_path = mullvad_paths::get_rpc_socket_path();
+/// Create a [Channel] to the management interface listening at `ipc_path`.
+///
+/// A caller passing a path it did NOT derive from its own product environment
+/// (`mullvad_paths::rpc_socket_path_for` for another environment) MUST gate
+/// the dial on [`foreign_socket_is_privileged`] first. The management socket
+/// is world-accessible by design (`0o766` on unix, `allow_everyone_create` on
+/// the Windows pipe), so any local process can bind a lookalike path and
+/// answer whatever it likes.
+#[cfg(not(target_os = "android"))]
+pub async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
+    use futures::TryFutureExt;
 
     // The URI will be ignored
     Endpoint::from_static("lttp://[::]:50051")
@@ -149,6 +160,45 @@ pub(crate) async fn grpc_transport_channel() -> Result<Channel, Error> {
         }))
         .await
         .map_err(Error::GrpcTransportError)
+}
+
+/// Whether the OS vouches that the management endpoint at `path` belongs to a
+/// privileged process: owned by uid 0 on unix, owned by SYSTEM or the
+/// built-in administrators on Windows.
+///
+/// This is the admission gate for every cross-environment dial, and it is the
+/// same check the desktop GUI runs on its own daemon in `verifyOwnership()`.
+/// Without it a foreign environment's state is worthless as evidence: the
+/// management socket is world-accessible and `DisconnectTunnel`,
+/// `SetLockdownMode` and `SetAutoConnect` are unauthenticated, so an
+/// unprivileged process that binds prod's path could hold a kill switch open
+/// forever and any environment that believed it would stand down on command.
+///
+/// Answers `false` for anything it cannot verify: an absent path, a path that
+/// is not an endpoint at all, an ownership query that failed. An environment
+/// that is not installed has no socket, and a probe that cannot see one must
+/// read as "nothing to yield to" rather than as an error.
+#[cfg(all(unix, not(target_os = "android")))]
+#[must_use]
+pub fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
+    use std::os::unix::fs::{FileTypeExt, MetadataExt};
+
+    // symlink_metadata, not metadata: a symlink an unprivileged user planted
+    // at the derived path must never inherit the target's ownership.
+    std::fs::symlink_metadata(path)
+        .is_ok_and(|meta| meta.file_type().is_socket() && meta.uid() == 0)
+}
+
+/// Windows variant of the unix gate above: open the named pipe and ask the
+/// security descriptor who owns it, mirroring `pipeIsAdminOwned` in the
+/// desktop main process.
+#[cfg(windows)]
+#[must_use]
+pub fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
+    let Ok(pipe) = std::fs::File::options().read(true).open(path) else {
+        return false;
+    };
+    talpid_windows::fs::is_admin_owned(pipe).unwrap_or(false)
 }
 
 #[cfg(not(target_os = "android"))]
@@ -418,6 +468,83 @@ impl<T: AsyncRead + AsyncWrite + Unpin> AsyncWrite for StreamBox<T> {
 
     fn poll_shutdown(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
         Pin::new(&mut self.inner).poll_shutdown(cx)
+    }
+}
+
+#[cfg(all(test, not(target_os = "android")))]
+mod foreign_socket_tests {
+    use super::foreign_socket_is_privileged;
+
+    /// A private directory under the system temp dir, removed on drop.
+    ///
+    /// The name is kept short on purpose: a unix socket path must fit in
+    /// `sun_path` (104 bytes on macOS), and the system temp dir already eats
+    /// most of that on a Mac.
+    struct Scratch(std::path::PathBuf);
+
+    impl Scratch {
+        fn new(tag: &str) -> Self {
+            let unique = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .subsec_nanos();
+            let dir =
+                std::env::temp_dir().join(format!("wfs-{tag}-{}-{unique}", std::process::id()));
+            std::fs::create_dir_all(&dir).expect("create scratch dir");
+            Scratch(dir)
+        }
+
+        fn join(&self, name: &str) -> std::path::PathBuf {
+            self.0.join(name)
+        }
+    }
+
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+
+    #[test]
+    fn a_path_that_does_not_exist_is_not_privileged() {
+        // The probe must answer "no" rather than error out: an environment
+        // that is not installed simply has no socket, and the caller reads a
+        // false here as "nothing to yield to".
+        let scratch = Scratch::new("a");
+        assert!(!foreign_socket_is_privileged(
+            &scratch.join("no-such-socket")
+        ));
+    }
+
+    #[test]
+    fn a_regular_file_is_not_privileged() {
+        // Only a live management endpoint counts. A regular file at the
+        // derived path is leftover garbage or bait, never a daemon.
+        let scratch = Scratch::new("r");
+        let path = scratch.join("not-a-socket");
+        std::fs::write(&path, b"not a socket").expect("write file");
+        assert!(!foreign_socket_is_privileged(&path));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_socket_owned_by_an_unprivileged_user_is_not_privileged() {
+        // The whole point of the gate. The management socket is
+        // world-accessible and its RPCs are unauthenticated, so any local
+        // process can bind a lookalike path and answer "connected" forever.
+        // Believing it would disarm this build's kill switch on demand.
+        let scratch = Scratch::new("u");
+        let path = scratch.join("s");
+        let _listener = std::os::unix::net::UnixListener::bind(&path).expect("bind test socket");
+        assert!(
+            path.exists(),
+            "the test socket must exist for the assertion below to mean anything"
+        );
+        // Phrased against the running uid so a root shell exercises the
+        // accepting branch instead of producing a spurious red. Every gated
+        // runner (CI and dev) is unprivileged, so this is the rejecting case.
+        let owner_is_root = nix::unistd::geteuid().is_root();
+        assert_eq!(foreign_socket_is_privileged(&path), owner_is_root);
     }
 }
 

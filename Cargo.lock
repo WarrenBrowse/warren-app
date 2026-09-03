@@ -3271,6 +3271,7 @@ dependencies = [
  "prost",
  "prost-types",
  "talpid-types",
+ "talpid-windows",
  "thiserror 2.0.18",
  "tipsy",
  "tokio",
