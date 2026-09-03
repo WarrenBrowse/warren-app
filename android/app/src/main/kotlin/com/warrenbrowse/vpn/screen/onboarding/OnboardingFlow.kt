@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.screen.onboarding
 
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
+import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.screen.navigation.OnboardingBetaAccessNavKey
@@ -33,6 +34,19 @@ internal fun enterWalletStep(
         }
     navigator.navigate(next)
 }
+
+/**
+ * Where the welcome step's skip link lands.
+ *
+ * With no wallet the skip still routes through wallet creation, because the wallet IS the identity
+ * on Android: what is skipped is the guided funding and preferences steps.
+ *
+ * With a wallet already on the device (every replay from the settings root) that screen is a dead
+ * end: it leaves on the transition into `WalletState.Ready`, which happened long ago, so its only
+ * remaining exit is the settings cogwheel, and Connect is unreachable until the app is killed.
+ */
+internal fun skipDestination(walletPresent: Boolean): NavKey2 =
+    if (walletPresent) ConnectNavKey else WarrenWalletNavKey(onboarding = false)
 
 /**
  * The wizard's real exits: the terminal Done CTA and every skip link. Stamps the completed flag,

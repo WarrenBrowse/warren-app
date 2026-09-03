@@ -67,6 +67,24 @@ class OnboardingFlowTest {
     }
 
     @Test
+    fun `skipping with a wallet already on the device lands on Connect`() {
+        // The wallet screen leaves on the transition into Ready, which a device
+        // that already holds a wallet will never produce again: rooting it there
+        // strands the user with the settings cogwheel as the only way out.
+        assertEquals(ConnectNavKey, skipDestination(walletPresent = true))
+    }
+
+    @Test
+    fun `skipping with no wallet still routes through wallet creation`() {
+        // The wallet IS the identity on Android: what the skip drops is the
+        // guided funding and preferences steps, never the wallet itself.
+        assertEquals(
+            WarrenWalletNavKey(onboarding = false),
+            skipDestination(walletPresent = false),
+        )
+    }
+
+    @Test
     fun `leaving the wizard marks it completed`() {
         val navigator = navigatorAt(OnboardingNavKey)
 

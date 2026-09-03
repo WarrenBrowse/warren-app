@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.core.Navigator
-import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -30,9 +29,8 @@ import org.koin.compose.koinInject
  * once (see [com.warrenbrowse.vpn.screen.splash.SplashViewModel]).
  *
  * "Get started" only advances; the wizard is marked completed at its real exits (see
- * [leaveWizard]). Skipping still routes through wallet creation because the wallet IS the identity
- * on Android: what is skipped is the guided funding and preferences steps, so the post-wallet
- * destination is Connect.
+ * [leaveWizard]). Where the skip link lands depends on whether the device already holds a wallet
+ * (see [skipDestination]).
  */
 @Composable
 fun OnboardingScreen(navigator: Navigator) {
@@ -77,7 +75,13 @@ fun OnboardingScreen(navigator: Navigator) {
             text = stringResource(R.string.onboarding_get_started),
         )
         PrimaryTextButton(
-            onClick = { leaveWizard(settings, navigator, WarrenWalletNavKey(onboarding = false)) },
+            onClick = {
+                leaveWizard(
+                    settings,
+                    navigator,
+                    skipDestination(walletPresent = walletState !is WalletState.Absent),
+                )
+            },
             text = stringResource(R.string.onboarding_skip),
         )
     }
