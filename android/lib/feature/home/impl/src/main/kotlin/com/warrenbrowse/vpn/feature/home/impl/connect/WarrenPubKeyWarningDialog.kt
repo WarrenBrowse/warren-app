@@ -41,12 +41,13 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.primaryDisabled
  * Trust-on-first-use exit-key mismatch warning, aligned with the desktop
  * `WarrenPubKeyWarning`: a title, two explanatory paragraphs, the cryptographic
  * detail rows (exit id, previously pinned key, newly observed key, location) and
- * two actions (trust the new key, or reject and stay disconnected).
+ * the same three actions: trust the new key, report the change to Warren and stay
+ * disconnected, or reject it and stay disconnected.
  *
- * The desktop's third action, "Report to Warren" (a signed POST to
- * `/v1/incidents/pubkey-mismatch`), is intentionally absent: the Android JNI
- * surface exposes no incident-report endpoint, so wiring it would need new engine
- * plumbing rather than a UI change.
+ * Reporting and rejecting both leave the tunnel down, so the report rides the
+ * rejection rather than adding a fourth outcome: what it adds is a signed
+ * `POST /v1/incidents/pubkey-mismatch` telling the operator which key was served
+ * where a pinned one was expected.
  */
 @Suppress("LongMethod")
 @Composable
@@ -56,6 +57,7 @@ fun WarrenPubKeyWarningDialog(
     observedPubkeyHex: String,
     locationText: String?,
     onTrust: () -> Unit,
+    onReport: () -> Unit,
     onReject: () -> Unit,
     // The decision runs a pin write plus a re-dial. While that is in flight the
     // choice is locked, and a failure keeps the dialog up with a reason rather
@@ -179,11 +181,22 @@ fun WarrenPubKeyWarningDialog(
             )
         },
         dismissButton = {
-            NegativeButton(
-                onClick = onReject,
-                isEnabled = !busy,
-                text = stringResource(R.string.warren_pubkey_warning_reject),
-            )
+            Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
+                // Reporting is the middle ground the desktop offers between
+                // trusting a key nobody announced and saying nothing about it:
+                // it leaves the tunnel down and tells the operator what was
+                // served.
+                PrimaryButton(
+                    onClick = onReport,
+                    isEnabled = !busy,
+                    text = stringResource(R.string.warren_pubkey_warning_report),
+                )
+                NegativeButton(
+                    onClick = onReject,
+                    isEnabled = !busy,
+                    text = stringResource(R.string.warren_pubkey_warning_reject),
+                )
+            }
         },
         containerColor = MaterialTheme.colorScheme.surface,
     )

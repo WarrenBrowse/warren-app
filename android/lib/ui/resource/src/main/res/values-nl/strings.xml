@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">%1$d vastgezette exit-sleutels verwijderd.</string>
     <string name="warren_pubkey_warning_trust">Nieuwe sleutel vertrouwen</string>
     <string name="warren_pubkey_warning_reject">Afwijzen (verbinding verbreken)</string>
+    <string name="warren_pubkey_warning_report">Melden bij Warren</string>
     <string name="tunnel_multihop_title">Multi-hop inschakelen</string>
     <string name="tunnel_multihop_tradeoff">Single-hop is sneller, maar dan ziet één relay zowel je IP als je bestemming. Multi-hop verdeelt ze over twee relays, zodat geen van beide ze allebei ziet.</string>
     <string name="tunnel_multihop_desc">Multi-hop stuurt verkeer via een aparte entry-relay zodat de exit je IP nooit ziet. Het is beschikbaar in de Warren-desktopapp. De Android-tunnel maakt momenteel single-hop verbinding, dus er wordt geen multi-hop-indicator getoond tijdens de verbinding.</string>

@@ -119,6 +119,22 @@ interface WarrenJniBridge {
     fun forumNotificationsSeen(mnemonic: String): String
 
     /**
+     * Report a pinned exit key that changed (`POST /v1/incidents/pubkey-mismatch`), signed and
+     * sent in Rust. Every field is already public through the signed relay list and the server
+     * records no signer, so the report says what changed and not who saw it. Returns
+     * `{"ok":true}` or `{"ok":false,"reason":"<class>"}`. Blocks on a network POST: invoke off
+     * the main thread.
+     */
+    fun reportPubkeyMismatch(
+        mnemonic: String,
+        exitIdHex: String,
+        oldPubkeyHex: String,
+        newPubkeyHex: String,
+        countryCode: String,
+        city: String,
+    ): String
+
+    /**
      * Collect the redacted problem report into [outputPath]: the Rust log
      * files, the Kotlin log directory [appLogDir], a logcat dump, and the
      * [metadataJson] facts (one JSON object) in the header, with every string

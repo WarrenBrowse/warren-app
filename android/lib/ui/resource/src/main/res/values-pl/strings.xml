@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Usunięto przypięte klucze wyjściowe: %1$d.</string>
     <string name="warren_pubkey_warning_trust">Zaufaj nowemu kluczowi</string>
     <string name="warren_pubkey_warning_reject">Odrzuć (rozłącz)</string>
+    <string name="warren_pubkey_warning_report">Zgłoś do Warren</string>
     <string name="tunnel_multihop_title">Włącz tryb wieloskokowy</string>
     <string name="tunnel_multihop_tradeoff">Tryb jednoskokowy jest szybszy, ale wtedy jeden przekaźnik widzi zarówno Twoje IP, jak i miejsce docelowe. Tryb wieloskokowy rozdziela je między dwa przekaźniki, więc żaden nie widzi obu.</string>
     <string name="tunnel_multihop_desc">Tryb wieloskokowy kieruje ruch przez osobny przekaźnik wejściowy, dzięki czemu węzeł wyjściowy nigdy nie widzi Twojego IP. Jest dostępny w aplikacji Warren na komputery. Tunel na Androidzie obecnie łączy się jednoskokowo, więc podczas połączenia nie jest wyświetlany wskaźnik trybu wieloskokowego.</string>

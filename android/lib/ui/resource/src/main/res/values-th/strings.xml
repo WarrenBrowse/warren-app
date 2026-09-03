@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">ลบคีย์ทางออกที่ปักหมุดแล้ว %1$d รายการ</string>
     <string name="warren_pubkey_warning_trust">เชื่อถือกุญแจใหม่</string>
     <string name="warren_pubkey_warning_reject">ปฏิเสธ (ตัดการเชื่อมต่อ)</string>
+    <string name="warren_pubkey_warning_report">รายงานไปยัง Warren</string>
     <string name="tunnel_multihop_title">เปิดใช้ Multi-hop</string>
     <string name="tunnel_multihop_tradeoff">Single-hop เร็วกว่า แต่รีเลย์เดียวจะเห็นทั้ง IP และปลายทางของคุณ ส่วน Multi-hop จะแยกทั้งสองอย่างไปยังรีเลย์สองตัว เพื่อไม่ให้ตัวใดเห็นทั้งคู่</string>
     <string name="tunnel_multihop_desc">Multi-hop ส่งการรับส่งข้อมูลผ่านรีเลย์ทางเข้าแยกต่างหาก เพื่อให้ exit ไม่เห็น IP ของคุณ มีให้ใช้งานบนแอป Warren เดสก์ท็อป ขณะนี้อุโมงค์ Android เชื่อมต่อแบบ single-hop ดังนั้นจึงไม่แสดงตัวบ่งชี้ multi-hop ขณะเชื่อมต่อ</string>

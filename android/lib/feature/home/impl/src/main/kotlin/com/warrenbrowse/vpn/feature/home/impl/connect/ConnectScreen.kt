@@ -130,6 +130,7 @@ import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectResult
+import com.warrenbrowse.vpn.lib.repository.WarrenIncidentReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
@@ -217,6 +218,9 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val warrenReconnect = koinInject<WarrenQuinnReconnectInvoker>()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val localSettings = koinInject<WarrenLocalSettingsRepository>()
+    // The key-mismatch dialog's "Report to Warren": a signed incident post,
+    // the only telemetry this screen sends and only when the user asks.
+    val incidentReporter = koinInject<WarrenIncidentReporter>()
     // Beta program surfaces: the badge is gated on the COMPILED flavor;
     // the network-info feed only supplies the live cap figure.
     val productFlags = koinInject<WarrenProductFlags>()
@@ -662,6 +666,27 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                                 else -> pubkeyError = trustFailedMessage
                             }
                         }
+                    },
+                    // Same outcome as rejecting (the connect was never
+                    // dispatched, so there is no tunnel to drop), plus the
+                    // signed report that tells the operator which key was
+                    // served under this exit id. The dialog closes at once:
+                    // the POST is best effort and the user has already
+                    // decided, so making them wait on it would only turn a
+                    // security answer into a spinner.
+                    onReport = {
+                        val location = relays.firstOrNull { it.exitId == mismatch.exitId }
+                        warrenScope.launch {
+                            incidentReporter.reportPubkeyMismatch(
+                                exitIdHex = mismatch.exitId,
+                                oldPubkeyHex = mismatch.pinnedPubkeyHex,
+                                newPubkeyHex = mismatch.observedPubkeyHex,
+                                countryCode = location?.country.orEmpty(),
+                                city = location?.city.orEmpty(),
+                            )
+                        }
+                        pubkeyMismatch = null
+                        pubkeyError = null
                     },
                     // The connect was never dispatched on a mismatch, so rejecting
                     // just clears the pending prompt; there is no tunnel to drop.

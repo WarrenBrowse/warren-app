@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Rimosse %1$d chiavi di uscita bloccate.</string>
     <string name="warren_pubkey_warning_trust">Affidati alla nuova chiave</string>
     <string name="warren_pubkey_warning_reject">Rifiuta (disconnetti)</string>
+    <string name="warren_pubkey_warning_report">Segnala a Warren</string>
     <string name="tunnel_multihop_title">Attiva il multi-hop</string>
     <string name="tunnel_multihop_tradeoff">Il single-hop è più veloce, ma in tal caso un solo relay vede sia il tuo IP sia la tua destinazione. Il multi-hop li divide su due relay, così nessuno dei due li vede entrambi.</string>
     <string name="tunnel_multihop_desc">Il multi-hop instrada il traffico attraverso un relay di ingresso separato, così l\'uscita non vede mai il tuo IP. È disponibile nell\'app desktop Warren. Il tunnel Android attualmente si connette in single-hop, quindi nessun indicatore multi-hop viene mostrato durante la connessione.</string>

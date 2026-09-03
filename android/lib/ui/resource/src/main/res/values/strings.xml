@@ -272,6 +272,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Dropped %1$d pinned exit key entries.</string>
     <string name="warren_pubkey_warning_trust">Trust new key</string>
     <string name="warren_pubkey_warning_reject">Reject (disconnect)</string>
+    <string name="warren_pubkey_warning_report">Report to Warren</string>
     <string name="tunnel_multihop_title">Enable multi-hop</string>
     <string name="tunnel_multihop_tradeoff">Single-hop is faster, but one relay then sees both your IP and your destination. Multi-hop splits them across two relays so neither sees both.</string>
     <string name="tunnel_multihop_desc">Multi-hop routes traffic through a separate entry relay so the exit never sees your IP. Pick the entry and exit countries below, or leave them automatic to let Warren choose.</string>

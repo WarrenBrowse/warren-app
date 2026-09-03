@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Sabitlenmiş %1$d çıkış anahtarı kaldırıldı.</string>
     <string name="warren_pubkey_warning_trust">Yeni anahtara güven</string>
     <string name="warren_pubkey_warning_reject">Reddet (bağlantıyı kes)</string>
+    <string name="warren_pubkey_warning_report">Warren\'a bildir</string>
     <string name="tunnel_multihop_title">Çok atlamalı bağlantıyı etkinleştir</string>
     <string name="tunnel_multihop_tradeoff">Tek atlamalı bağlantı daha hızlıdır, ancak o zaman tek bir aktarıcı hem IP adresinizi hem de hedefinizi görür. Çok atlamalı bağlantı bunları iki aktarıcıya böler, böylece hiçbiri ikisini birden görmez.</string>
     <string name="tunnel_multihop_desc">Çok atlamalı bağlantı, trafiği ayrı bir giriş aktarıcısı üzerinden yönlendirir; böylece çıkış IP adresinizi asla görmez. Warren masaüstü uygulamasında kullanılabilir. Android tüneli şu anda tek atlamalı bağlanır, bu nedenle bağlıyken çok atlamalı göstergesi gösterilmez.</string>

@@ -22,6 +22,7 @@ import kotlinx.serialization.json.jsonPrimitive
  * Lifecycle-coupled exports of [WarrenJni] (initLogger, connectTunnel,
  * etc.) intentionally do NOT appear here; they stay app-private.
  */
+@Suppress("TooManyFunctions") // one delegation per JNI export: the count is the surface's size
 class WarrenJniBridgeImpl : WarrenJniBridge {
     override fun generateMnemonic(): String = ready { WarrenJni.generateMnemonic() }
 
@@ -69,6 +70,24 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
 
     override fun forumNotificationsSeen(mnemonic: String): String = ready {
         WarrenJni.forumNotificationsSeen(mnemonic)
+    }
+
+    override fun reportPubkeyMismatch(
+        mnemonic: String,
+        exitIdHex: String,
+        oldPubkeyHex: String,
+        newPubkeyHex: String,
+        countryCode: String,
+        city: String,
+    ): String = ready {
+        WarrenJni.reportPubkeyMismatch(
+            mnemonic,
+            exitIdHex,
+            oldPubkeyHex,
+            newPubkeyHex,
+            countryCode,
+            city,
+        )
     }
 
     override fun collectProblemReport(

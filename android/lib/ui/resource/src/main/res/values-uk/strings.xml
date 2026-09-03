@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Видалено закріплених вихідних ключів: %1$d.</string>
     <string name="warren_pubkey_warning_trust">Довіряти новому ключу</string>
     <string name="warren_pubkey_warning_reject">Відхилити (від\'єднати)</string>
+    <string name="warren_pubkey_warning_report">Повідомити Warren</string>
     <string name="tunnel_multihop_title">Увімкнути багатоперехідний режим</string>
     <string name="tunnel_multihop_tradeoff">Одноперехідний режим швидший, але тоді одне реле бачить і вашу IP-адресу, і місце призначення. Багатоперехідний режим розподіляє їх між двома реле, тож жодне не бачить обидва.</string>
     <string name="tunnel_multihop_desc">Багатоперехідний режим маршрутизує трафік через окреме вхідне реле, тож вихід ніколи не бачить вашу IP-адресу. Він доступний у застосунку Warren для комп\'ютера. Тунель Android наразі підключається в одноперехідному режимі, тому під час підключення індикатор багатоперехідного режиму не відображається.</string>

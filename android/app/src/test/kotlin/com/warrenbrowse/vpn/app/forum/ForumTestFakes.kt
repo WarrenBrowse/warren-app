@@ -159,6 +159,21 @@ internal class FakeJniBridge(
         return notificationsAnswer()
     }
 
+    val pubkeyMismatchReports = mutableListOf<List<String>>()
+    var pubkeyMismatchAnswer: () -> String = { """{"ok":true}""" }
+
+    override fun reportPubkeyMismatch(
+        mnemonic: String,
+        exitIdHex: String,
+        oldPubkeyHex: String,
+        newPubkeyHex: String,
+        countryCode: String,
+        city: String,
+    ): String {
+        pubkeyMismatchReports += listOf(exitIdHex, oldPubkeyHex, newPubkeyHex, countryCode, city)
+        return pubkeyMismatchAnswer()
+    }
+
     override fun forumNotificationsSeen(mnemonic: String): String {
         seenCalls++
         return seenAnswer()

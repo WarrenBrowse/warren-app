@@ -48,6 +48,15 @@ class AppVersionInfoRepositoryTest {
 
         override fun forumNotificationsSeen(mnemonic: String): String = error("unused")
 
+        override fun reportPubkeyMismatch(
+            mnemonic: String,
+            exitIdHex: String,
+            oldPubkeyHex: String,
+            newPubkeyHex: String,
+            countryCode: String,
+            city: String,
+        ): String = error("unused")
+
         override fun collectProblemReport(
             metadataJson: String,
             redactJson: String,

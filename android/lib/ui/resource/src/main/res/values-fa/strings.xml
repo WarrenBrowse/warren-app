@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">%1$d کلید خروجی سنجاق‌شده حذف شد.</string>
     <string name="warren_pubkey_warning_trust">اعتماد به کلید جدید</string>
     <string name="warren_pubkey_warning_reject">رد کردن (قطع اتصال)</string>
+    <string name="warren_pubkey_warning_report">گزارش به Warren</string>
     <string name="tunnel_multihop_title">فعال‌سازی چندپرشی</string>
     <string name="tunnel_multihop_tradeoff">تک‌پرشی سریع‌تر است، اما در آن حالت یک رله هم IP شما و هم مقصدتان را می‌بیند. چندپرشی آن‌ها را بین دو رله تقسیم می‌کند تا هیچ‌کدام هر دو را نبیند.</string>
     <string name="tunnel_multihop_desc">چندپرشی ترافیک را از طریق یک رله ورودی جداگانه مسیریابی می‌کند تا خروجی هرگز IP شما را نبیند. این قابلیت در برنامه دسکتاپ Warren در دسترس است. تونل اندروید در حال حاضر تک‌پرشی وصل می‌شود، بنابراین هنگام اتصال هیچ نشانگر چندپرشی نمایش داده نمی‌شود.</string>

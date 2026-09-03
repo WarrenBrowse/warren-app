@@ -269,6 +269,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Au fost eliminate %1$d chei de ieșire fixate.</string>
     <string name="warren_pubkey_warning_trust">Confirmați noua cheie</string>
     <string name="warren_pubkey_warning_reject">Respingeți (deconectați)</string>
+    <string name="warren_pubkey_warning_report">Raport către Warren</string>
     <string name="tunnel_multihop_title">Activează multi-hop</string>
     <string name="tunnel_multihop_tradeoff">Single-hop este mai rapid, dar atunci un singur releu vede atât adresa ta IP, cât și destinația. Multi-hop le separă pe două relee, astfel încât niciunul nu le vede pe amândouă.</string>
     <string name="tunnel_multihop_desc">Multi-hop direcționează traficul printr-un releu de intrare separat, astfel încât ieșirea să nu vă vadă niciodată adresa IP. Este disponibil în aplicația desktop Warren. Tunelul Android se conectează în prezent single-hop, deci niciun indicator multi-hop nu este afișat în timpul conectării.</string>

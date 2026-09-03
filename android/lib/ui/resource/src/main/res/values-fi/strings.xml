@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Poistettiin %1$d kiinnitettyä exit-avainta.</string>
     <string name="warren_pubkey_warning_trust">Luota uuteen avaimeen</string>
     <string name="warren_pubkey_warning_reject">Hylkää (katkaise yhteys)</string>
+    <string name="warren_pubkey_warning_report">Ilmoita Warrenille</string>
     <string name="tunnel_multihop_title">Ota multi-hop käyttöön</string>
     <string name="tunnel_multihop_tradeoff">Single-hop on nopeampi, mutta silloin yksi välityspalvelin näkee sekä IP-osoitteesi että kohteesi. Multi-hop jakaa ne kahden välityspalvelimen kesken, joten kumpikaan ei näe molempia.</string>
     <string name="tunnel_multihop_desc">Multi-hop reitittää liikenteen erillisen sisääntulovälityspalvelimen kautta, joten exit ei koskaan näe IP-osoitettasi. Se on saatavilla Warrenin työpöytäsovelluksessa. Androidin tunneli yhdistää tällä hetkellä single-hop-tilassa, joten yhdistettynä ei näytetä multi-hop-ilmaisinta.</string>

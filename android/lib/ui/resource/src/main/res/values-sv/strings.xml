@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Tog bort %1$d fästa exit-nycklar.</string>
     <string name="warren_pubkey_warning_trust">Lita på den nya nyckeln</string>
     <string name="warren_pubkey_warning_reject">Avvisa (koppla från)</string>
+    <string name="warren_pubkey_warning_report">Rapportera till Warren</string>
     <string name="tunnel_multihop_title">Aktivera multi-hop</string>
     <string name="tunnel_multihop_tradeoff">Single-hop är snabbare, men då ser ett relä både din IP och din destination. Multi-hop delar upp dem på två reläer, så att inget av dem ser båda.</string>
     <string name="tunnel_multihop_desc">Multi-hop dirigerar trafik genom ett separat ingångsrelä så att exit-noden aldrig ser din IP. Det är tillgängligt i Warrens skrivbordsapp. Android-tunneln ansluter för närvarande single-hop, så ingen multi-hop-indikator visas medan du är ansluten.</string>

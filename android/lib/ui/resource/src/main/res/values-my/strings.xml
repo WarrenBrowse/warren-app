@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">ပင်ထိုးထားသော ထွက်ပေါက်ကီး %1$d ခုကို ဖယ်ရှားပြီးပါပြီ။</string>
     <string name="warren_pubkey_warning_trust">သော့အသစ်ကို ယုံကြည်ရန်</string>
     <string name="warren_pubkey_warning_reject">ငြင်းဆိုရန် (ချိတ်ဆက်မှုဖြတ်)</string>
+    <string name="warren_pubkey_warning_report">Warren သို့ တိုင်ကြားရန်</string>
     <string name="tunnel_multihop_title">Multi-hop ကို ဖွင့်ပါ</string>
     <string name="tunnel_multihop_tradeoff">Single-hop က ပိုမြန်ပေမဲ့ relay တစ်ခုတည်းက သင့် IP နှင့် သင့်ဦးတည်ရာ နှစ်ခုစလုံးကို မြင်ပါသည်။ Multi-hop က ၎င်းတို့ကို relay နှစ်ခုပေါ် ခွဲဝေပေးသဖြင့် တစ်ခုမှ နှစ်ခုစလုံးကို မမြင်ပါ။</string>
     <string name="tunnel_multihop_desc">Multi-hop သည် ထွက်ဝင်ဒေတာကို သီးခြား entry relay တစ်ခုမှတစ်ဆင့် လမ်းကြောင်းချသဖြင့် exit သည် သင့် IP ကို ဘယ်တော့မှ မမြင်ပါ။ ၎င်းကို Warren desktop အက်ပ်တွင် ရရှိနိုင်သည်။ Android ဥမင်လိုဏ်ခေါင်းသည် လက်ရှိ single-hop ချိတ်ဆက်နေသဖြင့် ချိတ်ဆက်နေစဉ် multi-hop ပြသချက် မပြသပါ။</string>

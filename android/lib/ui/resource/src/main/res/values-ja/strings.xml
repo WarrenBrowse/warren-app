@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">固定した出口キーを %1$d 件削除しました。</string>
     <string name="warren_pubkey_warning_trust">新しい鍵を信頼</string>
     <string name="warren_pubkey_warning_reject">拒否（切断）</string>
+    <string name="warren_pubkey_warning_report">Warren に報告</string>
     <string name="tunnel_multihop_title">マルチホップを有効にする</string>
     <string name="tunnel_multihop_tradeoff">シングルホップはより高速ですが、その場合は1つのリレーがあなたのIPと宛先の両方を把握します。マルチホップはそれらを2つのリレーに分けるため、どちらも両方を把握することはありません。</string>
     <string name="tunnel_multihop_desc">マルチホップは、出口があなたの IP を一切見ないように、別の入口リレーを経由して通信をルーティングします。これは Warren デスクトップアプリで利用できます。Android のトンネルは現在シングルホップで接続するため、接続中にマルチホップのインジケーターは表示されません。</string>

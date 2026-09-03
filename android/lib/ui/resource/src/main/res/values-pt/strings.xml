@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Foram removidas %1$d chaves de saída fixadas.</string>
     <string name="warren_pubkey_warning_trust">Confiar na nova chave</string>
     <string name="warren_pubkey_warning_reject">Rejeitar (desligar)</string>
+    <string name="warren_pubkey_warning_report">Reportar ao Warren</string>
     <string name="tunnel_multihop_title">Ativar o multi-hop</string>
     <string name="tunnel_multihop_tradeoff">O single-hop é mais rápido, mas então um único relay vê tanto o seu IP como o seu destino. O multi-hop divide-os por dois relays, para que nenhum veja ambos.</string>
     <string name="tunnel_multihop_desc">O multi-hop encaminha o tráfego através de um relay de entrada separado, para que o nó de saída nunca veja o seu IP. Está disponível na aplicação de ambiente de trabalho Warren. O túnel Android liga-se atualmente em single-hop, pelo que não é mostrado qualquer indicador de multi-hop durante a ligação.</string>

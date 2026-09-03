@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">تم حذف %1$d من مفاتيح الخروج المثبّتة.</string>
     <string name="warren_pubkey_warning_trust">الوثوق بالمفتاح الجديد</string>
     <string name="warren_pubkey_warning_reject">رفض (قطع الاتصال)</string>
+    <string name="warren_pubkey_warning_report">إبلاغ Warren</string>
     <string name="tunnel_multihop_title">تفعيل القفز المتعدّد</string>
     <string name="tunnel_multihop_tradeoff">القفز الأحادي أسرع، لكن حينئذٍ يرى مُرحِّل واحد كلًّا من عنوان IP الخاص بك ووجهتك. أما القفز المتعدّد فيوزّعهما على مُرحِّلين بحيث لا يرى أيٌّ منهما كليهما.</string>
     <string name="tunnel_multihop_desc">يوجّه القفز المتعدّد حركة المرور عبر مُرحِّل دخول منفصل بحيث لا يرى الخروج عنوان IP الخاص بك أبدًا. وهو متاح في تطبيق Warren لسطح المكتب. يتصل نفق Android حاليًا بقفزة واحدة، لذا لا يظهر أي مؤشّر للقفز المتعدّد أثناء الاتصال.</string>

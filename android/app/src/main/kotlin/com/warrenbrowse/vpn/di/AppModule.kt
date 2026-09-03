@@ -9,6 +9,7 @@ import androidx.datastore.dataStore
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.RelayCatalog
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenIncidentReportUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
@@ -69,6 +70,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenNoticeState
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
+import com.warrenbrowse.vpn.lib.repository.WarrenIncidentReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
@@ -165,6 +167,12 @@ val appModule = module {
 
     single { WarrenReconnectUseCase(context = androidContext(), connectionProxy = get()) } bind
         WarrenQuinnReconnectInvoker::class
+
+    // The user-driven incident report behind the key-mismatch dialog's
+    // "Report to Warren"; the automatic exit-down report needs no binding,
+    // the tunnel adapter posts it through its own platform seam.
+    single { WarrenIncidentReportUseCase(walletRepository = get(), jni = get()) } bind
+        WarrenIncidentReporter::class
 
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
     single { WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get()) } bind

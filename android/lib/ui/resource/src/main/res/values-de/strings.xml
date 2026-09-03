@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">%1$d angeheftete Exit-Schlüssel entfernt.</string>
     <string name="warren_pubkey_warning_trust">Neuem Schlüssel vertrauen</string>
     <string name="warren_pubkey_warning_reject">Ablehnen (Verbindung trennen)</string>
+    <string name="warren_pubkey_warning_report">An Warren melden</string>
     <string name="tunnel_multihop_title">Multi-Hop aktivieren</string>
     <string name="tunnel_multihop_tradeoff">Single-Hop ist schneller, aber dann sieht ein Relay sowohl deine IP als auch dein Ziel. Multi-Hop verteilt beides auf zwei Relays, sodass keines beides sieht.</string>
     <string name="tunnel_multihop_desc">Multi-Hop leitet den Datenverkehr durch ein separates Eingangs-Relay, sodass der Exit niemals deine IP sieht. Es ist in der Warren-Desktop-App verfügbar. Der Android-Tunnel verbindet sich derzeit per Single-Hop, daher wird im verbundenen Zustand keine Multi-Hop-Anzeige angezeigt.</string>

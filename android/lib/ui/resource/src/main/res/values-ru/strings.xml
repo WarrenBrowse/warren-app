@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Удалено закреплённых выходных ключей: %1$d.</string>
     <string name="warren_pubkey_warning_trust">Доверять новому ключу</string>
     <string name="warren_pubkey_warning_reject">Отклонить (отключить)</string>
+    <string name="warren_pubkey_warning_report">Сообщить Warren</string>
     <string name="tunnel_multihop_title">Включить многоузловой режим</string>
     <string name="tunnel_multihop_tradeoff">Одноузловой режим быстрее, но тогда один ретранслятор видит и ваш IP, и пункт назначения. Многоузловой режим распределяет их между двумя ретрансляторами, так что ни один не видит оба.</string>
     <string name="tunnel_multihop_desc">Многоузловой режим направляет трафик через отдельный входной ретранслятор, чтобы выходной узел никогда не видел ваш IP. Он доступен в настольном приложении Warren. Туннель на Android сейчас подключается через один узел, поэтому индикатор многоузлового режима при подключении не отображается.</string>

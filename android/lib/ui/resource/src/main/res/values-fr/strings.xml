@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">%1$d clés de sortie épinglées supprimées.</string>
     <string name="warren_pubkey_warning_trust">Faire confiance à la nouvelle clé</string>
     <string name="warren_pubkey_warning_reject">Refuser (déconnecter)</string>
+    <string name="warren_pubkey_warning_report">Signaler à Warren</string>
     <string name="tunnel_multihop_title">Activer le multi-saut</string>
     <string name="tunnel_multihop_tradeoff">Le saut unique est plus rapide, mais un même relais voit alors à la fois votre IP et votre destination. Le multi-saut les répartit sur deux relais pour qu\'aucun ne voie les deux.</string>
     <string name="tunnel_multihop_desc">Le multi-saut achemine le trafic via un relais d\'entrée séparé pour que la sortie ne voie jamais votre IP. Warren sur Android se connecte toujours en multi-saut : un relais d\'entrée distinct transmet votre trafic vers la sortie choisie, l\'indicateur « Multihop » est donc affiché lors de la connexion.</string>

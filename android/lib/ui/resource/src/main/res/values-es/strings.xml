@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">Se han eliminado %1$d claves de salida fijadas.</string>
     <string name="warren_pubkey_warning_trust">Confiar en la nueva clave</string>
     <string name="warren_pubkey_warning_reject">Rechazar (desconectar)</string>
+    <string name="warren_pubkey_warning_report">Reportar a Warren</string>
     <string name="tunnel_multihop_title">Activar el multisalto</string>
     <string name="tunnel_multihop_tradeoff">El salto único es más rápido, pero entonces un mismo relé ve tanto tu IP como tu destino. El multisalto los reparte entre dos relés para que ninguno vea ambos.</string>
     <string name="tunnel_multihop_desc">El multisalto enruta el tráfico a través de un relé de entrada independiente para que la salida nunca vea tu IP. Está disponible en la app de escritorio de Warren. El túnel de Android se conecta actualmente con un solo salto, por lo que no se muestra ningún indicador de multisalto mientras está conectado.</string>

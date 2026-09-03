@@ -21,6 +21,7 @@ import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
  * Inverting that order is the one mistake in this class that turns an outage into a leak, so it is
  * pinned by a test.
  */
+@Suppress("TooManyFunctions") // one method per platform call: the count is the surface's size
 interface WarrenTunnelPlatform {
     /**
      * Apply [plan] to a fresh `VpnService.Builder` and establish it. Returns null when the platform
@@ -89,6 +90,7 @@ interface WarrenTunnelPlatform {
 }
 
 /** The production [WarrenTunnelPlatform]: real `VpnService`, real JNI. */
+@Suppress("TooManyFunctions") // one method per platform call, mirroring the interface
 class AndroidTunnelPlatform(
     private val vpnService: VpnService,
     private val connectivityManager: ConnectivityManager,

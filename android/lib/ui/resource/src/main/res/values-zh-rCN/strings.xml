@@ -265,6 +265,7 @@
     <string name="tunnel_reset_pinned_keys_done_body">已删除 %1$d 条固定的出口密钥。</string>
     <string name="warren_pubkey_warning_trust">信任新密钥</string>
     <string name="warren_pubkey_warning_reject">拒绝（断开连接）</string>
+    <string name="warren_pubkey_warning_report">上报给 Warren</string>
     <string name="tunnel_multihop_title">启用多跳</string>
     <string name="tunnel_multihop_tradeoff">单跳速度更快，但这样一来一个中继会同时看到你的 IP 和目的地。多跳会将两者分散到两个中继，使任何一个都无法同时看到两者。</string>
     <string name="tunnel_multihop_desc">多跳通过一个独立的入口中继路由流量，使出口永远看不到你的 IP。该功能在 Warren 桌面应用中可用。Android 隧道目前以单跳方式连接，因此连接时不会显示多跳指示器。</string>
