@@ -71,6 +71,7 @@ fun AnimatedNotificationBanner(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
+    onClickDismissNotice: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) {
     // Fix for animating to invisible state
@@ -109,6 +110,7 @@ fun AnimatedNotificationBanner(
                     onClickDismissAndroid16UpgradeWarning = onClickDismissAndroid16UpgradeWarning,
                     onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                     onClickDismissExitSwitched = onClickDismissExitSwitched,
+                    onClickDismissNotice = onClickDismissNotice,
                     onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                 ),
             )

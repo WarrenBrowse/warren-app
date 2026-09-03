@@ -103,6 +103,7 @@ fun InAppNotification.toNotificationData(
     onClickDismissAndroid16UpgradeWarning: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
+    onClickDismissNotice: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) =
     when (this) {
@@ -135,7 +136,8 @@ fun InAppNotification.toNotificationData(
                     ),
                 statusLevel = statusLevel,
             )
-        is InAppNotification.OperatorNotice -> operatorNoticeBannerData(statusLevel, notice)
+        is InAppNotification.OperatorNotice ->
+            operatorNoticeBannerData(statusLevel, notice, onClickDismissNotice)
         InAppNotification.HostOffline ->
             NotificationData(
                 title = stringResource(id = R.string.no_internet_connection),
@@ -324,6 +326,7 @@ fun InAppNotification.toNotificationData(
 private fun operatorNoticeBannerData(
     statusLevel: StatusLevel,
     notice: WarrenNotice,
+    onDismiss: () -> Unit,
 ): NotificationData {
     val title =
         when (notice.level) {
@@ -337,18 +340,42 @@ private fun operatorNoticeBannerData(
     if (expanded) {
         InfoDialog(title = title, message = notice.message, onDismiss = { expanded = false })
     }
+    val expand = { expanded = true }
+    val readInFull = stringResource(R.string.notice_read_in_full)
+    // An informational notice spends its single action slot on the dismiss, and
+    // the clamped text itself opens the rest (the stand-down banner's pattern).
+    // The slot cannot hold both, and of the two only the dismiss frees the
+    // banner for the cards ranked under the notice.
+    val dismissible = notice.level == WarrenNoticeLevel.INFO
     return NotificationData(
         // The primary constructor, because the convenience ones do not carry
         // the clamp; the title is a plain resource all the same.
         title = AnnotatedString(title),
-        message = NotificationMessage.Text(AnnotatedString(notice.message)),
+        message =
+            if (dismissible) {
+                ClickableText(
+                    text = AnnotatedString(notice.message),
+                    onClick = expand,
+                    contentDescription = readInFull,
+                )
+            } else {
+                NotificationMessage.Text(AnnotatedString(notice.message))
+            },
         statusLevel = statusLevel,
         action =
-            NotificationAction(
-                Icons.Rounded.UnfoldMore,
-                onClick = { expanded = true },
-                contentDescription = stringResource(R.string.notice_read_in_full),
-            ),
+            if (dismissible) {
+                NotificationAction(
+                    Icons.Rounded.Clear,
+                    onClick = onDismiss,
+                    contentDescription = stringResource(R.string.dismiss),
+                )
+            } else {
+                NotificationAction(
+                    Icons.Rounded.UnfoldMore,
+                    onClick = expand,
+                    contentDescription = readInFull,
+                )
+            },
         messageMaxLines = NOTICE_BANNER_MAX_LINES,
     )
 }

@@ -238,6 +238,14 @@ class ConnectViewModel(
         userPreferencesRepository.setDismissedUpgradeVersion(version)
     }
 
+    /**
+     * The reader has put an informational operator notice away, freeing the
+     * single banner slot for the cards ranked under it.
+     */
+    fun dismissNotice(key: String) = viewModelScope.launch {
+        userPreferencesRepository.dismissNotice(key)
+    }
+
     /** The switch banner is read; the next failover raises it again. */
     fun acknowledgeExitSwitch() = exitSwitchedNotificationUseCase.acknowledge()
 

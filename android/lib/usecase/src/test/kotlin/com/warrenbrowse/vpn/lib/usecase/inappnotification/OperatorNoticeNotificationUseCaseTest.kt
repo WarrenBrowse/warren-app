@@ -6,8 +6,12 @@ import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.StatusLevel
 import com.warrenbrowse.vpn.lib.model.WarrenNotice
 import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
+import io.mockk.every
+import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.runTest
+import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNoticeRepository
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertNull
@@ -17,7 +21,10 @@ import org.junit.jupiter.api.extension.ExtendWith
 class OperatorNoticeNotificationUseCaseTest {
 
     private val state = WarrenNoticeRepository()
-    private val useCase = OperatorNoticeNotificationUseCase(state)
+    private val dismissed = MutableStateFlow<List<String>>(emptyList())
+    private val userPreferencesRepository: UserPreferencesRepository =
+        mockk { every { dismissedNotices() } returns dismissed }
+    private val useCase = OperatorNoticeNotificationUseCase(state, userPreferencesRepository)
 
     private fun notice(id: String, level: WarrenNoticeLevel = WarrenNoticeLevel.INFO) =
         WarrenNotice(id, "message of $id", level)
@@ -57,6 +64,50 @@ class OperatorNoticeNotificationUseCaseTest {
             state.setNotices(emptyList())
             assertNull(awaitItem())
         }
+    }
+
+    @Test
+    fun `a notice the reader put away yields the slot to what it was hiding`() = runTest {
+        val notice = notice("a1")
+        state.setNotices(listOf(notice))
+
+        useCase().test {
+            assertEquals(InAppNotification.OperatorNotice(notice), awaitItem())
+            dismissed.value = listOf(notice.dismissalKey)
+            assertNull(awaitItem())
+        }
+    }
+
+    @Test
+    fun `putting the first notice away reveals the next one`() = runTest {
+        val first = notice("first")
+        state.setNotices(listOf(first, notice("second")))
+
+        useCase().test {
+            assertEquals("first", (awaitItem() as InAppNotification.OperatorNotice).notice.id)
+            dismissed.value = listOf(first.dismissalKey)
+            assertEquals("second", (awaitItem() as InAppNotification.OperatorNotice).notice.id)
+        }
+    }
+
+    @Test
+    fun `an operator who rewrites a notice in place raises it again`() = runTest {
+        val read = notice("a1")
+        dismissed.value = listOf(read.dismissalKey)
+        state.setNotices(listOf(read.copy(message = "the beta runs one more week")))
+
+        useCase().test {
+            assertEquals("a1", (awaitItem() as InAppNotification.OperatorNotice).notice.id)
+        }
+    }
+
+    @Test
+    fun `a warning or an error keeps the slot whatever the reader put away`() = runTest {
+        val alarm = notice("a1", WarrenNoticeLevel.ERROR)
+        dismissed.value = listOf(alarm.dismissalKey)
+        state.setNotices(listOf(alarm))
+
+        useCase().test { assertEquals(InAppNotification.OperatorNotice(alarm), awaitItem()) }
     }
 
     @Test

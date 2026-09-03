@@ -9,7 +9,16 @@ package com.warrenbrowse.vpn.lib.model
  * text. It is never translated and never parsed as markup: the whole point of
  * the signed channel is that what the operator wrote is what the user reads.
  */
-data class WarrenNotice(val id: String, val message: String, val level: WarrenNoticeLevel)
+data class WarrenNotice(val id: String, val message: String, val level: WarrenNoticeLevel) {
+    /**
+     * Key a dismissal is recorded under. The wording is part of it, not just
+     * the id: an operator who rewrites a notice in place keeps its id, and a
+     * key on the id alone would bury the new words for everyone who had put
+     * the old ones away.
+     */
+    val dismissalKey: String
+        get() = "$id:${message.hashCode()}"
+}
 
 /** Severity of a [WarrenNotice], which picks the banner's title and colour. */
 enum class WarrenNoticeLevel {

@@ -20,4 +20,10 @@ message UserPreferences {
   // the setting could not be read: a device that hides it must not be told it
   // is unprotected.
   bool show_always_on_vpn_advice = 8;
+  // Keys of the operator notices the user has put away, one entry per notice
+  // (id plus a digest of its wording, see WarrenNotice.dismissalKey). The
+  // banner holds one card and ranks the notice on top, so an informational
+  // notice standing for days would otherwise hide the update prompt and the
+  // expiry warning under it for as long as the operator leaves it up.
+  repeated string dismissed_notices = 9;
 }

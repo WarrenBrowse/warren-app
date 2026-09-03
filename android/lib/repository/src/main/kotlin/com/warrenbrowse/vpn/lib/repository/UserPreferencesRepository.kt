@@ -66,6 +66,24 @@ class UserPreferencesRepository(
         }
     }
 
+    /** Keys of the operator notices the user has put away. */
+    fun dismissedNotices(): Flow<List<String>> =
+        userPreferencesStore.data.map { it.dismissedNoticesList }
+
+    /**
+     * Puts one notice away for good. Append-only and de-duplicated: the same
+     * notice dismissed on two runs must not grow the file forever.
+     */
+    suspend fun dismissNotice(key: String) {
+        userPreferencesStore.updateData { prefs ->
+            if (prefs.dismissedNoticesList.contains(key)) {
+                prefs
+            } else {
+                prefs.toBuilder().addDismissedNotices(key).build()
+            }
+        }
+    }
+
     fun showSystemAppsSplitTunneling(): Flow<Boolean> =
         userPreferencesStore.data.map { it.showSystemAppsSplitTunneling }
 

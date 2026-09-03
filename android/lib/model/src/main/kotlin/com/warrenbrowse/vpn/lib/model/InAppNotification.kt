@@ -24,9 +24,11 @@ sealed class InAppNotification {
      * hides (connecting, offline, blocked) are still legible in the connect
      * card's own status.
      *
-     * It carries no dismiss. It clears from the same signal that raised it:
-     * Rust hands over an empty list as soon as the notice is erased or its
-     * signed envelope lapses (desktop `WarrenNoticeNotificationProvider`).
+     * It clears from the signal that raised it: Rust hands over an empty list
+     * as soon as the notice is erased or its signed envelope lapses (desktop
+     * `WarrenNoticeNotificationProvider`). An informational one can also be put
+     * away by the reader, so a message the operator leaves up for a week does
+     * not hide the update prompt and the expiry warning for that whole week.
      */
     data class OperatorNotice(val notice: WarrenNotice) : InAppNotification() {
         override val statusLevel =

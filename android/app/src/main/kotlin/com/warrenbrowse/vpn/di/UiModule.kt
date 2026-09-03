@@ -137,7 +137,8 @@ val uiModule = module {
     // Ranked first of all: when the operator has published a notice, that
     // message is the one thing the user must read, and the states it hides are
     // still legible in the connect card's own status.
-    single { OperatorNoticeNotificationUseCase(get()) } bind InAppNotificationUseCase::class
+    single { OperatorNoticeNotificationUseCase(get(), get()) } bind
+        InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     // Coexistence with a higher-priority product environment (prod over
     // staging over beta). Presence of the other install is the whole rule,

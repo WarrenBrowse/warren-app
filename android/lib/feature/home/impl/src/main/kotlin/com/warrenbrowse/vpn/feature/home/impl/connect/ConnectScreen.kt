@@ -600,6 +600,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 }
             },
             onClickDismissExitSwitched = connectViewModel::acknowledgeExitSwitch,
+            // The dismissal is recorded against the notice's own key, so a
+            // later notice, or a rewrite of this one, raises the banner again.
+            onClickDismissNotice = {
+                (uiState.inAppNotification as? InAppNotification.OperatorNotice)?.let {
+                    connectViewModel.dismissNotice(it.notice.dismissalKey)
+                }
+            },
             onClickReEnableAfterStandDown = connectViewModel::reEnableAfterStandDown,
             forumSlot = forumSlot,
             onForumClick =
@@ -729,6 +736,7 @@ fun ConnectScreen(
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit = {},
     onClickDismissExitSwitched: () -> Unit = {},
+    onClickDismissNotice: () -> Unit = {},
     onClickReEnableAfterStandDown: () -> Unit = {},
     // The desktop header's forum slot: the bell with its badge, the lifebuoy
     // for a wallet with no forum account, nothing when the setting is off.
@@ -775,6 +783,7 @@ fun ConnectScreen(
                 onClickShowAndroid16UpgradeInfo,
                 onClickDismissUpdateAvailable,
                 onClickDismissExitSwitched,
+                onClickDismissNotice,
                 onClickReEnableAfterStandDown,
             )
         }
@@ -848,6 +857,7 @@ private fun Content(
     onClickShowAndroid16UpgradeInfo: () -> Unit,
     onClickDismissUpdateAvailable: () -> Unit,
     onClickDismissExitSwitched: () -> Unit,
+    onClickDismissNotice: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
@@ -901,6 +911,7 @@ private fun Content(
                             onClickDismissAndroid16UpgradeWarning,
                         onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
                         onClickDismissExitSwitched = onClickDismissExitSwitched,
+                        onClickDismissNotice = onClickDismissNotice,
                         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                     )
                     if (showBetaBadge) {
