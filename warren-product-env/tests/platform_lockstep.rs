@@ -1,8 +1,9 @@
 //! The per-environment product anchors are spelled again wherever a build
 //! tool needs them before any Rust runs: the desktop TypeScript table
 //! (`src/shared/constants/product-env.ts`), the Electron packaging config
-//! (`tasks/distribution.cjs`) and the Android flavors
-//! (`android/app/build.gradle.kts`). Each copy is read here as text and held
+//! (`tasks/distribution.cjs`), the Android flavors
+//! (`android/app/build.gradle.kts`) and the iOS build settings
+//! (`ios/Configurations/ProductEnv.xcconfig`). Each copy is read here as text and held
 //! to this crate, the reference, so a value edited in one place fails the
 //! suite that compiles the reference. The vitest and JVM readers of
 //! `fixtures/client-rules/product_env.json` pin the same copies from their
@@ -15,6 +16,8 @@ use warren_product_env::{ALL, ProductEnv};
 const PRODUCT_ENV_TS: &str = "desktop/packages/mullvad-vpn/src/shared/constants/product-env.ts";
 const DISTRIBUTION_CJS: &str = "desktop/packages/mullvad-vpn/tasks/distribution.cjs";
 const BUILD_GRADLE: &str = "android/app/build.gradle.kts";
+const IOS_PRODUCT_ENV_XCCONFIG: &str = "ios/Configurations/ProductEnv.xcconfig";
+const IOS_INFO_PLIST: &str = "ios/WarrenVPN/Supporting Files/Info.plist";
 
 fn repo_file(relative: &str) -> String {
     let path = format!("{}/../{relative}", env!("CARGO_MANIFEST_DIR"));
@@ -195,6 +198,94 @@ fn the_android_flavor_table_is_the_crates() {
             gradle_build_config_string(block, "API_ENDPOINT"),
             expected_endpoint,
             "{name}: API_ENDPOINT"
+        );
+    }
+}
+
+/// The value of the one `<name>_<env> = <value>` line of the iOS xcconfig
+/// table (a build setting value runs to the end of its line, unquoted).
+fn xcconfig_value(source: &str, name: &str, env: ProductEnv) -> String {
+    let key = format!("{name}_{}", env.name());
+    let re = Regex::new(&format!(r"(?m)^{key}\s*=\s*(.*?)\s*$")).expect("regex");
+    let mut matches = re.captures_iter(source);
+    let first = matches
+        .next()
+        .unwrap_or_else(|| panic!("no `{key}` line in {IOS_PRODUCT_ENV_XCCONFIG}"));
+    assert!(
+        matches.next().is_none(),
+        "`{key}` is set twice in {IOS_PRODUCT_ENV_XCCONFIG}"
+    );
+    first[1].to_owned()
+}
+
+/// The iOS build cannot read the crate before Xcode resolves its settings, so
+/// `ProductEnv.xcconfig` spells the scheme, the API host and the display name
+/// per environment and selects the row with `WARREN_PRODUCT_ENV`, the same
+/// selector `build-rust-library.sh` hands cargo. The three tables must be the
+/// crate's, and each selector must resolve through the environment rather
+/// than through a build configuration of its own.
+#[test]
+fn the_ios_xcconfig_table_is_the_crates() {
+    let source = repo_file(IOS_PRODUCT_ENV_XCCONFIG);
+    for env in ALL {
+        let name = env.name();
+        assert_eq!(
+            xcconfig_value(&source, "WARREN_DEEP_LINK_SCHEME", env),
+            env.deep_link_scheme(),
+            "{name}: WARREN_DEEP_LINK_SCHEME"
+        );
+        assert_eq!(
+            xcconfig_value(&source, "WARREN_API_HOST", env),
+            env.api_host(),
+            "{name}: WARREN_API_HOST"
+        );
+        assert_eq!(
+            xcconfig_value(&source, "WARREN_DISPLAY_NAME", env),
+            env.display_name(),
+            "{name}: WARREN_DISPLAY_NAME"
+        );
+    }
+    for selector in [
+        "WARREN_DEEP_LINK_SCHEME",
+        "WARREN_API_HOST",
+        "WARREN_DISPLAY_NAME",
+    ] {
+        let line = format!("\n{selector} = $({selector}_$(WARREN_PRODUCT_ENV))\n");
+        assert!(
+            source.contains(&line),
+            "{selector} must resolve through WARREN_PRODUCT_ENV"
+        );
+    }
+    // Prod is the default everywhere (rule 50); no other line may set it
+    // unconditionally.
+    assert!(source.contains("\nWARREN_PRODUCT_ENV = prod\n"));
+}
+
+/// The URL scheme the OS registers for the app is the resolved selector, so
+/// a beta build answers `warren-beta://` without anyone editing the plist; a
+/// literal scheme in the plist would silently pin every build to one
+/// environment again (a beta iOS install could not receive the beta broker's
+/// link until 2026-09-03 for that reason).
+#[test]
+fn the_ios_url_scheme_is_the_xcconfig_selector_not_a_literal() {
+    let plist = repo_file(IOS_INFO_PLIST);
+    let start = plist
+        .find("<key>CFBundleURLSchemes</key>")
+        .expect("the app registers a URL scheme");
+    let block = &plist[start..];
+    let end = block.find("</array>").expect("the scheme list closes");
+    let schemes: Vec<&str> = Regex::new(r"<string>([^<]*)</string>")
+        .expect("regex")
+        .captures_iter(&block[..end])
+        .map(|c| c.get(1).expect("capture").as_str())
+        .collect();
+    assert_eq!(schemes, ["$(WARREN_DEEP_LINK_SCHEME)"]);
+    for env in ALL {
+        let literal = format!("<string>{}</string>", env.deep_link_scheme());
+        assert!(
+            !plist.contains(&literal),
+            "{}: the scheme must not be spelled in the plist",
+            env.name()
         );
     }
 }

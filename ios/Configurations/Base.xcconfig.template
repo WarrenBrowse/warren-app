@@ -1,4 +1,5 @@
 #include "Version.xcconfig"
+#include "ProductEnv.xcconfig"
 #include "Api.xcconfig"
 
 // Development team
@@ -6,8 +7,8 @@
 // when Warren account is provisioned. Placeholder until then.
 DEVELOPMENT_TEAM = XXXXXXXXXX
 
-// Product display name
-DISPLAY_NAME = Warren VPN
+// Product display name, per product environment (ProductEnv.xcconfig)
+DISPLAY_NAME = $(WARREN_DISPLAY_NAME)
 
 // Bundle ID
 APPLICATION_IDENTIFIER = com.warrenbrowse.vpn.ios

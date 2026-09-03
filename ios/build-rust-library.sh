@@ -22,6 +22,21 @@ if [[ "$#" -eq 2 ]] ; then
 fi
 
 
+# The product environment the staticlib compiles in (warren-product-env). Xcode
+# hands every build setting to this script as an environment variable, so the
+# value is ProductEnv.xcconfig's (or the WARREN_PRODUCT_ENV=... given on the
+# xcodebuild command line), and the Rust table, the URL scheme in Info.plist and
+# the API host are one environment. Unset means prod, as everywhere else.
+export WARREN_PRODUCT_ENV="${WARREN_PRODUCT_ENV:-prod}"
+case "$WARREN_PRODUCT_ENV" in
+    prod|staging|beta) ;;
+    *)
+        echo "WARREN_PRODUCT_ENV must be one of prod|staging|beta, got '$WARREN_PRODUCT_ENV'" >&2
+        exit 1
+        ;;
+esac
+echo "Building $FFI_TARGET for WARREN_PRODUCT_ENV=$WARREN_PRODUCT_ENV"
+
 RELFLAG=
 LOCKEDFLAG=
 if [[ "$CONFIGURATION" == "Release" || "$CONFIGURATION" == "MockRelease" ]]; then

@@ -54,6 +54,24 @@ Ensure you have a valid build profile for a development build for both
 WarrenVPN and PacketTunnel, both need the
 `packet-tunnel-provider-systemextension` NetworkExtension entitlement.
 
+## Product environment (prod, staging, beta)
+
+`Configurations/ProductEnv.xcconfig` (tracked, not a template) carries the
+single selector `WARREN_PRODUCT_ENV`, the same one every other Warren client
+compiles with. It decides the API host, the display name and the URL scheme
+the app registers for forum deep links (`warren`, `warren-staging`,
+`warren-beta`), and `build-rust-library.sh` hands it to cargo so the Rust
+staticlib compiles the same environment (`warren-product-env`). The default is
+`prod`; the `Staging` build configuration selects `staging`. A one-off build
+of another environment overrides the setting on the command line:
+
+```
+xcodebuild -project WarrenVPN.xcodeproj -scheme WarrenVPN WARREN_PRODUCT_ENV=beta ...
+```
+
+The per-environment values in that file are copies of the Rust table;
+`warren-product-env/tests/platform_lockstep.rs` fails on drift.
+
 # The following instructions are only relevant for release builds.
 
 ## Create private key and Certificate Signing Request (CSR)

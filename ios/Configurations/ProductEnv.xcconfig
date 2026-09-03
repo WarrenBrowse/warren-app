@@ -1,0 +1,32 @@
+// The Warren product environment of this build, and the per-environment
+// anchors Xcode needs before any Rust runs.
+//
+// WARREN_PRODUCT_ENV is the single selector: prod | staging | beta. It reaches
+// the Rust staticlib through build-rust-library.sh (the warren-product-env
+// crate compiles the same environment in), the Info.plist (the URL scheme the
+// OS registers, the display name) and the API host below. Override it from the
+// command line for a one-off build of another environment:
+//
+//     xcodebuild ... WARREN_PRODUCT_ENV=beta
+//
+// The tables are copies of the rows of warren-product-env/src/lib.rs, spelled
+// here because xcconfig cannot read a Rust crate; warren-product-env's
+// tests/platform_lockstep.rs reads this file and fails on drift, the same way
+// it holds the desktop and Android tables.
+WARREN_PRODUCT_ENV = prod
+WARREN_PRODUCT_ENV[config=Staging] = staging
+
+WARREN_DEEP_LINK_SCHEME_prod = warren
+WARREN_DEEP_LINK_SCHEME_staging = warren-staging
+WARREN_DEEP_LINK_SCHEME_beta = warren-beta
+WARREN_DEEP_LINK_SCHEME = $(WARREN_DEEP_LINK_SCHEME_$(WARREN_PRODUCT_ENV))
+
+WARREN_API_HOST_prod = api.warrenbrowse.com
+WARREN_API_HOST_staging = api.staging.warrenbrowse.com
+WARREN_API_HOST_beta = api.beta.warrenbrowse.com
+WARREN_API_HOST = $(WARREN_API_HOST_$(WARREN_PRODUCT_ENV))
+
+WARREN_DISPLAY_NAME_prod = Warren VPN
+WARREN_DISPLAY_NAME_staging = Warren VPN Staging
+WARREN_DISPLAY_NAME_beta = Warren VPN Beta
+WARREN_DISPLAY_NAME = $(WARREN_DISPLAY_NAME_$(WARREN_PRODUCT_ENV))

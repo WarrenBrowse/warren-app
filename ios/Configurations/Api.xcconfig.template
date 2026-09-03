@@ -3,10 +3,10 @@ HOST_NAME[config=Release] = warrenbrowse.com
 HOST_NAME[config=MockRelease] = warrenbrowse.com
 HOST_NAME[config=Staging] = staging.warrenbrowse.com
 
-API_HOST_NAME[config=Debug] = api.$(HOST_NAME)
-API_HOST_NAME[config=Release] = api.$(HOST_NAME)
-API_HOST_NAME[config=MockRelease] = api.$(HOST_NAME)
-API_HOST_NAME[config=Staging] = api.$(HOST_NAME)
+// The API host follows the product environment (ProductEnv.xcconfig), never a
+// build configuration on its own: a beta build talks to the beta API, whatever
+// configuration produced it.
+API_HOST_NAME = $(WARREN_API_HOST)
 
 ENCRYPTED_DNS_HOST_NAME[config=Debug] = dns.warrenbrowse.com
 ENCRYPTED_DNS_HOST_NAME[config=Release] = dns.warrenbrowse.com

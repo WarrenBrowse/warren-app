@@ -11,7 +11,7 @@
 			<string>com.warrenbrowse.vpn.forum-login</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>warren</string>
+				<string>$(WARREN_DEEP_LINK_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
