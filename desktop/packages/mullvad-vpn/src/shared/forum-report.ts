@@ -83,6 +83,13 @@ export type ForumReportResult =
 
 export type ForumReportResultKind = ForumReportResult['kind'];
 
+/**
+ * What became of a request to keep the collected logs on this machine: the
+ * person chose a file and it was written, closed the dialog, or the write (or
+ * the collection behind it) failed.
+ */
+export type ForumReportSaveOutcome = 'saved' | 'cancelled' | 'failed';
+
 /** True when the failure is the upload deadline with logs attached. */
 export function isForumReportUploadTimeout(result: ForumReportResult): boolean {
   return result.kind === 'failed' && result.reason === 'upload-timeout';

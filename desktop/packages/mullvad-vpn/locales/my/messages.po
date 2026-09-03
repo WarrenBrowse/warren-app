@@ -5456,6 +5456,10 @@ msgid "Report a problem"
 msgstr "ပြဿနာ ရီပို့တ်လုပ်ရန်"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "မှတ်တမ်းများကို သိမ်းရန်"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "ဖော်ပြချက်နှင့် သင့်မှတ်တမ်းများကို ပံ့ပိုးမှုအဖွဲ့သို့ ပေးပို့ရန်"
 
@@ -5498,6 +5502,14 @@ msgstr "မှတ်တမ်းများ ကြီးလွန်း၍ ပ�
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "မှတ်တမ်းများ စုဆောင်း၍ မရပါ။ ဖော်ပြချက်ကိုတော့ ပေးပို့နိုင်ပါသေးသည်။"
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "မှတ်တမ်းများကို မသိမ်းနိုင်ပါ။"
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "မှတ်တမ်းများကို သိမ်းပြီးပါပြီ။ ဝက်ဘ်ဆိုက်ရှိ အကူအညီဖောင်တွင် ပူးတွဲနိုင်ပါသည်။"
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

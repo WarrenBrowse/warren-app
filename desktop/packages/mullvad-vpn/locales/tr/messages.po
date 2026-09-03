@@ -5481,6 +5481,10 @@ msgid "Report a problem"
 msgstr "Bir sorun bildir"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "Günlükleri kaydet"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Destek ekibine bir açıklama ve günlüklerinizi gönderin"
 
@@ -5523,6 +5527,14 @@ msgstr "Günlükler gönderilemeyecek kadar büyük."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "Günlükler toplanamadı. Yine de açıklamayı gönderebilirsiniz."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "Günlükler kaydedilemedi."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "Günlükler kaydedildi. Bunları web sitesindeki yardım formuna ekleyebilirsiniz."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

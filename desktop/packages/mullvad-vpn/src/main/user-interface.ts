@@ -265,6 +265,24 @@ export default class UserInterface implements WindowControllerDelegate {
   // There is no portable "focus that browser" API, and leaving the app in
   // front is what made those flows feel stalled.
   public hideWindow = () => this.windowController.hide();
+  /**
+   * A save dialog raised by the app itself, with the window held up for as
+   * long as it is open. An unpinned window hides the moment it loses focus,
+   * and it took the report form, and the notice the person was acting on,
+   * down with it.
+   */
+  public async showSaveDialog(
+    options: Electron.SaveDialogOptions,
+  ): Promise<Electron.SaveDialogReturnValue> {
+    this.browsingFiles = true;
+    try {
+      return await dialog.showSaveDialog(options);
+    } finally {
+      this.browsingFiles = false;
+      this.showWindow();
+    }
+  }
+
   public updateTrayTheme = () => this.trayIconController?.updateTheme() ?? Promise.resolve();
   public setMonochromaticIcon = (value: boolean) =>
     this.trayIconController?.setMonochromaticIcon(value);

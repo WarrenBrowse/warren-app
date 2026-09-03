@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   beginReportCollect,
+  beginReportSave,
   beginReportSend,
   canSendReport,
   clampReportText,
@@ -9,6 +10,7 @@ import {
   descriptionChars,
   initialReportProblemFormState,
   noticeForForumReportResult,
+  offersSaveLogs,
   REPORT_TEXT_OVERRUN_CHARS,
   reportFormPayload,
   ReportProblemFormState,
@@ -18,6 +20,7 @@ import {
   setReportSteps,
   setReportWhatHappened,
   settleReportCollect,
+  settleReportSave,
   settleReportSend,
   stepsChars,
 } from '../../src/renderer/features/report-problem/form-state';
@@ -214,5 +217,61 @@ describe('the outcome notices', () => {
     expect(texts.has(undefined)).toBe(false);
     expect(texts.size).toBe(kinds.length);
     expect(noticeForForumReportResult(created)).toBeUndefined();
+  });
+});
+
+describe('keeping the logs when the broker did not take the report', () => {
+  const withLogs = { ...filled, includeLogs: true };
+
+  it('is offered on every outcome that did not file the report', () => {
+    // The send collects its own report and deletes it, so once the broker
+    // refuses, the only copy the person can still get is the one this button
+    // writes. Android hands the same file to the share sheet.
+    const refusals: ForumReportResult[] = [
+      { kind: 'failed', reason: 'transport' },
+      { kind: 'server-error' },
+      { kind: 'rate-limited' },
+      { kind: 'subscription-required' },
+      { kind: 'clock-skew' },
+      { kind: 'too-large' },
+      { kind: 'invalid' },
+      { kind: 'no-identity' },
+    ];
+    for (const result of refusals) {
+      expect(offersSaveLogs(settleReportSend(withLogs, result))).toBe(true);
+    }
+  });
+
+  it('is not offered before a send, on a created topic, or without logs', () => {
+    expect(offersSaveLogs(withLogs)).toBe(false);
+    expect(offersSaveLogs(settleReportSend(withLogs, created))).toBe(false);
+    expect(
+      offersSaveLogs(
+        settleReportSend({ ...withLogs, includeLogs: false }, { kind: 'server-error' }),
+      ),
+    ).toBe(false);
+  });
+
+  it('holds the screen while the file is being written and remembers the outcome', () => {
+    const saving = beginReportSave(settleReportSend(withLogs, { kind: 'server-error' }));
+    expect(saving.saving).toBe(true);
+    expect(saving.saveOutcome).toBeUndefined();
+    // The refusal notice stays: saving the logs did not file the report.
+    expect(saving.result).toEqual({ kind: 'server-error' });
+    expect(settleReportSave(saving, 'saved').saving).toBe(false);
+    expect(settleReportSave(saving, 'saved').saveOutcome).toBe('saved');
+    expect(settleReportSave(saving, 'failed').saveOutcome).toBe('failed');
+    // A dialog the person closed says nothing at all afterwards.
+    expect(settleReportSave(saving, 'cancelled').saveOutcome).toBeUndefined();
+  });
+
+  it('forgets the last save once a field changes', () => {
+    const saved = settleReportSave(
+      beginReportSave(settleReportSend(withLogs, { kind: 'server-error' })),
+      'saved',
+    );
+    expect(
+      setReportWhatHappened(saved, 'something else entirely, at length').saveOutcome,
+    ).toBeUndefined();
   });
 });

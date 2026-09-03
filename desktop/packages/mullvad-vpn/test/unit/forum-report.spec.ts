@@ -15,6 +15,7 @@ import {
   ForumReportFacts,
   forumReportPlatform,
   forumReportResultForResponse,
+  reportSaveFileName,
   sendForumReport,
   uploadDeadlineMs,
 } from '../../src/main/forum-report';
@@ -335,5 +336,23 @@ describe('sending a report', () => {
     const pending = sendForumReport({ ...form, includeLogs: false }, undefined, facts, rpc);
     await vi.advanceTimersByTimeAsync(uploadDeadlineMs(Buffer.byteLength(signature.body)));
     expect(await pending).toEqual({ kind: 'failed', reason: 'transport' });
+  });
+});
+
+describe('the file name a saved report is offered under', () => {
+  it('names the app and the moment, down to the second', () => {
+    // Two saves in the same minute must not offer the same name, and the
+    // support staff reading an attached file want the moment it was taken.
+    expect(reportSaveFileName(new Date(2026, 8, 3, 21, 44, 33))).toBe(
+      'warren-report-2026-09-03-214433.log',
+    );
+  });
+
+  it('carries nothing a file system refuses', () => {
+    // Windows refuses `:` in a name, and an ISO timestamp is full of them:
+    // the save dialog then opened on a name the person had to fix by hand.
+    const name = reportSaveFileName(new Date(2026, 0, 9, 7, 5, 2));
+    expect(name).toBe('warren-report-2026-01-09-070502.log');
+    expect(name).not.toMatch(/[:/\\]/);
   });
 });

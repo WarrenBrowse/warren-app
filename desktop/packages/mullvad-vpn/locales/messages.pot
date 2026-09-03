@@ -2793,6 +2793,11 @@ msgctxt "report-problem"
 msgid "Report a problem"
 msgstr ""
 
+#. Button that writes the collected logs to a file the person picks.
+msgctxt "report-problem"
+msgid "Save the logs"
+msgstr ""
+
 #. Subtitle of that row.
 msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
@@ -2840,6 +2845,15 @@ msgstr ""
 #. Shown when the logs could not be collected.
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
+msgstr ""
+
+#. Shown when the logs could not be written to the chosen file.
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr ""
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
 msgstr ""
 
 msgctxt "report-problem"

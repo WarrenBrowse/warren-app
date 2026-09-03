@@ -5453,6 +5453,10 @@ msgid "Report a problem"
 msgstr "报告问题"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "保存日志"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "向支持团队发送问题描述和日志"
 
@@ -5495,6 +5499,14 @@ msgstr "日志过大，无法发送。"
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "无法收集日志。您仍然可以发送描述。"
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "无法保存日志。"
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "日志已保存。你可以将其附加到网站上的帮助表单。"
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

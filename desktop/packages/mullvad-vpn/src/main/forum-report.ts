@@ -122,6 +122,20 @@ export function uploadDeadlineMs(bodyBytes: number): number {
   return (20 + 10 * Math.ceil(bodyBytes / mib)) * 1000;
 }
 
+/**
+ * The name a saved copy of the collected report is offered under: the app,
+ * then the local date and time of the collection down to the second, so two
+ * saves in the same minute do not land on one name and the support staff can
+ * see when it was taken. Only digits and dashes: a `:` from an ISO stamp is
+ * refused by Windows, and the dialog then opens on a name to fix by hand.
+ */
+export function reportSaveFileName(now: Date): string {
+  const pad = (value: number) => String(value).padStart(2, '0');
+  const day = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+  const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `warren-report-${day}-${time}.log`;
+}
+
 /** The forum origin's host: the only one a topic link is opened on. */
 const FORUM_HOST = new URL(urls.forum).host;
 

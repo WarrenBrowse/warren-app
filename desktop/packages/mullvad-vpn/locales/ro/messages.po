@@ -4630,6 +4630,10 @@ msgid "Report a problem"
 msgstr "Raportați o problemă"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "Salvează logurile"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Trimite o descriere și jurnalele tale echipei de suport"
 
@@ -4672,6 +4676,14 @@ msgstr "Jurnalele sunt prea mari pentru a fi trimise."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "Jurnalele nu au putut fi colectate. Poți totuși trimite descrierea."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "Logurile nu au putut fi salvate."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "Logurile au fost salvate. Le poți atașa la formularul de ajutor de pe site."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

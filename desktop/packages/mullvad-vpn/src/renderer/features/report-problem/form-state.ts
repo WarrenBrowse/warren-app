@@ -4,6 +4,7 @@ import {
   ForumReportArea,
   ForumReportFrequency,
   ForumReportResult,
+  ForumReportSaveOutcome,
   IForumReportForm,
   isForumReportUploadTimeout,
 } from '../../../shared/forum-report';
@@ -27,6 +28,10 @@ export interface ReportProblemFormState {
   collecting: boolean;
   collectFailed: boolean;
   sending: boolean;
+  // A copy of the logs is being written to a file the person chose.
+  saving: boolean;
+  // What the last save did, when it did something worth saying.
+  saveOutcome?: Exclude<ForumReportSaveOutcome, 'cancelled'>;
   // The last outcome, rendered under the form.
   result?: ForumReportResult;
 }
@@ -41,6 +46,8 @@ export const initialReportProblemFormState: ReportProblemFormState = {
   collecting: false,
   collectFailed: false,
   sending: false,
+  saving: false,
+  saveOutcome: undefined,
   result: undefined,
 };
 
@@ -79,6 +86,7 @@ export function canSendReport(state: ReportProblemFormState): boolean {
     stepsChars(state) <= FORUM_REPORT_MAX_DESCRIPTION_CHARS &&
     !state.sending &&
     !state.collecting &&
+    !state.saving &&
     state.result?.kind !== 'created'
   );
 }
@@ -102,28 +110,33 @@ export function setReportArea(
   state: ReportProblemFormState,
   area: ForumReportArea,
 ): ReportProblemFormState {
-  return { ...state, area, result: undefined };
+  return { ...state, area, result: undefined, saveOutcome: undefined };
 }
 
 export function setReportFrequency(
   state: ReportProblemFormState,
   frequency: ForumReportFrequency,
 ): ReportProblemFormState {
-  return { ...state, frequency, result: undefined };
+  return { ...state, frequency, result: undefined, saveOutcome: undefined };
 }
 
 export function setReportWhatHappened(
   state: ReportProblemFormState,
   text: string,
 ): ReportProblemFormState {
-  return { ...state, whatHappened: clampReportText(text), result: undefined };
+  return {
+    ...state,
+    whatHappened: clampReportText(text),
+    result: undefined,
+    saveOutcome: undefined,
+  };
 }
 
 export function setReportSteps(
   state: ReportProblemFormState,
   text: string,
 ): ReportProblemFormState {
-  return { ...state, steps: clampReportText(text), result: undefined };
+  return { ...state, steps: clampReportText(text), result: undefined, saveOutcome: undefined };
 }
 
 /** Switching the logs off drops the previewed report; the caller discards it. */
@@ -136,6 +149,7 @@ export function setReportIncludeLogs(
     includeLogs,
     previewReportId: includeLogs ? state.previewReportId : undefined,
     result: undefined,
+    saveOutcome: undefined,
   };
 }
 
@@ -165,6 +179,36 @@ export function settleReportSend(
   result: ForumReportResult,
 ): ReportProblemFormState {
   return { ...state, sending: false, result };
+}
+
+/**
+ * True when the screen offers to keep the logs on this machine. The send
+ * collects its own report and deletes it, so the moment the broker refuses,
+ * the only copy the person can still obtain is the one the save writes: they
+ * can then attach it to the website help form, or to a topic filed from
+ * another device. Android hands the same file to the share sheet.
+ */
+export function offersSaveLogs(state: ReportProblemFormState): boolean {
+  return state.includeLogs && state.result !== undefined && state.result.kind !== 'created';
+}
+
+export function beginReportSave(state: ReportProblemFormState): ReportProblemFormState {
+  return { ...state, saving: true, saveOutcome: undefined };
+}
+
+/**
+ * A cancelled save says nothing: the person closed the dialog on purpose, and
+ * a line about it under the form reads as a failure.
+ */
+export function settleReportSave(
+  state: ReportProblemFormState,
+  outcome: ForumReportSaveOutcome,
+): ReportProblemFormState {
+  return {
+    ...state,
+    saving: false,
+    saveOutcome: outcome === 'cancelled' ? undefined : outcome,
+  };
 }
 
 /** What a created topic says about its logs. */

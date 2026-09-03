@@ -5453,6 +5453,10 @@ msgid "Report a problem"
 msgstr "รายงานปัญหา"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "จัดเก็บบันทึก"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "ส่งคำอธิบายและบันทึกของคุณให้ทีมสนับสนุน"
 
@@ -5495,6 +5499,14 @@ msgstr "บันทึกมีขนาดใหญ่เกินกว่า
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "ไม่สามารถรวบรวมบันทึกได้ คุณยังส่งคำอธิบายได้"
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "ไม่สามารถจัดเก็บบันทึกได้"
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "จัดเก็บบันทึกแล้ว คุณสามารถแนบไปกับแบบฟอร์มขอความช่วยเหลือบนเว็บไซต์ได้"
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

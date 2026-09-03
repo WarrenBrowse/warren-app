@@ -5511,6 +5511,10 @@ msgid "Report a problem"
 msgstr "Повідомити про проблему"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "Зберегти журнали"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Надіслати опис і ваші журнали команді підтримки"
 
@@ -5553,6 +5557,14 @@ msgstr "Журнали завеликі для надсилання."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "Не вдалося зібрати журнали. Ви все одно можете надіслати опис."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "Не вдалося зберегти журнали."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "Журнали збережено. Ви можете додати їх до форми допомоги на сайті."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

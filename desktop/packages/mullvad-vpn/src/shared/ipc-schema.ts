@@ -37,7 +37,7 @@ import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumIdentity } from './forum-identity';
 import { ForumLoginResult, IForumLoginRequest } from './forum-login';
 import { ForumNotificationsResult } from './forum-notifications';
-import { ForumReportResult, IForumReportForm } from './forum-report';
+import { ForumReportResult, ForumReportSaveOutcome, IForumReportForm } from './forum-report';
 import { IGuiSettingsState } from './gui-settings-state';
 import { invoke, invokeSync, notifyRenderer, send } from './ipc-helpers';
 import {
@@ -227,12 +227,15 @@ export const ipcSchema = {
   // logs" (opened through problemReport.viewLog) and answers its id, or
   // undefined when the collection failed; `discard` deletes one; `send`
   // collects its own fresh report when the form asks for logs, has the daemon
-  // sign the body and posts it to the broker. The renderer never sees the log
-  // content, only ids and the outcome.
+  // sign the body and posts it to the broker; `save` writes a copy of the
+  // collected report wherever the person chooses, which is all that is left
+  // to them once the broker refuses the report. The renderer never sees the
+  // log content, only ids and the outcome.
   forumReport: {
     collect: invoke<void, string | undefined>(),
     discard: invoke<string, void>(),
     send: invoke<IForumReportForm, ForumReportResult>(),
+    save: invoke<string | undefined, ForumReportSaveOutcome>(),
   },
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),

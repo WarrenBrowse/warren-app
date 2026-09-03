@@ -5481,6 +5481,10 @@ msgid "Report a problem"
 msgstr "Een probleem rapporteren"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "De logs opslaan"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Een beschrijving en je logboeken naar het supportteam sturen"
 
@@ -5523,6 +5527,14 @@ msgstr "De logboeken zijn te groot om te versturen."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "De logboeken konden niet worden verzameld. Je kunt de beschrijving toch versturen."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "De logs konden niet worden opgeslagen."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "De logs zijn opgeslagen. Je kunt ze toevoegen aan het hulpformulier op de website."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

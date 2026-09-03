@@ -5481,6 +5481,10 @@ msgid "Report a problem"
 msgstr "Rapporter et problem"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "Lagre loggene"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Send en beskrivelse og loggene dine til supportteamet"
 
@@ -5523,6 +5527,14 @@ msgstr "Loggene er for store til å sendes."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "Loggene kunne ikke samles inn. Du kan likevel sende beskrivelsen."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "Loggene kunne ikke lagres."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "Loggene ble lagret. Du kan legge dem ved hjelpeskjemaet på nettstedet."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

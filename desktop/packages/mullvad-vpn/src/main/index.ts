@@ -36,7 +36,11 @@ import {
 import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
 import { ForumIdentity } from '../shared/forum-identity';
 import { IForumLoginRequest } from '../shared/forum-login';
-import { ForumReportResult, IForumReportForm } from '../shared/forum-report';
+import {
+  ForumReportResult,
+  ForumReportSaveOutcome,
+  IForumReportForm,
+} from '../shared/forum-report';
 import { messages, relayLocations } from '../shared/gettext';
 import { SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import { ITranslations, MacOsScrollbarVisibility } from '../shared/ipc-schema';
@@ -92,6 +96,7 @@ import {
   desktopOsVersion,
   ForumReportFacts,
   forumReportPlatform,
+  reportSaveFileName,
   sendForumReport,
 } from './forum-report';
 import SafeStorageForumIdentityStore from './forum-store';
@@ -553,6 +558,50 @@ class ApplicationMain
       this.adoptForumIdentity(result.identity);
     }
     return result;
+  }
+
+  // Keeping the collected logs on this machine, which is all the reporter
+  // has left once the broker refuses the report: the send collects its own
+  // copy and deletes it, so nothing survives the refusal. The person picks
+  // the destination; the file written there is a copy, and the temp original
+  // is reaped as before. Android hands the same file to the share sheet.
+  //
+  // **No-log policy**: neither the destination nor the report content is
+  // logged, only what happened.
+  private async saveCollectedReport(reportId: string | undefined): Promise<ForumReportSaveOutcome> {
+    let collected = reportId;
+    let collectedHere = false;
+    if (collected === undefined) {
+      try {
+        collected = await problemReport.collectLogs(this.loggedInPubkey());
+        collectedHere = true;
+      } catch {
+        log.error('Forum report: could not collect the report to save');
+        return 'failed';
+      }
+    }
+    try {
+      const chosen = await this.userInterface?.showSaveDialog({
+        defaultPath: path.join(app.getPath('downloads'), reportSaveFileName(new Date())),
+        filters: [{ name: 'Log', extensions: ['log'] }],
+      });
+      if (chosen === undefined || chosen.canceled || chosen.filePath === undefined) {
+        return 'cancelled';
+      }
+      await fs.promises.copyFile(problemReport.getProblemReportPath(collected), chosen.filePath);
+      log.info('Forum report: the collected report was saved where the reporter chose');
+      return 'saved';
+    } catch (error) {
+      // Only the class: a filesystem error quotes the path it failed on, and
+      // a home directory names its owner.
+      const code = (error as NodeJS.ErrnoException).code ?? 'unknown';
+      log.error(`Forum report: the report could not be saved (${code})`);
+      return 'failed';
+    } finally {
+      if (collectedHere) {
+        this.deleteCollectedReport(collected);
+      }
+    }
   }
 
   // A forum identity learnt from any signed exchange (a login, a report)
@@ -1457,6 +1506,7 @@ class ApplicationMain
       return Promise.resolve();
     });
     IpcMainEventChannel.forumReport.handleSend((form) => this.sendForumReportRequest(form));
+    IpcMainEventChannel.forumReport.handleSave((reportId) => this.saveCollectedReport(reportId));
 
     IpcMainEventChannel.customLists.handleCreateCustomList((name) => {
       return this.daemonRpc.createCustomList(name);

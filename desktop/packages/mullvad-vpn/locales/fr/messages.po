@@ -4634,6 +4634,10 @@ msgid "Report a problem"
 msgstr "Signaler un problème"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "Enregistrer les journaux"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Envoyer une description et vos journaux à l'équipe support"
 
@@ -4676,6 +4680,14 @@ msgstr "Les journaux sont trop volumineux pour être envoyés."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "Les journaux n'ont pas pu être collectés. Vous pouvez tout de même envoyer la description."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "Les journaux n'ont pas pu être enregistrés."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "Les journaux ont été enregistrés. Vous pouvez les joindre au formulaire d'aide du site web."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

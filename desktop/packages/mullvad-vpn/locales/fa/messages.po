@@ -5468,6 +5468,10 @@ msgid "Report a problem"
 msgstr "گزارش مشکل"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "ذخیره لاگ‌ها"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "ارسال شرح مشکل و گزارش‌های شما به تیم پشتیبانی"
 
@@ -5510,6 +5514,14 @@ msgstr "گزارش‌ها برای ارسال بیش از حد بزرگ‌اند
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "گزارش‌ها جمع‌آوری نشدند. همچنان می‌توانید شرح مشکل را بفرستید."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "ذخیره لاگ‌ها ممکن نشد."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "لاگ‌ها ذخیره شدند. می‌توانید آن‌ها را به فرم کمک وب‌سایت پیوست کنید."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

@@ -5528,6 +5528,10 @@ msgid "Report a problem"
 msgstr "الإبلاغ عن مشكلة"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "حفظ السجلات"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "أرسل وصفًا وسجلاتك إلى فريق الدعم"
 
@@ -5570,6 +5574,14 @@ msgstr "السجلات كبيرة جدًا بحيث يتعذر إرسالها."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "تعذر جمع السجلات. لا يزال بإمكانك إرسال الوصف."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "تعذر حفظ السجلات."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "تم حفظ السجلات. يمكنك إرفاقها بنموذج المساعدة على الموقع."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

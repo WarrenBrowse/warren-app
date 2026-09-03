@@ -5481,6 +5481,10 @@ msgid "Report a problem"
 msgstr "Raportoi ongelma"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "Tallenna lokit"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "Lähetä kuvaus ja lokisi tukitiimille"
 
@@ -5523,6 +5527,14 @@ msgstr "Lokit ovat liian suuria lähetettäviksi."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "Lokeja ei voitu kerätä. Voit silti lähettää kuvauksen."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "Lokeja ei voitu tallentaa."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "Lokit tallennettiin. Voit liittää ne verkkosivuston ohjelomakkeeseen."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

@@ -14,12 +14,14 @@ import { messages } from '../../../../shared/gettext';
 import { useAppContext } from '../../../context';
 import {
   beginReportCollect,
+  beginReportSave,
   beginReportSend,
   canSendReport,
   createdReportNotice,
   descriptionChars,
   initialReportProblemFormState,
   noticeForForumReportResult,
+  offersSaveLogs,
   reportFormPayload,
   ReportProblemFormState,
   setReportArea,
@@ -28,6 +30,7 @@ import {
   setReportSteps,
   setReportWhatHappened,
   settleReportCollect,
+  settleReportSave,
   settleReportSend,
   stepsChars,
 } from '../../../features/report-problem/form-state';
@@ -216,6 +219,16 @@ export function ReportProblemView() {
     }
   }, [state.previewReportId]);
 
+  // Keeping the logs on this machine when the broker would not take them:
+  // main collects afresh unless "View the logs" already has one, and writes a
+  // copy wherever the person chooses. The report the send collected is gone
+  // by then, so nothing else can hand them the file.
+  const handleSaveLogs = useCallback(async () => {
+    setState((current) => beginReportSave(current));
+    const outcome = await window.ipc.forumReport.save(state.previewReportId);
+    setState((current) => settleReportSave(current, outcome));
+  }, [state.previewReportId]);
+
   const send = useCallback(async (from: ReportProblemFormState) => {
     if (!canSendReport(from)) {
       return;
@@ -260,7 +273,7 @@ export function ReportProblemView() {
     }
   }, [openUrl, topicUrl]);
   const notice = result === undefined ? undefined : noticeForForumReportResult(result);
-  const busy = state.sending || state.collecting;
+  const busy = state.sending || state.collecting || state.saving;
 
   // TRANSLATORS: Title of the in-app bug report view.
   const title = messages.pgettext('report-problem', 'Report a problem');
@@ -525,6 +538,36 @@ export function ReportProblemView() {
                           }
                         </Button.Text>
                       </Button>
+                    )}
+                  </FlexColumn>
+                )}
+
+                {offersSaveLogs(state) && (
+                  <FlexColumn gap="tiny">
+                    <Button type="button" width="fit" disabled={busy} onClick={handleSaveLogs}>
+                      <Button.Text>
+                        {
+                          // TRANSLATORS: Button that writes the collected logs to a file the person picks.
+                          messages.pgettext('report-problem', 'Save the logs')
+                        }
+                      </Button.Text>
+                    </Button>
+                    <Text variant="labelTiny" color="whiteOnDarkBlue60" role="status">
+                      {state.saveOutcome === 'saved'
+                        ? // TRANSLATORS: Shown once the logs have been written to the chosen file.
+                          messages.pgettext(
+                            'report-problem',
+                            'The logs were saved. You can attach them to the help form on the website.',
+                          )
+                        : ''}
+                    </Text>
+                    {state.saveOutcome === 'failed' && (
+                      <StyledRefusal role="alert">
+                        {
+                          // TRANSLATORS: Shown when the logs could not be written to the chosen file.
+                          messages.pgettext('report-problem', 'The logs could not be saved.')
+                        }
+                      </StyledRefusal>
                     )}
                   </FlexColumn>
                 )}

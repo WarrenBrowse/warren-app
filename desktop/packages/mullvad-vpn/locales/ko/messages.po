@@ -5453,6 +5453,10 @@ msgid "Report a problem"
 msgstr "문제 신고"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "로그 저장"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "설명과 로그를 지원팀에 보내기"
 
@@ -5495,6 +5499,14 @@ msgstr "로그가 너무 커서 보낼 수 없습니다."
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "로그를 수집할 수 없습니다. 설명만 보낼 수는 있습니다."
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "로그를 저장하지 못했습니다."
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "로그를 저장했습니다. 웹사이트의 도움 양식에 첨부할 수 있습니다."
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."

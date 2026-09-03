@@ -5453,6 +5453,10 @@ msgid "Report a problem"
 msgstr "問題を報告する"
 
 msgctxt "report-problem"
+msgid "Save the logs"
+msgstr "ログを保存"
+
+msgctxt "report-problem"
 msgid "Send a description and your logs to the support team"
 msgstr "説明とログをサポートチームに送信"
 
@@ -5495,6 +5499,14 @@ msgstr "ログが大きすぎて送信できません。"
 msgctxt "report-problem"
 msgid "The logs could not be collected. You can still send the description."
 msgstr "ログを収集できませんでした。説明だけでも送信できます。"
+
+msgctxt "report-problem"
+msgid "The logs could not be saved."
+msgstr "ログを保存できませんでした。"
+
+msgctxt "report-problem"
+msgid "The logs were saved. You can attach them to the help form on the website."
+msgstr "ログを保存しました。ウェブサイトのヘルプフォームに添付できます。"
 
 msgctxt "report-problem"
 msgid "The report could not be sent. Check the connection and try again."
