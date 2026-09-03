@@ -62,6 +62,19 @@ fi
 
 fail=0
 
+# Both gates below read the WORKING TREE, while a push ships COMMITS. An
+# uncommitted edit under the path a gate covers (the next lot in progress, or a
+# second agent sharing this checkout) therefore makes the gate measure code that
+# is not being pushed: on 2026-09-03 a half-written component nobody had
+# committed added a translator string, and the pot gate blocked six unrelated
+# commits over it. A dirty path means the gate cannot conclude anything about
+# the pushed range, so it is skipped with a warning, like every other case this
+# hook cannot measure.
+tree_dirty() {
+  ! git diff --quiet HEAD -- "$@" ||
+    [ -n "$(git ls-files --others --exclude-standard -- "$@")" ]
+}
+
 # Gate 1: cargo fmt --check, Warren scope. The -p list is copied verbatim from
 # warren-tests.yml so this and CI format the same crate set. cargo fmt resolves
 # the workspace (path-deps to the sibling repos), so it needs those present;
@@ -73,6 +86,8 @@ if [ "$has_rs" -eq 1 ]; then
   done
   if ! command -v cargo >/dev/null 2>&1 || ! cargo fmt --version >/dev/null 2>&1; then
     echo "warren pre-push: cargo/rustfmt not found; skipping the fmt gate (CI still enforces it)." >&2
+  elif tree_dirty '*.rs'; then
+    echo "warren pre-push: uncommitted Rust in the tree, so cargo fmt would check it and not the pushed commits; skipping the fmt gate (CI still enforces it)." >&2
   elif [ "$siblings_ok" -eq 0 ]; then
     echo "warren pre-push: sibling repos (../warrenguard, ../warren-sdk-rs, ../warren-contract) missing; skipping the fmt gate (CI still enforces it)." >&2
   else
@@ -100,6 +115,8 @@ if [ "$has_ui" -eq 1 ]; then
   pkg="desktop/packages/mullvad-vpn"
   if [ ! -d "$pkg/node_modules" ]; then
     echo "warren pre-push: $pkg/node_modules missing; skipping the messages.pot gate (run the desktop install; CI still enforces it)." >&2
+  elif tree_dirty "$pkg"; then
+    echo "warren pre-push: $pkg has uncommitted changes, so the extractor would read them and not the pushed commits; skipping the messages.pot gate (CI still enforces it)." >&2
   elif ! (cd "$pkg" && npm run --silent update-translations) >/dev/null 2>&1; then
     echo "warren pre-push: update-translations could not run; skipping the messages.pot gate (CI still enforces it)." >&2
   elif ! git diff --quiet -- "$pkg/locales/messages.pot"; then
