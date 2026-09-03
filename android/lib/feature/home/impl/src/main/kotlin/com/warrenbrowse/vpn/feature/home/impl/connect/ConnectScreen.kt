@@ -330,9 +330,11 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val relayProvider = koinInject<WarrenRelayProvider>()
     // Seeding produceState from the cached snapshot keeps the "Automatic" flash
     // away without blocking: resolving the catalogue inline would run the
-    // signed fetch during composition and freeze the home screen.
+    // signed fetch during composition and freeze the home screen. The fetch
+    // itself only happens once the snapshot is an hour old (the daemon's
+    // cadence), not on every return to this screen.
     val relays: List<WarrenRelaySummary> by produceState(initialValue = relayProvider.list()) {
-        value = relayProvider.refresh()
+        value = relayProvider.refreshIfStale()
     }
     val exitPin by localSettings.exitPin.collectAsStateWithLifecycle()
     val cachedPinLabel by localSettings.exitPinLabel.collectAsStateWithLifecycle()

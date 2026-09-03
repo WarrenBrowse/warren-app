@@ -13,7 +13,8 @@ import com.warrenbrowse.vpn.lib.repository.resolveExitPin
  *
  * Reads the user's toggles from [WarrenLocalSettingsRepository] and
  * resolves the actual exit / entry relays via [RelayCatalog] (which is
- * itself backed by `WarrenJni.listRelays()`). The picker pin can name a
+ * itself backed by `WarrenJni.listRelays()`, on the daemon's hourly
+ * refresh cadence). The picker pin can name a
  * country, a city or one exit, so it is resolved here to the single
  * concrete exit the engine dials; with nothing pinned (or nothing active
  * in the pinned scope) the builder falls back to the preferred exit
@@ -43,7 +44,9 @@ class WarrenTunnelConfigBuilder(
         val lockdownMode = localSettings.lockdownMode.value
         val allowLan = localSettings.allowLan.value
 
-        val relays = relayCatalog.listRelays().map { it.toSummary() }
+        // The fresh snapshot, or a fetch when it is stale: an exit switch dials
+        // from the list the user just picked from instead of refetching it.
+        val relays = relayCatalog.relaysForDial()
         val exitCountry = localSettings.exitCountry.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
 

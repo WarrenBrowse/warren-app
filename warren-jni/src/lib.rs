@@ -91,6 +91,11 @@ mod protected_transport;
 #[cfg(any(test, target_os = "android"))]
 mod probes;
 
+// The multi-hop directory, fetched once per hour instead of once per dial
+// (the daemon's cadence); host-tested against a counting transport.
+#[cfg(any(test, target_os = "android"))]
+mod directory_cache;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

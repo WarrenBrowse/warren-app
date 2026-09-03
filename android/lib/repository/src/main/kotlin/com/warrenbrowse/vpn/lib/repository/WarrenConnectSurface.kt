@@ -262,11 +262,19 @@ interface WarrenRelayProvider {
     fun list(): List<WarrenRelaySummary>
 
     /**
-     * Fetch the catalogue and publish it to the snapshot [list] reads. The
-     * underlying call is a blocking signed round trip, so implementations
-     * move off the main thread before issuing it.
+     * Fetch the catalogue and publish it to the snapshot [list] reads,
+     * whatever its age (the user's explicit retry). The underlying call is a
+     * blocking signed round trip, so implementations move off the main
+     * thread before issuing it.
      */
     suspend fun refresh(): List<WarrenRelaySummary>
+
+    /**
+     * The snapshot while it is younger than the daemon's staleness bound (one
+     * hour, the cadence of the desktop relay-list updater), otherwise
+     * [refresh]. What a screen calls on entry.
+     */
+    suspend fun refreshIfStale(): List<WarrenRelaySummary>
 }
 
 /**

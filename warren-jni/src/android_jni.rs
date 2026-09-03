@@ -801,15 +801,18 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
     }
 }
 
-/// Fetch the raw signed multi-hop directory (`GET /v1/multihop/directory`) and
-/// return its verbatim JSON, or an empty string on any failure.
+/// The raw signed multi-hop directory (`GET /v1/multihop/directory`) as its
+/// verbatim JSON, or an empty string when none is available.
 ///
-/// Called from Kotlin BEFORE the VpnService TUN is established so the request
-/// egresses the physical network. A fetch issued from inside the tunnel
-/// session (after the TUN is up) is captured by the half-open tunnel and
-/// blackholed - which is exactly why `run_multi_hop_session` must NOT fetch
-/// this itself but receive the blob through the tunnel config. The blob's
-/// signature + version are verified Rust-side in `run_multi_hop_session`.
+/// Served from the process cache while the copy is under an hour old and
+/// still valid (the daemon's refresh cadence, `crate::directory_cache`), so
+/// an exit switch dials without a round trip; fetched otherwise. Called from
+/// Kotlin BEFORE the VpnService TUN is established so a fetch egresses the
+/// physical network. A fetch issued from inside the tunnel session (after the
+/// TUN is up) is captured by the half-open tunnel and blackholed, which is
+/// exactly why `run_multi_hop_session` must NOT fetch this itself but receive
+/// the blob through the tunnel config. The blob's signature, version and
+/// expiry are verified Rust-side in `run_multi_hop_session` on every dial.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDirectory(
     env: JNIEnv<'_>,
@@ -849,7 +852,13 @@ fn unsigned_warren_client()
     })
 }
 
-/// Raw signed multi-hop directory, or empty string on failure.
+/// The last good directory and when it was fetched; see `crate::directory_cache`.
+#[cfg(target_os = "android")]
+static DIRECTORY_CACHE: crate::directory_cache::DirectoryCache =
+    crate::directory_cache::DirectoryCache::new();
+
+/// Raw signed multi-hop directory (cached or fetched), or empty string when
+/// nothing usable exists.
 #[cfg(target_os = "android")]
 fn fetch_multihop_directory_raw() -> String {
     let Some(runtime) = RUNTIME.get() else {
@@ -857,17 +866,20 @@ fn fetch_multihop_directory_raw() -> String {
         return String::new();
     };
     let client = unsigned_warren_client();
-    match runtime.block_on(client.fetch_multihop_directory()) {
-        Ok(Some(raw)) => raw,
-        Ok(None) => {
-            log::warn!("fetchMultihopDirectory: no directory published (404)");
-            String::new()
-        }
-        Err(e) => {
-            log::warn!("fetchMultihopDirectory: fetch failed: {e}");
-            String::new()
-        }
-    }
+    runtime
+        .block_on(DIRECTORY_CACHE.fetch_or_cached(client, now_unix_secs()))
+        .unwrap_or_default()
+}
+
+/// Seconds since the Unix epoch, 0 on a clock before it (the cache then
+/// reads every copy as stale and refetches, the daemon's rule for a clock
+/// it cannot trust).
+#[cfg(target_os = "android")]
+fn now_unix_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 #[cfg(not(target_os = "android"))]

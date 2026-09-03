@@ -56,7 +56,7 @@ fun WarrenMultihopSettings(navigator: Navigator) {
     // snapshot then refreshed off the main thread: the fetch behind the
     // catalogue blocks on a network round trip.
     val relays by produceState(initialValue = relayProvider.list()) {
-        value = relayProvider.refresh()
+        value = relayProvider.refreshIfStale()
     }
     // Code kept as the stored value, localized name shown and sorted on: the
     // rest of the app names countries, so a raw ISO code here reads as a

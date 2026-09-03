@@ -85,7 +85,7 @@ class WarrenTunnelConfigBuilderTest {
 
     private fun mockCatalog(relays: List<RelayInfo> = listOf(sampleRelay)): RelayCatalog {
         val catalog: RelayCatalog = mockk()
-        every { catalog.listRelays() } returns relays
+        every { catalog.relaysForDial() } returns relays.map { it.toSummary() }
         return catalog
     }
 

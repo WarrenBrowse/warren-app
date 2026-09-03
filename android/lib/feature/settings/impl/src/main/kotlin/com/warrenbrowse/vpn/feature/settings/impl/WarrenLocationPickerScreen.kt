@@ -187,12 +187,14 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     // The catalogue is a stream so a refresh landing after the screen opened
     // replaces the cold snapshot, and the fetch is tracked separately: an empty
     // list during the signed round trip is "not loaded yet", never "no relays".
+    // Opening the picker takes the snapshot while it is fresh (the daemon's
+    // hourly cadence); only the user's Retry forces a fetch.
     val relays by relayProvider.catalogue.collectAsStateWithLifecycle()
     var refreshTick by rememberSaveable { mutableStateOf(0) }
     var refreshing by remember { mutableStateOf(true) }
     LaunchedEffect(refreshTick) {
         refreshing = true
-        relayProvider.refresh()
+        if (refreshTick == 0) relayProvider.refreshIfStale() else relayProvider.refresh()
         refreshing = false
     }
 
