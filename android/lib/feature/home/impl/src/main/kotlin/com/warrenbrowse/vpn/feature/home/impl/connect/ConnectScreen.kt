@@ -901,6 +901,7 @@ private fun Content(
                         ) {
                             AlwaysExpandedFeatureIndicators(
                                 features = features,
+                                multihopCircuit = state.tunnelState.isMultihopCircuit(),
                                 onNavigateToFeature = onNavigateToFeature,
                             )
                         }
@@ -1397,10 +1398,7 @@ fun TunnelState.toConnectionsDetails(exitLocation: GeoIpLocation?): ConnectionDe
 
     val outV4 = location()?.ipv4?.hostAddress
     val outV6 = location()?.ipv6?.hostAddress
-    val multihop =
-        featureIndicators()?.any {
-            it == FeatureIndicator.MULTIHOP || it == FeatureIndicator.DAITA_MULTIHOP
-        } ?: false
+    val multihop = isMultihopCircuit()
     // The exit socket the traffic egresses from, unless it is the unspecified
     // sentinel the engine publishes when it has no address to give.
     val exitEndpoint = endpoint.endpoint.takeUnless { it.isUnspecified() }?.toOutAddress()
@@ -1484,7 +1482,8 @@ private fun FeatureIndicator.navKey(): NavKey2 =
     when (this) {
         FeatureIndicator.DAITA,
         FeatureIndicator.DAITA_MULTIHOP -> WarrenDaitaSettingsNavKey
-        FeatureIndicator.MULTIHOP -> WarrenMultihopSettingsNavKey
+        FeatureIndicator.MULTIHOP,
+        FeatureIndicator.MULTIHOP_CIRCUIT -> WarrenMultihopSettingsNavKey
         FeatureIndicator.SPLIT_TUNNELING -> SplitTunnelingNavKey(isModal = true)
         FeatureIndicator.PORT_FORWARDING -> WarrenPortForwardingSettingsNavKey
 

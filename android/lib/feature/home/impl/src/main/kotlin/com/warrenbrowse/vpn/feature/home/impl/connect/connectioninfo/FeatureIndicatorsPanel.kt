@@ -40,6 +40,7 @@ import org.koin.compose.koinInject
 @Composable
 fun AlwaysExpandedFeatureIndicators(
     features: List<FeatureIndicator>,
+    multihopCircuit: Boolean,
     onNavigateToFeature: (FeatureIndicator) -> Unit,
 ) {
     val settings = koinInject<WarrenLocalSettingsRepository>()
@@ -55,6 +56,7 @@ fun AlwaysExpandedFeatureIndicators(
     val chips =
         featureChips(
             features = features,
+            multihopCircuit = multihopCircuit,
             mtu = mtu,
             effectiveMtu = effectiveMtu,
             daitaWanted = daitaWanted,
@@ -124,6 +126,7 @@ private data class FeatureChip(
 @Composable
 private fun featureChips(
     features: List<FeatureIndicator>,
+    multihopCircuit: Boolean,
     mtu: Int,
     effectiveMtu: Int?,
     daitaWanted: Boolean,
@@ -134,6 +137,18 @@ private fun featureChips(
 
     features.forEach { indicator ->
         chips.add(FeatureChip(indicator, indicator.label(natPmpStatus)))
+    }
+
+    // Desktop shows the "Multihop" feature beside a "Multihop (2 hops)" chip
+    // read from the live circuit (MultihopIndicator): the setting and its
+    // effect are two facts, and both clients state both.
+    if (multihopCircuit) {
+        chips.add(
+            FeatureChip(
+                FeatureIndicator.MULTIHOP_CIRCUIT,
+                stringResource(R.string.connection_details_multihop),
+            )
+        )
     }
 
     // Same words as the desktop chips, same meaning: "Reduced MTU (n)" is the
@@ -201,6 +216,7 @@ private fun FeatureIndicator.label(natPmpStatus: String): String {
             FeatureIndicator.DAITA_MULTIHOP ->
                 return stringResource(R.string.daita_multihop, stringResource(R.string.daita))
             FeatureIndicator.MULTIHOP -> R.string.multihop
+            FeatureIndicator.MULTIHOP_CIRCUIT -> R.string.connection_details_multihop
         }
     return stringResource(resource)
 }

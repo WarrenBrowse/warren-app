@@ -35,6 +35,23 @@ sealed class TunnelState {
             is Error -> null
         }
 
+    /**
+     * Whether the tunnel is up or coming up as a two-hop circuit (desktop
+     * `isMultihopTunnelState`): an entry relay that is a different host from
+     * the exit. Only the host counts, since the two legs of a one-hop circuit
+     * can differ by port alone.
+     */
+    fun isMultihopCircuit(): Boolean {
+        val endpoint =
+            when (this) {
+                is Connected -> endpoint
+                is Connecting -> endpoint
+                else -> null
+            }
+        val entry = endpoint?.entryEndpoint ?: return false
+        return !entry.address.hostString.equals(endpoint.endpoint.address.hostString, ignoreCase = true)
+    }
+
     fun isConnectingOrConnected(): Boolean =
         when (this) {
             is Connected,

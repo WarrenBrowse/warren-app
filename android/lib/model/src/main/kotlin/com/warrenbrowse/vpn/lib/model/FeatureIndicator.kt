@@ -10,6 +10,10 @@ enum class FeatureIndicator {
     DAITA_MULTIHOP,
     QUANTUM_RESISTANCE,
     MULTIHOP,
+    // The live circuit is two hops (desktop MultihopIndicator), read from the
+    // endpoints rather than the engine's feature list; sits by MULTIHOP so
+    // the setting and its effect read as a pair.
+    MULTIHOP_CIRCUIT,
     PORT_FORWARDING,
     SPLIT_TUNNELING,
     UDP_2_TCP,
