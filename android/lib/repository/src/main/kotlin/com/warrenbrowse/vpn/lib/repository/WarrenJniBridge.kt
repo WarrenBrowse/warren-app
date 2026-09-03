@@ -79,6 +79,34 @@ interface WarrenJniBridge {
     fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String
 
     /**
+     * One conditional fetch of the broadcast forum activity digest, verified
+     * in Rust against the pinned server key. Returns
+     * `{"counts":"<hex>"|null,"fetch":"ok"|"not-modified"|"rejected"|"transport"}`:
+     * `counts` is the whole anonymous document while a fresh one is held (one
+     * lowercase hex character per slot), null otherwise; `fetch` sizes the
+     * next delay. Carries no account. Blocks on a network GET: invoke off the
+     * main thread.
+     */
+    fun forumDigestFetch(): String
+
+    /**
+     * The wallet's own forum notifications (`POST /v1/forum/notifications`),
+     * signed and sent in Rust; the rows come back validated. Returns
+     * `{"ok":true,"notifications":[..]}` or `{"ok":false,"error":..,"reason":..}`.
+     * The one request tied to an account: call it only when the user opens
+     * the panel. Blocks on a network POST: invoke off the main thread.
+     */
+    fun forumNotifications(mnemonic: String): String
+
+    /**
+     * Marks the wallet's forum notification list seen
+     * (`POST /v1/forum/notifications/seen`), signed over its own path.
+     * Returns `{"ok":true}` or the classed failure. Blocks on a network POST:
+     * invoke off the main thread.
+     */
+    fun forumNotificationsSeen(mnemonic: String): String
+
+    /**
      * Collect the redacted problem report into [outputPath]: the Rust log
      * files, the Kotlin log directory [appLogDir], a logcat dump, and the
      * [metadataJson] facts (one JSON object) in the header, with every string

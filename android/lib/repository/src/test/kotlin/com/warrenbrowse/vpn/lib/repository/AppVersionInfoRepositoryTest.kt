@@ -40,6 +40,12 @@ class AppVersionInfoRepositoryTest {
         override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
             error("unused")
 
+        override fun forumDigestFetch(): String = error("unused")
+
+        override fun forumNotifications(mnemonic: String): String = error("unused")
+
+        override fun forumNotificationsSeen(mnemonic: String): String = error("unused")
+
         override fun collectProblemReport(
             metadataJson: String,
             redactJson: String,

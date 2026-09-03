@@ -81,7 +81,7 @@ impl ProtectedTransport {
     async fn execute_inner(
         &self,
         request: HttpRequest,
-    ) -> Result<(HttpResponse, Option<String>), TransportError> {
+    ) -> Result<(HttpResponse, ResponseMeta), TransportError> {
         let url = parse_url(&request.url)
             .ok_or_else(|| TransportError::Io("unsupported request url".to_owned()))?;
 
@@ -233,10 +233,48 @@ impl ProtectedTransport {
         request: HttpRequest,
         total: Duration,
     ) -> Result<(HttpResponse, Option<String>), TransportError> {
+        self.execute_within(request, total)
+            .await
+            .map(|(response, meta)| (response, meta.date))
+    }
+
+    /// One ETag conditional GET: `If-None-Match` is sent when a validator is
+    /// known, so an unchanged artifact costs one header round trip instead of
+    /// a body plus a signature check, and the response's own validator comes
+    /// back for the next call. A `304` is a response like any other status.
+    pub(crate) async fn execute_conditional(
+        &self,
+        mut request: HttpRequest,
+        etag: Option<&str>,
+    ) -> Result<(HttpResponse, Option<String>), TransportError> {
+        if let Some(tag) = etag {
+            request
+                .headers
+                .push(("If-None-Match".to_owned(), tag.to_owned()));
+        }
+        self.execute_within(request, TOTAL_TIMEOUT)
+            .await
+            .map(|(response, meta)| (response, meta.etag))
+    }
+
+    async fn execute_within(
+        &self,
+        request: HttpRequest,
+        total: Duration,
+    ) -> Result<(HttpResponse, ResponseMeta), TransportError> {
         tokio::time::timeout(total, self.execute_inner(request))
             .await
             .map_err(|_| TransportError::Io("request timed out".to_owned()))?
     }
+}
+
+/// The two response headers the forum flows read: `Date`, the trusted clock a
+/// skewed device is corrected against, and `ETag`, the validator of the next
+/// conditional GET. The SDK's response type carries no headers, so they are
+/// read here, where the HTTP/1.1 exchange is visible.
+pub(crate) struct ResponseMeta {
+    pub(crate) date: Option<String>,
+    pub(crate) etag: Option<String>,
 }
 
 /// The two TLS configurations (SNI on, SNI off), built once per process.
@@ -317,7 +355,7 @@ async fn h1_roundtrip<S>(
     stream: S,
     url: &ParsedUrl,
     request: HttpRequest,
-) -> Result<(HttpResponse, Option<String>), TransportError>
+) -> Result<(HttpResponse, ResponseMeta), TransportError>
 where
     S: AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {
@@ -352,11 +390,17 @@ where
 
     let response = sender.send_request(req).await.map_err(io_err)?;
     let status = response.status().as_u16();
-    let date = response
-        .headers()
-        .get(hyper::header::DATE)
-        .and_then(|v| v.to_str().ok())
-        .map(str::to_owned);
+    let header = |name: hyper::header::HeaderName| {
+        response
+            .headers()
+            .get(name)
+            .and_then(|v| v.to_str().ok())
+            .map(str::to_owned)
+    };
+    let meta = ResponseMeta {
+        date: header(hyper::header::DATE),
+        etag: header(hyper::header::ETAG),
+    };
     let body = response
         .into_body()
         .collect()
@@ -364,7 +408,7 @@ where
         .map_err(io_err)?
         .to_bytes()
         .to_vec();
-    Ok((HttpResponse { status, body }, date))
+    Ok((HttpResponse { status, body }, meta))
 }
 
 /// Loopback HTTP/1.1 servers for the host tests of this transport and of the
@@ -577,6 +621,54 @@ mod tests {
         );
         assert!(lower.contains("x-warren-probe: 1"), "{captured}");
         assert!(captured.ends_with("{\"epochs\":[]}"), "{captured}");
+    }
+
+    #[tokio::test]
+    async fn a_conditional_get_sends_the_validator_and_reads_the_new_one_back() {
+        // The forum digest is fetched every minute; on a quiet forum the
+        // validator turns that into a 304 and a few hundred bytes.
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let server = tokio::spawn(serve_one(
+            listener,
+            "HTTP/1.1 200 OK\r\netag: \"v2\"\r\ncontent-length: 2\r\nconnection: close\r\n\r\nhi"
+                .to_owned(),
+        ));
+
+        let transport = ProtectedTransport::with_protect(Arc::new(|_| true));
+        let (response, etag) = transport
+            .execute_conditional(
+                get(format!("http://127.0.0.1:{}/v1/forum/digest", addr.port())),
+                Some("\"v1\""),
+            )
+            .await
+            .expect("roundtrip");
+
+        assert_eq!(response.status, 200);
+        assert_eq!(etag.as_deref(), Some("\"v2\""));
+        let captured = String::from_utf8_lossy(&server.await.expect("server")).to_ascii_lowercase();
+        assert!(captured.contains("if-none-match: \"v1\""), "{captured}");
+    }
+
+    #[tokio::test]
+    async fn a_not_modified_answer_is_a_response_with_no_validator_of_its_own() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let server = tokio::spawn(serve_one(
+            listener,
+            "HTTP/1.1 304 Not Modified\r\nconnection: close\r\n\r\n".to_owned(),
+        ));
+
+        let transport = ProtectedTransport::with_protect(Arc::new(|_| true));
+        let (response, etag) = transport
+            .execute_conditional(get(format!("http://127.0.0.1:{}/x", addr.port())), None)
+            .await
+            .expect("roundtrip");
+
+        assert_eq!(response.status, 304);
+        assert_eq!(etag, None);
+        let captured = String::from_utf8_lossy(&server.await.expect("server")).to_ascii_lowercase();
+        assert!(!captured.contains("if-none-match"), "{captured}");
     }
 
     #[tokio::test]

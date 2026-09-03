@@ -72,6 +72,10 @@ serde_json = { workspace = true }
 tracing = { version = "0.1", features = ["log"] }
 # Timestamps of the Rust log file, in the daemon's own line format.
 chrono = { workspace = true, features = ["clock"] }
+# The signed-artifact verifiers (relay list, multi-hop directory, forum
+# digest). Host-side so the digest state (`forum_digest`) is tested against
+# real signatures rather than a stub.
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 
 [dev-dependencies]
 # Canonical product anchors for the `product` module's drift gate.
@@ -125,7 +129,6 @@ serde_json = { workspace = true }
 
 # Warren auth wallet + relay selector + HTTP API client - these crates build
 # cleanly for `target_os = "android"` today.
-warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 # Wire DTOs of the public `/v1` endpoints (the network-info fetch parses
 # `NetworkInfoResponse`).
 warren-contract = { path = "../../warren-contract" }

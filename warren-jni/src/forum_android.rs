@@ -1,6 +1,7 @@
 //! The Android exports of the community-forum flows: the wallet-signed login
 //! approval, its cancel, the in-app bug report and the problem-report
-//! collection behind it.
+//! collection behind it, the broadcast activity digest, the panel read and
+//! the mark-seen.
 //!
 //! Everything that decides bytes lives in [`crate::forum`] (shared with iOS)
 //! and [`crate::report`]; this module only crosses the JNI boundary, picks
@@ -22,7 +23,11 @@ use jnix::{
 use warren_api::{HttpRequest, HttpResponse, HttpTransport, Method, TransportError};
 use zeroize::Zeroizing;
 
-use crate::forum::{self, FailReason, ForumLoginOutcome, ForumRequestError, ReportOutcome};
+use crate::forum::{
+    self, FailReason, ForumLoginOutcome, ForumNotificationsOutcome, ForumRequestError,
+    ReportOutcome,
+};
+use crate::forum_digest::{DigestState, Fetched, Refresh};
 
 /// The transport the forum requests ride: the VpnService-protected one when
 /// the crate carries it, so the request never black-holes into a TUN that is
@@ -60,6 +65,48 @@ async fn get_dated(
 async fn get_dated(
     transport: &ForumTransport,
     url: String,
+) -> Result<(HttpResponse, Option<String>), TransportError> {
+    let response = transport
+        .execute(HttpRequest {
+            method: Method::Get,
+            url,
+            headers: Vec::new(),
+            body: Vec::new(),
+            use_sni: true,
+        })
+        .await?;
+    Ok((response, None))
+}
+
+/// A conditional GET, for the digest: `If-None-Match` when a validator is
+/// held, the response's own validator read back.
+#[cfg(feature = "tunnel")]
+async fn get_conditional(
+    transport: &ForumTransport,
+    url: String,
+    etag: Option<&str>,
+) -> Result<(HttpResponse, Option<String>), TransportError> {
+    transport
+        .execute_conditional(
+            HttpRequest {
+                method: Method::Get,
+                url,
+                headers: Vec::new(),
+                body: Vec::new(),
+                use_sni: true,
+            },
+            etag,
+        )
+        .await
+}
+
+/// The SDK client reads no response header, so this arm always refetches;
+/// it ships in no build.
+#[cfg(not(feature = "tunnel"))]
+async fn get_conditional(
+    transport: &ForumTransport,
+    url: String,
+    _etag: Option<&str>,
 ) -> Result<(HttpResponse, Option<String>), TransportError> {
     let response = transport
         .execute(HttpRequest {
@@ -353,24 +400,7 @@ fn forum_report(mnemonic: &str, report_json: &str, log_gz: Option<&[u8]>) -> Rep
         return ReportOutcome::Failed(FailReason::Runtime);
     };
     let transport = forum_transport();
-    let device_now = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map(|d| d.as_secs())
-        .unwrap_or(0);
-    let health = format!("https://{}/healthz", forum::connect_host());
-    let offset_secs = match runtime.block_on(get_dated(&transport, health)) {
-        Ok((_, date)) => date
-            .as_deref()
-            .and_then(|d| forum::clock_offset_secs(d, device_now))
-            .unwrap_or(0),
-        Err(err) => {
-            log::warn!(
-                "forumReport: clock preflight failed ({}), signing anyway",
-                transport_class(&err)
-            );
-            0
-        }
-    };
+    let offset_secs = connect_clock_offset(runtime, &transport, "forumReport");
     let Some(timestamp) = forum::timestamp_with_offset(offset_secs) else {
         return ReportOutcome::Failed(FailReason::Build);
     };
@@ -424,6 +454,217 @@ fn forum_report(mnemonic: &str, report_json: &str, log_gz: Option<&[u8]>) -> Rep
             }
         }
     }
+}
+
+/// The device clock's offset from the connect host, from a dated GET of its
+/// health endpoint: the flows with no session (the report, the panel read,
+/// the mark-seen) have no status URL to read, and the health answer carries
+/// the same trusted `Date`. Zero when the preflight itself fails: the request
+/// is then signed with the device clock and the provider decides, as before
+/// the preflight existed.
+fn connect_clock_offset(
+    runtime: &tokio::runtime::Runtime,
+    transport: &ForumTransport,
+    flow: &str,
+) -> i64 {
+    let device_now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let health = format!("https://{}/healthz", forum::connect_host());
+    match runtime.block_on(get_dated(transport, health)) {
+        Ok((_, date)) => date
+            .as_deref()
+            .and_then(|d| forum::clock_offset_secs(d, device_now))
+            .unwrap_or(0),
+        Err(err) => {
+            log::warn!(
+                "{flow}: clock preflight failed ({}), signing anyway",
+                transport_class(&err)
+            );
+            0
+        }
+    }
+}
+
+/// The verified digest held for this process, and the facts that guard it.
+/// In memory only, like the daemon's: a badge is never read off a disk cache.
+static DIGEST: parking_lot::Mutex<DigestState> = parking_lot::Mutex::new(DigestState::new());
+
+/// One conditional fetch of the broadcast forum activity digest
+/// (`GET /v1/forum/digest` on the API host), verified against the pinned
+/// server key with the anti-rollback and freshness rules of
+/// [`crate::forum_digest`]. Returns `{"counts":"<hex>"|null,"fetch":"<class>"}`:
+/// `counts` is the whole anonymous document while a fresh one is held (Kotlin
+/// indexes its own slot into it), `fetch` is `ok`, `not-modified`, `rejected`
+/// or `transport`, on which Kotlin sizes its next delay. Kotlin runs the
+/// cadence (a minute in the foreground, a fetch on resume), so the request
+/// carries no account and no cadence can be tied to one. Blocks on a network
+/// GET: invoke off the main thread.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumDigestFetch<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+) -> jstring {
+    let json = forum_digest_fetch();
+    match env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn forum_digest_fetch() -> String {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let Some(runtime) = crate::android_jni::runtime() else {
+        log::warn!("forumDigest: initLogger must run first");
+        return crate::forum_digest::envelope(None, Refresh::Transport);
+    };
+    let url = format!(
+        "{}/v1/forum/digest",
+        crate::product::PRODUCT_API_URL.trim_end_matches('/')
+    );
+    let etag = DIGEST.lock().etag();
+    let transport = forum_transport();
+    let fetched = match runtime.block_on(get_conditional(&transport, url, etag.as_deref())) {
+        Ok((response, new_etag)) => match response.status {
+            304 => Fetched::NotModified,
+            200 => Fetched::Body {
+                body: String::from_utf8(response.body).unwrap_or_default(),
+                etag: new_etag,
+            },
+            other => Fetched::Status(other),
+        },
+        Err(err) => {
+            log::debug!("forumDigest: fetch failed ({})", transport_class(&err));
+            Fetched::Transport
+        }
+    };
+    let pins: Vec<&str> = crate::product::SERVER_PUBKEY_HEX.into_iter().collect();
+    let mut state = DIGEST.lock();
+    let refresh = state.accept(fetched, &pins);
+    let counts = state.counts(now);
+    crate::forum_digest::envelope(counts.as_deref(), refresh)
+}
+
+/// The caller's own forum notifications (`POST /v1/forum/notifications`),
+/// signed with the wallet and sent here like the login. Called when the user
+/// opens the activity panel, never on a timer: this is the one request tied
+/// to an account. Returns the envelope of [`crate::forum::notifications_envelope`]:
+/// `{"ok":true,"notifications":[..]}` with rows already validated in the
+/// shared crate, or `{"ok":false,"error":"error","reason":"<class>"}`. The
+/// mnemonic, signature and body are never logged.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumNotifications<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let outcome = forum_notifications(&phrase);
+    let json = forum::notifications_envelope(&outcome);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn forum_notifications(mnemonic: &str) -> ForumNotificationsOutcome {
+    match signed_forum_post(
+        mnemonic,
+        "forumNotifications",
+        forum::build_signed_notifications_request,
+    ) {
+        Ok(response) => {
+            let outcome =
+                forum::notifications_outcome_for_response(response.status, &response.body);
+            log::info!(
+                "forumNotifications: provider answered {} ({})",
+                response.status,
+                match &outcome {
+                    ForumNotificationsOutcome::Ok(rows) => format!("{} rows", rows.len()),
+                    ForumNotificationsOutcome::Failed(_) => "failed".to_owned(),
+                }
+            );
+            outcome
+        }
+        Err(reason) => ForumNotificationsOutcome::Failed(reason),
+    }
+}
+
+/// Marks the caller's own forum notification list seen
+/// (`POST /v1/forum/notifications/seen`), what opening the forum bell does
+/// there. Signed over its own path, so the read's signature cannot be replayed
+/// as this write. Returns `{"ok":true}` or the classed failure.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumNotificationsSeen<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let outcome = forum_notifications_seen(&phrase);
+    let json = forum::seen_envelope(&outcome);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn forum_notifications_seen(mnemonic: &str) -> Result<(), FailReason> {
+    let response = signed_forum_post(
+        mnemonic,
+        "forumNotificationsSeen",
+        forum::build_signed_notifications_seen_request,
+    )?;
+    let outcome = forum::seen_outcome_for_response(response.status);
+    log::info!(
+        "forumNotificationsSeen: provider answered {} ({})",
+        response.status,
+        if outcome.is_ok() { "seen" } else { "failed" }
+    );
+    outcome
+}
+
+/// The shape the two account-bound calls share: the clock preflight against
+/// the connect host, the signed request at the corrected time, the forum
+/// transport. `build` is the shared-crate builder for the route.
+fn signed_forum_post(
+    mnemonic: &str,
+    flow: &str,
+    build: fn(&str, u64) -> Result<forum::SignedForumRequest, ForumRequestError>,
+) -> Result<HttpResponse, FailReason> {
+    let Some(runtime) = crate::android_jni::runtime() else {
+        log::warn!("{flow}: initLogger must run first");
+        return Err(FailReason::Runtime);
+    };
+    let transport = forum_transport();
+    let offset_secs = connect_clock_offset(runtime, &transport, flow);
+    let timestamp = forum::timestamp_with_offset(offset_secs).ok_or(FailReason::Build)?;
+    let signed = build(mnemonic, timestamp).map_err(|_| {
+        log::warn!("{flow}: could not build signed request");
+        FailReason::Build
+    })?;
+    let request = HttpRequest {
+        method: Method::Post,
+        url: signed.url,
+        headers: signed.headers,
+        body: signed.body,
+        use_sni: true,
+    };
+    let started = std::time::Instant::now();
+    runtime.block_on(transport.execute(request)).map_err(|err| {
+        log::warn!(
+            "{flow}: transport error ({}) after {} ms",
+            transport_class(&err),
+            started.elapsed().as_millis()
+        );
+        FailReason::Transport
+    })
 }
 
 fn report_class(outcome: &ReportOutcome) -> &'static str {

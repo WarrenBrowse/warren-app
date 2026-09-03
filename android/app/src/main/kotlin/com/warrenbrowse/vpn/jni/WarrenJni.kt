@@ -123,6 +123,33 @@ object WarrenJni {
     external fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String
 
     /**
+     * One conditional fetch of the broadcast forum activity digest (`GET /v1/forum/digest` on the
+     * API host), verified in Rust against the pinned server key with the daemon's anti-rollback and
+     * freshness rules. Returns `{"counts":"<hex>"|null,"fetch":"ok"|"not-modified"|"rejected"|
+     * "transport"}`: `counts` is the whole anonymous document while a fresh one is held, `fetch`
+     * sizes the next delay. The document is identical for every client, so the request carries no
+     * account. Blocks on a network GET: invoke off the main thread.
+     */
+    external fun forumDigestFetch(): String
+
+    /**
+     * The wallet's own forum notifications (`POST /v1/forum/notifications`), signed with the wallet
+     * key and sent in Rust; the rows are validated there (kinds, pinned paths, bounded text) and
+     * come back as `{"ok":true,"notifications":[{id,kind,unread,created_at,title,actor,excerpt,
+     * path}]}` or `{"ok":false,"error":"error","reason":"<class>"}`. Blocks on a network POST:
+     * invoke off the main thread. Never log the mnemonic.
+     */
+    external fun forumNotifications(mnemonic: String): String
+
+    /**
+     * Marks the wallet's forum notification list seen (`POST /v1/forum/notifications/seen`), what
+     * opening the forum bell does there; signed over its own path so the read's signature cannot
+     * be replayed as this write. Returns `{"ok":true}` or the classed failure. Blocks on a network
+     * POST: invoke off the main thread.
+     */
+    external fun forumNotificationsSeen(mnemonic: String): String
+
+    /**
      * Collect the redacted problem report into `outputPath` with the shared desktop collector: Rust
      * log files, the Kotlin log directory, a logcat dump, plus the `metadataJson` facts in the
      * header and the strings of `redactJson` redacted. `forSend` runs the live network probes,

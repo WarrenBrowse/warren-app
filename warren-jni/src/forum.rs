@@ -10,10 +10,12 @@
 use std::time::Duration;
 
 pub use warren_forum::{
-    FailReason, ForumIdentity, ForumLoginOutcome, ForumRequestError, ReportOutcome,
-    SignedForumRequest, build_cancel_url, build_status_url, clock_offset_secs, connect_host,
-    envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code, outcome_for_response,
-    report_envelope, report_outcome_for_response, timestamp_with_offset,
+    FailReason, ForumIdentity, ForumLoginOutcome, ForumNotificationsOutcome, ForumRequestError,
+    ReportOutcome, SignedForumRequest, build_cancel_url, build_status_url, clock_offset_secs,
+    connect_host, envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code,
+    notifications_envelope, notifications_outcome_for_response, outcome_for_response,
+    report_envelope, report_outcome_for_response, seen_envelope, seen_outcome_for_response,
+    timestamp_with_offset,
 };
 
 /// The total deadline of a report upload, from the body it sends: 20 s for
@@ -88,6 +90,38 @@ pub fn build_signed_report_request(
     warren_forum::build_signed_report_request(&key, report_json, log_gz, timestamp)
 }
 
+/// Build the signed panel read (`POST /v1/forum/notifications`) from the
+/// wallet `mnemonic`, stamped with the corrected `timestamp`.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the mnemonic is malformed or the RNG is
+/// unusable.
+pub fn build_signed_notifications_request(
+    mnemonic: &str,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    let key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|_| ForumRequestError::Invalid)?;
+    warren_forum::build_signed_notifications_request(&key, timestamp)
+}
+
+/// Build the signed mark-seen (`POST /v1/forum/notifications/seen`) from the
+/// wallet `mnemonic`, stamped with the corrected `timestamp`.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the mnemonic is malformed or the RNG is
+/// unusable.
+pub fn build_signed_notifications_seen_request(
+    mnemonic: &str,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    let key = crate::wallet::signing_key_from_mnemonic(mnemonic)
+        .map_err(|_| ForumRequestError::Invalid)?;
+    warren_forum::build_signed_notifications_seen_request(&key, timestamp)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -139,6 +173,30 @@ mod tests {
             .find(|(n, _)| n == "X-Warren-Timestamp")
             .map(|(_, v)| v.as_str());
         assert_eq!(stamp, Some("1800000000"));
+    }
+
+    #[test]
+    fn the_panel_read_and_the_mark_seen_from_a_mnemonic_target_their_own_routes() {
+        let read = build_signed_notifications_request(PHRASE, 1_800_000_000).expect("builds");
+        assert_eq!(
+            read.url,
+            "https://connect.warrenbrowse.com/v1/forum/notifications"
+        );
+        assert_eq!(read.body, b"{}");
+        let seen = build_signed_notifications_seen_request(PHRASE, 1_800_000_000).expect("builds");
+        assert_eq!(
+            seen.url,
+            "https://connect.warrenbrowse.com/v1/forum/notifications/seen"
+        );
+        assert_eq!(seen.body, b"{}");
+        assert_eq!(
+            build_signed_notifications_request("not a mnemonic", 1),
+            Err(ForumRequestError::Invalid)
+        );
+        assert_eq!(
+            build_signed_notifications_seen_request("not a mnemonic", 1),
+            Err(ForumRequestError::Invalid)
+        );
     }
 
     #[test]

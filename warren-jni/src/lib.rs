@@ -119,6 +119,11 @@ mod path_metrics;
 #[cfg(target_os = "android")]
 mod android_jni;
 
+// The verified forum activity digest and its anti-rollback and freshness
+// rules, host-tested; `forum_android` fetches it on Kotlin's cadence.
+#[cfg(any(test, target_os = "android"))]
+mod forum_digest;
+
 // The forum flows' JNI exports (login, cancel, report, collection), split
 // from the datapath bridge so the forum surface reads as one module.
 #[cfg(target_os = "android")]

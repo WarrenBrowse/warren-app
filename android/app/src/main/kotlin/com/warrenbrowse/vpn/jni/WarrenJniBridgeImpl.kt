@@ -57,6 +57,16 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
     override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
         ready { WarrenJni.forumReport(mnemonic, reportJson, logGz) }
 
+    override fun forumDigestFetch(): String = ready { WarrenJni.forumDigestFetch() }
+
+    override fun forumNotifications(mnemonic: String): String = ready {
+        WarrenJni.forumNotifications(mnemonic)
+    }
+
+    override fun forumNotificationsSeen(mnemonic: String): String = ready {
+        WarrenJni.forumNotificationsSeen(mnemonic)
+    }
+
     override fun collectProblemReport(
         metadataJson: String,
         redactJson: String,
