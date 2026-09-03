@@ -280,6 +280,26 @@ fn warren_status_snapshot_to_proto(
     }
 }
 
+/// Empties every account-bound secret the status carries unless the caller
+/// may see wallet secrets.
+///
+/// Today that is the announcement voucher code, a bearer token worth a month
+/// of service. The status stream is not gated (every local process may read
+/// the tunnel state, and should be able to), and the management socket is
+/// world-accessible unless the operator restricted it to a group, so a code
+/// riding this snapshot is one local user's voucher handed to every other
+/// local user, next to a mnemonic the same socket keeps behind
+/// `authorize_wallet_access`. The operator's own text is not withheld: the
+/// card still reads exactly as published, without the code.
+fn withhold_account_secrets(status: &mut types::WarrenStatus, may_see_secrets: bool) {
+    if may_see_secrets {
+        return;
+    }
+    for announcement in &mut status.announcements {
+        announcement.voucher_code = None;
+    }
+}
+
 const INVALID_VOUCHER_MESSAGE: &str = "This voucher code is invalid";
 const USED_VOUCHER_MESSAGE: &str = "This voucher code has already been used";
 const EXPIRED_VOUCHER_MESSAGE: &str = "This voucher code has expired";
@@ -888,10 +908,12 @@ impl ManagementService for ManagementServiceImpl {
 
     /// Snapshot of the live Warren tunnel status read directly from
     /// the daemon-shared cache.
-    async fn get_warren_status(&self, _: Request<()>) -> ServiceResult<types::WarrenStatus> {
+    async fn get_warren_status(&self, request: Request<()>) -> ServiceResult<types::WarrenStatus> {
         log::debug!("get_warren_status");
         let snapshot = self.warren_status_cache.snapshot();
-        Ok(Response::new(warren_status_snapshot_to_proto(snapshot)))
+        let mut status = warren_status_snapshot_to_proto(snapshot);
+        withhold_account_secrets(&mut status, self.claim_wallet_access_for_status(&request));
+        Ok(Response::new(status))
     }
 
     /// Push stream emitting a `WarrenStatus` whenever the underlying
@@ -901,10 +923,16 @@ impl ManagementService for ManagementServiceImpl {
     /// behind, avoiding unbounded growth.
     async fn warren_status_updates(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<Self::WarrenStatusUpdatesStream> {
         log::debug!("warren_status_updates subscribe");
         let rx = self.warren_status_cache.subscribe();
+        // Claimed once at subscribe, then read per item: this subscription
+        // outlives the whole session, and what may be shown on it changes the
+        // moment the ownership is settled.
+        let _ = self.claim_wallet_access_for_status(&request);
+        let wallet_access = Arc::clone(&self.wallet_access);
+        let peer = Self::peer_of(&request);
         // The closure intentionally returns `Result<_, Status>` so the
         // tonic stream contract is satisfied (errors become trailing
         // gRPC status); the `Ok` branch is the steady state. Status is
@@ -914,8 +942,11 @@ impl ManagementService for ManagementServiceImpl {
             clippy::result_large_err,
             reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values, so the large Err branch is never instantiated."
         )]
-        let stream = tokio_stream::wrappers::WatchStream::new(rx)
-            .map(|snap| Ok(warren_status_snapshot_to_proto(snap)));
+        let stream = tokio_stream::wrappers::WatchStream::new(rx).map(move |snap| {
+            let mut status = warren_status_snapshot_to_proto(snap);
+            withhold_account_secrets(&mut status, wallet_access.may_see_secrets(peer));
+            Ok(status)
+        });
         Ok(Response::new(
             Box::new(Box::pin(stream)) as Self::WarrenStatusUpdatesStream
         ))
@@ -2130,15 +2161,49 @@ impl ManagementServiceImpl {
     /// user is trying to reach this account's secrets. `extensions` is the
     /// incoming request's extension map.
     fn authorize_wallet_access<T>(&self, request: &Request<T>) -> Result<(), Status> {
-        let peer = request
+        let claim = self
+            .wallet_access
+            .authorize(Self::peer_of(request))
+            .map_err(|e| {
+                log::warn!("Refused wallet/secret RPC: {e}");
+                Status::permission_denied(e.to_string())
+            })?;
+        if claim == crate::wallet_access::Access::JustClaimed {
+            // Until this call the owner was unknown, so every status this
+            // peer received had its account-bound secrets withheld. Push the
+            // same state again now that they may be shown, instead of leaving
+            // the card without its code until something else moves.
+            self.warren_status_cache.republish();
+        }
+        Ok(())
+    }
+
+    /// Whether the caller may be shown the account-bound secrets an ordinary
+    /// status carries, taking the wallet ownership for it if nobody holds it.
+    ///
+    /// A status read is never REFUSED: every local process may see the tunnel
+    /// state, and the CLI depends on it. What a caller that is not the wallet
+    /// owner does not get is the announcement voucher code that rides the
+    /// snapshot (see [`withhold_account_secrets`]).
+    ///
+    /// The read claims the ownership like any other wallet call. That costs an
+    /// attacker nothing it did not already have, since the mnemonic RPC on the
+    /// same socket claims too and hands over the seed with it, and it buys the
+    /// desktop GUI the ownership in every ordinary session: it subscribes to
+    /// this stream seconds after the daemon comes up, while it may never call
+    /// a wallet RPC at all (the forum panel is user-initiated, never polled).
+    fn claim_wallet_access_for_status<T>(&self, request: &Request<T>) -> bool {
+        self.wallet_access.authorize(Self::peer_of(request)).is_ok()
+    }
+
+    /// The peer credentials the management interface captured, `None` where
+    /// the platform cannot supply them (the Windows named pipe).
+    fn peer_of<T>(request: &Request<T>) -> Option<mullvad_management_interface::PeerCredentials> {
+        request
             .extensions()
             .get::<mullvad_management_interface::ManagementConnectInfo>()
             .copied()
-            .flatten();
-        self.wallet_access.authorize(peer).map_err(|e| {
-            log::warn!("Refused wallet/secret RPC: {e}");
-            Status::permission_denied(e.to_string())
-        })
+            .flatten()
     }
 
     /// Sends a command to the daemon and maps the error to an RPC error.
@@ -2536,5 +2601,53 @@ fn map_version_check_error(error: crate::version::Error) -> Status {
 fn map_protobuf_type_err(err: types::FromProtobufTypeError) -> Status {
     match err {
         types::FromProtobufTypeError::InvalidArgument(err) => Status::invalid_argument(err),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{types, withhold_account_secrets};
+
+    fn status_with_a_code() -> types::WarrenStatus {
+        types::WarrenStatus {
+            announcements: vec![types::WarrenAnnouncement {
+                id: "a1".to_owned(),
+                headline: "Warren production is open".to_owned(),
+                body: "One free month on production.".to_owned(),
+                level: 0,
+                cta: None,
+                voucher_code: Some("ABCDEFGHJKMNPQRS".to_owned()),
+            }],
+            ..Default::default()
+        }
+    }
+
+    /// The management socket is world-accessible unless the operator
+    /// restricted it to a group, and this stream is open to every local
+    /// process: a code riding it is one local user's voucher, worth a month
+    /// of service, handed to every other local user.
+    #[test]
+    fn a_caller_that_does_not_own_the_wallet_reads_the_card_without_its_code() {
+        let mut status = status_with_a_code();
+
+        withhold_account_secrets(&mut status, false);
+
+        assert_eq!(status.announcements[0].voucher_code, None);
+        assert_eq!(
+            status.announcements[0].headline, "Warren production is open",
+            "the operator's own text is not a secret"
+        );
+    }
+
+    #[test]
+    fn the_wallet_owner_reads_the_code_it_was_drawn_for() {
+        let mut status = status_with_a_code();
+
+        withhold_account_secrets(&mut status, true);
+
+        assert_eq!(
+            status.announcements[0].voucher_code.as_deref(),
+            Some("ABCDEFGHJKMNPQRS")
+        );
     }
 }

@@ -881,6 +881,19 @@ impl WarrenStatusCache {
         let _ = self.tx.send_replace(snapshot);
     }
 
+    /// Push the state that is already held, unchanged.
+    ///
+    /// What a subscriber is shown is not only the state: the account-bound
+    /// secrets a snapshot carries are withheld from a caller the daemon does
+    /// not yet know to be the wallet's owner. When that becomes known, the
+    /// state has not moved and nothing else would wake the stream, so the
+    /// subscriber would keep the redacted copy for as long as nothing else
+    /// changed.
+    pub fn republish(&self) {
+        let snapshot = self.snapshot();
+        let _ = self.tx.send_replace(snapshot);
+    }
+
     /// Take the published announcements down because the identity moved.
     ///
     /// A card carries the code drawn for ONE account, and the snapshot every
@@ -2014,6 +2027,23 @@ mod tests {
 
         assert!(rx.has_changed().unwrap_or(false));
         assert!(rx.borrow_and_update().announcements.is_empty());
+    }
+
+    /// A subscriber that was shown a redacted snapshot has to be given the
+    /// same state again once it may see all of it, and nothing else would
+    /// wake it: the state itself has not moved.
+    #[test]
+    fn republishing_wakes_the_stream_without_changing_the_state() {
+        let cache = WarrenStatusCache::new();
+        let cards = vec![card("a1", Some("ABCDEFGHJKMNPQRS"))];
+        cache.set_announcements(cards.clone());
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        cache.republish();
+
+        assert!(rx.has_changed().unwrap_or(false));
+        assert_eq!(rx.borrow_and_update().announcements, cards);
     }
 
     /// A code belongs to one account. The snapshot outlives a logout, so

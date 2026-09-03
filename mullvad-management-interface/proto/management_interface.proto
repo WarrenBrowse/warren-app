@@ -998,7 +998,9 @@ message WarrenAnnouncement {
   //
   // A bearer token worth a month of service on the other deployment: it
   // belongs on the account's own screen and nowhere else, never in a log,
-  // an error or a problem report.
+  // an error or a problem report. The daemon serves it only to a caller
+  // that may see wallet secrets: on the ungated status stream every other
+  // local process reads an empty field.
   optional string voucher_code = 6;
 }
 

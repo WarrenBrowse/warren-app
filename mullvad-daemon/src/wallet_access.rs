@@ -69,28 +69,63 @@ impl WalletAccessControl {
     /// Authorize a wallet/secret operation from a peer. `peer` is the
     /// connect-info captured by the management interface (`None` when the
     /// platform cannot supply credentials).
-    pub fn authorize(&self, peer: Option<PeerCredentials>) -> Result<(), WalletAccessError> {
+    ///
+    /// Answers whether this call is what claimed the ownership, so a caller
+    /// that shows different things to the owner can refresh what it already
+    /// published.
+    pub fn authorize(&self, peer: Option<PeerCredentials>) -> Result<Access, WalletAccessError> {
         let Some(peer) = peer else {
             // No credentials available (e.g. Windows named pipe): gated elsewhere.
-            return Ok(());
+            return Ok(Access::AlreadyHeld);
         };
         if peer.uid == 0 {
-            return Ok(());
+            return Ok(Access::AlreadyHeld);
         }
         if self.group_restricted.load(Ordering::Relaxed) {
             // Kernel already enforced group membership at connect time.
-            return Ok(());
+            return Ok(Access::AlreadyHeld);
         }
         let mut owner = self.owner_uid.lock().unwrap();
         match *owner {
             None => {
                 *owner = Some(peer.uid);
-                Ok(())
+                Ok(Access::JustClaimed)
             }
-            Some(u) if u == peer.uid => Ok(()),
+            Some(u) if u == peer.uid => Ok(Access::AlreadyHeld),
             Some(_) => Err(WalletAccessError::DeniedDifferentUser { uid: peer.uid }),
         }
     }
+
+    /// Whether `peer` may be shown wallet-grade secrets, WITHOUT claiming
+    /// anything for it.
+    ///
+    /// [`Self::authorize`] takes ownership on first use, which is right for a
+    /// call that asks for a secret and wrong for a call that merely carries
+    /// one alongside ordinary state: a hostile local process racing the GUI to
+    /// a status read would inherit the mnemonic with it. So an unclaimed
+    /// daemon answers `false` here, and the secret joins the ordinary state
+    /// from the moment the owner is known.
+    #[must_use]
+    pub fn may_see_secrets(&self, peer: Option<PeerCredentials>) -> bool {
+        let Some(peer) = peer else {
+            return true;
+        };
+        if peer.uid == 0 || self.group_restricted.load(Ordering::Relaxed) {
+            return true;
+        }
+        *self.owner_uid.lock().unwrap() == Some(peer.uid)
+    }
+}
+
+/// Whether an authorized call is the one that took the ownership.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Access {
+    /// The peer already owned wallet access, or the socket is gated by the
+    /// kernel and ownership does not apply.
+    AlreadyHeld,
+    /// This call claimed the ownership: nothing was withheld from this peer
+    /// before it, and things may be shown to it now.
+    JustClaimed,
 }
 
 impl Default for WalletAccessControl {
@@ -109,6 +144,47 @@ mod tests {
             gid: uid,
             pid: Some(1234),
         })
+    }
+
+    /// Reading state must never be what makes a caller the wallet owner: the
+    /// claim belongs to a call that asks for a secret outright.
+    #[test]
+    fn peeking_never_claims_the_ownership() {
+        let ac = WalletAccessControl::new();
+        ac.set_socket_security(SocketSecurity::WorldAccessible);
+
+        assert!(
+            !ac.may_see_secrets(creds(1000)),
+            "nobody owns the wallet yet"
+        );
+        assert_eq!(ac.authorize(creds(1001)), Ok(Access::JustClaimed));
+        assert!(
+            !ac.may_see_secrets(creds(1000)),
+            "the peek must not have made 1000 the owner"
+        );
+        assert!(ac.may_see_secrets(creds(1001)));
+    }
+
+    #[test]
+    fn root_and_a_kernel_gated_socket_always_see_secrets() {
+        let ac = WalletAccessControl::new();
+        ac.set_socket_security(SocketSecurity::WorldAccessible);
+        assert!(ac.may_see_secrets(creds(0)));
+        assert!(ac.may_see_secrets(None), "no credentials: gated elsewhere");
+
+        ac.set_socket_security(SocketSecurity::GroupRestricted);
+        assert!(ac.may_see_secrets(creds(1000)));
+    }
+
+    /// The claim is reported once, so a caller that publishes different
+    /// things to the owner knows exactly when to publish again.
+    #[test]
+    fn the_ownership_is_reported_as_claimed_once() {
+        let ac = WalletAccessControl::new();
+        ac.set_socket_security(SocketSecurity::WorldAccessible);
+
+        assert_eq!(ac.authorize(creds(1000)), Ok(Access::JustClaimed));
+        assert_eq!(ac.authorize(creds(1000)), Ok(Access::AlreadyHeld));
     }
 
     #[test]
