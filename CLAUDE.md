@@ -109,6 +109,19 @@ Android and iOS in one pass. Converting a layer by hand, or regenerating one
 platform alone, is what left Singapore photoreal on desktop for a whole release.
 `test/unit/scenery-assets.spec.ts` gates it.
 
+Two rules the connect screen's own geometry rests on: the three layers are
+painted registered on one canvas, so the foreground may slide DOWN over the
+landscape and never up (lifting it uncovers the rows it exists to hide, which
+shipped as a visible tear when the connection card grew), and the foreground's
+slide is the only thing that may move, never the landscape.
+
+The Android "Auto-connect & Lockdown mode" slides are generated as well, for
+another reason: they depict the system VPN settings, which name the app and show
+its icon, so they carry the product environment. Redraw them with
+`android/scripts/vpn-settings-guide/make.py`, once per environment (the beta set
+lives in `app/src/beta/res`), rather than editing a PNG. The caption under them
+takes the same name from `app_name`.
+
 iOS backgrounds are **JPEG**, not PNG: asset catalogs reject WebP, the masters
 are already JPEG so a PNG imageset conserves nothing, and it cost 10 MB of
 `Assets.car`. The two alpha layers stay PNG. Formats, measurements and the
