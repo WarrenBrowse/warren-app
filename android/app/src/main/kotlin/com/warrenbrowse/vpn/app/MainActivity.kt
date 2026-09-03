@@ -21,6 +21,7 @@ import co.touchlab.kermit.Logger
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumJournal
 import com.warrenbrowse.vpn.app.forum.JournalField
@@ -31,6 +32,7 @@ import com.warrenbrowse.vpn.app.forum.ForumLoginPromptHost
 import com.warrenbrowse.vpn.app.forum.classifyForumLoginLink
 import com.warrenbrowse.vpn.app.perf.JankLogger
 import com.warrenbrowse.vpn.di.uiModule
+import com.warrenbrowse.vpn.lib.common.constant.KEY_OPEN_FORUM_ACTIVITY
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
@@ -38,6 +40,7 @@ import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.getApiEndpointConfigurationExtras
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.Prepared
+import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.SplashCompleteRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
@@ -67,6 +70,8 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
     private val forumLoginController by inject<ForumLoginController>()
     private val forumEventsJournal by inject<ForumJournal>()
+    private val forumDigestPoller by inject<ForumDigestPoller>()
+    private val forumActivityOpenRequests by inject<ForumActivityOpenRequests>()
 
     private fun dispatchWarrenConnect() {
         // Route the post-VPN-profile-grant connect (and the already-prepared
@@ -142,6 +147,14 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
                 }
             }
         }
+
+        // The forum digest poll lives exactly as long as the window is visible:
+        // a fetch on every start (what the app missed while away), then one a
+        // minute, cancelled at stop. Nothing polls in the background, so the
+        // badge never turns the app into a periodic presence signal.
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) { forumDigestPoller.run() }
+        }
     }
 
     override fun onRestoreInstanceState(savedInstanceState: Bundle) {
@@ -177,6 +190,9 @@ class MainActivity : FragmentActivity(), AndroidScopeComponent {
                     intent.getApiEndpointConfigurationExtras()
                 )
             KEY_REQUEST_VPN_PROFILE -> handleRequestVpnProfileIntent()
+            // The forum notification was tapped: the panel opens once the main
+            // flow is on screen (the navigator may not exist yet on a cold start).
+            KEY_OPEN_FORUM_ACTIVITY -> forumActivityOpenRequests.request()
             Intent.ACTION_VIEW -> handleForumDeepLink(intent)
             else -> Logger.w("Unhandled intent action: $action")
         }

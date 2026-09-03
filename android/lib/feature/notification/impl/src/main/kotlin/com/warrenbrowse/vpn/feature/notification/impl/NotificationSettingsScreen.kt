@@ -2,6 +2,9 @@ package com.warrenbrowse.vpn.feature.notification.impl
 
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.only
@@ -14,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -52,6 +56,7 @@ private fun PreviewNotificationSettingsScreen(
             state = state,
             onBackClick = {},
             onToggleLocationInNotifications = {},
+            onToggleForumNotifications = {},
             onOpenSystemNotificationsSettings = {},
         )
     }
@@ -76,6 +81,7 @@ fun NotificationSettings(navigator: Navigator) {
         state = state,
         onBackClick = dropUnlessResumed { navigator.goBack() },
         onToggleLocationInNotifications = vm::onToggleLocationInNotifications,
+        onToggleForumNotifications = vm::onToggleForumNotifications,
         onOpenSystemNotificationsSettings = vm::openSystemNotificationsSettings,
     )
 }
@@ -85,6 +91,7 @@ fun NotificationSettingsScreen(
     state: Lc<Unit, NotificationSettingsUiState>,
     onBackClick: () -> Unit,
     onToggleLocationInNotifications: (Boolean) -> Unit,
+    onToggleForumNotifications: (Boolean) -> Unit,
     onOpenSystemNotificationsSettings: () -> Unit,
 ) {
     ScaffoldWithSmallTopBar(
@@ -134,6 +141,7 @@ fun NotificationSettingsScreen(
                     NotificationSettingsContent(
                         state = state.value,
                         onToggleLocationInNotifications = onToggleLocationInNotifications,
+                        onToggleForumNotifications = onToggleForumNotifications,
                     )
                 }
             }
@@ -145,6 +153,7 @@ fun NotificationSettingsScreen(
 private fun NotificationSettingsContent(
     state: NotificationSettingsUiState,
     onToggleLocationInNotifications: (Boolean) -> Unit,
+    onToggleForumNotifications: (Boolean) -> Unit,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         SwitchListItem(
@@ -152,6 +161,25 @@ private fun NotificationSettingsContent(
             isToggled = state.locationInNotificationEnabled,
             onCellClicked = onToggleLocationInNotifications,
         )
+        // Desktop `ForumNotificationsSetting`: shown only to a wallet that has
+        // a forum account; off removes the bell, the badge and the
+        // notification alike.
+        state.forumNotificationsEnabled?.let { enabled ->
+            Spacer(modifier = Modifier.height(Dimens.mediumPadding))
+            SwitchListItem(
+                title = stringResource(R.string.forum_notifications_setting),
+                isToggled = enabled,
+                onCellClicked = onToggleForumNotifications,
+            )
+            Text(
+                text = stringResource(R.string.forum_notifications_setting_description),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = Dimens.mediumPadding, vertical = Dimens.smallPadding),
+            )
+        }
     }
 }
 

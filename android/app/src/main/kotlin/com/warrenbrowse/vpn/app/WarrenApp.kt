@@ -70,7 +70,9 @@ import com.warrenbrowse.vpn.feature.notification.impl.navigation.notificationEnt
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.settingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenSupportEntries
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
+import com.warrenbrowse.vpn.feature.settings.api.ForumActivityNavKey
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
+import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
@@ -151,6 +153,17 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
             OutOfTimeGateAction.Push -> nav3.navigate(OutOfTimeNavKey)
             OutOfTimeGateAction.Pop -> nav3.goBackUntil(OutOfTimeNavKey, inclusive = true)
             OutOfTimeGateAction.None -> Unit
+        }
+    }
+
+    // A tap on the forum notification: consumed once the main flow is up, so a
+    // cold start lands on the panel and onboarding is never interrupted by it.
+    val forumOpenRequests = koinInject<ForumActivityOpenRequests>()
+    val forumOpenPending by forumOpenRequests.pending.collectAsStateWithLifecycle()
+    LaunchedEffect(forumOpenPending, inMainFlow) {
+        if (forumOpenPending && inMainFlow) {
+            forumOpenRequests.consume()
+            nav3.navigate(ForumActivityNavKey)
         }
     }
 

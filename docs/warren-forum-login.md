@@ -144,6 +144,43 @@ by hand. The `FileProvider` behind it serves the report directory only, under
 an authority derived from the running package (each product environment has
 its own application id).
 
+## Forum activity on Android: the bell, the notification, the panel
+
+The desktop rules apply unchanged (`forum-activity-monitor.ts`, ported rule
+for rule as `ForumActivityMonitor` in `lib/repository`, with the same table
+test): the badge comes only from the broadcast digest indexed by the wallet's
+slot, a notification fires only on a rise seen while the app was watching, an
+absent digest is unknown rather than zero, what the panel itself proved
+overrides the digest until the document changes, and the setting removes the
+whole header slot, lifebuoy included. Erasing the wallet clears the identity
+(`ForumIdentityWalletBinding`), so the slot goes and the badge with it.
+
+Where the pieces live: the digest verification, the anti-rollback high-water
+mark and the freshness rule in `warren-jni/src/forum_digest.rs` (host-tested,
+the daemon's `warren_forum_digest_updater` without the loop); the conditional
+GET on the protected transport (`forumDigestFetch`); the panel read and the
+mark-seen signed in the shared crate over their own paths and sent on the
+protected transport (`forumNotifications`, `forumNotificationsSeen`), the rows
+validated in `warren-forum` before they cross the FFI; the Kotlin monitor and
+its wiring in `lib/repository` (`ForumActivityRepository`); the header slot in
+`lib/ui/component` (`ForumHeaderSlot`); the panel screen and the "Forum
+notifications" switch in the settings and notification features; the
+low-importance `forum_activity` channel in `lib/push-notification`, whose
+notification opens the panel through `KEY_OPEN_FORUM_ACTIVITY`.
+
+**Poll model, decided 2026-09-03: foreground only.** `ForumDigestPoller` runs
+inside `MainActivity`'s STARTED lifecycle: one fetch on every start (what the
+app missed while away), then one a minute (the daemon's `CHECK_INTERVAL`, with
+its 20 s to 45 s fast retry after a transport failure), cancelled the moment the
+window is gone. No WorkManager period and no service wake-up: a background
+cadence would make the app a periodic presence signal for a badge nobody is
+looking at, WorkManager's 15 minute floor would make that badge lag anyway, and
+the fetch on resume already catches up. The consequence to know: a reply that
+arrives while the app is in the background raises the notification on the next
+resume, not at once. A tunnel between states defers a fetch (the resolver is
+the tunnel's, or absent under the kill switch) and counts as unreachable for the
+retry cadence.
+
 ## Reading a failed attempt
 
 - Device: `adb logcat -s WarrenJni:V` for the live run;

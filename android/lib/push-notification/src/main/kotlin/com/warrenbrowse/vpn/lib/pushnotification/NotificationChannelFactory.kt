@@ -26,7 +26,18 @@ class NotificationChannelFactory(
     private fun NotificationChannel.toAndroidNotificationChannel(): NotificationChannelCompat =
         when (this) {
             NotificationChannel.TunnelUpdates -> NotificationChannel.TunnelUpdates.toChannel()
+            NotificationChannel.ForumActivity -> NotificationChannel.ForumActivity.toChannel()
         }
+
+    // The launcher badge is the Android stand-in for the desktop tray dot: it
+    // shows while the notification is up and goes with it.
+    private fun NotificationChannel.ForumActivity.toChannel(): NotificationChannelCompat =
+        NotificationChannelCompat.Builder(id.value, NotificationManager.IMPORTANCE_LOW)
+            .setName(resources.getString(R.string.forum_activity_channel_name))
+            .setDescription(resources.getString(R.string.forum_activity_channel_description))
+            .setShowBadge(true)
+            .setVibrationEnabled(false)
+            .build()
 
     private fun NotificationChannel.TunnelUpdates.toChannel(): NotificationChannelCompat =
         NotificationChannelCompat.Builder(id.value, NotificationManager.IMPORTANCE_LOW)

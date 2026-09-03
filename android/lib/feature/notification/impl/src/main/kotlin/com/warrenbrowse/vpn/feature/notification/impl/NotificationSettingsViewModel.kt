@@ -5,32 +5,39 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.toLc
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 
 sealed interface NotificationSettingsSideEffect {
     data object OpenSystemNotificationsSettings : NotificationSettingsSideEffect
 }
 
 class NotificationSettingsViewModel(
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val localSettings: WarrenLocalSettingsRepository,
+    forumIdentity: ForumIdentityRepository,
 ) : ViewModel() {
 
     private val _uiSideEffect = Channel<NotificationSettingsSideEffect>()
     val uiSideEffect = _uiSideEffect.receiveAsFlow()
 
     val uiState =
-        userPreferencesRepository
-            .preferencesFlow()
-            .map { settings ->
+        combine(
+                userPreferencesRepository.preferencesFlow(),
+                localSettings.forumNotificationsEnabled,
+                forumIdentity.identity,
+            ) { settings, forumEnabled, identity ->
                 NotificationSettingsUiState(
-                        locationInNotificationEnabled = settings.showLocationInSystemNotification
+                        locationInNotificationEnabled = settings.showLocationInSystemNotification,
+                        forumNotificationsEnabled = if (identity != null) forumEnabled else null,
                     )
                     .toLc<Unit, NotificationSettingsUiState>()
             }
@@ -45,6 +52,9 @@ class NotificationSettingsViewModel(
             userPreferencesRepository.setLocationInNotificationEnabled(enabled)
         }
     }
+
+    fun onToggleForumNotifications(enabled: Boolean) =
+        localSettings.setForumNotificationsEnabled(enabled)
 
     fun openSystemNotificationsSettings() = viewModelScope.launch {
         _uiSideEffect.send(NotificationSettingsSideEffect.OpenSystemNotificationsSettings)

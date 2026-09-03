@@ -22,6 +22,7 @@ import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletBackupViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
 import com.warrenbrowse.vpn.feature.notification.impl.NotificationSettingsViewModel
 import com.warrenbrowse.vpn.feature.settings.impl.SettingsViewModel
+import com.warrenbrowse.vpn.feature.settings.impl.support.ForumActivityViewModel
 import com.warrenbrowse.vpn.feature.settings.impl.support.ReportProblemViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
@@ -179,9 +180,10 @@ val uiModule = module {
     viewModel { PrivacyDisclaimerViewModel(get(), IS_PLAY_BUILD) }
     viewModel { SettingsViewModel(get(), get(), get(), IS_PLAY_BUILD) }
     viewModel { ReportProblemViewModel(get()) }
+    viewModel { ForumActivityViewModel(get(), get()) }
     viewModel { SplashViewModel(get(), get(), inject(), inject()) }
     viewModel { OutOfTimeGateViewModel(get(), get()) }
-    viewModel { NotificationSettingsViewModel(get()) }
+    viewModel { NotificationSettingsViewModel(get(), get(), get()) }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         viewModel { LanguageViewModel(get()) }
     }

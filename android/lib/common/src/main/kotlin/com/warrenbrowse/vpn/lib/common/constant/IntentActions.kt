@@ -6,6 +6,9 @@ const val KEY_RECONNECT_ACTION = "$WARREN_PACKAGE_NAME.reconnect_action"
 const val KEY_DISCONNECT_ACTION = "$WARREN_PACKAGE_NAME.disconnect_action"
 const val KEY_REQUEST_VPN_PROFILE = "$WARREN_PACKAGE_NAME.request_vpn_profile"
 
+/** Opens the community-forum activity panel; what the forum notification does when tapped. */
+const val KEY_OPEN_FORUM_ACTIVITY = "$WARREN_PACKAGE_NAME.open_forum_activity"
+
 /**
  * Dedicated Quinn connect action. Carries a serialised
  * [com.warrenbrowse.vpn.app.service.WarrenTunnelConfig] under the

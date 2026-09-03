@@ -14,12 +14,14 @@ import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
+import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
 import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
 import com.warrenbrowse.vpn.app.forum.ForumJournal
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.JournalField
 import com.warrenbrowse.vpn.app.forum.LinkSource
+import com.warrenbrowse.vpn.app.forum.WarrenForumActivityUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
 import com.warrenbrowse.vpn.app.forum.forumLoginLinkFromCode
@@ -34,12 +36,18 @@ import com.warrenbrowse.vpn.lib.model.NotificationChannel
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationProvider
+import com.warrenbrowse.vpn.lib.pushnotification.forum.ForumActivityNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
+import com.warrenbrowse.vpn.lib.repository.ForumActivityAlerts
+import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
+import com.warrenbrowse.vpn.lib.repository.ForumActivityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumActivityState
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumNotificationsReader
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
 import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
@@ -203,6 +211,30 @@ val appModule = module {
             controller.request(forumLoginLinkFromCode(sid))
         }
     }
+    // The forum activity badge (doc 55): one number for the bell, the
+    // notification and the panel, from the broadcast digest indexed by the
+    // wallet's slot, corrected by what the panel itself proved. The alerts
+    // surface is the notification provider registered below.
+    single {
+        ForumActivityRepository(
+                identity = get<ForumIdentityRepository>().identity,
+                enabled = get<WarrenLocalSettingsRepository>().forumNotificationsEnabled,
+                alerts = get(),
+                scope = get<ApplicationScope>(),
+            )
+            .also { it.start() }
+    } bind ForumActivityState::class
+    single<ForumNotificationsReader> {
+        WarrenForumActivityUseCase(
+            walletRepository = get(),
+            forumIdentityRepository = get(),
+            activity = get(),
+            jni = get(),
+            tunnelState = get(),
+        )
+    }
+    single { ForumDigestPoller(jni = get(), activity = get(), tunnelState = get()) }
+    single { ForumActivityOpenRequests() }
     single<WarrenSupportReporter> {
         WarrenSupportReporterImpl(
             context = androidContext(),
@@ -223,6 +255,7 @@ val appModule = module {
     single<PackageManager> { androidContext().packageManager }
 
     single { NotificationChannel.TunnelUpdates } bind NotificationChannel::class
+    single { NotificationChannel.ForumActivity } bind NotificationChannel::class
     single { NotificationChannelFactory(get(), get(), getAll()) } withOptions { createdAtStart() }
     single { NotificationManagerCompat.from(androidContext()) }
     single { NotificationManager(get(), getAll(), get(), MainScope()) } withOptions
@@ -239,6 +272,8 @@ val appModule = module {
             MainScope(),
         )
     } bind NotificationProvider::class
+    single { ForumActivityNotificationProvider(get<NotificationChannel.ForumActivity>().id) } binds
+        arrayOf(NotificationProvider::class, ForumActivityAlerts::class)
     // Compile-time product facts for lib modules (they cannot read the
     // app BuildConfig): the beta flavor drives the BETA banner and the
     // payment-surface masking.
