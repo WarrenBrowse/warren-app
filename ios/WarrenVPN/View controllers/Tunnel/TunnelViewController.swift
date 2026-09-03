@@ -198,8 +198,26 @@ class TunnelViewController: UIViewController, RootContainment {
         fatalError("init(coder:) has not been implemented")
     }
 
+    @objc private func warrenEnvStandDownDidChange() {
+        connectionViewViewModel.isStandingDownForHigherEnvironment =
+            interactor.isStandingDownForHigherEnvironment
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        // The stand-down record is pushed from its source rather than inferred
+        // from a settings write: standing down and re-enabling both write the
+        // kill switch, and a write that changes nothing (the common case,
+        // "Force all apps" already off) never reaches
+        // `didUpdateTunnelSettings`. Without this the Connect button stays
+        // greyed out after a re-enable, with no banner left to explain why.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(warrenEnvStandDownDidChange),
+            name: .warrenEnvStandDownDidChange,
+            object: nil
+        )
         indicatorsViewViewModel.onFeaturePressed = { [weak self] feature in
             self?.shouldShowSettingsForFeature?(feature)
         }

@@ -97497,6 +97497,148 @@
         }
       }
     },
+    "Warren VPN is installed on this device and takes priority. Tap here to stand this build down: it disconnects, stops connecting on demand and turns “Force all apps” off.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‏Warren VPN مثبت على هذا الجهاز وله الأولوية. اضغط هنا لإيقاف هذا الإصدار: يقطع الاتصال، ويوقف الاتصال عند الطلب، ويوقف «إلزام جميع التطبيقات»."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN er installeret på denne enhed og har prioritet. Tryk her for at trække denne version tilbage: den afbryder forbindelsen, stopper med at forbinde efter behov og slår “Tving alle apps” fra."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN ist auf diesem Gerät installiert und hat Vorrang. Hier tippen, um diese Version zurückzuziehen: Sie trennt die Verbindung, beendet die Verbindung bei Bedarf und deaktiviert „Alle Apps zwingen“."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN está instalado en este dispositivo y tiene prioridad. Toca aquí para retirar esta versión: se desconecta, deja de conectarse a demanda y desactiva «Forzar todas las aplicaciones»."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "‏Warren VPN روی این دستگاه نصب است و اولویت دارد. برای کنار کشیدن این نسخه اینجا را بزنید: قطع می‌شود، اتصال درخواستی را متوقف می‌کند و «اجبار همهٔ برنامه‌ها» را خاموش می‌کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN on asennettu tähän laitteeseen ja on etusijalla. Napauta tästä, niin tämä versio väistyy: se katkaisee yhteyden, lopettaa pyynnöstä yhdistämisen ja poistaa ”Pakota kaikki sovellukset” käytöstä."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN est installé sur cet appareil et il est prioritaire. Touchez ici pour retirer cette version : elle se déconnecte, cesse de se connecter à la demande et désactive « Forcer toutes les applications »."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN è installato su questo dispositivo e ha la priorità. Tocca qui per ritirare questa versione: si disconnette, smette di connettersi su richiesta e disattiva “Forza tutte le app”."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスには Warren VPN がインストールされており、そちらが優先されます。ここをタップすると、このビルドは接続を切断し、オンデマンド接続をやめ、「すべてのアプリに強制適用」をオフにします。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기에 Warren VPN이 설치되어 있어 우선합니다. 여기를 누르면 이 빌드가 연결을 끊고 온디맨드 연결을 중지하며 ‘모든 앱에 강제 적용’을 끕니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်ပစ္စည်းတွင် Warren VPN ကို ထည့်သွင်းထားပြီး ၎င်းက ဦးစားပေးဖြစ်သည်။ ဤဗားရှင်းကို ဖယ်ရန် ဤနေရာကို တို့ပါ။ ချိတ်ဆက်မှုကို ဖြုတ်ပြီး လိုအပ်သည့်အခါ အလိုအလျောက်ချိတ်ဆက်ခြင်းကို ရပ်ကာ “အက်ပ်အားလုံး၌ မဖြစ်မနေ လုပ်ဆောင်ရန်” ကို ပိတ်ပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN er installert på denne enheten og har prioritet. Trykk her for å trekke denne versjonen tilbake: den kobler fra, slutter å koble til ved behov og slår av “Tving alle apper”."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN is op dit apparaat geïnstalleerd en heeft voorrang. Tik hier om deze versie terug te trekken: de verbinding wordt verbroken, verbinden op verzoek stopt en “Alle apps forceren” wordt uitgeschakeld."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN jest zainstalowany na tym urządzeniu i ma pierwszeństwo. Dotknij tutaj, aby wycofać tę wersję: rozłączy się, przestanie łączyć się na żądanie i wyłączy „Wymuszaj na wszystkich aplikacjach”."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Warren VPN está instalado neste dispositivo e tem prioridade. Toque aqui para retirar esta versão: desliga-se, deixa de ligar a pedido e desativa «Forçar todas as aplicações»."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN este instalat pe acest dispozitiv și are prioritate. Atingeți aici pentru a retrage această versiune: se deconectează, încetează să se conecteze la cerere și dezactivează „Forțați toate aplicațiile”."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На этом устройстве установлен Warren VPN, и он имеет приоритет. Нажмите здесь, чтобы отвести эту сборку: она отключится, перестанет подключаться по требованию и выключит «Принудительно для всех приложений»."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren VPN är installerat på den här enheten och har företräde. Tryck här för att dra tillbaka den här versionen: den kopplar från, slutar ansluta vid behov och stänger av ”Tvinga alla appar”."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีการติดตั้ง Warren VPN บนอุปกรณ์นี้และมีลำดับความสำคัญสูงกว่า แตะที่นี่เพื่อให้บิลด์นี้ถอย โดยจะตัดการเชื่อมต่อ หยุดเชื่อมต่อตามต้องการ และปิด “บังคับทุกแอป”"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazda Warren VPN kurulu ve önceliği var. Bu sürümü geri çekmek için buraya dokunun: bağlantıyı keser, istek üzerine bağlanmayı durdurur ve “Tüm uygulamaları IAN tünelini kullanmaya zorla” seçeneğini kapatır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На цьому пристрої встановлено Warren VPN, і він має пріоритет. Натисніть тут, щоб відкликати цю збірку: вона відключиться, припинить підключатися за потреби та вимкне «Примусово для всіх застосунків»."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本设备已安装 Warren VPN，它拥有优先权。点按这里让此版本让位：将断开连接、停止按需连接，并关闭“强制所有 App”。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本裝置已安裝 Warren VPN，它擁有優先權。點一下這裡讓此版本讓位：將中斷連線、停止按需連線，並關閉「強制所有應用程式」。"
+          }
+        }
+      }
+    },
     "Warren VPN is installed on this device and takes priority, so this build disconnected, stopped connecting on demand and turned “Force all apps” off.": {
       "localizations": {
         "ar": {

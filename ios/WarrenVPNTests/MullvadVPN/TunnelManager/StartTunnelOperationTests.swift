@@ -107,7 +107,8 @@ class StartTunnelOperationTests: XCTestCase {
         WarrenEnvStandDownRecord(
             higherEnvironmentSeen: "prod",
             reEnabled: false,
-            restoreIncludeAllNetworks: true
+            restoreIncludeAllNetworks: true,
+            standDownApplied: true
         )
     }
 

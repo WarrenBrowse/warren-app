@@ -16,7 +16,9 @@ private final class FakeStandDownRecordStore: WarrenEnvStandDownStoring {
 }
 
 final class WarrenEnvStandDownNotificationProviderTests: XCTestCase {
-    func testShouldDisplayOnlyWhileAHigherEnvironmentHoldsTheDevice() {
+    /// The offer, and the stand-down it may lead to, are both the banner. Only
+    /// an answered record takes it away.
+    func testShouldDisplayWhileAHigherEnvironmentIsOfferedOrStoodDownFor() {
         XCTAssertFalse(
             WarrenEnvStandDownNotificationProvider.shouldDisplay(record: WarrenEnvStandDownRecord())
         )
@@ -25,8 +27,17 @@ final class WarrenEnvStandDownNotificationProviderTests: XCTestCase {
                 record: WarrenEnvStandDownRecord(higherEnvironmentSeen: "prod")
             )
         )
-        // The user asked for this build back: the banner goes and stays gone,
-        // even though the other install is still there.
+        XCTAssertTrue(
+            WarrenEnvStandDownNotificationProvider.shouldDisplay(
+                record: WarrenEnvStandDownRecord(
+                    higherEnvironmentSeen: "prod",
+                    standDownApplied: true
+                )
+            )
+        )
+        // The user asked for this build back, or turned the offer down: the
+        // banner goes and stays gone, even though the other install is still
+        // there.
         XCTAssertFalse(
             WarrenEnvStandDownNotificationProvider.shouldDisplay(
                 record: WarrenEnvStandDownRecord(higherEnvironmentSeen: "prod", reEnabled: true)
@@ -34,12 +45,46 @@ final class WarrenEnvStandDownNotificationProviderTests: XCTestCase {
         )
     }
 
-    func testDescriptorNamesTheStandDownAndOffersTheReEnable() {
+    /// Nothing has been given up yet, so the banner asks rather than reports,
+    /// and the tap is the consent the teardown needs.
+    func testTheOfferAsksBeforeAnythingIsGivenUp() {
         let store = FakeStandDownRecordStore()
         store.warrenEnvStandDown = WarrenEnvStandDownRecord(higherEnvironmentSeen: "prod")
+        var confirmed = false
         var reEnabled = false
         let provider = WarrenEnvStandDownNotificationProvider(
             store: store,
+            confirm: { confirmed = true },
+            reEnable: { reEnabled = true }
+        )
+
+        let descriptor = provider.notificationDescriptor
+
+        XCTAssertNotNil(descriptor)
+        XCTAssertEqual(descriptor?.identifier, .warrenEnvStandDownInAppNotification)
+        XCTAssertEqual(descriptor?.style, .warning)
+        XCTAssertFalse(descriptor?.body.string.isEmpty ?? true)
+
+        // The close button turns the offer down: the signal behind it cannot
+        // be authenticated, so putting it away must cost nothing.
+        descriptor?.button?.handler?()
+        XCTAssertTrue(reEnabled)
+        XCTAssertFalse(confirmed)
+
+        descriptor?.tapAction?.handler?()
+        XCTAssertTrue(confirmed)
+    }
+
+    func testDescriptorNamesTheStandDownAndOffersTheReEnable() {
+        let store = FakeStandDownRecordStore()
+        store.warrenEnvStandDown = WarrenEnvStandDownRecord(
+            higherEnvironmentSeen: "prod",
+            standDownApplied: true
+        )
+        var reEnabled = false
+        let provider = WarrenEnvStandDownNotificationProvider(
+            store: store,
+            confirm: {},
             reEnable: { reEnabled = true }
         )
 
@@ -64,9 +109,14 @@ final class WarrenEnvStandDownNotificationProviderTests: XCTestCase {
         let store = FakeStandDownRecordStore()
         store.warrenEnvStandDown = WarrenEnvStandDownRecord(
             higherEnvironmentSeen: "prod",
-            reEnabled: true
+            reEnabled: true,
+            standDownApplied: true
         )
-        let provider = WarrenEnvStandDownNotificationProvider(store: store, reEnable: {})
+        let provider = WarrenEnvStandDownNotificationProvider(
+            store: store,
+            confirm: {},
+            reEnable: {}
+        )
 
         XCTAssertNil(provider.notificationDescriptor)
     }
@@ -78,6 +128,7 @@ final class WarrenEnvStandDownNotificationProviderTests: XCTestCase {
     func testItOutranksTheTunnelStatusBanner() {
         let provider = WarrenEnvStandDownNotificationProvider(
             store: FakeStandDownRecordStore(),
+            confirm: {},
             reEnable: {}
         )
 

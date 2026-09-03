@@ -21,27 +21,70 @@ public struct WarrenEnvStandDownRecord: Codable, Equatable, Sendable {
     /// so a later reinstall reads as the new transition it is.
     public var higherEnvironmentSeen: String?
 
-    /// The user asked for this build back. Sticky by construction: the
-    /// environment stays marked as seen, so no later launch stands down for
-    /// the same install again.
+    /// The user asked for this build back, or turned the offer down. Sticky by
+    /// construction: the environment stays marked as seen, so no later launch
+    /// raises the same offer again.
     public var reEnabled: Bool
 
-    /// The "Force all apps" state to put back on a manual re-enable, snapshot
-    /// before the stand-down turned it off.
+    /// The "Force all apps" state to put back when this build is re-enabled or
+    /// the other install goes away, snapshot before the stand-down turned it
+    /// off. Only meaningful once [standDownApplied] is set.
     public var restoreIncludeAllNetworks: Bool
 
-    /// Whether the stand-down banner is up: an environment was seen and the
-    /// user has not overridden it.
-    public var isStandingDown: Bool { higherEnvironmentSeen != nil && !reEnabled }
+    /// Whether the user accepted the stand-down and the teardown actually ran.
+    ///
+    /// The presence of the other install is read from `UIApplication`'s URL
+    /// scheme probe, which any app on the device can answer by declaring the
+    /// scheme in its own Info.plist. An observation therefore never
+    /// disconnects this build or turns the kill switch off on its own: it
+    /// offers, and the user's tap is what applies it.
+    public var standDownApplied: Bool
+
+    /// Whether the stand-down is in force: the user accepted it and has not
+    /// asked for this build back. The tunnel refuses to arm exactly here.
+    public var isStandingDown: Bool {
+        higherEnvironmentSeen != nil && standDownApplied && !reEnabled
+    }
+
+    /// Whether the stand-down is merely on offer: an environment was observed
+    /// and the user has neither accepted nor turned it down. Nothing on the
+    /// device has been touched.
+    public var isOfferingStandDown: Bool {
+        higherEnvironmentSeen != nil && !standDownApplied && !reEnabled
+    }
 
     public init(
         higherEnvironmentSeen: String? = nil,
         reEnabled: Bool = false,
-        restoreIncludeAllNetworks: Bool = false
+        restoreIncludeAllNetworks: Bool = false,
+        standDownApplied: Bool = false
     ) {
         self.higherEnvironmentSeen = higherEnvironmentSeen
         self.reEnabled = reEnabled
         self.restoreIncludeAllNetworks = restoreIncludeAllNetworks
+        self.standDownApplied = standDownApplied
+    }
+
+    /// A record written before the stand-down was put behind a confirmation
+    /// carries no `standDownApplied`, and back then having seen an
+    /// environment WAS having stood down for it. Reading such a record as a
+    /// fresh offer would forget that the kill switch is already off and lose
+    /// the value to restore, so the missing field decodes as the state that
+    /// record was actually in.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        higherEnvironmentSeen = try container.decodeIfPresent(
+            String.self,
+            forKey: .higherEnvironmentSeen
+        )
+        reEnabled = try container.decode(Bool.self, forKey: .reEnabled)
+        restoreIncludeAllNetworks = try container.decode(
+            Bool.self,
+            forKey: .restoreIncludeAllNetworks
+        )
+        standDownApplied =
+            try container.decodeIfPresent(Bool.self, forKey: .standDownApplied)
+            ?? (higherEnvironmentSeen != nil)
     }
 }
 

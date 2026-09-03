@@ -38,8 +38,7 @@ struct WarrenEnvStandDownRefusal: LocalizedError {
 /// Coexistence with a higher-priority product environment: prod outranks
 /// staging, staging outranks beta, and the outranked build is the one that
 /// stands down. Nothing here ever commands the other install, and the
-/// production build is not modified, which is what keeps the design from
-/// becoming a documented way for a local app to disarm someone's kill switch.
+/// production build is not modified.
 ///
 /// iOS shows far less than the desktop, and the gap is not closable. The
 /// desktop daemon dials the higher environment's socket and yields
@@ -51,8 +50,17 @@ struct WarrenEnvStandDownRefusal: LocalizedError {
 /// transition. A continuous rule would undo the user's manual re-enable at the
 /// next start, since the other install is still there.
 ///
+/// That presence is read from `UIApplication.canOpenURL`, and a URL scheme is
+/// not an identity: any app on the device can claim `warren://` in its own
+/// Info.plist, and the platform offers no signed alternative a build can check
+/// on its own. So an observation only ever OFFERS the stand-down. Applying it
+/// takes an explicit tap ([confirmStandDown]), which is what stops the design
+/// from being a documented way for any local app to disconnect someone's
+/// tunnel and disarm their kill switch.
+///
 /// [refresh] is the whole observation. The banner it raises is cleared by
-/// [reEnable] and by nothing else.
+/// [confirmStandDown] (accept), by [reEnable] (turn it down, or ask for this
+/// build back afterwards), and by the other install going away.
 final class WarrenEnvStandDown {
     /// The device this stand-down observes and the levers it pulls, injected
     /// so the teardown ORDER can be asserted without NetworkExtension.
@@ -108,8 +116,8 @@ final class WarrenEnvStandDown {
     }
 
     /// Observe the device once. A presence that has not changed since the last
-    /// observation does nothing at all, so a re-enable holds and a build that
-    /// already stood down is not torn down again on every start.
+    /// observation does nothing at all, so an answered offer holds and a build
+    /// that already stood down is not torn down again on every start.
     func refresh() {
         let seen = Self.assertingEnvironment(
             higherPriority: higherPriority,
@@ -117,24 +125,14 @@ final class WarrenEnvStandDown {
         )?.name
         guard seen != record.higherEnvironmentSeen else { return }
         if let seen {
-            standDown(to: seen)
+            offerStandDown(to: seen)
         } else {
             forget()
         }
     }
 
-    /// The user asked for this build back. Sticky: the record keeps the higher
-    /// install marked as seen, so no later start stands down for it again.
-    /// Only a fresh install of it is a new transition.
-    func reEnable() {
-        var record = store.warrenEnvStandDown
-        guard record.isStandingDown else { return }
-        record.reEnabled = true
-        store.warrenEnvStandDown = record
-        device.writeKillSwitch(record.restoreIncludeAllNetworks)
-        didChange?()
-    }
-
+    /// The user accepted the stand-down.
+    ///
     /// The order is the safety, and it is the desktop daemon's order
     /// (`warren_env_arbitration::stand_down_plan`): record what is about to be
     /// given up, take the tunnel down while the block is still armed, and lift
@@ -144,24 +142,98 @@ final class WarrenEnvStandDown {
     /// The block is released even if the stop reported an error: the operation
     /// has run its course, and leaving "Force all apps" armed behind a tunnel
     /// that will not come up is how a user loses the network entirely.
-    private func standDown(to environment: String) {
-        store.warrenEnvStandDown = WarrenEnvStandDownRecord(
-            higherEnvironmentSeen: environment,
-            reEnabled: false,
-            restoreIncludeAllNetworks: device.readKillSwitch()
-        )
-        didChange?()
-        device.stopTunnelAndClearOnDemand { [device, didChange] in
+    func confirmStandDown() {
+        var record = store.warrenEnvStandDown
+        guard record.isOfferingStandDown else { return }
+        record.standDownApplied = true
+        record.restoreIncludeAllNetworks = device.readKillSwitch()
+        store.warrenEnvStandDown = record
+        announceChange()
+        device.stopTunnelAndClearOnDemand { [weak self, device] in
             device.writeKillSwitch(false)
-            didChange?()
+            self?.announceChange()
         }
     }
 
-    /// The higher install is gone. The record is dropped whole rather than
-    /// merely cleared of its banner, so a reinstall later reads as the new
-    /// transition it is and stands this build down again.
-    private func forget() {
-        store.warrenEnvStandDown = WarrenEnvStandDownRecord()
-        didChange?()
+    /// The user turned the offer down, or asked for this build back after
+    /// accepting it. Sticky: the record keeps the higher install marked as
+    /// seen, so no later start raises the offer for it again. Only a fresh
+    /// install of it is a new transition.
+    ///
+    /// The kill switch is put back only when the teardown actually ran. After
+    /// a mere offer nothing was ever turned off, and writing the recorded
+    /// value then would overwrite whatever the user has set since.
+    func reEnable() {
+        var record = store.warrenEnvStandDown
+        guard record.isStandingDown || record.isOfferingStandDown else { return }
+        let restore = record.standDownApplied ? record.restoreIncludeAllNetworks : nil
+        record.reEnabled = true
+        store.warrenEnvStandDown = record
+        if let restore {
+            device.writeKillSwitch(restore)
+        }
+        announceChange()
     }
+
+    /// A higher environment appeared, or a stronger one took over from the one
+    /// already recorded. Nothing on the device is touched here.
+    ///
+    /// A stand-down already in force keeps the two values it recorded and only
+    /// moves the environment it names: the kill switch is off by then, so
+    /// reading it again would save the neutralised value as the one to put
+    /// back and quietly destroy the user's setting. That is the defect the
+    /// desktop fixed by threading the held record through `stand_down_plan`.
+    private func offerStandDown(to environment: String) {
+        var record = store.warrenEnvStandDown
+        if record.isStandingDown {
+            record.higherEnvironmentSeen = environment
+            store.warrenEnvStandDown = record
+        } else {
+            store.warrenEnvStandDown = WarrenEnvStandDownRecord(
+                higherEnvironmentSeen: environment
+            )
+        }
+        announceChange()
+    }
+
+    /// The higher install is gone. What this build gave up for it goes back
+    /// before anything else, because the record about to be dropped is the
+    /// only place the value to restore is written down. The record is then
+    /// dropped whole rather than merely cleared of its banner, so a reinstall
+    /// later reads as the new transition it is and offers the stand-down
+    /// again.
+    private func forget() {
+        let record = store.warrenEnvStandDown
+        if record.isStandingDown {
+            device.writeKillSwitch(record.restoreIncludeAllNetworks)
+        }
+        store.warrenEnvStandDown = WarrenEnvStandDownRecord()
+        announceChange()
+    }
+
+    /// The record moved: re-render the banner, and tell the connect screen.
+    ///
+    /// The screen cannot infer this from a settings write, because both the
+    /// stand-down and the re-enable write the kill switch and a write that
+    /// changes nothing never reaches the settings observer. The post is
+    /// hopped to the main queue: the tunnel-stop completion arrives on the
+    /// tunnel manager's own queue, and the observer touches the view model.
+    private func announceChange() {
+        didChange?()
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: .warrenEnvStandDownDidChange,
+                object: nil
+            )
+        }
+    }
+}
+
+extension Notification.Name {
+    /// The coexistence record moved. Posted by [WarrenEnvStandDown] and
+    /// observed by the connect screen, which greys its buttons out exactly
+    /// while the stand-down is in force.
+    static let warrenEnvStandDownDidChange = Notification.Name(
+        "WarrenEnvStandDownDidChange"
+    )
 }

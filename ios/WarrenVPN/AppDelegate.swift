@@ -577,6 +577,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
 
         let provider = WarrenEnvStandDownNotificationProvider(
             store: appPreferences,
+            confirm: { [weak standDown] in standDown?.confirmStandDown() },
             reEnable: { [weak standDown] in standDown?.reEnable() }
         )
         standDown.didChange = { [weak provider] in provider?.invalidate() }

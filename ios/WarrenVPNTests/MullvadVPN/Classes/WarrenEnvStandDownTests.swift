@@ -118,10 +118,11 @@ final class WarrenEnvStandDownTests: XCTestCase {
         XCTAssertFalse(standDown.isStandingDown)
     }
 
-    /// The order is the safety: what is about to be given up is recorded
-    /// first, the tunnel comes down while the kill switch is still armed, and
-    /// only a tunnel that is actually down releases the block.
-    func testTheFirstDetectionRecordsThenStopsThenDisarms() throws {
+    /// The presence of the other install is a URL scheme any app on the device
+    /// can register, so observing it may only ever OFFER the stand-down: the
+    /// tunnel, the on-demand rule and "Force all apps" are untouched until the
+    /// user says so.
+    func testAnObservedInstallOnlyOffersTheStandDown() throws {
         let store = FakeEnvStandDownStore()
         let device = DeviceRecorder()
         device.installedSchemes = ["warren"]
@@ -129,6 +130,26 @@ final class WarrenEnvStandDownTests: XCTestCase {
         let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
 
         standDown.refresh()
+
+        XCTAssertEqual(device.steps, [])
+        XCTAssertTrue(device.killSwitchIsOn)
+        XCTAssertTrue(standDown.record.isOfferingStandDown)
+        XCTAssertFalse(standDown.isStandingDown)
+        XCTAssertEqual(store.warrenEnvStandDown.higherEnvironmentSeen, "prod")
+    }
+
+    /// The order is the safety: what is about to be given up is recorded
+    /// first, the tunnel comes down while the kill switch is still armed, and
+    /// only a tunnel that is actually down releases the block.
+    func testTheAcceptedStandDownRecordsThenStopsThenDisarms() throws {
+        let store = FakeEnvStandDownStore()
+        let device = DeviceRecorder()
+        device.installedSchemes = ["warren"]
+        device.killSwitchIsOn = true
+        let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
+
+        standDown.refresh()
+        standDown.confirmStandDown()
 
         // The tunnel has been asked to stop and the block still stands.
         XCTAssertEqual(device.steps, [.readKillSwitch, .stopTunnel])
@@ -143,6 +164,54 @@ final class WarrenEnvStandDownTests: XCTestCase {
         XCTAssertTrue(standDown.isStandingDown)
     }
 
+    /// Turning the offer down is the answer to a presence this build cannot
+    /// authenticate: the record goes sticky and not one device call is made.
+    func testTurningTheOfferDownTouchesNothing() throws {
+        let store = FakeEnvStandDownStore()
+        let device = DeviceRecorder()
+        device.installedSchemes = ["warren"]
+        device.killSwitchIsOn = true
+        let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
+
+        standDown.refresh()
+        standDown.reEnable()
+
+        XCTAssertEqual(device.steps, [])
+        XCTAssertTrue(device.killSwitchIsOn)
+        XCTAssertFalse(standDown.isStandingDown)
+        XCTAssertFalse(standDown.record.isOfferingStandDown)
+        XCTAssertTrue(store.warrenEnvStandDown.reEnabled)
+    }
+
+    /// A second environment taking over from the first keeps the two values
+    /// the first stand-down recorded: the kill switch is already off, so
+    /// reading it again would save the neutralised value as the one to put
+    /// back and destroy the user's setting. The desktop daemon threads the
+    /// held record through `stand_down_plan` for exactly this.
+    func testASecondEnvironmentKeepsWhatTheFirstStandDownRecorded() throws {
+        let store = FakeEnvStandDownStore()
+        let device = DeviceRecorder()
+        device.installedSchemes = ["warren-staging"]
+        device.killSwitchIsOn = true
+        let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
+
+        standDown.refresh()
+        standDown.confirmStandDown()
+        device.finishStoppingTunnel()
+        XCTAssertFalse(device.killSwitchIsOn)
+
+        device.installedSchemes = ["warren", "warren-staging"]
+        standDown.refresh()
+
+        XCTAssertEqual(store.warrenEnvStandDown.higherEnvironmentSeen, "prod")
+        XCTAssertTrue(store.warrenEnvStandDown.restoreIncludeAllNetworks)
+        XCTAssertTrue(standDown.isStandingDown)
+
+        standDown.reEnable()
+
+        XCTAssertTrue(device.killSwitchIsOn)
+    }
+
     /// Presence, observed once. The other install is still there at every
     /// later launch, so a rule that re-evaluated itself would tear the build
     /// down again and undo the manual re-enable.
@@ -153,6 +222,7 @@ final class WarrenEnvStandDownTests: XCTestCase {
         let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
 
         standDown.refresh()
+        standDown.confirmStandDown()
         device.finishStoppingTunnel()
         let afterFirst = device.steps
 
@@ -169,6 +239,7 @@ final class WarrenEnvStandDownTests: XCTestCase {
         let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
 
         standDown.refresh()
+        standDown.confirmStandDown()
         device.finishStoppingTunnel()
         XCTAssertFalse(device.killSwitchIsOn)
 
@@ -187,26 +258,91 @@ final class WarrenEnvStandDownTests: XCTestCase {
         XCTAssertTrue(device.killSwitchIsOn)
     }
 
-    /// The higher install is gone: the record is dropped whole, so a later
-    /// reinstall reads as the new transition it is.
-    func testTheHigherEnvironmentGoingAwayForgetsTheRecord() throws {
+    /// The higher install is gone: what this build gave up for it goes back
+    /// first, and only then is the record dropped whole, so a later reinstall
+    /// reads as the new transition it is. Dropping it without restoring would
+    /// leave "Force all apps" off for good, with no banner left to say so and
+    /// no record left to restore from.
+    func testTheHigherEnvironmentGoingAwayPutsTheKillSwitchBack() throws {
         let store = FakeEnvStandDownStore()
         let device = DeviceRecorder()
         device.installedSchemes = ["warren"]
+        device.killSwitchIsOn = true
         let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
         standDown.refresh()
+        standDown.confirmStandDown()
         device.finishStoppingTunnel()
+        XCTAssertFalse(device.killSwitchIsOn)
 
         device.installedSchemes = []
         standDown.refresh()
 
+        XCTAssertTrue(device.killSwitchIsOn)
         XCTAssertNil(store.warrenEnvStandDown.higherEnvironmentSeen)
         XCTAssertFalse(standDown.isStandingDown)
 
         device.installedSchemes = ["warren"]
         standDown.refresh()
 
-        XCTAssertTrue(standDown.isStandingDown)
+        XCTAssertTrue(standDown.record.isOfferingStandDown)
+    }
+
+    /// An offer the user never answered has changed nothing, so the install
+    /// going away has nothing to put back.
+    func testTheHigherEnvironmentGoingAwayAfterAnUnansweredOfferTouchesNothing() throws {
+        let store = FakeEnvStandDownStore()
+        let device = DeviceRecorder()
+        device.installedSchemes = ["warren"]
+        device.killSwitchIsOn = true
+        let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
+        standDown.refresh()
+
+        device.installedSchemes = []
+        standDown.refresh()
+
+        XCTAssertEqual(device.steps, [])
+        XCTAssertTrue(device.killSwitchIsOn)
+        XCTAssertNil(store.warrenEnvStandDown.higherEnvironmentSeen)
+    }
+
+    /// A record written before the stand-down was put behind a confirmation
+    /// carries no `standDownApplied`, and back then having seen an environment
+    /// WAS having stood down for it. It has to keep reading that way, or the
+    /// upgrade forgets that the kill switch is already off.
+    func testARecordWrittenBeforeTheConfirmationStillReadsAsStoodDown() throws {
+        let stored = """
+            {"higherEnvironmentSeen":"prod","reEnabled":false,"restoreIncludeAllNetworks":true}
+            """
+
+        let record = try JSONDecoder().decode(
+            WarrenEnvStandDownRecord.self,
+            from: Data(stored.utf8)
+        )
+
+        XCTAssertTrue(record.isStandingDown)
+        XCTAssertFalse(record.isOfferingStandDown)
+        XCTAssertTrue(record.restoreIncludeAllNetworks)
+    }
+
+    /// The connect screen has to learn that the record moved, and it cannot
+    /// learn it from a settings write: standing down and re-enabling both
+    /// write the kill switch, and a write that changes nothing (the common
+    /// case, "Force all apps" already off) never reaches the settings
+    /// observer. Connect would then stay greyed out with no banner left.
+    func testTheRecordMovingIsAnnouncedToTheConnectScreen() throws {
+        let store = FakeEnvStandDownStore()
+        let device = DeviceRecorder()
+        device.installedSchemes = ["warren"]
+        let standDown = makeStandDown(store: store, device: device, higherPriority: try higherPriorityRows())
+        let announced = expectation(
+            forNotification: .warrenEnvStandDownDidChange,
+            object: nil,
+            handler: nil
+        )
+
+        standDown.refresh()
+
+        wait(for: [announced], timeout: 2)
     }
 
     /// Staging outranks beta too, and the strongest installed environment is

@@ -74,7 +74,8 @@ final class TunnelConfigurationTests: XCTestCase {
             standDown: WarrenEnvStandDownRecord(
                 higherEnvironmentSeen: "prod",
                 reEnabled: false,
-                restoreIncludeAllNetworks: false
+                restoreIncludeAllNetworks: false,
+                standDownApplied: true
             )
         )
 
@@ -94,7 +95,8 @@ final class TunnelConfigurationTests: XCTestCase {
             standDown: WarrenEnvStandDownRecord(
                 higherEnvironmentSeen: "prod",
                 reEnabled: true,
-                restoreIncludeAllNetworks: false
+                restoreIncludeAllNetworks: false,
+                standDownApplied: true
             )
         )
 
