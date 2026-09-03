@@ -11,6 +11,7 @@
 
 import Foundation
 import Security
+import WarrenRustRuntime
 
 /// Errors emitted by `WarrenWalletKeychain`.
 public enum WarrenWalletKeychainError: Error, Equatable {
@@ -113,8 +114,12 @@ public struct WarrenWalletKeychain {
         return status == errSecSuccess
     }
 
-    /// Removes the wallet entry from the Keychain. Safe to call when no
-    /// entry exists (returns silently on `errSecItemNotFound`).
+    /// Removes the wallet entry from the Keychain, and with it the forum
+    /// identity the wallet signed in under: that handle is this wallet's
+    /// pairwise name, so a wallet restored later on the same device must never
+    /// be shown it (every erase path, logout included, comes through here).
+    /// Safe to call when no entry exists (returns silently on
+    /// `errSecItemNotFound`).
     public static func delete() throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -124,6 +129,13 @@ public struct WarrenWalletKeychain {
         let status = SecItemDelete(query as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else {
             throw WarrenWalletKeychainError.secStatus(status)
+        }
+        do {
+            try WarrenForumIdentityStore.delete()
+        } catch WarrenForumIdentityStoreError.secStatus(let forumStatus) {
+            throw WarrenWalletKeychainError.secStatus(forumStatus)
+        } catch {
+            throw WarrenWalletKeychainError.secStatus(errSecInternalError)
         }
     }
 }

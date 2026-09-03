@@ -14,16 +14,20 @@ who cannot get through the browser still reaches the support team.
 | In-app report | Settings, "Report a problem" (Android and desktop) | the form fields plus `log_gz_b64` | `POST /v1/forum/report` |
 
 The scheme is per product environment (`warren`, `warren-beta`,
-`warren-staging`); connect emits the one its `WARREN_DEEP_LINK_SCHEME` names.
-The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
+`warren-staging`); connect emits the one its `WARREN_DEEP_LINK_SCHEME` names,
+and every client registers the one its `WARREN_PRODUCT_ENV` build compiles
+in (the desktop table, the Android flavors and the iOS xcconfig are held to
+the Rust `warren-product-env` crate by its `platform_lockstep` tests). The
+host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
 
 ## Where the logic lives
 
 - `warren-forum` (Rust, shared by `warren-jni` and `warren-ios`): the
   allowlist, the sid shape, the sign-in code normalisation, the signed request
-  bytes for login and report, the status URL used as a clock preflight, the
-  clock offset read from a `Date` header, the outcome tables and the FFI
-  envelopes. Host-tested; iOS and Android cannot drift on the wire.
+  bytes for login and report, the status URL used as a clock preflight and
+  the classing of its answer (`classify_status_preflight`), the clock offset
+  read from a `Date` header, the outcome tables and the FFI envelopes.
+  Host-tested; iOS and Android cannot drift on the wire.
 - `warren-jni/src/forum_android.rs`: the Android exports. The forum POSTs
   ride the VpnService-protected transport (`protected_transport.rs`) when the
   crate is built with the tunnel feature: a plain socket is routed into the
@@ -87,6 +91,39 @@ The host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
 
 Every step writes its class to the events journal and the Rust log, so a
 report filed afterwards explains a failure without a second round trip.
+
+## The sign-in on iOS
+
+The same three pieces as Android, in Swift over the shared crate:
+
+- `ios/WarrenVPN/Classes/WarrenForumLogin.swift`: the link classification
+  (`WarrenForumLinks.classify`, the fixture's rejection classes, logged by
+  class only), the typed sign-in code (`normalizeSignInCode`), and the flow
+  (consent prompt, the signed approval in Rust off the main thread, the result
+  alert, the identity stored). The scheme the build answers and the connect
+  host come from the Rust product table through
+  `WarrenRustRuntime/WarrenProductAnchors.swift` (`warren_product_anchors()`),
+  never from a literal: `ios/Configurations/ProductEnv.xcconfig` selects the
+  environment for Xcode (`WARREN_PRODUCT_ENV`), `Info.plist` registers
+  `$(WARREN_DEEP_LINK_SCHEME)`, and `build-rust-library.sh` compiles the Rust
+  staticlib for the same environment. Until 2026-09-03 the plist spelled
+  `warren` and the parser checked it, so a beta iOS install could never
+  receive the beta broker's `warren-beta://` link.
+- `warren-ios/src/warren_forum_ffi.rs`: the status preflight (the shared
+  `classify_status_preflight`, the same table Android applies: a 404 is
+  `expired` without a signature spent, the `Date` header corrects the device
+  clock), the signed POST at the corrected time, the envelope of the shared
+  crate with the identity.
+- `WarrenRustRuntime/WarrenForumIdentityStore.swift`: the handle and the slot
+  in the Keychain, device local, shown as "Forum name" on the account screen
+  and erased with the wallet (`WarrenWalletKeychain.delete`).
+- Settings, "Sign in to the forum with a code"
+  (`WarrenForumSignInCodeView`), shown once a wallet exists: the same consent
+  prompt as a deep link, on the allowlisted host, same device.
+
+Readers of the fixtures: `WarrenForumLinkTests`, `WarrenForumLoginOutcomeTests`,
+`WarrenProductAnchorsTests` (the `WarrenVPNCI` test plan). Not on iOS yet:
+the tunnel-state preflight, the in-app report, the activity surface.
 
 ## The in-app report (desktop)
 

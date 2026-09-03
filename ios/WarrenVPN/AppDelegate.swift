@@ -52,6 +52,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     var accessMethodReceiver: MullvadAccessMethodReceiver!
     private var shadowsocksCacheCleaner: ShadowsocksCacheCleaner!
     let breadcrumbsProvider = BreadcrumbsProvider()
+    /// The community-forum wallet login (doc 55), from a deep link or a typed
+    /// code; the scene that owns the window supplies its presenter.
+    let forumLogin = WarrenForumLoginFlow()
 
     let notificationSettingsListener = NotificationSettingsListener()
     private var notificationSettingsUpdater: NotificationSettingsUpdater!

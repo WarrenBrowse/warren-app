@@ -119,6 +119,20 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/BlockedUpdate/WarrenBlockedUpdateView.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/WarrenVersionGate/WarrenAppVersionGateTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/WarrenVersionGate/ios-manifest.json" => "WarrenVPNTests",
+
+  # Community-forum sign-in (doc 55): the product table read from Rust, the
+  # forum identity store, the login flow, the sign-in code screen, the
+  # account row, and their tests. The fixture loader is shared by both test
+  # bundles (SHARED_MULTI_TARGET below).
+  "WarrenRustRuntime/WarrenProductAnchors.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntime/WarrenForumIdentityStore.swift" => "WarrenRustRuntime",
+  "WarrenVPN/Classes/WarrenForumLogin.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Settings/WarrenForumSignInCodeView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Account/ForumHandleRow.swift" => "WarrenVPN",
+  "WarrenVPNTests/Fixtures/ClientRulesFixtures.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumLinkTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumIdentityStoreTests.swift" => "WarrenVPNTests",
+  "WarrenRustRuntimeTests/WarrenProductAnchorsTests.swift" => "WarrenRustRuntimeTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad
@@ -129,6 +143,7 @@ FILES_TO_ADD = {
 SHARED_MULTI_TARGET = {
   "Shared/WarrenAppGroupKey.swift" => %w[PacketTunnelCore PacketTunnel],
   "Shared/WarrenWalletKeychain.swift" => %w[PacketTunnelCore PacketTunnel],
+  "WarrenVPNTests/Fixtures/ClientRulesFixtures.swift" => %w[WarrenRustRuntimeTests],
 }.freeze
 
 # Find or create a PBXGroup at the relative path. Walks the group tree

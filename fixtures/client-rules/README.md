@@ -23,27 +23,27 @@ everywhere is the definition of parity.
 
 | fixture | Rust | Android (JVM) | desktop (vitest) | iOS |
 |---|---|---|---|---|
-| `forum_link.json` login cases | `warren-forum/tests/client_rules.rs` (sid shape, host allowlist, status and cancel URLs; the URL-level classes have no Rust parser yet) | `ForumLoginLinkTest` (`classifyForumLoginLink`, the full class vocabulary) | `forum-login.spec.ts` (`parseForumLoginUrl`, accept or reject only: desktop has no rejection classes) | none yet (no parser test; `SceneDelegate.parseForumLogin` answers the prod scheme only) |
+| `forum_link.json` login cases | `warren-forum/tests/client_rules.rs` (sid shape, host allowlist, status and cancel URLs; the URL-level classes have no Rust parser yet) | `ForumLoginLinkTest` (`classifyForumLoginLink`, the full class vocabulary) | `forum-login.spec.ts` (`parseForumLoginUrl`, accept or reject only: desktop has no rejection classes) | `WarrenForumLinkTests` (`WarrenForumLinks.classify`, the full class vocabulary; the scheme comes from the Rust table through `WarrenProductAnchors`) |
 | `forum_link.json` attach cases | none (no attach builder in the crate yet) | none (no attach-logs handler on Android) | `forum-login.spec.ts` (`parseForumAttachUrl`) | none |
-| `forum_link.json` sign-in codes | `warren-forum/tests/client_rules.rs` (`normalize_sign_in_code`) | `ForumLoginLinkTest` (`normalizeForumSignInCode`) | `forum-login.spec.ts` (`normalizeForumSignInCode`, `forumLoginRequestFromCode`) | none |
-| `forum_link.json` `allowed_hosts`, `schemes`, `pending_ttl_secs` | `client_rules.rs` (hosts, schemes against `product_env.json`) | `ForumLoginLinkTest` (host, login TTL), `ProductEnvBuildConfigTest` (scheme) | `forum-login.spec.ts` (hosts, both TTLs), `product-env.spec.ts` (schemes) | none |
-| `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | none yet (`WarrenForumLoginOutcomeTests` pins four envelopes by hand) |
+| `forum_link.json` sign-in codes | `warren-forum/tests/client_rules.rs` (`normalize_sign_in_code`) | `ForumLoginLinkTest` (`normalizeForumSignInCode`) | `forum-login.spec.ts` (`normalizeForumSignInCode`, `forumLoginRequestFromCode`) | `WarrenForumLinkTests` (`WarrenForumLinks.normalizeSignInCode`, `linkFromCode`) |
+| `forum_link.json` `allowed_hosts`, `schemes`, `pending_ttl_secs` | `client_rules.rs` (hosts, schemes against `product_env.json`) | `ForumLoginLinkTest` (host, login TTL), `ProductEnvBuildConfigTest` (scheme) | `forum-login.spec.ts` (hosts, both TTLs), `product-env.spec.ts` (schemes) | `WarrenForumLinkTests` (hosts, schemes against `product_env.json` and the compiled table) |
+| `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | `WarrenForumLoginOutcomeTests` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminal`) |
 | `forum_outcomes.json` report | `client_rules.rs` (`report_outcome_for_response`, `report_envelope`) | `ReportOutcomeTest` (decodes `envelope`) | `forum-report.spec.ts` (`forumReportResultForResponse`, the `expect` column: kind, topic, trusted URL, logs, identity) | none |
-| `product_env.json` | `warren-product-env/tests/client_rules.rs` (every column, and `ProductEnv::anchors_json()` equals the row), `warren-product-env/tests/platform_lockstep.rs` (`product-env.ts`, `tasks/distribution.cjs` and `android/app/build.gradle.kts` read as text and held to the crate), `warren-forum` `client_rules.rs` (connect host, forum origin) | `ProductEnvBuildConfigTest` (`BuildConfig` of the running flavor against the row, and against the row decoded as the native table `WarrenJni.productAnchorsJson()` returns); `ProductAnchorsJniTest` (instrumented, the real native table against `BuildConfig`) | `product-env.spec.ts` (`product-env.ts`, `tasks/distribution.cjs`) | none yet (`warren_product_anchors()` exposes the table; no Swift reader, no product-env plumbing in the Xcode build) |
+| `product_env.json` | `warren-product-env/tests/client_rules.rs` (every column, and `ProductEnv::anchors_json()` equals the row), `warren-product-env/tests/platform_lockstep.rs` (`product-env.ts`, `tasks/distribution.cjs`, `android/app/build.gradle.kts` and `ios/Configurations/ProductEnv.xcconfig` read as text and held to the crate, and the iOS `Info.plist` URL scheme held to the xcconfig selector), `warren-forum` `client_rules.rs` (connect host, forum origin) | `ProductEnvBuildConfigTest` (`BuildConfig` of the running flavor against the row, and against the row decoded as the native table `WarrenJni.productAnchorsJson()` returns); `ProductAnchorsJniTest` (instrumented, the real native table against `BuildConfig`) | `product-env.spec.ts` (`product-env.ts`, `tasks/distribution.cjs`) | `WarrenProductAnchorsTests` (the live table `warren_product_anchors()` returns against the row of the compiled environment, and every row through the Swift decoder) |
 
 The vitest readers run on the Node-only desktop CI machine and must stay free
 of cargo and Electron; the Rust readers run in `warren-checks.yml`; the JVM
 readers in `android-checks.yml`. A change under `fixtures/client-rules/`
-triggers all three.
+triggers all three. The Swift readers run in the `WarrenVPNCI` test plan
+(`ios.yml`, dispatch-only in this fork) and read the fixture directory from
+the checkout through the simulator; run them locally with
+`xcodebuild -project ios/WarrenVPN.xcodeproj -scheme WarrenVPN -testPlan WarrenVPNCI -destination 'platform=iOS Simulator,name=iPhone 17' test`.
 
 ## Skip lists in force
 
 | fixture | case | skipped | why |
 |---|---|---|---|
 | `forum_link.json` | `no_data` | desktop, ios | an Android intent can carry no data; the desktop is handed argv strings and iOS a URL, so the input does not exist there |
-| `forum_link.json` | `beta_link_on_beta_build`, `prod_link_on_beta_build` | ios | iOS registers and parses the prod scheme only; a beta install cannot answer the beta broker (shared-code step 4) |
-| `forum_outcomes.json` login | `approved_with_identity`, `approved_without_slot` | ios | the iOS decoder drops the handle and the slot (shared-code step 1) |
-| `forum_outcomes.json` login | `expired` | ios | iOS collapses the 404 into the generic failure and keeps the prompt armed for a doomed retry (shared-code step 1) |
 
 ## Schema
 

@@ -10,8 +10,7 @@
         "status": 200,
         "body": "{\"handle\":\"jugop-lobab-virar\",\"notify_slot\":1,\"status\":\"approved\"}",
         "expect": { "kind": "approved", "handle": "jugop-lobab-virar", "notify_slot": 1 },
-        "envelope": "{\"ok\":true,\"handle\":\"jugop-lobab-virar\",\"notify_slot\":1}",
-        "skip": ["ios"]
+        "envelope": "{\"ok\":true,\"handle\":\"jugop-lobab-virar\",\"notify_slot\":1}"
       },
       {
         "name": "approved_without_slot",
@@ -19,8 +18,7 @@
         "status": 200,
         "body": "{\"handle\":\"jugop-lobab-virar\",\"status\":\"approved\"}",
         "expect": { "kind": "approved", "handle": "jugop-lobab-virar", "notify_slot": null },
-        "envelope": "{\"ok\":true,\"handle\":\"jugop-lobab-virar\"}",
-        "skip": ["ios"]
+        "envelope": "{\"ok\":true,\"handle\":\"jugop-lobab-virar\"}"
       },
       {
         "name": "approved_empty_body",
@@ -101,8 +99,7 @@
         "status": 404,
         "body": "unknown or expired session",
         "expect": { "kind": "expired" },
-        "envelope": "{\"ok\":false,\"error\":\"expired\"}",
-        "skip": ["ios"]
+        "envelope": "{\"ok\":false,\"error\":\"expired\"}"
       },
       {
         "name": "forum_unavailable",

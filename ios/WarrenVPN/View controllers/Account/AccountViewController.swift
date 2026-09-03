@@ -7,6 +7,7 @@
 //
 
 import WarrenLogging
+import WarrenRustRuntime
 import WarrenSettings
 import UIKit
 
@@ -78,6 +79,15 @@ class AccountViewController: UIViewController, @unchecked Sendable {
             }
         }
 
+        // A forum sign-in approved while this screen is open hands the
+        // identity back on a background queue; the store announces it.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(forumIdentityDidChange),
+            name: WarrenForumIdentityStore.didChangeNotification,
+            object: nil
+        )
+
         configUI()
         addActions()
         updateView(from: interactor.deviceState)
@@ -109,6 +119,7 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         // account number; fall back to the stored number if unavailable.
         contentView.accountTokenRowView.accountNumber = interactor.walletAddress ?? accountData.number
         contentView.setExpiry(accountData.expiry)
+        contentView.setForumIdentity(WarrenForumIdentityStore.load())
     }
 
     private func applyViewState(animated: Bool) {
@@ -142,6 +153,10 @@ class AccountViewController: UIViewController, @unchecked Sendable {
 
     @objc private func logOut() {
         actionHandler?(.logOut)
+    }
+
+    @objc private func forumIdentityDidChange() {
+        contentView.setForumIdentity(WarrenForumIdentityStore.load())
     }
 
     @objc private func handleDismiss() {

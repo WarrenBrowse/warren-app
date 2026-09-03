@@ -49,17 +49,37 @@ public enum WarrenAccountError: Error, Equatable {
     case server(status: Int, message: String)
 }
 
-/// Outcome of a `POST /v1/forum/login` (community-forum wallet login, doc 55).
+/// Outcome of a `POST /v1/forum/login` (community-forum wallet login, doc 55):
+/// the `login` table of `fixtures/client-rules/forum_outcomes.json`, which the
+/// desktop and Android decoders read from the same crate.
 public enum WarrenForumLoginOutcome: Equatable {
     /// The provider accepted the signature; the browser completes the login.
-    case approved
+    /// Carries the forum identity the body handed back, `nil` from an older
+    /// provider that names none.
+    case approved(WarrenForumIdentity?)
     /// The wallet has never subscribed to Warren; forum access is refused (403).
     case subscriptionRequired
     /// The provider refused the signature because this device's clock is off by
     /// more than its accepted window. The one failure the user repairs themselves.
     case clockSkew
-    /// Any other failure (bad input, provider error, transport error).
-    case failed
+    /// The session is gone (404): expired, cancelled or already consumed. A
+    /// retry on the same link can only fail again.
+    case expired
+    /// Any other failure, with its class (`transport`, `build`, `runtime`,
+    /// `http-<status>`; `unknown` when the envelope names none). The class is
+    /// for the log only, never shown as such.
+    case failed(reason: String)
+
+    /// True for the outcomes after which the pending link is spent (the
+    /// fixture's `terminal_kinds`): the prompt must not offer a retry.
+    public var isTerminal: Bool {
+        switch self {
+        case .subscriptionRequired, .clockSkew, .expired:
+            return true
+        case .approved, .failed:
+            return false
+        }
+    }
 }
 
 /// Stateless facade over the Warren account FFI. All methods are
@@ -191,7 +211,7 @@ public enum WarrenAccountClient {
     /// request. Blocking (run off the main thread); the seed and sid are never
     /// logged.
     public static func forumLogin(seed: Data, sid: String, host: String) -> WarrenForumLoginOutcome {
-        guard seed.count == seedByteCount else { return .failed }
+        guard seed.count == seedByteCount else { return .failed(reason: "build") }
         let raw = seed.withUnsafeBytes { rawBuffer -> UnsafeMutablePointer<CChar>? in
             guard let base = rawBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
             return sid.withCString { sidPtr in
@@ -200,31 +220,42 @@ public enum WarrenAccountClient {
                 }
             }
         }
-        guard let raw else { return .failed }
+        guard let raw else { return .failed(reason: "runtime") }
         defer { warren_wallet_free_mnemonic(raw) }
         return forumLoginOutcome(fromEnvelope: String(cString: raw))
     }
 
-    /// Maps the `warren_forum_login` JSON envelope to an outcome. The envelope
-    /// is `{"ok":true}` or `{"ok":false,"error":"subscription-required"|
-    /// "clock-skew"|"error"}`, single-sourced in the Rust `warren-forum` crate.
-    /// Pure so the mapping is unit-tested off-device.
+    /// Maps the `warren_forum_login` JSON envelope to an outcome. The shapes
+    /// are single-sourced in the Rust `warren-forum` crate and pinned by the
+    /// `envelope` column of `fixtures/client-rules/forum_outcomes.json`:
+    /// `{"ok":true}` with the additive `handle` and `notify_slot`, or
+    /// `{"ok":false,"error":<kind>}` with the additive `reason` on `error`.
+    /// The handle is taken as the crate hands it (it validated the shape
+    /// before crossing the FFI), as the Android decoder does. Pure so the
+    /// mapping is unit-tested off-device.
     static func forumLoginOutcome(fromEnvelope envelope: String?) -> WarrenForumLoginOutcome {
         guard let envelope,
-              let data = envelope.data(using: .utf8),
-              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            return .failed
+            let data = envelope.data(using: .utf8),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return .failed(reason: "unknown")
         }
         if object["ok"] as? Bool == true {
-            return .approved
+            guard let handle = object["handle"] as? String else {
+                return .approved(nil)
+            }
+            let slot = (object["notify_slot"] as? NSNumber).map { UInt32(truncating: $0) }
+            return .approved(WarrenForumIdentity(handle: handle, notifySlot: slot))
         }
         switch object["error"] as? String {
         case "subscription-required":
             return .subscriptionRequired
         case "clock-skew":
             return .clockSkew
+        case "expired":
+            return .expired
         default:
-            return .failed
+            return .failed(reason: object["reason"] as? String ?? "unknown")
         }
     }
 

@@ -223,6 +223,18 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenAbout }
 
+        case .warrenForumSignInCode:
+            guard let cell = cell as? SettingsCell else { return }
+            cell.titleLabel.text = String(
+                localized: "Sign in to the forum with a code",
+                table: "Settings",
+                comment: "Settings row that opens the forum sign-in code entry"
+            )
+            cell.detailTitleLabel.text = nil
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .chevron
+            cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenForumSignInCode }
+
         case .warrenPortForwarding:
             guard let cell = cell as? SettingsCell else { return }
 

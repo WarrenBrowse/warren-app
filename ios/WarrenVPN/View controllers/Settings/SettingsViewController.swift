@@ -167,6 +167,8 @@ private extension SettingsDataSource.Item {
             .warrenDiagnosticInfo
         case .warrenAbout:
             .warrenAbout
+        case .warrenForumSignInCode:
+            .warrenForumSignInCode
         case .warrenPortForwarding:
             .warrenPortForwarding
         case .debugOptions:

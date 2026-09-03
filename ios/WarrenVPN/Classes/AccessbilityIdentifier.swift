@@ -143,6 +143,7 @@ public enum AccessibilityIdentifier: Equatable {
     case warrenTunnelStatisticsCell
     case warrenDiagnosticInfoCell
     case warrenAboutCell
+    case warrenForumSignInCodeCell
     case warrenPortForwardingCell
     case daitaFilterPill
     case obfuscationFilterPill

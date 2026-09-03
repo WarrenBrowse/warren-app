@@ -66,6 +66,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         case warrenTunnelStatistics
         case warrenDiagnosticInfo
         case warrenAbout
+        case warrenForumSignInCode
         case warrenPortForwarding
         // Developer tooling; only ever appended to the snapshot in DEBUG
         // builds, so release users never see it.
@@ -103,6 +104,8 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
                 .warrenDiagnosticInfoCell
             case .warrenAbout:
                 .warrenAboutCell
+            case .warrenForumSignInCode:
+                .warrenForumSignInCodeCell
             case .warrenPortForwarding:
                 .warrenPortForwardingCell
             case .debugOptions:
@@ -306,10 +309,13 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         snapshot.appendSections([.misc])
         // About Warren + Diagnostic info sit in misc - all are user-facing
         // support / legal tools.
-        snapshot.appendItems(
-            [.warrenDiagnosticInfo, .warrenAbout, .faq, .language],
-            toSection: .misc
-        )
+        var miscItems: [Item] = [.warrenDiagnosticInfo, .warrenAbout]
+        // The forum sign-in signs with the wallet, so the row needs one.
+        if WarrenWalletKeychain.exists() {
+            miscItems.append(.warrenForumSignInCode)
+        }
+        miscItems += [.faq, .language]
+        snapshot.appendItems(miscItems, toSection: .misc)
         #if DEBUG
             snapshot.appendItems([.debugOptions], toSection: .misc)
         #endif

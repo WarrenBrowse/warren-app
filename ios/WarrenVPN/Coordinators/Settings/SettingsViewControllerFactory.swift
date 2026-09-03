@@ -95,6 +95,8 @@ final class SettingsViewControllerFactory {
             makeWarrenDiagnosticInfoViewController()
         case .warrenAbout:
             makeWarrenAboutViewController()
+        case .warrenForumSignInCode:
+            makeWarrenForumSignInCodeViewController()
         case .warrenPortForwarding:
             makeWarrenPortForwardingViewController()
         }
@@ -288,6 +290,26 @@ final class SettingsViewControllerFactory {
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
         host.title = String(localized: "About Warren", table: "Settings")
+        return .viewController(host)
+    }
+
+    /// Forum sign-in by code (Settings, "Sign in to the forum with a code").
+    /// The typed code raises the same consent prompt a deep link would; the
+    /// screen pops first so the prompt lands over the settings list.
+    private func makeWarrenForumSignInCodeViewController() -> MakeChildResult {
+        let navigationController = self.navigationController
+        let view = WarrenForumSignInCodeView { code in
+            guard let flow = (UIApplication.shared.delegate as? AppDelegate)?.forumLogin,
+                flow.handle(code: code)
+            else {
+                return false
+            }
+            navigationController.popViewController(animated: true)
+            return true
+        }
+        let host = UIHostingController(rootView: view)
+        host.view.backgroundColor = .Warren.navy
+        host.title = String(localized: "Sign in to the forum with a code", table: "Settings")
         return .viewController(host)
     }
 

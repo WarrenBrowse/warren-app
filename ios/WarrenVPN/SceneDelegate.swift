@@ -192,10 +192,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
         window?.makeKeyAndVisible()
         addTunnelObserver()
 
-        // A `warren://forum-login` deep link that cold-starts the app arrives
+        // A `<scheme>://forum-login` deep link that cold-starts the app arrives
         // here rather than via `openURLContexts` (doc 55).
+        forumLogin.presenter = { [weak self] in self?.topViewController() }
         if let url = connectionOptions.urlContexts.first?.url {
-            handleForumLoginURL(url)
+            forumLogin.handle(url: url)
         }
     }
 
@@ -219,137 +220,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
 
     // MARK: - Community-forum wallet login deep link (doc 55)
 
-    /// The single connect host accepted from a forum-login deep link (Rust
-    /// re-validates; this is a fail-fast, not the security boundary).
-    private static let forumLoginAllowedHost = "connect.warrenbrowse.com"
+    /// The login flow the app delegate owns; this scene supplies where its
+    /// prompts are presented.
+    private var forumLogin: WarrenForumLoginFlow {
+        appDelegate.forumLogin
+    }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
-        handleForumLoginURL(url)
-    }
-
-    /// Parses `warren://forum-login?sid=..&host=..` and, when valid, shows the
-    /// consent prompt (the app NEVER signs into the forum silently). Non-forum
-    /// URLs are ignored.
-    private func handleForumLoginURL(_ url: URL) {
-        guard let link = Self.parseForumLogin(url) else { return }
-        DispatchQueue.main.async { [weak self] in
-            self?.presentForumLoginConsent(
-                sid: link.sid, host: link.host, crossDevice: link.crossDevice)
-        }
-    }
-
-    /// `crossDevice` means the link came from the QR on the approval page, so
-    /// the browser signing in is on another device. A relayed (phished)
-    /// approval has exactly that shape and nothing on the wire tells the two
-    /// apart, so the prompt names the situation and lets the reader decide.
-    /// An older provider sends no flag, which degrades to the ordinary prompt.
-    private static func parseForumLogin(_ url: URL)
-        -> (sid: String, host: String, crossDevice: Bool)?
-    {
-        guard url.scheme == "warren", url.host == "forum-login",
-              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
-              let items = components.queryItems else { return nil }
-        let params = Dictionary(
-            items.compactMap { item in item.value.map { (item.name, $0) } },
-            uniquingKeysWith: { first, _ in first })
-        guard let sid = params["sid"], let host = params["host"],
-              host == forumLoginAllowedHost,
-              sid.count == 32,
-              sid.allSatisfy({ $0.isHexDigit && ($0.isNumber || $0.isLowercase) })
-        else { return nil }
-        return (sid, host, params["xd"] == "1")
-    }
-
-    private func presentForumLoginConsent(sid: String, host: String, crossDevice: Bool) {
-        guard let presenter = topViewController() else { return }
-        let title =
-            crossDevice
-            ? NSLocalizedString(
-                "Sign in to the forum on another device?",
-                comment: "Forum login consent prompt title, cross device")
-            : NSLocalizedString(
-                "Sign in to the Warren community forum?",
-                comment: "Forum login consent prompt title")
-        let message =
-            crossDevice
-            ? NSLocalizedString(
-                """
-                This request came from a QR code, so the browser being signed in is on \
-                another device, not this one. Approve only if you are looking at that \
-                sign in page right now. If someone sent you this code, they are signing \
-                in as you. No email and no password are used.
-                """,
-                comment: "Forum login consent prompt body, cross device")
-            : NSLocalizedString(
-                """
-                Your app will sign a one time challenge with your wallet key to \
-                prove it is you. No email and no password are used, and you appear \
-                under an anonymous handle that cannot be linked to your Warren \
-                account. Only approve if you started this sign in.
-                """,
-                comment: "Forum login consent prompt body")
-        let alert = UIAlertController(
-            title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(
-            title: NSLocalizedString("Cancel", comment: ""),
-            style: .cancel,
-            handler: { _ in Self.notifyForumLoginCancelled(sid: sid, host: host) }))
-        alert.addAction(UIAlertAction(
-            title: NSLocalizedString("Approve", comment: ""),
-            style: .default,
-            handler: { [weak self] _ in self?.performForumLogin(sid: sid, host: host) }))
-        presenter.present(alert, animated: true)
-    }
-
-    /// Best-effort cancel notify so the waiting browser page unblocks (mirrors
-    /// the desktop). Fire-and-forget off the main thread; the 10-minute server
-    /// session expiry covers a dropped call.
-    private static func notifyForumLoginCancelled(sid: String, host: String) {
-        DispatchQueue.global(qos: .utility).async {
-            WarrenAccountClient.forumLoginCancel(sid: sid, host: host)
-        }
-    }
-
-    /// Loads the wallet seed silently and signs + POSTs the challenge in Rust
-    /// off the main thread (the Keychain item is `WhenUnlockedThisDeviceOnly`,
-    /// no biometric gate, matching the tunnel which signs with the same key).
-    private func performForumLogin(sid: String, host: String) {
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let outcome: WarrenForumLoginOutcome
-            if let mnemonic = try? WarrenWalletKeychain.load(),
-               let wallet = try? WarrenWallet.fromMnemonic(mnemonic) {
-                defer { wallet.forgetSecret() }
-                outcome = WarrenAccountClient.forumLogin(seed: wallet.seed, sid: sid, host: host)
-            } else {
-                outcome = .failed
-            }
-            DispatchQueue.main.async { self?.presentForumLoginResult(outcome) }
-        }
-    }
-
-    private func presentForumLoginResult(_ outcome: WarrenForumLoginOutcome) {
-        guard let presenter = topViewController() else { return }
-        let message: String
-        switch outcome {
-        case .approved:
-            message = NSLocalizedString(
-                "Signed in to the Warren forum.", comment: "Forum login success")
-        case .subscriptionRequired:
-            message = NSLocalizedString(
-                "Forum access requires a Warren subscription. This wallet has never subscribed.",
-                comment: "Forum login refused, no subscription")
-        case .clockSkew:
-            message = NSLocalizedString(
-                "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
-                comment: "Forum login refused, device clock outside the accepted window")
-        case .failed:
-            message = NSLocalizedString(
-                "Sign in failed. Please try again in a moment.", comment: "Forum login failed")
-        }
-        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: NSLocalizedString("OK", comment: ""), style: .default))
-        presenter.present(alert, animated: true)
+        forumLogin.handle(url: url)
     }
 
     private func topViewController() -> UIViewController? {

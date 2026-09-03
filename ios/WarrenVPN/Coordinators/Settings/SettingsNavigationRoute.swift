@@ -57,6 +57,9 @@ enum SettingsNavigationRoute: Equatable {
     /// About Warren (marketing site + privacy + ToS + AGPL source links).
     case warrenAbout
 
+    /// Forum sign-in finished with the code the approval page shows.
+    case warrenForumSignInCode
+
     /// Warren NAT-PMP port forwarding settings.
     case warrenPortForwarding
 }

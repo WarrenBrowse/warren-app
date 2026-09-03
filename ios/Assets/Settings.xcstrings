@@ -6068,6 +6068,746 @@
           }
         }
       }
+    },
+    "Sign in to the forum with a code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to the forum with a code"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول إلى المنتدى برمز"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log ind på forummet med en kode"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem Code im Forum anmelden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión en el foro con un código"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورود به انجمن با کد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjaudu foorumille koodilla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter au forum avec un code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi al forum con un codice"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コードでフォーラムにサインイン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "코드로 포럼에 로그인"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကုဒ်ဖြင့် ဖိုရမ်သို့ ဝင်ရောက်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logg inn på forumet med en kode"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelden bij het forum met een code"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaloguj się na forum za pomocą kodu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão no fórum com um código"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autentifică-te pe forum cu un cod"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войти на форум по коду"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logga in på forumet med en kod"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลงชื่อเข้าใช้ฟอรัมด้วยรหัส"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foruma bir kodla giriş yap"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увійти на форум за кодом"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用代码登录论坛"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用代碼登入論壇"
+          }
+        }
+      }
+    },
+    "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في صفحة تسجيل الدخول إلى المنتدى، يظهر رمز الجلسة أسفل الزر. أدخله هنا للموافقة على تسجيل الدخول هذا من هذا التطبيق. تواصل الصفحة الانتظار في هذه الأثناء."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På forummets loginside vises sessionskoden under knappen. Indtast den her for at godkende det login fra denne app. Siden venter imens."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf der Anmeldeseite des Forums steht der Sitzungscode unter der Schaltfläche. Gib ihn hier ein, um diese Anmeldung aus der App zu bestätigen. Die Seite wartet währenddessen weiter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la página de inicio de sesión del foro, el código de sesión aparece debajo del botón. Escríbelo aquí para aprobar ese inicio de sesión desde esta aplicación. La página sigue esperando mientras tanto."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در صفحهٔ ورود انجمن، کد نشست زیر دکمه نمایش داده می‌شود. آن را اینجا وارد کنید تا آن ورود را از این برنامه تأیید کنید. صفحه در این مدت همچنان منتظر می‌ماند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foorumin kirjautumissivulla istuntokoodi näkyy painikkeen alla. Kirjoita se tähän hyväksyäksesi kirjautumisen tästä sovelluksesta. Sivu odottaa sillä välin."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur la page de connexion du forum, le code de session est affiché sous le bouton. Saisissez-le ici pour approuver cette connexion depuis l'application. La page continue d'attendre pendant ce temps."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nella pagina di accesso del forum, il codice di sessione è mostrato sotto il pulsante. Inseriscilo qui per approvare quell'accesso da questa app. La pagina continua ad attendere nel frattempo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォーラムのサインインページでは、ボタンの下にセッションコードが表示されています。ここに入力すると、このアプリからそのサインインを承認できます。その間、ページは待機し続けます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포럼 로그인 페이지에서 세션 코드는 버튼 아래에 표시됩니다. 여기에 입력하면 이 앱에서 해당 로그인을 승인할 수 있습니다. 그동안 페이지는 계속 기다립니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဖိုရမ်၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ဆက်ရှင်ကုဒ်ကို ခလုတ်အောက်၌ ပြထားသည်။ ဤအက်ပ်မှ ထိုဝင်ရောက်မှုကို အတည်ပြုရန် ဤနေရာတွင် ရိုက်ထည့်ပါ။ ထိုအတောအတွင်း စာမျက်နှာက ဆက်စောင့်နေပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På forumets innloggingsside vises øktkoden under knappen. Skriv den inn her for å godkjenne den innloggingen fra denne appen. Siden fortsetter å vente imens."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op de aanmeldpagina van het forum staat de sessiecode onder de knop. Typ hem hier om die aanmelding vanuit deze app goed te keuren. De pagina blijft ondertussen wachten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na stronie logowania forum kod sesji jest wyświetlony pod przyciskiem. Wpisz go tutaj, aby zatwierdzić to logowanie z tej aplikacji. Strona w tym czasie nadal czeka."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na página de início de sessão do fórum, o código de sessão aparece por baixo do botão. Escreve-o aqui para aprovar esse início de sessão a partir desta aplicação. A página continua à espera entretanto."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe pagina de autentificare a forumului, codul de sesiune este afișat sub buton. Introdu-l aici pentru a aproba acea autentificare din această aplicație. Pagina așteaptă în continuare între timp."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На странице входа на форум код сеанса показан под кнопкой. Введите его здесь, чтобы подтвердить этот вход из приложения. Страница тем временем продолжает ждать."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På forumets inloggningssida visas sessionskoden under knappen. Skriv in den här för att godkänna den inloggningen från den här appen. Sidan fortsätter vänta under tiden."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ในหน้าลงชื่อเข้าใช้ของฟอรัม รหัสเซสชันจะแสดงอยู่ใต้ปุ่ม พิมพ์รหัสที่นี่เพื่ออนุมัติการลงชื่อเข้าใช้นั้นจากแอปนี้ หน้าเว็บจะรอต่อไประหว่างนั้น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forumun giriş sayfasında oturum kodu düğmenin altında gösterilir. Bu girişi bu uygulamadan onaylamak için kodu buraya yazın. Sayfa bu sırada beklemeye devam eder."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На сторінці входу на форум код сеансу показано під кнопкою. Введіть його тут, щоб підтвердити цей вхід із застосунку. Сторінка тим часом продовжує чекати."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在论坛登录页面，会话代码显示在按钮下方。在此输入该代码，即可从本应用批准该次登录。在此期间页面会继续等待。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在論壇登入頁面，工作階段代碼顯示在按鈕下方。在此輸入該代碼，即可從本應用程式核准該次登入。在此期間頁面會持續等待。"
+          }
+        }
+      }
+    },
+    "Sign-in code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in code"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمز تسجيل الدخول"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loginkode"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldecode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de inicio de sesión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد ورود"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautumiskoodi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code de connexion"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice di accesso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 코드"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်မှုကုဒ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innloggingskode"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmeldcode"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod logowania"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de início de sessão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cod de autentificare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входа"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggningskod"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รหัสลงชื่อเข้าใช้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş kodu"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входу"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录代码"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入代碼"
+          }
+        }
+      }
+    },
+    "A sign-in code is 32 letters and digits, as shown on the forum page.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sign-in code is 32 letters and digits, as shown on the forum page."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتكون رمز تسجيل الدخول من 32 حرفًا ورقمًا، كما هو معروض في صفحة المنتدى."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En loginkode består af 32 bogstaver og tal, som vist på forumsiden."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Anmeldecode besteht aus 32 Buchstaben und Ziffern, wie auf der Forumseite angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un código de inicio de sesión tiene 32 letras y cifras, tal como aparece en la página del foro."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد ورود از ۳۲ حرف و رقم تشکیل شده است، همان‌طور که در صفحهٔ انجمن نشان داده می‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautumiskoodissa on 32 kirjainta ja numeroa, kuten foorumisivulla näkyy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un code de connexion compte 32 lettres et chiffres, tel qu'affiché sur la page du forum."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un codice di accesso è composto da 32 lettere e cifre, come mostrato nella pagina del forum."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインコードは、フォーラムページに表示されている32文字の英数字です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 코드는 포럼 페이지에 표시된 대로 32자의 영문자와 숫자입니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်မှုကုဒ်သည် ဖိုရမ်စာမျက်နှာတွင် ပြထားသည့်အတိုင်း စာလုံးနှင့် ဂဏန်း ၃၂ လုံး ဖြစ်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En innloggingskode består av 32 bokstaver og sifre, slik den vises på forumsiden."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een aanmeldcode bestaat uit 32 letters en cijfers, zoals op de forumpagina staat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod logowania składa się z 32 liter i cyfr, tak jak na stronie forum."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um código de início de sessão tem 32 letras e algarismos, tal como aparece na página do fórum."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un cod de autentificare are 32 de litere și cifre, așa cum apare pe pagina forumului."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входа состоит из 32 букв и цифр, как показано на странице форума."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En inloggningskod består av 32 bokstäver och siffror, som på forumsidan."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รหัสลงชื่อเข้าใช้ประกอบด้วยตัวอักษรและตัวเลข 32 ตัว ตามที่แสดงบนหน้าฟอรัม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir giriş kodu, forum sayfasında gösterildiği gibi 32 harf ve rakamdan oluşur."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входу складається з 32 літер і цифр, як показано на сторінці форуму."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录代码由 32 个字母和数字组成，与论坛页面上显示的一致。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入代碼由 32 個字母和數字組成，與論壇頁面上顯示的一致。"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متابعة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsæt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادامه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jatka"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続行"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계속"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆက်လုပ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsett"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontynuuj"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsätt"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ดำเนินการต่อ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam et"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продовжити"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "繼續"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

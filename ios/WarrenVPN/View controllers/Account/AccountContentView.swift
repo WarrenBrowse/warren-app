@@ -7,14 +7,16 @@
 //
 
 import UIKit
+import WarrenRustRuntime
 
 /// Account screen layout mirroring the desktop account view: a
 /// subscription card (remaining time prominent when active + paid-until
-/// date), an identity card (wallet public key with copy), then the
-/// actions in the desktop order and styles: buy more credit (green CTA),
-/// redeem voucher, backup keys (outline navigation row), log out (red
-/// ghost link). Delete account has no desktop equivalent but is required
-/// on iOS by App Store review guideline 5.1.1(v).
+/// date), an identity card (wallet public key with copy), the forum name
+/// card once a forum sign-in has handed one back, then the actions in the
+/// desktop order and styles: buy more credit (green CTA), redeem voucher,
+/// backup keys (outline navigation row), log out (red ghost link). Delete
+/// account has no desktop equivalent but is required on iOS by App Store
+/// review guideline 5.1.1(v).
 class AccountContentView: UIView {
     let purchaseButton: InAppPurchaseButton = {
         let button = InAppPurchaseButton()
@@ -71,6 +73,10 @@ class AccountContentView: UIView {
         AccountExpiryRow()
     }()
 
+    let forumHandleRowView: ForumHandleRow = {
+        ForumHandleRow()
+    }()
+
     private lazy var subscriptionCardView: UIView = {
         let stackView = UIStackView(arrangedSubviews: [remainingTimeLabel, accountExpiryRowView])
         stackView.axis = .vertical
@@ -82,11 +88,21 @@ class AccountContentView: UIView {
         Self.makeCard(content: accountTokenRowView)
     }()
 
+    /// Hidden until a forum sign-in has handed an identity back (desktop
+    /// shows the row on the same condition). Internal so unit tests can
+    /// observe the hide logic.
+    lazy var forumCardView: UIView = {
+        let card = Self.makeCard(content: forumHandleRowView)
+        card.isHidden = true
+        return card
+    }()
+
     lazy var contentStackView: UIStackView = {
         let stackView =
             UIStackView(arrangedSubviews: [
                 subscriptionCardView,
                 identityCardView,
+                forumCardView,
             ])
         stackView.axis = .vertical
         stackView.spacing = UIMetrics.padding16
@@ -130,6 +146,13 @@ class AccountContentView: UIView {
             remainingTimeLabel.text = nil
             remainingTimeLabel.isHidden = true
         }
+    }
+
+    /// Shows the forum name this wallet posts under, or no card at all when
+    /// no sign-in has handed one back yet.
+    func setForumIdentity(_ identity: WarrenForumIdentity?) {
+        forumHandleRowView.handle = identity?.handle
+        forumCardView.isHidden = identity == nil
     }
 
     /// Surface card lifting the account facts off the flat background,
