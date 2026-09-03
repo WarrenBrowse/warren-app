@@ -86,6 +86,10 @@ tracing-subscriber = { workspace = true }
 # the bundled reqwest transport. iOS-only: the module's only consumer is
 # `#[cfg(target_os = "ios")]`.
 warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
+# The forum login preflight reads the connect host's `Date` header, and the
+# SDK transport's response type carries no headers, so that one GET is made
+# on the same reqwest the SDK transport is built on (`warren_forum_ffi`).
+reqwest = { workspace = true }
 
 # Quinn tunnel + multi-hop + NAT-PMP are gated behind the `tunnel` feature,
 # enabled by the iOS Xcode build phase (build-rust-library.sh warren-ios

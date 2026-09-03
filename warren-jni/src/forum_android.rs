@@ -25,7 +25,7 @@ use zeroize::Zeroizing;
 
 use crate::forum::{
     self, FailReason, ForumLoginOutcome, ForumNotificationsOutcome, ForumRequestError,
-    ReportOutcome,
+    ReportOutcome, SessionPreflight,
 };
 use crate::forum_digest::{DigestState, Fetched, Refresh};
 
@@ -144,56 +144,42 @@ async fn post_within(
     transport.execute(request).await
 }
 
-/// What the preflight of a login learnt.
-enum Preflight {
-    /// The session still waits; `offset_secs` corrects the device clock.
-    Pending { offset_secs: i64 },
-    /// The session is gone (404): signing would only spend a nonce.
-    Gone,
-    /// The preflight itself failed: sign with the device clock and let the
-    /// provider decide, as before the preflight existed.
-    Unknown,
-}
-
 /// Reads the session's status once before signing. The `Date` header of that
 /// TLS-authenticated answer is the trusted clock a device that never
 /// synchronised its own can be corrected against, which turns the 2026-08-18
 /// class (every attempt refused by the 60 s window) into a login that works.
-async fn preflight(transport: &ForumTransport, sid: &str, host: &str) -> Preflight {
+/// The classing of the answer is the shared crate's, the same one iOS applies.
+async fn preflight(transport: &ForumTransport, sid: &str, host: &str) -> SessionPreflight {
     let Some(url) = forum::build_status_url(sid, host) else {
-        return Preflight::Unknown;
+        return SessionPreflight::Unknown;
     };
     match get_dated(transport, url).await {
-        Ok((response, date)) if response.status == 404 => {
-            let _ = date;
-            Preflight::Gone
-        }
-        Ok((response, date)) if (200..300).contains(&response.status) => {
+        Ok((response, date)) => {
             let device_now = std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_secs())
                 .unwrap_or(0);
-            let offset_secs = date
-                .as_deref()
-                .and_then(|d| forum::clock_offset_secs(d, device_now))
-                .unwrap_or(0);
-            if offset_secs.abs() > 30 {
-                log::warn!(
-                    "forumLogin: device clock is {offset_secs} s off the connect host, correcting"
-                );
+            let verdict =
+                forum::classify_status_preflight(response.status, date.as_deref(), device_now);
+            match verdict {
+                SessionPreflight::Pending { offset_secs } if offset_secs.abs() > 30 => {
+                    log::warn!(
+                        "forumLogin: device clock is {offset_secs} s off the connect host, correcting"
+                    );
+                }
+                SessionPreflight::Unknown => {
+                    log::info!(
+                        "forumLogin: status preflight answered {}, signing with the device clock",
+                        response.status
+                    );
+                }
+                SessionPreflight::Pending { .. } | SessionPreflight::Gone => {}
             }
-            Preflight::Pending { offset_secs }
-        }
-        Ok((response, _)) => {
-            log::info!(
-                "forumLogin: status preflight answered {}, signing with the device clock",
-                response.status
-            );
-            Preflight::Unknown
+            verdict
         }
         Err(_) => {
             log::warn!("forumLogin: status preflight failed (transport), signing anyway");
-            Preflight::Unknown
+            SessionPreflight::Unknown
         }
     }
 }
@@ -248,12 +234,12 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> ForumLoginOutcome {
     }
     let transport = forum_transport();
     let offset_secs = match runtime.block_on(preflight(&transport, sid, host)) {
-        Preflight::Pending { offset_secs } => offset_secs,
-        Preflight::Gone => {
+        SessionPreflight::Pending { offset_secs } => offset_secs,
+        SessionPreflight::Gone => {
             log::info!("forumLogin: session already gone before signing");
             return ForumLoginOutcome::Expired;
         }
-        Preflight::Unknown => 0,
+        SessionPreflight::Unknown => 0,
     };
     let Some(timestamp) = forum::timestamp_with_offset(offset_secs) else {
         log::warn!("forumLogin: could not stamp the request");

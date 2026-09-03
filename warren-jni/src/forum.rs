@@ -11,11 +11,11 @@ use std::time::Duration;
 
 pub use warren_forum::{
     FailReason, ForumIdentity, ForumLoginOutcome, ForumNotificationsOutcome, ForumRequestError,
-    ReportOutcome, SignedForumRequest, build_cancel_url, build_status_url, clock_offset_secs,
-    connect_host, envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code,
-    notifications_envelope, notifications_outcome_for_response, outcome_for_response,
-    report_envelope, report_outcome_for_response, seen_envelope, seen_outcome_for_response,
-    timestamp_with_offset,
+    ReportOutcome, SessionPreflight, SignedForumRequest, build_cancel_url, build_status_url,
+    classify_status_preflight, clock_offset_secs, connect_host, envelope, is_allowed_connect_host,
+    is_valid_sid, normalize_sign_in_code, notifications_envelope,
+    notifications_outcome_for_response, outcome_for_response, report_envelope,
+    report_outcome_for_response, seen_envelope, seen_outcome_for_response, timestamp_with_offset,
 };
 
 /// The total deadline of a report upload, from the body it sends: 20 s for

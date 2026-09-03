@@ -6814,6 +6814,7 @@ dependencies = [
  "mullvad-types",
  "mullvad-update",
  "mullvad-version",
+ "reqwest",
  "serde",
  "serde_json",
  "shadowsocks",

@@ -321,6 +321,47 @@ pub fn timestamp_with_offset(offset_secs: i64) -> Option<u64> {
     u64::try_from(now.checked_add(offset_secs)?).ok()
 }
 
+/// What one unsigned read of the session's status (`GET /v1/session/{sid}/status`)
+/// told the client before it signs. Shared by every mobile FFI so Android and
+/// iOS make the same call from the same answer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SessionPreflight {
+    /// The session still waits. `offset_secs` is the correction of
+    /// [`clock_offset_secs`] read off the answer's `Date` header, zero when
+    /// the answer carried no usable one.
+    Pending {
+        /// Server clock minus device clock, in seconds.
+        offset_secs: i64,
+    },
+    /// The session is gone (404): expired, cancelled or already consumed.
+    /// Signing would only spend a nonce.
+    Gone,
+    /// The read answered something else. The caller signs with the device
+    /// clock and lets the provider decide, as before the preflight existed.
+    Unknown,
+}
+
+/// Classes a status answer for the login preflight: `status` and the `Date`
+/// header of the TLS-authenticated response, `device_now` the device clock at
+/// the same moment. A transport failure never reaches this function; the
+/// caller reports it as [`SessionPreflight::Unknown`] itself.
+#[must_use]
+pub fn classify_status_preflight(
+    status: u16,
+    date_header: Option<&str>,
+    device_now: u64,
+) -> SessionPreflight {
+    match status {
+        404 => SessionPreflight::Gone,
+        200..=299 => SessionPreflight::Pending {
+            offset_secs: date_header
+                .and_then(|date| clock_offset_secs(date, device_now))
+                .unwrap_or(0),
+        },
+        _ => SessionPreflight::Unknown,
+    }
+}
+
 /// The forum identity an approved login carries back: the pairwise handle
 /// (keyed derivation, so the client can learn it nowhere else) and the digest
 /// slot the badge indexes. Mirrors the desktop `ForumIdentity`.
@@ -1101,6 +1142,51 @@ mod tests {
         assert_eq!(clock_offset_secs("yesterday", 1), None);
         assert!(timestamp_with_offset(0).is_some());
         assert!(timestamp_with_offset(i64::MIN).is_none());
+    }
+
+    #[test]
+    fn a_pending_session_carries_the_clock_offset_of_the_dated_answer() {
+        // The device is 90 s behind the connect host: the correction is what
+        // makes the signed request land inside the 60 s window.
+        assert_eq!(
+            classify_status_preflight(
+                200,
+                Some("Wed, 02 Sep 2026 17:50:28 GMT"),
+                1_788_371_428 - 90
+            ),
+            SessionPreflight::Pending { offset_secs: 90 }
+        );
+    }
+
+    #[test]
+    fn a_pending_session_without_a_usable_date_corrects_nothing() {
+        assert_eq!(
+            classify_status_preflight(200, None, 1_788_371_428),
+            SessionPreflight::Pending { offset_secs: 0 }
+        );
+        assert_eq!(
+            classify_status_preflight(200, Some("yesterday"), 1_788_371_428),
+            SessionPreflight::Pending { offset_secs: 0 }
+        );
+    }
+
+    #[test]
+    fn a_gone_session_is_told_apart_before_a_signature_is_spent() {
+        assert_eq!(
+            classify_status_preflight(404, Some("Wed, 02 Sep 2026 17:50:28 GMT"), 1),
+            SessionPreflight::Gone
+        );
+    }
+
+    #[test]
+    fn any_other_status_answer_leaves_the_device_clock_in_charge() {
+        for status in [304u16, 403, 429, 500, 503] {
+            assert_eq!(
+                classify_status_preflight(status, Some("Wed, 02 Sep 2026 17:50:28 GMT"), 1),
+                SessionPreflight::Unknown,
+                "status {status}"
+            );
+        }
     }
 
     #[test]

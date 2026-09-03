@@ -10,9 +10,11 @@
 //!
 //! Memory ownership: the returned heap `CString` MUST be freed once via
 //! `warren_wallet_free_mnemonic` (type-agnostic: it reclaims any `CString` this
-//! crate produces). Envelope shapes match Android's `WarrenJni.forumLogin`:
-//! `{"ok":true}` / `{"ok":false,"error":"subscription-required"}` /
-//! `{"ok":false,"error":"clock-skew"}` / `{"ok":false,"error":"error"}`.
+//! crate produces). Envelope shapes match Android's `WarrenJni.forumLogin`,
+//! the `login` table of `fixtures/client-rules/forum_outcomes.json`:
+//! `{"ok":true,"handle":"..","notify_slot":n}` (both additive) /
+//! `{"ok":false,"error":"subscription-required"|"clock-skew"|"expired"}` /
+//! `{"ok":false,"error":"error","reason":"<class>"}`.
 //!
 //! Blocking: `block_on`s the shared iOS tokio runtime; the Swift facade invokes
 //! it off the main thread.
@@ -21,14 +23,70 @@
 
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
+use std::time::Duration;
 
 use warren_api::{HttpRequest, HttpTransport, Method, ReqwestTransport};
 use warren_identity::WarrenIdentity;
 use zeroize::Zeroizing;
 
-use crate::forum::{self, FailReason, ForumLoginOutcome};
+use crate::forum::{self, FailReason, ForumLoginOutcome, SessionPreflight};
 
 const SEED_LEN: usize = 32;
+
+/// The connect and total timeouts of the status read, the SDK transport's own
+/// (5 s connect, 15 s total), so the preflight can never outlast the POST it
+/// precedes.
+const PREFLIGHT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+const PREFLIGHT_TOTAL_TIMEOUT: Duration = Duration::from_secs(15);
+
+/// Reads the session's status once before signing (`GET /v1/session/{sid}/status`,
+/// unsigned). The `Date` header of that TLS-authenticated answer is the
+/// trusted clock a device that never synchronised its own is corrected
+/// against, which turns the 2026-08-18 class (every attempt refused by the
+/// broker's 60 s window) into a login that works; a 404 names a dead session
+/// before a signature is spent. The classing is the shared crate's, the one
+/// Android applies. Any failure of the read itself is `Unknown`: the request
+/// is then stamped with the device clock and the provider decides, as before
+/// the preflight existed. Nothing about the request is logged.
+async fn preflight(sid: &str, host: &str) -> SessionPreflight {
+    let Some(url) = forum::build_status_url(sid, host) else {
+        return SessionPreflight::Unknown;
+    };
+    let Ok(client) = reqwest::Client::builder()
+        .connect_timeout(PREFLIGHT_CONNECT_TIMEOUT)
+        .timeout(PREFLIGHT_TOTAL_TIMEOUT)
+        .build()
+    else {
+        return SessionPreflight::Unknown;
+    };
+    match client.get(&url).send().await {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            let date = response
+                .headers()
+                .get(reqwest::header::DATE)
+                .and_then(|value| value.to_str().ok())
+                .map(str::to_owned);
+            let device_now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs())
+                .unwrap_or(0);
+            let verdict = forum::classify_status_preflight(status, date.as_deref(), device_now);
+            if let SessionPreflight::Pending { offset_secs } = verdict
+                && offset_secs.abs() > 30
+            {
+                log::warn!(
+                    "forumLogin: device clock is {offset_secs} s off the connect host, correcting"
+                );
+            }
+            verdict
+        }
+        Err(_) => {
+            log::warn!("forumLogin: status preflight failed (transport), signing anyway");
+            SessionPreflight::Unknown
+        }
+    }
+}
 
 /// Reads a 32-byte seed into a zeroizing buffer. `None` when `seed` is null.
 ///
@@ -74,12 +132,16 @@ fn envelope_cstring(outcome: ForumLoginOutcome) -> *mut c_char {
 
 /// Sign and submit a forum-login challenge for `sid` to the connect `host`.
 ///
-/// Derives the `WarrenIdentity` from the 32-byte wallet `seed`, builds the
-/// signed `POST /v1/forum/login` request (host allowlist + sid shape checked in
-/// `crate::forum`), sends it, and returns the outcome envelope. Any input,
-/// build, or transport failure collapses to `{"ok":false,"error":"error"}`; a
-/// server 403 maps to `subscription-required`. Nothing about the request (seed,
-/// sid, signature, nonce) is ever logged.
+/// Derives the `WarrenIdentity` from the 32-byte wallet `seed`, reads the
+/// session's status once (a dead session is `expired` without a signature
+/// spent; the answer's `Date` corrects the device clock), builds the signed
+/// `POST /v1/forum/login` request at the corrected time (host allowlist + sid
+/// shape checked in `crate::forum`), sends it, and returns the outcome
+/// envelope: `{"ok":true,...}` with the forum identity the broker handed back,
+/// `subscription-required` on 403, `clock-skew` on connect's 401 token,
+/// `expired` on 404, `error` with a `reason` class for anything else (input,
+/// build, runtime, transport, an unnamed status). Nothing about the request
+/// (seed, sid, signature, nonce) is ever logged.
 ///
 /// # Safety
 /// `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
@@ -101,14 +163,25 @@ pub unsafe extern "C" fn warren_forum_login(
             return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build));
         };
 
-        let identity = WarrenIdentity::from_seed(&seed);
-        let signed = match forum::build_signed_request(&identity, &sid, &host) {
-            Ok(req) => req,
-            Err(_) => return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build)),
-        };
+        if !warren_forum::is_allowed_connect_host(&host) || !warren_forum::is_valid_sid(&sid) {
+            return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build));
+        }
         let handle = match crate::warren_ios_runtime() {
             Ok(handle) => handle,
             Err(_) => return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Runtime)),
+        };
+        let offset_secs = match handle.block_on(preflight(&sid, &host)) {
+            SessionPreflight::Pending { offset_secs } => offset_secs,
+            SessionPreflight::Gone => return envelope_cstring(ForumLoginOutcome::Expired),
+            SessionPreflight::Unknown => 0,
+        };
+        let Some(timestamp) = forum::timestamp_with_offset(offset_secs) else {
+            return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build));
+        };
+        let identity = WarrenIdentity::from_seed(&seed);
+        let signed = match forum::build_signed_request_at(&identity, &sid, &host, timestamp) {
+            Ok(req) => req,
+            Err(_) => return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build)),
         };
 
         let request = HttpRequest {

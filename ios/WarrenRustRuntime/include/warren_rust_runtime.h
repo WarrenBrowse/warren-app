@@ -807,12 +807,16 @@ char *warren_account_delete(const uint8_t *seed);
 /**
  * Sign and submit a forum-login challenge for `sid` to the connect `host`.
  *
- * Derives the `WarrenIdentity` from the 32-byte wallet `seed`, builds the
- * signed `POST /v1/forum/login` request (host allowlist + sid shape checked in
- * `crate::forum`), sends it, and returns the outcome envelope. Any input,
- * build, or transport failure collapses to `{"ok":false,"error":"error"}`; a
- * server 403 maps to `subscription-required`. Nothing about the request (seed,
- * sid, signature, nonce) is ever logged.
+ * Derives the `WarrenIdentity` from the 32-byte wallet `seed`, reads the
+ * session's status once (a dead session is `expired` without a signature
+ * spent; the answer's `Date` corrects the device clock), builds the signed
+ * `POST /v1/forum/login` request at the corrected time (host allowlist + sid
+ * shape checked in `crate::forum`), sends it, and returns the outcome
+ * envelope: `{"ok":true,...}` with the forum identity the broker handed back,
+ * `subscription-required` on 403, `clock-skew` on connect's 401 token,
+ * `expired` on 404, `error` with a `reason` class for anything else (input,
+ * build, runtime, transport, an unnamed status). Nothing about the request
+ * (seed, sid, signature, nonce) is ever logged.
  *
  * # Safety
  * `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
@@ -825,8 +829,9 @@ char *warren_forum_login(const uint8_t *seed, const char *sid, const char *host)
  * Best-effort: notify the connect `host` that the user declined the forum login
  * for `sid` (`POST /v1/session/<sid>/cancel`), so the waiting browser page
  * unblocks instead of polling to timeout. Unsigned (no seed / wallet material);
- * mirrors the desktop `cancelForumLogin`. Failures are ignored (the server
- * session expires on its own in 10 minutes). Blocking; call off the main thread.
+ * mirrors the desktop `cancelForumLogin`. Failures are ignored (connect drops
+ * a login session on its own after 5 minutes, the `pending_ttl_secs.login` of
+ * `fixtures/client-rules/forum_link.json`). Blocking; call off the main thread.
  *
  * # Safety
  * `sid` and `host` must be valid NUL-terminated C strings.
