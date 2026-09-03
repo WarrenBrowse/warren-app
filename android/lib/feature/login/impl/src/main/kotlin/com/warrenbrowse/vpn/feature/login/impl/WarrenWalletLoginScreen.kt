@@ -11,7 +11,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,41 +22,47 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.core.text.HtmlCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.common.compose.SecureScreenWhileInView
+import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.component.WarrenHelpLink
 import com.warrenbrowse.vpn.lib.ui.component.dialog.NegativeConfirmationDialog
+import com.warrenbrowse.vpn.lib.ui.component.toAnnotatedString
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.component.wallet.MnemonicInput
 import com.warrenbrowse.vpn.lib.ui.component.wallet.countMnemonicWords
+import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryTextButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 /**
- * Wallet entry-point screen. Mirrors the desktop login UX: the Warren mark
- * sits in the top bar (like the desktop AppMainHeader), then the non-custodial
- * explanation and two full-width choices.
+ * Wallet entry-point screen. Mirrors the desktop login UX: the Warren mark sits in the top bar
+ * (like the desktop AppMainHeader), then the non-custodial explanation and two full-width choices.
  *
- *   - `Create a new account` (positive/green CTA) emits
- *     `BackupGeneratedMnemonic` so the host NavController routes to
- *     `WarrenWalletBackupScreen`.
- *   - `I already have an account` (primary/blue) opens an inline
- *     `MnemonicInput` for the 12-word phrase, then
- *     `WarrenWalletViewModel.importWallet`, which emits `WalletReady` on
- *     success.
+ * - `Create a new account` (positive/green CTA) emits `BackupGeneratedMnemonic` so the host
+ *   NavController routes to `WarrenWalletBackupScreen`.
+ * - `I already have an account` (primary/blue) opens an inline `MnemonicInput` for the 12-word
+ *   phrase, then `WarrenWalletViewModel.importWallet`, which emits `WalletReady` on success.
  *
- * The ViewModel owns the repository interaction, the phrase being typed (so a
- * rotation does not wipe it) and one-shot event dispatch (Channel) so
- * re-emission on config change does not re-navigate.
+ * The ViewModel owns the repository interaction, the phrase being typed (so a rotation does not
+ * wipe it) and one-shot event dispatch (Channel) so re-emission on config change does not
+ * re-navigate.
  */
 @Composable
 fun WarrenWalletLoginScreen(
@@ -70,6 +75,19 @@ fun WarrenWalletLoginScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val busy by vm.busy.collectAsStateWithLifecycle()
     val importPhrase by vm.importPhrase.collectAsStateWithLifecycle()
+
+    // Desktop LoginView `BlockMessage`: a user who logged out under lockdown, or
+    // whose tunnel dropped while the kill switch holds, is offline and this
+    // screen is the only one telling them why and how to release it.
+    val connectionProxy = koinInject<ConnectionProxy>()
+    val localSettings = koinInject<WarrenLocalSettingsRepository>()
+    val disconnectInvoker = koinInject<WarrenQuinnDisconnectInvoker>()
+    val tunnelState by
+        connectionProxy.tunnelState.collectAsStateWithLifecycle(
+            initialValue = TunnelState.Disconnected()
+        )
+    val lockdownMode by localSettings.lockdownMode.collectAsStateWithLifecycle()
+    val blockNotice = loginBlockNotice(tunnelState, lockdownMode)
 
     // Used only when hardware-bound keystore auth is enabled: the encrypt step
     // at wallet create/import is gated by a CryptoObject prompt. With the flag
@@ -129,17 +147,17 @@ fun WarrenWalletLoginScreen(
         onAccountClicked = null,
     ) { pv ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.surface)
-                .padding(pv)
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = Dimens.sideMargin,
-                    end = Dimens.sideMargin,
-                    top = Dimens.screenTopMargin,
-                    bottom = Dimens.screenBottomMargin,
-                ),
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(pv)
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = Dimens.sideMargin,
+                        end = Dimens.sideMargin,
+                        top = Dimens.screenTopMargin,
+                        bottom = Dimens.screenBottomMargin,
+                    ),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding),
         ) {
@@ -188,6 +206,20 @@ fun WarrenWalletLoginScreen(
                     )
                 }
             } else {
+                if (blockNotice != null) {
+                    BlockMessage(
+                        notice = blockNotice,
+                        onUnblock = {
+                            // Disabling lockdown alone leaves the blackhole up
+                            // until the adapter acts; the release is the
+                            // disconnect, exactly as desktop's `unlock`.
+                            if (blockNotice == LoginBlockNotice.LockdownMode) {
+                                localSettings.setLockdownMode(false)
+                            }
+                            disconnectInvoker.disconnect()
+                        },
+                    )
+                }
                 Text(
                     text = stringResource(R.string.wallet_login_title),
                     style = MaterialTheme.typography.headlineSmall,
@@ -236,6 +268,49 @@ fun WarrenWalletLoginScreen(
                 vm.createWallet(authorizer)
             },
             onBack = { confirmOverwrite = false },
+        )
+    }
+}
+
+/** Desktop `BlockMessage`: title, cause, and the one destructive action that releases traffic. */
+@Composable
+private fun BlockMessage(notice: LoginBlockNotice, onUnblock: () -> Unit) {
+    val message =
+        when (notice) {
+            LoginBlockNotice.LockdownMode ->
+                stringResource(
+                    R.string.login_blocking_lockdown,
+                    stringResource(R.string.tunnel_lockdown_mode_title),
+                )
+            LoginBlockNotice.KillSwitch -> stringResource(R.string.login_blocking_kill_switch)
+        }
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
+    ) {
+        Text(
+            text = stringResource(R.string.blocking_internet),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.error,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text =
+                HtmlCompat.fromHtml(message, HtmlCompat.FROM_HTML_MODE_COMPACT)
+                    .toAnnotatedString(boldSpanStyle = SpanStyle(fontWeight = FontWeight.Bold)),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        NegativeButton(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onUnblock,
+            text =
+                stringResource(
+                    if (notice == LoginBlockNotice.LockdownMode) R.string.disable
+                    else R.string.unblock
+                ),
         )
     }
 }
