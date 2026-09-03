@@ -809,10 +809,15 @@ impl Drop for PathHealthTaskGuard {
 /// `None` from [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled in
 /// config.
 struct NatPmpGuard {
-    /// Filled by `starter` once the loop is running; empty while it is still
-    /// giving the entitlement mint its head start.
-    refresh:
-        std::sync::Arc<parking_lot::Mutex<Option<warrenguard_natpmp_client::RefreshLoopHandle>>>,
+    /// Where `starter` leaves the handle that cancels the refresh loop, and
+    /// where this teardown picks it up. The third state
+    /// (`NatPmpSlot::Cancelled`) is what settles the race between them; see
+    /// [`crate::natpmp_slot::NatPmpSlot`].
+    refresh: std::sync::Arc<
+        parking_lot::Mutex<
+            crate::natpmp_slot::NatPmpSlot<warrenguard_natpmp_client::RefreshLoopHandle>,
+        >,
+    >,
     starter: tokio::task::JoinHandle<()>,
     drain: tokio::task::JoinHandle<()>,
 }
@@ -822,12 +827,14 @@ impl Drop for NatPmpGuard {
         // Clear the published status so a stale "mapped" port does not
         // linger in the UI after the mapping is torn down.
         crate::android_jni::reset_natpmp_status();
-        // Ordered: abort the starter first, so a teardown during the head
-        // start cannot race a loop into existence behind the cancel below.
-        // The starter stores its handle with no await between spawn and
-        // store, so an abort can never land in that gap.
+        // Abort the starter first: while it is still waiting on the
+        // entitlement mint that is what stops the loop from ever being
+        // spawned. It is not enough on its own, because an abort cannot
+        // preempt a starter already past its last await, so the slot is
+        // marked cancelled too and a handle stored after this point is
+        // cancelled by the starter itself.
         self.starter.abort();
-        if let Some(mut refresh) = self.refresh.lock().take() {
+        if let Some(mut refresh) = self.refresh.lock().cancel() {
             refresh.cancel();
         }
         // Abort eagerly: the refresh-loop cancel closes the sender
@@ -912,7 +919,9 @@ fn maybe_spawn_nat_pmp(
     } else {
         warrenguard_natpmp_client::ForwardProtos::Udp
     };
-    let refresh = std::sync::Arc::new(parking_lot::Mutex::new(None));
+    let refresh = std::sync::Arc::new(parking_lot::Mutex::new(
+        crate::natpmp_slot::NatPmpSlot::Pending,
+    ));
     let refresh_slot = refresh.clone();
     let starter = tokio::spawn(async move {
         // The engine reads the credential once per cycle, and the first cycle
@@ -951,7 +960,14 @@ fn maybe_spawn_nat_pmp(
             },
             tx,
         );
-        *refresh_slot.lock() = Some(handle);
+        // The session may have ended while this task was between the spawn
+        // above and this store, a window no abort can interrupt. The slot
+        // hands the handle back when it has: the loop this task just started
+        // would otherwise renew its mapping against a TUN that is gone, for
+        // the life of the process.
+        if let Some(mut orphan) = refresh_slot.lock().store(handle) {
+            orphan.cancel();
+        }
     });
     let drain = tokio::spawn(async move {
         while let Some(event) = rx.recv().await {

@@ -68,6 +68,11 @@ mod rate_limited_tun;
 // wiring that consumes it is Android-gated in `tunnel`.
 mod natpmp_follow;
 
+// The NAT-PMP refresh loop's slot, and the teardown race it settles
+// (host-tested); the task that fills it is Android-gated in `tunnel`.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod natpmp_slot;
+
 // Multi-hop circuit selection (single-hop collapse vs distinct-entry two-hop):
 // pure index arithmetic, host-tested; the datapath that dials the chosen node
 // is Android-gated in `tunnel`.
