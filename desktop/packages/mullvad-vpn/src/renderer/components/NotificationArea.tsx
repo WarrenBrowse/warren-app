@@ -39,6 +39,7 @@ import {
   WarrenMaintenanceNotificationProvider,
   WarrenNoticeNotificationProvider,
   WarrenPortMigrationNotificationProvider,
+  WarrenUncleanRestoreNotificationProvider,
 } from '../lib/notifications';
 import { AppUpgradeAvailableNotificationProvider } from '../lib/notifications/app-upgrade-available';
 import { useMounted } from '../lib/utility-hooks';
@@ -201,6 +202,9 @@ export default function NotificationArea(props: IProps) {
     }),
     new WarrenPortMigrationNotificationProvider({
       portMigrationCancellationActive: warrenStatus?.portMigrationCancellationActive ?? false,
+    }),
+    new WarrenUncleanRestoreNotificationProvider({
+      restoredAfterUncleanShutdown: warrenStatus?.restoredAfterUncleanShutdown ?? false,
     }),
   ];
 

@@ -214,6 +214,19 @@ pub struct WarrenStatusSnapshot {
     /// UI renders the "interrupted" phase with an exit-not-forwarding
     /// cause while this holds.
     pub exit_egress_dead: bool,
+    /// True when this daemon restored a `Secured` target state that a
+    /// previous run left behind after failing to exit cleanly (a host
+    /// crash, a power loss, a SIGKILL), rather than because the user or
+    /// the `auto_connect` setting asked for a tunnel.
+    ///
+    /// It exists because that path is invisible everywhere else: it is
+    /// gated by neither `auto_connect` nor the GUI's launch-at-login, so
+    /// a user who turned both off is still connected at the next boot
+    /// with nothing on screen to say why. Cleared as soon as the user
+    /// takes control of the target state, and deliberately never by a
+    /// timer: the machine can sit untouched for hours, and the
+    /// explanation must still be there when someone finally looks.
+    pub restored_after_unclean_shutdown: bool,
     /// Latest `GET /v1/network` descriptor, `None` until the first
     /// successful fetch (or when the API predates the endpoint).
     pub network_info: Option<NetworkInfoSnapshot>,
@@ -252,6 +265,7 @@ impl Default for WarrenStatusSnapshot {
             port_migration_cancellation_active: false,
             host_offline: false,
             exit_egress_dead: false,
+            restored_after_unclean_shutdown: false,
             network_info: None,
             notices: Vec::new(),
             forum_digest: None,
@@ -292,6 +306,7 @@ struct InternalState {
     last_port_migration_cancelled_at: Option<Instant>,
     host_offline: bool,
     exit_egress_dead: bool,
+    restored_after_unclean_shutdown: bool,
     network_info: Option<NetworkInfoSnapshot>,
     notices: Vec<crate::warren_notices_updater::DisplayNotice>,
     forum_digest: Option<String>,
@@ -312,6 +327,7 @@ impl Default for InternalState {
             last_port_migration_cancelled_at: None,
             host_offline: false,
             exit_egress_dead: false,
+            restored_after_unclean_shutdown: false,
             network_info: None,
             notices: Vec::new(),
             forum_digest: None,
@@ -381,6 +397,7 @@ impl WarrenStatusCache {
             ),
             host_offline: inner.host_offline,
             exit_egress_dead: inner.exit_egress_dead,
+            restored_after_unclean_shutdown: inner.restored_after_unclean_shutdown,
             network_info: inner.network_info.clone(),
             notices: inner.notices.clone(),
             forum_digest: inner.forum_digest.clone(),
@@ -684,6 +701,43 @@ impl WarrenStatusCache {
     /// daemon whenever the tunnel leaves Connected (a rebuilt tunnel
     /// starts with a clean verdict). Idempotent: repeated equal
     /// verdicts do not re-push.
+    /// Records that this daemon restored the tunnel from a target state
+    /// cache the previous run left behind, so every client can tell the
+    /// user why they are connected without having asked. Broadcasts, so a
+    /// client that attaches later still receives it in its first snapshot.
+    pub fn record_restored_after_unclean_shutdown(&self) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.restored_after_unclean_shutdown {
+                return;
+            }
+            inner.restored_after_unclean_shutdown = true;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Clears the restore flag once the user has taken control of the
+    /// target state (any explicit connect or disconnect). From that point
+    /// the tunnel state is theirs and needs no explanation.
+    pub fn clear_restored_after_unclean_shutdown(&self) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if !inner.restored_after_unclean_shutdown {
+                return;
+            }
+            inner.restored_after_unclean_shutdown = false;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
     pub fn set_exit_egress_dead(&self, dead: bool) {
         let snapshot = {
             let mut inner = self
@@ -927,6 +981,43 @@ mod tests {
         cache.record_reconnect();
         cache.record_reconnect();
         assert_eq!(cache.snapshot().reconnect_count, u32::MAX);
+    }
+
+    // --- Restore after an unclean shutdown -----------------------------------
+
+    #[test]
+    fn default_snapshot_reports_no_restore() {
+        assert!(!WarrenStatusSnapshot::default().restored_after_unclean_shutdown);
+        assert!(
+            !WarrenStatusCache::new()
+                .snapshot()
+                .restored_after_unclean_shutdown
+        );
+    }
+
+    #[test]
+    fn record_restore_activates_snapshot_and_broadcasts() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.record_restored_after_unclean_shutdown();
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(cache.snapshot().restored_after_unclean_shutdown);
+    }
+
+    /// The flag survives until the user takes control, with no timer: it is
+    /// cleared by an explicit connect or disconnect, never by elapsed time.
+    /// A machine can sit untouched for hours after the boot that restored it,
+    /// and an expiring flag would erase the one explanation the user needs.
+    #[test]
+    fn clear_restore_deactivates_snapshot_and_broadcasts() {
+        let cache = WarrenStatusCache::new();
+        cache.record_restored_after_unclean_shutdown();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        cache.clear_restored_after_unclean_shutdown();
+        assert!(rx.has_changed().unwrap_or(false));
+        assert!(!cache.snapshot().restored_after_unclean_shutdown);
     }
 
     // --- Exit maintenance migration (ADR 36 banner) --------------------------

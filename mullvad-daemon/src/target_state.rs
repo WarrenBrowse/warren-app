@@ -16,6 +16,13 @@ pub struct PersistentTargetState {
     state: TargetState,
     cache_path: PathBuf,
     locked: bool,
+    /// True when this state came from a cache file the previous daemon left
+    /// behind, which only happens when that daemon did not exit cleanly (a
+    /// host crash, a power loss, a SIGKILL). It is the one signal that
+    /// separates "the tunnel is up because the user asked" from "the tunnel
+    /// is up because we restored it on their behalf", and neither
+    /// `auto_connect` nor the GUI's launch-at-login can express it.
+    restored_from_cache: bool,
 }
 
 impl PersistentTargetState {
@@ -25,11 +32,13 @@ impl PersistentTargetState {
         let TargetStateInner {
             state,
             update_cache,
+            restored_from_cache,
         } = Self::read_target_state(&cache_path, fs::read_to_string).await;
         let state = PersistentTargetState {
             state,
             cache_path,
             locked: false,
+            restored_from_cache,
         };
         if update_cache {
             state.save().await;
@@ -61,6 +70,7 @@ impl PersistentTargetState {
                     TargetStateInner {
                         state,
                         update_cache: false,
+                        restored_from_cache: true,
                     }
                 })
                 .unwrap_or_else(|error| {
@@ -71,6 +81,7 @@ impl PersistentTargetState {
                     TargetStateInner {
                         state: TargetState::Secured,
                         update_cache: true,
+                        restored_from_cache: true,
                     }
                 }),
 
@@ -79,6 +90,7 @@ impl PersistentTargetState {
                 TargetStateInner {
                     state: DEFAULT_TARGET_STATE,
                     update_cache: false,
+                    restored_from_cache: false,
                 }
             }
             Err(error) => {
@@ -89,9 +101,16 @@ impl PersistentTargetState {
                 TargetStateInner {
                     state: TargetState::Secured,
                     update_cache: true,
+                    restored_from_cache: true,
                 }
             }
         }
+    }
+
+    /// Whether this state was recovered from a cache file left behind by a
+    /// daemon that did not exit cleanly. See the field's documentation.
+    pub fn restored_from_cache(&self) -> bool {
+        self.restored_from_cache
     }
 
     /// Force the initial target state to be 'secured'
@@ -101,6 +120,9 @@ impl PersistentTargetState {
             state: TargetState::Secured,
             cache_path,
             locked: false,
+            // Forced by the `auto_connect` setting, not recovered from a
+            // previous run: the user configured this and the UI says so.
+            restored_from_cache: false,
         };
         state.save().await;
         state
@@ -191,6 +213,9 @@ struct TargetStateInner {
     /// constructor of [`PersistentTargetState`] by setting this value to
     /// `true`.
     update_cache: bool,
+    /// Whether a cache file was there to read at all. See
+    /// [`PersistentTargetState::restored_from_cache`].
+    restored_from_cache: bool,
 }
 
 impl Deref for TargetStateInner {
@@ -247,5 +272,58 @@ mod test {
             .await;
         // Reading back a corrupt target state cache should yield `TargetState::Secured`.
         assert_eq!(*target_state, TargetState::Secured);
+    }
+
+    /// No cache file means the previous daemon exited cleanly and removed it,
+    /// so nothing was restored. This is the only branch that must report
+    /// `false`: it is what separates a normal boot from a boot after a crash.
+    #[tokio::test]
+    async fn a_missing_cache_is_not_a_restore() {
+        let target_state =
+            PersistentTargetState::read_target_state(Path::new(DUMMY_CACHE_DIR), |_| async {
+                Err(io::ErrorKind::NotFound.into())
+            })
+            .await;
+        assert!(!target_state.restored_from_cache);
+    }
+
+    /// A cache file that outlived the daemon that wrote it is a restore,
+    /// whatever it holds. `Unsecured` is covered on purpose: the caller
+    /// decides what to do with the pair, this flag only reports provenance.
+    #[tokio::test]
+    async fn a_surviving_cache_is_a_restore() {
+        for cached_state in [TargetState::Secured, TargetState::Unsecured] {
+            let target_state =
+                PersistentTargetState::read_target_state(Path::new(DUMMY_CACHE_DIR), |_| async {
+                    Ok(serde_json::to_string(&cached_state).unwrap())
+                })
+                .await;
+            assert!(target_state.restored_from_cache);
+        }
+    }
+
+    /// A corrupt cache still proves the file outlived its writer, so it is a
+    /// restore too. Reporting it as a clean boot would hide exactly the crash
+    /// this flag exists to name.
+    #[tokio::test]
+    async fn a_corrupt_cache_is_a_restore() {
+        let target_state =
+            PersistentTargetState::read_target_state(Path::new(DUMMY_CACHE_DIR), |_| async {
+                Ok("Not a valid target state".to_string())
+            })
+            .await;
+        assert!(target_state.restored_from_cache);
+    }
+
+    /// An unreadable cache (present, but the read failed for a reason other
+    /// than absence) is treated as a restore for the same reason.
+    #[tokio::test]
+    async fn an_unreadable_cache_is_a_restore() {
+        let target_state =
+            PersistentTargetState::read_target_state(Path::new(DUMMY_CACHE_DIR), |_| async {
+                Err(io::ErrorKind::PermissionDenied.into())
+            })
+            .await;
+        assert!(target_state.restored_from_cache);
     }
 }

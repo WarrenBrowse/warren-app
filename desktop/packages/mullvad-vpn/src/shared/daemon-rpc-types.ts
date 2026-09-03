@@ -786,6 +786,12 @@ export interface WarrenStatus {
   // still answers QUIC keep-alives). Drives the "interrupted" phase
   // with the exit-not-forwarding banner while Connected.
   exitEgressDead: boolean;
+  // True when the daemon restored a Secured target state left behind by a
+  // run that did not exit cleanly (host crash, power loss, SIGKILL). It is
+  // gated by neither auto-connect nor launch on start-up, so it is the one
+  // way to be connected with nothing the user configured explaining it.
+  // The daemon clears it when the user next sets the target state.
+  restoredAfterUncleanShutdown: boolean;
   // Public `GET /v1/network` descriptor fetched by the daemon.
   // Display data only (the compiled product environment stays the
   // authority on WHICH build this is): the beta banner reads the live

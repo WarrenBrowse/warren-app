@@ -1826,6 +1826,10 @@ msgctxt "in-app-notifications"
 msgid "READY TO INSTALL UPDATE"
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr ""
+
 #. Button label opening the community forum to report a problem.
 msgctxt "in-app-notifications"
 msgid "Report on the forum"
@@ -1914,6 +1918,10 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "WARREN"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
 msgstr ""
 
 msgctxt "in-app-notifications"

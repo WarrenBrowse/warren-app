@@ -220,6 +220,7 @@ fn warren_status_snapshot_to_proto(
             }
         }),
         maintenance_migration_active: snap.maintenance_migration_active,
+        restored_after_unclean_shutdown: snap.restored_after_unclean_shutdown,
         port_migration_cancellations: snap.port_migration_cancellations,
         port_migration_cancellation_active: snap.port_migration_cancellation_active,
         host_offline: snap.host_offline,

@@ -1350,6 +1350,25 @@ impl Daemon {
             PersistentTargetState::new(&config.cache_dir).await
         };
 
+        // A `Secured` state recovered from the cache means the previous
+        // daemon never reached `finalize()` and so never deleted the file:
+        // a host crash, a power loss, a SIGKILL. We are re-arming the
+        // tunnel on the user's behalf, and this path is gated by NEITHER
+        // `auto_connect` NOR the GUI's launch-at-login, which is what
+        // makes it the one way to end up connected with nothing on screen
+        // to say why. Surface it to every client, and log it at a level a
+        // reader cannot mistake for routine: at INFO, next to the ordinary
+        // "Loaded cached target state" line, it reads like bookkeeping.
+        if *target_state == TargetState::Secured && target_state.restored_from_cache() {
+            log::warn!(
+                "Restoring the tunnel from a target state left behind by an unclean \
+                 shutdown: the previous run did not exit cleanly. This is neither \
+                 auto-connect nor launch-at-login, so nothing the user configured \
+                 explains it"
+            );
+            warren_status_cache.record_restored_after_unclean_shutdown();
+        }
+
         #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
         let exclude_paths = if settings.split_tunnel.enable_exclusions {
             settings
@@ -3045,6 +3064,11 @@ impl Daemon {
         tx: oneshot::Sender<bool>,
         new_target_state: TargetState,
     ) {
+        // The user has taken control of the tunnel, so any explanation we
+        // were holding for them about a restore they did not ask for is
+        // spent. This is the only clearer: the flag has no timer.
+        self.warren_status_cache
+            .clear_restored_after_unclean_shutdown();
         let state_change_initated = self.set_target_state(new_target_state).await;
         Self::oneshot_send(tx, state_change_initated, "state change initiated");
     }

@@ -2170,6 +2170,8 @@ export class WarrenStatus extends jspb.Message {
     clearForumDigest(): void;
     getForumDigest(): string | undefined;
     setForumDigest(value: string): WarrenStatus;
+    getRestoredAfterUncleanShutdown(): boolean;
+    setRestoredAfterUncleanShutdown(value: boolean): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2197,6 +2199,7 @@ export namespace WarrenStatus {
         networkInfo?: WarrenNetworkInfo.AsObject,
         noticesList: Array<WarrenNotice.AsObject>,
         forumDigest?: string,
+        restoredAfterUncleanShutdown: boolean,
     }
 }
 

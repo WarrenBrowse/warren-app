@@ -17573,7 +17573,8 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     networkInfo: (f = msg.getNetworkInfo()) && proto.mullvad_daemon.management_interface.WarrenNetworkInfo.toObject(includeInstance, f),
     noticesList: jspb.Message.toObjectList(msg.getNoticesList(),
     proto.mullvad_daemon.management_interface.WarrenNotice.toObject, includeInstance),
-    forumDigest: jspb.Message.getFieldWithDefault(msg, 14, "")
+    forumDigest: jspb.Message.getFieldWithDefault(msg, 14, ""),
+    restoredAfterUncleanShutdown: jspb.Message.getBooleanFieldWithDefault(msg, 15, false)
   };
 
   if (includeInstance) {
@@ -17670,6 +17671,10 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
     case 14:
       var value = /** @type {string} */ (reader.readString());
       msg.setForumDigest(value);
+      break;
+    case 15:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setRestoredAfterUncleanShutdown(value);
       break;
     default:
       reader.skipField();
@@ -17800,6 +17805,13 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
   if (f != null) {
     writer.writeString(
       14,
+      f
+    );
+  }
+  f = message.getRestoredAfterUncleanShutdown();
+  if (f) {
+    writer.writeBool(
+      15,
       f
     );
   }
@@ -18169,6 +18181,24 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearForumDiges
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasForumDigest = function() {
   return jspb.Message.getField(this, 14) != null;
+};
+
+
+/**
+ * optional bool restored_after_unclean_shutdown = 15;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getRestoredAfterUncleanShutdown = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 15, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setRestoredAfterUncleanShutdown = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 15, value);
 };
 
 

@@ -937,6 +937,15 @@ message WarrenStatus {
   // only in the UI's sealed store, so nothing here ties the document to
   // an account.
   optional string forum_digest = 14;
+  // True when the daemon restored a Secured target state that a previous
+  // run left behind after failing to exit cleanly (host crash, power loss,
+  // SIGKILL), rather than because the user or `auto_connect` asked for a
+  // tunnel. Gated by neither `auto_connect` nor the GUI's launch-at-login,
+  // so it is the only way to be connected with nothing on screen saying
+  // why. Cleared when the user next sets the target state; never on a
+  // timer, because the machine may sit untouched for hours and the
+  // explanation has to survive until someone looks.
+  bool restored_after_unclean_shutdown = 15;
 }
 
 // One operator-published broadcast notice, ready to display. Carries no

@@ -48,6 +48,7 @@ const BASE_STATUS: WarrenStatus = {
   portMigrationCancellationActive: false,
   hostOffline: false,
   exitEgressDead: false,
+  restoredAfterUncleanShutdown: false,
   networkInfo: null,
   notices: [],
   forumDigest: null,

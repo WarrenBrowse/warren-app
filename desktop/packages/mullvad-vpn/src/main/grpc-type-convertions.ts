@@ -669,6 +669,7 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     portMigrationCancellationActive: status.getPortMigrationCancellationActive(),
     hostOffline: status.getHostOffline(),
     exitEgressDead: status.getExitEgressDead(),
+    restoredAfterUncleanShutdown: status.getRestoredAfterUncleanShutdown(),
     networkInfo: convertFromWarrenNetworkInfo(status.getNetworkInfo()),
     notices: status.getNoticesList().map(convertFromWarrenNotice),
     forumDigest: status.hasForumDigest() ? (status.getForumDigest() ?? null) : null,
