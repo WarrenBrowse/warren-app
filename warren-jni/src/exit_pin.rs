@@ -64,6 +64,41 @@ pub(crate) fn resolve_exit_pin(pin: &ExitPinSpec, relays: &[RelayRow]) -> Option
     pick_among(relays, &scope)
 }
 
+/// Index into `relays` of the exit an unpinned dial goes to: the shared
+/// pick among the active rows of the preferred `exit_country`, and among
+/// every active row when that country has none.
+///
+/// An [`ExitPinSpec::Automatic`] pin names no scope, so the choice belongs
+/// to the connect path rather than to [`resolve_exit_pin`]. It lives here
+/// so it is the shared `warren_discovery_core::pick_exit` too: the Kotlin
+/// chain this replaced took the first active row of the list, which
+/// ignored the fleet's weights on the configuration most users run while
+/// the daemon and iOS applied the shared rule to the same directory.
+///
+/// The country is a preference, not a pin: when nothing in it is active the
+/// dial takes the heaviest exit anywhere rather than refusing to connect.
+#[must_use]
+pub(crate) fn resolve_automatic_exit(
+    exit_country: Option<&str>,
+    relays: &[RelayRow],
+) -> Option<usize> {
+    let preferred: Vec<usize> = relays
+        .iter()
+        .enumerate()
+        .filter(|(_, r)| r.active && admits(&ExitPinSpec::Automatic, exit_country, r))
+        .map(|(i, _)| i)
+        .collect();
+    pick_among(relays, &preferred).or_else(|| {
+        let anywhere: Vec<usize> = relays
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| r.active)
+            .map(|(i, _)| i)
+            .collect();
+        pick_among(relays, &anywhere)
+    })
+}
+
 /// Index into `relays` of the exit an automatic retry dials once the exit
 /// with `failed_exit_pubkey_hex` dropped, or `None` when the pin leaves no
 /// alternative (the retry then redials the same exit).
@@ -188,6 +223,16 @@ pub(crate) fn resolve_exit_pin_json(pin_json: &str, relays_json: &str) -> String
     index_json(picked)
 }
 
+/// [`resolve_automatic_exit`] over the JSON Kotlin hands the JNI export; an
+/// empty `exit_country` is "none preferred". Returns [`index_json`].
+#[must_use]
+pub(crate) fn resolve_automatic_exit_json(exit_country: &str, relays_json: &str) -> String {
+    let picked = decode::<Vec<RelayRow>>("relay list", relays_json).and_then(|relays| {
+        resolve_automatic_exit(Some(exit_country).filter(|c| !c.trim().is_empty()), &relays)
+    });
+    index_json(picked)
+}
+
 /// [`resolve_failover_exit`] over the JSON Kotlin hands the JNI export; an
 /// empty `exit_country` is "none preferred". Returns [`index_json`].
 #[must_use]
@@ -266,6 +311,51 @@ mod tests {
             resolve_exit_pin(&ExitPinSpec::Automatic, &catalogue()),
             None
         );
+    }
+
+    #[test]
+    fn an_automatic_dial_picks_the_heaviest_active_exit_not_the_first_row() {
+        // The Kotlin chain this replaced took `relays.firstOrNull { active }`,
+        // so an unpinned Android dial ignored the fleet's weights while the
+        // daemon and iOS applied `pick_exit` to the same directory.
+        assert_eq!(resolve_automatic_exit(None, &catalogue()), Some(3));
+    }
+
+    #[test]
+    fn an_automatic_dial_stays_in_the_preferred_country_when_it_has_an_active_exit() {
+        assert_eq!(resolve_automatic_exit(Some("DE"), &catalogue()), Some(2));
+        assert_eq!(
+            resolve_automatic_exit(Some("de"), &catalogue()),
+            Some(2),
+            "the preference matches the catalogue case-insensitively"
+        );
+    }
+
+    #[test]
+    fn an_automatic_dial_leaves_a_country_with_nothing_active_rather_than_refusing() {
+        // Every French row is down: an unpinned dial is a preference, not a
+        // pin, so it takes the heaviest exit anywhere instead of stranding
+        // the user with no circuit at all.
+        let france_down: Vec<RelayRow> = catalogue()
+            .into_iter()
+            .map(|r| {
+                let down = r.country == "FR";
+                RelayRow { active: !down, ..r }
+            })
+            .collect();
+        assert_eq!(resolve_automatic_exit(Some("FR"), &france_down), Some(2));
+    }
+
+    #[test]
+    fn an_automatic_dial_with_a_blank_preference_is_no_preference() {
+        assert_eq!(resolve_automatic_exit(Some("  "), &catalogue()), Some(3));
+    }
+
+    #[test]
+    fn an_automatic_dial_with_no_active_exit_at_all_resolves_to_nothing() {
+        let down = vec![relay(7, "SE", "Stockholm", false, 1)];
+        assert_eq!(resolve_automatic_exit(None, &down), None);
+        assert_eq!(resolve_automatic_exit(Some("SE"), &down), None);
     }
 
     #[test]
@@ -494,6 +584,29 @@ mod tests {
     }
 
     #[test]
+    fn the_automatic_json_contract_answers_the_shared_pick() {
+        assert_eq!(
+            resolve_automatic_exit_json("", TWO_GERMAN_ROWS),
+            r#"{"index":1}"#,
+            "the heaviest row, not the first one"
+        );
+        assert_eq!(
+            resolve_automatic_exit_json("DE", TWO_GERMAN_ROWS),
+            r#"{"index":1}"#
+        );
+        assert_eq!(
+            resolve_automatic_exit_json("FR", TWO_GERMAN_ROWS),
+            r#"{"index":1}"#,
+            "a preference no active row satisfies still dials the fleet's heaviest"
+        );
+        assert_eq!(resolve_automatic_exit_json("", "[]"), r#"{"index":null}"#);
+        assert_eq!(
+            resolve_automatic_exit_json("", "{not json"),
+            r#"{"index":null}"#
+        );
+    }
+
+    #[test]
     fn an_unreadable_input_answers_no_index() {
         assert_eq!(
             resolve_exit_pin_json("{not json", TWO_GERMAN_ROWS),
@@ -548,6 +661,11 @@ mod tests {
                 resolve_exit_pin_json(r#"{"kind":"country","country":"xx"}"#, &relays_json),
                 serde_json::json!({ "index": case["expected"] }).to_string(),
                 "exit vector `{name}` diverged through the JNI contract"
+            );
+            assert_eq!(
+                resolve_automatic_exit_json("XX", &relays_json),
+                serde_json::json!({ "index": case["expected"] }).to_string(),
+                "exit vector `{name}` diverged through the automatic JNI contract"
             );
         }
     }

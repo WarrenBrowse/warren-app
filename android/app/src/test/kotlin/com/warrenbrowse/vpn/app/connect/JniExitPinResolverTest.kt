@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.connect
 
+import com.warrenbrowse.vpn.lib.repository.ExitChoice
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -8,8 +9,8 @@ import org.junit.jupiter.api.Test
 
 /**
  * The Kotlin half of the exit-choice JNI contract: the exact bytes the resolver
- * hands `WarrenJni.resolveExitPin` / `resolveFailoverExit` and how it reads the
- * answer. The Rust half (`warren-jni/src/exit_pin.rs`, `the_json_contract_*`)
+ * hands `WarrenJni.resolveExitPin` / `resolveAutomaticExit` /
+ * `resolveFailoverExit` and how it reads the answer. The Rust half (`warren-jni/src/exit_pin.rs`, `the_json_contract_*`)
  * pins the same request literals to the same answers, and the instrumented
  * `ExitPinJniTest` replays the shared `exit_pick.json` vector through the real
  * library on a device.
@@ -69,12 +70,36 @@ class JniExitPinResolverTest {
     }
 
     @Test
-    fun `an answer outside the contract resolves to nothing`() {
-        assertNull(JniExitPinResolver.decodeIndex("not json"))
-        assertNull(JniExitPinResolver.decodeIndex("""{"exit":"bb"}"""))
-        assertNull(JniExitPinResolver.decodeIndex("""{"index":"one"}"""))
-        val resolver = JniExitPinResolver(resolveJson = { _, _ -> """{"index":7}""" })
-        assertNull(resolver.resolve(ExitPin.Country("DE"), rows), "a position past the list is no exit")
+    fun `an answer outside the contract is a failure, never an empty scope`() {
+        // A native library and a Kotlin decoder from two revisions must not
+        // look like "nothing fits": the caller widens the scope on that answer.
+        for (offContract in listOf("not json", """{"exit":"bb"}""", """{"index":"one"}""")) {
+            val resolver = JniExitPinResolver(resolveJson = { _, _ -> offContract })
+            assertEquals(
+                ExitChoice.ResolverFailed,
+                resolver.resolve(ExitPin.Country("DE"), rows),
+                "answer: $offContract",
+            )
+        }
+        val past = JniExitPinResolver(resolveJson = { _, _ -> """{"index":7}""" })
+        assertEquals(
+            ExitChoice.ResolverFailed,
+            past.resolve(ExitPin.Country("DE"), rows),
+            "a position past the list is not an empty scope either",
+        )
+    }
+
+    @Test
+    fun `the rule's own refusal stays an empty scope`() {
+        val resolver =
+            JniExitPinResolver(
+                resolveJson = { _, _ -> """{"index":null}""" },
+                automaticJson = { _, _ -> """{"index":null}""" },
+                failoverJson = { _, _, _, _ -> """{"index":null}""" },
+            )
+        assertEquals(ExitChoice.NoneInScope, resolver.resolve(ExitPin.Country("DE"), rows))
+        assertEquals(ExitChoice.NoneInScope, resolver.automatic(null, rows))
+        assertEquals(ExitChoice.NoneInScope, resolver.failover(ExitPin.Automatic, null, rows, "bb"))
     }
 
     @Test
@@ -87,8 +112,24 @@ class JniExitPinResolverTest {
                     """{"index":1}"""
                 }
             )
-        assertEquals(berlin, resolver.resolve(ExitPin.Country("DE"), rows))
+        assertEquals(ExitChoice.Picked(berlin), resolver.resolve(ExitPin.Country("DE"), rows))
         assertEquals("""{"kind":"country","country":"DE"}""" to twoGermanRows, sent)
+    }
+
+    @Test
+    fun `automatic sends the preferred country and the snapshot, with no pin`() {
+        var sent: Pair<String, String>? = null
+        val resolver =
+            JniExitPinResolver(
+                automaticJson = { exitCountry, relays ->
+                    sent = exitCountry to relays
+                    """{"index":1}"""
+                }
+            )
+        assertEquals(ExitChoice.Picked(berlin), resolver.automatic("DE", rows))
+        assertEquals("DE" to twoGermanRows, sent)
+        resolver.automatic(null, rows)
+        assertEquals("", sent?.first, "no preference travels as the empty string")
     }
 
     @Test
@@ -101,20 +142,22 @@ class JniExitPinResolverTest {
                     """{"index":0}"""
                 }
             )
-        assertEquals(frankfurt, resolver.failover(ExitPin.Automatic, null, rows, "bb"))
+        assertEquals(ExitChoice.Picked(frankfurt), resolver.failover(ExitPin.Automatic, null, rows, "bb"))
         assertEquals(listOf("""{"kind":"automatic"}""", "", twoGermanRows, "bb"), sent)
         resolver.failover(ExitPin.Automatic, "FR", rows, "bb")
         assertEquals("FR", sent?.get(1), "a preferred exit country travels as itself")
     }
 
     @Test
-    fun `a native call that throws resolves to nothing`() {
+    fun `a native call that throws is a failure the caller can refuse to dial on`() {
         val resolver =
             JniExitPinResolver(
                 resolveJson = { _, _ -> throw UnsatisfiedLinkError("no library") },
+                automaticJson = { _, _ -> throw UnsatisfiedLinkError("no library") },
                 failoverJson = { _, _, _, _ -> throw IllegalStateException("boom") },
             )
-        assertNull(resolver.resolve(ExitPin.Country("DE"), rows))
-        assertNull(resolver.failover(ExitPin.Automatic, null, rows, "bb"))
+        assertEquals(ExitChoice.ResolverFailed, resolver.resolve(ExitPin.Country("DE"), rows))
+        assertEquals(ExitChoice.ResolverFailed, resolver.automatic("DE", rows))
+        assertEquals(ExitChoice.ResolverFailed, resolver.failover(ExitPin.Automatic, null, rows, "bb"))
     }
 }

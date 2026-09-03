@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.app.connect
 
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
+import com.warrenbrowse.vpn.lib.repository.ExitChoice
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.ExitPinResolver
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -105,13 +106,36 @@ class WarrenTunnelConfigBuilderTest {
     private class ScriptedExitPins(
         private val resolveAnswer: String? = null,
         private val failoverAnswer: String? = null,
+        private val resolveFails: Boolean = false,
+        private val automaticFails: Boolean = false,
     ) : ExitPinResolver {
         var resolveAsked: Pair<ExitPin, List<WarrenRelaySummary>>? = null
+        var automaticAsked: Pair<String?, List<WarrenRelaySummary>>? = null
         var failoverAsked: List<Any?>? = null
 
-        override fun resolve(pin: ExitPin, relays: List<WarrenRelaySummary>): WarrenRelaySummary? {
+        override fun resolve(pin: ExitPin, relays: List<WarrenRelaySummary>): ExitChoice {
             resolveAsked = pin to relays
-            return relays.firstOrNull { it.exitId == resolveAnswer }
+            if (resolveFails) return ExitChoice.ResolverFailed
+            return choose(relays, resolveAnswer)
+        }
+
+        /**
+         * The unpinned rule as Rust runs it: the preferred country when it has
+         * an active exit, and the heaviest exit anywhere when it does not.
+         */
+        override fun automatic(exitCountry: String?, relays: List<WarrenRelaySummary>): ExitChoice {
+            automaticAsked = exitCountry to relays
+            if (automaticFails) return ExitChoice.ResolverFailed
+            val active = relays.filter { it.active }
+            val preferred =
+                exitCountry?.let { c -> active.filter { it.country.equals(c, ignoreCase = true) } }
+            val scope = preferred?.takeIf { it.isNotEmpty() } ?: active
+            // The shared rule: heaviest first, ties broken by the smallest exit id.
+            return scope
+                .minWithOrNull(
+                    compareByDescending<WarrenRelaySummary> { it.weight }.thenBy { it.exitId }
+                )
+                ?.let(ExitChoice::Picked) ?: ExitChoice.NoneInScope
         }
 
         override fun failover(
@@ -119,10 +143,14 @@ class WarrenTunnelConfigBuilderTest {
             exitCountry: String?,
             relays: List<WarrenRelaySummary>,
             failedExitPubkeyHex: String,
-        ): WarrenRelaySummary? {
+        ): ExitChoice {
             failoverAsked = listOf(pin, exitCountry, relays, failedExitPubkeyHex)
-            return relays.firstOrNull { it.exitId == failoverAnswer }
+            return choose(relays, failoverAnswer)
         }
+
+        private fun choose(relays: List<WarrenRelaySummary>, exitId: String?): ExitChoice =
+            relays.firstOrNull { it.exitId == exitId }?.let(ExitChoice::Picked)
+                ?: ExitChoice.NoneInScope
     }
 
     // Construct the builder with a stub multi-hop directory fetch so the unit
@@ -246,23 +274,85 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `a pin the resolver cannot resolve falls back to the first active relay`() {
-        // An inactive or unknown target, an empty scope: Rust answers nothing and
-        // the builder's own chain (preferred country, then first active) runs.
+    fun `a pin the resolver cannot resolve falls back to the unpinned rule`() {
+        // An inactive or unknown target, an empty scope: Rust answers nothing
+        // and the unpinned arm of the same rule runs.
         val inactive = sampleRelay.copy(exitId = "deadbeefdeadbeefdeadbeefdeadbeef", active = false)
+        val exitPins = ScriptedExitPins()
         val builder = cfgBuilder(
             mockRepo(exitPin = ExitPin.Exit(inactive.exitId)),
             mockCatalog(listOf(sampleRelay, inactive)),
+            exitPins = exitPins,
         )
         val config = builder.build(pubkey)!!
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
+        assertEquals(sampleRelay.toSummary(), exitPins.automaticAsked?.second?.first())
     }
 
     @Test
-    fun `an automatic pin is still put to the resolver so the rule stays in one place`() {
+    fun `an unpinned dial goes to the resolver, never to the first row of the catalogue`() {
+        // The Kotlin chain this replaced took `relays.firstOrNull { active }`,
+        // so the configuration most users run ignored the fleet's weights while
+        // the daemon and iOS applied the shared pick to the same directory.
+        val heaviest = sampleRelay.copy(
+            exitId = "ffffffffffffffffffffffffffffffff",
+            exitPubkeyHex = "f".repeat(64),
+            endpoint = "warren-exit-2.warren.brown:443",
+            weight = sampleRelay.weight + 100,
+        )
         val exitPins = ScriptedExitPins()
-        cfgBuilder(mockRepo(), mockCatalog(), exitPins = exitPins).build(pubkey)!!
-        assertEquals(ExitPin.Automatic, exitPins.resolveAsked?.first)
+        val config = cfgBuilder(
+            mockRepo(),
+            mockCatalog(listOf(sampleRelay, heaviest)),
+            exitPins = exitPins,
+        ).build(pubkey)!!
+        assertEquals(heaviest.exitPubkeyHex, config.exitPubkeyHex)
+        assertNull(exitPins.resolveAsked, "an automatic pin scopes nothing, so it is not resolved")
+        assertEquals(listOf(sampleRelay.toSummary(), heaviest.toSummary()), exitPins.automaticAsked?.second)
+    }
+
+    @Test
+    fun `the preferred exit country reaches the unpinned rule rather than a Kotlin filter`() {
+        val fr = sampleRelay.copy(
+            exitId = "ffffffffffffffffffffffffffffffff",
+            exitPubkeyHex = "f".repeat(64),
+            country = "FR",
+            city = "Paris",
+        )
+        val exitPins = ScriptedExitPins()
+        cfgBuilder(
+            mockRepo(exitCountry = "FR"),
+            mockCatalog(listOf(sampleRelay, fr)),
+            exitPins = exitPins,
+        ).build(pubkey)!!
+        assertEquals("FR", exitPins.automaticAsked?.first)
+    }
+
+    @Test
+    fun `a resolver that could not run refuses the dial instead of widening the scope`() {
+        // A partial upgrade, an ABI-split APK carrying an older library: the
+        // rule never ran, so a user who pinned a country for a jurisdictional
+        // reason must not be silently moved to another one.
+        val fr = sampleRelay.copy(
+            exitId = "ffffffffffffffffffffffffffffffff",
+            exitPubkeyHex = "f".repeat(64),
+            country = "FR",
+            city = "Paris",
+        )
+        assertNull(
+            cfgBuilder(
+                mockRepo(exitPin = ExitPin.Country("FR")),
+                mockCatalog(listOf(sampleRelay, fr)),
+                exitPins = ScriptedExitPins(resolveFails = true),
+            ).build(pubkey)
+        )
+        assertNull(
+            cfgBuilder(
+                mockRepo(),
+                mockCatalog(listOf(sampleRelay, fr)),
+                exitPins = ScriptedExitPins(automaticFails = true),
+            ).build(pubkey)
+        )
     }
 
     @Test
@@ -281,7 +371,7 @@ class WarrenTunnelConfigBuilderTest {
     }
 
     @Test
-    fun `exit country falls back to first active when no relay matches`() {
+    fun `exit country falls back to any active exit when no relay matches`() {
         val config = cfgBuilder(
             mockRepo(exitCountry = "JP"),
             mockCatalog(listOf(sampleRelay)),
@@ -301,7 +391,8 @@ class WarrenTunnelConfigBuilderTest {
             mockRepo(multiHop = true, entryCountry = "FR"),
             mockCatalog(listOf(sampleRelay, fr)),
         ).build(pubkey)!!
-        // Exit defaults to first active (DE sample); the entry hop is present
+        // Exit defaults to the shared pick (the DE sample: same weight as the
+        // French row, smaller exit id); the entry hop is present
         // but unpinned (warren-jni picks a distinct entry from the directory).
         assertEquals(sampleRelay.exitPubkeyHex, config.exitPubkeyHex)
         assertNotNull(config.entryHop)

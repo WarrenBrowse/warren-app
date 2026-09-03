@@ -311,6 +311,14 @@ object WarrenJni {
     external fun resolveExitPin(pinJson: String, relaysJson: String): String
 
     /**
+     * The exit an unpinned dial goes to, chosen in Rust: the shared pick among the active rows
+     * of `exitCountry`, and among every active row when that country has none (a preference is
+     * not a pin, so a country with nothing active still yields a circuit). An empty
+     * `exitCountry` means none preferred. Same answer shape as [resolveExitPin]. Pure.
+     */
+    external fun resolveAutomaticExit(exitCountry: String, relaysJson: String): String
+
+    /**
      * The exit a drop retry moves to, chosen in Rust: an active alternative inside `pinJson`'s
      * scope (an automatic pin narrowed to `exitCountry` when it is not empty), in the failed
      * exit's own country first, then anywhere the pin allows, never `failedExitPubkeyHex` itself.

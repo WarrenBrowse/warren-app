@@ -1,10 +1,10 @@
 package com.warrenbrowse.vpn.app.connect
 
 import androidx.test.platform.app.InstrumentationRegistry
+import com.warrenbrowse.vpn.lib.repository.ExitChoice
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -62,9 +62,20 @@ class ExitPinJniTest {
                     )
                 }
             if (rows.any { it.weight < 0 }) continue
-            val picked = resolver.resolve(ExitPin.Country("xx"), rows)
-            val expected = case["expected"]!!.jsonPrimitive.longOrNull?.toInt()?.let(rows::get)
-            assertEquals(expected, picked, "exit vector `$name` diverged on the device")
+            val expected =
+                case["expected"]!!.jsonPrimitive.longOrNull?.toInt()?.let(rows::get)?.let(
+                    ExitChoice::Picked
+                ) ?: ExitChoice.NoneInScope
+            assertEquals(
+                expected,
+                resolver.resolve(ExitPin.Country("xx"), rows),
+                "exit vector `$name` diverged on the device",
+            )
+            assertEquals(
+                expected,
+                resolver.automatic("XX", rows),
+                "exit vector `$name` diverged through the unpinned arm on the device",
+            )
         }
     }
 
@@ -89,7 +100,10 @@ class ExitPinJniTest {
     fun a_failover_through_the_native_resolver_never_returns_the_failed_exit() {
         val a = row(0, "00000000000000000000000000000001", 10).copy(exitPubkeyHex = "aa")
         val b = row(1, "00000000000000000000000000000002", 30).copy(exitPubkeyHex = "bb")
-        assertEquals(a, resolver.failover(ExitPin.Automatic, null, listOf(a, b), "bb"))
-        assertNull(resolver.failover(ExitPin.Exit(b.exitId), null, listOf(a, b), "bb"))
+        assertEquals(ExitChoice.Picked(a), resolver.failover(ExitPin.Automatic, null, listOf(a, b), "bb"))
+        assertEquals(
+            ExitChoice.NoneInScope,
+            resolver.failover(ExitPin.Exit(b.exitId), null, listOf(a, b), "bb"),
+        )
     }
 }

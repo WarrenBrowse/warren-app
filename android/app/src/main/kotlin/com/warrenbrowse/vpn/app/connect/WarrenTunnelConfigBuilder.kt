@@ -5,7 +5,11 @@ import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.app.service.WarrenTunnelConfig
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
+import com.warrenbrowse.vpn.lib.repository.ExitChoice
+import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.ExitPinResolver
+import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
+import com.warrenbrowse.vpn.lib.repository.relayOrNull
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
 
@@ -15,12 +19,12 @@ import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
  * Reads the user's toggles from [WarrenLocalSettingsRepository] and
  * resolves the actual exit / entry relays via [RelayCatalog] (which is
  * itself backed by `WarrenJni.listRelays()`, on the daemon's hourly
- * refresh cadence). The picker pin can name a
- * country, a city or one exit, so it is resolved through [exitPins] (the
- * shared Rust rule, over the snapshot) to the single concrete exit the
- * engine dials; with nothing pinned (or nothing active in the pinned
- * scope) the builder falls back to the preferred exit country, then to
- * the first active entry in the catalogue.
+ * refresh cadence). The picker pin can name a country, a city or one exit,
+ * so it is resolved through [exitPins] (the shared Rust rule, over the
+ * snapshot) to the single concrete exit the engine dials; with nothing
+ * pinned, or nothing active in the pinned scope, the unpinned arm of the
+ * same rule runs, which prefers the exit country and otherwise picks the
+ * heaviest exit anywhere.
  */
 class WarrenTunnelConfigBuilder(
     private val localSettings: WarrenLocalSettingsRepository,
@@ -59,17 +63,27 @@ class WarrenTunnelConfigBuilder(
         val exitCountry = localSettings.exitCountry.value
         val multiHopEnabled = localSettings.multiHopEnabled.value
 
-        // Exit precedence: explicit picker > preferred country > first active.
-        // The picker pin can name a country or a city, so it is resolved to
-        // one concrete exit here: the engine only ever accepts a single exit.
+        // Exit precedence: explicit picker > the unpinned rule (preferred
+        // country, then anywhere). Both arms are the Rust choice, so an
+        // Android dial lands on the node the daemon and iOS dial from the same
+        // directory; the picker pin can name a country or a city, and either
+        // way it is resolved to one concrete exit here, because the engine
+        // only ever accepts a single exit.
         val pin = localSettings.exitPin.value
-        val exit = exitPins.resolve(pin, relays)
-            ?: exitCountry?.let { c -> relays.firstOrNull { it.active && it.country.equals(c, ignoreCase = true) } }
-            ?: relays.firstOrNull { it.active }
-            ?: run {
+        val exit = when (val choice = chooseExit(pin, exitCountry, relays)) {
+            is ExitChoice.Picked -> choice.relay
+            ExitChoice.NoneInScope -> {
                 Logger.e("WarrenTunnelConfigBuilder: no active relay in catalogue")
                 return null
             }
+            // The rule never ran, so every wider scope is a guess: dialling one
+            // would put a user who pinned a country on an exit somewhere else
+            // with nothing said. Refuse instead and let the caller surface it.
+            ExitChoice.ResolverFailed -> {
+                Logger.e("WarrenTunnelConfigBuilder: the exit choice could not run, not dialling")
+                return null
+            }
+        }
 
         // Always ride the multi-hop wire: the production exit fleet runs the
         // unified `:443` dispatcher (`warren-exit --multihop`), which ONLY
@@ -127,6 +141,26 @@ class WarrenTunnelConfigBuilder(
     }
 
     /**
+     * The one exit a dial goes to: the pinned scope first, and the unpinned
+     * rule when nothing is pinned or the pinned scope holds nothing active.
+     * A [ExitChoice.ResolverFailed] short-circuits: a scope the rule never
+     * evaluated must not be widened.
+     */
+    private fun chooseExit(
+        pin: ExitPin,
+        exitCountry: String?,
+        relays: List<WarrenRelaySummary>,
+    ): ExitChoice {
+        if (pin != ExitPin.Automatic) {
+            when (val pinned = exitPins.resolve(pin, relays)) {
+                is ExitChoice.Picked, ExitChoice.ResolverFailed -> return pinned
+                ExitChoice.NoneInScope -> Unit
+            }
+        }
+        return exitPins.automatic(exitCountry, relays)
+    }
+
+    /**
      * The config a drop retry dials instead of [previous]: the same session
      * moved to an alternative exit the pin admits, or `null` when the
      * catalogue snapshot holds none (the retry then redials [previous]).
@@ -141,13 +175,15 @@ class WarrenTunnelConfigBuilder(
      * dial exactly as the same-config redial does.
      */
     fun buildFailover(previous: WarrenTunnelConfig): WarrenTunnelConfig? {
+        // Both a refusal and a failure leave the retry on `previous`, which is
+        // the fail-safe move here: the session redials the exit it was on.
         val alternative =
             exitPins.failover(
                 localSettings.exitPin.value,
                 localSettings.exitCountry.value,
                 relayCatalog.list(),
                 previous.exitPubkeyHex,
-            ) ?: return null
+            ).relayOrNull() ?: return null
         return previous.copy(
             exitPubkeyHex = alternative.exitPubkeyHex,
             exitEndpoint = alternative.endpoint,

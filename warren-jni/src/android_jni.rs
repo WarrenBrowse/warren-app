@@ -955,6 +955,28 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_resolveExitPin<'l
     }
 }
 
+/// The exit an unpinned dial goes to
+/// (`crate::exit_pin::resolve_automatic_exit`): the shared pick among the
+/// active rows of `exit_country`, and among every active row when that
+/// country has none. An empty `exit_country` means none preferred. Same
+/// answer shape as `resolveExitPin`. Pure.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_resolveAutomaticExit<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    exit_country: JString<'local>,
+    relays_json: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let exit_country = String::from_java(&jnix_env, exit_country);
+    let relays = String::from_java(&jnix_env, relays_json);
+    let json = crate::exit_pin::resolve_automatic_exit_json(&exit_country, &relays);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
 /// The exit a drop retry moves to (`crate::exit_pin::resolve_failover_exit`):
 /// same JSON shapes and answer as `resolveExitPin`; an empty `exit_country`
 /// means none preferred. Pure.

@@ -31,7 +31,32 @@ sealed interface ExitPin {
 data class ExitPinLabel(val exitId: String, val label: String)
 
 /**
- * Resolves a pin, or a drop, to the one concrete exit the engine dials.
+ * What an exit choice answered.
+ *
+ * A refusal and a failure are different facts and the caller must not read
+ * them the same way: [NoneInScope] means the rule ran and nothing fits, so a
+ * wider fallback is legitimate; [ResolverFailed] means the rule never ran, so
+ * anything the caller would dial instead is a guess. Collapsing the two onto
+ * `null` let a pinned country degrade to an exit in an arbitrary country
+ * whenever the native library and the Kotlin decoder disagreed.
+ */
+sealed interface ExitChoice {
+    /** The one exit to dial. */
+    data class Picked(val relay: WarrenRelaySummary) : ExitChoice
+
+    /** The rule ran and nothing in scope is dialable. */
+    data object NoneInScope : ExitChoice
+
+    /** The rule could not run: the native call threw, or answered off-contract. */
+    data object ResolverFailed : ExitChoice
+}
+
+/** The relay of a [ExitChoice.Picked], or `null` for either other answer. */
+fun ExitChoice.relayOrNull(): WarrenRelaySummary? = (this as? ExitChoice.Picked)?.relay
+
+/**
+ * Resolves a pin, an unpinned dial, or a drop, to the one concrete exit the
+ * engine dials.
  *
  * The rule lives in Rust (`warren-jni/src/exit_pin.rs`, over the shared
  * `warren_discovery_core::pick_exit`): the heaviest active exit inside the
@@ -43,25 +68,35 @@ data class ExitPinLabel(val exitId: String, val label: String)
  */
 interface ExitPinResolver {
     /**
-     * The exit [pin] resolves to among [relays], or `null` when the pin names
-     * nothing usable (an empty scope, an inactive exit, or [ExitPin.Automatic],
-     * which pins nothing on purpose so the caller's own fallback chain runs).
+     * The exit [pin] resolves to among [relays]. [ExitChoice.NoneInScope] when
+     * the pin names nothing usable (an empty scope, an inactive exit, or
+     * [ExitPin.Automatic], which pins nothing on purpose so the caller runs
+     * [automatic] instead).
      */
-    fun resolve(pin: ExitPin, relays: List<WarrenRelaySummary>): WarrenRelaySummary?
+    fun resolve(pin: ExitPin, relays: List<WarrenRelaySummary>): ExitChoice
+
+    /**
+     * The exit an unpinned dial goes to among [relays]: the shared pick inside
+     * [exitCountry] when one is preferred, and among every active exit when
+     * that country has none. A preference is not a pin, so a country with
+     * nothing active yields an exit elsewhere rather than no circuit.
+     */
+    fun automatic(exitCountry: String?, relays: List<WarrenRelaySummary>): ExitChoice
 
     /**
      * The exit an automatic retry dials once [failedExitPubkeyHex] dropped, or
-     * `null` when [pin] leaves no alternative and the same exit is retried: an
-     * active alternative inside the pinned scope, in the failed exit's own
-     * country first, then anywhere the pin allows, never the failed exit itself.
-     * An automatic pin is scoped by [exitCountry] when one is preferred.
+     * [ExitChoice.NoneInScope] when [pin] leaves no alternative and the same
+     * exit is retried: an active alternative inside the pinned scope, in the
+     * failed exit's own country first, then anywhere the pin allows, never the
+     * failed exit itself. An automatic pin is scoped by [exitCountry] when one
+     * is preferred.
      */
     fun failover(
         pin: ExitPin,
         exitCountry: String?,
         relays: List<WarrenRelaySummary>,
         failedExitPubkeyHex: String,
-    ): WarrenRelaySummary?
+    ): ExitChoice
 }
 
 /** True when [country] is exactly what is pinned, with no deeper selection. */
