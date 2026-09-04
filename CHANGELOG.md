@@ -29,6 +29,16 @@ Line wrap the file at 100 chars.                                              Th
   never restored.
 
 
+## [1.1.26] - 2026-09-04
+### Changed
+- Give the beta app its own tray colours, orchid while disconnected and azure while connected, so a
+  computer running both the beta and the production app never shows two identical icons in its menu
+  bar or its system tray.
+### Fixed
+- [Windows] Fix the tray icon vanishing in a remote desktop session that reduces the colour depth.
+  The reduced-colour copies inside the monochrome icon files were empty.
+
+
 ## [1.1.17] - 2026-08-16
 ### Changed
 - [macOS] Try another entry server when a connection carries nothing and the computer has been

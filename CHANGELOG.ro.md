@@ -14,6 +14,16 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.26] - 2026-09-04
+### Modificat
+- Dă aplicației beta propriile culori în bara de sistem, orhidee cât timp este deconectată și azur
+  cât timp este conectată, astfel încât un computer pe care rulează atât beta cât și versiunea de
+  producție să nu afișeze niciodată două pictograme identice.
+### Reparat
+- [Windows] Repară dispariția pictogramei într-o sesiune de desktop la distanță care reduce numărul
+  de culori. Copiile cu număr redus de culori din fișierele de pictograme monocrome erau goale.
+
+
 ## [1.1.17] - 2026-08-16
 ### Modificat
 - [macOS] Încearcă un alt server de intrare când o conexiune nu transportă nimic, iar computerul a

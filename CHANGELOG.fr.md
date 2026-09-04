@@ -15,6 +15,17 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.26] - 2026-09-04
+### Modifié
+- Donner à l'application beta ses propres couleurs dans la barre système, orchidée quand elle est
+  déconnectée et azur quand elle est connectée, pour qu'un ordinateur faisant tourner la beta et la
+  version de production n'affiche jamais deux icônes identiques.
+### Corrigé
+- [Windows] Corriger la disparition de l'icône dans une session de bureau à distance qui réduit le
+  nombre de couleurs. Les copies en couleurs réduites contenues dans les fichiers d'icônes
+  monochromes étaient vides.
+
+
 ## [1.1.17] - 2026-08-16
 ### Modifié
 - [macOS] Essayer un autre serveur d'entrée quand une connexion ne transporte rien et que
