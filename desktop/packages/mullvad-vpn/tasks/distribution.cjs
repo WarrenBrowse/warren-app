@@ -598,7 +598,7 @@ function newConfig() {
 
 // Windows cannot load a tray icon out of the asar archive, so the .ico files
 // are unpacked to disk beside it. The `**` is load-bearing: a non-prod build
-// serves its tray icons from a badged subdirectory (menubar-icons/win32/beta/),
+// serves its tray icons from a sibling subdirectory (menubar-icons/win32/beta/),
 // and a glob that stops at win32/ leaves those inside the archive, which shows
 // an empty tray at runtime, in packaged builds only, with no error and no way
 // to reproduce it from `npm run develop`.

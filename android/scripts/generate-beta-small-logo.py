@@ -8,9 +8,11 @@ non-prod flavors overlay the same drawable with the beta pip stamped on it.
 
 Android flattens a notification small icon to an alpha mask and tints it to the
 system foreground, so the amber does not survive there: the marker is the `B`
-knocked out of the pip, the same shape the desktop tray assets carry. The pip
-geometry and the letter both come from graphics/make-beta-icon.py, so the two
-platforms cannot drift apart.
+knocked out of the pip. The pip geometry and the letter come from
+graphics/make-beta-icon.py, the same producer as the app icon's badge, so the
+two cannot drift apart. The desktop tray takes a different route because its
+coloured variant is the one users see by default: it recolours the lock rather
+than badging it (graphics/menubar-beta-palette.txt).
 
 The overlay has to land in an unqualified `drawable/` directory: a
 `drawable-nodpi/` copy is a different resource configuration, which Android

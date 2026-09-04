@@ -89,8 +89,8 @@ class BetaSmallLogoOverrideTest {
 
     @Test
     fun `the non-prod flavors share one badged artwork`() {
-        // Desktop stamps a single badged tray tree and serves it to every
-        // non-prod environment. Two hand-kept copies here would drift.
+        // Desktop generates a single non-prod tray tree and serves it to
+        // every non-prod environment. Two hand-kept copies here would drift.
         val reference = BADGED_FLAVORS.first()
         val failures =
             statusBarDrawables().flatMap { name ->

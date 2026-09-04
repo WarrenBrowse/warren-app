@@ -2,7 +2,7 @@ import { app, NativeImage, nativeImage, Notification as ElectronNotification } f
 import os from 'os';
 import path from 'path';
 
-import { badgedAssetSegments } from '../shared/constants/product-env';
+import { nonProdAssetSegments } from '../shared/constants/product-env';
 import { TunnelState } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import {
@@ -27,10 +27,11 @@ const THROTTLE_DELAY = 500;
 // build serves the badged copy from a sibling directory under the same file
 // name, the rule the menubar tree already follows (src/main/tray-icon.ts):
 // without it a beta notification puts the production mark on the desktop of a
-// tester who runs both installs.
+// tester who runs both installs. This one is badged rather than recoloured
+// because it is the app's own mark, not a state indicator.
 export const notificationIconRelativePath = path.join(
   'assets/images',
-  ...badgedAssetSegments,
+  ...nonProdAssetSegments,
   'icon-notification.png',
 );
 

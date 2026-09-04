@@ -11,12 +11,10 @@ adaptive icon down to a circle, and anything outside the safe zone is cropped.
 The mark is shrunk slightly to make room, otherwise the badge eats the lower
 half of the right ear.
 
-The same amber also marks the tray icon, as a rounded square rather than a
-disc (--square-pip); see the constants below for why the shape differs.
-
 Called by desktop/packages/mullvad-vpn/scripts/build-logo-icons.sh,
-desktop/packages/mullvad-vpn/scripts/generate-menubar-icons.sh and
-android/scripts/generate-pngs.sh.
+ios/scripts/generate-beta-app-icon.sh and android/scripts/generate-pngs.sh.
+android/scripts/generate-beta-small-logo.py imports the pip geometry and the
+letter from here, so the status-bar badge and this one cannot drift apart.
 """
 
 import argparse
@@ -37,13 +35,12 @@ MARK_SHIFT_Y = -12 / 126
 
 MARK_ANCHOR = '<g transform="translate('
 
-# The tray pip is a rounded SQUARE, and it sits at the icon's bottom-left. Both
-# halves are forced: the forum-activity dot is already an amber circle overlaid
-# at the bottom-right of the same tray icon, so a second amber circle would read
-# as a second notification, and on macOS the menu-bar asset is a template image
-# that AppKit flattens to an alpha mask, where colour does not survive and only
-# a shape carries the meaning. Hence the B is knocked out of the pip rather than
-# drawn on it, exactly as lock-10_mono.svg turns its state dot into a hole.
+# The pip Android stamps on its status-bar logo is a rounded SQUARE with the B
+# knocked OUT of it rather than drawn on it. A status-bar icon is a silhouette
+# the system tints itself, so colour does not survive there and only a shape
+# carries the meaning, the same reason lock-10_mono.svg turns its state dot into
+# a hole. android/scripts/generate-beta-small-logo.py lays the pip out from
+# these constants and the letter below.
 PIP_CANVAS = 100.0
 PIP_CORNER_RADIUS = 22.0
 # Cap height of the knocked-out letter, on the same 100-unit canvas.
@@ -106,35 +103,6 @@ def beta_letter_path(badge_svg: str) -> str:
     return ''.join(kept)
 
 
-def build_square_pip(badge_svg: str, size: float, label: bool) -> str:
-    """The tray pip: a rounded amber square with the B knocked out of it."""
-    mask_attribute = ''
-    defs = ''
-    if label:
-        x_min, y_min, x_max, y_max = B_GLYPH_BOX
-        scale = PIP_LABEL_HEIGHT / (y_max - y_min)
-        centre_x = (x_min + x_max) / 2
-        centre_y = (y_min + y_max) / 2
-        half = PIP_CANVAS / 2
-        defs = (
-            '<defs><mask id="beta-pip" maskUnits="userSpaceOnUse" '
-            f'x="0" y="0" width="{PIP_CANVAS:g}" height="{PIP_CANVAS:g}">'
-            f'<rect width="{PIP_CANVAS:g}" height="{PIP_CANVAS:g}" fill="#FFFFFF"/>'
-            f'<g transform="translate({half:g},{half:g}) scale({scale:.6f}) '
-            f'translate({-centre_x:.4f},{-centre_y:.4f})">'
-            f'<path fill="#000000" d="{beta_letter_path(badge_svg)}"/></g></mask></defs>'
-        )
-        mask_attribute = ' mask="url(#beta-pip)"'
-    return (
-        '<?xml version="1.0" encoding="UTF-8"?>\n'
-        f'<svg xmlns="http://www.w3.org/2000/svg" width="{size:g}" height="{size:g}" '
-        f'viewBox="0 0 {PIP_CANVAS:g} {PIP_CANVAS:g}">{defs}'
-        f'<rect width="{PIP_CANVAS:g}" height="{PIP_CANVAS:g}" '
-        f'rx="{PIP_CORNER_RADIUS:g}" ry="{PIP_CORNER_RADIUS:g}" fill="#CA963C"'
-        f'{mask_attribute}/></svg>\n'
-    )
-
-
 def build_icon(source: str, badge_svg: str, label: bool) -> str:
     svg = swap_palette(source)
     size = canvas_size(svg)
@@ -186,20 +154,13 @@ def main() -> None:
     parser.add_argument('--output', required=True)
     parser.add_argument('--source', help='prod icon SVG to derive from')
     parser.add_argument('--badge-only', action='store_true')
-    parser.add_argument('--square-pip', action='store_true',
-                        help='tray pip: a rounded square with the B knocked out')
-    parser.add_argument('--size', type=float,
-                        help='canvas size for --badge-only and --square-pip')
+    parser.add_argument('--size', type=float, help='canvas size for --badge-only')
     parser.add_argument('--circle-radius', type=float, help='visible disc radius for --badge-only')
     parser.add_argument('--no-label', action='store_true', help='draw the disc without BETA')
     args = parser.parse_args()
 
     badge_svg = pathlib.Path(args.badge).read_text()
-    if args.square_pip:
-        if args.size is None:
-            parser.error('--square-pip needs --size')
-        out = build_square_pip(badge_svg, args.size, not args.no_label)
-    elif args.badge_only:
+    if args.badge_only:
         if args.size is None or args.circle_radius is None:
             parser.error('--badge-only needs --size and --circle-radius')
         out = build_badge_only(badge_svg, args.size, args.circle_radius, not args.no_label)

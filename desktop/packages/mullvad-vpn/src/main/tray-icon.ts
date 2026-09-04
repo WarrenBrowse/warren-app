@@ -1,14 +1,15 @@
 import { nativeImage } from 'electron';
 import path from 'path';
 
-import { badgedAssetSegments } from '../shared/constants/product-env';
+import { nonProdAssetSegments } from '../shared/constants/product-env';
 
 // A non-prod build serves the whole menubar tree from a sibling directory whose
-// assets carry the beta pip, under file names identical to the prod ones, so
-// the suffix matrix in tray-icon-controller.ts stays untouched. The directory
-// name and the environment test are shared with every other badged asset tree
-// (`badgedAssetSegments`): staging is a non-prod install that has to be
-// tellable from prod on the same machine, and there is no third artwork.
+// coloured assets are drawn in another hue family, under file names identical
+// to the prod ones, so the suffix matrix in tray-icon-controller.ts stays
+// untouched. The directory name and the environment test are shared with every
+// other non-prod asset tree (`nonProdAssetSegments`): staging is a non-prod
+// install that has to be tellable from prod on the same machine, and there is
+// no third palette.
 
 export class TrayIcon {
   constructor(public fileName?: string) {}
@@ -26,7 +27,7 @@ export class TrayIcon {
   }
 
   public get environmentDirectory(): string | undefined {
-    return badgedAssetSegments[0];
+    return nonProdAssetSegments[0];
   }
 
   public get filePath() {

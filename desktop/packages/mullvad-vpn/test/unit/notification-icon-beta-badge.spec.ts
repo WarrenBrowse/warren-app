@@ -9,7 +9,7 @@ type NotificationControllerModule = typeof import('../../src/main/notification-c
 // The resolver anchors on `import.meta.dirname`, which points at src/main in a
 // source tree and at build/ in a packaged app, so the suite checks the segment
 // the resolver appends against the real asset directory. Same shape as
-// tray-icon-beta-badge.spec.ts, which pins the tray tree the same way.
+// tray-icon-beta-palette.spec.ts, which pins the tray tree the same way.
 const ASSETS_DIR = path.resolve(__dirname, '../../assets/images');
 
 const BADGED_DIR = 'beta';

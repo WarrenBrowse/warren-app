@@ -1,0 +1,31 @@
+# Tray lock palette of a non-prod build (beta, staging).
+#
+# A machine running two Warren installs must never show two identical tray
+# icons, so the non-prod lock is the production lock in another hue family.
+# Left column: every accent the coloured lock frames use in prod. Right column:
+# the accent that replaces it. generate-menubar-icons.sh applies this table to
+# the coloured sources before it renders the beta tree, and refuses to write an
+# icon in which a production accent survived.
+#
+# Each beta accent keeps the OKLab lightness and chroma of the production accent
+# it replaces and moves only the hue, mapping the red-to-green ramp (32 to 124
+# degrees) onto an orchid-to-azure one (330 to 250 degrees). Keeping lightness
+# and chroma is what makes the beta lock exactly as legible as the production
+# one on a light menu bar, on a dark one, and at 16px. Moving the hue into the
+# half of the wheel production never uses is what keeps the states apart: the
+# two ramps are 0.16 to 0.18 apart in OKLab under simulated deuteranopia and
+# protanopia, where the production pair itself collapses to 0.05, so a
+# red-green dichromat still tells a beta install from a production one.
+#
+# Monochrome tray variants (macOS Template, Windows black and white, Linux
+# white) are single-tint alpha masks. They carry no colour, so the two trees
+# hold identical monochrome bytes and a user who turns the monochromatic tray
+# icon on gives up the distinction.
+#
+# prod     beta
+#C44E3A   #AA52A4
+#A8483A   #944B8C
+#A85A40   #925B97
+#8A7340   #7070A1
+#6E8A48   #4B84B6
+#7E964E   #5990C7

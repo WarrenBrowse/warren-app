@@ -32,16 +32,18 @@ export const productEnvironment: ProductEnvironment = resolveProductEnvironment(
 export const isBetaBuild: boolean =
   (typeof WARREN_PRODUCT_ENV === 'string' ? WARREN_PRODUCT_ENV : 'prod') === 'beta';
 
-// Directory holding the badged copy of an asset tree a non-prod build serves
-// (the menubar icons, the system-notification icon), under file names
-// identical to the prod ones. Staging wears the beta artwork like the app icon
-// does: what matters is being tellable from prod on one machine, and there is
-// no third palette.
-export const BADGED_ENVIRONMENT_DIR = 'beta';
+// Directory holding the non-prod copy of an asset tree, under file names
+// identical to the prod ones. How each tree marks itself is its own business:
+// the menubar lock is recoloured (graphics/menubar-beta-palette.txt) because
+// its coloured variant is what users see by default, while the
+// system-notification icon carries the amber BETA badge. Staging shares the
+// beta artwork like the app icon does: what matters is being tellable from
+// prod on one machine, and there is no third palette.
+export const NON_PROD_ASSET_DIR = 'beta';
 
 // The path segments a build inserts to reach that copy, empty in prod.
-export const badgedAssetSegments: string[] =
-  productEnvironment === 'prod' ? [] : [BADGED_ENVIRONMENT_DIR];
+export const nonProdAssetSegments: string[] =
+  productEnvironment === 'prod' ? [] : [NON_PROD_ASSET_DIR];
 
 // Per-environment anchors, a copy of the Rust `warren-product-env` crate's
 // table (the daemon side of the same values). The crate is the reference:

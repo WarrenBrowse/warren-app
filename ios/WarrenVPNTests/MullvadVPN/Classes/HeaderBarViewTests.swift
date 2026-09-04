@@ -49,7 +49,7 @@ final class HeaderBarViewTests: XCTestCase {
 
         XCTAssertNotEqual(overCharcoal, overScenery)
         // The fill stays the brand amber in both tones: it is the same signal
-        // the badged app icon and the desktop tray pip carry.
+        // the badged app icon carries.
         XCTAssertEqual(header.productChipLabel.backgroundColor, UIColor.Warren.yellow)
     }
 }

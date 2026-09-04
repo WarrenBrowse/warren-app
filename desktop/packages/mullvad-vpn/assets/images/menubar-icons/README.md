@@ -13,11 +13,19 @@ run from the `desktop/packages/mullvad-vpn`-directory using
 The script crates all menubar images for all platforms including the monochrome ones.
 
 It writes each platform's tree twice: the prod icons at the root, and a `beta/`
-subdirectory holding the same file names with the amber beta pip stamped on the
-bottom-left. `src/main/tray-icon.ts` inserts that segment for every non-prod
-product environment (beta and staging), so a machine running two Warren installs
-never shows two identical tray icons. Deriving the pip needs `python3` on top of
-the dependencies below.
+subdirectory holding the same file names with the lock drawn in another hue
+family. `src/main/tray-icon.ts` inserts that segment for every non-prod product
+environment (beta and staging), so a machine running two Warren installs never
+shows two identical tray icons.
+
+The accent table, and why those hues, is
+[`graphics/menubar-beta-palette.txt`](../../../../../../graphics/menubar-beta-palette.txt);
+the generator refuses to write an icon in which a production accent survived,
+and `test/unit/tray-icon-beta-palette.spec.ts` reads the pixels back. The
+monochrome variants (macOS Template, Windows black and white, Linux white) hold
+identical bytes in both trees: they are single-tint alpha masks with no colour
+to move, so the distinction is lost for anyone who turns the monochromatic tray
+icon on.
 
 ### Dependencies
 Imagemagick is required for the script to run.
