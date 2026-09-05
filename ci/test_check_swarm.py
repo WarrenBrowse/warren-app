@@ -135,5 +135,29 @@ class Verdict(unittest.TestCase):
         self.assertEqual(cs.unseeded(counts, [HASH_A]), [HASH_A])
 
 
+class TorrentUrlsFromManifest(unittest.TestCase):
+    """The scheduled watch has no release directory: it starts from the manifest."""
+
+    def test_collects_the_torrent_of_every_platform(self):
+        doc = {
+            "platforms": {
+                "linux": {"assets": [{"torrent": "https://h/a.deb.torrent"}, {"url": "https://h/b"}]},
+                "macos": {"assets": [{"torrent": "https://h/c.pkg.torrent"}]},
+            }
+        }
+
+        self.assertEqual(
+            cs.torrent_urls(doc), ["https://h/a.deb.torrent", "https://h/c.pkg.torrent"]
+        )
+
+    def test_a_manifest_predating_the_channel_yields_nothing(self):
+        # Not an error: the channel simply has not published a torrent yet, and
+        # the watch must say so rather than fail.
+        self.assertEqual(cs.torrent_urls({"platforms": {"linux": {"assets": [{"url": "x"}]}}}), [])
+
+    def test_tolerates_a_document_with_no_platforms_at_all(self):
+        self.assertEqual(cs.torrent_urls({}), [])
+
+
 if __name__ == "__main__":
     unittest.main()

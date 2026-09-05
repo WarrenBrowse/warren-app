@@ -1,0 +1,53 @@
+---
+name: Swarm watch
+
+# Daily proof that the app's BitTorrent downloads still have a seeder.
+#
+# The release run already verifies this at publication time, but that answer
+# expires: the seedbox can die the day after, and until the next release
+# nothing would notice while the download page keeps advertising magnet links
+# into an empty swarm. Users see a torrent that never starts and no error
+# anywhere says why. This asks the tracker once a day instead.
+#
+# Channel scoping costs nothing here, the same way the metadata refresh scopes
+# itself: the check starts from a channel's published downloads.json, so a
+# channel that serves no manifest (prod answers 410 today) or one that has not
+# published torrents yet simply reports "nothing to check" and stays green. It
+# starts watching a channel the day that channel publishes its first release,
+# with nothing to rewire.
+#
+# A tracker that cannot be reached warns rather than fails: a public tracker's
+# outage is not a Warren defect, and the web seed serves every download
+# regardless. Only "the tracker answered and reports no seeder" reds this.
+
+on:
+  schedule:
+    # 05:23 UTC, well after any nightly release run has settled.
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    name: ${{ matrix.channel }} swarm
+    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - channel: prod
+            updates-base: https://api.warrenbrowse.com/updates/desktop
+          - channel: beta
+            updates-base: https://api.beta.warrenbrowse.com/updates/desktop
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Ask the tracker who is seeding ${{ matrix.channel }}
+        run: |
+          python3 ci/check-swarm.py \
+            --downloads-url "${{ matrix.updates-base }}/downloads.json" \
+            --timeout-seconds 120 \
+            --interval-seconds 30

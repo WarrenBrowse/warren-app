@@ -22,12 +22,15 @@ stdlib only, same reason as the rest of ci/.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import socket
 import struct
 import sys
+import tempfile
 import time
 import urllib.parse
+import urllib.request
 from collections import namedtuple
 from pathlib import Path
 
@@ -108,6 +111,34 @@ def collect_torrents(torrent_dir: Path) -> list:
     return [torrentlib.describe_torrent(p) for p in sorted(torrent_dir.glob("*.torrent"))]
 
 
+def torrent_urls(downloads: dict) -> list:
+    """Every .torrent a published downloads.json points at, sorted.
+
+    Empty is not an error: a channel that has not published a torrent yet has
+    nothing to be seeded, and the caller says so rather than failing.
+    """
+    urls = [
+        asset["torrent"]
+        for platform in downloads.get("platforms", {}).values()
+        for asset in platform.get("assets", [])
+        if asset.get("torrent")
+    ]
+    return sorted(urls)
+
+
+def fetch_torrents(downloads_url: str, into: Path) -> list:
+    """Download the channel's current .torrent files, so a watch that owns no
+    release checkout can check the same swarms the release job did."""
+    with urllib.request.urlopen(downloads_url, timeout=30) as response:
+        downloads = json.loads(response.read().decode())
+    into.mkdir(parents=True, exist_ok=True)
+    for url in torrent_urls(downloads):
+        name = url.rsplit("/", 1)[-1]
+        with urllib.request.urlopen(url, timeout=60) as response:
+            (into / name).write_bytes(response.read())
+    return collect_torrents(into)
+
+
 def unseeded(counts: dict, infohashes: list) -> list:
     """The hashes the tracker does not report at least one seeder for.
 
@@ -119,8 +150,13 @@ def unseeded(counts: dict, infohashes: list) -> list:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--torrent-dir", required=True,
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--torrent-dir",
                         help="Directory holding this release's .torrent files")
+    source.add_argument("--downloads-url",
+                        help="A published downloads.json; its .torrent files are fetched "
+                             "and checked. Used by the scheduled watch, which owns no "
+                             "release directory")
     parser.add_argument("--tracker", default=torrentlib.DEFAULT_TRACKER_TIERS[0][0],
                         help="UDP announce URL to scrape")
     parser.add_argument("--timeout-seconds", type=int, default=900,
@@ -130,9 +166,22 @@ def main() -> int:
     parser.add_argument("--interval-seconds", type=int, default=60)
     args = parser.parse_args()
 
-    torrents = collect_torrents(Path(args.torrent_dir))
+    with tempfile.TemporaryDirectory() as scratch:
+        if args.torrent_dir:
+            torrents = collect_torrents(Path(args.torrent_dir))
+        else:
+            try:
+                torrents = fetch_torrents(args.downloads_url, Path(scratch))
+            except (OSError, ValueError) as error:
+                print(f"::warning::cannot read {args.downloads_url} ({error}); "
+                      "nothing to check")
+                return 0
+        return check(torrents, args)
+
+
+def check(torrents: list, args) -> int:
     if not torrents:
-        print("::warning::no .torrent in the release; nothing to check")
+        print("::warning::no .torrent published here; nothing to check")
         return 0
     by_hash = {t.infohash: t for t in torrents}
     host, port = tracker_endpoint(args.tracker)
