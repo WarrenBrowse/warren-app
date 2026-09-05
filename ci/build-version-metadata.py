@@ -53,6 +53,11 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# ci/ is on sys.path when this file is run as a script, but not when a test
+# loads it by path, so the sibling module is reached explicitly.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import torrentlib  # noqa: E402
+
 # Filename architecture token -> metadata architecture enum value.
 WIN_ARCH_TOKENS = {"x64": "x86", "arm64": "arm64"}
 
@@ -81,6 +86,15 @@ SITE_SKIP_FORMATS = {
     "prod": {"aab", "apk"},
     "beta": {"aab"},
 }
+
+# Suffix of the .torrent written beside each installer. The release job
+# uploads and prunes the update host by name, so this pattern is shared with
+# the workflow's prune glob.
+TORRENT_SUFFIX = ".torrent"
+
+# Below this, a swarm costs more than it saves: the NixOS flake tarball weighs
+# a few kB and its magnet would be a link nobody ever seeds.
+MIN_TORRENT_BYTES = 8 * 1024 * 1024
 
 # iOS versions are calendar-based (YYYY.N marketing version), unlike the
 # desktop/Android 1.x tag scheme (Android bakes the desktop tag as its
@@ -360,17 +374,30 @@ def _split_stem(stem: str) -> tuple[str, str, str]:
 
 def classify_site_assets(release_dir: Path, version: str, asset_base: str,
                          artifact_prefix: str = "WarrenVPN",
-                         channel: str = "prod") -> dict:
+                         channel: str = "prod",
+                         torrent_dir: Path | None = None,
+                         min_torrent_bytes: int = MIN_TORRENT_BYTES,
+                         creation_date: int = 0) -> dict:
     """Group every user-facing installer of this release by platform.
 
     Unlike the app manifests (whose installer lists are an app-updater
     contract: one installer per architecture, none on Linux), downloads.json
     lists everything a human can download on this channel, all formats included.
+
+    With `torrent_dir` set, each installer above `min_torrent_bytes` also gets
+    a .torrent written there and a `torrent` + `magnet` pair on its entry. The
+    torrent is built from the very bytes hashed above, so the magnet and the
+    direct link can never name different content.
     """
     platforms: dict[str, list] = {}
     skip_formats = SITE_SKIP_FORMATS[channel]
     prefix = f"{artifact_prefix}-{version}-"
     for path in sorted(release_dir.glob(f"{prefix}*")):
+        # The torrents are written beside the installers, so the release job
+        # uploads and prunes them with no extra machinery. They are not
+        # themselves something a visitor installs.
+        if path.name.endswith(TORRENT_SUFFIX):
+            continue
         parts = split_asset_name(path.name[len(prefix):])
         if parts is None:
             continue
@@ -382,9 +409,10 @@ def classify_site_assets(release_dir: Path, version: str, asset_base: str,
             continue
         architecture = SITE_ARCH_TOKENS.get(arch_token, arch_token)
         sha256, size = sha256_and_size(path)
+        url = asset_url(asset_base, path.name)
         asset = {
             "filename": path.name,
-            "url": asset_url(asset_base, path.name),
+            "url": url,
             "size": size,
             "sha256": sha256,
             "architecture": architecture,
@@ -392,6 +420,19 @@ def classify_site_assets(release_dir: Path, version: str, asset_base: str,
         }
         if flavor:
             asset["flavor"] = flavor
+        if torrent_dir is not None and size >= min_torrent_bytes:
+            result = torrentlib.write_torrent(
+                path,
+                torrent_dir,
+                tracker_tiers=torrentlib.DEFAULT_TRACKER_TIERS,
+                webseeds=[url],
+                creation_date=creation_date,
+                comment=f"Warren VPN {version}",
+            )
+            asset["torrent"] = asset_url(asset_base, result.filename)
+            asset["magnet"] = result.magnet
+            print(f"  torrent {result.filename}: {result.pieces} pieces of "
+                  f"{result.piece_length // 1024} KiB, {result.infohash}")
         platforms.setdefault(platform, []).append(asset)
     return platforms
 
@@ -419,7 +460,16 @@ def build_downloads(args, classified: dict) -> dict:
         fetch_previous_downloads(args.metadata_base_url), args.dropped_versions)
     for platform, assets in classified.items():
         platforms[platform] = {"version": args.version, "assets": assets}
-    return {"updated_at": args.now, "platforms": platforms}
+    return {
+        "updated_at": args.now,
+        # Published so the download page can name the tracker a visitor's
+        # client will announce on without hardcoding it in three languages.
+        "bittorrent": {
+            "trackers": [url for tier in torrentlib.DEFAULT_TRACKER_TIERS for url in tier],
+            "webseeded": True,
+        },
+        "platforms": platforms,
+    }
 
 
 def build_release(
@@ -511,6 +561,10 @@ def main() -> int:
     parser.add_argument("--drop-version", action="append", default=[], metavar="VERSION",
                         help="Withdraw this version from the channel: its entry is removed from "
                              "the preserved history instead of being carried forward. Repeatable")
+    parser.add_argument("--no-torrents", action="store_true",
+                        help="Skip the BitTorrent half: no .torrent is written and no magnet "
+                             "reaches downloads.json. Torrents are on by default so a metadata "
+                             "refresh can never blank the download page's magnet links")
     parser.add_argument("--out-dir", required=True, help="Output directory for unsigned JSON")
     parser.add_argument("--now", required=True, help="Current time, RFC3339 (e.g. 2026-06-14T00:00:00Z)")
     parser.add_argument("--expiry-months", type=int, default=6)
@@ -577,10 +631,16 @@ def main() -> int:
 
     # Website manifest (warren.ro download page): every format, all platforms.
     # Served over TLS only; not part of the signed app-update contract.
+    # The .torrent files land beside the installers on purpose: the release
+    # job's upload and prune steps already walk that directory by name, so the
+    # BitTorrent channel needs no transport of its own.
     downloads = build_downloads(
         args,
         classify_site_assets(release_dir, args.version, asset_base,
-                             args.artifact_prefix, args.channel))
+                             args.artifact_prefix, args.channel,
+                             torrent_dir=None if args.no_torrents else release_dir,
+                             creation_date=int(now.replace(
+                                 tzinfo=datetime.timezone.utc).timestamp())))
     downloads_path = out_dir / "downloads.json"
     downloads_path.write_text(json.dumps(downloads, indent=2) + "\n", encoding="utf-8")
     counts = {p: len(v.get("assets", [])) for p, v in downloads["platforms"].items()}

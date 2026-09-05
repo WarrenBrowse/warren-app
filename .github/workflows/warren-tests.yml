@@ -267,6 +267,15 @@ jobs:
         shell: bash
         run: python3 ci/test_build_version_metadata.py
 
+      # A torrent's infohash IS its identity: a wrong one publishes a magnet
+      # link into a swarm nobody else is in, and nothing about the download
+      # page looks broken. The suite anchors the infohash on two independent
+      # reference implementations rather than on our own output.
+      - name: Torrent metainfo unit tests
+        working-directory: .
+        shell: bash
+        run: python3 ci/test_torrentlib.py
+
       # The macOS pkg scripts only ever run inside a real install, so a wrong
       # abort there is invisible until a user double-clicks the installer. It
       # shipped once: every FIRST install failed. Gated on the release path

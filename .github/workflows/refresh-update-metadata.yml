@@ -351,7 +351,7 @@ jobs:
           # URLs and clients only ever fetch the newest. Scoped to installer
           # names so no manifest can be caught by it.
           $ssh "$target" "cd '$dest' && ls -1 \
-            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz)\$' \
+            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz|torrent)\$' \
             | grep -v -F '${WARREN_ARTIFACT_PREFIX}-${VERSION}-' \
             | xargs -r rm -f --"
           $ssh "$target" "ls -lh '$dest'"

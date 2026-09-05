@@ -14,6 +14,14 @@
 # native: build-linux on the x86_64 (Rosetta) pool, build-linux-arm64 on the
 # aarch64 one. Nothing is cross-compiled.
 #
+# Every installer above 8 MiB also ships as a BitTorrent download: the
+# metadata job writes a single-file .torrent beside it (web seeded on the
+# update host, announced on tracker.opentrackr.org) and puts the magnet link
+# on the asset's downloads.json entry, which is what the website renders. It
+# is generated from the very bytes that were just hashed, so the magnet and
+# the direct link can never name different content, and a rerun reproduces
+# the same infohash. See ci/torrentlib.py.
+#
 # The two extra Linux artifacts cover distributions the deb/rpm/pacman set
 # cannot reach, and neither recompiles anything: both consume the amd64 .deb
 # the Linux job published to the draft release.
@@ -1353,6 +1361,26 @@ jobs:
             --now "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
             ${WARREN_UPDATE_MIN_VERSION_BETA:+--min-version "$WARREN_UPDATE_MIN_VERSION_BETA"}
 
+      # The torrents were written into release-files by the generator above,
+      # so the upload and prune steps below carry them with no extra
+      # machinery. Attaching them to the GitHub release too costs one call and
+      # gives the swarm a second permanent home the day the repo goes public.
+      # They land after SHA256SUMS was computed, and deliberately stay out of
+      # it: a torrent verifies its own payload piece by piece.
+      - name: Attach the torrents to the GitHub Release
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          shopt -s nullglob
+          torrents=(release-files/*.torrent)
+          if [ ${#torrents[@]} -eq 0 ]; then
+            echo "::warning::no .torrent was generated; the download page will show no magnet link"
+            exit 0
+          fi
+          gh release upload "$TAG_NAME" "${torrents[@]}" --clobber
+
       - name: Sign metadata
         if: env.WARREN_UPDATE_SIGNING_KEY != ''
         run: |
@@ -1482,7 +1510,7 @@ jobs:
           # needs its installers mirrored. Scoped to installer names so no
           # manifest can be caught by it.
           $ssh "$target" "cd '$dest' && ls -1 \
-            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz)\$' \
+            | grep -E '^WarrenVPN.*\.(pkg|exe|deb|rpm|pacman|apk|aab|dmg|tar\.gz|torrent)\$' \
             | grep -v -F '${prefix}-${WARREN_VERSION}-' \
             | xargs -r rm -f --"
           $ssh "$target" "ls -lh '$dest'"

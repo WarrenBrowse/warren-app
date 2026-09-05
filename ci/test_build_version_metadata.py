@@ -9,6 +9,7 @@ need (a GitHub release asset of a private repo answers 404 without a token, so
 a manifest pointing there is undownloadable for every user).
 """
 
+import argparse
 import importlib.util
 import tempfile
 import unittest
@@ -156,6 +157,115 @@ class DropVersions(unittest.TestCase):
         kept = bvm.drop_downloads_versions(platforms, {"1.1.5"})
 
         self.assertEqual(list(kept), ["linux"])
+
+
+class SiteAssetsWithTorrents(unittest.TestCase):
+    """The download page's BitTorrent half is generated here.
+
+    A magnet link is only useful if it names the same bytes the direct link
+    serves, so the torrent is built from the installer this pass just hashed,
+    never from a separate listing that could drift.
+    """
+
+    BASE = "https://api.beta.warrenbrowse.com/updates/desktop"
+
+    def classify(self, tmp: str, payload: bytes, name: str, **kwargs) -> dict:
+        release_dir = Path(tmp) / "release-files"
+        release_dir.mkdir()
+        (release_dir / name).write_bytes(payload)
+        return bvm.classify_site_assets(
+            release_dir,
+            "1.2.3",
+            self.BASE,
+            "WarrenVPN",
+            "beta",
+            torrent_dir=release_dir,
+            min_torrent_bytes=kwargs.pop("min_torrent_bytes", 16),
+            creation_date=0,
+        )
+
+    def test_an_installer_gains_a_torrent_and_a_magnet(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            platforms = self.classify(
+                tmp, b"x" * 1024, "WarrenVPN-1.2.3-linux-amd64.deb"
+            )
+
+        asset = platforms["linux"][0]
+        self.assertEqual(
+            asset["torrent"], f"{self.BASE}/WarrenVPN-1.2.3-linux-amd64.deb.torrent"
+        )
+        self.assertTrue(asset["magnet"].startswith("magnet:?xt=urn:btih:"))
+
+    def test_the_torrent_web_seeds_the_direct_download(self):
+        # Without it the swarm dies the moment the last peer leaves, and the
+        # magnet on the download page becomes a link to nothing.
+        with tempfile.TemporaryDirectory() as tmp:
+            release_dir = Path(tmp) / "release-files"
+            self.classify(tmp, b"x" * 1024, "WarrenVPN-1.2.3-linux-amd64.deb")
+            written = (release_dir / "WarrenVPN-1.2.3-linux-amd64.deb.torrent").read_bytes()
+
+        self.assertIn(
+            f"{self.BASE}/WarrenVPN-1.2.3-linux-amd64.deb".encode(), written
+        )
+
+    def test_a_file_below_the_threshold_gets_no_torrent(self):
+        # The NixOS flake tarball weighs a few kB: a swarm for it costs more
+        # than it saves, and an empty one on the page reads as broken.
+        with tempfile.TemporaryDirectory() as tmp:
+            platforms = self.classify(
+                tmp,
+                b"x" * 8,
+                "WarrenVPN-1.2.3-linux-x86_64-nixos.tar.gz",
+                min_torrent_bytes=1024,
+            )
+
+        asset = platforms["linux"][0]
+        self.assertNotIn("torrent", asset)
+        self.assertNotIn("magnet", asset)
+
+    def test_a_generated_torrent_is_not_itself_a_download_row(self):
+        # The torrents are written beside the installers so the release job
+        # uploads them with no extra machinery; classification must not then
+        # offer them to visitors as a package to install.
+        with tempfile.TemporaryDirectory() as tmp:
+            platforms = self.classify(
+                tmp, b"x" * 1024, "WarrenVPN-1.2.3-linux-amd64.deb"
+            )
+
+        self.assertEqual([a["format"] for a in platforms["linux"]], ["deb"])
+
+    def test_torrents_can_be_turned_off_entirely(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            release_dir = Path(tmp) / "release-files"
+            release_dir.mkdir()
+            (release_dir / "WarrenVPN-1.2.3-linux-amd64.deb").write_bytes(b"x" * 1024)
+
+            platforms = bvm.classify_site_assets(
+                release_dir, "1.2.3", self.BASE, "WarrenVPN", "beta"
+            )
+
+        self.assertNotIn("magnet", platforms["linux"][0])
+        self.assertEqual(list(release_dir.glob("*.torrent")), [])
+
+
+class DownloadsBitTorrentBlock(unittest.TestCase):
+    def test_names_the_trackers_the_torrents_announce_on(self):
+        # The download page tells visitors which tracker their client will talk
+        # to; reading it from the manifest keeps that claim true after a
+        # tracker change, instead of hardcoding a name in three languages.
+        args = argparse.Namespace(
+            version="1.2.3",
+            now="2026-09-05T00:00:00Z",
+            metadata_base_url="https://example.invalid/updates/desktop",
+            dropped_versions=set(),
+        )
+
+        downloads = bvm.build_downloads(args, {})
+
+        self.assertEqual(
+            downloads["bittorrent"]["trackers"][0],
+            "udp://tracker.opentrackr.org:1337/announce",
+        )
 
 
 if __name__ == "__main__":
