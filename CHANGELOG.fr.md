@@ -15,6 +15,14 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.27] - 2026-09-05
+### Ajouté
+- Publier aussi chaque installateur en BitTorrent. La page de téléchargement porte désormais un
+  lien magnétique à côté de chaque fichier, alimenté en permanence et annoncé sur
+  tracker.opentrackr.org, pour que Warren reste joignable quand le serveur de téléchargement est
+  bloqué ou injoignable.
+
+
 ## [1.1.26] - 2026-09-04
 ### Modifié
 - Donner à l'application beta ses propres couleurs dans la barre système, orchidée quand elle est

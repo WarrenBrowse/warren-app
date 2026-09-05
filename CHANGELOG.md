@@ -29,6 +29,13 @@ Line wrap the file at 100 chars.                                              Th
   never restored.
 
 
+## [1.1.27] - 2026-09-05
+### Added
+- Publish every installer as a BitTorrent download as well. The download page now carries a magnet
+  link beside each file, permanently seeded and announced on tracker.opentrackr.org, so Warren
+  stays reachable when the download server is blocked or unreachable.
+
+
 ## [1.1.26] - 2026-09-04
 ### Changed
 - Give the beta app its own tray colours, orchid while disconnected and azure while connected, so a
