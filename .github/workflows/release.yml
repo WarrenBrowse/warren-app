@@ -1516,6 +1516,20 @@ jobs:
           $ssh "$target" "ls -lh '$dest'"
           rm -f "$key"
 
+      # A magnet link into an empty swarm looks exactly like a healthy one on
+      # the download page, and every job here would still be green. The only
+      # place the difference is observable is the tracker, so the release asks
+      # it. A tracker that does not answer only warns: a public tracker's bad
+      # day is not this release's problem, and the web seed serves the files
+      # either way. A tracker that answers "no seeder" is a red run: the
+      # warren-seeder stack is not following this channel.
+      - name: Verify the release is actually seeded
+        if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
+        run: |
+          mkdir -p torrents
+          cp release-files/*.torrent torrents/ 2>/dev/null || true
+          python3 ci/check-swarm.py --torrent-dir torrents
+
       - name: Warn when upload is skipped
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY == ''
         run: echo "::warning::Signed metadata built but WARREN_UPDATES_SSH_* not set; not uploaded (see the update-metadata artifact)."

@@ -273,5 +273,70 @@ class DefaultTrackers(unittest.TestCase):
         self.assertEqual(len(flat), len(set(flat)))
 
 
+class Bdecode(unittest.TestCase):
+    """Reading a .torrent back is what the swarm check reads infohashes from."""
+
+    def test_round_trips_every_encodable_shape(self):
+        value = {"a": 1, "b": [b"x", "y"], "c": {"d": -3}}
+
+        self.assertEqual(tl.bdecode(tl.bencode(value)), {b"a": 1, b"b": [b"x", b"y"], b"c": {b"d": -3}})
+
+    def test_rejects_trailing_bytes(self):
+        # A truncated or concatenated file must not decode as if it were whole.
+        with self.assertRaises(ValueError):
+            tl.bdecode(b"i1etrailing")
+
+    def test_rejects_a_malformed_document(self):
+        with self.assertRaises(ValueError):
+            tl.bdecode(b"d3:abc")
+
+
+class InfohashOfFile(unittest.TestCase):
+    def write_at_fixture_piece_length(self, root: Path) -> Path:
+        """A .torrent whose identity is the reference-tool infohash."""
+        path = write_fixture(root)
+        meta = tl.build_metainfo(
+            path,
+            tracker_tiers=TRACKERS,
+            webseeds=[WEBSEED],
+            creation_date=7,
+            piece_length=FIXTURE_PIECE_LENGTH,
+        )
+        target = root / f"{FIXTURE_NAME}.torrent"
+        target.write_bytes(tl.bencode(meta))
+        return target
+
+    def test_reads_the_reference_infohash_off_a_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            target = self.write_at_fixture_piece_length(Path(tmp))
+
+            self.assertEqual(tl.infohash_of_file(target), FIXTURE_INFOHASH)
+
+    def test_reports_the_payload_name_size_trackers_and_webseeds(self):
+        # The swarm check names the artifact in its report; reading it from the
+        # torrent keeps that name true even if the file was renamed on disk.
+        with tempfile.TemporaryDirectory() as tmp:
+            described = tl.describe_torrent(self.write_at_fixture_piece_length(Path(tmp)))
+
+        self.assertEqual(described.name, FIXTURE_NAME)
+        self.assertEqual(described.size, len(FIXTURE))
+        self.assertEqual(described.infohash, FIXTURE_INFOHASH)
+        self.assertEqual(described.trackers[0], TRACKERS[0][0])
+        self.assertEqual(described.webseeds, [WEBSEED])
+
+    def test_agrees_with_what_write_torrent_reported(self):
+        # The publishing path and the verifying path must never disagree, or
+        # the release checks a swarm the download page did not advertise.
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            path = write_fixture(root)
+
+            result = tl.write_torrent(
+                path, root, tracker_tiers=TRACKERS, webseeds=[WEBSEED], creation_date=7
+            )
+
+            self.assertEqual(tl.infohash_of_file(root / result.filename), result.infohash)
+
+
 if __name__ == "__main__":
     unittest.main()

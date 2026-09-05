@@ -57,6 +57,10 @@ TorrentResult = namedtuple(
     "TorrentResult", ["filename", "infohash", "magnet", "piece_length", "pieces"]
 )
 
+TorrentDescription = namedtuple(
+    "TorrentDescription", ["infohash", "name", "size", "trackers", "webseeds"]
+)
+
 
 def bencode(value) -> bytes:
     """Bencode a metainfo value.
@@ -201,3 +205,85 @@ def write_torrent(
         piece_length=info["piece length"],
         pieces=len(info["pieces"]) // 20,
     )
+
+
+def bdecode(data: bytes):
+    """Decode a whole bencoded document, refusing anything left over.
+
+    Trailing bytes mean a truncated or concatenated file, which must not be
+    read as if it were a valid torrent.
+    """
+    value, offset = _bdecode_at(data, 0)
+    if offset != len(data):
+        raise ValueError(f"{len(data) - offset} trailing byte(s) after the document")
+    return value
+
+
+def _bdecode_at(data: bytes, i: int):
+    kind = data[i : i + 1]
+    if kind == b"i":
+        end = data.find(b"e", i)
+        if end < 0:
+            raise ValueError("unterminated integer")
+        return int(data[i + 1 : end]), end + 1
+    if kind == b"l":
+        i += 1
+        out = []
+        while True:
+            if i >= len(data):
+                raise ValueError("unterminated list")
+            if data[i : i + 1] == b"e":
+                return out, i + 1
+            value, i = _bdecode_at(data, i)
+            out.append(value)
+    if kind == b"d":
+        i += 1
+        out = {}
+        while True:
+            if i >= len(data):
+                raise ValueError("unterminated dictionary")
+            if data[i : i + 1] == b"e":
+                return out, i + 1
+            key, i = _bdecode_at(data, i)
+            out[key], i = _bdecode_at(data, i)
+    colon = data.find(b":", i)
+    if colon < 0:
+        raise ValueError("unterminated string length")
+    length = int(data[i:colon])
+    end = colon + 1 + length
+    if end > len(data):
+        raise ValueError("string runs past the end of the document")
+    return data[colon + 1 : end], end
+
+
+def describe_torrent(path: Path) -> TorrentDescription:
+    """Read back what a published .torrent announces.
+
+    The infohash is taken over the RAW `info` bytes of the file rather than
+    over a re-encoding of the decoded dict, so a torrent written by any other
+    tool is read at its true identity.
+    """
+    raw = path.read_bytes()
+    meta = bdecode(raw)
+    start = raw.find(b"4:info")
+    if start < 0:
+        raise ValueError(f"{path.name} carries no info dictionary")
+    start += len(b"4:info")
+    _, end = _bdecode_at(raw, start)
+    info = meta[b"info"]
+    trackers = [
+        url.decode("utf-8")
+        for tier in meta.get(b"announce-list", [])
+        for url in tier
+    ] or [meta[b"announce"].decode("utf-8")]
+    return TorrentDescription(
+        infohash=hashlib.sha1(raw[start:end]).hexdigest(),
+        name=info[b"name"].decode("utf-8"),
+        size=info[b"length"],
+        trackers=trackers,
+        webseeds=[url.decode("utf-8") for url in meta.get(b"url-list", [])],
+    )
+
+
+def infohash_of_file(path: Path) -> str:
+    return describe_torrent(path).infohash

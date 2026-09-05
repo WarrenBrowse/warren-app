@@ -276,6 +276,15 @@ jobs:
         shell: bash
         run: python3 ci/test_torrentlib.py
 
+      # The swarm checker is what stops a release from shipping magnet links
+      # nothing seeds, so a misread of the UDP tracker protocol would either
+      # pass a dead swarm or red a live release. Offline: only the protocol
+      # halves are exercised, the live scrape belongs to the release job.
+      - name: Swarm checker unit tests
+        working-directory: .
+        shell: bash
+        run: python3 ci/test_check_swarm.py
+
       # The macOS pkg scripts only ever run inside a real install, so a wrong
       # abort there is invisible until a user double-clicks the installer. It
       # shipped once: every FIRST install failed. Gated on the release path
