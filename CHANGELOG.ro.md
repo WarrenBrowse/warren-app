@@ -16,9 +16,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [1.1.27] - 2026-09-05
 ### Adăugat
-- Publică fiecare instalator și prin BitTorrent. Pagina de descărcare are acum un link magnet lângă
-  fiecare fișier, distribuit permanent și anunțat pe tracker.opentrackr.org, astfel încât Warren să
-  rămână accesibil când serverul de descărcare este blocat sau inaccesibil.
+- Publică fiecare instalator și prin BitTorrent. Pagina de descărcare are acum un fișier .torrent
+  și un link magnet lângă fiecare fișier, cu seed permanent și tracker anunțat, astfel încât Warren
+  să rămână accesibil când serverul de descărcare este blocat.
 
 
 ## [1.1.26] - 2026-09-04

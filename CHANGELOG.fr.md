@@ -17,10 +17,9 @@ par l'application, gardez-le tel quel.
 
 ## [1.1.27] - 2026-09-05
 ### Ajouté
-- Publier aussi chaque installateur en BitTorrent. La page de téléchargement porte désormais un
-  lien magnétique à côté de chaque fichier, alimenté en permanence et annoncé sur
-  tracker.opentrackr.org, pour que Warren reste joignable quand le serveur de téléchargement est
-  bloqué ou injoignable.
+- Publier aussi chaque installateur en BitTorrent. La page de téléchargement porte maintenant un
+  fichier .torrent et un lien magnet à côté de chaque fichier, avec un seed permanent et un tracker
+  annoncé, pour que Warren reste joignable quand le serveur de téléchargement est bloqué.
 
 
 ## [1.1.26] - 2026-09-04
