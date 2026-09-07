@@ -15,6 +15,24 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.28] - 2026-09-07
+### Modifié
+- Utiliser d'abord le transport TLS-over-TCP sur un réseau qui laisse le tunnel s'établir puis le
+  tue. Certains réseaux laissent passer le handshake et coupent la session vingt secondes plus
+  tard, et l'application relançait la course UDP à chaque tentative : elle se reconnectait en
+  boucle sans rien transporter. Après deux sessions de ce type d'affilée, elle appelle maintenant
+  le transport TCP en premier pendant quinze minutes, et revient à UDP dès qu'une session tient.
+### Corrigé
+- Activer l'accès beta dès la création du compte, et non seulement à la fin de l'assistant de
+  configuration. Un premier lancement interrompu avant cette étape laissait tous les écrans
+  annoncer un compte arrivé à expiration, alors qu'il n'avait jamais été enregistré.
+- Garder la fenêtre de l'application à l'écran pendant le premier lancement. Elle se cachait dès
+  que le focus passait ailleurs, emportant la phrase de récupération et l'étape d'activation avant
+  qu'on puisse les lire.
+- Ne plus signaler qu'un compte beta est arrivé à expiration quand il n'a jamais été activé. Le
+  message se lisait comme un compte mort et poussait à désinstaller l'application.
+
+
 ## [1.1.27] - 2026-09-05
 ### Ajouté
 - Publier aussi chaque installateur en BitTorrent. La page de téléchargement porte maintenant un

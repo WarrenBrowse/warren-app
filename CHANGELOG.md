@@ -24,6 +24,23 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.28] - 2026-09-07
+### Changed
+- Reach for the TLS-over-TCP carrier first on a network that lets the tunnel start and then kills
+  it. Some networks pass the handshake and drop the session twenty seconds later, and the app kept
+  racing UDP again on every attempt, so it reconnected in a loop and never carried traffic. After
+  two such sessions in a row it now dials the carrier first for the next fifteen minutes, and
+  returns to UDP as soon as a session survives.
+### Fixed
+- Activate the beta access the moment an account is created, instead of only at the end of the
+  setup wizard. A first run that ended before that step left every screen saying the account had
+  run out of time, on an account that had simply never been registered.
+- Keep the app window on screen during the first run. It hid as soon as the focus moved elsewhere,
+  taking the recovery phrase and the activation step away before they could be read.
+- Stop warning that a beta account has run out of time when it was never activated. The message
+  read as a dead account and sent first-run users to uninstall the app.
+
+
 ## [1.1.27] - 2026-09-05
 ### Added
 - Publish every installer as a BitTorrent download as well. The download page now carries a

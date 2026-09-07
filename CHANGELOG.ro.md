@@ -14,6 +14,24 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.28] - 2026-09-07
+### Modificat
+- Folosește mai întâi transportul TLS-over-TCP într-o rețea care lasă tunelul să pornească și apoi
+  îl omoară. Unele rețele lasă handshake-ul să treacă și taie sesiunea douăzeci de secunde mai
+  târziu, iar aplicația relua cursa UDP la fiecare încercare: se reconecta în buclă fără să
+  transporte nimic. După două sesiuni de acest fel la rând, apelează acum transportul TCP primul,
+  timp de cincisprezece minute, și revine la UDP imediat ce o sesiune rezistă.
+### Reparat
+- Activează accesul beta din momentul creării contului, nu doar la finalul asistentului de
+  configurare. O primă pornire încheiată înainte de acel pas lăsa toate ecranele să anunțe un cont
+  expirat, deși contul nu fusese niciodată înregistrat.
+- Păstrează fereastra aplicației pe ecran în timpul primei porniri. Se ascundea imediat ce focusul
+  trecea în altă parte, luând cu ea fraza de recuperare și pasul de activare înainte de a putea fi
+  citite.
+- Nu mai avertiza că un cont beta a expirat când nu a fost niciodată activat. Mesajul se citea ca
+  un cont mort și îi trimitea pe utilizatori să dezinstaleze aplicația.
+
+
 ## [1.1.27] - 2026-09-05
 ### Adăugat
 - Publică fiecare instalator și prin BitTorrent. Pagina de descărcare are acum un fișier .torrent
