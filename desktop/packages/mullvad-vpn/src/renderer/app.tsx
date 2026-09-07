@@ -5,7 +5,7 @@ import { Router } from 'react-router';
 import { bindActionCreators } from 'redux';
 import { StyleSheetManager } from 'styled-components';
 
-import { closeToExpiry, hasExpired } from '../shared/account-expiry';
+import { closeToExpiry, hasExpired, NEVER_ACTIVATED_EXPIRY } from '../shared/account-expiry';
 import {
   ILinuxSplitTunnelingApplication,
   ISplitTunnelingApplication,
@@ -680,7 +680,12 @@ export default class AppRenderer {
   // buy-plan / expired screen for a fresh account).
   public finishAccountBackup = (pubkey: WarrenPubKey) => {
     this.setBackupPending(false);
-    this.reduxActions.account.accountCreated(pubkey, new Date().toISOString());
+    // The main process may already have activated the beta access and
+    // pushed the real expiry while the user was writing the words down;
+    // a wallet still unknown to the API carries the never-activated
+    // sentinel, which the reducer reads as expired.
+    const knownExpiry = this.reduxStore.getState().account.expiry;
+    this.reduxActions.account.accountCreated(pubkey, knownExpiry ?? NEVER_ACTIVATED_EXPIRY);
   };
 
   public setAllowLan = async (allowLan: boolean) => {

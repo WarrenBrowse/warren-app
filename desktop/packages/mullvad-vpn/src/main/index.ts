@@ -1759,6 +1759,8 @@ class ApplicationMain
   public dismissActiveNotifications = () =>
     this.notificationController.dismissActiveNotifications();
   public isUnpinnedWindow = () => this.settings.gui.unpinnedWindow;
+  public isFirstRunPending = () =>
+    this.settings.gui.backupPending || this.settings.gui.onboardingPending;
   public updateAccountData = () => this.account.updateAccountData();
 
   public checkPendingPurchases = () => {

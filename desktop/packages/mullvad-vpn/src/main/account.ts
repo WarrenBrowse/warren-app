@@ -1,4 +1,5 @@
 import { closeToExpiry, hasExpired } from '../shared/account-expiry';
+import { isBetaBuild } from '../shared/constants/product-env';
 import {
   DeviceEvent,
   DeviceState,
@@ -34,6 +35,11 @@ export interface AccountDelegate {
   onAccountData?(): void;
 }
 
+export interface AccountOptions {
+  // Injectable for tests; the build constant in production.
+  betaBuild: boolean;
+}
+
 export default class Account {
   private accountDataValue?: IAccountData = undefined;
   private accountHistoryValue?: WarrenPubKey = undefined;
@@ -56,6 +62,7 @@ export default class Account {
   public constructor(
     private delegate: AccountDelegate & TunnelStateProvider & LocaleProvider & NotificationSender,
     private daemonRpc: DaemonRpc,
+    private options: AccountOptions = { betaBuild: isBetaBuild },
   ) {
     this.monitorExpiredChange();
   }
@@ -116,6 +123,21 @@ export default class Account {
     });
   };
 
+  public async createNewAccount(): Promise<string> {
+    let pubkey: string;
+    try {
+      pubkey = await this.daemonRpc.createNewAccount();
+    } catch (e) {
+      const error = e as Error;
+      log.error(`Failed to create account: ${error.message}`);
+      throw error;
+    }
+    if (this.options.betaBuild) {
+      void this.activateBetaAccess();
+    }
+    return pubkey;
+  }
+
   public detectStaleAccountExpiry(tunnelState: TunnelState) {
     const expired = !this.accountData || hasExpired(this.accountData.expiry);
 
@@ -166,13 +188,21 @@ export default class Account {
     });
   }
 
-  private async createNewAccount(): Promise<string> {
+  // A beta wallet is granted its access the moment it exists, so a first
+  // run that never reaches the wizard's activation step (the window hid,
+  // the user quit) does not leave the wallet unknown to the API and every
+  // screen saying "out of time" (topic 195). The server call is
+  // idempotent; the wizard step and the "refresh beta access" button
+  // remain as the visible confirmation and the offline retry.
+  private async activateBetaAccess(): Promise<void> {
     try {
-      return await this.daemonRpc.createNewAccount();
+      const response = await this.submitVoucher('');
+      if (response.type !== 'success') {
+        log.info(`Beta access not activated at creation (${response.type}), the wizard retries`);
+      }
     } catch (e) {
       const error = e as Error;
-      log.error(`Failed to create account: ${error.message}`);
-      throw error;
+      log.info(`Beta access activation at creation failed, the wizard retries: ${error.message}`);
     }
   }
 
@@ -204,6 +234,7 @@ export default class Account {
       const expiredNotification = new AccountExpiredNotificationProvider({
         accountExpiry: this.accountData.expiry,
         tunnelState: this.delegate.getTunnelState(),
+        betaBuild: this.options.betaBuild,
       });
       const closeToExpiryNotification = new CloseToAccountExpiryNotificationProvider({
         accountExpiry: this.accountData.expiry,
@@ -214,6 +245,14 @@ export default class Account {
         this.expiryNotificationFrequencyScheduler.cancel();
         this.firstExpiryNotificationScheduler.cancel();
         this.delegate.notify(expiredNotification.getSystemNotification());
+      } else if (hasExpired(this.accountData.expiry)) {
+        // Expired but not announced (tunnel not disconnected, or a beta
+        // wallet not yet activated): nothing to schedule. The branches
+        // below compute a delay from a future expiry; on a past one it is
+        // negative, setTimeout clamps it to 1 ms, and this method re-ran
+        // itself about a thousand times a second until the state changed.
+        this.expiryNotificationFrequencyScheduler.cancel();
+        this.firstExpiryNotificationScheduler.cancel();
       } else if (
         !this.expiryNotificationFrequencyScheduler.isRunning &&
         closeToExpiryNotification.mayDisplay()

@@ -64,6 +64,28 @@ describe('account reducer - Warren pubkey state shape', () => {
     expect(next.status).toMatchObject({ method: 'new_account', expiredState: 'expired' });
   });
 
+  // A wallet activated at creation (beta auto-register) arrives at the backup
+  // confirmation with a live expiry: it must not be routed through the
+  // out-of-time screen on its way to the wizard.
+  it('ACCOUNT_CREATED with a future expiry is ok without an expired state', () => {
+    const awaiting = accountReducer(undefined, accountActions.accountAwaitingBackup(validPubKey));
+    const expiry = '2099-01-01T00:00:00.000Z';
+    const next = accountReducer(awaiting, accountActions.accountCreated(validPubKey, expiry));
+    expect(next.status.type).toBe('ok');
+    expect(next.status).toMatchObject({ method: 'new_account' });
+    expect(next.status).not.toHaveProperty('expiredState', 'expired');
+    expect(next.expiry).toBe(expiry);
+  });
+
+  it('ACCOUNT_CREATED with the never-activated epoch expiry is expired', () => {
+    const awaiting = accountReducer(undefined, accountActions.accountAwaitingBackup(validPubKey));
+    const next = accountReducer(
+      awaiting,
+      accountActions.accountCreated(validPubKey, new Date(0).toISOString()),
+    );
+    expect(next.status).toMatchObject({ method: 'new_account', expiredState: 'expired' });
+  });
+
   it('createAccountFailed surfaces the error on the failed state', () => {
     const loggingIn = accountReducer(undefined, accountActions.startCreateAccount());
     const error = new Error('daemon refused');

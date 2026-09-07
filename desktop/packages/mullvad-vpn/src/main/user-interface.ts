@@ -22,6 +22,7 @@ import { isMacOs11OrNewer } from './platform-version';
 import { resolveBin } from './proc';
 import { createTray } from './tray';
 import TrayIconController, { TrayIconType } from './tray-icon-controller';
+import { shouldHideOnBlur } from './window-blur';
 import WindowController, { WindowControllerDelegate } from './window-controller';
 
 const execAsync = promisify(exec);
@@ -35,6 +36,8 @@ export interface UserInterfaceDelegate {
   disconnectTunnel(source: DisconnectSource): void;
   disconnectAndQuit(source: DisconnectSource): void;
   isUnpinnedWindow(): boolean;
+  // True while the recovery-phrase backup or the onboarding wizard is owed.
+  isFirstRunPending(): boolean;
   isLoggedIn(): boolean;
   getAccountData(): IAccountData | undefined;
   getTunnelState(): TunnelState;
@@ -589,7 +592,13 @@ export default class UserInterface implements WindowControllerDelegate {
         cursorPos.y >= trayBounds.y &&
         cursorPos.x <= trayBounds.x + trayBounds.width &&
         cursorPos.y <= trayBounds.y + trayBounds.height;
-      if (!isCursorInside && !this.browsingFiles) {
+      if (
+        shouldHideOnBlur({
+          cursorOverTray: isCursorInside,
+          browsingFiles: this.browsingFiles,
+          firstRunPending: this.delegate.isFirstRunPending(),
+        })
+      ) {
         this.windowController.hide();
       }
     });
@@ -615,7 +624,12 @@ export default class UserInterface implements WindowControllerDelegate {
       // But avoid doing that when dev tools capture the focus to make it possible to inspect the UI
       if (
         this.windowController.window?.isVisible() &&
-        !this.windowController.window?.webContents.isDevToolsFocused()
+        !this.windowController.window?.webContents.isDevToolsFocused() &&
+        shouldHideOnBlur({
+          cursorOverTray: false,
+          browsingFiles: this.browsingFiles,
+          firstRunPending: this.delegate.isFirstRunPending(),
+        })
       ) {
         this.windowController.hide();
       }

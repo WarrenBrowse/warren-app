@@ -1,3 +1,4 @@
+import { hasExpired } from '../../../shared/account-expiry';
 import { WarrenPubKey } from '../../../shared/daemon-rpc-types';
 import { ForumIdentity } from '../../../shared/forum-identity';
 import { RenewalUiState } from '../../../shared/renewal';
@@ -93,12 +94,15 @@ export default function (
         pubkey: action.pubkey,
       };
     case 'ACCOUNT_CREATED':
+      // A wallet whose beta access was already granted at creation lands
+      // straight on the wizard; only a wallet with no time yet goes through
+      // the out-of-time screen.
       return {
         ...state,
         status: {
           type: 'ok',
           method: 'new_account',
-          expiredState: 'expired',
+          expiredState: hasExpired(action.expiry) ? 'expired' : undefined,
         },
         pubkey: action.pubkey,
         expiry: action.expiry,

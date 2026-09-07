@@ -1,4 +1,4 @@
-import { hasExpired } from '../account-expiry';
+import { hasExpired, isNeverActivatedExpiry, NEVER_ACTIVATED_EXPIRY } from '../account-expiry';
 import { urls } from '../constants';
 import { isBetaBuild } from '../constants/product-env';
 import { TunnelState } from '../daemon-rpc-types';
@@ -10,9 +10,13 @@ import {
   SystemNotificationSeverityType,
 } from './notification';
 
+export { isNeverActivatedExpiry, NEVER_ACTIVATED_EXPIRY };
+
 interface AccountExpiredNotificaitonContext {
   accountExpiry: string;
   tunnelState: TunnelState;
+  // Injectable for tests; the build constant elsewhere.
+  betaBuild?: boolean;
 }
 
 export class AccountExpiredNotificationProvider implements SystemNotificationProvider {
@@ -21,9 +25,20 @@ export class AccountExpiredNotificationProvider implements SystemNotificationPro
   public mayDisplay() {
     // Only show when disconnected since the error state handles this if the connection is closed
     // due to account expiry.
-    return (
-      this.context.tunnelState.state === 'disconnected' && hasExpired(this.context.accountExpiry)
-    );
+    if (this.context.tunnelState.state !== 'disconnected') {
+      return false;
+    }
+    // A beta wallet that never registered is not out of time, it is not
+    // activated yet: the wizard (or the "refresh beta access" button) does
+    // that, and a toast saying the account has run out sent a first-run
+    // user to uninstall (topic 195). A lapsed beta access still warns.
+    if (
+      (this.context.betaBuild ?? isBetaBuild) &&
+      isNeverActivatedExpiry(this.context.accountExpiry)
+    ) {
+      return false;
+    }
+    return hasExpired(this.context.accountExpiry);
   }
 
   public getSystemNotification(): SystemNotification {

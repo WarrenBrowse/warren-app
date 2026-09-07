@@ -1,4 +1,4 @@
-import { closeToExpiry, hasExpired } from '../shared/account-expiry';
+import { closeToExpiry, hasExpired, NEVER_ACTIVATED_EXPIRY } from '../shared/account-expiry';
 import {
   AccountDataError,
   AccountDataResponse,
@@ -159,7 +159,7 @@ export default class AccountDataCache {
     // callers; the retry loop drives background polling beyond
     // that.
     if (error === 'no-subscription') {
-      this.setValue({ expiry: new Date(0).toISOString() });
+      this.setValue({ expiry: NEVER_ACTIVATED_EXPIRY });
       this.scheduleRetry(pubkey, error);
       return;
     }
