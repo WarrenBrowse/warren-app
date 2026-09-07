@@ -22,11 +22,6 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
-### Fixed
-- [macOS] Fix name resolution lost on every disconnect when a stopped VPN app (Tailscale) leaves
-  its DNS entry behind. The daemon restored that entry as the original DNS and its dead resolver
-  outranked the network's own. A DNS entry whose service publishes no address is now removed,
-  never restored.
 
 
 ## [1.1.27] - 2026-09-05
@@ -44,6 +39,14 @@ Line wrap the file at 100 chars.                                              Th
 ### Fixed
 - [Windows] Fix the tray icon vanishing in a remote desktop session that reduces the colour depth.
   The reduced-colour copies inside the monochrome icon files were empty.
+
+
+## [1.1.20] - 2026-08-25
+### Fixed
+- [macOS] Fix name resolution lost on every disconnect when a stopped VPN app (Tailscale) leaves
+  its DNS entry behind. The daemon restored that entry as the original DNS and its dead resolver
+  outranked the network's own. A DNS entry whose service publishes no address is now removed,
+  never restored.
 
 
 ## [1.1.17] - 2026-08-16
