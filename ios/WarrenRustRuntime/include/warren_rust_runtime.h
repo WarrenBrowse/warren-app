@@ -916,6 +916,64 @@ char *warren_forum_login(const uint8_t *seed, const char *sid, const char *host)
 void warren_forum_cancel(const char *sid, const char *host);
 
 /**
+ * Sign and submit the attach-logs upload (`POST /v1/forum/attach-logs`) for
+ * the forum's "attach your logs" page: `sid` and `host` from the deep link
+ * (or the typed code), `topic_id` the topic the logs join (0 for a pre-topic
+ * session, where the report is still being composed), `log_gz` the gzipped
+ * redacted problem report of `log_gz_len` bytes. The mirror of Android's
+ * `forumAttachLogs` and of the desktop `approveForumAttach` plus the daemon's
+ * signer: preflight the attach session (clock offset, dead session), sign the
+ * body at the corrected time, send it under the body-sized upload deadline,
+ * and class the answer. Returns the envelope of
+ * [`warren_forum::attach_envelope`]: `{"ok":true}` when attached or parked,
+ * `{"ok":false,"error":"not-author"}` (403), `expired` (404, which also
+ * covers a topic the session is not bound to), `too-large` (over the cap
+ * here, before any byte leaves, or 413), `clock-skew`, `server-error` (5xx),
+ * or `error` with a `reason` class (`build`, `runtime`, `transport`,
+ * `upload-timeout`, `http-<status>`). The seed, sid, signature and report are
+ * never logged.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
+ * `host` must be valid NUL-terminated C strings; `log_gz`, when non-null,
+ * must point to at least `log_gz_len` readable bytes. The returned pointer
+ * must be freed exactly once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_attach_logs(const uint8_t *seed,
+                               const char *sid,
+                               uint64_t topic_id,
+                               const char *host,
+                               const uint8_t *log_gz,
+                               uintptr_t log_gz_len);
+
+/**
+ * Best-effort: tell the connect provider the user declined the attach
+ * (`POST /v1/attach/<sid>/cancel`) so the waiting forum page shows
+ * "cancelled" instead of polling to its timeout. Unsigned; mirrors the
+ * desktop `cancelForumAttach`. Failures are ignored: the session expires on
+ * its own in 30 minutes (`pending_ttl_secs.attach`). Blocking; call off the
+ * main thread.
+ *
+ * # Safety
+ * `sid` and `host` must be valid NUL-terminated C strings.
+ */
+void warren_forum_attach_cancel(const char *sid, const char *host);
+
+/**
+ * Places a session id typed by hand before any consent is raised: the login
+ * status read first, the attach status read only when the login one answers
+ * 404. Returns `{"kind":"login"|"attach"|"gone"|"unknown"}`
+ * ([`warren_forum::code_probe_envelope`]). Unsigned, no wallet material;
+ * blocks on up to two GETs, so invoke off the main thread. The sid is never
+ * logged.
+ *
+ * # Safety
+ * `sid` and `host` must be valid NUL-terminated C strings. The returned
+ * pointer must be freed exactly once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_code_probe(const char *sid, const char *host);
+
+/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,
