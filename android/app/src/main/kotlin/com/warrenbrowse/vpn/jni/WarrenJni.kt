@@ -152,10 +152,11 @@ object WarrenJni {
      * first, the attach status read only when the login one answers 404, the attach meta only
      * when that one is pending (it names the topic the code cannot carry). Returns
      * `{"kind":"login"|"gone"|"unknown"}` or `{"kind":"attach","topic_id":N}` with 0 for a
-     * pre-topic session. Unsigned; blocks on up to three GETs, so it must be invoked off the
-     * main thread.
+     * pre-topic session. The reads share `budgetMillis`, each taking what is left of it, so the
+     * call returns within it. Unsigned; blocks for at most the budget, so it must be invoked off
+     * the main thread.
      */
-    external fun forumCodeProbe(sid: String, host: String): String
+    external fun forumCodeProbe(sid: String, host: String, budgetMillis: Long): String
 
     /**
      * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust: `reportJson` is one

@@ -71,19 +71,22 @@ private const val PREVIEW_MAX_BYTES = 400_000
 fun ForumAttachPromptHost() {
     val controller = koinInject<ForumAttachController>()
     val useCase = koinInject<WarrenForumAttachUseCase>()
+    val journal = koinInject<ForumJournal>()
     val pending by controller.pending.collectAsState()
     val link = pending ?: return
 
     val context = LocalContext.current
     val scope = controller.scope
-    // Keyed on the link's sid inside: a link replacing another while the
-    // prompt is open starts clean instead of inheriting a disarmed Approve.
+    // Keyed on the link's sid and the request's token inside: a link
+    // replacing another while the prompt is open, or a new request naming
+    // the sid of a finished attempt, starts clean instead of inheriting a
+    // disarmed Approve or a spent attached flag.
     val state = controller.prompt
-    state.bind(link)
+    state.bind(link, controller.requestToken)
     val messages = attachMessages()
 
     val dropPreview = {
-        state.preview?.let(useCase::discard)
+        state.takePreview()?.let(useCase::discard)
     }
 
     // The provider attached (or parked) the report: the prompt closes and
@@ -118,12 +121,18 @@ fun ForumAttachPromptHost() {
             // can only fail on a dead sid.
             state.fail(messages.expired)
         } else if (!state.busy) {
-            state.begin()
+            val attempt = state.begin()
             scope.launch {
-                when (val outcome = useCase.attach(link, link.topicId)) {
-                    WarrenForumAttachOutcome.Attached -> state.markAttached()
-                    else -> state.settle(outcome, messages.failureFor(outcome))
-                }
+                val outcome = useCase.attach(link, link.topicId)
+                // A second link mid-upload rebinds the prompt: this result
+                // belongs to the link that launched it and is dropped rather
+                // than applied to the one now on screen.
+                val applied =
+                    when (outcome) {
+                        WarrenForumAttachOutcome.Attached -> state.markAttached(attempt)
+                        else -> state.settle(attempt, outcome, messages.failureFor(outcome))
+                    }
+                if (!applied) journal.record(ForumEvent.ATTACH_RESULT, JournalField.Class("superseded"))
             }
         }
     }

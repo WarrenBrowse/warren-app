@@ -99,10 +99,12 @@ interface WarrenJniBridge {
      * Places a session id typed by hand: `{"kind":"login"|"gone"|"unknown"}` or
      * `{"kind":"attach","topic_id":N}` (0 for a pre-topic session), from the
      * login status read, the attach status read when that one answers 404,
-     * and the attach meta when that one is pending. Unsigned. Blocks on up
-     * to three GETs: invoke off the main thread.
+     * and the attach meta when that one is pending. The reads share
+     * [budgetMillis], each taking what is left of it, so the call returns
+     * within it. Unsigned. Blocks for at most the budget: invoke off the
+     * main thread.
      */
-    fun forumCodeProbe(sid: String, host: String): String
+    fun forumCodeProbe(sid: String, host: String, budgetMillis: Long): String
 
     /**
      * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust.

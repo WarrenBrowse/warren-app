@@ -5,16 +5,29 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 /**
- * The consent prompt's state for one pending link. Keyed on the link's sid:
- * a link that replaces another while the prompt is open (the user started
- * again from the browser after a terminal refusal) gets a clean prompt, and
- * a recomposition binding the same link changes nothing. Plain Kotlin over
- * snapshot state so the transitions are unit-tested off-device.
+ * The consent prompt's state for one pending link. Owned by
+ * [ForumLoginController], never by the composable: a rotation recreates the
+ * Activity and every `remember` with it, while the signature it launched is
+ * still out, so the state it reports to has to outlive the host. Keyed on
+ * the link's sid and the request's token: a link that replaces another while
+ * the prompt is open (the user started again from the browser after a
+ * terminal refusal) gets a clean prompt, a recomposition binding the same
+ * request changes nothing, and a new request naming the sid of a finished
+ * attempt starts clean too. Plain Kotlin over snapshot state so the
+ * transitions are unit-tested off-device.
  */
 class ForumLoginPromptState {
     /** The sid of the link the state belongs to; null before the first bind. */
     var sid: String? = null
         private set
+
+    private var boundToken: Long? = null
+
+    /**
+     * The attempt in flight, as [begin] numbered it. A result names the
+     * attempt it belongs to and is dropped when a rebind superseded it.
+     */
+    private var attempt: Long = 0L
 
     /** A signature is out: Approve and Cancel are disabled. */
     var busy by mutableStateOf(false)
@@ -40,33 +53,51 @@ class ForumLoginPromptState {
     var approved by mutableStateOf(false)
         private set
 
-    /** Adopt [link]; a different sid than the current one resets everything. */
-    fun bind(link: ForumLoginLink) {
-        if (link.sid == sid) return
+    /** Adopt [link] for the request [token]; anything else than the current pair resets. */
+    fun bind(link: ForumLoginLink, token: Long) {
+        if (link.sid == sid && token == boundToken) return
+        reset()
         sid = link.sid
+        boundToken = token
+    }
+
+    /** Back to the state before any bind: what the controller does when the consent ends. */
+    fun reset() {
+        sid = null
+        boundToken = null
+        attempt += 1
         busy = false
         failure = null
         terminal = false
         approved = false
     }
 
-    /** The provider accepted the signature. */
-    fun markApproved() {
-        busy = false
-        approved = true
-    }
-
-    /** The user approved: the signature is in flight. */
-    fun begin() {
+    /** The user approved: the signature is in flight. Returns the attempt's number. */
+    fun begin(): Long {
+        attempt += 1
         busy = true
         failure = null
+        return attempt
     }
 
-    /** A non-approved [outcome] came back, rendered as [message]. */
-    fun settle(outcome: WarrenForumLoginOutcome, message: String) {
+    /**
+     * A non-approved [outcome] of [attempt] came back, rendered as [message].
+     * False when a rebind superseded the attempt: nothing is applied.
+     */
+    fun settle(attempt: Long, outcome: WarrenForumLoginOutcome, message: String): Boolean {
+        if (attempt != this.attempt) return false
         busy = false
         terminal = isTerminalOutcome(outcome)
         failure = message
+        return true
+    }
+
+    /** The provider accepted the signature of [attempt]; false when superseded. */
+    fun markApproved(attempt: Long): Boolean {
+        if (attempt != this.attempt) return false
+        busy = false
+        approved = true
+        return true
     }
 
     /** A message for the current link without an attempt (a stale link). */

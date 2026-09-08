@@ -46,15 +46,18 @@ import org.koin.compose.koinInject
 fun ForumLoginPromptHost() {
     val controller = koinInject<ForumLoginController>()
     val useCase = koinInject<WarrenForumLoginUseCase>()
+    val journal = koinInject<ForumJournal>()
     val pending by controller.pending.collectAsState()
     val link = pending ?: return
 
     val context = LocalContext.current
     val scope = controller.scope
-    // Keyed on the link's sid inside: a link replacing another while the
-    // prompt is open starts clean instead of inheriting a disarmed Approve.
+    // Keyed on the link's sid and the request's token inside: a link
+    // replacing another while the prompt is open, or a new request naming
+    // the sid of a finished attempt, starts clean instead of inheriting a
+    // disarmed Approve or a spent approved flag.
     val state = controller.prompt
-    state.bind(link)
+    state.bind(link, controller.requestToken)
     val messages = promptMessages()
 
     // The browser page is what completes the login, and it only re-polls
@@ -85,14 +88,19 @@ fun ForumLoginPromptHost() {
             // can only fail on a dead sid.
             state.fail(messages.expired)
         } else if (!state.busy) {
-            state.begin()
+            val attempt = state.begin()
             scope.launch {
                 val outcome = useCase.signIn(link)
-                if (outcome is WarrenForumLoginOutcome.Approved) {
-                    state.markApproved()
-                } else {
-                    state.settle(outcome, messages.failureFor(outcome))
-                }
+                // A second link mid-signature rebinds the prompt: this result
+                // belongs to the link that launched it and is dropped rather
+                // than applied to the one now on screen.
+                val applied =
+                    if (outcome is WarrenForumLoginOutcome.Approved) {
+                        state.markApproved(attempt)
+                    } else {
+                        state.settle(attempt, outcome, messages.failureFor(outcome))
+                    }
+                if (!applied) journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("superseded"))
             }
         }
     }

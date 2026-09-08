@@ -160,6 +160,9 @@ internal class FakeJniBridge(
     var attachCancelCalls = 0
     var codeProbeCalls = 0
 
+    /** The budget every code probe crossed into Rust with. */
+    val codeProbeBudgets = mutableListOf<Long>()
+
     /** The topic ids and gzip sizes every attach upload crossed into Rust with. */
     val attachedTopics = mutableListOf<Long>()
     val attachedGzBytes = mutableListOf<Int>()
@@ -181,8 +184,9 @@ internal class FakeJniBridge(
         attachCancelCalls++
     }
 
-    override fun forumCodeProbe(sid: String, host: String): String {
+    override fun forumCodeProbe(sid: String, host: String, budgetMillis: Long): String {
         codeProbeCalls++
+        codeProbeBudgets += budgetMillis
         return codeProbeAnswer()
     }
     var reportCalls = 0

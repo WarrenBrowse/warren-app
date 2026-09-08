@@ -18,6 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
  * [scope] is where a prompt runs the signature or the upload it launches: a
  * composition scope dies with the Activity on a rotation, taking the outcome
  * with it and leaving Approve re-armed over a request still in flight.
+ *
+ * Every request carries a fresh [requestToken]. The broker hands the same
+ * sid back for a pending topic and keeps a pre-topic session alive once its
+ * report is parked, so a second request can name the sid of a finished
+ * attempt: the prompt keys its state on the token beside the sid, and the
+ * subclass resets that state when the consent ends ([clear]).
  */
 open class PendingForumConsent<T : Any>(
     private val ttlMillis: Long,
@@ -31,10 +37,16 @@ open class PendingForumConsent<T : Any>(
     /** The pending consent request, or null when there is none to show. */
     val pending: StateFlow<T?> = _pending.asStateFlow()
 
+    /** The instant-keyed identity of the pending request; a new one per [request]. */
+    @Volatile
+    var requestToken: Long = 0L
+        private set
+
     private var seenAny = false
 
     fun request(link: T) {
         requestedAtMillis = nowMillis()
+        requestToken += 1
         seenAny = true
         _pending.value = link
     }
@@ -52,7 +64,8 @@ open class PendingForumConsent<T : Any>(
         return nowMillis() - requestedAtMillis > ttlMillis
     }
 
-    fun clear() {
+    /** Ends the consent; a subclass resets the prompt state it owns as well. */
+    open fun clear() {
         _pending.value = null
     }
 }

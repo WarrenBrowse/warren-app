@@ -18,6 +18,15 @@ class ForumLoginController(
     /** The consent prompt's state, outliving any host that shows it. */
     val prompt = ForumLoginPromptState()
 
+    /**
+     * The state outlives the consent on purpose (a rotation), so it is
+     * reset here rather than left for the next request to inherit.
+     */
+    override fun clear() {
+        super.clear()
+        prompt.reset()
+    }
+
     companion object {
         const val PENDING_LINK_TTL_MILLIS: Long = 300_000L
     }

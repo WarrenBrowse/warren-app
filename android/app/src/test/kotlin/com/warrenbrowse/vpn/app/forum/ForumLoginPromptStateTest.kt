@@ -19,11 +19,11 @@ class ForumLoginPromptStateTest {
         // the user fixed the clock and started again from the browser. The
         // new sid must not inherit the dead one's disarmed button and message.
         val state = ForumLoginPromptState()
-        state.bind(first)
-        state.settle(WarrenForumLoginOutcome.ClockSkew, message = "fix the clock")
+        state.bind(first, token = 1L)
+        state.settle(state.begin(), WarrenForumLoginOutcome.ClockSkew, message = "fix the clock")
         assertTrue(state.terminal)
 
-        state.bind(second)
+        state.bind(second, token = 2L)
 
         assertFalse(state.terminal)
         assertFalse(state.busy)
@@ -36,10 +36,10 @@ class ForumLoginPromptStateTest {
         // Recomposition binds the same link again while the signature is out;
         // that must not reset the busy marker and re-enable Approve mid-flight.
         val state = ForumLoginPromptState()
-        state.bind(first)
+        state.bind(first, token = 1L)
         state.begin()
 
-        state.bind(first)
+        state.bind(first, token = 1L)
 
         assertTrue(state.busy)
     }
@@ -47,10 +47,10 @@ class ForumLoginPromptStateTest {
     @Test
     fun a_non_terminal_outcome_keeps_approve_armed_with_its_message() {
         val state = ForumLoginPromptState()
-        state.bind(first)
-        state.begin()
+        state.bind(first, token = 1L)
+        val attempt = state.begin()
 
-        state.settle(WarrenForumLoginOutcome.Deferred("connecting"), message = "tunnel busy")
+        state.settle(attempt, WarrenForumLoginOutcome.Deferred("connecting"), message = "tunnel busy")
 
         assertFalse(state.busy)
         assertFalse(state.terminal)
@@ -63,15 +63,43 @@ class ForumLoginPromptStateTest {
         // a rotation mid-flight still learns the approval from the state
         // rather than re-arming Approve over a login that already happened.
         val state = ForumLoginPromptState()
-        state.bind(first)
-        state.begin()
+        state.bind(first, token = 1L)
+        val attempt = state.begin()
 
-        state.markApproved()
+        assertTrue(state.markApproved(attempt))
 
         assertTrue(state.approved)
         assertFalse(state.busy)
 
-        state.bind(second)
+        state.bind(second, token = 2L)
         assertFalse(state.approved)
+    }
+
+    @Test
+    fun a_new_request_for_the_same_sid_starts_a_fresh_consent() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+        assertTrue(state.markApproved(state.begin()))
+
+        state.bind(first, token = 2L)
+
+        assertFalse(state.approved)
+        assertFalse(state.busy)
+        assertNull(state.failure)
+    }
+
+    @Test
+    fun a_result_for_a_superseded_attempt_is_dropped_never_applied_to_the_current_link() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+        val attempt = state.begin()
+
+        state.bind(second, token = 2L)
+
+        assertFalse(state.markApproved(attempt))
+        assertFalse(state.approved)
+        assertFalse(state.settle(attempt, WarrenForumLoginOutcome.Expired, message = "gone"))
+        assertNull(state.failure)
+        assertFalse(state.terminal)
     }
 }

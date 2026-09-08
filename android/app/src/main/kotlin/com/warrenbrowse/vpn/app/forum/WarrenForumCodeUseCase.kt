@@ -37,8 +37,13 @@ class WarrenForumCodeUseCase(
 ) : ForumSignInRequests {
 
     override suspend fun requestSignIn(sid: String) {
+        // The reads bound themselves in Rust with the budget; the timeout
+        // here is only the belt, a grace past the budget, because it cannot
+        // interrupt the native call it waits on.
         val placement =
-            withTimeoutOrNull(probeTimeoutMillis) { withContext(ioDispatcher) { probe(sid) } }
+            withTimeoutOrNull(probeTimeoutMillis + PROBE_GRACE_MILLIS) {
+                withContext(ioDispatcher) { probe(sid) }
+            }
                 ?: Placement.Login("timeout")
         when (placement) {
             is Placement.Attach -> {
@@ -83,7 +88,7 @@ class WarrenForumCodeUseCase(
     @Suppress("TooGenericExceptionCaught")
     private fun probe(sid: String): Placement =
         try {
-            parsePlacement(jni.forumCodeProbe(sid, ALLOWED_CONNECT_HOST))
+            parsePlacement(jni.forumCodeProbe(sid, ALLOWED_CONNECT_HOST, probeTimeoutMillis))
         } catch (e: Exception) {
             Logger.w(throwable = e) { "WarrenJniBridge.forumCodeProbe threw" }
             Placement.Login("jni")
@@ -116,11 +121,14 @@ class WarrenForumCodeUseCase(
 
     companion object {
         /**
-         * The bound on the placement: up to three broker reads, each on the
-         * forum transport's own 15 s. Past it the login consent is raised,
-         * which preflights again before signing.
+         * The budget of the placement, shared by its up to three broker
+         * reads, each taking what is left of it in Rust. Past it the login
+         * consent is raised, which preflights again before signing.
          */
         const val PROBE_TIMEOUT_MILLIS: Long = 20_000L
+
+        /** How long past the budget the caller still waits for the native call to return. */
+        const val PROBE_GRACE_MILLIS: Long = 1_000L
         private val CODE_KINDS = setOf("login", "gone", "unknown")
     }
 }

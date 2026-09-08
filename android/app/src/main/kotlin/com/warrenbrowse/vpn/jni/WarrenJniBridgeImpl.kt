@@ -67,8 +67,8 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         WarrenJni.forumAttachCancel(sid, host)
     }
 
-    override fun forumCodeProbe(sid: String, host: String): String = ready {
-        WarrenJni.forumCodeProbe(sid, host)
+    override fun forumCodeProbe(sid: String, host: String, budgetMillis: Long): String = ready {
+        WarrenJni.forumCodeProbe(sid, host, budgetMillis)
     }
 
     override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =

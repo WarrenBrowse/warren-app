@@ -47,7 +47,8 @@ class AppVersionInfoRepositoryTest {
 
         override fun forumAttachCancel(sid: String, host: String) = error("unused")
 
-        override fun forumCodeProbe(sid: String, host: String): String = error("unused")
+        override fun forumCodeProbe(sid: String, host: String, budgetMillis: Long): String =
+            error("unused")
 
         override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
             error("unused")

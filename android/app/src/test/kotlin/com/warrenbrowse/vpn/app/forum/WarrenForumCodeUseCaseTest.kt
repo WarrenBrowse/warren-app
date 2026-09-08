@@ -1,6 +1,8 @@
 package com.warrenbrowse.vpn.app.forum
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -18,9 +20,15 @@ class WarrenForumCodeUseCaseTest {
 
     private val sid = "0123456789abcdef0123456789abcdef"
 
-    private class Harness(jni: FakeJniBridge) {
-        val loginController = ForumLoginController()
-        val attachController = ForumAttachController()
+    private class Harness(
+        val jni: FakeJniBridge,
+        ioDispatcher: kotlinx.coroutines.CoroutineDispatcher = Dispatchers.Unconfined,
+        probeTimeoutMillis: Long = WarrenForumCodeUseCase.PROBE_TIMEOUT_MILLIS,
+    ) {
+        // The JVM has no main looper: the scope a prompt would launch on is injected.
+        private val scope = CoroutineScope(Dispatchers.Unconfined)
+        val loginController = ForumLoginController(scope)
+        val attachController = ForumAttachController(scope)
         val journal = RecordingJournal()
         val useCase =
             WarrenForumCodeUseCase(
@@ -29,7 +37,8 @@ class WarrenForumCodeUseCaseTest {
                 attachController = attachController,
                 journal = journal,
                 // Unconfined: the probe runs to completion inside the test.
-                ioDispatcher = Dispatchers.Unconfined,
+                ioDispatcher = ioDispatcher,
+                probeTimeoutMillis = probeTimeoutMillis,
             )
 
         fun linkReceived(): List<JournalField> = journal.fieldsOf(ForumEvent.LINK_RECEIVED).single()
@@ -118,5 +127,38 @@ class WarrenForumCodeUseCaseTest {
 
         assertEquals(forumLoginLinkFromCode(sid), h.loginController.pending.value)
         assertTrue(h.linkReceived().contains(JournalField.Class("gone")))
+    }
+
+    @Test
+    fun the_probe_budget_is_handed_to_the_native_reads() = runTest {
+        // `withTimeoutOrNull` cannot interrupt a blocking native call, so the
+        // reads themselves are bounded in Rust with the budget the use case
+        // holds, and the Kotlin bound is only the belt over it.
+        val h = Harness(FakeJniBridge(codeProbeAnswer = { """{"kind":"login"}""" }), probeTimeoutMillis = 7_000L)
+
+        h.useCase.requestSignIn(sid)
+
+        assertEquals(listOf(7_000L), h.jni.codeProbeBudgets)
+    }
+
+    @Test
+    fun a_probe_past_its_budget_falls_back_to_the_login_consent() = runBlocking {
+        // A native read that outlives the budget (a broker that accepts the
+        // connection and never answers) must not hold the screen: the login
+        // consent is raised, which preflights again before signing.
+        val jni =
+            FakeJniBridge(
+                codeProbeAnswer = {
+                    Thread.sleep(2_000)
+                    """{"kind":"attach","topic_id":199}"""
+                }
+            )
+        val h = Harness(jni, ioDispatcher = Dispatchers.IO, probeTimeoutMillis = 100L)
+
+        h.useCase.requestSignIn(sid)
+
+        assertEquals(forumLoginLinkFromCode(sid), h.loginController.pending.value)
+        assertNull(h.attachController.pending.value)
+        assertTrue(h.linkReceived().contains(JournalField.Class("timeout")))
     }
 }

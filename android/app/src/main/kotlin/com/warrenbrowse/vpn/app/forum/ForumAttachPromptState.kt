@@ -10,15 +10,26 @@ import com.warrenbrowse.vpn.lib.repository.CollectedReport
  * [ForumAttachController], never by the composable: a rotation recreates the
  * Activity and every `remember` with it, while the upload it launched is
  * still out, so the state it reports to has to outlive the host. Keyed on
- * the link's sid like the login prompt's: a link that replaces another while
+ * the link's sid and the request's token: a link that replaces another while
  * the prompt is open gets a clean prompt, a recomposition binding the same
- * link changes nothing. Plain Kotlin over snapshot state so the transitions
- * are unit-tested off-device.
+ * request changes nothing, and a new request naming the sid of a finished
+ * attempt (the broker hands the same sid back for a pending topic, and a
+ * pre-topic session stays alive once its report is parked) starts clean
+ * too. Plain Kotlin over snapshot state so the transitions are unit-tested
+ * off-device.
  */
 class ForumAttachPromptState {
     /** The sid of the link the state belongs to; null before the first bind. */
     var sid: String? = null
         private set
+
+    private var boundToken: Long? = null
+
+    /**
+     * The attempt in flight, as [begin] numbered it. A result names the
+     * attempt it belongs to and is dropped when a rebind superseded it.
+     */
+    private var attempt: Long = 0L
 
     /** An upload is out: Approve and Cancel are disabled. */
     var busy by mutableStateOf(false)
@@ -56,8 +67,8 @@ class ForumAttachPromptState {
         private set
 
     /**
-     * The report collected for the preview, kept until the prompt goes or a
-     * fresh collection replaces it, so a rotation cannot leak the file.
+     * The report collected for the preview, kept until [takePreview] hands
+     * it out for deletion, so a rotation cannot leak the file.
      */
     var preview by mutableStateOf<CollectedReport?>(null)
         private set
@@ -66,10 +77,23 @@ class ForumAttachPromptState {
     var previewPath by mutableStateOf<String?>(null)
         private set
 
-    /** Adopt [link]; a different sid than the current one resets everything. */
-    fun bind(link: ForumAttachLink) {
-        if (link.sid == sid) return
+    /** Adopt [link] for the request [token]; anything else than the current pair resets. */
+    fun bind(link: ForumAttachLink, token: Long) {
+        if (link.sid == sid && token == boundToken) return
+        reset()
         sid = link.sid
+        boundToken = token
+    }
+
+    /**
+     * Back to the state before any bind: what the controller does when the
+     * consent ends. The preview file, if any, is the caller's to delete
+     * through [takePreview] first.
+     */
+    fun reset() {
+        sid = null
+        boundToken = null
+        attempt += 1
         busy = false
         failure = null
         terminal = false
@@ -84,24 +108,33 @@ class ForumAttachPromptState {
     val canApprove: Boolean
         get() = !busy && !terminal
 
-    /** The user approved: the upload is in flight. */
-    fun begin() {
+    /** The user approved: the upload is in flight. Returns the attempt's number. */
+    fun begin(): Long {
+        attempt += 1
         busy = true
         failure = null
+        return attempt
     }
 
-    /** A non-attached [outcome] came back, rendered as [message]. */
-    fun settle(outcome: WarrenForumAttachOutcome, message: String) {
+    /**
+     * A non-attached [outcome] of [attempt] came back, rendered as [message].
+     * False when a rebind superseded the attempt: nothing is applied.
+     */
+    fun settle(attempt: Long, outcome: WarrenForumAttachOutcome, message: String): Boolean {
+        if (attempt != this.attempt) return false
         busy = false
         terminal = isTerminalAttachOutcome(outcome)
         cancelsOnDecline = outcome !is WarrenForumAttachOutcome.Expired
         failure = message
+        return true
     }
 
-    /** The provider attached (or parked) the report. */
-    fun markAttached() {
+    /** The provider attached (or parked) the report of [attempt]; false when superseded. */
+    fun markAttached(attempt: Long): Boolean {
+        if (attempt != this.attempt) return false
         busy = false
         attached = true
+        return true
     }
 
     /** A message for the current link without an attempt (a stale link). */
@@ -125,9 +158,21 @@ class ForumAttachPromptState {
         collectFailed = true
     }
 
-    /** Closes the screen; the file stays for the approval or the next bind. */
+    /** Closes the screen; the file stays for the next view or the drop. */
     fun closePreview() {
         previewPath = null
+    }
+
+    /**
+     * Hands the collected report out, once, for deletion, and forgets it:
+     * the screen over a deleted file closes with it, and the next "View the
+     * logs" collects afresh.
+     */
+    fun takePreview(): CollectedReport? {
+        val report = preview
+        preview = null
+        previewPath = null
+        return report
     }
 }
 
