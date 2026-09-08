@@ -12,6 +12,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.long
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -166,6 +167,15 @@ class WarrenForumAttachUseCaseTest {
     // envelope the shared crate hands this decoder for every provider answer,
     // replayed here and by the Rust reader on its side of the same file.
     private val fixture = ClientRulesFixtures.load("forum_outcomes.json")
+
+    @Test
+    fun the_attach_log_cap_is_the_fixtures() {
+        // The first leg of the report-size chain is one number on every
+        // platform: the fixture pins it, so a cap moved in the shared crate
+        // fails here as it fails the Rust and Swift readers.
+        val pinned = fixture["attach"]!!.jsonObject["max_log_gz_bytes"]!!.jsonPrimitive.long
+        assertEquals(pinned, WarrenSupportReporterImpl.MAX_LOG_GZ_BYTES.toLong())
+    }
 
     @Test
     fun the_shared_attach_outcome_fixture_replays_case_for_case() {

@@ -26,7 +26,6 @@ final class WarrenForumAttachPromptStateTests: XCTestCase {
         let state = state()
         XCTAssertTrue(state.canApprove)
         XCTAssertTrue(state.cancelsOnDecline)
-        XCTAssertFalse(state.attached)
         XCTAssertFalse(state.link.isPreTopic)
         XCTAssertTrue(self.state(topicId: 0).link.isPreTopic)
     }
@@ -61,12 +60,12 @@ final class WarrenForumAttachPromptStateTests: XCTestCase {
         XCTAssertFalse(gone.cancelsOnDecline)
     }
 
-    func testAnAttachedUploadEndsTheBusyStateAndMarksThePromptDone() {
+    func testAnAttachedUploadEndsTheBusyStateWithNoFailureLeft() {
         let state = state()
+        state.settle(.serverError, message: "later")
         state.begin()
         state.markAttached()
         XCTAssertFalse(state.busy)
-        XCTAssertTrue(state.attached)
         XCTAssertNil(state.failure)
     }
 

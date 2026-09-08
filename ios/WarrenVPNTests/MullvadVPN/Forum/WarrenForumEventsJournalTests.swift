@@ -66,6 +66,17 @@ final class WarrenForumEventsJournalTests: XCTestCase {
         XCTAssertEqual(journal.fileURL.lastPathComponent, WarrenForumEventsJournal.fileName)
     }
 
+    func testFlushReturnsBehindEveryPendingWrite() throws {
+        let journal = WarrenForumEventsJournal(directory: directory)
+        for _ in 0..<50 {
+            journal.record(.attachSigning, .preTopic(false))
+        }
+        journal.flush()
+        // Read straight off the disk, not through the queue `drain` waits on.
+        let text = try String(contentsOf: journal.fileURL, encoding: .utf8)
+        XCTAssertEqual(text.split(separator: "\n", omittingEmptySubsequences: true).count, 50)
+    }
+
     func testTheJournalKeepsItsNewestHalfPastTheCap() throws {
         let journal = WarrenForumEventsJournal(directory: directory)
         // Well past the cap: every line is about 90 bytes.

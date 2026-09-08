@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import WarrenTypes
 
 private let kLogDelimiter = "===================="
 private let kRedactedPlaceholder = "[REDACTED]"

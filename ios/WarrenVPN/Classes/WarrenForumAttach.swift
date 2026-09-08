@@ -125,8 +125,6 @@ final class WarrenForumAttachPromptState: ObservableObject {
     @Published private(set) var failure: String?
     /// No retry can change the outcome, so Approve is disarmed for good.
     @Published private(set) var terminal = false
-    /// The upload was attached (or parked); the prompt is done.
-    @Published private(set) var attached = false
     /// Leaving the prompt tells the provider the user declined, so the forum
     /// page stops waiting. False only once the provider reported the session
     /// gone: a refusal as author or a report over the cap leaves the session
@@ -158,11 +156,11 @@ final class WarrenForumAttachPromptState: ObservableObject {
         failure = message
     }
 
-    /// The provider attached (or parked) the report.
+    /// The provider attached (or parked) the report; the flow dismisses the
+    /// prompt, so nothing here outlives it.
     func markAttached() {
         busy = false
         failure = nil
-        attached = true
     }
 
     /// A message for the current link without an attempt (a stale link, a
@@ -225,10 +223,11 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
         self.anchors = anchors
         self.journal = journal
         let journalURL = journal.fileURL
-        self.upload = upload ?? Self.productionUpload(journalURL: journalURL)
+        self.upload = upload ?? Self.productionUpload(journal: journal)
         self.collectPreview =
             collectPreview ?? {
-                WarrenProblemReport.consolidate(
+                journal.flush()
+                return WarrenProblemReport.consolidate(
                     fileURLs: Self.reportFileURLs(journalURL: journalURL),
                     redacting: Self.walletAddress().map { [$0] } ?? [],
                     groupIdentifiers: [ApplicationConfiguration.securityGroupIdentifier],
@@ -379,15 +378,18 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
     // MARK: - Production wiring
 
     /// The upload as shipped: the Keychain wallet, the app's own log files
-    /// consolidated and gzipped, the Rust FFI.
-    static func productionUpload(journalURL: URL) -> WarrenForumAttachUpload {
-        WarrenForumAttachUpload(
+    /// consolidated and gzipped after the journal is flushed (so the attempt's
+    /// own `attach.signing` line rides in its report), the Rust FFI.
+    static func productionUpload(journal: WarrenForumEventsJournal) -> WarrenForumAttachUpload {
+        let journalURL = journal.fileURL
+        return WarrenForumAttachUpload(
             loadWallet: {
                 guard let mnemonic = try? WarrenWalletKeychain.load() else { return nil }
                 return try? WarrenWallet.fromMnemonic(mnemonic)
             },
             collectGzipped: { address in
-                try WarrenProblemReport.gzipped(
+                journal.flush()
+                return try WarrenProblemReport.gzipped(
                     fileURLs: reportFileURLs(journalURL: journalURL),
                     redacting: address.map { [$0] } ?? [],
                     groupIdentifiers: [ApplicationConfiguration.securityGroupIdentifier],

@@ -24,11 +24,12 @@ struct WarrenForumAttachUpload {
     /// Sign and send: seed, sid, topic, host, gzip. The Rust FFI in production.
     let attach: (Data, String, UInt64, String, Data) -> WarrenForumAttachOutcome
 
-    /// Largest gzipped report sent: the shared crate's `MAX_LOG_GZ_BYTES`, the
-    /// broker's 16,000,000-character base64 cap translated to bytes. The
-    /// first leg of the report-size chain, applied here before any byte
-    /// leaves; the Rust side applies it again.
-    static let maxLogGzBytes = 12_000_000
+    /// Largest gzipped report sent: the shared crate's `MAX_LOG_GZ_BYTES`, read
+    /// off the FFI rather than copied, the broker's 16,000,000-character
+    /// base64 cap translated to bytes. The first leg of the report-size
+    /// chain, applied here before any byte leaves; the Rust side applies it
+    /// again.
+    static var maxLogGzBytes: Int { WarrenAccountClient.forumMaxLogGzBytes }
 
     struct Result: Equatable {
         let outcome: WarrenForumAttachOutcome

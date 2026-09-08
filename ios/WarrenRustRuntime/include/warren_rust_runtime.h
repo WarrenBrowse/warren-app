@@ -960,6 +960,13 @@ char *warren_forum_attach_logs(const uint8_t *seed,
 void warren_forum_attach_cancel(const char *sid, const char *host);
 
 /**
+ * The largest gzipped report the attach upload sends,
+ * [`warren_forum::MAX_LOG_GZ_BYTES`], for the Swift size gate to read rather
+ * than copy: one cap, applied on both sides of the boundary.
+ */
+uintptr_t warren_forum_max_log_gz_bytes(void);
+
+/**
  * Places a session id typed by hand before any consent is raised: the login
  * status read first, the attach status read only when the login one answers
  * 404, and the attach meta only for a pending attach session, because it

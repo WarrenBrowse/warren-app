@@ -150,6 +150,14 @@ final class WarrenForumEventsJournal: @unchecked Sendable {
         }
     }
 
+    /// Returns once every write recorded so far is on disk. The report
+    /// collector calls it before consolidating, so an attempt's own
+    /// `attach.signing` line, written moments earlier, rides in the report it
+    /// describes instead of the next one.
+    func flush() {
+        queue.sync {}
+    }
+
     /// The lines currently in the journal file, oldest first, read behind
     /// every pending write on the journal's queue.
     func drain() throws -> [String] {

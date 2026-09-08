@@ -452,6 +452,13 @@ public enum WarrenAccountClient {
         }
     }
 
+    /// The largest gzipped report the attach upload sends, the shared crate's
+    /// `MAX_LOG_GZ_BYTES` (`warren_forum_max_log_gz_bytes`): the one cap the
+    /// Rust gate applies, so the Swift gate cannot drift from it.
+    public static var forumMaxLogGzBytes: Int {
+        Int(warren_forum_max_log_gz_bytes())
+    }
+
     /// Places a session id typed by hand before any consent is raised: reads
     /// the login status, the attach status when the first answered 404, and
     /// the attach meta for a pending attach session, which names the topic

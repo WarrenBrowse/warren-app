@@ -107,6 +107,10 @@ final class WarrenForumAttachOutcomeTests: XCTestCase {
         XCTAssertEqual(
             WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":-1}"#),
             .attachWithoutTopic)
+        // A JSON boolean is an NSNumber too, and `true` would read as topic 1.
+        XCTAssertEqual(
+            WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":true}"#),
+            .attachWithoutTopic)
         XCTAssertEqual(
             WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":9007199254740993}"#),
             .attachWithoutTopic)

@@ -491,6 +491,14 @@ pub unsafe extern "C" fn warren_forum_attach_cancel(sid: *const c_char, host: *c
     })
 }
 
+/// The largest gzipped report the attach upload sends,
+/// [`warren_forum::MAX_LOG_GZ_BYTES`], for the Swift size gate to read rather
+/// than copy: one cap, applied on both sides of the boundary.
+#[unsafe(no_mangle)]
+pub extern "C" fn warren_forum_max_log_gz_bytes() -> usize {
+    warren_forum::MAX_LOG_GZ_BYTES
+}
+
 /// Places a session id typed by hand before any consent is raised: the login
 /// status read first, the attach status read only when the login one answers
 /// 404, and the attach meta only for a pending attach session, because it

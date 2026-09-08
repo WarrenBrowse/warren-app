@@ -346,6 +346,8 @@
   "attach": {
     "_comment": "The broker's answers to POST /v1/forum/attach-logs (the forum's attach-your-logs page), classed the way the desktop ForumAttachResult and the shared crate class them: every refusal by status, clock_skew by its body token. Both successes are one kind: the pre-topic report is parked until the forum binds it, and the client has nothing else to do.",
     "_kinds": ["attached", "not-author", "expired", "too-large", "clock-skew", "server-error", "failed"],
+    "_comment_max_log_gz_bytes": "The largest gzipped report a client sends, the shared crate's MAX_LOG_GZ_BYTES: the broker caps the base64 FIELD at 16,000,000 characters and base64 spends 4 per 3 bytes, so 12,000,000 bytes fill it exactly. Every platform's size gate is held to this number.",
+    "max_log_gz_bytes": 12000000,
     "terminal_kinds": ["not-author", "expired", "too-large"],
     "cases": [
       {

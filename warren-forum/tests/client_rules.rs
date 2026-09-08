@@ -7,11 +7,11 @@
 //! are replayed by the platform mirrors only.
 
 use warren_forum::{
-    FailReason, ForumAttachOutcome, ForumIdentity, ForumLoginOutcome, PRE_TOPIC_ID, ReportOutcome,
-    attach_body, attach_envelope, attach_outcome_for_response, build_attach_cancel_url,
-    build_attach_status_url, build_cancel_url, build_status_url, connect_host, envelope,
-    is_allowed_connect_host, is_valid_sid, normalize_sign_in_code, outcome_for_response,
-    parse_topic_id, report_envelope, report_outcome_for_response,
+    FailReason, ForumAttachOutcome, ForumIdentity, ForumLoginOutcome, MAX_LOG_GZ_BYTES,
+    PRE_TOPIC_ID, ReportOutcome, attach_body, attach_envelope, attach_outcome_for_response,
+    build_attach_cancel_url, build_attach_status_url, build_cancel_url, build_status_url,
+    connect_host, envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code,
+    outcome_for_response, parse_topic_id, report_envelope, report_outcome_for_response,
 };
 
 fn fixture(name: &str) -> serde_json::Value {
@@ -405,6 +405,19 @@ fn every_report_case_classes_and_envelopes_as_the_fixture_says() {
             "{name}: envelope"
         );
     }
+}
+
+#[test]
+fn the_attach_log_cap_is_the_fixtures() {
+    // The first leg of the report-size chain is one number on every
+    // platform: the fixture pins it, so a cap moved here fails this reader,
+    // the JVM one and the Swift one together instead of one client silently
+    // sending what the others refuse.
+    let outcomes = fixture("forum_outcomes.json");
+    let pinned = outcomes["attach"]["max_log_gz_bytes"]
+        .as_u64()
+        .expect("attach.max_log_gz_bytes");
+    assert_eq!(u64::try_from(MAX_LOG_GZ_BYTES).expect("fits"), pinned);
 }
 
 #[test]

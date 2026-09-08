@@ -3,10 +3,10 @@ import XCTest
 @testable import WarrenRustRuntime
 
 /// The attach-logs upload from an approval to the FFI call, with the wallet,
-/// the collector and the client faked: the Android
-/// `WarrenForumAttachUseCaseTest` mirrored. The one property the reviewer
-/// asked for by name is that the gzip the collector produced is the byte
-/// array the FFI receives.
+/// the collector and the client faked, the Android
+/// `WarrenForumAttachUseCaseTest` mirrored. The property that matters most:
+/// the gzip the collector produced is the byte array the FFI receives, whole
+/// and unchanged.
 final class WarrenForumAttachUploadTests: XCTestCase {
     private let sid = "0123456789abcdef0123456789abcdef"
     private let host = "connect.warrenbrowse.com"
@@ -84,11 +84,20 @@ final class WarrenForumAttachUploadTests: XCTestCase {
         XCTAssertEqual(recorder.attached.count, 0)
     }
 
+    func testTheCapIsTheSharedCratesAndTheFixtures() throws {
+        // The size gate reads the cap off the FFI (`warren_forum::MAX_LOG_GZ_BYTES`),
+        // and the fixture pins the value every platform's gate applies, so a
+        // moved cap fails here and in the crate's and the JVM readers together.
+        let fixture = try ClientRulesFixtures.load("forum_outcomes.json")
+        let attach = try ClientRulesFixtures.object(fixture, "attach")
+        let pinned = try XCTUnwrap(attach["max_log_gz_bytes"] as? NSNumber).intValue
+        XCTAssertEqual(WarrenForumAttachUpload.maxLogGzBytes, pinned)
+        XCTAssertEqual(WarrenAccountClient.forumMaxLogGzBytes, pinned)
+    }
+
     func testAReportOverTheCapIsRefusedBeforeItCrossesAndTheCapItselfIsSent() {
         // The first leg of the report-size chain: a gzip the broker would
-        // refuse at its base64 cap reaches no host. The cap is the shared
-        // crate's `MAX_LOG_GZ_BYTES`, 12,000,000 bytes.
-        XCTAssertEqual(WarrenForumAttachUpload.maxLogGzBytes, 12_000_000)
+        // refuse at its base64 cap reaches no host.
         let over = Recorder()
         let refused = upload(over, gz: Data(count: WarrenForumAttachUpload.maxLogGzBytes + 1))
             .run(sid: sid, host: host, topicId: 42)
