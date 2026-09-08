@@ -181,6 +181,16 @@ carries none, never another environment's.
    apksigner sign --ks app-keys.jks (WarrenVPN)(version)(.apk|.aab)
    ```
 
+### Release build without a keystore
+When the `warren.keystore.*` properties (or the `WARREN_KEYSTORE_*` variables)
+are absent, `assembleProdRelease` / `assembleBetaRelease` still produce an
+installable APK: `app/build.gradle.kts` signs the release build type with the
+AGP debug keystore (`~/.android/debug.keystore`). This is what the release
+workflow ships for the beta while no upload keystore exists: the optimised
+build (R8, release-profile Rust) under the key every beta install already
+carries, because the CI runner's debug keystore signed every earlier beta APK,
+so a sideloaded beta upgrades in place. A configured keystore takes precedence.
+
 ## Build using nix devshell
 This is supported on Linux (x86_64) as well as macOS (x86_64 and aarch64).
 

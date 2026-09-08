@@ -5,8 +5,10 @@
 # .pacman, for x86_64 and arm64, plus a sysvinit .deb and a NixOS flake),
 # Windows (MSI/NSIS) and Android (AAB/APK), and uploads them to a GitHub
 # Release. Code signing is opt-in per platform: when the signing secrets are
-# absent the jobs produce UNSIGNED builds (the current default, since Warren
-# has no company/store accounts yet). iOS is disabled until an Apple Developer
+# absent the desktop jobs produce UNSIGNED builds (the current default, since
+# Warren has no company/store accounts yet) and the Android job signs its
+# release build with the runner's AGP debug key (see build-android), because
+# an unsigned APK installs nowhere. iOS is disabled until an Apple Developer
 # account exists (re-enable by setting the repo variable
 # WARREN_ENABLE_IOS=true).
 #
@@ -914,8 +916,12 @@ jobs:
     # (attached to the GitHub Release by publish-release) on every version tag,
     # and it blocks the release like the desktop builds. Signing is opt-in: with
     # ANDROID_KEYSTORE_BASE64 set it produces a signed release APK + AAB and
-    # uploads the AAB to the Play internal-test track; without it, an unsigned
-    # debug APK is built and published (same opt-in model as the desktop builds).
+    # uploads the AAB to the Play internal-test track; without it, the SAME
+    # release build type (R8, release-profile Rust) is built and signed with
+    # the runner's AGP debug keystore (app/build.gradle.kts, buildTypes). That
+    # key signed every beta APK shipped so far, so a sideloaded beta upgrades
+    # in place. The debug build type was published under that key until
+    # 1.1.28: an unoptimised datapath that held a Fairphone 3 at 59 % CPU.
     needs: [tag-guard, tests]
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 60
@@ -994,19 +1000,21 @@ jobs:
           ./gradlew app:assembleBetaRelease app:bundleBetaRelease --parallel \
             -Pwarren.app.config.override.versionCode="$WARREN_BETA_VERSION_CODE"
 
-      - name: Build unsigned APK (prod)
+      # No keystore: the release build type, signed with the runner's AGP debug
+      # key. APK only, a debug-signed AAB has no store to go to.
+      - name: Build release APK signed with the runner debug key (prod)
         if: env.WARREN_CHANNEL == 'prod' && env.ANDROID_KEYSTORE_B64 == ''
         working-directory: android
         run: |
-          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; producing unsigned dev build."
-          ./gradlew app:assembleProdDebug --parallel
+          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; the release APK is signed with the runner's AGP debug key."
+          ./gradlew app:assembleProdRelease --parallel
 
-      - name: Build unsigned APK (beta)
+      - name: Build release APK signed with the runner debug key (beta)
         if: env.WARREN_CHANNEL == 'beta' && env.ANDROID_KEYSTORE_B64 == ''
         working-directory: android
         run: |
-          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; producing unsigned dev build."
-          ./gradlew app:assembleBetaDebug --parallel \
+          echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; the release APK is signed with the runner's AGP debug key."
+          ./gradlew app:assembleBetaRelease --parallel \
             -Pwarren.app.config.override.versionCode="$WARREN_BETA_VERSION_CODE"
 
       # Prod only: the Play listing is the prod applicationId; the beta app is

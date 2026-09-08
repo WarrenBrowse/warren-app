@@ -1,32 +1,18 @@
-# Mullvad daemon FFI/JNI
-# See: <repository-root>/mullvad-jni/classes.rs
-# Keep all talpid classes as they are used for JNI calls
--keep class net.mullvad.talpid.** { *; }
-# These are specific classes used in JNI calls with the daemon
--keep class com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride { *; }
--keep class com.warrenbrowse.vpn.app.service.MullvadDaemon { *; }
--keep class com.warrenbrowse.vpn.app.service.MullvadVpnService { *; }
-# All classes that are used in JNI calls are subclasses of Parcelable
--keep class android.os.Parcelable { *; }
-# Common java types used in JNI calls
--keep class java.lang.Boolean { *; }
--keep class java.lang.Integer { *; }
--keep class java.lang.String { *; }
--keep class java.net.InetAddress { *; }
--keep class java.net.InetSocketAddress { *; }
--keep class java.util.ArrayList { *; }
+# Warren engine JNI (warren-jni/src/android_jni.rs)
+#
+# The Rust side reaches Java through two surfaces only:
+#   1. its own native methods on com.warrenbrowse.vpn.jni.WarrenJni, bound by
+#      symbol name (Java_com_warrenbrowse_vpn_jni_WarrenJni_<method>), so the
+#      class and its native method names must survive R8. The default
+#      proguard-android-optimize.txt already keeps native members by name;
+#      naming the class here pins that contract to the one class it protects.
+#   2. VpnService.protect(int) on the service object handed to connectTunnel,
+#      a framework method that R8 never touches.
+# No Kotlin class is looked up by name from Rust (no FindClass), so nothing
+# else needs a keep rule for JNI.
+-keepclasseswithmembernames class com.warrenbrowse.vpn.jni.WarrenJni {
+    native <methods>;
+}
 
-# grpc
--keep class io.grpc.okhttp.OkHttpChannelBuilder { *; }
--keep class mullvad_daemon.management_interface.** { *; }
--keep class mullvad_daemon.relay_selector.** { *; }
--keep class com.google.protobuf.Timestamp { *; }
--keepnames class com.google.protobuf.** { *; }
--dontwarn com.google.j2objc.annotations.ReflectionSupport
--dontwarn com.google.j2objc.annotations.RetainedWith
--dontwarn com.squareup.okhttp.CipherSuite
--dontwarn com.squareup.okhttp.ConnectionSpec
--dontwarn com.squareup.okhttp.TlsVersion
-
-# datastore
+# datastore: protobuf lite resolves the message fields by name at runtime.
 -keep class com.warrenbrowse.vpn.repository.UserPreferences { *; }

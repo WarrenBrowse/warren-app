@@ -134,11 +134,21 @@ android {
 
     buildTypes {
         getByName(BuildTypes.RELEASE) {
+            // The beta ships as a direct APK from the release workflow, and no
+            // upload keystore exists yet. A release build with a null signing
+            // config yields an unsigned APK that no device installs, which is
+            // what pushed the workflow onto the debug build type: an unoptimised
+            // Rust datapath and no R8, measured at 59 % CPU on a Fairphone 3.
+            // The AGP debug keystore of the build machine is the key every beta
+            // install already carries (the CI runner's ~/.android/debug.keystore
+            // signed each of them), so signing the release build type with it
+            // keeps the R8 and release-profile Rust output together with the
+            // in-place upgrade path. A configured upload keystore takes over.
             signingConfig =
                 if (signingConfigured) {
                     signingConfigs.getByName("warrenRelease")
                 } else {
-                    null
+                    signingConfigs.getByName("debug")
                 }
             isMinifyEnabled = true
             isShrinkResources = true
