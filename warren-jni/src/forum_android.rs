@@ -17,15 +17,15 @@ use jnix::{
     jni::{
         JNIEnv,
         objects::{JClass, JString},
-        sys::{jboolean, jbyteArray, jstring},
+        sys::{jboolean, jbyteArray, jlong, jstring},
     },
 };
 use warren_api::{HttpRequest, HttpResponse, HttpTransport, Method, TransportError};
 use zeroize::Zeroizing;
 
 use crate::forum::{
-    self, FailReason, ForumLoginOutcome, ForumNotificationsOutcome, ForumRequestError,
-    ReportOutcome, SessionPreflight,
+    self, CodeKind, FailReason, ForumAttachOutcome, ForumLoginOutcome, ForumNotificationsOutcome,
+    ForumRequestError, ReportOutcome, SessionPreflight,
 };
 use crate::forum_digest::{DigestState, Fetched, Refresh};
 
@@ -144,13 +144,19 @@ async fn post_within(
     transport.execute(request).await
 }
 
-/// Reads the session's status once before signing. The `Date` header of that
-/// TLS-authenticated answer is the trusted clock a device that never
-/// synchronised its own can be corrected against, which turns the 2026-08-18
-/// class (every attempt refused by the 60 s window) into a login that works.
-/// The classing of the answer is the shared crate's, the same one iOS applies.
-async fn preflight(transport: &ForumTransport, sid: &str, host: &str) -> SessionPreflight {
-    let Some(url) = forum::build_status_url(sid, host) else {
+/// Reads the session's status (`url`, the login's or the attach session's)
+/// once before signing. The `Date` header of that TLS-authenticated answer is
+/// the trusted clock a device that never synchronised its own can be
+/// corrected against, which turns the 2026-08-18 class (every attempt refused
+/// by the 60 s window) into a login that works. The classing of the answer is
+/// the shared crate's, the same one iOS applies. `flow` names the caller in
+/// the log.
+async fn preflight(
+    transport: &ForumTransport,
+    url: Option<String>,
+    flow: &str,
+) -> SessionPreflight {
+    let Some(url) = url else {
         return SessionPreflight::Unknown;
     };
     match get_dated(transport, url).await {
@@ -164,12 +170,12 @@ async fn preflight(transport: &ForumTransport, sid: &str, host: &str) -> Session
             match verdict {
                 SessionPreflight::Pending { offset_secs } if offset_secs.abs() > 30 => {
                     log::warn!(
-                        "forumLogin: device clock is {offset_secs} s off the connect host, correcting"
+                        "{flow}: device clock is {offset_secs} s off the connect host, correcting"
                     );
                 }
                 SessionPreflight::Unknown => {
                     log::info!(
-                        "forumLogin: status preflight answered {}, signing with the device clock",
+                        "{flow}: status preflight answered {}, signing with the device clock",
                         response.status
                     );
                 }
@@ -178,7 +184,7 @@ async fn preflight(transport: &ForumTransport, sid: &str, host: &str) -> Session
             verdict
         }
         Err(_) => {
-            log::warn!("forumLogin: status preflight failed (transport), signing anyway");
+            log::warn!("{flow}: status preflight failed (transport), signing anyway");
             SessionPreflight::Unknown
         }
     }
@@ -233,7 +239,11 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> ForumLoginOutcome {
         return ForumLoginOutcome::Failed(FailReason::Build);
     }
     let transport = forum_transport();
-    let offset_secs = match runtime.block_on(preflight(&transport, sid, host)) {
+    let offset_secs = match runtime.block_on(preflight(
+        &transport,
+        forum::build_status_url(sid, host),
+        "forumLogin",
+    )) {
         SessionPreflight::Pending { offset_secs } => offset_secs,
         SessionPreflight::Gone => {
             log::info!("forumLogin: session already gone before signing");
@@ -321,7 +331,14 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLoginCancel<
 }
 
 fn forum_cancel(sid: &str, host: &str) {
-    let Some(url) = forum::build_cancel_url(sid, host) else {
+    post_best_effort(forum::build_cancel_url(sid, host));
+}
+
+/// An unsigned, bodyless POST whose answer nobody waits for: the two cancel
+/// notifications. A failed one just means the browser page polls to its
+/// timeout.
+fn post_best_effort(url: Option<String>) {
+    let Some(url) = url else {
         return;
     };
     let Some(runtime) = crate::android_jni::runtime() else {
@@ -334,8 +351,266 @@ fn forum_cancel(sid: &str, host: &str) {
         body: Vec::new(),
         use_sni: true,
     };
-    // Best-effort: a failed cancel just means the browser polls to timeout.
     let _ = runtime.block_on(forum_transport().execute(request));
+}
+
+/// An unsigned GET whose status and body are read back: the two status
+/// reads that place a typed code.
+async fn get_plain(
+    transport: &ForumTransport,
+    url: String,
+) -> Result<HttpResponse, TransportError> {
+    transport
+        .execute(HttpRequest {
+            method: Method::Get,
+            url,
+            headers: Vec::new(),
+            body: Vec::new(),
+            use_sni: true,
+        })
+        .await
+}
+
+/// The envelope handed back to Kotlin, or null when the JVM string cannot
+/// be allocated (the caller then sees an exception, never a forged answer).
+fn envelope_or_null(env: &JnixEnv<'_>, json: String) -> jstring {
+    match env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// Sign and submit the attach-logs upload (`POST /v1/forum/attach-logs`) for
+/// the forum's "attach your logs" page: `sid` and `host` from the deep link,
+/// `topic_id` the topic the logs join (0 for a pre-topic session, where the
+/// report is still being composed), `log_gz` the gzipped redacted problem
+/// report. The mirror of the desktop `approveForumAttach` plus the daemon's
+/// signer: preflight the session (clock offset, dead session), sign the body
+/// at the corrected time, send it under the body-sized upload deadline, and
+/// class the answer. Returns the envelope of [`crate::forum::attach_envelope`]:
+/// `{"ok":true}` when attached or parked, `{"ok":false,"error":"not-author"}`
+/// (403), `expired` (404, which also covers a topic the session is not bound
+/// to), `too-large` (over the cap here, or 413), `clock-skew`, `server-error`
+/// (5xx), or `error` with a `reason` class. The mnemonic, sid, signature and
+/// report are never logged.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumAttachLogs<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    sid: JString<'local>,
+    topic_id: jlong,
+    host: JString<'local>,
+    log_gz: jbyteArray,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let sid = String::from_java(&jnix_env, sid);
+    let host = String::from_java(&jnix_env, host);
+    let log_gz = if log_gz.is_null() {
+        None
+    } else {
+        jnix_env.convert_byte_array(log_gz).ok()
+    };
+    // A negative topic or an unreadable array is the caller's bug: nothing
+    // is signed for it, and the class says so.
+    let outcome = match (u64::try_from(topic_id), log_gz) {
+        (Ok(topic_id), Some(log_gz)) => forum_attach_logs(&phrase, &sid, &host, topic_id, &log_gz),
+        _ => ForumAttachOutcome::Failed(FailReason::Build),
+    };
+    envelope_or_null(&jnix_env, forum::attach_envelope(&outcome))
+}
+
+fn forum_attach_logs(
+    mnemonic: &str,
+    sid: &str,
+    host: &str,
+    topic_id: u64,
+    log_gz: &[u8],
+) -> ForumAttachOutcome {
+    let Some(runtime) = crate::android_jni::runtime() else {
+        log::warn!("forumAttachLogs: initLogger must run first");
+        return ForumAttachOutcome::Failed(FailReason::Runtime);
+    };
+    if !forum::is_allowed_connect_host(host) || !forum::is_valid_sid(sid) {
+        log::warn!("forumAttachLogs: refused a link outside the allowlist or sid shape");
+        return ForumAttachOutcome::Failed(FailReason::Build);
+    }
+    if log_gz.is_empty() {
+        log::warn!("forumAttachLogs: empty report, nothing to attach");
+        return ForumAttachOutcome::Failed(FailReason::Build);
+    }
+    // The first leg of the size chain, applied before any byte leaves: the
+    // broker would refuse the field, so the round trip could only be spent.
+    if log_gz.len() > forum::MAX_LOG_GZ_BYTES {
+        log::warn!("forumAttachLogs: report over the size cap, not sent");
+        return ForumAttachOutcome::TooLarge;
+    }
+    let transport = forum_transport();
+    let offset_secs = match runtime.block_on(preflight(
+        &transport,
+        forum::build_attach_status_url(sid, host),
+        "forumAttachLogs",
+    )) {
+        SessionPreflight::Pending { offset_secs } => offset_secs,
+        SessionPreflight::Gone => {
+            log::info!("forumAttachLogs: session already gone before signing");
+            return ForumAttachOutcome::Expired;
+        }
+        SessionPreflight::Unknown => 0,
+    };
+    let Some(timestamp) = forum::timestamp_with_offset(offset_secs) else {
+        log::warn!("forumAttachLogs: could not stamp the request");
+        return ForumAttachOutcome::Failed(FailReason::Build);
+    };
+    let signed = match forum::build_signed_attach_request(
+        mnemonic, sid, host, topic_id, log_gz, timestamp,
+    ) {
+        Ok(req) => req,
+        Err(ForumRequestError::LogTooLarge) => return ForumAttachOutcome::TooLarge,
+        Err(_) => {
+            log::warn!("forumAttachLogs: could not build signed request");
+            return ForumAttachOutcome::Failed(FailReason::Build);
+        }
+    };
+    let bytes = signed.body.len();
+    let request = HttpRequest {
+        method: Method::Post,
+        url: signed.url,
+        headers: signed.headers,
+        body: signed.body,
+        use_sni: true,
+    };
+    let deadline = forum::upload_deadline(bytes);
+    let started = std::time::Instant::now();
+    match runtime.block_on(post_within(&transport, request, deadline)) {
+        Ok(response) => {
+            let outcome = forum::attach_outcome_for_response(response.status, &response.body);
+            log::info!(
+                "forumAttachLogs: provider answered {} in {} ms for a {} byte body ({})",
+                response.status,
+                started.elapsed().as_millis(),
+                bytes,
+                attach_class(&outcome)
+            );
+            outcome
+        }
+        Err(err) => {
+            let class = transport_class(&err);
+            log::warn!(
+                "forumAttachLogs: transport error ({class}) after {} ms of a {} s deadline for a {bytes} byte body",
+                started.elapsed().as_millis(),
+                deadline.as_secs()
+            );
+            if class == "read-timeout" {
+                ForumAttachOutcome::Failed(FailReason::UploadTimeout)
+            } else {
+                ForumAttachOutcome::Failed(FailReason::Transport)
+            }
+        }
+    }
+}
+
+fn attach_class(outcome: &ForumAttachOutcome) -> &'static str {
+    match outcome {
+        ForumAttachOutcome::Attached => "attached",
+        ForumAttachOutcome::NotAuthor => "not author",
+        ForumAttachOutcome::Expired => "expired",
+        ForumAttachOutcome::TooLarge => "too large",
+        ForumAttachOutcome::ClockSkew => "clock skew",
+        ForumAttachOutcome::ServerError => "server error",
+        ForumAttachOutcome::Failed(_) => "failed",
+    }
+}
+
+/// Best-effort: tell the connect provider the user declined the attach
+/// (`POST /v1/attach/<sid>/cancel`) so the waiting forum page shows
+/// "cancelled" instead of polling to its timeout. Unsigned; mirrors the
+/// desktop `cancelForumAttach`. Failures are ignored: the session expires on
+/// its own in 30 minutes.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumAttachCancel<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    sid: JString<'local>,
+    host: JString<'local>,
+) {
+    let jnix_env = JnixEnv::from(env);
+    let sid = String::from_java(&jnix_env, sid);
+    let host = String::from_java(&jnix_env, host);
+    post_best_effort(forum::build_attach_cancel_url(&sid, &host));
+}
+
+/// Places a session id typed by hand before any consent is raised: the
+/// login status read first, the attach status read only when the login one
+/// answers 404. Returns `{"kind":"login"|"attach"|"gone"|"unknown"}`
+/// ([`crate::forum::code_probe_envelope`]). Unsigned, no wallet material;
+/// blocks on up to two GETs, so invoke off the main thread. The sid is never
+/// logged.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumCodeProbe<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    sid: JString<'local>,
+    host: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let sid = String::from_java(&jnix_env, sid);
+    let host = String::from_java(&jnix_env, host);
+    let kind = forum_code_probe(&sid, &host);
+    envelope_or_null(&jnix_env, forum::code_probe_envelope(kind))
+}
+
+fn forum_code_probe(sid: &str, host: &str) -> CodeKind {
+    let Some(runtime) = crate::android_jni::runtime() else {
+        log::warn!("forumCodeProbe: initLogger must run first");
+        return CodeKind::Unknown;
+    };
+    let (Some(login_url), Some(attach_url)) = (
+        forum::build_status_url(sid, host),
+        forum::build_attach_status_url(sid, host),
+    ) else {
+        log::warn!("forumCodeProbe: refused a code outside the allowlist or sid shape");
+        return CodeKind::Unknown;
+    };
+    let transport = forum_transport();
+    let login_status = match runtime.block_on(get_plain(&transport, login_url)) {
+        Ok(response) => Some(response.status),
+        Err(err) => {
+            log::warn!(
+                "forumCodeProbe: login status read failed ({})",
+                transport_class(&err)
+            );
+            None
+        }
+    };
+    let attach = if login_status == Some(404) {
+        match runtime.block_on(get_plain(&transport, attach_url)) {
+            Ok(response) => Some((response.status, response.body)),
+            Err(err) => {
+                log::warn!(
+                    "forumCodeProbe: attach status read failed ({})",
+                    transport_class(&err)
+                );
+                None
+            }
+        }
+    } else {
+        None
+    };
+    let kind = forum::classify_code_probe(
+        login_status,
+        attach
+            .as_ref()
+            .map(|(status, body)| (*status, body.as_slice())),
+    );
+    log::info!(
+        "forumCodeProbe: login status {:?}, attach status {:?}: {:?}",
+        login_status,
+        attach.as_ref().map(|(status, _)| *status),
+        kind
+    );
+    kind
 }
 
 /// Sign and submit an in-app bug report (`POST /v1/forum/report`).
