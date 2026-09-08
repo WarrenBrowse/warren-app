@@ -24,8 +24,8 @@ use warren_api::{HttpRequest, HttpResponse, HttpTransport, Method, TransportErro
 use zeroize::Zeroizing;
 
 use crate::forum::{
-    self, CodeKind, FailReason, ForumAttachOutcome, ForumLoginOutcome, ForumNotificationsOutcome,
-    ForumRequestError, ReportOutcome, SessionPreflight,
+    self, CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome,
+    ForumNotificationsOutcome, ForumRequestError, ReportOutcome, SessionPreflight,
 };
 use crate::forum_digest::{DigestState, Fetched, Refresh};
 
@@ -432,19 +432,12 @@ fn forum_attach_logs(
         log::warn!("forumAttachLogs: initLogger must run first");
         return ForumAttachOutcome::Failed(FailReason::Runtime);
     };
-    if !forum::is_allowed_connect_host(host) || !forum::is_valid_sid(sid) {
-        log::warn!("forumAttachLogs: refused a link outside the allowlist or sid shape");
-        return ForumAttachOutcome::Failed(FailReason::Build);
-    }
-    if log_gz.is_empty() {
-        log::warn!("forumAttachLogs: empty report, nothing to attach");
-        return ForumAttachOutcome::Failed(FailReason::Build);
-    }
-    // The first leg of the size chain, applied before any byte leaves: the
-    // broker would refuse the field, so the round trip could only be spent.
-    if log_gz.len() > forum::MAX_LOG_GZ_BYTES {
-        log::warn!("forumAttachLogs: report over the size cap, not sent");
-        return ForumAttachOutcome::TooLarge;
+    if let Some(refused) = forum::refuse_before_transport(sid, host, log_gz) {
+        log::warn!(
+            "forumAttachLogs: refused before transport ({})",
+            attach_class(&refused)
+        );
+        return refused;
     }
     let transport = forum_transport();
     let offset_secs = match runtime.block_on(preflight(
@@ -543,10 +536,12 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumAttachCancel
 
 /// Places a session id typed by hand before any consent is raised: the
 /// login status read first, the attach status read only when the login one
-/// answers 404. Returns `{"kind":"login"|"attach"|"gone"|"unknown"}`
-/// ([`crate::forum::code_probe_envelope`]). Unsigned, no wallet material;
-/// blocks on up to two GETs, so invoke off the main thread. The sid is never
-/// logged.
+/// answers 404, the attach meta only when that one is pending (it names the
+/// topic the code cannot carry). Returns `{"kind":"login"|"gone"|"unknown"}`
+/// or `{"kind":"attach","topic_id":N}` with 0 for a pre-topic session
+/// ([`crate::forum::code_placement_envelope`]). Unsigned, no wallet material;
+/// blocks on up to three GETs, so invoke off the main thread. The sid is
+/// never logged.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumCodeProbe<'local>(
     env: JNIEnv<'local>,
@@ -557,60 +552,72 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumCodeProbe<'l
     let jnix_env = JnixEnv::from(env);
     let sid = String::from_java(&jnix_env, sid);
     let host = String::from_java(&jnix_env, host);
-    let kind = forum_code_probe(&sid, &host);
-    envelope_or_null(&jnix_env, forum::code_probe_envelope(kind))
+    let placement = forum_code_probe(&sid, &host);
+    envelope_or_null(&jnix_env, forum::code_placement_envelope(placement))
 }
 
-fn forum_code_probe(sid: &str, host: &str) -> CodeKind {
+fn forum_code_probe(sid: &str, host: &str) -> CodePlacement {
     let Some(runtime) = crate::android_jni::runtime() else {
         log::warn!("forumCodeProbe: initLogger must run first");
-        return CodeKind::Unknown;
+        return CodePlacement::Unknown;
     };
-    let (Some(login_url), Some(attach_url)) = (
+    let (Some(login_url), Some(attach_url), Some(meta_url)) = (
         forum::build_status_url(sid, host),
         forum::build_attach_status_url(sid, host),
+        forum::build_attach_meta_url(sid, host),
     ) else {
         log::warn!("forumCodeProbe: refused a code outside the allowlist or sid shape");
-        return CodeKind::Unknown;
+        return CodePlacement::Unknown;
     };
     let transport = forum_transport();
-    let login_status = match runtime.block_on(get_plain(&transport, login_url)) {
-        Ok(response) => Some(response.status),
+    let read = |url: String, what: &str| match runtime.block_on(get_plain(&transport, url)) {
+        Ok(response) => Some((response.status, response.body)),
         Err(err) => {
             log::warn!(
-                "forumCodeProbe: login status read failed ({})",
+                "forumCodeProbe: {what} read failed ({})",
                 transport_class(&err)
             );
             None
         }
     };
+    let login_status = read(login_url, "login status").map(|(status, _)| status);
     let attach = if login_status == Some(404) {
-        match runtime.block_on(get_plain(&transport, attach_url)) {
-            Ok(response) => Some((response.status, response.body)),
-            Err(err) => {
-                log::warn!(
-                    "forumCodeProbe: attach status read failed ({})",
-                    transport_class(&err)
-                );
-                None
-            }
-        }
+        read(attach_url, "attach status")
     } else {
         None
     };
-    let kind = forum::classify_code_probe(
+    // The meta is read only for a pending attach session: it names the topic
+    // a code typed by hand cannot carry, and nothing else needs it.
+    let pending = matches!(
+        forum::classify_code_probe(
+            login_status,
+            attach
+                .as_ref()
+                .map(|(status, body)| (*status, body.as_slice()))
+        ),
+        CodeKind::Attach
+    );
+    let meta = if pending {
+        read(meta_url, "attach meta")
+    } else {
+        None
+    };
+    let placement = forum::place_code(
         login_status,
         attach
             .as_ref()
             .map(|(status, body)| (*status, body.as_slice())),
+        meta.as_ref()
+            .map(|(status, body)| (*status, body.as_slice())),
     );
     log::info!(
-        "forumCodeProbe: login status {:?}, attach status {:?}: {:?}",
+        "forumCodeProbe: login status {:?}, attach status {:?}, meta status {:?}: {:?}",
         login_status,
         attach.as_ref().map(|(status, _)| *status),
-        kind
+        meta.as_ref().map(|(status, _)| *status),
+        placement
     );
-    kind
+    placement
 }
 
 /// Sign and submit an in-app bug report (`POST /v1/forum/report`).

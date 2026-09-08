@@ -342,5 +342,133 @@
         }
       ]
     }
+  },
+  "attach": {
+    "_comment": "The broker's answers to POST /v1/forum/attach-logs (the forum's attach-your-logs page), classed the way the desktop ForumAttachResult and the shared crate class them: every refusal by status, clock_skew by its body token. Both successes are one kind: the pre-topic report is parked until the forum binds it, and the client has nothing else to do.",
+    "_kinds": ["attached", "not-author", "expired", "too-large", "clock-skew", "server-error", "failed"],
+    "terminal_kinds": ["not-author", "expired", "too-large"],
+    "cases": [
+      {
+        "name": "attached",
+        "status": 200,
+        "body": "{\"status\":\"attached\"}",
+        "expect": {
+          "kind": "attached"
+        },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "received_pre_topic",
+        "_comment": "A pre-topic session: the report is parked under the session and bound when the forum mints the topic.",
+        "status": 200,
+        "body": "{\"status\":\"received\"}",
+        "expect": {
+          "kind": "attached"
+        },
+        "envelope": "{\"ok\":true}"
+      },
+      {
+        "name": "not_author",
+        "_comment": "Only the topic's author may attach logs to it; the session stays pending, so leaving the prompt cancels it.",
+        "status": 403,
+        "body": "{\"error\":\"not_author\"}",
+        "expect": {
+          "kind": "not-author"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"not-author\"}"
+      },
+      {
+        "name": "session_unknown",
+        "_comment": "Expired, cancelled, already served, or bound to another topic than the one sent: the broker answers the same 404 for all four.",
+        "status": 404,
+        "body": "unknown or expired session",
+        "expect": {
+          "kind": "expired"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"expired\"}"
+      },
+      {
+        "name": "payload_too_large",
+        "status": 413,
+        "body": "payload too large",
+        "expect": {
+          "kind": "too-large"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"too-large\"}"
+      },
+      {
+        "name": "clock_skew",
+        "status": 401,
+        "body": "{\"error\":\"clock_skew\"}",
+        "expect": {
+          "kind": "clock-skew"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"clock-skew\"}"
+      },
+      {
+        "name": "unauthorized_without_a_token",
+        "_comment": "A 401 that does not carry the clock token is a refused signature the user cannot repair: a classed failure, never a clock message.",
+        "status": 401,
+        "body": "unauthorized",
+        "expect": {
+          "kind": "failed",
+          "reason": "http-401"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-401\"}"
+      },
+      {
+        "name": "rate_limited",
+        "status": 429,
+        "body": "rate limited",
+        "expect": {
+          "kind": "failed",
+          "reason": "http-429"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-429\"}"
+      },
+      {
+        "name": "forum_unavailable",
+        "status": 502,
+        "body": "forum backend error",
+        "expect": {
+          "kind": "server-error"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"server-error\"}"
+      },
+      {
+        "name": "feature_disabled",
+        "status": 503,
+        "body": "feature disabled",
+        "expect": {
+          "kind": "server-error"
+        },
+        "envelope": "{\"ok\":false,\"error\":\"server-error\"}"
+      }
+    ],
+    "client_side_failures": {
+      "cases": [
+        {
+          "name": "transport",
+          "reason": "transport",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"transport\"}"
+        },
+        {
+          "name": "upload_timeout",
+          "_comment": "The gzipped report ran past its body-sized upload deadline on this uplink.",
+          "reason": "upload-timeout",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"upload-timeout\"}"
+        },
+        {
+          "name": "build",
+          "reason": "build",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"build\"}"
+        },
+        {
+          "name": "runtime",
+          "reason": "runtime",
+          "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"runtime\"}"
+        }
+      ]
+    }
   }
 }

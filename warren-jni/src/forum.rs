@@ -8,17 +8,34 @@
 //! POST that consumes the request is Android-gated in `android_jni`.
 
 pub use warren_forum::{
-    CodeKind, FORUM_ATTACH_PATH, FailReason, ForumAttachOutcome, ForumIdentity, ForumLoginOutcome,
-    ForumNotificationsOutcome, ForumRequestError, MAX_FORUM_TOPIC_ID, MAX_LOG_GZ_BYTES,
-    PRE_TOPIC_ID, ReportOutcome, SessionPreflight, SignedForumRequest, attach_body,
-    attach_envelope, attach_outcome_for_response, build_attach_cancel_url, build_attach_status_url,
-    build_cancel_url, build_status_url, classify_code_probe, classify_status_preflight,
-    clock_offset_secs, code_probe_envelope, connect_host, envelope, is_allowed_connect_host,
+    AttachTopic, CodeKind, CodePlacement, FORUM_ATTACH_PATH, FailReason, ForumAttachOutcome,
+    ForumIdentity, ForumLoginOutcome, ForumNotificationsOutcome, ForumRequestError,
+    MAX_FORUM_TOPIC_ID, MAX_LOG_GZ_BYTES, PRE_TOPIC_ID, ReportOutcome, SessionPreflight,
+    SignedForumRequest, attach_body, attach_envelope, attach_outcome_for_response,
+    build_attach_cancel_url, build_attach_meta_url, build_attach_status_url, build_cancel_url,
+    build_status_url, classify_code_probe, classify_status_preflight, clock_offset_secs,
+    code_placement_envelope, code_probe_envelope, connect_host, envelope, is_allowed_connect_host,
     is_valid_sid, normalize_sign_in_code, notifications_envelope,
-    notifications_outcome_for_response, outcome_for_response, parse_topic_id, report_envelope,
-    report_outcome_for_response, seen_envelope, seen_outcome_for_response, timestamp_with_offset,
-    upload_deadline,
+    notifications_outcome_for_response, outcome_for_response, parse_attach_meta_topic,
+    parse_topic_id, place_code, report_envelope, report_outcome_for_response, seen_envelope,
+    seen_outcome_for_response, timestamp_with_offset, upload_deadline,
 };
+
+/// The refusals of an attach upload that cost no round trip, applied before
+/// the status preflight: the connect allowlist and the sid shape (a hostile
+/// link must never reach the network), an empty report, and the first leg of
+/// the report-size chain (a gzip the broker would refuse at its base64 cap).
+/// `None` lets the upload proceed to the preflight.
+#[must_use]
+pub fn refuse_before_transport(sid: &str, host: &str, log_gz: &[u8]) -> Option<ForumAttachOutcome> {
+    if !is_allowed_connect_host(host) || !is_valid_sid(sid) || log_gz.is_empty() {
+        return Some(ForumAttachOutcome::Failed(FailReason::Build));
+    }
+    if log_gz.len() > MAX_LOG_GZ_BYTES {
+        return Some(ForumAttachOutcome::TooLarge);
+    }
+    None
+}
 
 /// Build the signed forum-login request for `sid` against `host`, deriving the
 /// signing key from the wallet `mnemonic` (the Android secret-store shape; iOS
@@ -233,7 +250,10 @@ mod attach_tests {
             req.url,
             "https://connect.warrenbrowse.com/v1/forum/attach-logs"
         );
-        assert_eq!(req.body, attach_body(SID, 42, b"gz").expect("body"));
+        assert_eq!(
+            req.body,
+            format!(r#"{{"log_gz_b64":"Z3o=","sid":"{SID}","topic_id":42}}"#).into_bytes()
+        );
         let header = |name: &str| {
             req.headers
                 .iter()
@@ -264,6 +284,43 @@ mod attach_tests {
         assert_eq!(
             build_signed_attach_request(PHRASE, SID, HOST, 42, &vec![0u8; MAX_LOG_GZ_BYTES + 1], 1),
             Err(ForumRequestError::LogTooLarge)
+        );
+    }
+}
+
+#[cfg(test)]
+mod gate_tests {
+    use super::*;
+
+    const SID: &str = "0123456789abcdef0123456789abcdef";
+    const HOST: &str = "connect.warrenbrowse.com";
+
+    #[test]
+    fn the_pre_transport_gate_refuses_before_any_byte_leaves() {
+        // The first leg of the report-size chain, and the allowlist, applied
+        // before the status preflight: a refusal here costs no round trip and
+        // no signature.
+        assert_eq!(refuse_before_transport(SID, HOST, b"gz"), None);
+        assert_eq!(
+            refuse_before_transport(SID, HOST, &vec![0u8; MAX_LOG_GZ_BYTES]),
+            None,
+            "the cap itself is sent"
+        );
+        assert_eq!(
+            refuse_before_transport(SID, HOST, &vec![0u8; MAX_LOG_GZ_BYTES + 1]),
+            Some(ForumAttachOutcome::TooLarge)
+        );
+        assert_eq!(
+            refuse_before_transport(SID, HOST, b""),
+            Some(ForumAttachOutcome::Failed(FailReason::Build))
+        );
+        assert_eq!(
+            refuse_before_transport(SID, "evil.example.com", b"gz"),
+            Some(ForumAttachOutcome::Failed(FailReason::Build))
+        );
+        assert_eq!(
+            refuse_before_transport("NOTHEX", HOST, b"gz"),
+            Some(ForumAttachOutcome::Failed(FailReason::Build))
         );
     }
 }

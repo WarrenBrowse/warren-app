@@ -755,13 +755,40 @@ pub fn build_signed_attach_request(
     log_gz: &[u8],
     timestamp: u64,
 ) -> Result<SignedForumRequest, ForumRequestError> {
+    let nonce = nonce_16().ok_or(ForumRequestError::Invalid)?;
+    build_signed_attach_request_with_nonce(
+        signing_key,
+        sid,
+        host,
+        topic_id,
+        log_gz,
+        timestamp,
+        nonce,
+    )
+}
+
+/// [`build_signed_attach_request`] with the nonce supplied by the caller, for
+/// the golden-vector replay; production callers mint one through the twin.
+///
+/// # Errors
+///
+/// As [`build_signed_attach_request`], minus the RNG.
+pub(crate) fn build_signed_attach_request_with_nonce(
+    signing_key: &SigningKey,
+    sid: &str,
+    host: &str,
+    topic_id: u64,
+    log_gz: &[u8],
+    timestamp: u64,
+    nonce: [u8; 16],
+) -> Result<SignedForumRequest, ForumRequestError> {
     // The allowlist gate comes first, as for the login: a hostile link must
     // never reach a signature, whatever else it carries.
     if !is_allowed_connect_host(host) {
         return Err(ForumRequestError::Invalid);
     }
     let body = attach_body(sid, topic_id, log_gz)?;
-    signed_post(signing_key, host, FORUM_ATTACH_PATH, body, timestamp)
+    signed_post_with_nonce(signing_key, host, FORUM_ATTACH_PATH, body, timestamp, nonce)
 }
 
 /// The unsigned status URL `GET /v1/attach/<sid>/status` the forum page
@@ -784,6 +811,17 @@ pub fn build_attach_cancel_url(sid: &str, host: &str) -> Option<String> {
         return None;
     }
     Some(format!("https://{host}/v1/attach/{sid}/cancel"))
+}
+
+/// The unsigned meta URL `GET /v1/attach/<sid>/meta`, whose answer names the
+/// topic a live session is bound to (`null` for a pre-topic session): what a
+/// phone that typed the session id by hand cannot know otherwise.
+#[must_use]
+pub fn build_attach_meta_url(sid: &str, host: &str) -> Option<String> {
+    if !is_allowed_connect_host(host) || !is_valid_sid(sid) {
+        return None;
+    }
+    Some(format!("https://{host}/v1/attach/{sid}/meta"))
 }
 
 /// The total deadline of a report upload, from the body it sends: 20 s for
@@ -902,6 +940,106 @@ pub fn code_probe_envelope(kind: CodeKind) -> String {
         CodeKind::Unknown => "unknown",
     };
     format!(r#"{{"kind":"{word}"}}"#)
+}
+
+/// The topic a live attach session is bound to, as `GET /v1/attach/<sid>/meta`
+/// names it since warren-connect v0.15.8.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum AttachTopic {
+    /// A report still being composed (`topic_id` is `null`): the upload
+    /// carries [`PRE_TOPIC_ID`] and the forum binds the logs after creation.
+    PreTopic,
+    /// The existing topic the logs join.
+    Topic(u64),
+}
+
+impl AttachTopic {
+    /// The topic id the upload carries.
+    #[must_use]
+    pub fn id(self) -> u64 {
+        match self {
+            AttachTopic::PreTopic => PRE_TOPIC_ID,
+            AttachTopic::Topic(id) => id,
+        }
+    }
+}
+
+/// Reads the topic off a `GET /v1/attach/<sid>/meta` body: `null` is the
+/// pre-topic session, a number within [`MAX_FORUM_TOPIC_ID`] the topic.
+/// `None` for a body without the field (a provider older than v0.15.8) or
+/// with a value no topic can have: never a guess, because a wrong topic is
+/// refused by the provider as a dead session, the very dead end the field
+/// exists to remove.
+#[must_use]
+pub fn parse_attach_meta_topic(body: &[u8]) -> Option<AttachTopic> {
+    let value: serde_json::Value = serde_json::from_slice(body).ok()?;
+    match value.get("topic_id")? {
+        serde_json::Value::Null => Some(AttachTopic::PreTopic),
+        serde_json::Value::Number(number) => {
+            let id = number.as_u64()?;
+            if id == PRE_TOPIC_ID {
+                Some(AttachTopic::PreTopic)
+            } else {
+                (id <= MAX_FORUM_TOPIC_ID).then_some(AttachTopic::Topic(id))
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Where a session id typed by hand belongs, with what the attach consent
+/// needs to be raised: [`CodeKind`] plus the topic the meta names.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CodePlacement {
+    /// A pending sign-in session: the login consent applies.
+    Login,
+    /// A pending attach-logs session and its topic: the attach consent
+    /// applies, and needs no field.
+    Attach(AttachTopic),
+    /// The code is spent, whatever it was.
+    Gone,
+    /// Not settled: the reads failed, or the attach session's meta names no
+    /// topic. The caller falls back to the login flow, which preflights
+    /// again before signing.
+    Unknown,
+}
+
+/// Places a typed code from the three unsigned reads: the login status, the
+/// attach status when the login one answered 404 ([`classify_code_probe`]),
+/// and the attach meta when the attach status is pending. `None` for a read
+/// that got no HTTP answer or was not needed.
+#[must_use]
+pub fn place_code(
+    login_status: Option<u16>,
+    attach_status: Option<(u16, &[u8])>,
+    meta: Option<(u16, &[u8])>,
+) -> CodePlacement {
+    match classify_code_probe(login_status, attach_status) {
+        CodeKind::Login => CodePlacement::Login,
+        CodeKind::Gone => CodePlacement::Gone,
+        CodeKind::Unknown => CodePlacement::Unknown,
+        CodeKind::Attach => match meta {
+            Some((200..=299, body)) => {
+                parse_attach_meta_topic(body).map_or(CodePlacement::Unknown, CodePlacement::Attach)
+            }
+            _ => CodePlacement::Unknown,
+        },
+    }
+}
+
+/// The JSON envelope of a placement: `{"kind":"login"|"gone"|"unknown"}`, or
+/// `{"kind":"attach","topic_id":N}` with [`PRE_TOPIC_ID`] for a pre-topic
+/// session.
+#[must_use]
+pub fn code_placement_envelope(placement: CodePlacement) -> String {
+    match placement {
+        CodePlacement::Login => r#"{"kind":"login"}"#.to_owned(),
+        CodePlacement::Attach(topic) => {
+            format!(r#"{{"kind":"attach","topic_id":{}}}"#, topic.id())
+        }
+        CodePlacement::Gone => r#"{"kind":"gone"}"#.to_owned(),
+        CodePlacement::Unknown => r#"{"kind":"unknown"}"#.to_owned(),
+    }
 }
 
 /// The frozen body of the panel read and of the mark-seen: empty by design.
@@ -2131,7 +2269,12 @@ mod tests {
             req.url,
             "https://connect.warrenbrowse.com/v1/forum/attach-logs"
         );
-        assert_eq!(req.body, attach_body(SID, 42, b"gz").expect("body"));
+        // The literal bytes, so a builder that stopped sorting or encoding
+        // could not agree with itself here.
+        assert_eq!(
+            req.body,
+            format!(r#"{{"log_gz_b64":"Z3o=","sid":"{SID}","topic_id":42}}"#).into_bytes()
+        );
         assert_eq!(header(&req, "X-Warren-Timestamp"), "1800000000");
         assert_wire_parity(&req, FORUM_ATTACH_PATH);
     }
@@ -2339,5 +2482,125 @@ mod tests {
         assert_eq!(upload_deadline(1024 * 1024), Duration::from_secs(30));
         assert_eq!(upload_deadline(1024 * 1024 + 1), Duration::from_secs(40));
         assert_eq!(upload_deadline(16 * 1024 * 1024), Duration::from_secs(180));
+    }
+}
+
+#[cfg(test)]
+mod placement_tests {
+    use super::*;
+
+    #[test]
+    fn the_meta_answer_names_the_topic_or_the_pre_topic_variant() {
+        // warren-connect's `GET /v1/attach/<sid>/meta` since v0.15.8: the
+        // topic a live session is bound to, `null` for a pre-topic session.
+        assert_eq!(
+            parse_attach_meta_topic(br#"{"status":"pending","topic_id":4242}"#),
+            Some(AttachTopic::Topic(4242))
+        );
+        assert_eq!(
+            parse_attach_meta_topic(br#"{"status":"pending","topic_id":null}"#),
+            Some(AttachTopic::PreTopic)
+        );
+        assert_eq!(
+            parse_attach_meta_topic(
+                br#"{"os":"Android 15","status":"received","topic_id":null,"version":"1.2.3"}"#
+            ),
+            Some(AttachTopic::PreTopic)
+        );
+        // An older provider, or a body that is not the meta at all: unknown,
+        // never a guess at a topic.
+        assert_eq!(parse_attach_meta_topic(br#"{"status":"pending"}"#), None);
+        assert_eq!(
+            parse_attach_meta_topic(br#"{"status":"pending","topic_id":-1}"#),
+            None
+        );
+        assert_eq!(
+            parse_attach_meta_topic(br#"{"status":"pending","topic_id":"42"}"#),
+            None
+        );
+        assert_eq!(
+            parse_attach_meta_topic(br#"{"status":"pending","topic_id":9007199254740993}"#),
+            None
+        );
+        assert_eq!(parse_attach_meta_topic(b"not json"), None);
+        assert_eq!(AttachTopic::PreTopic.id(), PRE_TOPIC_ID);
+        assert_eq!(AttachTopic::Topic(4242).id(), 4242);
+    }
+
+    #[test]
+    fn a_typed_code_is_placed_with_its_topic_by_the_three_reads() {
+        // The login status first; a dead login session is asked about as an
+        // attach session; a pending attach session is offered with the topic
+        // its meta names, and without a readable meta it is not offered at
+        // all: a wrong topic would only ever be refused by the provider as a
+        // dead session, the very dead end the meta exists to remove.
+        let pending = br#"{"status":"pending"}"#;
+        assert_eq!(place_code(Some(200), None, None), CodePlacement::Login);
+        assert_eq!(
+            place_code(
+                Some(404),
+                Some((200, pending)),
+                Some((200, br#"{"status":"pending","topic_id":4242}"#))
+            ),
+            CodePlacement::Attach(AttachTopic::Topic(4242))
+        );
+        assert_eq!(
+            place_code(
+                Some(404),
+                Some((200, pending)),
+                Some((200, br#"{"status":"pending","topic_id":null}"#))
+            ),
+            CodePlacement::Attach(AttachTopic::PreTopic)
+        );
+        assert_eq!(
+            place_code(
+                Some(404),
+                Some((200, pending)),
+                Some((200, br#"{"status":"pending"}"#))
+            ),
+            CodePlacement::Unknown
+        );
+        assert_eq!(
+            place_code(Some(404), Some((200, pending)), Some((404, b""))),
+            CodePlacement::Unknown
+        );
+        assert_eq!(
+            place_code(Some(404), Some((200, pending)), None),
+            CodePlacement::Unknown
+        );
+        assert_eq!(
+            place_code(Some(404), Some((200, br#"{"status":"received"}"#)), None),
+            CodePlacement::Gone
+        );
+        assert_eq!(
+            place_code(Some(404), Some((404, b"")), None),
+            CodePlacement::Gone
+        );
+        assert_eq!(place_code(Some(404), None, None), CodePlacement::Unknown);
+        assert_eq!(place_code(None, None, None), CodePlacement::Unknown);
+    }
+
+    #[test]
+    fn the_placement_envelope_carries_the_kind_and_the_topic() {
+        assert_eq!(
+            code_placement_envelope(CodePlacement::Login),
+            r#"{"kind":"login"}"#
+        );
+        assert_eq!(
+            code_placement_envelope(CodePlacement::Attach(AttachTopic::Topic(4242))),
+            r#"{"kind":"attach","topic_id":4242}"#
+        );
+        assert_eq!(
+            code_placement_envelope(CodePlacement::Attach(AttachTopic::PreTopic)),
+            r#"{"kind":"attach","topic_id":0}"#
+        );
+        assert_eq!(
+            code_placement_envelope(CodePlacement::Gone),
+            r#"{"kind":"gone"}"#
+        );
+        assert_eq!(
+            code_placement_envelope(CodePlacement::Unknown),
+            r#"{"kind":"unknown"}"#
+        );
     }
 }

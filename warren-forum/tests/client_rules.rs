@@ -7,10 +7,11 @@
 //! are replayed by the platform mirrors only.
 
 use warren_forum::{
-    FailReason, ForumIdentity, ForumLoginOutcome, PRE_TOPIC_ID, ReportOutcome, attach_body,
-    build_attach_cancel_url, build_attach_status_url, build_cancel_url, build_status_url,
-    connect_host, envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code,
-    outcome_for_response, parse_topic_id, report_envelope, report_outcome_for_response,
+    FailReason, ForumAttachOutcome, ForumIdentity, ForumLoginOutcome, PRE_TOPIC_ID, ReportOutcome,
+    attach_body, attach_envelope, attach_outcome_for_response, build_attach_cancel_url,
+    build_attach_status_url, build_cancel_url, build_status_url, connect_host, envelope,
+    is_allowed_connect_host, is_valid_sid, normalize_sign_in_code, outcome_for_response,
+    parse_topic_id, report_envelope, report_outcome_for_response,
 };
 
 fn fixture(name: &str) -> serde_json::Value {
@@ -402,6 +403,70 @@ fn every_report_case_classes_and_envelopes_as_the_fixture_says() {
             report_envelope(&outcome),
             str_of(case, "envelope"),
             "{name}: envelope"
+        );
+    }
+}
+
+#[test]
+fn every_attach_case_classes_and_envelopes_as_the_fixture_says() {
+    let outcomes = fixture("forum_outcomes.json");
+    let cases = outcomes["attach"]["cases"]
+        .as_array()
+        .expect("attach cases");
+    assert!(cases.len() >= 8);
+    for case in cases {
+        if skipped_for_rust(case) {
+            continue;
+        }
+        let name = str_of(case, "name");
+        let (status, body) = status_and_body(case);
+        let expect = &case["expect"];
+        let expected = match str_of(expect, "kind") {
+            "attached" => ForumAttachOutcome::Attached,
+            "not-author" => ForumAttachOutcome::NotAuthor,
+            "expired" => ForumAttachOutcome::Expired,
+            "too-large" => ForumAttachOutcome::TooLarge,
+            "clock-skew" => ForumAttachOutcome::ClockSkew,
+            "server-error" => ForumAttachOutcome::ServerError,
+            "failed" => ForumAttachOutcome::Failed(fail_reason(expect)),
+            other => panic!("{name}: unknown attach kind {other}"),
+        };
+        let outcome = attach_outcome_for_response(status, body.as_bytes());
+        assert_eq!(outcome, expected, "{name}: outcome");
+        assert_eq!(
+            attach_envelope(&outcome),
+            str_of(case, "envelope"),
+            "{name}: envelope"
+        );
+    }
+    let kinds: Vec<&str> = outcomes["attach"]["_kinds"]
+        .as_array()
+        .expect("_kinds")
+        .iter()
+        .map(|k| k.as_str().expect("kind"))
+        .collect();
+    for kind in [
+        "attached",
+        "not-author",
+        "expired",
+        "too-large",
+        "clock-skew",
+        "server-error",
+        "failed",
+    ] {
+        assert!(kinds.contains(&kind), "attach._kinds lacks {kind}");
+    }
+    let client_side = outcomes["attach"]["client_side_failures"]["cases"]
+        .as_array()
+        .expect("attach client-side cases");
+    assert!(!client_side.is_empty());
+    for case in client_side {
+        let reason = client_side_reason(str_of(case, "reason"));
+        assert_eq!(
+            attach_envelope(&ForumAttachOutcome::Failed(reason)),
+            str_of(case, "envelope"),
+            "attach {}",
+            str_of(case, "name")
         );
     }
 }

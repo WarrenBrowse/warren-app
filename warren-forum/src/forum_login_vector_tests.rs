@@ -14,9 +14,11 @@
 //! daemon signing an attacker-supplied host or replaying a burnt nonce.
 
 use super::{
-    FailReason, ForumIdentity, ForumLoginOutcome, ReportOutcome, SignedForumRequest,
-    build_signed_report_request_with_nonce, build_signed_request_with_nonce, connect_host,
-    outcome_for_response, report_outcome_for_response, signed_post_with_nonce,
+    AttachTopic, CodePlacement, FailReason, ForumAttachOutcome, ForumIdentity, ForumLoginOutcome,
+    ReportOutcome, SignedForumRequest, attach_outcome_for_response,
+    build_signed_attach_request_with_nonce, build_signed_report_request_with_nonce,
+    build_signed_request_with_nonce, connect_host, outcome_for_response, parse_attach_meta_topic,
+    place_code, report_outcome_for_response, signed_post_with_nonce,
 };
 use warren_identity::ed25519_dalek::SigningKey;
 
@@ -127,6 +129,34 @@ fn every_pinned_request_is_rebuilt_byte_for_byte() {
                     nonce,
                 )
                 .expect("the raw builder signs any host")
+            }
+            "attach_with_log" | "attach_pre_topic" => {
+                let sid = str_of(request, "sid");
+                let topic_id = request["topic_id"].as_u64().expect("topic_id");
+                let log_gz = hex::decode(str_of(request, "log_gz_hex")).expect("log_gz_hex");
+                let built = build_signed_attach_request_with_nonce(
+                    &key,
+                    sid,
+                    connect_host(),
+                    topic_id,
+                    &log_gz,
+                    timestamp,
+                    nonce,
+                )
+                .expect("the vector's attach builds against the allowlisted host");
+                // Like the report, the upload always goes to the allowlisted
+                // host: only the path of the vector's URL is the crate's to
+                // reproduce.
+                assert_eq!(
+                    built.url,
+                    format!("https://{}{path}", connect_host()),
+                    "{name}: url"
+                );
+                assert!(
+                    url.ends_with(path),
+                    "{name}: vector url {url} ends with {path}"
+                );
+                built
             }
             "report_with_log" | "report_without_log" => {
                 let fields = request["fields"].to_string();
@@ -299,4 +329,116 @@ fn every_pinned_report_answer_classes_as_its_outcome() {
         report_outcome_for_response(418, b""),
         ReportOutcome::Failed(FailReason::Http(418))
     );
+}
+
+#[test]
+fn every_pinned_attach_answer_classes_as_its_outcome() {
+    let vector = load();
+    let group = &vector["responses"]["attach"];
+    let mut seen = 0;
+    for name in group.as_object().expect("attach answers").keys() {
+        if name.starts_with('_') {
+            continue;
+        }
+        let (status, body) = answer(group, name);
+        let expected = match name.as_str() {
+            // Both successes class the same: the pre-topic report is parked
+            // and the page says so; the client has nothing else to do.
+            "attached" | "received" => ForumAttachOutcome::Attached,
+            "not_author" => ForumAttachOutcome::NotAuthor,
+            "session_unknown" => ForumAttachOutcome::Expired,
+            "payload_too_large" => ForumAttachOutcome::TooLarge,
+            "clock_skew" => ForumAttachOutcome::ClockSkew,
+            "forum_unavailable" | "feature_disabled" => ForumAttachOutcome::ServerError,
+            other => {
+                panic!("unknown forum_login_v1 attach answer {other}: teach this suite its outcome")
+            }
+        };
+        assert_eq!(
+            attach_outcome_for_response(status, body.as_bytes()),
+            expected,
+            "attach answer {name}"
+        );
+        seen += 1;
+    }
+    assert_eq!(seen, 8, "the v1 attach answer set has eight members");
+    assert_eq!(
+        attach_outcome_for_response(429, b""),
+        ForumAttachOutcome::Failed(FailReason::Http(429))
+    );
+}
+
+#[test]
+fn every_pinned_attach_status_answer_places_a_typed_code() {
+    // The unsigned poll of the forum page, read by a client placing a typed
+    // session id: only a pending session raises the attach consent, the
+    // spent states and an unknown session are gone.
+    let vector = load();
+    let group = &vector["responses"]["attach_status"];
+    let topic = &vector["responses"]["attach_meta"]["pending_topic"];
+    let (meta_status, meta_body) = (
+        u16::try_from(topic["status"].as_u64().expect("status")).expect("u16"),
+        str_of(topic, "body_utf8"),
+    );
+    let mut seen = 0;
+    for name in group.as_object().expect("attach_status answers").keys() {
+        if name.starts_with('_') {
+            continue;
+        }
+        let (status, body) = answer(group, name);
+        let expected = match name.as_str() {
+            "pending" => CodePlacement::Attach(AttachTopic::Topic(
+                vector["provider"]["topic_id"].as_u64().expect("topic_id"),
+            )),
+            "processing" | "received" | "done" | "cancelled_user" | "unknown" => {
+                CodePlacement::Gone
+            }
+            other => panic!(
+                "unknown forum_login_v1 attach_status answer {other}: teach this suite its placement"
+            ),
+        };
+        assert_eq!(
+            place_code(
+                Some(404),
+                Some((status, body.as_bytes())),
+                Some((meta_status, meta_body.as_bytes()))
+            ),
+            expected,
+            "attach_status answer {name}"
+        );
+        seen += 1;
+    }
+    assert_eq!(seen, 6, "the v1 attach_status answer set has six members");
+}
+
+#[test]
+fn every_pinned_attach_meta_answer_names_its_topic() {
+    let vector = load();
+    let group = &vector["responses"]["attach_meta"];
+    let topic_id = vector["provider"]["topic_id"].as_u64().expect("topic_id");
+    let mut seen = 0;
+    for name in group.as_object().expect("attach_meta answers").keys() {
+        if name.starts_with('_') {
+            continue;
+        }
+        let (status, body) = answer(group, name);
+        let expected = match name.as_str() {
+            "pending_topic" => Some(AttachTopic::Topic(topic_id)),
+            "pending_pre_topic" | "received_pre_topic" => Some(AttachTopic::PreTopic),
+            "unknown" => None,
+            other => {
+                panic!(
+                    "unknown forum_login_v1 attach_meta answer {other}: teach this suite its topic"
+                )
+            }
+        };
+        let parsed = if (200..300).contains(&status) {
+            parse_attach_meta_topic(body.as_bytes())
+        } else {
+            None
+        };
+        assert_eq!(parsed, expected, "attach_meta answer {name}");
+        seen += 1;
+    }
+    assert_eq!(seen, 4, "the v1 attach_meta answer set has four members");
 }
