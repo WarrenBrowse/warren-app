@@ -14,11 +14,11 @@ pub use warren_forum::{ForumRequestError, SignedForumRequest};
 // internally and no iOS caller consumes them directly.
 #[cfg(target_os = "ios")]
 pub use warren_forum::{
-    CodeKind, FailReason, ForumAttachOutcome, ForumLoginOutcome, MAX_LOG_GZ_BYTES,
-    SessionPreflight, attach_envelope, attach_outcome_for_response, build_attach_cancel_url,
+    CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome, SessionPreflight,
+    attach_envelope, attach_outcome_for_response, build_attach_cancel_url, build_attach_meta_url,
     build_attach_status_url, build_cancel_url, build_status_url, classify_code_probe,
-    classify_status_preflight, code_probe_envelope, envelope, outcome_for_response,
-    timestamp_with_offset, upload_deadline,
+    classify_status_preflight, code_placement_envelope, envelope, outcome_for_response, place_code,
+    refuse_before_transport, timestamp_with_offset, upload_deadline,
 };
 use warren_identity::WarrenIdentity;
 
@@ -96,9 +96,11 @@ mod tests {
             req.url,
             "https://connect.warrenbrowse.com/v1/forum/attach-logs"
         );
+        // The literal bytes, so a builder that stopped sorting or encoding
+        // could not agree with itself here.
         assert_eq!(
             req.body,
-            warren_forum::attach_body(SID, 42, b"gz").expect("body")
+            format!(r#"{{"log_gz_b64":"Z3o=","sid":"{SID}","topic_id":42}}"#).into_bytes()
         );
         let stamped = req
             .headers

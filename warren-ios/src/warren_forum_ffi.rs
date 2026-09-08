@@ -12,13 +12,13 @@
 //!
 //! Memory ownership: the returned heap `CString` MUST be freed once via
 //! `warren_wallet_free_mnemonic` (type-agnostic: it reclaims any `CString` this
-//! crate produces). Envelope shapes match Android's, the `login` table of
-//! `fixtures/client-rules/forum_outcomes.json` for the login:
+//! crate produces). Envelope shapes match Android's, the `login` and `attach`
+//! tables of `fixtures/client-rules/forum_outcomes.json`:
 //! `{"ok":true,"handle":"..","notify_slot":n}` (both additive) /
 //! `{"ok":false,"error":"subscription-required"|"clock-skew"|"expired"}` /
 //! `{"ok":false,"error":"error","reason":"<class>"}`; the attach envelope adds
 //! `not-author`, `too-large` and `server-error`; the code probe answers
-//! `{"kind":"login"|"attach"|"gone"|"unknown"}`.
+//! `{"kind":"login"|"gone"|"unknown"}` or `{"kind":"attach","topic_id":N}`.
 //!
 //! Blocking: every entry `block_on`s the shared iOS tokio runtime; the Swift
 //! facade invokes them off the main thread.
@@ -34,26 +34,63 @@ use warren_identity::WarrenIdentity;
 use zeroize::Zeroizing;
 
 use crate::forum::{
-    self, CodeKind, FailReason, ForumAttachOutcome, ForumLoginOutcome, ForumRequestError,
-    SessionPreflight,
+    self, CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome,
+    ForumRequestError, SessionPreflight,
 };
 
 const SEED_LEN: usize = 32;
 
-/// The connect and total timeouts of an unsigned status read, the SDK
-/// transport's own (5 s connect, 15 s total), so a preflight can never
-/// outlast the POST it precedes.
-const PREFLIGHT_CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
-const PREFLIGHT_TOTAL_TIMEOUT: Duration = Duration::from_secs(15);
+/// The connect timeout of every request this module sends, the SDK
+/// transport's own.
+const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
+/// The total timeout of an unsigned read (a status, a meta), the SDK
+/// transport's own 15 s, so a preflight can never outlast the POST it
+/// precedes.
+const READ_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// A reqwest client bounded by `total`, or `None` when the TLS stack cannot
-/// be set up (a fixed failure of the build, never of the request).
-fn bounded_client(total: Duration) -> Option<reqwest::Client> {
+/// A reqwest client shared by every request of one flow: the preflight and
+/// the upload it precedes ride one connection pool. Timeouts are given per
+/// request, so the upload's body-sized deadline applies to it alone.
+fn client() -> Option<reqwest::Client> {
     reqwest::Client::builder()
-        .connect_timeout(PREFLIGHT_CONNECT_TIMEOUT)
-        .timeout(total)
+        .connect_timeout(CONNECT_TIMEOUT)
         .build()
         .ok()
+}
+
+/// One unsigned GET, read back as its status, its `Date` header and its
+/// body; `None` when it got no HTTP answer.
+async fn get_plain(
+    client: &reqwest::Client,
+    url: String,
+    flow: &str,
+    what: &str,
+) -> Option<(u16, Option<String>, Vec<u8>)> {
+    match client.get(&url).timeout(READ_TIMEOUT).send().await {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            let date = response
+                .headers()
+                .get(reqwest::header::DATE)
+                .and_then(|value| value.to_str().ok())
+                .map(str::to_owned);
+            let body = response
+                .bytes()
+                .await
+                .map(|b| b.to_vec())
+                .unwrap_or_default();
+            Some((status, date, body))
+        }
+        Err(err) => {
+            let class = if err.is_timeout() {
+                "timeout"
+            } else {
+                "transport"
+            };
+            log::warn!("{flow}: {what} read failed ({class})");
+            None
+        }
+    }
 }
 
 /// Reads a session's status (`url`, the login's or the attach session's)
@@ -66,21 +103,12 @@ fn bounded_client(total: Duration) -> Option<reqwest::Client> {
 /// request is then stamped with the device clock and the provider decides, as
 /// before the preflight existed. `flow` names the caller in the log; nothing
 /// about the request is logged.
-async fn preflight(url: Option<String>, flow: &str) -> SessionPreflight {
+async fn preflight(client: &reqwest::Client, url: Option<String>, flow: &str) -> SessionPreflight {
     let Some(url) = url else {
         return SessionPreflight::Unknown;
     };
-    let Some(client) = bounded_client(PREFLIGHT_TOTAL_TIMEOUT) else {
-        return SessionPreflight::Unknown;
-    };
-    match client.get(&url).send().await {
-        Ok(response) => {
-            let status = response.status().as_u16();
-            let date = response
-                .headers()
-                .get(reqwest::header::DATE)
-                .and_then(|value| value.to_str().ok())
-                .map(str::to_owned);
+    match get_plain(client, url, flow, "status preflight").await {
+        Some((status, date, _)) => {
             let verdict = forum::classify_status_preflight(status, date.as_deref(), device_now());
             if let SessionPreflight::Pending { offset_secs } = verdict
                 && offset_secs.abs() > 30
@@ -91,8 +119,8 @@ async fn preflight(url: Option<String>, flow: &str) -> SessionPreflight {
             }
             verdict
         }
-        Err(_) => {
-            log::warn!("{flow}: status preflight failed (transport), signing anyway");
+        None => {
+            log::warn!("{flow}: status preflight failed, signing anyway");
             SessionPreflight::Unknown
         }
     }
@@ -155,8 +183,9 @@ unsafe fn bytes_to_vec(bytes: *const u8, len: usize) -> Option<Vec<u8>> {
 }
 
 /// Allocates the JSON envelope `CString` for `json`. Every envelope this
-/// module hands out is built from fixed tokens and a proquint handle, so it
-/// never carries an interior NUL and this never fails in practice.
+/// module hands out is built from fixed tokens, a number and a proquint
+/// handle, so it never carries an interior NUL and this never fails in
+/// practice.
 fn json_cstring(json: String) -> *mut c_char {
     match CString::new(json) {
         Ok(c) => c.into_raw(),
@@ -212,7 +241,11 @@ pub unsafe extern "C" fn warren_forum_login(
             Ok(handle) => handle,
             Err(_) => return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Runtime)),
         };
+        let Some(client) = client() else {
+            return envelope_cstring(ForumLoginOutcome::Failed(FailReason::Build));
+        };
         let offset_secs = match handle.block_on(preflight(
+            &client,
             forum::build_status_url(&sid, &host),
             "forumLogin",
         )) {
@@ -292,16 +325,16 @@ pub unsafe extern "C" fn warren_forum_cancel(sid: *const c_char, host: *const c_
 /// session, where the report is still being composed), `log_gz` the gzipped
 /// redacted problem report of `log_gz_len` bytes. The mirror of Android's
 /// `forumAttachLogs` and of the desktop `approveForumAttach` plus the daemon's
-/// signer: preflight the attach session (clock offset, dead session), sign the
-/// body at the corrected time, send it under the body-sized upload deadline,
-/// and class the answer. Returns the envelope of
-/// [`warren_forum::attach_envelope`]: `{"ok":true}` when attached or parked,
-/// `{"ok":false,"error":"not-author"}` (403), `expired` (404, which also
-/// covers a topic the session is not bound to), `too-large` (over the cap
-/// here, before any byte leaves, or 413), `clock-skew`, `server-error` (5xx),
-/// or `error` with a `reason` class (`build`, `runtime`, `transport`,
-/// `upload-timeout`, `http-<status>`). The seed, sid, signature and report are
-/// never logged.
+/// signer: refuse what costs no round trip (the shared gate), preflight the
+/// attach session (clock offset, dead session), sign the body at the
+/// corrected time, send it under the body-sized upload deadline, and class
+/// the answer. Returns the envelope of [`warren_forum::attach_envelope`]:
+/// `{"ok":true}` when attached or parked, `{"ok":false,"error":"not-author"}`
+/// (403), `expired` (404, which also covers a topic the session is not bound
+/// to), `too-large` (over the cap here, before any byte leaves, or 413),
+/// `clock-skew`, `server-error` (5xx), or `error` with a `reason` class
+/// (`build`, `runtime`, `transport`, `upload-timeout`, `http-<status>`). The
+/// seed, sid, signature and report are never logged.
 ///
 /// # Safety
 /// `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
@@ -338,24 +371,21 @@ fn forum_attach_logs(
     topic_id: u64,
     log_gz: &[u8],
 ) -> ForumAttachOutcome {
-    if !warren_forum::is_allowed_connect_host(host) || !warren_forum::is_valid_sid(sid) {
-        log::warn!("forumAttachLogs: refused a link outside the allowlist or sid shape");
-        return ForumAttachOutcome::Failed(FailReason::Build);
-    }
-    if log_gz.is_empty() {
-        log::warn!("forumAttachLogs: empty report, nothing to attach");
-        return ForumAttachOutcome::Failed(FailReason::Build);
-    }
-    // The first leg of the size chain, applied before any byte leaves: the
-    // broker would refuse the field, so the round trip could only be spent.
-    if log_gz.len() > forum::MAX_LOG_GZ_BYTES {
-        log::warn!("forumAttachLogs: report over the size cap, not sent");
-        return ForumAttachOutcome::TooLarge;
+    if let Some(refused) = forum::refuse_before_transport(sid, host, log_gz) {
+        log::warn!(
+            "forumAttachLogs: refused before transport ({})",
+            attach_class(&refused)
+        );
+        return refused;
     }
     let Ok(handle) = crate::warren_ios_runtime() else {
         return ForumAttachOutcome::Failed(FailReason::Runtime);
     };
+    let Some(client) = client() else {
+        return ForumAttachOutcome::Failed(FailReason::Build);
+    };
     let offset_secs = match handle.block_on(preflight(
+        &client,
         forum::build_attach_status_url(sid, host),
         "forumAttachLogs",
     )) {
@@ -382,14 +412,12 @@ fn forum_attach_logs(
             }
         };
     let bytes = signed.body.len();
-    // The upload rides its own client: the SDK transport's 15 s is sized for
-    // a few hundred bytes, and a report with a few MiB of logs on a mobile
-    // uplink died in it after the data was spent.
+    // The upload rides the flow's client under its own body-sized deadline:
+    // the SDK transport's 15 s is sized for a few hundred bytes, and a report
+    // with a few MiB of logs on a mobile uplink died in it after the data was
+    // spent.
     let deadline = forum::upload_deadline(bytes);
-    let Some(client) = bounded_client(deadline) else {
-        return ForumAttachOutcome::Failed(FailReason::Build);
-    };
-    let mut request = client.post(&signed.url);
+    let mut request = client.post(&signed.url).timeout(deadline);
     for (name, value) in &signed.headers {
         request = request.header(name.as_str(), value.as_str());
     }
@@ -465,10 +493,12 @@ pub unsafe extern "C" fn warren_forum_attach_cancel(sid: *const c_char, host: *c
 
 /// Places a session id typed by hand before any consent is raised: the login
 /// status read first, the attach status read only when the login one answers
-/// 404. Returns `{"kind":"login"|"attach"|"gone"|"unknown"}`
-/// ([`warren_forum::code_probe_envelope`]). Unsigned, no wallet material;
-/// blocks on up to two GETs, so invoke off the main thread. The sid is never
-/// logged.
+/// 404, and the attach meta only for a pending attach session, because it
+/// names the topic a code typed by hand cannot carry. Returns
+/// `{"kind":"login"|"gone"|"unknown"}` or `{"kind":"attach","topic_id":N}`
+/// with 0 for a pre-topic session ([`warren_forum::code_placement_envelope`]).
+/// Unsigned, no wallet material; blocks on up to three GETs, so invoke off
+/// the main thread. The sid is never logged.
 ///
 /// # Safety
 /// `sid` and `host` must be valid NUL-terminated C strings. The returned
@@ -483,70 +513,70 @@ pub unsafe extern "C" fn warren_forum_code_probe(
         let (Some(sid), Some(host)) = (unsafe { cstr_to_string(sid) }, unsafe {
             cstr_to_string(host)
         }) else {
-            return json_cstring(forum::code_probe_envelope(CodeKind::Unknown));
+            return json_cstring(forum::code_placement_envelope(CodePlacement::Unknown));
         };
-        json_cstring(forum::code_probe_envelope(forum_code_probe(&sid, &host)))
+        json_cstring(forum::code_placement_envelope(forum_code_probe(
+            &sid, &host,
+        )))
     })
 }
 
-/// One unsigned GET, read back as its status and body; `None` when it got no
-/// HTTP answer.
-async fn get_plain(client: &reqwest::Client, url: String, flow: &str) -> Option<(u16, Vec<u8>)> {
-    match client.get(&url).send().await {
-        Ok(response) => {
-            let status = response.status().as_u16();
-            let body = response
-                .bytes()
-                .await
-                .map(|b| b.to_vec())
-                .unwrap_or_default();
-            Some((status, body))
-        }
-        Err(err) => {
-            let class = if err.is_timeout() {
-                "timeout"
-            } else {
-                "transport"
-            };
-            log::warn!("forumCodeProbe: {flow} status read failed ({class})");
-            None
-        }
-    }
-}
-
-fn forum_code_probe(sid: &str, host: &str) -> CodeKind {
-    let (Some(login_url), Some(attach_url)) = (
+fn forum_code_probe(sid: &str, host: &str) -> CodePlacement {
+    let (Some(login_url), Some(attach_url), Some(meta_url)) = (
         forum::build_status_url(sid, host),
         forum::build_attach_status_url(sid, host),
+        forum::build_attach_meta_url(sid, host),
     ) else {
         log::warn!("forumCodeProbe: refused a code outside the allowlist or sid shape");
-        return CodeKind::Unknown;
+        return CodePlacement::Unknown;
     };
     let Ok(handle) = crate::warren_ios_runtime() else {
-        return CodeKind::Unknown;
+        return CodePlacement::Unknown;
     };
-    let Some(client) = bounded_client(PREFLIGHT_TOTAL_TIMEOUT) else {
-        return CodeKind::Unknown;
+    let Some(client) = client() else {
+        return CodePlacement::Unknown;
     };
-    let login_status = handle
-        .block_on(get_plain(&client, login_url, "login"))
-        .map(|(status, _)| status);
+    let read = |url: String, what: &str| {
+        handle
+            .block_on(get_plain(&client, url, "forumCodeProbe", what))
+            .map(|(status, _, body)| (status, body))
+    };
+    let login_status = read(login_url, "login status").map(|(status, _)| status);
     let attach = if login_status == Some(404) {
-        handle.block_on(get_plain(&client, attach_url, "attach"))
+        read(attach_url, "attach status")
     } else {
         None
     };
-    let kind = forum::classify_code_probe(
+    // The meta is read only for a pending attach session: it names the topic
+    // a code typed by hand cannot carry, and nothing else needs it.
+    let pending = matches!(
+        forum::classify_code_probe(
+            login_status,
+            attach
+                .as_ref()
+                .map(|(status, body)| (*status, body.as_slice()))
+        ),
+        CodeKind::Attach
+    );
+    let meta = if pending {
+        read(meta_url, "attach meta")
+    } else {
+        None
+    };
+    let placement = forum::place_code(
         login_status,
         attach
             .as_ref()
             .map(|(status, body)| (*status, body.as_slice())),
+        meta.as_ref()
+            .map(|(status, body)| (*status, body.as_slice())),
     );
     log::info!(
-        "forumCodeProbe: login status {:?}, attach status {:?}: {:?}",
+        "forumCodeProbe: login status {:?}, attach status {:?}, meta status {:?}: {:?}",
         login_status,
         attach.as_ref().map(|(status, _)| *status),
-        kind
+        meta.as_ref().map(|(status, _)| *status),
+        placement
     );
-    kind
+    placement
 }

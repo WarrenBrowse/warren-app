@@ -922,16 +922,16 @@ void warren_forum_cancel(const char *sid, const char *host);
  * session, where the report is still being composed), `log_gz` the gzipped
  * redacted problem report of `log_gz_len` bytes. The mirror of Android's
  * `forumAttachLogs` and of the desktop `approveForumAttach` plus the daemon's
- * signer: preflight the attach session (clock offset, dead session), sign the
- * body at the corrected time, send it under the body-sized upload deadline,
- * and class the answer. Returns the envelope of
- * [`warren_forum::attach_envelope`]: `{"ok":true}` when attached or parked,
- * `{"ok":false,"error":"not-author"}` (403), `expired` (404, which also
- * covers a topic the session is not bound to), `too-large` (over the cap
- * here, before any byte leaves, or 413), `clock-skew`, `server-error` (5xx),
- * or `error` with a `reason` class (`build`, `runtime`, `transport`,
- * `upload-timeout`, `http-<status>`). The seed, sid, signature and report are
- * never logged.
+ * signer: refuse what costs no round trip (the shared gate), preflight the
+ * attach session (clock offset, dead session), sign the body at the
+ * corrected time, send it under the body-sized upload deadline, and class
+ * the answer. Returns the envelope of [`warren_forum::attach_envelope`]:
+ * `{"ok":true}` when attached or parked, `{"ok":false,"error":"not-author"}`
+ * (403), `expired` (404, which also covers a topic the session is not bound
+ * to), `too-large` (over the cap here, before any byte leaves, or 413),
+ * `clock-skew`, `server-error` (5xx), or `error` with a `reason` class
+ * (`build`, `runtime`, `transport`, `upload-timeout`, `http-<status>`). The
+ * seed, sid, signature and report are never logged.
  *
  * # Safety
  * `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
@@ -962,10 +962,12 @@ void warren_forum_attach_cancel(const char *sid, const char *host);
 /**
  * Places a session id typed by hand before any consent is raised: the login
  * status read first, the attach status read only when the login one answers
- * 404. Returns `{"kind":"login"|"attach"|"gone"|"unknown"}`
- * ([`warren_forum::code_probe_envelope`]). Unsigned, no wallet material;
- * blocks on up to two GETs, so invoke off the main thread. The sid is never
- * logged.
+ * 404, and the attach meta only for a pending attach session, because it
+ * names the topic a code typed by hand cannot carry. Returns
+ * `{"kind":"login"|"gone"|"unknown"}` or `{"kind":"attach","topic_id":N}`
+ * with 0 for a pre-topic session ([`warren_forum::code_placement_envelope`]).
+ * Unsigned, no wallet material; blocks on up to three GETs, so invoke off
+ * the main thread. The sid is never logged.
  *
  * # Safety
  * `sid` and `host` must be valid NUL-terminated C strings. The returned
