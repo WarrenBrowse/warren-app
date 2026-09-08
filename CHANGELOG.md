@@ -22,6 +22,14 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+
+
+## [1.1.29] - 2026-09-09
+### Added
+- Attach the app's logs to a forum bug report on Android and iOS, from the same forum link the
+  desktop app already handles. A consent prompt names the topic being reported, shows the exact
+  redacted report on request, and sends only on approval. A session code from that page, typed
+  where a forum sign-in code goes, opens the same prompt instead of reading as an expired sign-in.
 ### Fixed
 - Show the app's own icon in the GNOME dock and window switcher on a Wayland session (Ubuntu 26.04).
   The Linux app never named its desktop entry to the compositor, so GNOME could not pair the window

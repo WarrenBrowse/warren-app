@@ -12,11 +12,32 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
+
+
+## [1.1.29] - 2026-09-09
+### Adăugat
+- Atașează jurnalele aplicației la un raport de eroare de pe forum din Android și iOS, pornind de
+  la același link al forumului pe care aplicația de desktop îl tratează deja. O cerere de
+  consimțământ numește subiectul raportat, arată la cerere exact raportul cenzurat și trimite
+  numai după aprobare. Un cod de sesiune luat din acea pagină, tastat unde merge un cod de
+  conectare la forum, deschide aceeași cerere în loc să fie citit ca o conectare expirată.
 ### Reparat
 - Afișează pictograma proprie a aplicației în dock-ul și în comutatorul de ferestre GNOME pe o
   sesiune Wayland (Ubuntu 26.04). Aplicația Linux nu își numea niciodată intrarea de desktop față de
   compozitor, așa că GNOME nu putea asocia fereastra cu lansatorul instalat și afișa pictograma
   generică.
+- Lasă aplicația să treacă pe transportul TLS-over-TCP în timp ce tunelul este ridicat. Într-o
+  rețea care blochează sau omoară UDP, aplicația trebuie să transporte tunelul prin TCP, iar pe
+  macOS kill switch-ul permitea numai UDP către releu: rezerva nu putea fi apelată niciodată, iar
+  aplicația se reconecta în buclă. Acum ajunge la același releu, pe același port, prin oricare
+  dintre cele două protocoale.
+- Se reconectează imediat când socketul de transport de pe macOS este măsurat ca gaură neagră chiar
+  după conectare, în loc să lase tunelul mort ridicat timp de 30 de secunde. Prima conectare într-o
+  rețea pe care aplicația nu a mai văzut-o leagă acest socket de interfața fizică și verifică în
+  două secunde că pachetele se întorc; când nu se întoarce nimic, verificarea încheie sesiunea
+  imediat, iar reconectarea care urmează folosește ieșirea prin ruta de gazdă deja înregistrată.
+  Până acum aceeași constatare aștepta două plase de siguranță de 15 secunde, cu toată mașina
+  tăiată de la internet în acest timp.
 
 
 

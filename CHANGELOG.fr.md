@@ -13,11 +13,32 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+
+
+## [1.1.29] - 2026-09-09
+### Ajouté
+- Joindre les journaux de l'application à un rapport de bug du forum depuis Android et iOS, à
+  partir du même lien du forum que l'application de bureau traite déjà. Une demande de consentement
+  nomme le sujet concerné, affiche sur demande le rapport expurgé exact, et n'envoie qu'après
+  approbation. Un code de session issu de cette page, saisi là où va un code de connexion au forum,
+  ouvre la même demande au lieu d'être lu comme une connexion expirée.
 ### Corrigé
 - Afficher l'icône de l'application dans le dock et le sélecteur de fenêtres de GNOME sur une
   session Wayland (Ubuntu 26.04). L'application Linux ne nommait jamais son entrée de bureau au
   compositeur, donc GNOME ne pouvait pas associer la fenêtre au lanceur installé et affichait
   l'icône générique.
+- Laisser l'application basculer sur son transport TLS-over-TCP pendant que le tunnel est monté.
+  Sur un réseau qui bloque ou tue UDP, l'application doit transporter le tunnel en TCP à la place,
+  et sur macOS le kill switch n'autorisait que UDP vers le relais : le repli ne pouvait donc jamais
+  être appelé et l'application se reconnectait en boucle. Elle atteint maintenant le même relais
+  sur le même port avec l'un ou l'autre protocole.
+- Se reconnecter tout de suite quand le socket de transport macOS est mesuré comme trou noir juste
+  après la connexion, au lieu de laisser le tunnel mort en place pendant 30 secondes. La première
+  connexion sur un réseau que l'application ne connaît pas lie ce socket à l'interface physique et
+  vérifie en deux secondes que les paquets reviennent ; quand rien ne revient, la vérification met
+  fin à la session immédiatement, et la reconnexion qui suit emprunte l'échappement par route
+  d'hôte déjà enregistré. Jusqu'ici le même constat attendait deux garde-fous de 15 secondes, la
+  machine entière coupée d'internet pendant ce temps.
 
 
 
