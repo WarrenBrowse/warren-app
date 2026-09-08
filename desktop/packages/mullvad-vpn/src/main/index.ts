@@ -103,6 +103,7 @@ import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { findIconPath } from './linux-desktop-entry';
+import { pairWindowWithDesktopEntry } from './linux-desktop-identity';
 import { loadTranslations } from './load-translations';
 import {
   backupLogFile,
@@ -302,6 +303,7 @@ class ApplicationMain
     if (process.platform === 'linux') {
       // NOTE: Keep in sync with mocked-utils.ts
       app.commandLine.appendSwitch('gtk-version', '3');
+      pairWindowWithDesktopEntry(process.env);
     }
 
     // Display correct colors regardless of monitor color profile.
