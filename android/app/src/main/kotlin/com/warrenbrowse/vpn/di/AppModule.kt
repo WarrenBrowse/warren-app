@@ -15,19 +15,18 @@ import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
+import com.warrenbrowse.vpn.app.forum.ForumAttachController
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
 import com.warrenbrowse.vpn.app.announcements.WarrenAnnouncementPoller
 import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
-import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
 import com.warrenbrowse.vpn.app.forum.ForumJournal
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
-import com.warrenbrowse.vpn.app.forum.JournalField
-import com.warrenbrowse.vpn.app.forum.LinkSource
 import com.warrenbrowse.vpn.app.forum.WarrenForumActivityUseCase
+import com.warrenbrowse.vpn.app.forum.WarrenForumAttachUseCase
+import com.warrenbrowse.vpn.app.forum.WarrenForumCodeUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
-import com.warrenbrowse.vpn.app.forum.forumLoginLinkFromCode
 import com.warrenbrowse.vpn.app.network.WarrenNetworkInfoUseCase
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
@@ -212,18 +211,29 @@ val appModule = module {
             tunnelState = get(),
         )
     }
-    // The sign-in code typed by hand lands on the same consent prompt.
+    // The forum's "attach your logs" page (doc 55): the deep-link consent
+    // controller and the collect + gzip + sign + POST use case.
+    single { ForumAttachController() }
+    single {
+        WarrenForumAttachUseCase(
+            walletRepository = get(),
+            reporter = get(),
+            journal = get(),
+            jni = get(),
+            tunnelState = get(),
+        )
+    }
+    // The sign-in code typed by hand is placed by the broker's status reads
+    // first: a login session raises the login consent, an attach session the
+    // attach consent.
     single<ForumSignInRequests> {
-        val controller = get<ForumLoginController>()
-        val journal = get<ForumJournal>()
-        ForumSignInRequests { sid ->
-            journal.record(
-                ForumEvent.LINK_RECEIVED,
-                JournalField.Verdict("accepted"),
-                JournalField.Source(LinkSource.TYPED_CODE),
-            )
-            controller.request(forumLoginLinkFromCode(sid))
-        }
+        WarrenForumCodeUseCase(
+            jni = get(),
+            loginController = get(),
+            attachController = get(),
+            journal = get(),
+            scope = get<ApplicationScope>(),
+        )
     }
     // The forum activity badge (doc 55): one number for the bell, the
     // notification and the panel, from the broadcast digest indexed by the

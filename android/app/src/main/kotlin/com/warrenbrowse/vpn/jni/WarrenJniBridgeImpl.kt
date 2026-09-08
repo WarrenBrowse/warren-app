@@ -55,6 +55,22 @@ class WarrenJniBridgeImpl : WarrenJniBridge {
         WarrenJni.forumLoginCancel(sid, host)
     }
 
+    override fun forumAttachLogs(
+        mnemonic: String,
+        sid: String,
+        topicId: Long,
+        host: String,
+        logGz: ByteArray,
+    ): String = ready { WarrenJni.forumAttachLogs(mnemonic, sid, topicId, host, logGz) }
+
+    override fun forumAttachCancel(sid: String, host: String) = ready {
+        WarrenJni.forumAttachCancel(sid, host)
+    }
+
+    override fun forumCodeProbe(sid: String, host: String): String = ready {
+        WarrenJni.forumCodeProbe(sid, host)
+    }
+
     override fun forumReport(mnemonic: String, reportJson: String, logGz: ByteArray?): String =
         ready { WarrenJni.forumReport(mnemonic, reportJson, logGz) }
 

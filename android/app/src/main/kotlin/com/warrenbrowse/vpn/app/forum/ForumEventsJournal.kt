@@ -27,6 +27,16 @@ enum class ForumEvent(val token: String) {
     REPORT_DEFERRED("report.deferred"),
     REPORT_COLLECT("report.collect"),
     REPORT_SUBMIT("report.submit"),
+    ATTACH_DEFERRED("attach.deferred"),
+    ATTACH_SIGNING("attach.signing"),
+    ATTACH_RESULT("attach.result"),
+    ATTACH_DECLINED("attach.declined"),
+}
+
+/** Which consent an accepted link or typed code raises. */
+enum class ForumLinkKind(val token: String) {
+    LOGIN("login"),
+    ATTACH("attach"),
 }
 
 /** Where an accepted sign-in link came from. */
@@ -65,6 +75,18 @@ sealed interface JournalField {
     data class Source(val source: LinkSource) : JournalField {
         override val key = "source"
         override val value = source.token
+    }
+
+    /** The consent an accepted link raises: the login's or the attach-logs one. */
+    data class Kind(val kind: ForumLinkKind) : JournalField {
+        override val key = "kind"
+        override val value = kind.token
+    }
+
+    /** Whether an attach targets a report still being composed (topic 0). */
+    data class PreTopic(val flag: Boolean) : JournalField {
+        override val key = "pre_topic"
+        override val value = flag.toString()
     }
 
     /** The host of the intent referrer: a package or a web host, never a session id. */

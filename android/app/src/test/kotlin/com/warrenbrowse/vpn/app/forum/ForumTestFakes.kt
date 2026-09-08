@@ -6,12 +6,18 @@ import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.CollectedReport
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumPreflight
+import com.warrenbrowse.vpn.lib.repository.ReportForm
+import com.warrenbrowse.vpn.lib.repository.ReportSubmitOutcome
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
+import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenVersionVerdict
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
+import java.io.File
 import java.time.Instant
 import java.util.Locale
 import java.util.TimeZone
@@ -76,6 +82,38 @@ internal class FakeTunnelStateProvider(
     override val connectedInfo: StateFlow<WarrenConnectedInfo> = info.asStateFlow()
 }
 
+/**
+ * The report collector as the attach flow sees it: every collection lands a
+ * small file in [dir] (or the answer a test sets), and every discard is kept,
+ * so a test can prove the report was collected once, for the send, and
+ * deleted afterwards.
+ */
+internal class FakeSupportReporter(private val dir: File) : WarrenSupportReporter {
+    var collectCalls = 0
+    val collectedForSend = mutableListOf<Boolean>()
+    val discarded = mutableListOf<CollectedReport>()
+    var collectAnswer: () -> Result<CollectedReport> = {
+        val file = File(dir, "warren-report-${collectCalls}.log")
+        file.writeText("System information:\n  warren log line\n")
+        Result.success(CollectedReport(file = file, bytes = file.length()))
+    }
+
+    override fun preflight(): ForumPreflight = ForumPreflight.Proceed
+
+    override suspend fun collect(forSend: Boolean): Result<CollectedReport> {
+        collectCalls++
+        collectedForSend += forSend
+        return collectAnswer()
+    }
+
+    override suspend fun submit(form: ReportForm, report: CollectedReport?): ReportSubmitOutcome =
+        error("unused")
+
+    override fun discard(report: CollectedReport) {
+        discarded += report
+    }
+}
+
 /** A journal kept in memory, so a test reads back exactly what was recorded. */
 internal class RecordingJournal : ForumJournal {
     val entries = mutableListOf<Pair<ForumEvent, List<JournalField>>>()
@@ -113,9 +151,40 @@ internal class FakeJniBridge(
         """{"announcements":[],"fetch":"transport"}"""
     },
     private val voucherAnswer: () -> String = { """{"ok":false,"code":null}""" },
+    private val attachAnswer: () -> String = { """{"ok":true}""" },
+    private val codeProbeAnswer: () -> String = { """{"kind":"login"}""" },
 ) : WarrenJniBridge {
     var loginCalls = 0
     var cancelCalls = 0
+    var attachCalls = 0
+    var attachCancelCalls = 0
+    var codeProbeCalls = 0
+
+    /** The topic ids and gzip sizes every attach upload crossed into Rust with. */
+    val attachedTopics = mutableListOf<Long>()
+    val attachedGzBytes = mutableListOf<Int>()
+
+    override fun forumAttachLogs(
+        mnemonic: String,
+        sid: String,
+        topicId: Long,
+        host: String,
+        logGz: ByteArray,
+    ): String {
+        attachCalls++
+        attachedTopics += topicId
+        attachedGzBytes += logGz.size
+        return attachAnswer()
+    }
+
+    override fun forumAttachCancel(sid: String, host: String) {
+        attachCancelCalls++
+    }
+
+    override fun forumCodeProbe(sid: String, host: String): String {
+        codeProbeCalls++
+        return codeProbeAnswer()
+    }
     var reportCalls = 0
     var notificationsCalls = 0
     var seenCalls = 0

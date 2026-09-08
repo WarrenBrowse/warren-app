@@ -13,13 +13,28 @@ import java.net.URISyntaxException
  */
 data class ForumLoginLink(val sid: String, val host: String, val crossDevice: Boolean = false)
 
-// The single connect host accepted from a forum-login deep link. A hard
-// allowlist: a hostile link must not be able to point the wallet-signed request
-// at an attacker-controlled server (Rust re-checks this too).
-private const val ALLOWED_CONNECT_HOST = "connect.warrenbrowse.com"
+// The single connect host accepted from a forum deep link. A hard allowlist:
+// a hostile link must not be able to point the wallet-signed request at an
+// attacker-controlled server (Rust re-checks this too).
+internal const val ALLOWED_CONNECT_HOST = "connect.warrenbrowse.com"
 
 // The Discourse SSO session id shape: exactly 32 lowercase hex chars.
-private val SID_REGEX = Regex("^[0-9a-f]{32}$")
+internal val FORUM_SID_REGEX = Regex("^[0-9a-f]{32}$")
+
+/** The deep-link actions the manifest registers, one per flow. */
+internal const val FORUM_LOGIN_ACTION = "forum-login"
+internal const val ATTACH_LOGS_ACTION = "attach-logs"
+
+/**
+ * The action of a forum deep link (`forum-login`, `attach-logs`), or null
+ * when the data is not a URI at all. Read before either parser: one intent
+ * filter serves both flows, and a link handed to the wrong parser would be
+ * refused as `wrong-action` and dropped.
+ */
+fun forumDeepLinkAction(rawUrl: String?): String? = rawUrl?.let(::parseForumUri)?.let(::forumUriAction)
+
+// `warren://forum-login?..` parses with authority = "forum-login".
+internal fun forumUriAction(uri: URI): String? = uri.authority ?: uri.path?.trimStart('/')
 
 /**
  * Parse and validate a `warren://forum-login?sid=..&host=..` URL. Returns null
@@ -52,21 +67,19 @@ fun classifyForumLoginLink(
     rawUrl: String?,
     expectedScheme: String = com.warrenbrowse.vpn.BuildConfig.DEEP_LINK_SCHEME,
 ): ForumLinkVerdict {
-    val uri = rawUrl?.let(::parseUri)
-    // `warren://forum-login?..` parses with authority = "forum-login".
-    val action = uri?.authority ?: uri?.path?.trimStart('/')
+    val uri = rawUrl?.let(::parseForumUri)
     return when {
         rawUrl == null -> ForumLinkVerdict.Rejected("no-data")
         uri == null -> ForumLinkVerdict.Rejected("not-a-uri")
         // The received scheme is a product-environment name, not identity
         // material: it is the one fact that tells a prod/beta mismatch apart.
         uri.scheme != expectedScheme -> ForumLinkVerdict.Rejected("wrong-scheme:${uri.scheme ?: "none"}")
-        action != "forum-login" -> ForumLinkVerdict.Rejected("wrong-action")
-        else -> classifyQuery(parseQuery(uri.rawQuery))
+        forumUriAction(uri) != FORUM_LOGIN_ACTION -> ForumLinkVerdict.Rejected("wrong-action")
+        else -> classifyQuery(parseForumQuery(uri.rawQuery))
     }
 }
 
-private fun parseUri(rawUrl: String): URI? =
+internal fun parseForumUri(rawUrl: String): URI? =
     try {
         URI(rawUrl)
     } catch (e: URISyntaxException) {
@@ -79,7 +92,7 @@ private fun classifyQuery(params: Map<String, String>): ForumLinkVerdict {
     return when {
         sid == null -> ForumLinkVerdict.Rejected("missing-sid")
         host == null -> ForumLinkVerdict.Rejected("missing-host")
-        !SID_REGEX.matches(sid) -> ForumLinkVerdict.Rejected("bad-sid-shape")
+        !FORUM_SID_REGEX.matches(sid) -> ForumLinkVerdict.Rejected("bad-sid-shape")
         host != ALLOWED_CONNECT_HOST -> ForumLinkVerdict.Rejected("host-not-allowlisted")
         // The provider sets `xd=1` on the QR link only. Anything else, an older
         // provider included, is the same-device button and gets the ordinary
@@ -101,7 +114,7 @@ private fun classifyQuery(params: Map<String, String>): ForumLinkVerdict {
 fun forumLoginLinkFromCode(sid: String): ForumLoginLink =
     ForumLoginLink(sid, ALLOWED_CONNECT_HOST, crossDevice = true)
 
-private fun parseQuery(rawQuery: String?): Map<String, String> {
+internal fun parseForumQuery(rawQuery: String?): Map<String, String> {
     if (rawQuery.isNullOrEmpty()) return emptyMap()
     return rawQuery
         .split('&')

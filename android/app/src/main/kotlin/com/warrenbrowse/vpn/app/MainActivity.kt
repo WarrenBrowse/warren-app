@@ -31,10 +31,17 @@ import com.warrenbrowse.vpn.app.forum.ForumEvent
 import com.warrenbrowse.vpn.app.forum.ForumJournal
 import com.warrenbrowse.vpn.app.forum.JournalField
 import com.warrenbrowse.vpn.app.forum.LinkSource
+import com.warrenbrowse.vpn.app.forum.ATTACH_LOGS_ACTION
+import com.warrenbrowse.vpn.app.forum.ForumAttachController
+import com.warrenbrowse.vpn.app.forum.ForumAttachPromptHost
+import com.warrenbrowse.vpn.app.forum.ForumAttachVerdict
+import com.warrenbrowse.vpn.app.forum.ForumLinkKind
 import com.warrenbrowse.vpn.app.forum.ForumLinkVerdict
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
 import com.warrenbrowse.vpn.app.forum.ForumLoginPromptHost
+import com.warrenbrowse.vpn.app.forum.classifyForumAttachLink
 import com.warrenbrowse.vpn.app.forum.classifyForumLoginLink
+import com.warrenbrowse.vpn.app.forum.forumDeepLinkAction
 import com.warrenbrowse.vpn.app.perf.JankLogger
 import com.warrenbrowse.vpn.di.uiModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_OPEN_FORUM_ACTIVITY
@@ -82,6 +89,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     private val splashCompleteRepository by inject<SplashCompleteRepository>()
     private val warrenConnect by inject<WarrenQuinnConnectInvoker>()
     private val forumLoginController by inject<ForumLoginController>()
+    private val forumAttachController by inject<ForumAttachController>()
     private val forumEventsJournal by inject<ForumJournal>()
     private val forumDigestPoller by inject<ForumDigestPoller>()
     private val noticePoller by inject<WarrenNoticePoller>()
@@ -138,9 +146,11 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         setContent {
             AppTheme {
                 WarrenApp(serviceConnectionManager)
-                // Overlay: shows the forum-login consent prompt when a
-                // `warren://forum-login` deep link has been captured below.
+                // Overlays: the forum-login and the attach-logs consent
+                // prompts, shown when a `warren://forum-login` or a
+                // `warren://attach-logs` deep link has been captured below.
                 ForumLoginPromptHost()
+                ForumAttachPromptHost()
             }
         }
         val jankLogger = JankLogger()
@@ -269,20 +279,34 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     }
 
     /**
-     * A `warren://forum-login` deep link: validate + stash it; the consent
-     * prompt (never a silent sign-in) reads it and signs on approval. A
-     * rejected link is logged by class (scheme, action, sid shape, host), never
-     * by value: the class is the fact a report needs to show a broker/app
-     * drift, and it used to be dropped in silence.
+     * A forum deep link: validate + stash it; the consent prompt (never a
+     * silent sign-in or a silent upload) reads it and signs on approval. One
+     * intent filter serves both flows, so the action picks the parser first.
+     * A rejected link is logged by class (scheme, action, sid shape, host),
+     * never by value: the class is the fact a report needs to show a
+     * broker/app drift, and it used to be dropped in silence.
      */
     private fun handleForumDeepLink(intent: Intent) {
-        val coldStart = !forumLoginController.hasSeenAnyLink()
-        when (val verdict = classifyForumLoginLink(intent.dataString)) {
+        val raw = intent.dataString
+        when (forumDeepLinkAction(raw)) {
+            ATTACH_LOGS_ACTION -> handleAttachDeepLink(raw)
+            else -> handleLoginDeepLink(raw)
+        }
+    }
+
+    /** Whether any forum link reached this process before this one. */
+    private fun forumColdStart(): Boolean =
+        !forumLoginController.hasSeenAnyLink() && !forumAttachController.hasSeenAnyLink()
+
+    private fun handleLoginDeepLink(raw: String?) {
+        val coldStart = forumColdStart()
+        when (val verdict = classifyForumLoginLink(raw)) {
             is ForumLinkVerdict.Accepted -> {
                 forumEventsJournal.record(
                     ForumEvent.LINK_RECEIVED,
                     JournalField.Verdict("accepted"),
                     JournalField.Source(LinkSource.DEEP_LINK),
+                    JournalField.Kind(ForumLinkKind.LOGIN),
                     JournalField.CrossDevice(verdict.link.crossDevice),
                     JournalField.ColdStart(coldStart),
                     JournalField.Referrer(referrer?.host),
@@ -291,7 +315,37 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
             }
             is ForumLinkVerdict.Rejected -> {
                 Logger.w("Ignoring a deep link the forum flow does not accept: ${verdict.reason}")
-                forumEventsJournal.record(ForumEvent.LINK_RECEIVED, JournalField.Verdict(verdict.reason))
+                forumEventsJournal.record(
+                    ForumEvent.LINK_RECEIVED,
+                    JournalField.Verdict(verdict.reason),
+                    JournalField.Kind(ForumLinkKind.LOGIN),
+                )
+            }
+        }
+    }
+
+    private fun handleAttachDeepLink(raw: String?) {
+        val coldStart = forumColdStart()
+        when (val verdict = classifyForumAttachLink(raw)) {
+            is ForumAttachVerdict.Accepted -> {
+                forumEventsJournal.record(
+                    ForumEvent.LINK_RECEIVED,
+                    JournalField.Verdict("accepted"),
+                    JournalField.Source(LinkSource.DEEP_LINK),
+                    JournalField.Kind(ForumLinkKind.ATTACH),
+                    JournalField.PreTopic(verdict.link.isPreTopic),
+                    JournalField.ColdStart(coldStart),
+                    JournalField.Referrer(referrer?.host),
+                )
+                forumAttachController.request(verdict.link)
+            }
+            is ForumAttachVerdict.Rejected -> {
+                Logger.w("Ignoring a deep link the attach flow does not accept: ${verdict.reason}")
+                forumEventsJournal.record(
+                    ForumEvent.LINK_RECEIVED,
+                    JournalField.Verdict(verdict.reason),
+                    JournalField.Kind(ForumLinkKind.ATTACH),
+                )
             }
         }
     }

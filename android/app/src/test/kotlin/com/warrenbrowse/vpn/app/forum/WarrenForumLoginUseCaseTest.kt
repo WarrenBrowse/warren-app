@@ -48,11 +48,12 @@ class WarrenForumLoginUseCaseTest {
             val jni =
                 FakeJniBridge(loginAnswer = { """{"ok":true,"handle":"lusab-babad-dovok","notify_slot":3}""" })
             val identities = FakeForumIdentityRepository()
+            val journal = ForumEventsJournal(dir, CoroutineScope(SupervisorJob()))
             val useCase =
                 WarrenForumLoginUseCase(
                     walletRepository = FakeWalletRepository(),
                     forumIdentityRepository = identities,
-                    journal = ForumEventsJournal(dir, CoroutineScope(SupervisorJob())),
+                    journal = journal,
                     jni = jni,
                     tunnelState =
                         FakeTunnelStateProvider(
@@ -68,5 +69,9 @@ class WarrenForumLoginUseCaseTest {
             )
             assertEquals(1, jni.loginCalls)
             assertEquals(ForumIdentity("lusab-babad-dovok", 3), identities.identity.value)
+            // Read back through the journal's own thread: this also sequences
+            // the test behind the pending write, which otherwise raced the
+            // temp directory's deletion.
+            assertEquals("approved-with-identity", journal.lastClassOf(ForumEvent.LOGIN_RESULT))
         }
 }

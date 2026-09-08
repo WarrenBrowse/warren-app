@@ -28,6 +28,11 @@ Line wrap the file at 100 chars.                                              Th
 - Pin each exit's public key on first use and refuse to connect if it changes; add a
   "Reset pinned exit keys" action in tunnel settings to accept a legitimate key rotation.
 - Add Romanian as a new language in the app.
+- Attach the app's logs to a forum bug report from the forum's "attach your logs" page, the link
+  the desktop apps already handle: a consent prompt names the topic, shows the exact redacted
+  report on request, and sends only on approval. A session code from that page typed under
+  "Sign in to the forum with a code" opens the same prompt instead of reading as an expired
+  sign-in.
 
 ### Changed
 - Ship an optimised build even when no upload keystore is configured. Every beta APK so far was the

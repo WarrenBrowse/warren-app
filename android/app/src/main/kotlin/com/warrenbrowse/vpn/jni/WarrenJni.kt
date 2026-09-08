@@ -121,6 +121,41 @@ object WarrenJni {
     external fun forumLoginCancel(sid: String, host: String)
 
     /**
+     * Sign and submit the attach-logs upload (`POST /v1/forum/attach-logs`) for the forum's
+     * "attach your logs" page in Rust: `sid` and `host` from the deep link, `topicId` the topic the
+     * logs join (0 for a pre-topic session, where the report is still being composed), `logGz` the
+     * gzipped redacted problem report. The body is serialised once in Rust, signed, and sent under
+     * the body-sized upload deadline; only the link and the gzip cross the boundary. Returns the
+     * envelope of `warren_jni::forum::attach_envelope`: `{"ok":true}` when attached or parked,
+     * `{"ok":false,"error":"not-author"|"expired"|"too-large"|"clock-skew"|"server-error"}`, or
+     * `{"ok":false,"error":"error","reason":"<class>"}`. Blocks on a network POST, so it must be
+     * invoked off the main thread. Never log the mnemonic or the sid (no-log).
+     */
+    external fun forumAttachLogs(
+        mnemonic: String,
+        sid: String,
+        topicId: Long,
+        host: String,
+        logGz: ByteArray,
+    ): String
+
+    /**
+     * Best-effort notify the connect `host` that the user declined to attach the logs for `sid`
+     * (`POST /v1/attach/<sid>/cancel`), so the waiting forum page shows "cancelled" instead of
+     * polling to its timeout. Unsigned; failures are ignored (the session expires in 30 min).
+     * Blocks on a network POST, so it must be invoked off the main thread.
+     */
+    external fun forumAttachCancel(sid: String, host: String)
+
+    /**
+     * Places a session id typed by hand before any consent is raised: the login status read
+     * first, the attach status read only when the login one answers 404. Returns
+     * `{"kind":"login"|"attach"|"gone"|"unknown"}`. Unsigned; blocks on up to two GETs, so it
+     * must be invoked off the main thread.
+     */
+    external fun forumCodeProbe(sid: String, host: String): String
+
+    /**
      * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust: `reportJson` is one
      * JSON object with the connect contract's field names, `logGz` the gzipped redacted problem
      * report or null. The body is serialised once in Rust, signed, and sent; only the form and the

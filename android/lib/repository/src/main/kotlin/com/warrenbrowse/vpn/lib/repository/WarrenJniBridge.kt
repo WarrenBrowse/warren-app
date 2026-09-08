@@ -70,6 +70,40 @@ interface WarrenJniBridge {
     fun forumLoginCancel(sid: String, host: String)
 
     /**
+     * Sign and submit the attach-logs upload (`POST /v1/forum/attach-logs`)
+     * in Rust for the forum's "attach your logs" page: [sid] and [host] from
+     * the deep link, [topicId] the topic the logs join (0 for a pre-topic
+     * session), [logGz] the gzipped redacted problem report. Returns the JSON
+     * envelope of `warren_jni::forum::attach_envelope` (`{"ok":true}`, or
+     * `{"ok":false,"error":..}` with `not-author`, `expired`, `too-large`,
+     * `clock-skew`, `server-error`, or `error` plus a `reason` class). Blocks
+     * on a network POST: invoke off the main thread.
+     */
+    fun forumAttachLogs(
+        mnemonic: String,
+        sid: String,
+        topicId: Long,
+        host: String,
+        logGz: ByteArray,
+    ): String
+
+    /**
+     * Best-effort notify the connect [host] that the user declined to attach
+     * the logs for [sid], so the waiting forum page shows "cancelled".
+     * Unsigned; failures are ignored. Blocks on a network POST: invoke off the
+     * main thread.
+     */
+    fun forumAttachCancel(sid: String, host: String)
+
+    /**
+     * Places a session id typed by hand: `{"kind":"login"|"attach"|"gone"|"unknown"}`,
+     * from the login status read and, when that one answers 404, the attach
+     * status read. Unsigned. Blocks on up to two GETs: invoke off the main
+     * thread.
+     */
+    fun forumCodeProbe(sid: String, host: String): String
+
+    /**
      * Sign and submit an in-app bug report (`POST /v1/forum/report`) in Rust.
      * [reportJson] is one JSON object with the connect contract's field names;
      * [logGz] the gzipped redacted problem report, or null to file the report
