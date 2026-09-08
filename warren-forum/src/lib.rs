@@ -724,11 +724,14 @@ pub fn parse_topic_id(text: &str) -> Option<u64> {
 ///
 /// # Errors
 ///
-/// [`ForumRequestError::Invalid`] for a malformed `sid` or an empty log (the
-/// provider refuses both, so nothing is signed for them);
-/// [`ForumRequestError::LogTooLarge`] over [`MAX_LOG_GZ_BYTES`].
+/// [`ForumRequestError::Invalid`] for a malformed `sid`, an empty log or a
+/// topic over [`MAX_FORUM_TOPIC_ID`] (the provider refuses all three, so
+/// nothing is signed for them); [`ForumRequestError::LogTooLarge`] over
+/// [`MAX_LOG_GZ_BYTES`].
 pub fn attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> Result<Vec<u8>, ForumRequestError> {
-    if !is_valid_sid(sid) || log_gz.is_empty() {
+    // The topic rule every client applies to a link applies to the wire too:
+    // a builder must not sign a topic past the safe integer.
+    if !is_valid_sid(sid) || log_gz.is_empty() || topic_id > MAX_FORUM_TOPIC_ID {
         return Err(ForumRequestError::Invalid);
     }
     report_body(
@@ -789,6 +792,23 @@ pub(crate) fn build_signed_attach_request_with_nonce(
     }
     let body = attach_body(sid, topic_id, log_gz)?;
     signed_post_with_nonce(signing_key, host, FORUM_ATTACH_PATH, body, timestamp, nonce)
+}
+
+/// The refusals of an attach upload that cost no round trip, applied before
+/// the status preflight: the connect allowlist and the sid shape (a hostile
+/// link must never reach the network), an empty report, and the first leg of
+/// the report-size chain (a gzip the broker would refuse at its base64 cap).
+/// `None` lets the upload proceed to the preflight. Both mobile FFIs apply it
+/// so the two cannot drift.
+#[must_use]
+pub fn refuse_before_transport(sid: &str, host: &str, log_gz: &[u8]) -> Option<ForumAttachOutcome> {
+    if !is_allowed_connect_host(host) || !is_valid_sid(sid) || log_gz.is_empty() {
+        return Some(ForumAttachOutcome::Failed(FailReason::Build));
+    }
+    if log_gz.len() > MAX_LOG_GZ_BYTES {
+        return Some(ForumAttachOutcome::TooLarge);
+    }
+    None
 }
 
 /// The unsigned status URL `GET /v1/attach/<sid>/status` the forum page
@@ -2255,6 +2275,33 @@ mod tests {
     }
 
     #[test]
+    fn the_attach_body_and_the_builder_refuse_a_topic_no_forum_can_have() {
+        // The rule every client applies to a link is the rule the wire
+        // applies too: a builder must not sign a topic past the safe integer
+        // (the desktop reads it as a JavaScript number), let alone `u64::MAX`.
+        assert!(attach_body(SID, MAX_FORUM_TOPIC_ID, b"x").is_ok());
+        assert_eq!(
+            attach_body(SID, MAX_FORUM_TOPIC_ID + 1, b"x"),
+            Err(ForumRequestError::Invalid)
+        );
+        assert_eq!(
+            attach_body(SID, u64::MAX, b"x"),
+            Err(ForumRequestError::Invalid)
+        );
+        assert_eq!(
+            build_signed_attach_request(
+                &signing_key(),
+                SID,
+                "connect.warrenbrowse.com",
+                u64::MAX,
+                b"gz",
+                1
+            ),
+            Err(ForumRequestError::Invalid)
+        );
+    }
+
+    #[test]
     fn build_signed_attach_request_targets_the_attach_route_at_the_given_stamp() {
         let req = build_signed_attach_request(
             &signing_key(),
@@ -2306,6 +2353,36 @@ mod tests {
                 1
             ),
             Err(ForumRequestError::LogTooLarge)
+        );
+    }
+
+    #[test]
+    fn the_pre_transport_gate_refuses_before_any_byte_leaves() {
+        // The first leg of the report-size chain, and the allowlist, applied
+        // before the status preflight: a refusal here costs no round trip and
+        // no signature.
+        const HOST: &str = "connect.warrenbrowse.com";
+        assert_eq!(refuse_before_transport(SID, HOST, b"gz"), None);
+        assert_eq!(
+            refuse_before_transport(SID, HOST, &vec![0u8; MAX_LOG_GZ_BYTES]),
+            None,
+            "the cap itself is sent"
+        );
+        assert_eq!(
+            refuse_before_transport(SID, HOST, &vec![0u8; MAX_LOG_GZ_BYTES + 1]),
+            Some(ForumAttachOutcome::TooLarge)
+        );
+        assert_eq!(
+            refuse_before_transport(SID, HOST, b""),
+            Some(ForumAttachOutcome::Failed(FailReason::Build))
+        );
+        assert_eq!(
+            refuse_before_transport(SID, "evil.example.com", b"gz"),
+            Some(ForumAttachOutcome::Failed(FailReason::Build))
+        );
+        assert_eq!(
+            refuse_before_transport("NOTHEX", HOST, b"gz"),
+            Some(ForumAttachOutcome::Failed(FailReason::Build))
         );
     }
 
