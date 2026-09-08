@@ -24,6 +24,9 @@ Line wrap the file at 100 chars.                                              Th
 ## UNRELEASED
 ### Add
 - Add support for connecting over IPv6
+- Attach the app's redacted logs to a forum bug report, from the forum's "attach your
+  logs" link or a session code typed under Settings, behind a consent prompt with a
+  log preview.
 
 ## [2026.2 - 2026-04-21]
 ### Add

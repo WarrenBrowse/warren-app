@@ -204,8 +204,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
         forumLogin.tunnelState = { [weak self] in
             self?.tunnelManager.tunnelStatus.state ?? .disconnected
         }
+        // The attach-logs flow shares the login's URL scheme, presenter and
+        // tunnel rule; one intent picks the parser by the action.
+        forumAttach.presenter = { [weak self] in self?.topViewController() }
+        forumAttach.tunnelState = { [weak self] in
+            self?.tunnelManager.tunnelStatus.state ?? .disconnected
+        }
         if let url = connectionOptions.urlContexts.first?.url {
-            forumLogin.handle(url: url)
+            handleForumURL(url, coldStart: true)
         }
     }
 
@@ -235,9 +241,26 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate, @preconcurrency Setting
         appDelegate.forumLogin
     }
 
+    /// The attach-logs flow the app delegate owns; this scene supplies its
+    /// presenter and tunnel state, as it does the login's.
+    private var forumAttach: WarrenForumAttachFlow {
+        appDelegate.forumAttach
+    }
+
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
-        forumLogin.handle(url: url)
+        handleForumURL(url, coldStart: false)
+    }
+
+    /// One URL scheme serves the login and the attach-logs flows, so the
+    /// action picks the flow. An unknown action falls to the login parser,
+    /// which rejects it by class as it always did.
+    private func handleForumURL(_ url: URL, coldStart: Bool) {
+        if WarrenForumLinks.action(of: url.absoluteString) == WarrenForumLinks.attachAction {
+            forumAttach.handle(url: url, coldStart: coldStart)
+        } else {
+            forumLogin.handle(url: url)
+        }
     }
 
     private func topViewController() -> UIViewController? {

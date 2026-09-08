@@ -135,6 +135,22 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumIdentityStoreTests.swift" => "WarrenVPNTests",
   "WarrenRustRuntimeTests/WarrenProductAnchorsTests.swift" => "WarrenRustRuntimeTests",
 
+  # The forum page's attach-logs flow (doc 55): the link parser shares the
+  # login's file; the flow, its consent view, the typed-code router, the
+  # events journal, the report collector, the gzip framing and the FFI
+  # decoders are new, with their tests.
+  "WarrenRustRuntime/WarrenGzip.swift" => "WarrenRustRuntime",
+  "WarrenVPN/Classes/WarrenForumAttach.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenForumCodeFlow.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenForumEventsJournal.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenProblemReport.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Settings/WarrenForumAttachConsentView.swift" => "WarrenVPN",
+  "WarrenRustRuntimeTests/WarrenForumAttachOutcomeTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenRustRuntimeTests/WarrenGzipTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumAttachPromptStateTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumEventsJournalTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumAttachCopyTests.swift" => "WarrenVPNTests",
+
   # Coexistence: this build stands down when a higher-priority product
   # environment (prod, then staging) is installed beside it.
   "WarrenVPN/Classes/WarrenEnvStandDown.swift" => "WarrenVPN",

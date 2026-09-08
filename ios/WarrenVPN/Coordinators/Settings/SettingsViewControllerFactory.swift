@@ -299,8 +299,11 @@ final class SettingsViewControllerFactory {
     private func makeWarrenForumSignInCodeViewController() -> MakeChildResult {
         let navigationController = self.navigationController
         let view = WarrenForumSignInCodeView { code in
-            guard let flow = (UIApplication.shared.delegate as? AppDelegate)?.forumLogin,
-                flow.handle(code: code)
+            // The code flow probes the two unsigned status endpoints and opens
+            // the login or the attach consent; the screen only decides whether
+            // the code is a session id at all (topic 199, 2026-09-07).
+            guard let flow = (UIApplication.shared.delegate as? AppDelegate)?.forumCode,
+                flow.submit(code: code)
             else {
                 return false
             }

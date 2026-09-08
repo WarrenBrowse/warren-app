@@ -83,6 +83,71 @@ public enum WarrenForumLoginOutcome: Equatable {
     }
 }
 
+/// What the provider made of a forum attach-logs upload (doc 55): the
+/// desktop `ForumAttachResult` plus the clock-skew refusal the login already
+/// tells apart. Single-sourced in the Rust `warren-forum` crate
+/// (`attach_envelope`); the tokens are pinned by `WarrenForumAttachOutcomeTests`.
+public enum WarrenForumAttachOutcome: Equatable {
+    /// Attached to the topic, or parked for a report still being composed.
+    case attached
+    /// The wallet is not the author of the topic; the provider refused (403).
+    case notAuthor
+    /// The session is gone: expired, cancelled, already served, or bound to
+    /// another topic than the one sent (404).
+    case expired
+    /// The gzipped report is over the cap, here before any byte leaves or at
+    /// the provider (413).
+    case tooLarge
+    /// The signature was refused for a device clock outside the window.
+    case clockSkew
+    /// The provider failed on its own side (5xx); nothing to fix here.
+    case serverError
+    /// Any other failure, with its class (`build`, `runtime`, `transport`,
+    /// `upload-timeout`, `http-<status>`, `unknown`). The class is for the log
+    /// and the journal, never shown as such.
+    case failed(reason: String)
+
+    /// True when no retry from this device can change the outcome: the
+    /// provider refused the signer as author, the session is gone, or the
+    /// report is over the cap. A clock fix, a settled tunnel or a recovered
+    /// provider are retries worth offering, as on Android.
+    public var isTerminal: Bool {
+        switch self {
+        case .notAuthor, .expired, .tooLarge:
+            return true
+        case .attached, .clockSkew, .serverError, .failed:
+            return false
+        }
+    }
+
+    /// The coarse class for the log and the events journal; never a value.
+    public var journalClass: String {
+        switch self {
+        case .attached: return "attached"
+        case .notAuthor: return "not-author"
+        case .expired: return "expired"
+        case .tooLarge: return "too-large"
+        case .clockSkew: return "clock-skew"
+        case .serverError: return "server-error"
+        case let .failed(reason): return reason
+        }
+    }
+}
+
+/// What a session id typed by hand stands for, from the two unsigned status
+/// reads (`warren_forum_code_probe`). Single-sourced in the Rust crate
+/// (`code_probe_envelope`).
+public enum WarrenForumCodeKind: String {
+    /// A pending sign-in session: the login consent applies.
+    case login
+    /// A pending attach-logs session: the attach consent applies.
+    case attach
+    /// The code is spent, whatever it was.
+    case gone
+    /// The reads did not settle it: the caller falls back to the login flow.
+    case unknown
+}
+
 /// Stateless facade over the Warren account FFI. All methods are
 /// synchronous and blocking; run them off the main thread.
 public enum WarrenAccountClient {
@@ -325,6 +390,114 @@ public enum WarrenAccountClient {
                 warren_forum_cancel(sidPtr, hostPtr)
             }
         }
+    }
+
+    // MARK: - Community-forum attach-logs (doc 55)
+
+    /// Signs and submits the attach-logs upload for the forum's "attach your
+    /// logs" page (`POST /v1/forum/attach-logs`): `sid` and `host` from the
+    /// deep link or the typed code, `topicId` the topic the logs join (0 for a
+    /// report still being composed), `logGz` the gzipped redacted problem
+    /// report. Everything wire-sensitive happens in Rust; only the opaque
+    /// inputs and the gzip cross the boundary, so the wallet signature never
+    /// surfaces to Swift. `host` is re-validated against a hard allowlist in
+    /// Rust. Blocking (run off the main thread); the seed, sid, signature and
+    /// report are never logged.
+    public static func forumAttachLogs(
+        seed: Data, sid: String, topicId: UInt64, host: String, logGz: Data
+    ) -> WarrenForumAttachOutcome {
+        guard seed.count == seedByteCount, !logGz.isEmpty else { return .failed(reason: "build") }
+        let raw = seed.withUnsafeBytes { seedBuffer -> UnsafeMutablePointer<CChar>? in
+            guard let seedBase = seedBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+            return logGz.withUnsafeBytes { gzBuffer -> UnsafeMutablePointer<CChar>? in
+                guard let gzBase = gzBuffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+                return sid.withCString { sidPtr in
+                    host.withCString { hostPtr in
+                        warren_forum_attach_logs(seedBase, sidPtr, topicId, hostPtr, gzBase, UInt(logGz.count))
+                    }
+                }
+            }
+        }
+        guard let raw else { return .failed(reason: "runtime") }
+        defer { warren_wallet_free_mnemonic(raw) }
+        return forumAttachOutcome(fromEnvelope: String(cString: raw))
+    }
+
+    /// Best-effort: tells the connect `host` the user declined the attach for
+    /// `sid` (`POST /v1/attach/<sid>/cancel`), so the waiting forum page shows
+    /// "cancelled" instead of polling to its timeout. Unsigned (no wallet
+    /// material); mirrors the desktop `cancelForumAttach`. Blocking, run off
+    /// the main thread; failures are ignored (the session expires in 30 min).
+    public static func forumAttachCancel(sid: String, host: String) {
+        sid.withCString { sidPtr in
+            host.withCString { hostPtr in
+                warren_forum_attach_cancel(sidPtr, hostPtr)
+            }
+        }
+    }
+
+    /// Places a session id typed by hand before any consent is raised: reads
+    /// the login status, then the attach status when the first answered 404
+    /// (`warren_forum_code_probe`, two unsigned GETs in Rust). Blocking, run
+    /// off the main thread; the sid is never logged.
+    public static func forumCodeProbe(sid: String, host: String) -> WarrenForumCodeKind {
+        let raw = sid.withCString { sidPtr in
+            host.withCString { hostPtr in
+                warren_forum_code_probe(sidPtr, hostPtr)
+            }
+        }
+        guard let raw else { return .unknown }
+        defer { warren_wallet_free_mnemonic(raw) }
+        return forumCodeKind(fromEnvelope: String(cString: raw))
+    }
+
+    /// Maps the `warren_forum_attach_logs` JSON envelope to an outcome. The
+    /// shapes are single-sourced in the Rust `warren-forum` crate
+    /// (`attach_envelope`) and pinned by `WarrenForumAttachOutcomeTests`.
+    /// `ok` names an attach; a named error maps to its case, and any
+    /// unreadable, unnamed or unrecognised envelope is a generic failure so a
+    /// broken envelope can never read as success. Pure, unit-tested off-device.
+    static func forumAttachOutcome(fromEnvelope envelope: String?) -> WarrenForumAttachOutcome {
+        guard let envelope,
+            let data = envelope.data(using: .utf8),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else {
+            return .failed(reason: "unknown")
+        }
+        if object["ok"] as? Bool == true {
+            return .attached
+        }
+        switch object["error"] as? String {
+        case "not-author":
+            return .notAuthor
+        case "expired":
+            return .expired
+        case "too-large":
+            return .tooLarge
+        case "clock-skew":
+            return .clockSkew
+        case "server-error":
+            return .serverError
+        case "error":
+            let reason = (object["reason"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            return .failed(reason: reason ?? "unknown")
+        default:
+            return .failed(reason: "unknown")
+        }
+    }
+
+    /// Maps the `warren_forum_code_probe` envelope to a kind; anything off the
+    /// table is `unknown`, which the caller treats as the login flow (it
+    /// preflights again before signing). Pure, unit-tested off-device.
+    static func forumCodeKind(fromEnvelope envelope: String?) -> WarrenForumCodeKind {
+        guard let envelope,
+            let data = envelope.data(using: .utf8),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let kind = (object["kind"] as? String).flatMap(WarrenForumCodeKind.init(rawValue:))
+        else {
+            return .unknown
+        }
+        return kind
     }
 
     // MARK: - Envelope parsing

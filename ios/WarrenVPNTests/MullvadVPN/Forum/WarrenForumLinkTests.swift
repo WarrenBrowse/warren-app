@@ -10,9 +10,10 @@ import XCTest
 
 @testable import WarrenVPN
 
-/// The deep-link rules replayed from `fixtures/client-rules/forum_link.json`
-/// with the full rejection-class vocabulary, the same file the Rust crate, the
-/// JVM suite and the desktop suite read on their side.
+/// The deep-link rules (the login's and the attach-logs one's) replayed from
+/// `fixtures/client-rules/forum_link.json` with the full rejection-class
+/// vocabulary, the same file the Rust crate, the JVM suite and the desktop
+/// suite read on their side.
 final class WarrenForumLinkTests: XCTestCase {
     private let allowedHost = "connect.warrenbrowse.com"
 
@@ -41,6 +42,59 @@ final class WarrenForumLinkTests: XCTestCase {
                 XCTAssertEqual(verdict, .rejected(try ClientRulesFixtures.string(expect, "rejected")), name)
             }
         }
+    }
+
+    func testTheSharedAttachFixtureReplaysCaseForCase() throws {
+        let fixture = try ClientRulesFixtures.load("forum_link.json")
+        let cases = try ClientRulesFixtures.cases(fixture, "attach_cases").filter {
+            !ClientRulesFixtures.skippedOnIOS($0)
+        }
+        XCTAssertGreaterThanOrEqual(cases.count, 10, "only \(cases.count) attach cases reached this reader")
+        for testCase in cases {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let verdict = WarrenForumLinks.classifyAttach(
+                testCase["url"] as? String,
+                expectedScheme: try ClientRulesFixtures.string(testCase, "expected_scheme"),
+                allowedHost: allowedHost)
+            let expect = try ClientRulesFixtures.object(testCase, "expect")
+            if let accepted = expect["accepted"] as? [String: Any] {
+                let link = ForumAttachLink(
+                    sid: try ClientRulesFixtures.string(accepted, "sid"),
+                    host: try ClientRulesFixtures.string(accepted, "host"),
+                    topicId: try XCTUnwrap((accepted["topic_id"] as? NSNumber).map { UInt64(truncating: $0) }))
+                XCTAssertEqual(verdict, .accepted(link), name)
+            } else {
+                XCTAssertEqual(verdict, .rejected(try ClientRulesFixtures.string(expect, "rejected")), name)
+            }
+        }
+    }
+
+    func testTheActionRoutesALinkBeforeEitherParserRuns() throws {
+        // One URL scheme serves both flows, so the scene picks the parser by
+        // the action alone; a link neither flow owns still reaches the login
+        // parser, which rejects it by class as it always did.
+        let query = "sid=0123456789abcdef0123456789abcdef&host=\(allowedHost)"
+        XCTAssertEqual(WarrenForumLinks.action(of: "warren://attach-logs?topic=1&\(query)"), "attach-logs")
+        XCTAssertEqual(WarrenForumLinks.action(of: "warren://forum-login?\(query)"), "forum-login")
+        XCTAssertEqual(WarrenForumLinks.action(of: "warren-beta:///attach-logs?\(query)"), "attach-logs")
+        XCTAssertNil(WarrenForumLinks.action(of: "::not a uri::"))
+        XCTAssertEqual(WarrenForumLinks.attachAction, "attach-logs")
+        XCTAssertEqual(WarrenForumLinks.loginAction, "forum-login")
+    }
+
+    func testATypedCodeStandsForAnAttachWithoutATopic() throws {
+        // The attach page prints its session id in the shape of the sign-in
+        // code, and nothing the broker answers without a signature names the
+        // topic, so the link a typed code stands for asks for it; 0 remains
+        // the report still being composed.
+        let sid = "0123456789abcdef0123456789abcdef"
+        let link = WarrenForumLinks.attachLinkFromCode(sid, host: allowedHost)
+        XCTAssertEqual(link, ForumAttachLink(sid: sid, host: allowedHost, topicId: nil))
+        XCTAssertFalse(link.isPreTopic)
+        XCTAssertTrue(ForumAttachLink(sid: sid, host: allowedHost, topicId: 0).isPreTopic)
+        XCTAssertEqual(ForumAttachLink.preTopic, 0)
+        XCTAssertEqual(WarrenForumLinks.parseTopicId("042"), 42)
+        XCTAssertNil(WarrenForumLinks.parseTopicId("4 2"))
     }
 
     func testTheSchemesOfTheFixtureAreTheProductTables() throws {

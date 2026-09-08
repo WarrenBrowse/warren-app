@@ -55,6 +55,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// The community-forum wallet login (doc 55), from a deep link or a typed
     /// code; the scene that owns the window supplies its presenter.
     let forumLogin = WarrenForumLoginFlow()
+    /// The forum flows' event journal, in the app log container so the
+    /// problem-report collector carries it (doc 55). Lazy so the container is
+    /// resolved when a forum flow first runs, never at app allocation.
+    lazy var forumEvents = WarrenForumEventsJournal(directory: ApplicationConfiguration.containerURL)
+    /// The forum page's attach-logs flow (doc 55); the scene supplies its
+    /// presenter and tunnel state like the login's.
+    lazy var forumAttach = WarrenForumAttachFlow(journal: forumEvents)
+    /// Places a session id typed under Settings and routes it to the login or
+    /// the attach consent after an unsigned probe.
+    lazy var forumCode = WarrenForumCodeFlow(
+        journal: forumEvents, loginFlow: forumLogin, attachFlow: forumAttach)
     /// Coexistence: this build stands down when a higher-priority product
     /// environment is installed beside it. Nil on prod, which outranks
     /// everything and watches nothing.
