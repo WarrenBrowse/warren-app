@@ -405,7 +405,7 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        set -euo pipefail
+        sudo apt-get update
         # clang: the ring crate's C sources are compiled with CC=clang; without
         # it the release build dies with "cc-rs: clang ... exit status: 127" and,
         # because the packaging step swallowed the empty output, silently shipped
@@ -413,28 +413,7 @@ runs:
         # libarchive-tools: provides bsdtar, required by fpm to emit the Arch
         # (pacman) package alongside the deb/rpm (electron-builder's pacman
         # target). xz (already present via rpm) is the archive compressor.
-        packages="libdbus-1-dev clang libarchive-tools"
-        missing=""
-        for pkg in $packages; do
-          dpkg -s "$pkg" >/dev/null 2>&1 || missing="$missing $pkg"
-        done
-        if [ -z "$missing" ]; then
-          echo "Build dependencies already present:$packages"
-          exit 0
-        fi
-        # The runner image is debian:bullseye, which reached end of life on
-        # 2026-08-31. Its final security Release file carries
-        # `Valid-Until: 2026-09-07 21:13 UTC`, so from that moment `apt-get
-        # update` exits 100 on every job in the pool, whatever the job builds,
-        # and the index can never refresh itself. Refreshing is still tried
-        # first (a live suite must keep its freshness check); only its failure
-        # falls back to accepting the expired index, which is the documented
-        # handling for an archived Debian suite. The real fix is a runner image
-        # on a supported release.
-        sudo apt-get update \
-          || sudo apt-get -o Acquire::Check-Valid-Until=false update
-        # shellcheck disable=SC2086
-        sudo apt-get install -y $missing
+        sudo apt-get install -y libdbus-1-dev clang libarchive-tools
 
     - name: Install Go
       uses: actions/setup-go@v6
