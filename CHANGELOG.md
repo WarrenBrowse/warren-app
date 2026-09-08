@@ -23,6 +23,10 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Fixed
+- Let the app fall back to its TLS-over-TCP carrier while the tunnel is up. On a network that
+  blocks or kills UDP, the app is meant to carry the tunnel over TCP instead, and on macOS the
+  kill switch allowed only UDP to the relay, so the fallback could never be dialled and the app
+  reconnected in a loop. It now reaches the same relay on the same port over either protocol.
 - Reconnect at once when the macOS carrier bind is found black-holed right after connecting, instead
   of leaving the dead tunnel up for 30 seconds. The first connect on a network the app has not seen
   binds the carrier socket to the physical interface and checks within two seconds that packets

@@ -75,22 +75,40 @@ impl BackendParams {
         }
     }
 
-    /// UDP endpoints to allow through the firewall pre-handshake (the
-    /// client -> next-hop outbound UDP path).
+    /// Endpoints to allow through the firewall pre-handshake (the
+    /// client -> next-hop outbound path).
     ///
     /// - Warren single-hop: every candidate IP of the exit (client
     ///   dials the exit directly).
     /// - Warren multi-hop: only the relay endpoint (the client never
-    ///   sends UDP to the exit directly; the relay forwards the QUIC
+    ///   sends to the exit directly; the relay forwards the QUIC
     ///   datagrams on a separate C2 connection).
+    ///
+    /// Each of those is allowed on **both** UDP and TCP, because the
+    /// datapath has two carriers to the same `<addr>:443`: QUIC over UDP,
+    /// and the TLS-over-TCP fallback the engine races, and dials FIRST on a
+    /// network that has killed two UDP sessions in a row. Allowing only UDP
+    /// left the remedy for a UDP-hostile network blocked by our own kill
+    /// switch, in `Connecting` and in `Connected` alike, which is why a
+    /// macOS host with a dead carrier logged "UDP failed and the TCP
+    /// fallback also failed" on every attempt.
+    ///
+    /// This opens one more protocol, never one more destination, and the
+    /// rule stays scoped to the daemon's own uid (`AllowedClients::Root` off
+    /// Windows) exactly like the UDP one.
     pub fn get_next_hop_endpoints(&self) -> Vec<Endpoint> {
+        let carriers = |addr| {
+            [TransportProtocol::Udp, TransportProtocol::Tcp]
+                .into_iter()
+                .map(move |proto| Endpoint::from_socket_address(addr, proto))
+        };
         match self {
             Self::Warren(info) => match info.relay_endpoint {
-                Some(relay) => vec![Endpoint::from_socket_address(relay, TransportProtocol::Udp)],
+                Some(relay) => carriers(relay).collect(),
                 None => info
                     .exit_candidates
                     .iter()
-                    .map(|&addr| Endpoint::from_socket_address(addr, TransportProtocol::Udp))
+                    .flat_map(|&addr| carriers(addr))
                     .collect(),
             },
         }
@@ -233,24 +251,19 @@ mod tests {
     }
 
     #[test]
-    fn warren_get_next_hop_endpoints_maps_all_ip_candidates_as_udp() {
+    fn warren_get_next_hop_endpoints_maps_all_ip_candidates() {
         // Critical regression: if we forgot to map the candidate
         // `ip_addrs` to allowed firewall endpoints, the QUIC handshake
         // would not get through and no tunnel could be established.
+        // Both families must survive the mapping; the per-candidate
+        // protocols are pinned by `every_next_hop_is_allowed_on_tcp_as_well_as_udp`.
         let params = fixture_warren(&["198.51.100.7:51820", "[2001:db8::7]:51820"]);
         let backend = BackendParams::Warren(params);
 
         let endpoints = backend.get_next_hop_endpoints();
-        assert_eq!(endpoints.len(), 2, "must expose every candidate IP");
-
         let mut found_v4 = false;
         let mut found_v6 = false;
         for ep in &endpoints {
-            assert_eq!(
-                ep.protocol,
-                TransportProtocol::Udp,
-                "Warren is QUIC over UDP, never TCP"
-            );
             match ep.address {
                 SocketAddr::V4(_) => found_v4 = true,
                 SocketAddr::V6(_) => found_v6 = true,
@@ -307,6 +320,50 @@ mod tests {
     }
 
     #[test]
+    fn every_next_hop_is_allowed_on_tcp_as_well_as_udp() {
+        // The datapath has TWO carriers to the same `<addr>:443`: QUIC over
+        // UDP, and the TLS-over-TCP fallback the engine races (and, on a
+        // network that killed two UDP sessions in a row, dials FIRST). The
+        // firewall only ever allowed the UDP one, so on macOS the fallback
+        // could not be dialled in `Connecting` or in `Connected`: the remedy
+        // for a UDP-hostile network was blocked by our own kill switch. The
+        // 2026-09-08 log shows it seven times in one minute, "UDP failed and
+        // the TCP fallback also failed", on a host whose carrier was dead.
+        let params = fixture_warren(&["198.51.100.7:443", "[2001:db8::7]:443"]);
+        let backend = BackendParams::Warren(params);
+        let endpoints = backend.get_next_hop_endpoints();
+
+        for addr in ["198.51.100.7:443", "[2001:db8::7]:443"] {
+            let addr: SocketAddr = addr.parse().unwrap();
+            for proto in [TransportProtocol::Udp, TransportProtocol::Tcp] {
+                assert!(
+                    endpoints
+                        .iter()
+                        .any(|e| e.address == addr && e.protocol == proto),
+                    "{addr} must be allowed on {proto:?}, got {endpoints:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn allowing_tcp_never_widens_the_set_of_reachable_addresses() {
+        // The second carrier is the same peer on the same port, so the
+        // firewall opens one more protocol and not one more destination.
+        // Widening the address set is how a multi-hop client would start
+        // reaching the exit directly, which the threat model forbids.
+        let params = fixture_warren_multi_hop("198.51.100.10:443", "198.51.100.20:443");
+        let backend = BackendParams::Warren(params);
+        let endpoints = backend.get_next_hop_endpoints();
+
+        let relay: SocketAddr = "198.51.100.10:443".parse().unwrap();
+        assert!(
+            endpoints.iter().all(|e| e.address == relay),
+            "multi-hop must reach the relay and nothing else, got {endpoints:?}"
+        );
+    }
+
+    #[test]
     fn warren_multi_hop_get_next_hop_endpoints_returns_only_relay_endpoint() {
         // Critical firewall regression: on the multi-hop path the
         // client never sends UDP to the exit directly; the relay
@@ -318,13 +375,12 @@ mod tests {
         let backend = BackendParams::Warren(params);
 
         let endpoints = backend.get_next_hop_endpoints();
-        assert_eq!(
-            endpoints.len(),
-            1,
-            "multi-hop must expose exactly one next-hop (the relay), got {endpoints:?}"
+        let relay: SocketAddr = "198.51.100.10:443".parse().unwrap();
+        assert!(
+            endpoints.iter().all(|e| e.address == relay),
+            "multi-hop must expose the relay and nothing else, got {endpoints:?}"
         );
         let only = &endpoints[0];
-        assert_eq!(only.protocol, TransportProtocol::Udp);
         assert_eq!(
             only.address,
             "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
