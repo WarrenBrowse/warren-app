@@ -12,6 +12,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
+### Reparat
+- Afișează pictograma proprie a aplicației în dock-ul și în comutatorul de ferestre GNOME pe o
+  sesiune Wayland (Ubuntu 26.04). Aplicația Linux nu își numea niciodată intrarea de desktop față de
+  compozitor, așa că GNOME nu putea asocia fereastra cu lansatorul instalat și afișa pictograma
+  generică.
+
 
 
 ## [1.1.28] - 2026-09-07

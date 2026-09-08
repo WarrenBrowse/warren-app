@@ -13,6 +13,12 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+### Corrigé
+- Afficher l'icône de l'application dans le dock et le sélecteur de fenêtres de GNOME sur une
+  session Wayland (Ubuntu 26.04). L'application Linux ne nommait jamais son entrée de bureau au
+  compositeur, donc GNOME ne pouvait pas associer la fenêtre au lanceur installé et affichait
+  l'icône générique.
+
 
 
 ## [1.1.28] - 2026-09-07

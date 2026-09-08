@@ -23,6 +23,9 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Fixed
+- Show the app's own icon in the GNOME dock and window switcher on a Wayland session (Ubuntu 26.04).
+  The Linux app never named its desktop entry to the compositor, so GNOME could not pair the window
+  with the installed launcher entry and painted the generic icon.
 - Let the app fall back to its TLS-over-TCP carrier while the tunnel is up. On a network that
   blocks or kills UDP, the app is meant to carry the tunnel over TCP instead, and on macOS the
   kill switch allowed only UDP to the relay, so the fallback could never be dialled and the app

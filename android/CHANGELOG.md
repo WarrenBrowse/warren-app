@@ -30,6 +30,10 @@ Line wrap the file at 100 chars.                                              Th
 - Add Romanian as a new language in the app.
 
 ### Changed
+- Ship an optimised build even when no upload keystore is configured. Every beta APK so far was the
+  debug variant, with the tunnel engine compiled unoptimised, which cost CPU and heat on slower
+  phones; the release variant is now built and signed with the same key, so it installs over the
+  previous beta without uninstalling.
 - Optimize LWO performance. The throughput is around 3 times higher in our benchmarks.
 - Replace the non-functional multi-hop toggle with a read-only indicator: multi-hop is
   available on the desktop app and the Android tunnel connects single-hop for now.
