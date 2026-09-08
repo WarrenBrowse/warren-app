@@ -248,6 +248,31 @@ class SiteAssetsWithTorrents(unittest.TestCase):
         self.assertEqual(list(release_dir.glob("*.torrent")), [])
 
 
+class MappingAssets(unittest.TestCase):
+    BASE = "https://api.beta.warrenbrowse.com/updates/desktop"
+
+    def test_the_r8_mapping_beside_the_apk_is_not_a_download(self):
+        # The release job stages the R8 mapping next to the APK so a problem
+        # report from that build can be symbolicated. Split by name it reads as
+        # an Android asset of architecture "mapping.txt" in format "gz", which
+        # no skip list covers, so it would become a second Android row on the
+        # download page.
+        with tempfile.TemporaryDirectory() as tmp:
+            release_dir = Path(tmp) / "release-files"
+            release_dir.mkdir()
+            (release_dir / "WarrenVPN-Beta-1.2.3-android.apk").write_bytes(b"x" * 64)
+            (release_dir / "WarrenVPN-Beta-1.2.3-android-mapping.txt.gz").write_bytes(b"y" * 64)
+
+            platforms = bvm.classify_site_assets(
+                release_dir, "1.2.3", self.BASE, "WarrenVPN-Beta", "beta"
+            )
+
+        self.assertEqual(
+            [asset["url"].rsplit("/", 1)[1] for asset in platforms["android"]],
+            ["WarrenVPN-Beta-1.2.3-android.apk"],
+        )
+
+
 class DownloadsBitTorrentBlock(unittest.TestCase):
     def test_names_the_trackers_the_torrents_announce_on(self):
         # The download page tells visitors which tracker their client will talk

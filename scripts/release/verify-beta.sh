@@ -136,8 +136,8 @@ if [[ "$SKIP_ANDROID" -eq 1 ]]; then
 elif [[ ! -f android/gradlew ]]; then
     yellow "  SKIP: android/gradlew missing"
 else
-    run_or_record "./gradlew app:assembleDebug" \
-        bash -c 'cd android && ./gradlew app:assembleDebug --parallel'
+    run_or_record "./gradlew app:assembleBetaRelease" \
+        bash -c 'cd android && ./gradlew app:assembleBetaRelease --parallel'
 fi
 
 section "Summary"

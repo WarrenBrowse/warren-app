@@ -16,6 +16,7 @@
 #   WarrenVPN-1.0.10-linux-aarch64.rpm
 #   WarrenVPN-1.0.10-android.apk
 #   WarrenVPN-1.0.10-android.aab
+#   WarrenVPN-1.0.10-android-mapping.txt.gz   (the APK's R8 mapping, for symbolication)
 #
 # Usage: ci/stage-release-assets.sh <macos|linux|windows|android> <version> [prod|beta]
 #
@@ -25,7 +26,7 @@
 # every platform so the asset set is uniform regardless of each tool's internal
 # naming. The upstream build.sh names desktop installers
 # WarrenVPN-<ver>[_<arch>].<ext>; the Android Gradle output is
-# app-prod-{debug,release}.{apk,aab} with no version in the name at all. This
+# app-<flavor>-release.{apk,aab} with no version in the name at all. This
 # script normalises all of them into one place with consistent names.
 #
 # The optional third argument selects the compiled product environment of the
@@ -136,11 +137,24 @@ case "$platform" in
     ;;
   android)
     # Gradle output carries no version in the filename and only one universal
-    # APK is produced per flavor; prefer the signed release artifact, fall
-    # back to debug.
-    for f in "android/app/build/outputs/apk/${ANDROID_FLAVOR}/release"/*.apk \
-             "android/app/build/outputs/apk/${ANDROID_FLAVOR}/debug"/*.apk; do
+    # APK is produced per flavor. Only the release build type is staged: the
+    # workflow signs it with the upload keystore when one is configured and
+    # with the runner's AGP debug key otherwise (android/docs/BuildInstructions.md,
+    # "Release build without a keystore"), so an output apksigner cannot verify
+    # (AGP names it *-unsigned.apk) means that fallback broke, and nothing
+    # unsigned may ship.
+    for f in "android/app/build/outputs/apk/${ANDROID_FLAVOR}/release"/*.apk; do
+      bash "$(dirname "$0")/verify-android-signer.sh" "$f"
       stage "$f" "${DST}-${version}-android.apk"
+      # The R8 mapping of the APK just staged travels with it, gzipped: without
+      # it no stack trace in a problem report from this build can be read back.
+      mapping="android/app/build/outputs/mapping/${ANDROID_FLAVOR}Release/mapping.txt"
+      if [ ! -s "$mapping" ]; then
+        echo "::error::$mapping is missing or empty; the staged APK is not an R8 release build" >&2
+        exit 1
+      fi
+      gzip -9 -n -c "$mapping" > "$OUT/${DST}-${version}-android-mapping.txt.gz"
+      echo "  staged $(basename "$mapping") -> ${DST}-${version}-android-mapping.txt.gz"
       break
     done
     for f in "android/app/build/outputs/bundle/${ANDROID_FLAVOR}Release"/*.aab; do

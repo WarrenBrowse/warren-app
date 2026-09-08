@@ -92,6 +92,12 @@ SITE_SKIP_FORMATS = {
 # the workflow's prune glob.
 TORRENT_SUFFIX = ".torrent"
 
+# The R8 mapping the Android job stages beside the APK, so the stack traces in
+# a problem report from that build can be symbolicated. A release asset that
+# nobody installs: split by name it would read as an Android build of
+# architecture "mapping.txt" and land on the download page.
+MAPPING_SUFFIX = "-android-mapping.txt.gz"
+
 # Below this, a swarm costs more than it saves: the NixOS flake tarball weighs
 # a few kB and its magnet would be a link nobody ever seeds.
 MIN_TORRENT_BYTES = 8 * 1024 * 1024
@@ -397,6 +403,8 @@ def classify_site_assets(release_dir: Path, version: str, asset_base: str,
         # uploads and prunes them with no extra machinery. They are not
         # themselves something a visitor installs.
         if path.name.endswith(TORRENT_SUFFIX):
+            continue
+        if path.name.endswith(MAPPING_SUFFIX):
             continue
         parts = split_asset_name(path.name[len(prefix):])
         if parts is None:

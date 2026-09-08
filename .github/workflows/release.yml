@@ -916,12 +916,10 @@ jobs:
     # (attached to the GitHub Release by publish-release) on every version tag,
     # and it blocks the release like the desktop builds. Signing is opt-in: with
     # ANDROID_KEYSTORE_BASE64 set it produces a signed release APK + AAB and
-    # uploads the AAB to the Play internal-test track; without it, the SAME
-    # release build type (R8, release-profile Rust) is built and signed with
-    # the runner's AGP debug keystore (app/build.gradle.kts, buildTypes). That
-    # key signed every beta APK shipped so far, so a sideloaded beta upgrades
-    # in place. The debug build type was published under that key until
-    # 1.1.28: an unoptimised datapath that held a Fairphone 3 at 59 % CPU.
+    # uploads the AAB to the Play internal-test track; without it, the same
+    # release build type is signed with the runner's AGP debug key and the
+    # signer is asserted against android/fallback-signer.sha256 (rationale:
+    # android/docs/BuildInstructions.md, "Release build without a keystore").
     needs: [tag-guard, tests]
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 60
@@ -1016,6 +1014,18 @@ jobs:
           echo "::warning::ANDROID_KEYSTORE_BASE64 secret not set; the release APK is signed with the runner's AGP debug key."
           ./gradlew app:assembleBetaRelease --parallel \
             -Pwarren.app.config.override.versionCode="$WARREN_BETA_VERSION_CODE"
+
+      # The fallback's whole promise is that the key never changes, and AGP
+      # creates a fresh ~/.android/debug.keystore wherever it finds none: a
+      # runner rebuilt on another HOME would sign a green build with a new key
+      # and every install would answer INSTALL_FAILED_UPDATE_INCOMPATIBLE. The
+      # committed fingerprint makes that a red job instead.
+      - name: Assert the fallback signer is the key the published betas carry
+        if: env.ANDROID_KEYSTORE_B64 == ''
+        run: |
+          bash ci/verify-android-signer.sh \
+            "android/app/build/outputs/apk/$WARREN_CHANNEL/release/app-$WARREN_CHANNEL-release.apk" \
+            android/fallback-signer.sha256
 
       # Prod only: the Play listing is the prod applicationId; the beta app is
       # distributed as a direct APK and never uploaded.
@@ -1457,7 +1467,11 @@ jobs:
           # unfinished file (a truncated file has a short size and is re-sent).
           # Integrity is carried by SHA256SUMS and the signed manifests, both
           # re-sent every run.
+          # The R8 mapping stays a GitHub Release asset: the host mirrors what
+          # the download page serves, and the prune below does not know the
+          # mapping's extension, so one copy per version would pile up there.
           (cd release-files && ls -ln "${prefix}-${WARREN_VERSION}"-* \
+            | grep -v -- '-android-mapping.txt.gz' \
             | awk '{print $5, $NF}' | sort) > "$RUNNER_TEMP/local.list"
           $ssh "$target" "ls -ln '$dest' 2>/dev/null" \
             | awk 'NF>=5 {print $5, $NF}' | sort > "$RUNNER_TEMP/remote.list"
