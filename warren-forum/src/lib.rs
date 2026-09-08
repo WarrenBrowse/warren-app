@@ -1047,6 +1047,26 @@ pub fn place_code(
     }
 }
 
+/// The floor of a read worth starting in a bounded probe: under one second a
+/// TLS handshake alone can overrun it.
+const PROBE_READ_FLOOR: std::time::Duration = std::time::Duration::from_secs(1);
+
+/// What is left of a bounded probe's `budget` after `elapsed`, for its next
+/// read, or `None` when too little is left for one more exchange. A caller
+/// cannot interrupt a blocking read from outside (a Kotlin timeout over a
+/// JNI call returns without stopping it), so the reads bound themselves,
+/// each taking what the budget still holds; a budget too thin for one more
+/// read ends the probe as unplaced instead of starting a read that could
+/// only overrun it.
+#[must_use]
+pub fn probe_time_left(
+    budget: std::time::Duration,
+    elapsed: std::time::Duration,
+) -> Option<std::time::Duration> {
+    let left = budget.checked_sub(elapsed)?;
+    (left >= PROBE_READ_FLOOR).then_some(left)
+}
+
 /// The JSON envelope of a placement: `{"kind":"login"|"gone"|"unknown"}`, or
 /// `{"kind":"attach","topic_id":N}` with [`PRE_TOPIC_ID`] for a pre-topic
 /// session.
@@ -2655,6 +2675,32 @@ mod placement_tests {
         );
         assert_eq!(place_code(Some(404), None, None), CodePlacement::Unknown);
         assert_eq!(place_code(None, None, None), CodePlacement::Unknown);
+    }
+
+    #[test]
+    fn a_bounded_probe_hands_each_read_what_is_left_of_its_budget() {
+        use std::time::Duration;
+        // A caller cannot interrupt a blocking read from outside, so the
+        // reads bound themselves: each takes what the budget still holds,
+        // and a budget too thin for one more exchange ends the probe instead
+        // of starting a read that could only overrun it.
+        let budget = Duration::from_secs(20);
+        assert_eq!(
+            probe_time_left(budget, Duration::ZERO),
+            Some(Duration::from_secs(20))
+        );
+        assert_eq!(
+            probe_time_left(budget, Duration::from_secs(12)),
+            Some(Duration::from_secs(8))
+        );
+        assert_eq!(
+            probe_time_left(budget, Duration::from_secs(19)),
+            Some(Duration::from_secs(1)),
+            "one second is the floor of a read worth starting"
+        );
+        assert_eq!(probe_time_left(budget, Duration::from_millis(19_500)), None);
+        assert_eq!(probe_time_left(budget, Duration::from_secs(25)), None);
+        assert_eq!(probe_time_left(Duration::ZERO, Duration::ZERO), None);
     }
 
     #[test]

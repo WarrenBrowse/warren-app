@@ -17,7 +17,7 @@ pub use warren_forum::{
     code_placement_envelope, code_probe_envelope, connect_host, envelope, is_allowed_connect_host,
     is_valid_sid, normalize_sign_in_code, notifications_envelope,
     notifications_outcome_for_response, outcome_for_response, parse_attach_meta_topic,
-    parse_topic_id, place_code, refuse_before_transport, report_envelope,
+    parse_topic_id, place_code, probe_time_left, refuse_before_transport, report_envelope,
     report_outcome_for_response, seen_envelope, seen_outcome_for_response, timestamp_with_offset,
     upload_deadline,
 };

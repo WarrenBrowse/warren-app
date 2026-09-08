@@ -371,6 +371,39 @@ async fn get_plain(
         .await
 }
 
+/// A GET under a total deadline sized by the caller, status and body read
+/// back: the reads of the bounded code probe.
+#[cfg(feature = "tunnel")]
+async fn get_plain_within(
+    transport: &ForumTransport,
+    url: String,
+    total: Duration,
+) -> Result<HttpResponse, TransportError> {
+    transport
+        .execute_dated_within(
+            HttpRequest {
+                method: Method::Get,
+                url,
+                headers: Vec::new(),
+                body: Vec::new(),
+                use_sni: true,
+            },
+            total,
+        )
+        .await
+        .map(|(response, _)| response)
+}
+
+/// The SDK client carries its own fixed 15 s; this arm ships in no build.
+#[cfg(not(feature = "tunnel"))]
+async fn get_plain_within(
+    transport: &ForumTransport,
+    url: String,
+    _total: Duration,
+) -> Result<HttpResponse, TransportError> {
+    get_plain(transport, url).await
+}
+
 /// The envelope handed back to Kotlin, or null when the JVM string cannot
 /// be allocated (the caller then sees an exception, never a forged answer).
 fn envelope_or_null(env: &JnixEnv<'_>, json: String) -> jstring {
@@ -539,8 +572,11 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumAttachCancel
 /// answers 404, the attach meta only when that one is pending (it names the
 /// topic the code cannot carry). Returns `{"kind":"login"|"gone"|"unknown"}`
 /// or `{"kind":"attach","topic_id":N}` with 0 for a pre-topic session
-/// ([`crate::forum::code_placement_envelope`]). Unsigned, no wallet material;
-/// blocks on up to three GETs, so invoke off the main thread. The sid is
+/// ([`crate::forum::code_placement_envelope`]). The three reads share
+/// `budget_millis`: each takes what is left of it, and a budget too thin for
+/// one more read ends the probe as `unknown`, because a Kotlin timeout over
+/// this call returns without stopping it. Unsigned, no wallet material;
+/// blocks for at most the budget, so invoke off the main thread. The sid is
 /// never logged.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumCodeProbe<'local>(
@@ -548,15 +584,28 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumCodeProbe<'l
     _class: JClass<'local>,
     sid: JString<'local>,
     host: JString<'local>,
+    budget_millis: jlong,
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
     let sid = String::from_java(&jnix_env, sid);
     let host = String::from_java(&jnix_env, host);
-    let placement = forum_code_probe(&sid, &host);
+    let budget = Duration::from_millis(u64::try_from(budget_millis).unwrap_or(0));
+    let placement = forum_code_probe(&sid, &host, budget);
     envelope_or_null(&jnix_env, forum::code_placement_envelope(placement))
 }
 
-fn forum_code_probe(sid: &str, host: &str) -> CodePlacement {
+/// The placement's kind for the log: never the topic, which pairs the
+/// device with a public forum topic.
+fn placement_kind(placement: CodePlacement) -> &'static str {
+    match placement {
+        CodePlacement::Login => "login",
+        CodePlacement::Attach(_) => "attach",
+        CodePlacement::Gone => "gone",
+        CodePlacement::Unknown => "unknown",
+    }
+}
+
+fn forum_code_probe(sid: &str, host: &str, budget: Duration) -> CodePlacement {
     let Some(runtime) = crate::android_jni::runtime() else {
         log::warn!("forumCodeProbe: initLogger must run first");
         return CodePlacement::Unknown;
@@ -570,14 +619,21 @@ fn forum_code_probe(sid: &str, host: &str) -> CodePlacement {
         return CodePlacement::Unknown;
     };
     let transport = forum_transport();
-    let read = |url: String, what: &str| match runtime.block_on(get_plain(&transport, url)) {
-        Ok(response) => Some((response.status, response.body)),
-        Err(err) => {
-            log::warn!(
-                "forumCodeProbe: {what} read failed ({})",
-                transport_class(&err)
-            );
-            None
+    let started = std::time::Instant::now();
+    let read = |url: String, what: &str| {
+        let Some(left) = forum::probe_time_left(budget, started.elapsed()) else {
+            log::warn!("forumCodeProbe: budget spent before the {what} read");
+            return None;
+        };
+        match runtime.block_on(get_plain_within(&transport, url, left)) {
+            Ok(response) => Some((response.status, response.body)),
+            Err(err) => {
+                log::warn!(
+                    "forumCodeProbe: {what} read failed ({})",
+                    transport_class(&err)
+                );
+                None
+            }
         }
     };
     let login_status = read(login_url, "login status").map(|(status, _)| status);
@@ -611,11 +667,12 @@ fn forum_code_probe(sid: &str, host: &str) -> CodePlacement {
             .map(|(status, body)| (*status, body.as_slice())),
     );
     log::info!(
-        "forumCodeProbe: login status {:?}, attach status {:?}, meta status {:?}: {:?}",
+        "forumCodeProbe: login status {:?}, attach status {:?}, meta status {:?}: {} after {} ms",
         login_status,
         attach.as_ref().map(|(status, _)| *status),
         meta.as_ref().map(|(status, _)| *status),
-        placement
+        placement_kind(placement),
+        started.elapsed().as_millis()
     );
     placement
 }
