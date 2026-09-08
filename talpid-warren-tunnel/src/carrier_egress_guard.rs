@@ -18,12 +18,13 @@
 //! route swap it runs a short bootstrap window and watches for proof that our
 //! own post-swap sends reach the peer. If proven, the bind is good and stays.
 //! If sends were issued but nothing was acknowledged within the window, the
-//! guard RECORDS the network for the `<carrier_ip>/32` DefaultNode escape so
-//! the NEXT connect pre-installs it, before the `0/0` redirect, and leaves the
-//! live session alone. It used to patch the session in place instead, and that
-//! patch was itself an outage (see [`GuardOutcome::BindBlackholed`]). The bind
-//! is kept only when confirmed working, never fail-closed (fail-closed here
-//! would take egress down).
+//! guard RECORDS the network for the `<carrier_ip>/32` DefaultNode escape and
+//! ENDS the session at once through the monitor's reconnect channel, so the
+//! reconnect that follows pre-installs the escape before the `0/0` redirect.
+//! It never patches the live session in place: that patch was itself an
+//! outage (see [`GuardOutcome::BindBlackholed`]). The bind is kept only when
+//! confirmed working, never fail-closed (fail-closed here would take egress
+//! down).
 //!
 //! # What the counters cannot answer, and the probe that can
 //!
@@ -226,7 +227,9 @@ pub(crate) enum GuardOutcome {
     /// The bound carrier black-holed. The guard does NOT touch the live
     /// session: it records `RouteOnly` for the network so the NEXT connect
     /// pre-installs the escape in the documented order, before the `0/0`
-    /// redirect, and lets the dead-path escalation end this session.
+    /// redirect, then ends this session through the monitor's reconnect
+    /// channel ([`dead_carrier_ends_the_session`]) so that connect happens
+    /// now rather than after the dead-path backstops.
     ///
     /// The guard used to patch the session in place instead (install the `/32`
     /// on top of the live `0/0` redirect, rebind the primary socket underneath
@@ -238,10 +241,12 @@ pub(crate) enum GuardOutcome {
     /// `/32` lands BEFORE the `0/0` redirect, zero self-nest window); the
     /// revert was the one path that broke it.
     ///
-    /// Trade accepted: a host whose bind really is black-holed now waits for a
-    /// reconnect instead of healing in place. That costs seconds on a host that
+    /// Trade accepted: a host whose bind really is black-holed reconnects
+    /// instead of healing in place. That costs about two seconds on a host that
     /// was already carrying nothing, and it removes a total outage on hosts
-    /// where the live patch is what breaks the datapath.
+    /// where the live patch is what breaks the datapath. Leaving the reconnect
+    /// to the dead-path backstops instead cost 30 s of host-wide blackout on
+    /// every cold-cache connect (2026-09-08).
     BindBlackholed,
     /// A pre-installed `<carrier_ip>/32` escape carried nothing either. Only
     /// reachable from [`run_escape_verify_guard`], so the escape was measured
@@ -518,8 +523,8 @@ pub(crate) fn log_guard_outcome(
              the bootstrap window ({evidence}). The live session is \
              left untouched on purpose: patching it (installing the <carrier_ip>/32 on top of \
              the tunnel default and rebinding the socket underneath) is itself an outage on some \
-             networks. The escape is recorded for this network, so the next connect pre-installs \
-             it before the tunnel default; the dead-path escalation ends this session."
+             networks. The escape is recorded for this network and this session ends now, so the \
+             reconnect pre-installs it before the tunnel default."
         ),
         GuardOutcome::EscapeAlsoDead => log::warn!(
             "Warren carrier egress guard: this host egresses through NEITHER the IP_BOUND_IF \
@@ -531,6 +536,40 @@ pub(crate) fn log_guard_outcome(
         GuardOutcome::BypassConfirmed
         | GuardOutcome::RevertedToRoute
         | GuardOutcome::Inconclusive => {}
+    }
+}
+
+/// Whether a verdict ends the live session on the spot, and the reason the
+/// state machine is given for it.
+///
+/// Only [`GuardOutcome::BindBlackholed`]. It is the one dead verdict with a
+/// remedy that a reconnect applies: `RouteOnly` is recorded before this is
+/// consulted, so the connect that follows pre-installs the `<carrier_ip>/32`
+/// escape before the `0/0` redirect, the ordering topic 138 proved carries
+/// traffic. Leaving the session to the dead-path backstops instead meant the
+/// supervisor's zero-downlink redial window (15 s, whose redials reuse the
+/// same dead bind and fail) and then the session liveness deadline (15 s),
+/// all with the default route in the tunnel and the kill switch up: a 30 s
+/// host-wide blackout on every cold-cache connect, measured on poka's Mac on
+/// 2026-09-08, against a verdict the guard had in hand 1.7 s after `Up`.
+///
+/// [`GuardOutcome::EscapeAlsoDead`] has no such remedy: the network is
+/// forgotten and the next connect re-arms the bind that just failed, so ending
+/// the session at once would flap a both-dead host against the fleet every
+/// two seconds. The backstops are its pacing, and the circuit change
+/// (`dead_carrier_blames_the_circuit`) its only lever.
+#[must_use]
+pub(crate) fn dead_carrier_ends_the_session(outcome: GuardOutcome) -> Option<&'static str> {
+    match outcome {
+        GuardOutcome::BindBlackholed => Some(
+            "the IP_BOUND_IF-bound carrier egressed nothing after the route swap; the /32 \
+             escape is recorded for this network, so the reconnect pre-installs it before the \
+             tunnel default",
+        ),
+        GuardOutcome::EscapeAlsoDead
+        | GuardOutcome::BypassConfirmed
+        | GuardOutcome::RevertedToRoute
+        | GuardOutcome::Inconclusive => None,
     }
 }
 
@@ -1059,5 +1098,46 @@ mod tests {
         let mut io = MockIo::new(EgressReading::default(), EgressReading::default());
         let outcome = run_bootstrap_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::Inconclusive);
+    }
+
+    /// The verdict this guard exists for, and the one it can act on at once: a
+    /// black-holed bind has a remedy (the next connect pre-installs the `/32`
+    /// escape, recorded a moment earlier), so the session that carries nothing
+    /// ends now instead of waiting for the dead-path escalation. On poka's Mac
+    /// that wait was two 15 s backstops in a row: a host-wide blackout of
+    /// 30 s on every cold-cache connect (2026-09-08).
+    #[test]
+    fn a_blackholed_bind_ends_the_session_now() {
+        let reason = dead_carrier_ends_the_session(GuardOutcome::BindBlackholed)
+            .expect("a black-holed bind ends the live session");
+        assert!(
+            reason.contains("escape") && reason.contains("recorded"),
+            "the reason must say the remedy is already in place: {reason}"
+        );
+    }
+
+    /// Both configurations measured dead is a verdict WITHOUT a remedy in a
+    /// reconnect: the next connect re-arms the bind that just failed. Ending
+    /// the session at once would turn topic 138's host into a 2 s flap loop
+    /// against the fleet; the 15 s backstops are its pacing.
+    #[test]
+    fn a_dead_escape_leaves_the_session_to_the_backstops() {
+        assert_eq!(
+            dead_carrier_ends_the_session(GuardOutcome::EscapeAlsoDead),
+            None
+        );
+    }
+
+    /// A carrier that egresses, or one the guard could not judge, is never a
+    /// reason to leave Connected.
+    #[test]
+    fn a_working_or_unjudged_carrier_never_ends_the_session() {
+        for outcome in [
+            GuardOutcome::BypassConfirmed,
+            GuardOutcome::RevertedToRoute,
+            GuardOutcome::Inconclusive,
+        ] {
+            assert_eq!(dead_carrier_ends_the_session(outcome), None, "{outcome:?}");
+        }
     }
 }

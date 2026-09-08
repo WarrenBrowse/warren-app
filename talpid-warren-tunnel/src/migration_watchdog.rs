@@ -31,8 +31,7 @@ use warrenguard_tun_core::SocketBypass;
 
 /// Watch receiver over the supervisor's published session.
 type ClientWatch = tokio::sync::watch::Receiver<Option<Arc<MultiHopBundle>>>;
-/// Shared single-shot pump error sender (same instance the pumps use).
-type PumpErrorTx = Arc<std::sync::Mutex<Option<tokio::sync::oneshot::Sender<String>>>>;
+use crate::reconnect_signal::PumpErrorTx;
 
 /// Production bindings for [`MigrationIo`].
 pub(crate) struct RealWatchdogIo {
@@ -287,14 +286,7 @@ impl MigrationIo for RealWatchdogIo {
 
     fn escalate(&mut self, msg: String) {
         log::warn!("Warren migration watchdog: escalating to the state machine: {msg}");
-        if let Some(tx) = self
-            .pump_error_tx
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .take()
-        {
-            let _ = tx.send(msg);
-        }
+        crate::reconnect_signal::escalate(&self.pump_error_tx, msg);
     }
 }
 

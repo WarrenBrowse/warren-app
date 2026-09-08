@@ -52,9 +52,7 @@ type ClientWatch = tokio::sync::watch::Receiver<
 type DrainWatch =
     tokio::sync::watch::Receiver<Option<warrenguard_transport::supervised_pump::ExitDrainAdvisory>>;
 
-/// Shared single-shot pump-error sender (the same instance the pumps and
-/// `session_liveness` hold); `take()` fires the reconnect exactly once.
-type PumpErrorTx = std::sync::Arc<std::sync::Mutex<Option<tokio::sync::oneshot::Sender<String>>>>;
+use crate::reconnect_signal::PumpErrorTx;
 
 /// Production bindings for [`EgressProbeIo`].
 pub(crate) struct RealEgressProbeIo {
@@ -204,12 +202,10 @@ impl EgressProbeIo for RealEgressProbeIo {
     fn escalate_reconnect(&mut self, msg: String) {
         match self.pump_error_tx.as_ref() {
             Some(tx) => {
-                if let Some(sender) = tx.lock().unwrap_or_else(|p| p.into_inner()).take() {
-                    log::warn!("Warren egress probe: escalating reconnect: {msg}");
-                    let _ = sender.send(msg);
-                }
-                // If already taken, another guard beat us to the reconnect:
+                log::warn!("Warren egress probe: escalating reconnect: {msg}");
+                // `false` means another guard beat us to the reconnect:
                 // benign, the tunnel is already leaving Connected.
+                crate::reconnect_signal::escalate(tx, msg);
             }
             None => log::warn!(
                 "Warren egress probe: exit not forwarding but no reconnect channel wired; \

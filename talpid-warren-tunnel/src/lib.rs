@@ -287,6 +287,8 @@ mod egress_probe;
 /// kept sending. An indicator sampled post-connect, never a guard.
 mod leg_stall;
 mod migration_watchdog;
+/// The single-shot channel every in-tunnel guard ends a session through.
+mod reconnect_signal;
 mod session_liveness;
 mod session_placement;
 use adapter::MullvadTunPacketDevice;
@@ -1920,14 +1922,21 @@ impl WarrenTunnelMonitor {
             None
         };
 
+        // The monitor's single-shot reconnect channel, created here because the
+        // carrier egress guard below is the first task that may need it; the
+        // pumps and the other guards take clones of it further down.
+        let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
+        let pump_error_tx: reconnect_signal::PumpErrorTx =
+            std::sync::Arc::new(std::sync::Mutex::new(Some(pump_error_tx)));
+
         // macOS carrier egress guard (the carrier-blackhole failure mode):
         // now that the default route points at the TUN, VERIFY that the
         // carrier actually egresses, in WHICHEVER configuration is live. The
         // guard always runs AFTER `Up`, in the background, so the connect
-        // never waits on it: on a black-holing bind it self-heals to the `/32`
-        // escape within its adaptive window (a short dead-egress blip right
-        // after `Up`, once per network per verdict TTL) and records
-        // `RouteOnly` so the next connect skips the bind outright.
+        // never waits on it: on a black-holing bind it records `RouteOnly`
+        // and ends the session through the channel above (about 2 s after
+        // `Up`, once per network per verdict TTL), so the reconnect skips the
+        // bind and pre-installs the `/32` escape before the tunnel default.
         //
         // A cached-RouteOnly network skipped the bind above, and it is
         // verified all the same: a verdict that stops being measured stops
@@ -1950,6 +1959,7 @@ impl WarrenTunnelMonitor {
                     let relay_id = cfg.relay.relay_id;
                     let tun_ip = std::net::IpAddr::V4(tun_ip);
                     let dial_refused = params.warren_dial_refused.clone();
+                    let pump_error_tx = pump_error_tx.clone();
                     runtime.spawn(async move {
                         let report = if verify_only {
                             carrier_egress_guard::run_escape_verify_guard(&mut guard_io).await
@@ -1987,7 +1997,22 @@ impl WarrenTunnelMonitor {
                                 )
                             });
                         carrier_egress_guard::log_guard_outcome(report, &carrier_interface, routes);
+                        // Record BEFORE ending the session: the reconnect reads
+                        // the verdict cache from disk to choose its plan, and a
+                        // cold read there would re-arm the bind that just died.
                         recorder.record(outcome);
+                        if let Some(reason) =
+                            carrier_egress_guard::dead_carrier_ends_the_session(outcome)
+                        {
+                            log::warn!(
+                                "Warren carrier egress guard: escalating to the state machine: \
+                                 {reason}"
+                            );
+                            reconnect_signal::escalate(
+                                &pump_error_tx,
+                                format!("carrier bind black-holed: {reason}"),
+                            );
+                        }
                         warren_react_to_dead_carrier(outcome, routes, relay_id, dial_refused).await;
                     });
                 };
@@ -2102,8 +2127,6 @@ impl WarrenTunnelMonitor {
         // `_with_daita` variants drive the shared machine state (uplink
         // emits the padding actions, downlink filters the dummies); the
         // Notify is the cross-pump wake-up for downlink-scheduled timers.
-        let (pump_error_tx, pump_error_rx) = tokio::sync::oneshot::channel::<String>();
-        let pump_error_tx = std::sync::Arc::new(std::sync::Mutex::new(Some(pump_error_tx)));
         let pump_error_tx_uplink = pump_error_tx.clone();
         let pump_error_tx_downlink = pump_error_tx.clone();
         let daita_state_changed = std::sync::Arc::new(tokio::sync::Notify::new());

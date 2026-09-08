@@ -22,6 +22,13 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Fixed
+- Reconnect at once when the macOS carrier bind is found black-holed right after connecting, instead
+  of leaving the dead tunnel up for 30 seconds. The first connect on a network the app has not seen
+  binds the carrier socket to the physical interface and checks within two seconds that packets
+  come back; when none do, the check now ends the session immediately, and the reconnect that
+  follows uses the host-route escape it already recorded. Until now the same finding waited on two
+  15-second backstops, with the whole machine cut off from the internet in the meantime.
 
 
 ## [1.1.28] - 2026-09-07

@@ -42,10 +42,10 @@ use warrenguard_transport::drain_policy::{
 };
 use warrenguard_transport::supervised_pump::ExitDrainAdvisory;
 
-/// Pump-error escalation channel, shared with the pumps and the migration
-/// watchdog: the first task to take the `oneshot` reports the fatal/transient
-/// cause to the state machine, which rebuilds the tunnel.
-type PumpErrorTx = std::sync::Arc<std::sync::Mutex<Option<tokio::sync::oneshot::Sender<String>>>>;
+// Pump-error escalation channel, shared with the pumps and the migration
+// watchdog: the first task to take the `oneshot` reports the fatal/transient
+// cause to the state machine, which rebuilds the tunnel.
+use crate::reconnect_signal::PumpErrorTx;
 
 /// Unix seconds of the last drain-triggered escalation, process-wide (`0` =
 /// never). Shared across tunnel instances so a rebuilt tunnel's fresh reactor
@@ -203,14 +203,7 @@ impl DrainReactorIo for RealDrainReactorIo {
 
     fn escalate(&mut self, msg: String) {
         log::warn!("Warren drain reactor: escalating to the state machine: {msg}");
-        if let Some(tx) = self
-            .pump_error_tx
-            .lock()
-            .unwrap_or_else(|p| p.into_inner())
-            .take()
-        {
-            let _ = tx.send(msg);
-        }
+        crate::reconnect_signal::escalate(&self.pump_error_tx, msg);
     }
 
     fn report_drained_exit(&mut self) {
