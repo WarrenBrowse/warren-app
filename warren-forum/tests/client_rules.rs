@@ -7,9 +7,10 @@
 //! are replayed by the platform mirrors only.
 
 use warren_forum::{
-    FailReason, ForumIdentity, ForumLoginOutcome, ReportOutcome, build_cancel_url,
-    build_status_url, connect_host, envelope, is_allowed_connect_host, is_valid_sid,
-    normalize_sign_in_code, outcome_for_response, report_envelope, report_outcome_for_response,
+    FailReason, ForumIdentity, ForumLoginOutcome, PRE_TOPIC_ID, ReportOutcome, attach_body,
+    build_attach_cancel_url, build_attach_status_url, build_cancel_url, build_status_url,
+    connect_host, envelope, is_allowed_connect_host, is_valid_sid, normalize_sign_in_code,
+    outcome_for_response, parse_topic_id, report_envelope, report_outcome_for_response,
 };
 
 fn fixture(name: &str) -> serde_json::Value {
@@ -131,6 +132,94 @@ fn the_login_link_cases_agree_with_the_sid_and_host_rules() {
     assert!(
         replayed >= 8,
         "only {replayed} link cases reached the crate's rules"
+    );
+}
+
+#[test]
+fn the_attach_link_cases_agree_with_the_sid_host_and_topic_rules() {
+    let link = fixture("forum_link.json");
+    let mut replayed = 0;
+    for case in link["attach_cases"].as_array().expect("attach_cases") {
+        if skipped_for_rust(case) {
+            continue;
+        }
+        let name = str_of(case, "name");
+        let Some(url) = case["url"].as_str() else {
+            continue;
+        };
+        let params = query_params(url);
+        let expect = &case["expect"];
+        if let Some(accepted) = expect.get("accepted") {
+            let sid = str_of(accepted, "sid");
+            let host = str_of(accepted, "host");
+            let topic_id = accepted["topic_id"].as_u64().expect("topic_id");
+            assert_eq!(param(&params, "sid"), Some(sid), "{name}: sid");
+            assert_eq!(param(&params, "host"), Some(host), "{name}: host");
+            assert_eq!(
+                param(&params, "topic").and_then(parse_topic_id),
+                Some(topic_id),
+                "{name}: topic"
+            );
+            assert_eq!(
+                build_attach_status_url(sid, host).as_deref(),
+                Some(format!("https://{host}/v1/attach/{sid}/status").as_str()),
+                "{name}: status url"
+            );
+            assert_eq!(
+                build_attach_cancel_url(sid, host).as_deref(),
+                Some(format!("https://{host}/v1/attach/{sid}/cancel").as_str()),
+                "{name}: cancel url"
+            );
+            // The body the accepted link would be signed for carries the
+            // topic verbatim, the pre-topic one included.
+            let body = attach_body(sid, topic_id, b"x").expect("an accepted link builds");
+            let object: serde_json::Value = serde_json::from_slice(&body).expect("json body");
+            assert_eq!(object["topic_id"], topic_id, "{name}: topic in the body");
+            assert_eq!(
+                topic_id == PRE_TOPIC_ID,
+                name.starts_with("pre_topic"),
+                "{name}: the pre-topic case is topic 0"
+            );
+            replayed += 1;
+            continue;
+        }
+        match str_of(expect, "rejected") {
+            "bad-topic" => {
+                let topic = param(&params, "topic").expect("a bad-topic case carries a topic");
+                assert_eq!(
+                    parse_topic_id(topic),
+                    None,
+                    "{name}: the topic must be refused"
+                );
+                replayed += 1;
+            }
+            "missing-topic" => {
+                assert_eq!(param(&params, "topic"), None, "{name}");
+                replayed += 1;
+            }
+            "bad-sid-shape" => {
+                let sid = param(&params, "sid").expect("a bad-sid case carries a sid");
+                assert!(!is_valid_sid(sid), "{name}: the sid must be refused");
+                assert_eq!(build_attach_status_url(sid, connect_host()), None, "{name}");
+                assert_eq!(
+                    attach_body(sid, 42, b"x"),
+                    Err(warren_forum::ForumRequestError::Invalid)
+                );
+                replayed += 1;
+            }
+            "host-not-allowlisted" => {
+                let host = param(&params, "host").expect("a host case carries a host");
+                let sid = param(&params, "sid").expect("sid");
+                assert_eq!(build_attach_cancel_url(sid, host), None, "{name}");
+                replayed += 1;
+            }
+            // The URL-level classes are the platform mirrors' to replay.
+            _ => {}
+        }
+    }
+    assert!(
+        replayed >= 8,
+        "only {replayed} attach cases reached the crate's rules"
     );
 }
 
