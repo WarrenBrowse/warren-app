@@ -16,8 +16,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [1.1.29] - 2026-09-09
 ### Adăugat
-- Atașează jurnalele aplicației la un raport de eroare de pe forum din Android și iOS, pornind de
-  la același link al forumului pe care aplicația de desktop îl tratează deja. O cerere de
+- Atașează jurnalele aplicației la un raport de eroare de pe forum din Android, pornind de la
+  același link al forumului pe care aplicația de desktop îl tratează deja. O cerere de
   consimțământ numește subiectul raportat, arată la cerere exact raportul cenzurat și trimite
   numai după aprobare. Un cod de sesiune luat din acea pagină, tastat unde merge un cod de
   conectare la forum, deschide aceeași cerere în loc să fie citit ca o conectare expirată.

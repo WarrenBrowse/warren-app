@@ -17,11 +17,11 @@ par l'application, gardez-le tel quel.
 
 ## [1.1.29] - 2026-09-09
 ### Ajouté
-- Joindre les journaux de l'application à un rapport de bug du forum depuis Android et iOS, à
-  partir du même lien du forum que l'application de bureau traite déjà. Une demande de consentement
-  nomme le sujet concerné, affiche sur demande le rapport expurgé exact, et n'envoie qu'après
-  approbation. Un code de session issu de cette page, saisi là où va un code de connexion au forum,
-  ouvre la même demande au lieu d'être lu comme une connexion expirée.
+- Joindre les journaux de l'application à un rapport de bug du forum depuis Android, à partir du
+  même lien du forum que l'application de bureau traite déjà. Une demande de consentement nomme le
+  sujet concerné, affiche sur demande le rapport expurgé exact, et n'envoie qu'après approbation.
+  Un code de session issu de cette page, saisi là où va un code de connexion au forum, ouvre la
+  même demande au lieu d'être lu comme une connexion expirée.
 ### Corrigé
 - Afficher l'icône de l'application dans le dock et le sélecteur de fenêtres de GNOME sur une
   session Wayland (Ubuntu 26.04). L'application Linux ne nommait jamais son entrée de bureau au
