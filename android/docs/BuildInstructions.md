@@ -182,14 +182,44 @@ carries none, never another environment's.
    ```
 
 ### Release build without a keystore
-When the `warren.keystore.*` properties (or the `WARREN_KEYSTORE_*` variables)
-are absent, `assembleProdRelease` / `assembleBetaRelease` still produce an
-installable APK: `app/build.gradle.kts` signs the release build type with the
-AGP debug keystore (`~/.android/debug.keystore`). This is what the release
-workflow ships for the beta while no upload keystore exists: the optimised
-build (R8, release-profile Rust) under the key every beta install already
-carries, because the CI runner's debug keystore signed every earlier beta APK,
-so a sideloaded beta upgrades in place. A configured keystore takes precedence.
+The signing inputs are the four Gradle properties `warren.keystore.path`,
+`warren.keystore.password`, `warren.key.alias` and `warren.key.password`, or
+their environment fallbacks `WARREN_KEYSTORE_PATH`, `WARREN_KEYSTORE_PASSWORD`,
+`WARREN_KEY_ALIAS` and `WARREN_KEY_PASSWORD`. When any of them is missing,
+`assembleProdRelease` and `assembleBetaRelease` still produce an installable
+APK: `app/build.gradle.kts` signs the release build type with the AGP debug
+keystore (`~/.android/debug.keystore`) instead of leaving the signing config
+null, which would yield an `app-<flavor>-release-unsigned.apk` that no device
+installs.
+
+This is what the release workflow ships for the beta while no upload keystore
+exists. The beta is distributed as a direct APK, and Android upgrades an app in
+place only when the new APK carries the same signer as the installed one. The CI
+runner's debug keystore signed every beta APK published so far, so signing the
+optimised build (R8, release-profile Rust) with that key keeps every existing
+install upgrading. Until 1.1.28 the workflow fell back to the debug build type
+instead, an unoptimised datapath that held a Fairphone 3 at 59 % CPU. The prod
+flavor is wired the same way on purpose: a `v*` tag without a keystore also
+produces an installable release build.
+
+The key is whatever `~/.android/debug.keystore` the build machine holds, and AGP
+generates a new one wherever it finds none. Two consequences:
+
+- A developer's own machine signs with a different debug key. A release build
+  from your laptop installs on a clean device but does not upgrade a published
+  beta (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`), and uninstalling to get past
+  that erases the wallet. Reproduce an upgrade with the published APK only.
+- The published signer is pinned in `android/fallback-signer.sha256`: the
+  SHA-256 of the signer certificate as `apksigner verify --print-certs` prints
+  it, hex, no colons. On the fallback path the release workflow runs
+  `ci/verify-android-signer.sh` against the built APK and fails the job on a
+  mismatch, so a runner rebuilt on another HOME cannot rotate the key without
+  anyone noticing. `ci/stage-release-assets.sh` refuses an unsigned APK and
+  stages the R8 mapping beside it as
+  `WarrenVPN[-Beta]-<ver>-android-mapping.txt.gz`, the file that symbolicates
+  the stack traces in a problem report from that build.
+
+A configured keystore takes precedence over the fallback.
 
 ## Build using nix devshell
 This is supported on Linux (x86_64) as well as macOS (x86_64 and aarch64).
