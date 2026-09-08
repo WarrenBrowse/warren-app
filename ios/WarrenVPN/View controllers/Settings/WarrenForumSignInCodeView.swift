@@ -9,22 +9,31 @@
 //  its button did not open the app (a browser that asks first, no handler
 //  registered, an old install). Typing it here raises the very same consent
 //  prompt a deep link would, so the browser stops being a single point of
-//  failure between the forum and the wallet. Same copy as the desktop and
-//  Android screens.
+//  failure between the forum and the wallet. The forum's attach page prints
+//  its session id the same way, and a code from there raises the attach
+//  consent instead: the broker is asked which one it holds, with the screen
+//  saying so meanwhile. Same copy as the desktop and Android screens.
 //
 
 import SwiftUI
 
 public struct WarrenForumSignInCodeView: View {
-    /// Hands the typed code to the login flow; false when it is not a session
-    /// id, in which case the field shows why.
-    public let onSubmit: (String) -> Bool
+    /// Hands the typed code to the flow; false when it is not a session id,
+    /// in which case the field shows why. Otherwise the code is placed off
+    /// the main thread and `placed` runs once the consent is raised, so the
+    /// screen can leave; it shows progress until then.
+    public let onSubmit: (_ code: String, _ placed: @escaping @MainActor () -> Void) -> Bool
 
     @State private var code = ""
     @State private var invalid = false
+    @State private var checking = false
 
-    public init(onSubmit: @escaping (String) -> Bool) {
+    public init(onSubmit: @escaping (_ code: String, _ placed: @escaping @MainActor () -> Void) -> Bool) {
         self.onSubmit = onSubmit
+    }
+
+    private var canSubmit: Bool {
+        !checking && !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     public var body: some View {
@@ -58,6 +67,7 @@ public struct WarrenForumSignInCodeView: View {
                         .submitLabel(.done)
                         .onSubmit(submit)
                         .onChange(of: code) { _, _ in invalid = false }
+                        .disabled(checking)
                         .padding(12)
                         .background(
                             RoundedRectangle(cornerRadius: 8)
@@ -83,11 +93,16 @@ public struct WarrenForumSignInCodeView: View {
                 }
 
                 Button(action: submit) {
-                    Text(
-                        String(
-                            localized: "Continue", table: "Settings",
-                            comment: "Button that hands the typed forum sign-in code to the consent prompt")
-                    )
+                    HStack(spacing: 8) {
+                        if checking {
+                            ProgressView().tint(.Warren.navy)
+                        }
+                        Text(
+                            String(
+                                localized: "Continue", table: "Settings",
+                                comment: "Button that hands the typed forum sign-in code to the consent prompt")
+                        )
+                    }
                     .font(.warrenSmallSemiBold)
                     .foregroundColor(.Warren.navy)
                     .frame(maxWidth: .infinity)
@@ -97,9 +112,20 @@ public struct WarrenForumSignInCodeView: View {
                             .fill(Color.Warren.yellow)
                     )
                 }
-                .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .opacity(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.5 : 1)
+                .disabled(!canSubmit)
+                .opacity(canSubmit ? 1 : 0.5)
                 .accessibilityIdentifier("forumSignInCodeContinue")
+
+                if checking {
+                    Text(
+                        String(
+                            localized: "Checking the code, please wait.", table: "Settings",
+                            comment: "Shown while the broker is asked which consent a typed code calls for")
+                    )
+                    .font(.warrenMicro)
+                    .foregroundColor(.white.opacity(0.7))
+                    .accessibilityAddTraits(.updatesFrequently)
+                }
 
                 Spacer()
             }
@@ -110,9 +136,13 @@ public struct WarrenForumSignInCodeView: View {
     }
 
     private func submit() {
+        guard canSubmit else { return }
         // Checked in the flow as the boundary that decides what a code
-        // stands for; the view only reflects its answer.
-        if !onSubmit(code) {
+        // stands for; the view only reflects its answer. Bounded inside: the
+        // screen leaves once the prompt is raised.
+        if onSubmit(code, { checking = false }) {
+            checking = true
+        } else {
             invalid = true
         }
     }

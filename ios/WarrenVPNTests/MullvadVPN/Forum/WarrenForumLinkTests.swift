@@ -61,7 +61,7 @@ final class WarrenForumLinkTests: XCTestCase {
                 let link = ForumAttachLink(
                     sid: try ClientRulesFixtures.string(accepted, "sid"),
                     host: try ClientRulesFixtures.string(accepted, "host"),
-                    topicId: try XCTUnwrap((accepted["topic_id"] as? NSNumber).map { UInt64(truncating: $0) }))
+                    topicId: UInt64(truncating: try XCTUnwrap(accepted["topic_id"] as? NSNumber)))
                 XCTAssertEqual(verdict, .accepted(link), name)
             } else {
                 XCTAssertEqual(verdict, .rejected(try ClientRulesFixtures.string(expect, "rejected")), name)
@@ -82,19 +82,21 @@ final class WarrenForumLinkTests: XCTestCase {
         XCTAssertEqual(WarrenForumLinks.loginAction, "forum-login")
     }
 
-    func testATypedCodeStandsForAnAttachWithoutATopic() throws {
+    func testATypedCodeStandsForAnAttachWithTheTopicItsMetaNamed() throws {
         // The attach page prints its session id in the shape of the sign-in
-        // code, and nothing the broker answers without a signature names the
-        // topic, so the link a typed code stands for asks for it; 0 remains
-        // the report still being composed.
+        // code, and the topic is the one thing the code cannot carry: the
+        // broker's meta names it (0 for a report still being composed), so
+        // the link a typed code stands for carries it like a deep link.
         let sid = "0123456789abcdef0123456789abcdef"
-        let link = WarrenForumLinks.attachLinkFromCode(sid, host: allowedHost)
-        XCTAssertEqual(link, ForumAttachLink(sid: sid, host: allowedHost, topicId: nil))
-        XCTAssertFalse(link.isPreTopic)
-        XCTAssertTrue(ForumAttachLink(sid: sid, host: allowedHost, topicId: 0).isPreTopic)
+        XCTAssertEqual(
+            WarrenForumLinks.attachLinkFromCode(sid, host: allowedHost, topicId: 4242),
+            ForumAttachLink(sid: sid, host: allowedHost, topicId: 4242))
+        XCTAssertTrue(WarrenForumLinks.attachLinkFromCode(sid, host: allowedHost, topicId: 0).isPreTopic)
+        XCTAssertFalse(ForumAttachLink(sid: sid, host: allowedHost, topicId: 42).isPreTopic)
         XCTAssertEqual(ForumAttachLink.preTopic, 0)
         XCTAssertEqual(WarrenForumLinks.parseTopicId("042"), 42)
         XCTAssertNil(WarrenForumLinks.parseTopicId("4 2"))
+        XCTAssertNil(WarrenForumLinks.parseTopicId("9007199254740993"))
     }
 
     func testTheSchemesOfTheFixtureAreTheProductTables() throws {

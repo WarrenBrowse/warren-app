@@ -12,7 +12,9 @@
 //  the user approves the consent prompt, and the exact report can be read
 //  first ("View the logs"). The link rules mirror the login's and are pinned
 //  by the same fixture (`fixtures/client-rules/forum_link.json`); the wire
-//  bytes and outcome mapping live in the Rust `warren-forum` crate.
+//  bytes and outcome mapping live in the Rust `warren-forum` crate; the
+//  upload itself is `WarrenForumAttachUpload`, exercised with fakes off the
+//  device.
 //
 
 import Foundation
@@ -23,15 +25,13 @@ import WarrenRustRuntime
 
 /// A validated `<scheme>://attach-logs` deep link: the forum's "attach your
 /// logs" page asking the app to attach its redacted problem report to
-/// `topicId`, or, when it is 0, to a report still being composed (the forum
-/// binds the logs to the topic after creation).
-///
-/// `topicId` is `nil` for a session id typed by hand: the broker's status
-/// endpoints carry no topic id, so the consent prompt asks for it.
+/// `topicId`, or, when it is `preTopic`, to a report still being composed
+/// (the forum binds the logs to the topic after creation). A session id typed
+/// by hand carries the topic the broker's meta named for it.
 struct ForumAttachLink: Equatable {
     let sid: String
     let host: String
-    let topicId: UInt64?
+    let topicId: UInt64
 
     /// The topic id of a report still being composed.
     static let preTopic: UInt64 = 0
@@ -65,9 +65,8 @@ extension WarrenForumLinks {
         return components.host ?? components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     }
 
-    /// A topic id as a deep link, or the consent prompt's field, spells it:
-    /// decimal digits only (so no sign), within `maxForumTopicID`; `nil`
-    /// otherwise.
+    /// A topic id as a deep link spells it: decimal digits only (so no sign),
+    /// within `maxForumTopicID`; `nil` otherwise.
     static func parseTopicId(_ text: String) -> UInt64? {
         guard !text.isEmpty, text.allSatisfy({ $0.isASCII && $0.isNumber }), let value = UInt64(text) else {
             return nil
@@ -76,9 +75,12 @@ extension WarrenForumLinks {
     }
 
     /// The attach request a session id typed by hand stands for, against the
-    /// one allowlisted host. The topic is unknown, so the prompt asks for it.
-    static func attachLinkFromCode(_ sid: String, host: String) -> ForumAttachLink {
-        ForumAttachLink(sid: sid, host: host, topicId: nil)
+    /// one allowlisted host, with the topic the broker's meta
+    /// (`GET /v1/attach/<sid>/meta`) named for the session: the attach page
+    /// prints its session id in the same shape as the sign-in code, and the
+    /// topic is the one thing the code itself cannot carry.
+    static func attachLinkFromCode(_ sid: String, host: String, topicId: UInt64) -> ForumAttachLink {
+        ForumAttachLink(sid: sid, host: host, topicId: topicId)
     }
 
     /// Classifies `raw` as an attach-logs link. Classes: the login parser's
@@ -117,18 +119,19 @@ extension WarrenForumLinks {
 final class WarrenForumAttachPromptState: ObservableObject {
     let link: ForumAttachLink
 
-    /// The link carries no topic (a typed code), so the prompt shows the topic
-    /// field; an empty field means a report still being composed.
-    let needsTopic: Bool
-
-    /// What the topic field holds: digits only, whatever was typed or pasted.
-    @Published private(set) var topicInput = ""
     /// An upload is out: Approve and Cancel are disabled.
     @Published private(set) var busy = false
     /// The inline message of the last non-attached outcome, if any.
     @Published private(set) var failure: String?
     /// No retry can change the outcome, so Approve is disarmed for good.
     @Published private(set) var terminal = false
+    /// The upload was attached (or parked); the prompt is done.
+    @Published private(set) var attached = false
+    /// Leaving the prompt tells the provider the user declined, so the forum
+    /// page stops waiting. False only once the provider reported the session
+    /// gone: a refusal as author or a report over the cap leaves the session
+    /// pending on the provider, and the page polling it.
+    @Published private(set) var cancelsOnDecline = true
     /// "View the logs" is collecting the report.
     @Published private(set) var collecting = false
     @Published private(set) var collectFailed = false
@@ -137,22 +140,9 @@ final class WarrenForumAttachPromptState: ObservableObject {
 
     init(link: ForumAttachLink) {
         self.link = link
-        needsTopic = link.topicId == nil
     }
 
-    func updateTopicInput(_ text: String) {
-        topicInput = String(text.filter { $0.isASCII && $0.isNumber })
-    }
-
-    /// The topic the approval sends: the link's own, else the field's, an
-    /// empty field standing for a report still being composed. `nil` when the
-    /// field holds a number no topic can have.
-    func topicIdOrNil() -> UInt64? {
-        if let topicId = link.topicId { return topicId }
-        return topicInput.isEmpty ? ForumAttachLink.preTopic : WarrenForumLinks.parseTopicId(topicInput)
-    }
-
-    var canApprove: Bool { !busy && !terminal && topicIdOrNil() != nil }
+    var canApprove: Bool { !busy && !terminal }
 
     /// The user approved: the upload is in flight.
     func begin() {
@@ -164,10 +154,19 @@ final class WarrenForumAttachPromptState: ObservableObject {
     func settle(_ outcome: WarrenForumAttachOutcome, message: String) {
         busy = false
         terminal = outcome.isTerminal
+        cancelsOnDecline = outcome != .expired
         failure = message
     }
 
-    /// A message for the current link without an attempt (a stale link).
+    /// The provider attached (or parked) the report.
+    func markAttached() {
+        busy = false
+        failure = nil
+        attached = true
+    }
+
+    /// A message for the current link without an attempt (a stale link, a
+    /// tunnel between states).
     func fail(message: String) {
         failure = message
     }
@@ -196,12 +195,15 @@ final class WarrenForumAttachPromptState: ObservableObject {
 /// Owned by the app delegate; the scene that owns the window supplies the
 /// presenter and the tunnel state. The app NEVER uploads silently: every
 /// accepted link goes through the consent prompt. `@unchecked Sendable` like
-/// the login flow: the UI touches are `@MainActor`, the collect-and-upload
-/// runs on a background queue and touches only the journal and the logger.
+/// the login flow: the UI touches are `@MainActor`, the upload runs on a
+/// background queue and touches only the journal, the logger and the
+/// injected upload.
 final class WarrenForumAttachFlow: @unchecked Sendable {
     private let logger = Logger(label: "WarrenForumAttach")
     private let anchors: WarrenProductAnchors
     private let journal: WarrenForumEventsJournal
+    private let upload: WarrenForumAttachUpload
+    private let collectPreview: @Sendable () -> String
 
     /// Where the prompt is presented, resolved at presentation time so it
     /// lands over whatever is on screen.
@@ -211,9 +213,27 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
 
     @MainActor private weak var presented: UIViewController?
 
-    init(anchors: WarrenProductAnchors = .current, journal: WarrenForumEventsJournal) {
+    /// `upload` and `collectPreview` default to the production wiring (the
+    /// Keychain wallet, the app's log files, the Rust FFI); a test hands in
+    /// fakes.
+    init(
+        anchors: WarrenProductAnchors = .current,
+        journal: WarrenForumEventsJournal,
+        upload: WarrenForumAttachUpload? = nil,
+        collectPreview: (@Sendable () -> String)? = nil
+    ) {
         self.anchors = anchors
         self.journal = journal
+        let journalURL = journal.fileURL
+        self.upload = upload ?? Self.productionUpload(journalURL: journalURL)
+        self.collectPreview =
+            collectPreview ?? {
+                WarrenProblemReport.consolidate(
+                    fileURLs: Self.reportFileURLs(journalURL: journalURL),
+                    redacting: Self.walletAddress().map { [$0] } ?? [],
+                    groupIdentifiers: [ApplicationConfiguration.securityGroupIdentifier],
+                    bufferSize: ApplicationConfiguration.logMaximumFileSize)
+            }
     }
 
     /// A deep link handed to the scene (cold start or `openURLContexts`).
@@ -234,7 +254,8 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
         }
     }
 
-    /// A session id the code flow placed as an attach session.
+    /// A session id the code flow placed as an attach session, with the topic
+    /// the broker's meta named.
     @MainActor
     func requestFromCode(_ link: ForumAttachLink) {
         present(link)
@@ -254,19 +275,26 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
             onViewLogs: { [weak self] in self?.viewLogs(state) })
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy
+        // Only the two buttons close the prompt: a swipe would leave the forum
+        // page polling without the cancel notify Cancel sends.
+        host.isModalInPresentation = true
         presented = host
         presenter.present(host, animated: true)
     }
 
     @MainActor
-    private func dismiss() {
-        presented?.dismiss(animated: true)
-        presented = nil
+    private func dismiss(then completion: (() -> Void)? = nil) {
+        guard let presented else {
+            completion?()
+            return
+        }
+        self.presented = nil
+        presented.dismiss(animated: true, completion: completion)
     }
 
     @MainActor
     private func approve(_ state: WarrenForumAttachPromptState) {
-        guard !state.busy, let topicId = state.topicIdOrNil() else { return }
+        guard state.canApprove else { return }
         // A request signed while the tunnel is between states cannot resolve
         // the broker's host name, so the flow reads the tunnel and defers
         // instead of spending the session on it (the login's rule).
@@ -280,52 +308,35 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
         }
         state.begin()
         let link = state.link
-        journal.record(.attachSigning, .preTopic(topicId == ForumAttachLink.preTopic))
+        journal.record(.attachSigning, .preTopic(link.isPreTopic))
         let started = Date()
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             guard let self else { return }
-            let outcome = self.collectAndAttach(link: link, topicId: topicId)
+            let result = self.upload.run(sid: link.sid, host: link.host, topicId: link.topicId)
             let elapsed = Int(Date().timeIntervalSince(started) * 1000)
-            self.journal.record(.attachResult, .class(outcome.journalClass), .elapsedMs(elapsed))
+            var fields: [JournalField] = [.class(result.outcome.journalClass), .elapsedMs(elapsed)]
+            if let gzBytes = result.gzBytes {
+                fields.append(.gzBytes(gzBytes))
+            }
+            self.journal.record(.attachResult, fields: fields)
             DispatchQueue.main.async {
-                switch outcome {
+                switch result.outcome {
                 case .attached:
-                    self.dismiss()
+                    state.markAttached()
+                    let message = Self.attachedMessage(for: link)
+                    self.dismiss { self.presentResult(message) }
                 default:
-                    state.settle(outcome, message: Self.message(for: outcome, link: link))
+                    state.settle(result.outcome, message: Self.message(for: result.outcome))
                 }
             }
         }
-    }
-
-    /// Off the main thread: load the wallet, collect and gzip the report, then
-    /// sign and POST it in Rust. The seed is forgotten right after. Not
-    /// `@MainActor`: it touches only the journal, the logger and static APIs.
-    private func collectAndAttach(link: ForumAttachLink, topicId: UInt64) -> WarrenForumAttachOutcome {
-        guard let mnemonic = try? WarrenWalletKeychain.load(),
-            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
-        else {
-            return .failed(reason: "wallet-absent")
-        }
-        defer { wallet.forgetSecret() }
-        let address = wallet.publicKeyAddress
-        let gz: Data
-        do {
-            gz = try WarrenProblemReport.collectGzipped(
-                walletAddress: address.isEmpty ? nil : address, journalURL: journal.fileURL)
-        } catch {
-            logger.warning("forum attach: report collection failed")
-            return .failed(reason: "collect-failed")
-        }
-        return WarrenAccountClient.forumAttachLogs(
-            seed: wallet.seed, sid: link.sid, topicId: topicId, host: link.host, logGz: gz)
     }
 
     @MainActor
     private func cancel(_ state: WarrenForumAttachPromptState) {
         guard !state.busy else { return }
         let link = state.link
-        if !state.terminal {
+        if state.cancelsOnDecline {
             journal.record(.attachDeclined)
             DispatchQueue.global(qos: .utility).async {
                 WarrenAccountClient.forumAttachCancel(sid: link.sid, host: link.host)
@@ -338,17 +349,10 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
     private func viewLogs(_ state: WarrenForumAttachPromptState) {
         guard !state.collecting, !state.busy else { return }
         state.beginCollect()
-        let journalURL = journal.fileURL
+        let collect = collectPreview
         DispatchQueue.global(qos: .userInitiated).async {
             // Nothing leaves the device for the preview.
-            let address = (try? WarrenWalletKeychain.load())
-                .flatMap { try? WarrenWallet.fromMnemonic($0) }
-                .map { wallet -> String in
-                    defer { wallet.forgetSecret() }
-                    return wallet.publicKeyAddress
-                }
-            let text = WarrenProblemReport.collect(
-                walletAddress: (address?.isEmpty == false) ? address : nil, journalURL: journalURL)
+            let text = collect()
             DispatchQueue.main.async {
                 if text.isEmpty {
                     state.previewFailed()
@@ -359,7 +363,80 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
         }
     }
 
-    private static func message(for outcome: WarrenForumAttachOutcome, link: ForumAttachLink) -> String {
+    /// The attached confirmation, over whatever is on screen once the prompt
+    /// is gone: the forum page is what completes the flow.
+    @MainActor
+    private func presentResult(_ message: String) {
+        guard let presenter = presenter?() else { return }
+        let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString("OK", comment: "Forum attach result alert, the dismissing button"),
+                style: .default))
+        presenter.present(alert, animated: true)
+    }
+
+    // MARK: - Production wiring
+
+    /// The upload as shipped: the Keychain wallet, the app's own log files
+    /// consolidated and gzipped, the Rust FFI.
+    static func productionUpload(journalURL: URL) -> WarrenForumAttachUpload {
+        WarrenForumAttachUpload(
+            loadWallet: {
+                guard let mnemonic = try? WarrenWalletKeychain.load() else { return nil }
+                return try? WarrenWallet.fromMnemonic(mnemonic)
+            },
+            collectGzipped: { address in
+                try WarrenProblemReport.gzipped(
+                    fileURLs: reportFileURLs(journalURL: journalURL),
+                    redacting: address.map { [$0] } ?? [],
+                    groupIdentifiers: [ApplicationConfiguration.securityGroupIdentifier],
+                    bufferSize: ApplicationConfiguration.logMaximumFileSize)
+            },
+            attach: { seed, sid, topicId, host, logGz in
+                WarrenAccountClient.forumAttachLogs(seed: seed, sid: sid, topicId: topicId, host: host, logGz: logGz)
+            })
+    }
+
+    /// The files the report consolidates: the app and packet-tunnel logs
+    /// (the Rust engine logs are forwarded into the app's by `RustLogging`),
+    /// newest first, plus the forum events journal so the staff see the
+    /// history of the attempts.
+    static func reportFileURLs(journalURL: URL) -> [URL] {
+        let container = ApplicationConfiguration.containerURL
+        var files = ApplicationConfiguration.logFileURLs(for: .mainApp, in: container)
+        files += ApplicationConfiguration.logFileURLs(for: .packetTunnel, in: container)
+        if FileManager.default.fileExists(atPath: journalURL.path) {
+            files.append(journalURL)
+        }
+        return files
+    }
+
+    /// The wallet's SS58 address for the preview's redaction, the seed
+    /// forgotten right after; `nil` with no wallet.
+    private static func walletAddress() -> String? {
+        guard let mnemonic = try? WarrenWalletKeychain.load(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return nil
+        }
+        defer { wallet.forgetSecret() }
+        let address = wallet.publicKeyAddress
+        return address.isEmpty ? nil : address
+    }
+
+    // MARK: - Copy
+
+    private static func attachedMessage(for link: ForumAttachLink) -> String {
+        link.isPreTopic
+            ? NSLocalizedString(
+                "Your report was received. Go back to the forum tab to finish posting it.",
+                comment: "Forum attach success, a report still being composed")
+            : NSLocalizedString(
+                "Your logs reached the Warren support team.", comment: "Forum attach success")
+    }
+
+    private static func message(for outcome: WarrenForumAttachOutcome) -> String {
         switch outcome {
         case .attached:
             return NSLocalizedString(
@@ -369,16 +446,9 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
                 "Only the author of the bug report can attach logs to it. This report was posted from another forum account.",
                 comment: "Forum attach refused, the signer is not the topic author")
         case .expired:
-            // A typed code carries a topic the person supplied, and the
-            // provider answers a mismatch with the same 404 as an expiry, so
-            // that message names both.
-            return link.topicId == nil
-                ? NSLocalizedString(
-                    "This code has expired, or the topic number does not match it. Check the forum page and try again.",
-                    comment: "Forum attach refused, a typed code that is gone or points at the wrong topic")
-                : NSLocalizedString(
-                    "This request has expired. Start again from the forum page.",
-                    comment: "Forum attach refused, the session is gone")
+            return NSLocalizedString(
+                "This request has expired. Start again from the forum page.",
+                comment: "Forum attach refused, the session is gone")
         case .tooLarge:
             return NSLocalizedString(
                 "The logs are too large to send.", comment: "Forum attach refused, the report is over the cap")
@@ -393,6 +463,10 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
         case .failed(let reason) where reason == "wallet-absent":
             return NSLocalizedString(
                 "Set up your Warren wallet first.", comment: "Forum attach refused, no wallet on this device")
+        case .failed(let reason) where reason == "collect-failed":
+            return NSLocalizedString(
+                "The logs could not be collected. Try again in a moment.",
+                comment: "Forum attach, the report could not be collected")
         case .failed:
             return NSLocalizedString(
                 "Attaching the logs failed. Please try again in a moment.", comment: "Forum attach failed")

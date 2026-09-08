@@ -134,18 +134,34 @@ public enum WarrenForumAttachOutcome: Equatable {
     }
 }
 
-/// What a session id typed by hand stands for, from the two unsigned status
-/// reads (`warren_forum_code_probe`). Single-sourced in the Rust crate
-/// (`code_probe_envelope`).
-public enum WarrenForumCodeKind: String {
+/// Where a session id typed by hand belongs, from the unsigned status reads
+/// (`warren_forum_code_probe`, the attach meta included). Single-sourced in
+/// the Rust crate (`code_placement_envelope`).
+public enum WarrenForumCodePlacement: Equatable {
     /// A pending sign-in session: the login consent applies.
     case login
-    /// A pending attach-logs session: the attach consent applies.
-    case attach
+    /// A pending attach-logs session and the topic its meta named (0 for a
+    /// report still being composed): the attach consent applies.
+    case attach(topicId: UInt64)
+    /// An attach session whose meta named no usable topic (an older broker):
+    /// not offered as one, because the upload could only ever be refused as a
+    /// dead session. The login consent applies.
+    case attachWithoutTopic
     /// The code is spent, whatever it was.
     case gone
     /// The reads did not settle it: the caller falls back to the login flow.
     case unknown
+
+    /// The class the journal records for the placement.
+    public var journalClass: String {
+        switch self {
+        case .login: return "login"
+        case .attach: return "attach"
+        case .attachWithoutTopic: return "attach-no-topic"
+        case .gone: return "gone"
+        case .unknown: return "unknown"
+        }
+    }
 }
 
 /// Stateless facade over the Warren account FFI. All methods are
@@ -437,10 +453,11 @@ public enum WarrenAccountClient {
     }
 
     /// Places a session id typed by hand before any consent is raised: reads
-    /// the login status, then the attach status when the first answered 404
-    /// (`warren_forum_code_probe`, two unsigned GETs in Rust). Blocking, run
-    /// off the main thread; the sid is never logged.
-    public static func forumCodeProbe(sid: String, host: String) -> WarrenForumCodeKind {
+    /// the login status, the attach status when the first answered 404, and
+    /// the attach meta for a pending attach session, which names the topic
+    /// (`warren_forum_code_probe`, up to three unsigned GETs in Rust).
+    /// Blocking, run off the main thread; the sid is never logged.
+    public static func forumCodeProbe(sid: String, host: String) -> WarrenForumCodePlacement {
         let raw = sid.withCString { sidPtr in
             host.withCString { hostPtr in
                 warren_forum_code_probe(sidPtr, hostPtr)
@@ -448,7 +465,7 @@ public enum WarrenAccountClient {
         }
         guard let raw else { return .unknown }
         defer { warren_wallet_free_mnemonic(raw) }
-        return forumCodeKind(fromEnvelope: String(cString: raw))
+        return forumCodePlacement(fromEnvelope: String(cString: raw))
     }
 
     /// Maps the `warren_forum_attach_logs` JSON envelope to an outcome. The
@@ -486,18 +503,41 @@ public enum WarrenAccountClient {
         }
     }
 
-    /// Maps the `warren_forum_code_probe` envelope to a kind; anything off the
-    /// table is `unknown`, which the caller treats as the login flow (it
+    /// Maps the `warren_forum_code_probe` envelope to a placement: `kind` and,
+    /// for an attach session, `topic_id` (0 for a pre-topic session). An
+    /// attach kind without a usable topic is not offered as one; anything off
+    /// the table is `unknown`, which the caller treats as the login flow (it
     /// preflights again before signing). Pure, unit-tested off-device.
-    static func forumCodeKind(fromEnvelope envelope: String?) -> WarrenForumCodeKind {
+    static func forumCodePlacement(fromEnvelope envelope: String?) -> WarrenForumCodePlacement {
         guard let envelope,
             let data = envelope.data(using: .utf8),
             let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-            let kind = (object["kind"] as? String).flatMap(WarrenForumCodeKind.init(rawValue:))
+            let kind = object["kind"] as? String
         else {
             return .unknown
         }
-        return kind
+        switch kind {
+        case "login":
+            return .login
+        case "gone":
+            return .gone
+        case "attach":
+            // The topic the meta named, 0 for a report still being composed,
+            // within the safe integer every client caps a topic at.
+            // A JSON boolean decodes as an NSNumber too; its Objective-C type
+            // is the one thing that tells it from 0 or 1 (an NSNumber of 0
+            // bridges to `Bool`, so `is Bool` would refuse the pre-topic 0).
+            guard let number = object["topic_id"] as? NSNumber, number.objCType.pointee != 0x63 else {
+                return .attachWithoutTopic
+            }
+            let value = number.int64Value
+            guard value >= 0, number.doubleValue == Double(value), value <= 9_007_199_254_740_991 else {
+                return .attachWithoutTopic
+            }
+            return .attach(topicId: UInt64(value))
+        default:
+            return .unknown
+        }
     }
 
     // MARK: - Envelope parsing

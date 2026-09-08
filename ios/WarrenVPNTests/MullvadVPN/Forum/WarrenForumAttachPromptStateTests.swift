@@ -11,35 +11,28 @@ import XCTest
 @testable import WarrenVPN
 
 /// The attach consent's transitions, the Android `ForumAttachPromptState`
-/// mirrored: what Approve needs, what disarms it, and what a typed code's
-/// empty topic field stands for.
+/// mirrored: what Approve needs, what disarms it, and whether leaving the
+/// prompt still tells the provider.
 @MainActor
 final class WarrenForumAttachPromptStateTests: XCTestCase {
     private let host = "connect.warrenbrowse.com"
     private let sid = "0123456789abcdef0123456789abcdef"
 
-    func testALinkWithATopicNeedsNoFieldAndSendsItsOwnTopic() {
-        let state = WarrenForumAttachPromptState(link: ForumAttachLink(sid: sid, host: host, topicId: 42))
-        XCTAssertFalse(state.needsTopic)
-        XCTAssertEqual(state.topicIdOrNil(), 42)
-        XCTAssertTrue(state.canApprove)
+    private func state(topicId: UInt64 = 42) -> WarrenForumAttachPromptState {
+        WarrenForumAttachPromptState(link: ForumAttachLink(sid: sid, host: host, topicId: topicId))
     }
 
-    func testATypedCodeAsksForTheTopicAndAnEmptyFieldIsTheReportStillBeingComposed() {
-        let state = WarrenForumAttachPromptState(link: ForumAttachLink(sid: sid, host: host, topicId: nil))
-        XCTAssertTrue(state.needsTopic)
-        XCTAssertEqual(state.topicIdOrNil(), ForumAttachLink.preTopic)
+    func testAFreshPromptIsArmedAndCancelsOnDecline() {
+        let state = state()
         XCTAssertTrue(state.canApprove)
-        state.updateTopicInput("t-1 98")
-        XCTAssertEqual(state.topicInput, "198", "only digits survive, whatever was pasted")
-        XCTAssertEqual(state.topicIdOrNil(), 198)
-        state.updateTopicInput("99999999999999999999")
-        XCTAssertNil(state.topicIdOrNil(), "a number no topic can have")
-        XCTAssertFalse(state.canApprove)
+        XCTAssertTrue(state.cancelsOnDecline)
+        XCTAssertFalse(state.attached)
+        XCTAssertFalse(state.link.isPreTopic)
+        XCTAssertTrue(self.state(topicId: 0).link.isPreTopic)
     }
 
     func testAnUploadInFlightDisarmsBothButtonsAndATerminalOutcomeDisarmsApproveForGood() {
-        let state = WarrenForumAttachPromptState(link: ForumAttachLink(sid: sid, host: host, topicId: 42))
+        let state = state()
         state.begin()
         XCTAssertTrue(state.busy)
         XCTAssertFalse(state.canApprove)
@@ -53,8 +46,32 @@ final class WarrenForumAttachPromptStateTests: XCTestCase {
         XCTAssertFalse(state.canApprove)
     }
 
+    func testOnlyAGoneSessionStopsTheDeclineFromTellingTheProvider() {
+        // A refusal as author or a report over the cap leaves the session
+        // pending on the provider, and the forum page polling it; only a
+        // session the provider reported gone has nothing left to cancel.
+        let refused = state()
+        refused.settle(.notAuthor, message: "not yours")
+        XCTAssertTrue(refused.cancelsOnDecline)
+        let over = state()
+        over.settle(.tooLarge, message: "too large")
+        XCTAssertTrue(over.cancelsOnDecline)
+        let gone = state()
+        gone.settle(.expired, message: "expired")
+        XCTAssertFalse(gone.cancelsOnDecline)
+    }
+
+    func testAnAttachedUploadEndsTheBusyStateAndMarksThePromptDone() {
+        let state = state()
+        state.begin()
+        state.markAttached()
+        XCTAssertFalse(state.busy)
+        XCTAssertTrue(state.attached)
+        XCTAssertNil(state.failure)
+    }
+
     func testBeginClearsTheLastFailureAndAStaleLinkFailsWithoutAnAttempt() {
-        let state = WarrenForumAttachPromptState(link: ForumAttachLink(sid: sid, host: host, topicId: 0))
+        let state = state(topicId: 0)
         state.fail(message: "expired")
         XCTAssertEqual(state.failure, "expired")
         XCTAssertFalse(state.busy, "a stale link never starts an upload")
@@ -63,7 +80,7 @@ final class WarrenForumAttachPromptStateTests: XCTestCase {
     }
 
     func testThePreviewCollectsOnceAndReportsItsOwnFailure() {
-        let state = WarrenForumAttachPromptState(link: ForumAttachLink(sid: sid, host: host, topicId: 42))
+        let state = state()
         state.beginCollect()
         XCTAssertTrue(state.collecting)
         state.previewReady("System information:\n")

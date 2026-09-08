@@ -4,24 +4,69 @@ import XCTest
 
 /// The FFI envelopes of `warren_forum_attach_logs` and `warren_forum_code_probe`
 /// are fixed JSON shapes single-sourced in the Rust `warren-forum` crate
-/// (`attach_envelope`, `code_probe_envelope`), the same ones the Android
-/// decoder reads. This pins the Swift decoders to them off-device, so a class
-/// the crate adds cannot silently fall into the generic failure.
+/// (`attach_envelope`, `code_placement_envelope`). The attach table is
+/// replayed from `fixtures/client-rules/forum_outcomes.json`, the file the
+/// crate and the JVM decoder read on their side, so a class the crate adds
+/// cannot silently fall into the generic failure.
 final class WarrenForumAttachOutcomeTests: XCTestCase {
-    func testEveryAttachClassDecodesToItsOutcome() {
-        let table: [(String, WarrenForumAttachOutcome)] = [
-            (#"{"ok":true}"#, .attached),
-            (#"{"ok":false,"error":"not-author"}"#, .notAuthor),
-            (#"{"ok":false,"error":"expired"}"#, .expired),
-            (#"{"ok":false,"error":"too-large"}"#, .tooLarge),
-            (#"{"ok":false,"error":"clock-skew"}"#, .clockSkew),
-            (#"{"ok":false,"error":"server-error"}"#, .serverError),
-            (#"{"ok":false,"error":"error","reason":"transport"}"#, .failed(reason: "transport")),
-            (#"{"ok":false,"error":"error","reason":"upload-timeout"}"#, .failed(reason: "upload-timeout")),
-            (#"{"ok":false,"error":"error","reason":"http-418"}"#, .failed(reason: "http-418")),
-        ]
-        for (envelope, expected) in table {
-            XCTAssertEqual(WarrenAccountClient.forumAttachOutcome(fromEnvelope: envelope), expected, envelope)
+    private func expected(_ expect: [String: Any]) throws -> WarrenForumAttachOutcome {
+        try outcome(kind: try ClientRulesFixtures.string(expect, "kind"), reason: expect["reason"] as? String)
+    }
+
+    private func outcome(kind: String, reason: String?) throws -> WarrenForumAttachOutcome {
+        switch kind {
+        case "attached": return .attached
+        case "not-author": return .notAuthor
+        case "expired": return .expired
+        case "too-large": return .tooLarge
+        case "clock-skew": return .clockSkew
+        case "server-error": return .serverError
+        case "failed": return .failed(reason: try XCTUnwrap(reason))
+        case let other:
+            XCTFail("unknown kind \(other)")
+            return .failed(reason: other)
+        }
+    }
+
+    func testEveryAttachCaseDecodesItsEnvelopeAsTheFixtureSays() throws {
+        let fixture = try ClientRulesFixtures.load("forum_outcomes.json")
+        let attach = try ClientRulesFixtures.object(fixture, "attach")
+        let cases = try ClientRulesFixtures.cases(attach, "cases").filter { !ClientRulesFixtures.skippedOnIOS($0) }
+        XCTAssertGreaterThanOrEqual(cases.count, 8, "only \(cases.count) attach cases reached this reader")
+        for testCase in cases {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let envelope = try ClientRulesFixtures.string(testCase, "envelope")
+            let expect = try ClientRulesFixtures.object(testCase, "expect")
+            XCTAssertEqual(
+                WarrenAccountClient.forumAttachOutcome(fromEnvelope: envelope), try expected(expect), name)
+        }
+    }
+
+    func testTheClientSideFailuresCarryTheirClass() throws {
+        let fixture = try ClientRulesFixtures.load("forum_outcomes.json")
+        let attach = try ClientRulesFixtures.object(fixture, "attach")
+        let failures = try ClientRulesFixtures.object(attach, "client_side_failures")
+        let cases = try ClientRulesFixtures.cases(failures, "cases")
+        XCTAssertFalse(cases.isEmpty)
+        for testCase in cases {
+            let envelope = try ClientRulesFixtures.string(testCase, "envelope")
+            let reason = try ClientRulesFixtures.string(testCase, "reason")
+            XCTAssertEqual(WarrenAccountClient.forumAttachOutcome(fromEnvelope: envelope), .failed(reason: reason))
+        }
+    }
+
+    func testTheTerminalKindsAreTheFixtures() throws {
+        // Not the author, a dead session and a report over the cap end the
+        // prompt; a clock fix, a settled tunnel or a recovered provider are
+        // retries worth offering, as on Android.
+        let fixture = try ClientRulesFixtures.load("forum_outcomes.json")
+        let attach = try ClientRulesFixtures.object(fixture, "attach")
+        let terminal = Set(try XCTUnwrap(attach["terminal_kinds"] as? [String]))
+        let kinds = try XCTUnwrap(attach["_kinds"] as? [String])
+        XCTAssertFalse(terminal.isEmpty)
+        for kind in kinds {
+            XCTAssertEqual(
+                try outcome(kind: kind, reason: "transport").isTerminal, terminal.contains(kind), kind)
         }
     }
 
@@ -36,19 +81,6 @@ final class WarrenForumAttachOutcomeTests: XCTestCase {
             .failed(reason: "unknown"))
     }
 
-    func testOnlyTheOutcomesNoRetryCanChangeAreTerminal() {
-        // Not the author, a dead session and a report over the cap end the
-        // prompt; a clock fix, a settled tunnel or a recovered provider are
-        // retries worth offering, as on Android.
-        XCTAssertTrue(WarrenForumAttachOutcome.notAuthor.isTerminal)
-        XCTAssertTrue(WarrenForumAttachOutcome.expired.isTerminal)
-        XCTAssertTrue(WarrenForumAttachOutcome.tooLarge.isTerminal)
-        XCTAssertFalse(WarrenForumAttachOutcome.attached.isTerminal)
-        XCTAssertFalse(WarrenForumAttachOutcome.clockSkew.isTerminal)
-        XCTAssertFalse(WarrenForumAttachOutcome.serverError.isTerminal)
-        XCTAssertFalse(WarrenForumAttachOutcome.failed(reason: "transport").isTerminal)
-    }
-
     func testTheJournalClassNamesTheOutcomeAndNeverAValue() {
         XCTAssertEqual(WarrenForumAttachOutcome.attached.journalClass, "attached")
         XCTAssertEqual(WarrenForumAttachOutcome.notAuthor.journalClass, "not-author")
@@ -59,13 +91,38 @@ final class WarrenForumAttachOutcomeTests: XCTestCase {
         XCTAssertEqual(WarrenForumAttachOutcome.failed(reason: "http-502").journalClass, "http-502")
     }
 
-    func testTheCodeProbeKindsDecodeAndAnythingElseIsUnknown() {
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: #"{"kind":"login"}"#), .login)
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: #"{"kind":"attach"}"#), .attach)
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: #"{"kind":"gone"}"#), .gone)
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: #"{"kind":"unknown"}"#), .unknown)
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: #"{"kind":"something"}"#), .unknown)
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: "nope"), .unknown)
-        XCTAssertEqual(WarrenAccountClient.forumCodeKind(fromEnvelope: nil), .unknown)
+    func testATypedCodeIsPlacedWithTheTopicItsMetaNames() {
+        // `code_placement_envelope`: an attach session comes with the topic
+        // the broker's meta named for it (0 for a pre-topic session). An
+        // attach kind without a usable topic is not offered as one: the
+        // upload could only ever be refused as a dead session.
+        XCTAssertEqual(
+            WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":4242}"#),
+            .attach(topicId: 4242))
+        XCTAssertEqual(
+            WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":0}"#),
+            .attach(topicId: 0))
+        XCTAssertEqual(
+            WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach"}"#), .attachWithoutTopic)
+        XCTAssertEqual(
+            WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":-1}"#),
+            .attachWithoutTopic)
+        XCTAssertEqual(
+            WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"attach","topic_id":9007199254740993}"#),
+            .attachWithoutTopic)
+        XCTAssertEqual(WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"login"}"#), .login)
+        XCTAssertEqual(WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"gone"}"#), .gone)
+        XCTAssertEqual(WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"unknown"}"#), .unknown)
+        XCTAssertEqual(WarrenAccountClient.forumCodePlacement(fromEnvelope: #"{"kind":"something"}"#), .unknown)
+        XCTAssertEqual(WarrenAccountClient.forumCodePlacement(fromEnvelope: "nope"), .unknown)
+        XCTAssertEqual(WarrenAccountClient.forumCodePlacement(fromEnvelope: nil), .unknown)
+    }
+
+    func testAPlacementNamesItsJournalClass() {
+        XCTAssertEqual(WarrenForumCodePlacement.attach(topicId: 42).journalClass, "attach")
+        XCTAssertEqual(WarrenForumCodePlacement.attachWithoutTopic.journalClass, "attach-no-topic")
+        XCTAssertEqual(WarrenForumCodePlacement.login.journalClass, "login")
+        XCTAssertEqual(WarrenForumCodePlacement.gone.journalClass, "gone")
+        XCTAssertEqual(WarrenForumCodePlacement.unknown.journalClass, "unknown")
     }
 }

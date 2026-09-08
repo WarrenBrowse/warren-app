@@ -6,11 +6,10 @@
 //
 //  The attach-logs consent prompt (doc 55), the iOS mirror of the desktop
 //  `ForumAttachPrompt` and Android's `ForumAttachPromptHost`. Names the topic
-//  (or says it is a report still being composed, or a typed code with a topic
-//  field), lets the exact report be read first ("View the logs"), and uploads
-//  only on Approve. Cancel notifies the provider so the waiting forum page
-//  shows "cancelled". The copy is held to the string catalog by
-//  `WarrenForumAttachCopyTests`.
+//  (or says it is a report still being composed), lets the exact report be
+//  read first ("View the logs"), and uploads only on Approve. Cancel notifies
+//  the provider so the waiting forum page shows "cancelled". The copy is held
+//  to the string catalog by `WarrenForumAttachCopyTests`.
 //
 
 import SwiftUI
@@ -44,10 +43,6 @@ struct WarrenForumAttachConsentView: View {
                 )
                 .font(.footnote)
                 .foregroundColor(.white.opacity(0.7))
-
-                if state.needsTopic {
-                    topicField
-                }
 
                 Button(action: onViewLogs) {
                     HStack(spacing: 8) {
@@ -108,43 +103,16 @@ struct WarrenForumAttachConsentView: View {
     }
 
     private var bodyText: String {
-        if let topicId = state.link.topicId {
-            if topicId == ForumAttachLink.preTopic {
-                return NSLocalizedString(
-                    "The bug report you are writing on the Warren forum asks this app to attach its technical logs, to help diagnose the problem. They join the report once you post it.",
-                    comment: "Forum attach consent prompt body, a report still being composed")
-            }
-            return String(
-                format: NSLocalizedString(
-                    "Your bug report on the Warren forum (topic %lld) asks this app to attach its technical logs, to help diagnose the problem.",
-                    comment: "Forum attach consent prompt body, a numbered topic"),
-                Int64(topicId))
+        if state.link.isPreTopic {
+            return NSLocalizedString(
+                "The bug report you are writing on the Warren forum asks this app to attach its technical logs, to help diagnose the problem. They join the report once you post it.",
+                comment: "Forum attach consent prompt body, a report still being composed")
         }
-        return NSLocalizedString(
-            "This code belongs to a forum page that asks this app to attach its technical logs to a bug report, to help diagnose the problem.",
-            comment: "Forum attach consent prompt body, a session id typed by hand")
-    }
-
-    private var topicField: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(NSLocalizedString("Topic number", comment: "Forum attach, the topic-number field label"))
-                .font(.warrenSmallSemiBold)
-                .foregroundColor(.white)
-            TextField("", text: Binding(get: { state.topicInput }, set: { state.updateTopicInput($0) }))
-                .keyboardType(.numberPad)
-                .padding(12)
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.Warren.surface))
-                .foregroundColor(.white)
-                .disabled(state.busy)
-                .accessibilityIdentifier("forumAttachTopicField")
-            Text(
-                NSLocalizedString(
-                    "The number in the topic's address on the forum. Leave it empty if you are still writing the report.",
-                    comment: "Forum attach, the topic-number field hint")
-            )
-            .font(.warrenMicro)
-            .foregroundColor(.white.opacity(0.6))
-        }
+        return String(
+            format: NSLocalizedString(
+                "Your bug report on the Warren forum (topic %lld) asks this app to attach its technical logs, to help diagnose the problem.",
+                comment: "Forum attach consent prompt body, a numbered topic"),
+            Int64(state.link.topicId))
     }
 
     private var buttons: some View {

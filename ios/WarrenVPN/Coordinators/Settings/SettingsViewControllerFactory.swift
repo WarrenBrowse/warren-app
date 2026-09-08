@@ -298,17 +298,17 @@ final class SettingsViewControllerFactory {
     /// screen pops first so the prompt lands over the settings list.
     private func makeWarrenForumSignInCodeViewController() -> MakeChildResult {
         let navigationController = self.navigationController
-        let view = WarrenForumSignInCodeView { code in
-            // The code flow probes the two unsigned status endpoints and opens
-            // the login or the attach consent; the screen only decides whether
-            // the code is a session id at all (topic 199, 2026-09-07).
-            guard let flow = (UIApplication.shared.delegate as? AppDelegate)?.forumCode,
-                flow.submit(code: code)
-            else {
-                return false
+        let view = WarrenForumSignInCodeView { code, placed in
+            // The code flow probes the unsigned status endpoints (the attach
+            // meta included) and opens the login or the attach consent; the
+            // screen only decides whether the code is a session id at all
+            // (topic 199, 2026-09-07), shows progress meanwhile, and leaves
+            // once the consent is raised.
+            guard let flow = (UIApplication.shared.delegate as? AppDelegate)?.forumCode else { return false }
+            return flow.submit(code: code) {
+                placed()
+                navigationController.popViewController(animated: true)
             }
-            navigationController.popViewController(animated: true)
-            return true
         }
         let host = UIHostingController(rootView: view)
         host.view.backgroundColor = .Warren.navy

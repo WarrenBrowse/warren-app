@@ -107,16 +107,17 @@ enum JournalField {
     }
 }
 
-/// The forum flows' event journal file. `record` is synchronous and
-/// serialised by a lock: it is called off the main thread and journaling one
-/// line is cheap, so the staff can order the attempts by the sequence number
-/// this journal stamps.
+/// The forum flows' event journal file. `record` formats the line on the
+/// caller (every call site is `@MainActor`) and hands the write to the
+/// journal's own serial queue, so the main thread never touches the file and
+/// the staff can order the attempts by the sequence number stamped here.
 final class WarrenForumEventsJournal: @unchecked Sendable {
     static let fileName = "warren-events.log"
     static let maxBytes = 256 * 1024
 
     let fileURL: URL
     private let logger = Logger(label: "WarrenForumEvents")
+    private let queue = DispatchQueue(label: "com.warrenbrowse.forum.events", qos: .utility)
     private let lock = NSLock()
     private var sequence: Int = 0
 
@@ -135,27 +136,28 @@ final class WarrenForumEventsJournal: @unchecked Sendable {
         lock.unlock()
         let line = Self.format(at: Date(), sequence: sequenceNumber, event: event, fields: fields)
         logger.info("\(event.rawValue) \(fields.map { "\($0.key)=\($0.value)" }.joined(separator: " "))")
-        lock.lock()
-        defer { lock.unlock() }
-        do {
-            try FileManager.default.createDirectory(
-                at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-            if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > Self.maxBytes {
-                truncateHead()
+        queue.async { [self] in
+            do {
+                try FileManager.default.createDirectory(
+                    at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+                if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > Self.maxBytes {
+                    truncateHead()
+                }
+                append(line + "\n")
+            } catch {
+                logger.warning("forum events journal write failed")
             }
-            append(line + "\n")
-        } catch {
-            logger.warning("forum events journal write failed")
         }
     }
 
-    /// The lines currently in the journal file, oldest first.
+    /// The lines currently in the journal file, oldest first, read behind
+    /// every pending write on the journal's queue.
     func drain() throws -> [String] {
-        lock.lock()
-        defer { lock.unlock() }
-        guard FileManager.default.fileExists(atPath: fileURL.path) else { return [] }
-        let text = try String(contentsOf: fileURL, encoding: .utf8)
-        return text.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+        try queue.sync {
+            guard FileManager.default.fileExists(atPath: fileURL.path) else { return [] }
+            let text = try String(contentsOf: fileURL, encoding: .utf8)
+            return text.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+        }
     }
 
     /// Keeps the newest half of the file: the history that matters is recent.

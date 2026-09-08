@@ -150,6 +150,12 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumAttachPromptStateTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumEventsJournalTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumAttachCopyTests.swift" => "WarrenVPNTests",
+  # The upload from an approval to the FFI call, and the report consolidation,
+  # are pure over WarrenRustRuntime so they compile into the non-hosted test
+  # bundle too (SHARED_MULTI_TARGET) and run on a Mac with no signing identity.
+  "WarrenVPN/Classes/WarrenForumAttachUpload.swift" => "WarrenVPN",
+  "WarrenRustRuntimeTests/WarrenProblemReportTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenRustRuntimeTests/WarrenForumAttachUploadTests.swift" => "WarrenRustRuntimeTests",
 
   # Coexistence: this build stands down when a higher-priority product
   # environment (prod, then staging) is installed beside it.
@@ -187,6 +193,12 @@ SHARED_MULTI_TARGET = {
   "Shared/WarrenAppGroupKey.swift" => %w[PacketTunnelCore PacketTunnel],
   "Shared/WarrenWalletKeychain.swift" => %w[PacketTunnelCore PacketTunnel],
   "WarrenVPNTests/Fixtures/ClientRulesFixtures.swift" => %w[WarrenRustRuntimeTests],
+  # The attach-logs report and upload, exercised in the non-hosted bundle with
+  # the consolidation they build on.
+  "WarrenVPN/Classes/ConsolidatedApplicationLog.swift" => %w[WarrenRustRuntimeTests],
+  "WarrenVPN/Extensions/NSRegularExpression+IPAddress.swift" => %w[WarrenRustRuntimeTests],
+  "WarrenVPN/Classes/WarrenProblemReport.swift" => %w[WarrenRustRuntimeTests],
+  "WarrenVPN/Classes/WarrenForumAttachUpload.swift" => %w[WarrenRustRuntimeTests],
 }.freeze
 
 # Find or create a PBXGroup at the relative path. Walks the group tree

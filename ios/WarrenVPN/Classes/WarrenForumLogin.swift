@@ -68,7 +68,7 @@ enum WarrenForumLinks {
         guard scheme == expectedScheme else { return .rejected("wrong-scheme:\(scheme)") }
         // `warren://forum-login?..` parses with the action as the host.
         let action = components.host ?? components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard action == "forum-login" else { return .rejected("wrong-action") }
+        guard action == loginAction else { return .rejected("wrong-action") }
         var params: [String: String] = [:]
         for item in components.queryItems ?? [] where params[item.name] == nil {
             params[item.name] = item.value ?? ""

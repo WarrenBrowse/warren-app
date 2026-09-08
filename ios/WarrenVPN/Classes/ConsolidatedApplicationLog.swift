@@ -62,6 +62,24 @@ class ConsolidatedApplicationLog: TextOutputStreamable, @unchecked Sendable {
         }
     }
 
+    /// Consolidates `fileURLs` on the calling thread and returns the report
+    /// in hand: the files are read and redacted here, appended behind
+    /// whatever the queue already holds, and the formatted log returned from
+    /// the same queue turn. For a caller already off the main thread that
+    /// needs the bytes right away (the forum attach upload): the queued
+    /// `addLogFiles` enqueues its appends from inside its own barrier block,
+    /// so a `string` read right after it runs ahead of every append and sees
+    /// an empty report.
+    func consolidated(adding fileURLs: [URL]) -> String {
+        let attachments = fileURLs.map(attachment(for:))
+        return logQueue.sync {
+            logs.append(contentsOf: attachments)
+            // Nothing to read is an empty report, as `string` answers it.
+            guard !logs.isEmpty else { return "" }
+            return formatLog(logs: logs, metadata: metadata)
+        }
+    }
+
     func addError(message: String, error: String, completion: (@Sendable () -> Void)? = nil) {
         let redactedError = redact(string: error)
         logQueue.async(flags: .barrier) {
@@ -110,25 +128,28 @@ class ConsolidatedApplicationLog: TextOutputStreamable, @unchecked Sendable {
     }
 
     private func addSingleLogFile(_ fileURL: URL) {
+        let attachment = attachment(for: fileURL)
+        logQueue.async(flags: .barrier) {
+            self.logs.append(attachment)
+        }
+    }
+
+    /// The redacted attachment for `fileURL`, read on the calling thread: the
+    /// file's tail, or an error block naming why it could not be read.
+    private func attachment(for fileURL: URL) -> LogAttachment {
         guard fileURL.isFileURL else {
-            addError(
-                message: fileURL.absoluteString,
-                error: "Invalid log file URL: \(fileURL.absoluteString)."
-            )
-            return
+            return LogAttachment(
+                label: fileURL.absoluteString,
+                content: redact(string: "Invalid log file URL: \(fileURL.absoluteString)."))
         }
 
         let path = fileURL.path
         let redactedPath = redact(string: path)
 
         if let lossyString = readFileLossy(path: path, maxBytes: bufferSize) {
-            let redactedString = redact(string: lossyString)
-            logQueue.async(flags: .barrier) {
-                self.logs.append(LogAttachment(label: redactedPath, content: redactedString))
-            }
-        } else {
-            addError(message: redactedPath, error: "Log file does not exist: \(path).")
+            return LogAttachment(label: redactedPath, content: redact(string: lossyString))
         }
+        return LogAttachment(label: redactedPath, content: redact(string: "Log file does not exist: \(path)."))
     }
 
     private static func makeMetadata() -> Metadata {

@@ -47,7 +47,11 @@ public enum WarrenGzip {
     }
 
     /// The bytes a gzip member frames, verifying its magic and its trailing
-    /// CRC-32. The inverse of [`compress`].
+    /// CRC-32. The inverse of [`compress`], and only that: it assumes the
+    /// member has FLG == 0 (no extra field, name, comment or header CRC), the
+    /// shape [`compress`] writes, so the deflate body starts at byte 10. It
+    /// exists for the tests and the preview; nothing on the wire is inflated
+    /// here.
     ///
     /// # Errors
     /// [`WarrenGzipError/notGzip`] for a non-gzip or corrupt member;

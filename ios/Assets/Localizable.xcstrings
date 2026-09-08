@@ -82164,154 +82164,6 @@
         }
       }
     },
-    "The number in the topic's address on the forum. Leave it empty if you are still writing the report.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The number in the topic's address on the forum. Leave it empty if you are still writing the report."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "الرقم الموجود في عنوان الموضوع على المنتدى. اتركه فارغًا إذا كنت لا تزال تكتب التقرير."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tallet i emnets adresse på forummet. Lad feltet være tomt, hvis du stadig er ved at skrive rapporten."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Die Nummer in der Adresse des Themas im Forum. Lass das Feld leer, wenn du den Bericht noch schreibst."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "El número que aparece en la dirección del tema en el foro. Déjalo vacío si todavía estás escribiendo el informe."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "عددی که در نشانی موضوع در انجمن دیده می‌شود. اگر هنوز در حال نوشتن گزارش هستید، آن را خالی بگذارید."
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numero aiheen osoitteessa foorumilla. Jätä tyhjäksi, jos kirjoitat raporttia vielä."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Le numéro qui figure dans l'adresse du sujet sur le forum. Laissez-le vide si vous êtes encore en train de rédiger le rapport."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Il numero che compare nell'indirizzo dell'argomento sul forum. Lascialo vuoto se stai ancora scrivendo la segnalazione."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "フォーラムのトピックのアドレスに含まれる番号です。まだレポートを作成中の場合は空欄のままにしてください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "포럼에서 주제 주소에 있는 번호입니다. 아직 보고서를 작성 중이라면 비워 두세요."
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဖိုရမ်ရှိ ခေါင်းစဉ်၏ လိပ်စာတွင် ပါသောနံပါတ်။ အစီရင်ခံစာကို ရေးနေဆဲဖြစ်ပါက ဗလာထားပါ။"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tallet i emnets adresse på forumet. La feltet stå tomt hvis du fortsatt skriver rapporten."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Het nummer in het adres van het onderwerp op het forum. Laat het leeg als je het rapport nog aan het schrijven bent."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Liczba widoczna w adresie tematu na forum. Zostaw puste, jeśli wciąż piszesz zgłoszenie."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "O número que aparece no endereço do tópico no fórum. Deixe em branco se ainda estiver a escrever o relatório."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numărul din adresa subiectului de pe forum. Lasă-l gol dacă încă scrii raportul."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Число в адресе темы на форуме. Оставьте поле пустым, если вы ещё пишете отчёт."
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numret i ämnets adress på forumet. Lämna fältet tomt om du fortfarande skriver rapporten."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ตัวเลขในที่อยู่ของหัวข้อบนฟอรัม เว้นว่างไว้หากคุณยังเขียนรายงานอยู่"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forumda konunun adresinde yer alan numara. Raporu hâlâ yazıyorsanız boş bırakın."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Число в адресі теми на форумі. Залиште поле порожнім, якщо ви ще пишете звіт."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "论坛上主题地址中的数字。如果您仍在撰写报告，请留空。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "論壇上主題網址中的數字。如果您仍在撰寫報告，請留空。"
-          }
-        }
-      }
-    },
     "The queries still travel through the VPN tunnel, but the resolver you choose will see them. Leave this off unless you are testing remote DNS resolution.": {
       "localizations": {
         "ar": {
@@ -83450,302 +83302,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "當您不受審查影響時，此方式可能會很有用。"
-          }
-        }
-      }
-    },
-    "This code belongs to a forum page that asks this app to attach its technical logs to a bug report, to help diagnose the problem.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This code belongs to a forum page that asks this app to attach its technical logs to a bug report, to help diagnose the problem."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ينتمي هذا الرمز إلى صفحة على المنتدى تطلب من هذا التطبيق إرفاق سجلاته التقنية بتقرير مشكلة، للمساعدة في تشخيصها."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denne kode hører til en forumside, der beder denne app om at vedhæfte sine tekniske logfiler til en fejlrapport for at hjælpe med at diagnosticere problemet."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Code gehört zu einer Forumsseite, die diese App bittet, ihre technischen Protokolle an einen Fehlerbericht anzuhängen, um das Problem einzugrenzen."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este código pertenece a una página del foro que pide a esta aplicación que adjunte sus registros técnicos a un informe de error, para ayudar a diagnosticar el problema."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "این کد به صفحه‌ای در انجمن تعلق دارد که از این برنامه می‌خواهد گزارش‌های فنی خود را به یک گزارش مشکل پیوست کند تا به تشخیص آن کمک شود."
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tämä koodi kuuluu foorumin sivulle, joka pyytää tätä sovellusta liittämään tekniset lokinsa vikaraporttiin ongelman selvittämiseksi."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce code correspond à une page du forum qui demande à cette application de joindre ses journaux techniques à un rapport de bug, pour aider à diagnostiquer le problème."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Questo codice appartiene a una pagina del forum che chiede a questa app di allegare i suoi log tecnici a una segnalazione di bug, per aiutare a diagnosticare il problema."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このコードは、問題の診断に役立てるため、このアプリの技術ログをバグレポートに添付するよう求めるフォーラムのページのものです。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 코드는 문제 진단에 도움이 되도록 이 앱의 기술 로그를 버그 보고서에 첨부해 달라고 요청하는 포럼 페이지의 것입니다."
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဤကုဒ်သည် ပြဿနာကို ရှာဖွေရာတွင် အထောက်အကူဖြစ်စေရန် ဤအက်ပ်၏ နည်းပညာမှတ်တမ်းများကို ချို့ယွင်းချက်အစီရင်ခံစာတစ်ခုတွင် ပူးတွဲပေးရန် တောင်းဆိုသော ဖိုရမ်စာမျက်နှာနှင့် သက်ဆိုင်သည်။"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denne koden hører til en forumside som ber denne appen om å legge ved de tekniske loggene sine i en feilrapport, for å hjelpe med å finne problemet."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deze code hoort bij een forumpagina die deze app vraagt om zijn technische logboeken bij een foutrapport te voegen, om het probleem te helpen opsporen."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ten kod należy do strony forum, która prosi tę aplikację o dołączenie jej dzienników technicznych do zgłoszenia błędu, aby pomóc w zdiagnozowaniu problemu."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este código pertence a uma página do fórum que pede a esta aplicação que anexe os seus registos técnicos a um relatório de erro, para ajudar a diagnosticar o problema."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Acest cod aparține unei pagini de pe forum care cere acestei aplicații să atașeze jurnalele sale tehnice la un raport de eroare, pentru a ajuta la diagnosticarea problemei."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Этот код относится к странице форума, которая запрашивает у этого приложения его технические журналы для отчёта об ошибке, чтобы помочь найти причину проблемы."
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Den här koden hör till en forumsida som ber den här appen att bifoga sina tekniska loggar till en felrapport, för att hjälpa till att hitta problemet."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "รหัสนี้เป็นของหน้าฟอรัมที่ขอให้แอปนี้แนบบันทึกทางเทคนิคของแอปไปกับรายงานข้อบกพร่อง เพื่อช่วยวินิจฉัยปัญหา"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu kod, sorunun teşhisine yardımcı olmak için bu uygulamadan teknik günlüklerini bir hata raporuna eklemesini isteyen bir forum sayfasına ait."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Цей код належить сторінці форуму, яка просить цей застосунок додати свої технічні журнали до звіту про помилку, щоб допомогти знайти причину проблеми."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此代码来自一个论坛页面，该页面请求本应用将其技术日志附加到一份错误报告，以帮助诊断问题。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此代碼來自一個論壇頁面，該頁面要求本應用程式將其技術記錄檔附加至一份錯誤報告，以協助診斷問題。"
-          }
-        }
-      }
-    },
-    "This code has expired, or the topic number does not match it. Check the forum page and try again.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This code has expired, or the topic number does not match it. Check the forum page and try again."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "انتهت صلاحية هذا الرمز، أو أن رقم الموضوع لا يطابقه. تحقق من صفحة المنتدى وحاول مرة أخرى."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denne kode er udløbet, eller emnenummeret passer ikke til den. Tjek forumsiden, og prøv igen."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dieser Code ist abgelaufen, oder die Themennummer passt nicht dazu. Prüfe die Forumsseite und versuche es erneut."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este código ha caducado, o el número del tema no coincide con él. Revisa la página del foro e inténtalo de nuevo."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "این کد منقضی شده است، یا شمارهٔ موضوع با آن مطابقت ندارد. صفحهٔ انجمن را بررسی کنید و دوباره تلاش کنید."
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tämä koodi on vanhentunut, tai aiheen numero ei vastaa sitä. Tarkista foorumin sivu ja yritä uudelleen."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ce code a expiré, ou le numéro du sujet ne lui correspond pas. Vérifiez la page du forum et réessayez."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Questo codice è scaduto, oppure il numero dell'argomento non gli corrisponde. Controlla la pagina del forum e riprova."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このコードは期限切れか、トピック番号が一致していません。フォーラムのページを確認して、もう一度お試しください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이 코드가 만료되었거나 주제 번호가 일치하지 않습니다. 포럼 페이지를 확인하고 다시 시도하세요."
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဤကုဒ် သက်တမ်းကုန်သွားပြီ၊ သို့မဟုတ် ခေါင်းစဉ်နံပါတ်နှင့် မကိုက်ညီပါ။ ဖိုရမ်စာမျက်နှာကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Denne koden er utløpt, eller emnenummeret passer ikke til den. Sjekk forumsiden og prøv igjen."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Deze code is verlopen, of het onderwerpnummer hoort er niet bij. Controleer de forumpagina en probeer het opnieuw."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ten kod wygasł albo numer tematu do niego nie pasuje. Sprawdź stronę forum i spróbuj ponownie."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Este código expirou, ou o número do tópico não corresponde. Verifique a página do fórum e tente novamente."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Acest cod a expirat sau numărul subiectului nu i se potrivește. Verifică pagina forumului și încearcă din nou."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Срок действия этого кода истёк, или номер темы ему не соответствует. Проверьте страницу форума и повторите попытку."
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Den här koden har gått ut, eller så stämmer inte ämnesnumret med den. Kontrollera forumsidan och försök igen."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "รหัสนี้หมดอายุแล้ว หรือหมายเลขหัวข้อไม่ตรงกับรหัส โปรดตรวจสอบหน้าฟอรัมแล้วลองอีกครั้ง"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu kodun süresi dolmuş ya da konu numarası bu kodla eşleşmiyor. Forum sayfasını kontrol edip tekrar deneyin."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Термін дії цього коду минув, або номер теми йому не відповідає. Перевірте сторінку форуму й повторіть спробу."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此代码已过期，或主题编号与之不符。请检查论坛页面后重试。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "此代碼已過期，或主題編號與之不符。請檢查論壇頁面後再試一次。"
           }
         }
       }
@@ -87894,154 +87450,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "裝置過多"
-          }
-        }
-      }
-    },
-    "Topic number": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Topic number"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رقم الموضوع"
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Emnenummer"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Themennummer"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número del tema"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "شمارهٔ موضوع"
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aiheen numero"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numéro du sujet"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numero dell'argomento"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "トピック番号"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "주제 번호"
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ခေါင်းစဉ်နံပါတ်"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Emnenummer"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Onderwerpnummer"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numer tematu"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Número do tópico"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Numărul subiectului"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Номер темы"
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ämnesnummer"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "หมายเลขหัวข้อ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Konu numarası"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Номер теми"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "主题编号"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "主題編號"
           }
         }
       }
@@ -100451,6 +99859,154 @@
           "stringUnit": {
             "state": "translated",
             "value": "您的購買已成功退款。"
+          }
+        }
+      }
+    },
+    "Your report was received. Go back to the forum tab to finish posting it.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your report was received. Go back to the forum tab to finish posting it."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم استلام تقريرك. ارجع إلى علامة تبويب المنتدى لإكمال نشره."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din rapport er modtaget. Gå tilbage til forumfanen for at afslutte indsendelsen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Bericht ist eingegangen. Wechsle zurück zum Forum-Tab, um ihn abzuschicken."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu informe se ha recibido. Vuelve a la pestaña del foro para terminar de publicarlo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "گزارش شما دریافت شد. برای تکمیل انتشار آن به برگهٔ انجمن بازگردید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raporttisi vastaanotettiin. Palaa foorumin välilehdelle viimeistelläksesi sen julkaisun."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre rapport a été reçu. Revenez à l'onglet du forum pour finir de le publier."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tua segnalazione è stata ricevuta. Torna alla scheda del forum per finire di pubblicarla."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "レポートを受け付けました。フォーラムのタブに戻って投稿を完了してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "보고서가 접수되었습니다. 포럼 탭으로 돌아가 게시를 마무리하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်အစီရင်ခံစာကို လက်ခံရရှိပါပြီ။ တင်ပြခြင်းကို အပြီးသတ်ရန် ဖိုရမ်တက်ဘ်သို့ ပြန်သွားပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rapporten din er mottatt. Gå tilbake til forumfanen for å fullføre publiseringen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je rapport is ontvangen. Ga terug naar het forumtabblad om het plaatsen af te ronden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twoje zgłoszenie zostało odebrane. Wróć do karty forum, aby dokończyć jego publikację."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu relatório foi recebido. Volte ao separador do fórum para terminar de o publicar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raportul tău a fost primit. Revino la fila forumului pentru a termina publicarea."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш отчёт получен. Вернитесь на вкладку форума, чтобы завершить публикацию."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din rapport har tagits emot. Gå tillbaka till forumfliken för att slutföra publiceringen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ได้รับรายงานของคุณแล้ว กลับไปที่แท็บฟอรัมเพื่อโพสต์ให้เสร็จ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Raporunuz alındı. Göndermeyi tamamlamak için forum sekmesine dönün."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш звіт отримано. Поверніться на вкладку форуму, щоб завершити публікацію."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的报告已收到。请返回论坛标签页完成发布。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已收到您的報告。請返回論壇分頁完成發佈。"
           }
         }
       }
