@@ -7,16 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -25,7 +22,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,10 +31,8 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.warrenbrowse.vpn.lib.repository.CollectedReport
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
@@ -52,8 +46,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 
-/** Largest slice of the report shown; the file itself is sent whole. */
-private const val PREVIEW_MAX_CHARS = 400_000
+/** Largest prefix of the report read for the preview; the file itself is sent whole. */
+private const val PREVIEW_MAX_BYTES = 400_000
 
 /**
  * Consent prompt for attaching the redacted problem report to a forum bug
@@ -64,6 +58,10 @@ private const val PREVIEW_MAX_CHARS = 400_000
  * link, or a session id typed by hand that the broker holds as an attach
  * session, shows the prompt. Declining tells the provider so the waiting
  * forum page shows "cancelled".
+ *
+ * The prompt state and the upload live on the controller, not here: a
+ * rotation recreates this composable while the upload is out, and a host
+ * that owned them would re-arm Approve over it and drop the outcome.
  *
  * A failure keeps the prompt open with the reason inline, as the login
  * prompt does: clearing it would discard the captured link and send the
@@ -77,55 +75,54 @@ fun ForumAttachPromptHost() {
     val link = pending ?: return
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val scope = controller.scope
     // Keyed on the link's sid inside: a link replacing another while the
     // prompt is open starts clean instead of inheriting a disarmed Approve.
-    val state = remember { ForumAttachPromptState() }
+    val state = controller.prompt
     state.bind(link)
-    // The collected file behind the preview: deleted when the prompt goes or
-    // a fresh collection replaces it, never left in the cache.
-    var preview by remember { mutableStateOf<CollectedReport?>(null) }
     val messages = attachMessages()
 
     val dropPreview = {
-        preview?.let(useCase::discard)
-        preview = null
+        state.preview?.let(useCase::discard)
     }
 
-    // Declining notifies the provider so the waiting forum page shows
-    // "cancelled" (mirrors the desktop), then dismisses the prompt. After a
-    // terminal refusal the provider already knows; only the prompt is left.
+    // The provider attached (or parked) the report: the prompt closes and
+    // the foreground goes back to the forum page, which is what completes
+    // the flow and only re-polls once it is visible again (as the desktop
+    // hides its window). Reacted to from the state so a host recreated
+    // mid-flight does it too.
+    LaunchedEffect(state.attached) {
+        if (state.attached) {
+            dropPreview()
+            controller.clear()
+            Toast.makeText(context, messages.attachedFor(link), Toast.LENGTH_LONG).show()
+            (context as? Activity)?.moveTaskToBack(true)
+        }
+    }
+
+    // Declining tells the provider so the waiting forum page shows
+    // "cancelled" (mirrors the desktop), then dismisses the prompt. Only a
+    // session the provider already reported gone is left alone: a refusal as
+    // author or a report over the cap leaves it pending, and the page waiting.
     val onDecline = {
         if (!state.busy) {
-            if (!state.terminal) useCase.cancel(link)
+            if (state.cancelsOnDecline) useCase.cancel(link)
             dropPreview()
             controller.clear()
         }
     }
 
     val onApprove = {
-        val topicId = state.topicIdOrNull()
         if (!state.busy && controller.isStale()) {
             // The attach session died while the prompt sat here; sending now
             // can only fail on a dead sid.
-            state.fail(messages.expiredFor(link))
-        } else if (!state.busy && topicId != null) {
-            // Keep the request pending (dialog stays) until the call returns,
-            // so this composable does not leave composition and cancel the
-            // coroutine mid-flight.
+            state.fail(messages.expired)
+        } else if (!state.busy) {
             state.begin()
             scope.launch {
-                val outcome = useCase.attach(link, topicId)
-                if (outcome is WarrenForumAttachOutcome.Attached) {
-                    dropPreview()
-                    controller.clear()
-                    Toast.makeText(context, messages.attached, Toast.LENGTH_LONG).show()
-                    // The forum page is what completes the flow, and it only
-                    // re-polls once it is visible again: hand the foreground
-                    // back to it, as the desktop hides its window.
-                    (context as? Activity)?.moveTaskToBack(true)
-                } else {
-                    state.settle(outcome, messages.failureFor(outcome, link))
+                when (val outcome = useCase.attach(link, link.topicId)) {
+                    WarrenForumAttachOutcome.Attached -> state.markAttached()
+                    else -> state.settle(outcome, messages.failureFor(outcome))
                 }
             }
         }
@@ -142,8 +139,7 @@ fun ForumAttachPromptHost() {
                     .fold(
                         onSuccess = { report ->
                             dropPreview()
-                            preview = report
-                            state.previewReady(report.file.absolutePath)
+                            state.previewReady(report)
                         },
                         onFailure = { state.previewFailed() },
                     )
@@ -189,7 +185,7 @@ fun ForumAttachPromptHost() {
     state.previewPath?.let { path -> AttachReportPreview(path = path, onClose = state::closePreview) }
 }
 
-/** What the request is, what leaves the device, the topic field, the preview, the inline notices. */
+/** What the request is, what leaves the device, the preview, the inline notices. */
 @Composable
 private fun AttachPromptBody(
     link: ForumAttachLink,
@@ -197,27 +193,14 @@ private fun AttachPromptBody(
     onViewLogs: () -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
-        val topicId = link.topicId
         Text(
-            when {
-                topicId == null -> stringResource(R.string.forum_attach_body_code)
-                topicId == ForumAttachLink.PRE_TOPIC -> stringResource(R.string.forum_attach_body_pre_topic)
-                else -> stringResource(R.string.forum_attach_body_topic, topicId)
+            if (link.isPreTopic) {
+                stringResource(R.string.forum_attach_body_pre_topic)
+            } else {
+                stringResource(R.string.forum_attach_body_topic, link.topicId)
             }
         )
         Text(stringResource(R.string.forum_attach_body_second))
-        if (state.needsTopic) {
-            OutlinedTextField(
-                value = state.topicInput,
-                onValueChange = state::updateTopicInput,
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.busy,
-                label = { Text(stringResource(R.string.forum_attach_topic_label)) },
-                supportingText = { Text(stringResource(R.string.forum_attach_topic_hint)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-            )
-        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             WarrenTextButton(onClick = onViewLogs, enabled = !state.collecting && !state.busy) {
                 Text(stringResource(R.string.report_problem_view_logs))
@@ -256,6 +239,24 @@ private fun AttachPromptBody(
 }
 
 /**
+ * The first [PREVIEW_MAX_BYTES] of the report, read without loading the rest:
+ * a report can run to tens of megabytes and the screen shows one slice of it.
+ */
+private fun readPreview(file: File): String {
+    val buffer = ByteArray(PREVIEW_MAX_BYTES + 1)
+    var read = 0
+    file.inputStream().use { input ->
+        while (read < buffer.size) {
+            val n = input.read(buffer, read, buffer.size - read)
+            if (n < 0) break
+            read += n
+        }
+    }
+    val shown = String(buffer, 0, minOf(read, PREVIEW_MAX_BYTES), Charsets.UTF_8)
+    return if (read > PREVIEW_MAX_BYTES) shown + "\n[preview truncated]" else shown
+}
+
+/**
  * The exact redacted report about to be sent, full screen over the prompt:
  * the Report-a-problem screen's preview, reachable from a dialog that has no
  * navigator of its own. Read-only; the approval stays on the prompt behind.
@@ -265,19 +266,7 @@ private fun AttachPromptBody(
 private fun AttachReportPreview(path: String, onClose: () -> Unit) {
     var text by remember(path) { mutableStateOf<String?>(null) }
     LaunchedEffect(path) {
-        text =
-            withContext(Dispatchers.IO) {
-                runCatching {
-                    val content = File(path).readText()
-                    if (content.length > PREVIEW_MAX_CHARS) {
-                        content.take(PREVIEW_MAX_CHARS) + "\n[preview truncated]"
-                    } else {
-                        content
-                    }
-                }
-                    .getOrNull()
-            }
-                ?: ""
+        text = withContext(Dispatchers.IO) { runCatching { readPreview(File(path)) }.getOrNull() } ?: ""
     }
     Dialog(
         onDismissRequest = onClose,
@@ -310,10 +299,10 @@ private fun AttachReportPreview(path: String, onClose: () -> Unit) {
  * outside it, hold plain strings.
  */
 private class AttachMessages(
-    val attached: String,
+    private val attached: String,
+    private val received: String,
     private val notAuthor: String,
-    private val expired: String,
-    private val expiredCode: String,
+    val expired: String,
     private val tooLarge: String,
     private val clockSkew: String,
     private val server: String,
@@ -322,16 +311,16 @@ private class AttachMessages(
     private val generic: String,
 ) {
     /**
-     * A typed code carries a topic number the person supplied, and the
-     * provider answers a mismatch with the same 404 as an expiry, so that
-     * message names both.
+     * A pre-topic report is parked, not delivered: it reaches the support
+     * team once the forum tab posts the topic and binds it, so the toast
+     * sends the person back there rather than announcing a delivery.
      */
-    fun expiredFor(link: ForumAttachLink): String = if (link.topicId == null) expiredCode else expired
+    fun attachedFor(link: ForumAttachLink): String = if (link.isPreTopic) received else attached
 
-    fun failureFor(outcome: WarrenForumAttachOutcome, link: ForumAttachLink): String =
+    fun failureFor(outcome: WarrenForumAttachOutcome): String =
         when (outcome) {
             WarrenForumAttachOutcome.NotAuthor -> notAuthor
-            WarrenForumAttachOutcome.Expired -> expiredFor(link)
+            WarrenForumAttachOutcome.Expired -> expired
             WarrenForumAttachOutcome.TooLarge -> tooLarge
             WarrenForumAttachOutcome.ClockSkew -> clockSkew
             WarrenForumAttachOutcome.ServerError -> server
@@ -346,9 +335,9 @@ private class AttachMessages(
 private fun attachMessages(): AttachMessages =
     AttachMessages(
         attached = stringResource(R.string.forum_attach_result_attached),
+        received = stringResource(R.string.forum_attach_result_received),
         notAuthor = stringResource(R.string.forum_attach_result_not_author),
         expired = stringResource(R.string.forum_attach_result_expired),
-        expiredCode = stringResource(R.string.forum_attach_result_expired_code),
         tooLarge = stringResource(R.string.report_problem_error_too_large),
         clockSkew = stringResource(R.string.report_problem_error_clock),
         server = stringResource(R.string.forum_attach_result_server),

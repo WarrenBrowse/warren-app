@@ -3,13 +3,11 @@ package com.warrenbrowse.vpn.app.forum
 /**
  * A validated `warren://attach-logs` deep link: the forum's "attach your
  * logs" page asking the app to attach its redacted problem report to the
- * topic [topicId], or, when it is 0, to a report still being composed (the
- * forum binds the logs to the topic after creation).
- *
- * [topicId] is null for a session id typed by hand: the broker's status and
- * meta endpoints carry no topic id, so the consent prompt asks for it.
+ * topic [topicId], or, when it is [PRE_TOPIC], to a report still being
+ * composed (the forum binds the logs to the topic after creation). A session
+ * id typed by hand carries the topic the broker's meta named for it.
  */
-data class ForumAttachLink(val sid: String, val host: String, val topicId: Long?) {
+data class ForumAttachLink(val sid: String, val host: String, val topicId: Long) {
     val isPreTopic: Boolean
         get() = topicId == PRE_TOPIC
 
@@ -73,8 +71,8 @@ private fun classifyAttachQuery(params: Map<String, String>): ForumAttachVerdict
 }
 
 /**
- * A topic id as the link, or the consent prompt's field, spells it: decimal
- * digits only (so no sign), within [MAX_FORUM_TOPIC_ID]; null otherwise.
+ * A topic id as the link spells it: decimal digits only (so no sign), within
+ * [MAX_FORUM_TOPIC_ID]; null otherwise.
  */
 fun parseForumTopicId(text: String): Long? {
     if (!TOPIC_REGEX.matches(text)) return null
@@ -84,9 +82,10 @@ fun parseForumTopicId(text: String): Long? {
 
 /**
  * The attach request a session id typed by hand stands for, against the one
- * allowlisted host. The topic is unknown: the attach page prints its session
- * id in the same shape as the sign-in code, and nothing the broker answers
- * without a signature names the topic, so the prompt asks for it.
+ * allowlisted host, with the topic the broker's meta (`GET
+ * /v1/attach/<sid>/meta`) named for the session: the attach page prints its
+ * session id in the same shape as the sign-in code, and the topic is the one
+ * thing the code itself cannot carry.
  */
-fun forumAttachLinkFromCode(sid: String): ForumAttachLink =
-    ForumAttachLink(sid, ALLOWED_CONNECT_HOST, topicId = null)
+fun forumAttachLinkFromCode(sid: String, topicId: Long): ForumAttachLink =
+    ForumAttachLink(sid, ALLOWED_CONNECT_HOST, topicId)

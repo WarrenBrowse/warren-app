@@ -96,10 +96,11 @@ interface WarrenJniBridge {
     fun forumAttachCancel(sid: String, host: String)
 
     /**
-     * Places a session id typed by hand: `{"kind":"login"|"attach"|"gone"|"unknown"}`,
-     * from the login status read and, when that one answers 404, the attach
-     * status read. Unsigned. Blocks on up to two GETs: invoke off the main
-     * thread.
+     * Places a session id typed by hand: `{"kind":"login"|"gone"|"unknown"}` or
+     * `{"kind":"attach","topic_id":N}` (0 for a pre-topic session), from the
+     * login status read, the attach status read when that one answers 404,
+     * and the attach meta when that one is pending. Unsigned. Blocks on up
+     * to three GETs: invoke off the main thread.
      */
     fun forumCodeProbe(sid: String, host: String): String
 

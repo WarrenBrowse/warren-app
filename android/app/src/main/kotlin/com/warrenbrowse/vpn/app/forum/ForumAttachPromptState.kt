@@ -3,31 +3,21 @@ package com.warrenbrowse.vpn.app.forum
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.warrenbrowse.vpn.lib.repository.CollectedReport
 
 /**
- * The attach consent's state for one pending link. Keyed on the link's sid
- * like the login prompt's: a link that replaces another while the prompt is
- * open gets a clean prompt, a recomposition binding the same link changes
- * nothing. Plain Kotlin over snapshot state so the transitions are
- * unit-tested off-device.
+ * The attach consent's state for one pending link. Owned by
+ * [ForumAttachController], never by the composable: a rotation recreates the
+ * Activity and every `remember` with it, while the upload it launched is
+ * still out, so the state it reports to has to outlive the host. Keyed on
+ * the link's sid like the login prompt's: a link that replaces another while
+ * the prompt is open gets a clean prompt, a recomposition binding the same
+ * link changes nothing. Plain Kotlin over snapshot state so the transitions
+ * are unit-tested off-device.
  */
 class ForumAttachPromptState {
     /** The sid of the link the state belongs to; null before the first bind. */
     var sid: String? = null
-        private set
-
-    private var linkTopicId: Long? = null
-
-    /**
-     * The link carries no topic (a session id typed by hand), so the prompt
-     * shows the topic field; an empty field means a report still being
-     * composed.
-     */
-    var needsTopic by mutableStateOf(false)
-        private set
-
-    /** What the topic field holds: digits only, whatever was typed or pasted. */
-    var topicInput by mutableStateOf("")
         private set
 
     /** An upload is out: Approve and Cancel are disabled. */
@@ -45,11 +35,31 @@ class ForumAttachPromptState {
     var terminal by mutableStateOf(false)
         private set
 
+    /**
+     * Leaving the prompt tells the provider the user declined, so the forum
+     * page stops waiting. False only once the provider reported the session
+     * gone: a refusal as author or a report over the cap leaves the session
+     * pending on the provider, and the page polling it.
+     */
+    var cancelsOnDecline by mutableStateOf(true)
+        private set
+
+    /** The upload was attached (or parked); the host closes the prompt. */
+    var attached by mutableStateOf(false)
+        private set
+
     /** "View the logs" is collecting the report. */
     var collecting by mutableStateOf(false)
         private set
 
     var collectFailed by mutableStateOf(false)
+        private set
+
+    /**
+     * The report collected for the preview, kept until the prompt goes or a
+     * fresh collection replaces it, so a rotation cannot leak the file.
+     */
+    var preview by mutableStateOf<CollectedReport?>(null)
         private set
 
     /** The collected report on screen, or null when the preview is closed. */
@@ -60,32 +70,19 @@ class ForumAttachPromptState {
     fun bind(link: ForumAttachLink) {
         if (link.sid == sid) return
         sid = link.sid
-        linkTopicId = link.topicId
-        needsTopic = link.topicId == null
-        topicInput = ""
         busy = false
         failure = null
         terminal = false
+        cancelsOnDecline = true
+        attached = false
         collecting = false
         collectFailed = false
+        preview = null
         previewPath = null
     }
 
-    fun updateTopicInput(text: String) {
-        topicInput = text.filter { it.isDigit() }
-    }
-
-    /**
-     * The topic the approval sends: the link's own, else the field's, an
-     * empty field standing for a report still being composed. Null when the
-     * field holds a number no topic can have.
-     */
-    fun topicIdOrNull(): Long? =
-        linkTopicId
-            ?: if (topicInput.isEmpty()) ForumAttachLink.PRE_TOPIC else parseForumTopicId(topicInput)
-
     val canApprove: Boolean
-        get() = !busy && !terminal && topicIdOrNull() != null
+        get() = !busy && !terminal
 
     /** The user approved: the upload is in flight. */
     fun begin() {
@@ -97,7 +94,14 @@ class ForumAttachPromptState {
     fun settle(outcome: WarrenForumAttachOutcome, message: String) {
         busy = false
         terminal = isTerminalAttachOutcome(outcome)
+        cancelsOnDecline = outcome !is WarrenForumAttachOutcome.Expired
         failure = message
+    }
+
+    /** The provider attached (or parked) the report. */
+    fun markAttached() {
+        busy = false
+        attached = true
     }
 
     /** A message for the current link without an attempt (a stale link). */
@@ -110,9 +114,10 @@ class ForumAttachPromptState {
         collectFailed = false
     }
 
-    fun previewReady(path: String) {
+    fun previewReady(report: CollectedReport) {
         collecting = false
-        previewPath = path
+        preview = report
+        previewPath = report.file.absolutePath
     }
 
     fun previewFailed() {
@@ -120,6 +125,7 @@ class ForumAttachPromptState {
         collectFailed = true
     }
 
+    /** Closes the screen; the file stays for the approval or the next bind. */
     fun closePreview() {
         previewPath = null
     }

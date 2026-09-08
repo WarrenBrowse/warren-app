@@ -56,4 +56,22 @@ class ForumLoginPromptStateTest {
         assertFalse(state.terminal)
         assertEquals("tunnel busy", state.failure)
     }
+
+    @Test
+    fun an_approval_is_held_for_the_host_until_the_next_link() {
+        // The signature runs on the controller's scope, so a host recreated by
+        // a rotation mid-flight still learns the approval from the state
+        // rather than re-arming Approve over a login that already happened.
+        val state = ForumLoginPromptState()
+        state.bind(first)
+        state.begin()
+
+        state.markApproved()
+
+        assertTrue(state.approved)
+        assertFalse(state.busy)
+
+        state.bind(second)
+        assertFalse(state.approved)
+    }
 }

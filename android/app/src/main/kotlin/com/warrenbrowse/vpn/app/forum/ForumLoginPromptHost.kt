@@ -10,10 +10,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -38,6 +37,10 @@ import org.koin.compose.koinInject
  * A failure keeps the prompt open with the reason inline. Clearing it instead
  * discarded the captured link, so recovering from a transient failure meant
  * restarting the whole browser round trip.
+ *
+ * The prompt state and the signature live on the controller, not here: a
+ * rotation recreates this composable while the signature is out, and a host
+ * that owned them would re-arm Approve over it and drop the outcome.
  */
 @Composable
 fun ForumLoginPromptHost() {
@@ -47,12 +50,24 @@ fun ForumLoginPromptHost() {
     val link = pending ?: return
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val scope = controller.scope
     // Keyed on the link's sid inside: a link replacing another while the
     // prompt is open starts clean instead of inheriting a disarmed Approve.
-    val state = remember { ForumLoginPromptState() }
+    val state = controller.prompt
     state.bind(link)
     val messages = promptMessages()
+
+    // The browser page is what completes the login, and it only re-polls
+    // once it is visible again: hand the foreground back to it, as the
+    // desktop hides its window. Reacted to from the state so a host recreated
+    // mid-flight does it too.
+    LaunchedEffect(state.approved) {
+        if (state.approved) {
+            controller.clear()
+            Toast.makeText(context, messages.approved, Toast.LENGTH_LONG).show()
+            (context as? Activity)?.moveTaskToBack(true)
+        }
+    }
 
     // Declining notifies the provider so the waiting browser page unblocks
     // (mirrors the desktop), then dismisses the prompt. After a terminal
@@ -70,19 +85,11 @@ fun ForumLoginPromptHost() {
             // can only fail on a dead sid.
             state.fail(messages.expired)
         } else if (!state.busy) {
-            // Keep the request pending (dialog stays) until the call returns,
-            // so this composable does not leave composition and cancel the
-            // coroutine mid-flight.
             state.begin()
             scope.launch {
                 val outcome = useCase.signIn(link)
                 if (outcome is WarrenForumLoginOutcome.Approved) {
-                    controller.clear()
-                    Toast.makeText(context, messages.approved, Toast.LENGTH_LONG).show()
-                    // The browser page is what completes the login, and it only
-                    // re-polls once it is visible again: hand the foreground
-                    // back to it, as the desktop hides its window.
-                    (context as? Activity)?.moveTaskToBack(true)
+                    state.markApproved()
                 } else {
                     state.settle(outcome, messages.failureFor(outcome))
                 }

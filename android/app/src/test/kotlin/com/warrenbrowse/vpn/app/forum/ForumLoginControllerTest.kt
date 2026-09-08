@@ -52,4 +52,20 @@ class ForumLoginControllerTest {
         assertNull(controller.pending.value)
         assertFalse(controller.isStale())
     }
+
+    @Test
+    fun the_prompt_state_is_the_controllers_so_a_recreated_host_sees_the_attempt_in_flight() {
+        // A rotation recreates the Activity and every `remember` with it. The
+        // state a host reads has to outlive that, or Approve is re-armed over
+        // a signature that is still out.
+        val controller = ForumLoginController()
+        controller.request(link)
+        controller.prompt.bind(link)
+        controller.prompt.begin()
+
+        val recreated = controller.prompt
+        recreated.bind(link)
+
+        assertTrue(recreated.busy)
+    }
 }

@@ -1,11 +1,17 @@
 package com.warrenbrowse.vpn.app.forum
 
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.cases
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -145,29 +151,67 @@ class WarrenForumAttachUseCaseTest {
     }
 
     @Test
-    fun the_envelope_maps_to_the_desktop_result_classes() {
-        assertEquals(WarrenForumAttachOutcome.Attached, parseForumAttachOutcome("""{"ok":true}"""))
-        assertEquals(
-            WarrenForumAttachOutcome.NotAuthor,
-            parseForumAttachOutcome("""{"ok":false,"error":"not-author"}"""),
-        )
-        assertEquals(WarrenForumAttachOutcome.Expired, parseForumAttachOutcome("""{"ok":false,"error":"expired"}"""))
-        assertEquals(WarrenForumAttachOutcome.TooLarge, parseForumAttachOutcome("""{"ok":false,"error":"too-large"}"""))
-        assertEquals(WarrenForumAttachOutcome.ClockSkew, parseForumAttachOutcome("""{"ok":false,"error":"clock-skew"}"""))
-        assertEquals(
-            WarrenForumAttachOutcome.ServerError,
-            parseForumAttachOutcome("""{"ok":false,"error":"server-error"}"""),
-        )
-        assertEquals(
-            WarrenForumAttachOutcome.Failure("transport"),
-            parseForumAttachOutcome("""{"ok":false,"error":"error","reason":"transport"}"""),
-        )
-        assertEquals(
-            WarrenForumAttachOutcome.Failure("http-418"),
-            parseForumAttachOutcome("""{"ok":false,"error":"error","reason":"http-418"}"""),
-        )
+    fun a_refusal_through_attach_discards_the_file_and_journals_its_class(@TempDir dir: File) = runTest {
+        val h = Harness(dir, connected, jni = FakeJniBridge(attachAnswer = { """{"ok":false,"error":"not-author"}""" }))
+
+        val outcome = h.useCase.attach(link, topicId = 42L)
+
+        assertEquals(WarrenForumAttachOutcome.NotAuthor, outcome)
+        assertEquals(1, h.jni.attachCalls)
+        assertEquals(1, h.reporter.discarded.size, "the collected file never outlives the attempt")
+        assertEquals("not-author", h.journal.lastClassOf(ForumEvent.ATTACH_RESULT))
+    }
+
+    // The cross-platform fixture (fixtures/client-rules/README.md): the
+    // envelope the shared crate hands this decoder for every provider answer,
+    // replayed here and by the Rust reader on its side of the same file.
+    private val fixture = ClientRulesFixtures.load("forum_outcomes.json")
+
+    @Test
+    fun the_shared_attach_outcome_fixture_replays_case_for_case() {
+        val cases = fixture["attach"]!!.jsonObject.cases("cases").filterNot(ClientRulesFixtures::skippedOnAndroid)
+        assertTrue(cases.size >= 8, "only ${cases.size} attach cases reached this reader")
+        for (case in cases) {
+            val expect = case["expect"]!!.jsonObject
+            val expected =
+                when (val kind = expect.string("kind")) {
+                    "attached" -> WarrenForumAttachOutcome.Attached
+                    "not-author" -> WarrenForumAttachOutcome.NotAuthor
+                    "expired" -> WarrenForumAttachOutcome.Expired
+                    "too-large" -> WarrenForumAttachOutcome.TooLarge
+                    "clock-skew" -> WarrenForumAttachOutcome.ClockSkew
+                    "server-error" -> WarrenForumAttachOutcome.ServerError
+                    "failed" -> WarrenForumAttachOutcome.Failure(expect.string("reason"))
+                    else -> error("${case.string("name")}: unknown attach kind $kind")
+                }
+            assertEquals(expected, parseForumAttachOutcome(case.string("envelope")), case.string("name"))
+        }
+        val clientSide = fixture["attach"]!!.jsonObject["client_side_failures"]!!.jsonObject.cases("cases")
+        assertTrue(clientSide.isNotEmpty())
+        for (case in clientSide) {
+            assertEquals(
+                WarrenForumAttachOutcome.Failure(case.string("reason")),
+                parseForumAttachOutcome(case.string("envelope")),
+                case.string("name"),
+            )
+        }
+        // What no envelope can be is still a classed failure, never a crash.
         assertEquals(WarrenForumAttachOutcome.Failure("invalid-envelope"), parseForumAttachOutcome("not json"))
         assertEquals(WarrenForumAttachOutcome.Failure("unknown"), parseForumAttachOutcome("""{"ok":false}"""))
+        // Approve is disarmed after exactly the kinds the fixture names.
+        val terminal = fixture["attach"]!!.jsonObject["terminal_kinds"]!!.jsonArray.map { it.jsonPrimitive.content }
+        val byKind =
+            mapOf(
+                "attached" to WarrenForumAttachOutcome.Attached,
+                "not-author" to WarrenForumAttachOutcome.NotAuthor,
+                "expired" to WarrenForumAttachOutcome.Expired,
+                "too-large" to WarrenForumAttachOutcome.TooLarge,
+                "clock-skew" to WarrenForumAttachOutcome.ClockSkew,
+                "server-error" to WarrenForumAttachOutcome.ServerError,
+            )
+        for ((kind, outcome) in byKind) {
+            assertEquals(kind in terminal, isTerminalAttachOutcome(outcome), kind)
+        }
     }
 
     @Test

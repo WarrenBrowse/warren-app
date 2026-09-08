@@ -107,9 +107,12 @@ interface WarrenSupportReporter {
 }
 
 /**
- * Hands a sign-in code typed by the user to the same consent prompt a deep
- * link raises: the browser-independent path into the forum login.
+ * Hands a session id typed by the user to the consent prompt it calls for:
+ * the browser-independent path into the forum login, or into the attach-logs
+ * flow when the broker holds the id as an attach session. Returns once the
+ * prompt is raised (the placement reads the broker, bounded), so the screen
+ * can show progress and leave afterwards.
  */
-fun interface ForumSignInRequests {
-    fun requestSignIn(sid: String)
+interface ForumSignInRequests {
+    suspend fun requestSignIn(sid: String)
 }

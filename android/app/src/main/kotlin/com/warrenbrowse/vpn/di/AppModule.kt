@@ -232,7 +232,6 @@ val appModule = module {
             loginController = get(),
             attachController = get(),
             journal = get(),
-            scope = get<ApplicationScope>(),
         )
     }
     // The forum activity badge (doc 55): one number for the bell, the

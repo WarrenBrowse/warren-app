@@ -1,5 +1,8 @@
 package com.warrenbrowse.vpn.app.forum
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,11 +14,16 @@ import kotlinx.coroutines.flow.asStateFlow
  * stashes it here and the prompt reads it when it composes. Only the latest
  * unanswered request is kept. The login and the attach-logs flows each keep
  * one, with their own broker session lifetime as [ttlMillis].
+ *
+ * [scope] is where a prompt runs the signature or the upload it launches: a
+ * composition scope dies with the Activity on a rotation, taking the outcome
+ * with it and leaving Approve re-armed over a request still in flight.
  */
 open class PendingForumConsent<T : Any>(
     private val ttlMillis: Long,
     // Injected for the JVM tests; production uses the wall clock.
     private val nowMillis: () -> Long = System::currentTimeMillis,
+    val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
 ) {
     private val _pending = MutableStateFlow<T?>(null)
     private var requestedAtMillis: Long = 0L

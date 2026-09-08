@@ -32,6 +32,14 @@ class ForumLoginPromptState {
     var terminal by mutableStateOf(false)
         private set
 
+    /**
+     * The provider approved: the host closes the prompt and hands the
+     * foreground back. Held here, owned by the controller, so a host
+     * recreated by a rotation mid-flight learns it too.
+     */
+    var approved by mutableStateOf(false)
+        private set
+
     /** Adopt [link]; a different sid than the current one resets everything. */
     fun bind(link: ForumLoginLink) {
         if (link.sid == sid) return
@@ -39,6 +47,13 @@ class ForumLoginPromptState {
         busy = false
         failure = null
         terminal = false
+        approved = false
+    }
+
+    /** The provider accepted the signature. */
+    fun markApproved() {
+        busy = false
+        approved = true
     }
 
     /** The user approved: the signature is in flight. */

@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.feature.settings.impl.support
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,9 +18,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -32,8 +38,10 @@ import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
+import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorSmall
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 /**
@@ -41,21 +49,30 @@ import org.koin.compose.koinInject
  * as a code when tapping its button did not open the app (a browser that
  * asks first, no handler, an old install). Typing it here raises the very same
  * consent prompt a deep link would, so the browser stops being a single point
- * of failure between the forum and the wallet.
+ * of failure between the forum and the wallet. The forum's attach page prints
+ * its session id the same way, and a code from there raises the attach
+ * consent instead: the broker is asked which one it holds, with the screen
+ * saying so meanwhile.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForumSignInCode(navigator: Navigator) {
     val requests = koinInject<ForumSignInRequests>()
+    val scope = rememberCoroutineScope()
     var input by remember { mutableStateOf("") }
     var invalid by remember { mutableStateOf(false) }
+    var checking by remember { mutableStateOf(false) }
     val submit = {
         val sid = normalizeForumSignInCode(input)
         if (sid == null) {
             invalid = true
-        } else {
-            requests.requestSignIn(sid)
-            navigator.goBack()
+        } else if (!checking) {
+            checking = true
+            scope.launch {
+                // Bounded inside: the screen leaves once the prompt is raised.
+                requests.requestSignIn(sid)
+                navigator.goBack()
+            }
         }
     }
 
@@ -87,6 +104,7 @@ fun ForumSignInCode(navigator: Navigator) {
                     invalid = false
                 },
                 modifier = Modifier.fillMaxWidth(),
+                enabled = !checking,
                 label = { Text(stringResource(R.string.forum_sign_in_code_label)) },
                 placeholder = { Text("0123456789abcdef0123456789abcdef") },
                 textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
@@ -108,9 +126,23 @@ fun ForumSignInCode(navigator: Navigator) {
             PrimaryButton(
                 text = stringResource(R.string.forum_sign_in_code_continue),
                 onClick = submit,
-                isEnabled = input.isNotBlank(),
+                isEnabled = input.isNotBlank() && !checking,
+                leadingIcon =
+                    if (checking) {
+                        { WarrenCircularProgressIndicatorSmall() }
+                    } else null,
                 modifier = Modifier.fillMaxWidth(),
             )
+            if (checking) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = stringResource(R.string.forum_sign_in_code_checking),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    )
+                }
+            }
         }
     }
 }

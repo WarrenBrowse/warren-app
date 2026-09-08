@@ -149,9 +149,11 @@ object WarrenJni {
 
     /**
      * Places a session id typed by hand before any consent is raised: the login status read
-     * first, the attach status read only when the login one answers 404. Returns
-     * `{"kind":"login"|"attach"|"gone"|"unknown"}`. Unsigned; blocks on up to two GETs, so it
-     * must be invoked off the main thread.
+     * first, the attach status read only when the login one answers 404, the attach meta only
+     * when that one is pending (it names the topic the code cannot carry). Returns
+     * `{"kind":"login"|"gone"|"unknown"}` or `{"kind":"attach","topic_id":N}` with 0 for a
+     * pre-topic session. Unsigned; blocks on up to three GETs, so it must be invoked off the
+     * main thread.
      */
     external fun forumCodeProbe(sid: String, host: String): String
 

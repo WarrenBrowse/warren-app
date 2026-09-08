@@ -68,13 +68,17 @@ class ForumAttachLinkTest {
     }
 
     @Test
-    fun a_typed_code_stands_for_an_attach_session_whose_topic_the_app_cannot_know() {
-        // The attach page prints its session id like the sign-in code, and
-        // the broker's status and meta endpoints carry no topic id, so the
-        // consent has to ask for it: the link carries none.
+    fun a_typed_code_stands_for_the_attach_session_the_meta_named() {
+        // The attach page prints its session id like the sign-in code; the
+        // broker's meta names the topic, so the link the code stands for
+        // carries it, and a pre-topic session carries the pre-topic id.
         assertEquals(
-            ForumAttachLink(sid, "connect.warrenbrowse.com", topicId = null),
-            forumAttachLinkFromCode(sid),
+            ForumAttachLink(sid, "connect.warrenbrowse.com", topicId = 199L),
+            forumAttachLinkFromCode(sid, topicId = 199L),
+        )
+        assertEquals(
+            ForumAttachLink(sid, "connect.warrenbrowse.com", topicId = ForumAttachLink.PRE_TOPIC),
+            forumAttachLinkFromCode(sid, topicId = ForumAttachLink.PRE_TOPIC),
         )
     }
 }
