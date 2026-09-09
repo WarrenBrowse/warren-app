@@ -10,6 +10,22 @@
 # Exit codes:
 #   0 - all checks pass (Warren-branded)
 #   1 - at least one Mullvad branding residue detected
+#
+# WHAT BELONGS HERE, AND WHAT DOES NOT. A `grep` for a literal value is only
+# valid while that value IS a literal. The beta/prod coexistence campaign
+# turned the electron-builder names into expressions over `productEnv`
+# (`executableName: productEnv.packageName`, `/opt/${productEnv.productName}/`),
+# and three assertions here went red on correct code and stayed red through five
+# releases, which is how a gate stops being read at all.
+#
+# So the rule for this file: assert only what cannot be refactored out from
+# under it, which in practice means the ABSENCE of Mullvad strings plus names
+# that are genuinely fixed. Anything whose value is computed per environment is
+# asserted on the RESOLVED config instead, by
+# `desktop/packages/mullvad-vpn/test/unit/product-env-linux-packaging.spec.ts`,
+# which loads the packaging config once per environment and checks what actually
+# ships. That suite is stricter than the greps it replaced: it covers prod, beta
+# and staging, where a grep only ever saw one of them.
 
 set -eu
 
@@ -49,7 +65,11 @@ log_header "Warren build smoke check"
 # build.sh
 assert_contains build.sh 'Building Warren VPN' 'build-banner'
 assert_contains build.sh 'warren-daemon' 'binary-name-daemon'
-assert_contains build.sh 'warren-vpn-daemon_' 'linux-package-prefix'
+# The daemon package base name. NOT `warren-vpn-daemon_`: the name carries the
+# environment between the base and the version (`warren-vpn-daemon-beta_1.1.29`),
+# so the underscore is not adjacent to the base any more.
+assert_contains build.sh 'warren-vpn-daemon' 'linux-package-prefix'
+assert_absent build.sh 'mullvad-vpn-daemon' 'no-mullvad-package-prefix'
 assert_contains build.sh 'WarrenVPN-' 'universal-installer-filename'
 assert_absent build.sh 'MullvadVPN-' 'no-mullvad-installer-filename'
 assert_absent build.sh 'git.p2p.legal' 'no-gitea-url'
@@ -60,13 +80,14 @@ assert_contains desktop/scripts/pack-universal-win.sh 'WarrenVPN-' 'universal-wi
 assert_absent desktop/scripts/pack-universal-win.sh 'Mullvad VPN' 'no-mullvad-banner'
 assert_absent desktop/scripts/pack-universal-win.sh 'MullvadVPN-' 'no-mullvad-dest'
 
-# Electron builder distribution config
-assert_contains desktop/packages/mullvad-vpn/tasks/distribution.cjs "appId: 'com.warrenbrowse.vpn'" 'appid'
-assert_contains desktop/packages/mullvad-vpn/tasks/distribution.cjs "productName: 'Warren VPN'" 'product-name'
-assert_contains desktop/packages/mullvad-vpn/tasks/distribution.cjs "WarrenVPN-" 'artifact-name'
-assert_contains desktop/packages/mullvad-vpn/tasks/distribution.cjs "executableName: 'warren-vpn'" 'linux-exec'
-assert_contains desktop/packages/mullvad-vpn/tasks/distribution.cjs '/opt/Warren VPN/' 'linux-install-dir'
+# Electron builder distribution config.
+#
+# Only the Mullvad-absence check lives here. The app id, the product name, the
+# artifact name, the Linux executable name and the /opt install directory are
+# all resolved from `productEnv` and are asserted per environment, on the
+# resolved config, by test/unit/product-env-linux-packaging.spec.ts.
 assert_absent desktop/packages/mullvad-vpn/tasks/distribution.cjs "appId: 'net.mullvad.vpn'" 'no-mullvad-appid'
+assert_absent desktop/packages/mullvad-vpn/tasks/distribution.cjs "productName: 'Mullvad VPN'" 'no-mullvad-product-name'
 
 # desktop package.json
 assert_contains desktop/packages/mullvad-vpn/package.json '"productName": "Warren VPN"' 'pkg-product-name'
