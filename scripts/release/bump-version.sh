@@ -110,4 +110,17 @@ log_info "android versionCode -> $(cat "$ANDROID_VERSION_CODE_FILE")"
 
 log_info "ios left untouched (calendar MARKETING_VERSION $CURRENT_IOS_MARKETING, build $CURRENT_IOS_BUILD)"
 
+# The bundled "What's new" screen is generated from the changelog, so bumping
+# the version refreshes it here rather than relying on anyone to remember: it
+# went stale for 25 releases when it was a hand-maintained file. A missing
+# section is a warning, not a failure, because the notes are often written
+# after the bump; `test/unit/changes-txt.spec.ts` then refuses the release
+# until this is run again.
+if bash "$SCRIPT_DIR/generate-changes-txt.sh" "${NEW_VERSION%%-*}" 2>/dev/null; then
+    log_info "changes.txt regenerated for ${NEW_VERSION%%-*}"
+else
+    log_warn "no [${NEW_VERSION%%-*}] section in CHANGELOG.md yet, so changes.txt still holds the previous release's notes"
+    log_warn "write the release notes, then: bash scripts/release/generate-changes-txt.sh"
+fi
+
 log_success "Done. Review with 'git diff' and commit when ready."

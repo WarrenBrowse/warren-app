@@ -1170,12 +1170,15 @@ jobs:
           # with HTTP 422. Extract just this version's section; cap defensively
           # below the limit.
           notes="$RUNNER_TEMP/release-notes.md"
-          # CHANGELOG headers look like:  ## [1.0.10] - 2026-06-24; the version
-          # has its channel prefix stripped, so both series find their section.
-          awk -v ver="$WARREN_VERSION" '
-            /^## /{ if (cap) exit; cap = index($0, "[" ver "]") > 0 }
-            cap { print }
-          ' CHANGELOG.md > "$notes" || true
+          # One reader for every surface that shows release notes, so the body,
+          # the in-app what's-new and the signed manifests cannot disagree:
+          # ci/extract-changelog-section.sh, pinned by
+          # ci/test-extract-changelog-section.sh. `--with-heading` keeps the
+          # `## [1.0.10] - 2026-06-24` line, which the body displays and the
+          # in-app screen does not. The version has its channel prefix
+          # stripped, so both series find their section.
+          bash ci/extract-changelog-section.sh --with-heading \
+            CHANGELOG.md "$WARREN_VERSION" > "$notes" || true
           # Release notes are optional: a tag without a CHANGELOG [version]
           # section still ships, rather than failing the whole release after
           # every platform already built. When the section is absent, fall back

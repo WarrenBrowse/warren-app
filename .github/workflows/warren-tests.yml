@@ -87,6 +87,13 @@ jobs:
             -p mullvad-update -p mullvad-release \
             -- --check
 
+      # Sub-second, and it guards the release notes every surface shows: the
+      # GitHub release body, the in-app what's-new (changes.txt) and the signed
+      # manifests all read CHANGELOG.md, and the test pins the bash reader
+      # against the Python one so the two cannot answer differently.
+      - name: Release-notes reader (shell tests)
+        run: bash ci/test-extract-changelog-section.sh
+
       - name: install cargo-nextest
         uses: taiki-e/install-action@v2
         with:

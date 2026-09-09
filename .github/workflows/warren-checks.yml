@@ -87,6 +87,14 @@ on:
       # in this scope.
       - "dist-assets/pkg-scripts/**"
       - "scripts/ci/test-macos-pkg-preinstall.sh"
+      # The bundled what's-new screen is generated from the changelog and keyed
+      # on the committed desktop version, and the desktop unit suite refuses a
+      # changes.txt that disagrees with them. Both files sat outside this
+      # filter, which is how a release-prep commit (changelog plus version
+      # files, nothing else) ran no gate at all: `changes.txt` then advertised
+      # "First public beta release." for 25 releases.
+      - "CHANGELOG.md"
+      - "dist-assets/desktop-product-version.txt"
       - "Cargo.toml"
       - "Cargo.lock"
       - ".warrenguard-version"
