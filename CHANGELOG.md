@@ -24,6 +24,15 @@ Line wrap the file at 100 chars.                                              Th
 ## [Unreleased]
 
 
+## [1.1.30] - 2026-09-12
+### Fixed
+- Stop the tunnel piling seconds of queue on a slow upload link. The send buffer already shrank
+  itself toward what the connection can actually carry, but it was never allowed below a floor
+  sized for a fast line, so on an uplink around 1 Mbit/s the floor was the buffer and held about
+  nine seconds of traffic. A connection now gets a floor sized for a home link, which removes the
+  delay without changing anything on a faster one.
+
+
 ## [1.1.29] - 2026-09-09
 ### Added
 - Attach the app's logs to a forum bug report on Android, from the same forum link the desktop app

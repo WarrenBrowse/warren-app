@@ -1,19 +1,6 @@
-### Added
-- Attach the app's logs to a forum bug report on Android, from the same forum link the desktop app
-  already handles. A consent prompt names the topic being reported, shows the exact redacted
-  report on request, and sends only on approval. A session code from that page, typed where a
-  forum sign-in code goes, opens the same prompt instead of reading as an expired sign-in.
 ### Fixed
-- Show the app's own icon in the GNOME dock and window switcher on a Wayland session (Ubuntu 26.04).
-  The Linux app never named its desktop entry to the compositor, so GNOME could not pair the window
-  with the installed launcher entry and painted the generic icon.
-- Let the app fall back to its TLS-over-TCP carrier while the tunnel is up. On a network that
-  blocks or kills UDP, the app is meant to carry the tunnel over TCP instead, and on macOS the
-  kill switch allowed only UDP to the relay, so the fallback could never be dialled and the app
-  reconnected in a loop. It now reaches the same relay on the same port over either protocol.
-- Reconnect at once when the macOS carrier bind is found black-holed right after connecting, instead
-  of leaving the dead tunnel up for 30 seconds. The first connect on a network the app has not seen
-  binds the carrier socket to the physical interface and checks within two seconds that packets
-  come back; when none do, the check now ends the session immediately, and the reconnect that
-  follows uses the host-route escape it already recorded. Until now the same finding waited on two
-  15-second backstops, with the whole machine cut off from the internet in the meantime.
+- Stop the tunnel piling seconds of queue on a slow upload link. The send buffer already shrank
+  itself toward what the connection can actually carry, but it was never allowed below a floor
+  sized for a fast line, so on an uplink around 1 Mbit/s the floor was the buffer and held about
+  nine seconds of traffic. A connection now gets a floor sized for a home link, which removes the
+  delay without changing anything on a faster one.
