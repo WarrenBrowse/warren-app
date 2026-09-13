@@ -15,6 +15,16 @@ par l'application, gardez-le tel quel.
 ## [Non publié]
 
 
+## [1.1.30] - 2026-09-12
+### Corrigé
+- Empêcher le tunnel d'accumuler plusieurs secondes de file d'attente sur un lien d'envoi lent. Le
+  tampon d'envoi se réduisait déjà vers ce que la connexion peut réellement transporter, mais il ne
+  pouvait jamais descendre sous un plancher dimensionné pour une ligne rapide : sur un envoi autour
+  de 1 Mbit/s, le plancher était donc le tampon, et il retenait environ neuf secondes de trafic.
+  Une connexion reçoit maintenant un plancher dimensionné pour un lien domestique, ce qui supprime
+  ce délai sans rien changer sur une ligne plus rapide.
+
+
 ## [1.1.29] - 2026-09-09
 ### Ajouté
 - Joindre les journaux de l'application à un rapport de bug du forum depuis Android, à partir du

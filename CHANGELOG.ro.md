@@ -14,6 +14,16 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ## [Nepublicat]
 
 
+## [1.1.30] - 2026-09-12
+### Reparat
+- Împiedică tunelul să adune câteva secunde de coadă pe un link de trimitere lent. Bufferul de
+  trimitere se micșora deja către ceea ce poate duce efectiv conexiunea, dar nu putea coborî
+  niciodată sub un prag dimensionat pentru o linie rapidă: pe un upload de aproximativ 1 Mbit/s,
+  pragul era deci bufferul și reținea circa nouă secunde de trafic. O conexiune primește acum un
+  prag dimensionat pentru un link casnic, ceea ce elimină întârzierea fără să schimbe nimic pe o
+  linie mai rapidă.
+
+
 ## [1.1.29] - 2026-09-09
 ### Adăugat
 - Atașează jurnalele aplicației la un raport de eroare de pe forum din Android, pornind de la
