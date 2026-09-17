@@ -338,16 +338,6 @@ final class SceneryViewController: UIViewController {
     // carries the traffic, and the backdrop of any exit with no bespoke art.
     private static let plainImageName = "SceneryPlaine"
 
-    // The burrow foreground and Bula are raised by a constant share of the
-    // frame height so the burrow mouth clears the connection card. It is the
-    // same in every phase on purpose: only the landscape crossfades, so the
-    // foreground never jumps between modes. Desktop needs no lift at all, its
-    // frame carries the canvas ratio so the master's own framing lands right;
-    // the phone draws the foreground at canvas width (see the width-fit layout
-    // below), far shorter than the bounds, so it would otherwise sink behind
-    // the connection card.
-    private static let foregroundLift: CGFloat = 0.07
-
     // Hiding slides Bula this share of the height down into the burrow.
     private static let bulaHideDrop: CGFloat = 0.03
 
@@ -359,6 +349,10 @@ final class SceneryViewController: UIViewController {
     private static let bulaDuration: TimeInterval = 0.55
 
     private static let connectingZoom: CGFloat = 1.08
+    // The desktop dims the connecting landscape to brightness(0.92); over
+    // opaque art that is a black overlay at 8 %, on the blur's own clock.
+    // Android carries the same value as CONNECTING_DIM.
+    private static let connectingDim: CGFloat = 0.08
     private static let washAlpha: Float = 0.14
     private static let scrimStart: NSNumber = 0.66
     private static let scrimAlpha: CGFloat = 0.6
@@ -378,12 +372,23 @@ final class SceneryViewController: UIViewController {
     // Landscape layers live in one container so the connecting zoom scales
     // them together (desktop wraps them in a single transformed Scene div).
     private let landscapeContainer = UIView()
-    private let bottomExtensionView = SceneryViewController.makeFullBleedImageView()
     private let backLandscapeView = SceneryViewController.makeFullBleedImageView()
     private let frontLandscapeView = SceneryViewController.makeFullBleedImageView()
     private let blurredLandscapeView = SceneryViewController.makeFullBleedImageView()
+    // The connecting dim covers the landscape only, as on desktop where the
+    // filter sits on the scene wrapper: the burrow and Bula stay bright.
+    private let connectingDimView = UIView()
+    // The burrow layer is drawn in two parts: everything above the row it turns
+    // fully opaque at, natural, and the meadow below it stretched to the bottom
+    // of the screen. That is what continues the painted ground instead of the
+    // mirrored, blurred band this screen used to fill the gap with.
     private let foregroundView = SceneryViewController.makeFullBleedImageView()
+    private let foregroundGroundView = SceneryViewController.makeFullBleedImageView()
     private let bulaView = SceneryViewController.makeFullBleedImageView()
+
+    /// The connection card's top edge in this view's coordinates, or nil before
+    /// the card has been laid out. Drives the whole scene's placement.
+    private var cardTop: CGFloat?
 
     // A faint accent tint reinforces the phase (terracotta exposed / orange
     // connecting / olive protected) without washing out the artwork.
@@ -399,12 +404,16 @@ final class SceneryViewController: UIViewController {
     private var isBlurred = false
 
     // Blurring the full-resolution art costs tens of milliseconds; cache the
-    // result per landscape so each country pays it once per process.
-    private static var blurredImageCache = [String: UIImage]()
+    // result per landscape. NSCache rather than a dictionary: these are 7 MB
+    // entries and the process must be able to give them back under pressure.
+    private static let blurredImageCache = NSCache<NSString, UIImage>()
 
-    // Blurred mirrored ground/water continuation per landscape (see
-    // bottomExtensionImage), cached for the same reason.
-    private static var bottomExtensionCache = [String: UIImage]()
+    // One Core Image context for every render here: building one per call
+    // rebuilds its Metal pipeline each time.
+    private static let ciContext = CIContext(options: nil)
+
+    // The burrow layer split at its first fully opaque row, decoded once.
+    private static var burrowParts: (head: UIImage, ground: UIImage)?
 
     private static func makeFullBleedImageView() -> UIImageView {
         let imageView = UIImageView()
@@ -425,14 +434,19 @@ final class SceneryViewController: UIViewController {
 
         blurredLandscapeView.alpha = 0
 
-        // The bottom extension is stretched haze: any sampling artifact
-        // would show as banding at full sharpness, so it scales to fill.
-        bottomExtensionView.contentMode = .scaleToFill
+        // Both burrow parts fill the frame they are given: the head keeps the
+        // canvas ratio, the ground is the band that stretches.
+        foregroundView.contentMode = .scaleToFill
+        foregroundGroundView.contentMode = .scaleToFill
 
-        [bottomExtensionView, backLandscapeView, frontLandscapeView, blurredLandscapeView].forEach {
+        connectingDimView.backgroundColor = .black
+        connectingDimView.alpha = 0
+        connectingDimView.isUserInteractionEnabled = false
+
+        [backLandscapeView, frontLandscapeView, blurredLandscapeView, connectingDimView].forEach {
             landscapeContainer.addSubview($0)
         }
-        [landscapeContainer, foregroundView, bulaView].forEach {
+        [landscapeContainer, foregroundGroundView, foregroundView, bulaView].forEach {
             view.addSubview($0)
         }
 
@@ -449,8 +463,56 @@ final class SceneryViewController: UIViewController {
         bottomScrimLayer.locations = [0, Self.scrimStart, 1]
         view.layer.addSublayer(bottomScrimLayer)
 
-        foregroundView.image = UIImage(named: "SceneryTerrier")
+        let parts = Self.burrowLayerParts()
+        foregroundView.image = parts?.head
+        foregroundGroundView.image = parts?.ground
         bulaView.image = UIImage(named: "SceneryBula")
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(dropDerivedImages),
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
+    }
+
+    @objc private func dropDerivedImages() {
+        Self.blurredImageCache.removeAllObjects()
+    }
+
+    /// The connection card's top edge, in this view's coordinates. The scene
+    /// follows it, so the card growing or shrinking moves the art rather than
+    /// swallowing Bula.
+    func setCardTop(_ top: CGFloat?) {
+        guard cardTop != top else { return }
+        cardTop = top
+        view.setNeedsLayout()
+    }
+
+    /// The burrow layer cut at the first row it paints fully opaque across the
+    /// whole width. The two halves are drawn into adjacent frames, so the cut
+    /// is invisible, and only the lower half is ever stretched.
+    private static func burrowLayerParts() -> (head: UIImage, ground: UIImage)? {
+        if let cached = burrowParts { return cached }
+        guard let source = UIImage(named: "SceneryTerrier"), let cgImage = source.cgImage else {
+            return nil
+        }
+        let split = Int(
+            (SceneryLayout.groundRow / SceneryLayout.canvasHeight * CGFloat(cgImage.height)).rounded()
+        )
+        guard split > 0, split < cgImage.height,
+            let head = cgImage.cropping(
+                to: CGRect(x: 0, y: 0, width: cgImage.width, height: split)),
+            let ground = cgImage.cropping(
+                to: CGRect(x: 0, y: split, width: cgImage.width, height: cgImage.height - split))
+        else { return nil }
+        let parts = (
+            head: UIImage(cgImage: head, scale: source.scale, orientation: source.imageOrientation),
+            ground: UIImage(
+                cgImage: ground, scale: source.scale, orientation: source.imageOrientation)
+        )
+        burrowParts = parts
+        return parts
     }
 
     override func viewDidLayoutSubviews() {
@@ -464,31 +526,39 @@ final class SceneryViewController: UIViewController {
         landscapeContainer.bounds = bounds
         landscapeContainer.center = CGPoint(x: bounds.midX, y: bounds.midY)
 
-        // The landscape is width-fit and top-anchored, NOT center-cropped:
-        // a tall phone would otherwise cut ~30% of the art's width and
-        // lose edge elements like the country flag. The gap this opens
-        // below the art is filled by the blurred ground/water
-        // continuation, tucked under the bottom scrim and the card.
-        let layout = Self.landscapeLayout(
-            imageSize: (backLandscapeView.image ?? frontLandscapeView.image)?.size,
-            in: bounds
-        )
-        [backLandscapeView, frontLandscapeView, blurredLandscapeView].forEach {
-            $0.frame = layout.landscape
+        // Every layer is width-fit with NO side crop: a tall phone would
+        // otherwise cut about 30% of the art's width and lose edge elements
+        // like the country flag. The geometry below the canvas is
+        // SceneryLayout's, the formula the Android and desktop clients replay
+        // from the same fixture.
+        let placement = SceneryLayout.placement(in: bounds, cardTop: cardTop)
+        let landscapeRect = placement.canvasRect(
+            width: bounds.width, top: placement.landscapeTop)
+        [backLandscapeView, frontLandscapeView, blurredLandscapeView, connectingDimView].forEach {
+            $0.frame = landscapeRect
         }
-        bottomExtensionView.frame = layout.bottomExtension
-        bottomExtensionView.isHidden = layout.bottomExtension.height <= 0
 
-        // The foreground layers are NOT height-cropped like the landscape:
-        // width-fit keeps the whole painted canvas in frame (the burrow never
-        // crops off screen and Bula stays at his painted size instead of the
-        // tall-screen zoom), anchored at the bottom edge and lifted from
-        // there. Placed via bounds + center because the lift transform is
-        // already applied (setting frame under a transform is undefined).
-        place(foregroundView, at: Self.widthFitBottomFrame(for: foregroundView.image, in: bounds))
-        place(bulaView, at: Self.widthFitBottomFrame(for: bulaView.image, in: bounds))
-        foregroundView.transform = CGAffineTransform(
-            translationX: 0, y: -bounds.height * Self.foregroundLift)
+        // The burrow's head keeps its painted scale; its ground band is the
+        // only thing that stretches, and it reaches the bottom of the screen so
+        // nothing below the canvas is ever left to fill.
+        let headHeight = placement.groundOffset
+        foregroundView.frame = CGRect(
+            x: 0, y: placement.foregroundTop, width: bounds.width, height: headHeight)
+        let groundTop = placement.foregroundTop + headHeight
+        foregroundGroundView.frame = CGRect(
+            x: 0,
+            y: groundTop,
+            width: bounds.width,
+            height: max(0, placement.foregroundBottom - groundTop)
+        )
+
+        // Bula rides the same placement as the burrow he sits on, registered to
+        // it, and is never stretched: his body ends above the split row. Placed
+        // via bounds + center because the hide transform is already applied
+        // (setting frame under a transform is undefined).
+        place(
+            bulaView,
+            at: placement.canvasRect(width: bounds.width, top: placement.foregroundTop))
         bulaView.transform = bulaTransform(visible: bulaVisible)
 
         CATransaction.begin()
@@ -496,40 +566,6 @@ final class SceneryViewController: UIViewController {
         accentWashLayer.frame = bounds
         bottomScrimLayer.frame = bounds
         CATransaction.commit()
-    }
-
-    private static func widthFitBottomFrame(for image: UIImage?, in bounds: CGRect) -> CGRect {
-        guard let size = image?.size, size.width > 0 else { return bounds }
-        let height = bounds.width * size.height / size.width
-        return CGRect(x: 0, y: bounds.height - height, width: bounds.width, height: height)
-    }
-
-    struct SceneryLayout: Equatable {
-        let landscape: CGRect
-        // The strip left below the art on tall screens; zero-height when
-        // the art already covers the screen (wide screens). Overlaps the
-        // art bottom edge by 1pt so no hairline gap can show.
-        let bottomExtension: CGRect
-    }
-
-    // Pure layout math, separated from UIKit so it is directly testable:
-    // the landscape shows its FULL painted width anchored to the TOP
-    // edge (the real painted sky stays sharp behind the header, and edge
-    // elements like the country flag stay in frame), and whatever screen
-    // remains below it belongs to the bottom extension, which hides
-    // under the bottom scrim and the connection card.
-    static func landscapeLayout(imageSize: CGSize?, in bounds: CGRect) -> SceneryLayout {
-        guard let size = imageSize, size.width > 0 else {
-            return SceneryLayout(landscape: bounds, bottomExtension: .zero)
-        }
-        let height = bounds.width * size.height / size.width
-        let landscape = CGRect(x: 0, y: 0, width: bounds.width, height: height)
-        let bottomExtension =
-            height < bounds.height
-            ? CGRect(
-                x: 0, y: height - 1, width: bounds.width, height: bounds.height - height + 1)
-            : .zero
-        return SceneryLayout(landscape: landscape, bottomExtension: bottomExtension)
     }
 
     private func place(_ view: UIView, at rect: CGRect) {
@@ -586,10 +622,6 @@ final class SceneryViewController: UIViewController {
 
         let image = UIImage(named: imageName)
         refreshBlurredLandscape(animated: animated)
-        refreshBottomExtension()
-        // Frames derive from the image size (width-fit layout); the first
-        // image assignment must trigger a layout pass.
-        view.setNeedsLayout()
         guard animated, backLandscapeView.image != nil else {
             backLandscapeView.image = image
             frontLandscapeView.image = image
@@ -623,6 +655,7 @@ final class SceneryViewController: UIViewController {
         }
         UIView.animate(withDuration: animated ? Self.blurDuration : 0) {
             self.blurredLandscapeView.alpha = blurred ? 1 : 0
+            self.connectingDimView.alpha = blurred ? Self.connectingDim : 0
         }
         UIView.animate(
             withDuration: animated ? Self.zoomDuration : 0, delay: 0, options: [.curveEaseOut]
@@ -640,7 +673,7 @@ final class SceneryViewController: UIViewController {
     private func refreshBlurredLandscape(animated: Bool) {
         guard let imageName = currentImageName else { return }
 
-        if let cached = Self.blurredImageCache[imageName] {
+        if let cached = Self.blurredImageCache.object(forKey: imageName as NSString) {
             applyBlurredImage(cached, animated: animated)
             return
         }
@@ -648,96 +681,13 @@ final class SceneryViewController: UIViewController {
         DispatchQueue.global(qos: .userInitiated).async {
             guard let blurred = Self.gaussianBlurred(source, radius: Self.blurRadius) else { return }
             DispatchQueue.main.async {
-                Self.blurredImageCache[imageName] = blurred
+                Self.blurredImageCache.setObject(blurred, forKey: imageName as NSString)
                 // Only apply if this landscape is still the visible one.
                 if self.currentImageName == imageName {
                     self.applyBlurredImage(blurred, animated: true)
                 }
             }
         }
-    }
-
-    // Keeps the ground/water continuation in sync with the current
-    // landscape, generated off the main thread on first use per image
-    // (cached after).
-    private func refreshBottomExtension() {
-        guard let imageName = currentImageName else { return }
-
-        if let cached = Self.bottomExtensionCache[imageName] {
-            applyBottomExtension(cached)
-            return
-        }
-        guard let source = UIImage(named: imageName) else { return }
-        DispatchQueue.global(qos: .userInitiated).async {
-            guard let continuation = Self.bottomExtensionImage(from: source) else { return }
-            DispatchQueue.main.async {
-                Self.bottomExtensionCache[imageName] = continuation
-                if self.currentImageName == imageName {
-                    self.applyBottomExtension(continuation)
-                }
-            }
-        }
-    }
-
-    private func applyBottomExtension(_ image: UIImage) {
-        guard bottomExtensionView.image !== image else { return }
-        UIView.transition(
-            with: bottomExtensionView,
-            duration: bottomExtensionView.image == nil ? 0 : Self.crossfadeDuration,
-            options: [.transitionCrossDissolve]
-        ) {
-            self.bottomExtensionView.image = image
-        }
-    }
-
-    // Continuation below the painted canvas: the bottom strip of the
-    // art, mirrored vertically, sharp at the seam and progressively
-    // blurring away from it. The unblurred seam row is pixel-identical
-    // to the art's bottom edge, so no line can show; the deep-blur zone
-    // sits behind the bottom scrim and the connection card anyway.
-    private static func bottomExtensionImage(from image: UIImage) -> UIImage? {
-        guard let cgImage = image.cgImage else { return nil }
-        let stripHeight = max(1, Int(CGFloat(cgImage.height) * 0.45))
-        guard
-            let stripCG = cgImage.cropping(
-                to: CGRect(
-                    x: 0,
-                    y: cgImage.height - stripHeight,
-                    width: cgImage.width,
-                    height: stripHeight
-                ))
-        else { return nil }
-
-        let strip = CIImage(cgImage: stripCG)
-        let extent = strip.extent
-        let blurred =
-            strip
-            .clampedToExtent()
-            .applyingGaussianBlur(sigma: 40)
-            .cropped(to: extent)
-
-        // The art's bottom edge row renders at extent.minY in Core Image
-        // coordinates; displayed .downMirrored it becomes the top of the
-        // extension, i.e. the seam. The mask keeps that side sharp
-        // (black = background) and reaches full blur (white = input) a
-        // third of the strip away.
-        guard let gradientFilter = CIFilter(name: "CISmoothLinearGradient") else { return nil }
-        gradientFilter.setValue(CIVector(x: 0, y: extent.minY), forKey: "inputPoint0")
-        gradientFilter.setValue(CIColor.black, forKey: "inputColor0")
-        gradientFilter.setValue(
-            CIVector(x: 0, y: extent.minY + extent.height * 0.35), forKey: "inputPoint1")
-        gradientFilter.setValue(CIColor.white, forKey: "inputColor1")
-        guard let mask = gradientFilter.outputImage?.cropped(to: extent),
-            let blendFilter = CIFilter(name: "CIBlendWithMask")
-        else { return nil }
-        blendFilter.setValue(blurred, forKey: kCIInputImageKey)
-        blendFilter.setValue(strip, forKey: kCIInputBackgroundImageKey)
-        blendFilter.setValue(mask, forKey: kCIInputMaskImageKey)
-
-        guard let output = blendFilter.outputImage,
-            let outCG = CIContext(options: nil).createCGImage(output, from: extent)
-        else { return nil }
-        return UIImage(cgImage: outCG, scale: image.scale, orientation: .downMirrored)
     }
 
     private func applyBlurredImage(_ image: UIImage, animated: Bool) {
@@ -760,17 +710,17 @@ final class SceneryViewController: UIViewController {
             .clampedToExtent()
             .applyingGaussianBlur(sigma: radius)
             .cropped(to: ciImage.extent)
-        let context = CIContext(options: nil)
-        guard let cgImage = context.createCGImage(blurred, from: blurred.extent) else { return nil }
+        guard let cgImage = ciContext.createCGImage(blurred, from: blurred.extent) else {
+            return nil
+        }
         return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
     }
 
-    // Bula rides the same lift as the burrow he sits on; hiding slides him
-    // slightly down into the burrow while fading out.
+    // Bula is placed registered to the burrow he sits on; hiding slides him
+    // slightly down into it while fading out.
     private func bulaTransform(visible: Bool) -> CGAffineTransform {
-        let lift = -view.bounds.height * Self.foregroundLift
         let hideOffset = view.bounds.height * Self.bulaHideDrop
-        return CGAffineTransform(translationX: 0, y: visible ? lift : lift + hideOffset)
+        return CGAffineTransform(translationX: 0, y: visible ? 0 : hideOffset)
     }
 
     private func setBulaVisible(_ visible: Bool, animated: Bool) {

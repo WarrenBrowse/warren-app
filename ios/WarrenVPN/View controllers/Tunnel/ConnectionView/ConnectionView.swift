@@ -17,6 +17,11 @@ struct ConnectionView: View {
     @State private(set) var scrollViewHeight: CGFloat = 0
     var hasFeatureIndicators: Bool { !indicatorsViewModel.chips.isEmpty }
     var action: ButtonPanel.Action?
+    /// The card's top edge in window coordinates, reported on every frame of
+    /// its height animation. The scenery backdrop places the scene against it,
+    /// so Bula keeps his footing above the card instead of being swallowed
+    /// when the connection details expand.
+    var cardTopChanged: ((CGFloat) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -117,6 +122,9 @@ struct ConnectionView: View {
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
             .shadow(color: Color.black.opacity(0.35), radius: 12, x: 0, y: 8)
             .padding(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
+            .topOfView { top in
+                cardTopChanged?(top)
+            }
             .onChange(of: connectionViewModel.showsConnectionDetails) {
                 if !connectionViewModel.showsConnectionDetails {
                     withAnimation {

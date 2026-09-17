@@ -246,6 +246,13 @@ class TunnelViewController: UIViewController, RootContainment {
                 interactor.isStandingDownForHigherEnvironment
         }
 
+        connectionView.cardTopChanged = { [weak self] topInWindow in
+            guard let self, Self.usesSceneryBackdrop else { return }
+            let sceneryView = self.sceneryViewController.view!
+            self.sceneryViewController.setCardTop(
+                sceneryView.convert(CGPoint(x: 0, y: topInWindow), from: nil).y)
+        }
+
         connectionView.action = { [weak self] action in
             switch action {
             case .connect:

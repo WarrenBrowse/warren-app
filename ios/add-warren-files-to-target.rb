@@ -44,6 +44,10 @@ FILES_TO_ADD = {
   # Settings + Tunnel Warren-specific views.
   "WarrenVPN/View controllers/Tunnel/WarrenObfuscationIndicatorView.swift" => "WarrenVPN",
 
+  # The scenery placement, the formula every client replays from
+  # `fixtures/client-rules/scenery_layout.json`.
+  "WarrenVPN/View controllers/Tunnel/SceneryLayout.swift" => "WarrenVPN",
+
   # C.4.3 Warren Quinn tunnel implementation + actor scaffold inside
   # `PacketTunnelCore` (slots next to GotaTunTunnelImplementation +
   # GotaTunActor, conforms `TunnelImplementation` + `PacketTunnelActorProtocol`).
