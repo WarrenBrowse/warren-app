@@ -5,9 +5,10 @@
 //! a ring buffer the app can read for its own process and that a reboot
 //! empties. A failed forum login left no trace a user could send. The file
 //! uses the desktop daemon's line format so a report reads the same to staff
-//! whichever platform it came from, rotates once per process start with one
-//! level of history (the daemon's `rotate_log`), and is capped so it can
-//! never outgrow the report collector's per-file read limit by much.
+//! whichever platform it came from, rotates once per process start with two
+//! levels of history, and is capped so it can never outgrow the report
+//! collector's per-file read limit by much. The collector walks this whole
+//! directory, so a new history slot reaches a report with no change there.
 
 use std::fs::{File, OpenOptions};
 use std::io::{BufWriter, Write as _};
@@ -24,6 +25,14 @@ pub const RUST_LOG_DIR_NAME: &str = "rust_logs";
 pub const RUST_LOG_FILE: &str = "warren.log";
 /// The previous process's file.
 pub const RUST_LOG_OLD_FILE: &str = "warren.old.log";
+/// The process before that one.
+///
+/// Two levels, not one: the log of a failing session is what a bug report is
+/// read for, and a user who reopens the app twice between the failure and the
+/// report used to hand us a file with nothing in it. That is exactly what
+/// happened to the 2026-09-10 Kaliningrad window, where the engine's side of
+/// 60 failed dials was gone by the time the report could be uploaded at all.
+pub const RUST_LOG_OLDEST_FILE: &str = "warren.old2.log";
 /// Size past which the live file is rotated in place: a long session must not
 /// fill the disk, and the collector reads the tail of at most 4 MiB anyway.
 pub const MAX_LIVE_BYTES: u64 = 4 * 1024 * 1024;
@@ -104,11 +113,17 @@ impl FileSink {
     }
 }
 
-/// `warren.log` becomes `warren.old.log` (replacing the previous history).
+/// Shifts the history down one slot: `warren.old.log` becomes
+/// `warren.old2.log` (replacing it), then `warren.log` becomes
+/// `warren.old.log`.
 fn rotate(dir: &Path) -> std::io::Result<()> {
     let live = dir.join(RUST_LOG_FILE);
+    let old = dir.join(RUST_LOG_OLD_FILE);
+    if old.exists() {
+        std::fs::rename(&old, dir.join(RUST_LOG_OLDEST_FILE))?;
+    }
     if live.exists() {
-        std::fs::rename(&live, dir.join(RUST_LOG_OLD_FILE))?;
+        std::fs::rename(&live, &old)?;
     }
     Ok(())
 }
@@ -192,6 +207,25 @@ mod tests {
         let old = std::fs::read_to_string(dir.path().join(RUST_LOG_OLD_FILE)).expect("old");
         assert_eq!(live, "second process\n");
         assert_eq!(old, "first process\n");
+    }
+
+    #[test]
+    fn two_process_starts_do_not_erase_the_oldest_history() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        for process in 0..3 {
+            let sink = FileSink::open(dir.path()).expect("opens");
+            sink.write_line(&format!("process {process}"));
+        }
+        let live = std::fs::read_to_string(dir.path().join(RUST_LOG_FILE)).expect("live");
+        let old = std::fs::read_to_string(dir.path().join(RUST_LOG_OLD_FILE)).expect("old");
+        let older = std::fs::read_to_string(dir.path().join(RUST_LOG_OLDEST_FILE)).expect("oldest");
+        assert_eq!(live, "process 2\n");
+        assert_eq!(old, "process 1\n");
+        assert_eq!(
+            older, "process 0\n",
+            "a user who reopens the app twice before filing a report must not \
+             lose the session that failed"
+        );
     }
 
     #[test]

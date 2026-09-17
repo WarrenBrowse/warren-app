@@ -22,6 +22,14 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Fixed
+- Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start
+  and then cuts it. The app asked the server for its address and waited for an answer that never
+  came, spending the whole attempt on that single wait, so it never reached the point where it
+  switches to TCP. It now gives up on a silent answer after six seconds, and sends the next attempt
+  over TCP on port 443 straight away.
+- Keep one more of the previous log files on Android. Reopening the app twice after a failed
+  connection used to erase the record a bug report is read for.
 
 
 ## [1.1.30] - 2026-09-12
