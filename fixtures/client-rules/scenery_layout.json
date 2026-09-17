@@ -1,0 +1,298 @@
+{
+  "_comment": "The connect-screen scenery layout, one formula every client computes the same way. The three layers are painted registered on one canvas of canvas_px and are always drawn at full screen width with no side crop, which keeps every edge element in frame (a country flag sits at x 0.929 to 0.945 of the canvas width, the burrow mouth starts at x 0.094). A phone is far taller than the canvas, and the rows below the canvas used to be filled with a mirrored, blurred copy of the landscape: that band showed as a hard full-width line and a smeared bottom quarter of the screen (measured on a 1080x2400 device: a 36-level luminance step at 0.7725 of the screen height, and a mean image gradient of 0.82 below it against 16.3 in the art above). It is replaced by a two-part draw of the layers themselves: each layer is drawn at natural scale down to ground_row, the first canvas row the burrow layer paints fully opaque across the whole width, and the rows below it are scaled vertically to reach that layer's bottom. Those rows are one uniform watercolour meadow (row-to-row mean delta 0.547 of 255 over the last 300 rows), so scaling only them continues the ground with no seam, no repetition and no blur. A band is never compressed, so on a screen the canvas already covers, every stretch is exactly 1 and the draw is the plain three-image stack the desktop has always done.",
+  "_comment_foreground": "The foreground pair (the burrow and Bula, registered to each other because Bula's cast shadow is painted in the burrow layer) slides DOWN over the landscape so Bula's feet land gap_dp above the connection card. It never slides UP: lifting it uncovers the rows the burrow exists to hide. When the feet would have to rise instead, the WHOLE canvas pans up by the same amount, which keeps all three layers registered and cannot uncover anything; that pan is capped at max_canvas_pan_dp, the band the header already draws over, so a pan can only ever crop rows the header was covering. Exactly one of canvas_pan_px and foreground_shift_px is ever non-zero. feet_row is Bula's painted body bottom, not the tip of his cast shadow, which is a separate flat-alpha tail reaching row 1326; aiming the slide at the tail put his feet 216 canvas rows higher than the code meant.",
+  "version": 1,
+  "canvas_px": [
+    1140,
+    1706
+  ],
+  "feet_row": 1124,
+  "feet_row_provenance": "bula.png: last row with alpha >= 128. The body ends at row 1114 at alpha >= 240; rows 1140 to 1326 are a flat alpha-120 cast shadow.",
+  "ground_row": 1301,
+  "ground_row_provenance": "terrier.png: the first row whose every column has alpha >= 250, contiguous to the last row (405 rows).",
+  "gap_dp": 16,
+  "max_canvas_pan_dp": 96,
+  "formula": [
+    "scale = screen_width / canvas_px[0]",
+    "canvas_height = canvas_px[1] * scale",
+    "feet_y = feet_row * scale",
+    "ground_y = ground_row * scale",
+    "want = card_top - gap_dp * density - feet_y",
+    "canvas_pan = -min(max_canvas_pan_dp * density, max(0, -want))",
+    "foreground_shift = min(canvas_height - ground_y, max(0, want - canvas_pan))",
+    "landscape_top = canvas_pan, landscape_bottom = canvas_pan + canvas_height (the landscape is never stretched)",
+    "foreground_top = canvas_pan + foreground_shift",
+    "foreground_bottom = max(foreground_top + canvas_height, screen_height)",
+    "the foreground draws rows [0, ground_row) at natural scale from its own top, then rows [ground_row, canvas_px[1]) scaled vertically to reach foreground_bottom",
+    "Bula's layer is never stretched: his body ends above ground_row",
+    "the slide is capped at canvas_height - ground_y so the burrow's opaque rows always still overlap the landscape above them, which is what lets the landscape be drawn whole",
+    "the stretch never touches Bula or the burrow mouth: ground_row sits below feet_row, so the band begins under Bula's feet and only the meadow is ever scaled. A 2.54x stretch of that meadow measured imperceptible against the natural rows above it, so the factor is bounded only by max_band_stretch, as a guard rather than as a visual limit."
+  ],
+  "cases": [
+    {
+      "name": "android_1080x2400",
+      "note": "the device the artifact was reported on",
+      "screen_px": [
+        1080,
+        2400
+      ],
+      "density": 2.625,
+      "card_top_dp": 587.4,
+      "expect": {
+        "scale": 0.95,
+        "canvas_height_px": 1616.21,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 383.68,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 383.68,
+        "landscape_bottom_px": 1616.21,
+        "foreground_bottom_px": 2400.0,
+        "foreground_band_top_px": 1616.21,
+        "foreground_band_stretch": 2.04,
+        "feet_above_card_px": 93.4,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "android_1080x2592_tall",
+      "note": "21:9, the tallest phone shape served",
+      "screen_px": [
+        1080,
+        2592
+      ],
+      "density": 2.625,
+      "card_top_dp": 660.6,
+      "expect": {
+        "scale": 0.95,
+        "canvas_height_px": 1616.21,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 383.68,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 383.68,
+        "landscape_bottom_px": 1616.21,
+        "foreground_bottom_px": 2592.0,
+        "foreground_band_top_px": 1616.21,
+        "foreground_band_stretch": 2.54,
+        "feet_above_card_px": 285.55,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "android_1080x1920_16x9",
+      "note": "an old 16:9 phone",
+      "screen_px": [
+        1080,
+        1920
+      ],
+      "density": 2.625,
+      "card_top_dp": 441.0,
+      "expect": {
+        "scale": 0.95,
+        "canvas_height_px": 1616.21,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 50.78,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 50.78,
+        "landscape_bottom_px": 1616.21,
+        "foreground_bottom_px": 1920.0,
+        "foreground_band_top_px": 1283.31,
+        "foreground_band_stretch": 1.66,
+        "feet_above_card_px": 42.0,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "android_2400x1080_landscape",
+      "note": "phone landscape: the canvas is far taller than the screen, the pan clamps at the header band",
+      "screen_px": [
+        2400,
+        1080
+      ],
+      "density": 2.625,
+      "card_top_dp": 84.0,
+      "expect": {
+        "scale": 2.11,
+        "canvas_height_px": 3591.58,
+        "canvas_pan_px": -252.0,
+        "foreground_shift_px": 0.0,
+        "landscape_top_px": -252.0,
+        "foreground_top_px": -252.0,
+        "landscape_bottom_px": 3339.58,
+        "foreground_bottom_px": 3339.58,
+        "foreground_band_top_px": 2486.95,
+        "foreground_band_stretch": 1.0,
+        "feet_above_card_px": -1893.82,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "iphone_17_pro_1206x2622",
+      "note": "iPhone 17 Pro, the simulator the captures came from",
+      "screen_px": [
+        1206,
+        2622
+      ],
+      "density": 3.0,
+      "card_top_dp": 547.0,
+      "expect": {
+        "scale": 1.06,
+        "canvas_height_px": 1804.77,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 403.93,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 403.93,
+        "landscape_bottom_px": 1804.77,
+        "foreground_bottom_px": 2622.0,
+        "foreground_band_top_px": 1780.25,
+        "foreground_band_stretch": 1.96,
+        "feet_above_card_px": 48.0,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "iphone_17_pro_max_1320x2868",
+      "note": "iPhone 17 Pro Max",
+      "screen_px": [
+        1320,
+        2868
+      ],
+      "density": 3.0,
+      "card_top_dp": 629.0,
+      "expect": {
+        "scale": 1.16,
+        "canvas_height_px": 1975.37,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 468.95,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 468.95,
+        "landscape_bottom_px": 1975.37,
+        "foreground_bottom_px": 2868.0,
+        "foreground_band_top_px": 1975.37,
+        "foreground_band_stretch": 1.9,
+        "feet_above_card_px": 116.58,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "iphone_se_750x1334",
+      "note": "the shortest phone served: the canvas pans up into the header band so Bula clears the card",
+      "screen_px": [
+        750,
+        1334
+      ],
+      "density": 2.0,
+      "card_top_dp": 340.0,
+      "expect": {
+        "scale": 0.66,
+        "canvas_height_px": 1122.37,
+        "canvas_pan_px": -91.47,
+        "foreground_shift_px": 0.0,
+        "landscape_top_px": -91.47,
+        "foreground_top_px": -91.47,
+        "landscape_bottom_px": 1030.89,
+        "foreground_bottom_px": 1334.0,
+        "foreground_band_top_px": 764.45,
+        "foreground_band_stretch": 2.14,
+        "feet_above_card_px": 32.0,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "ipad_11_1668x2388",
+      "note": "iPad portrait",
+      "screen_px": [
+        1668,
+        2388
+      ],
+      "density": 2.0,
+      "card_top_dp": 867.0,
+      "expect": {
+        "scale": 1.46,
+        "canvas_height_px": 2496.15,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 57.41,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 57.41,
+        "landscape_bottom_px": 2496.15,
+        "foreground_bottom_px": 2553.56,
+        "foreground_band_top_px": 1960.98,
+        "foreground_band_stretch": 1.0,
+        "feet_above_card_px": 32.0,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "ipad_11_landscape_2388x1668",
+      "note": "iPad landscape: the pan clamps, Bula's feet fall below the screen",
+      "screen_px": [
+        2388,
+        1668
+      ],
+      "density": 2.0,
+      "card_top_dp": 507.0,
+      "expect": {
+        "scale": 2.09,
+        "canvas_height_px": 3573.62,
+        "canvas_pan_px": -192.0,
+        "foreground_shift_px": 0.0,
+        "landscape_top_px": -192.0,
+        "foreground_top_px": -192.0,
+        "landscape_bottom_px": 3381.62,
+        "foreground_bottom_px": 3381.62,
+        "foreground_band_top_px": 2533.25,
+        "foreground_band_stretch": 1.0,
+        "feet_above_card_px": -1148.48,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "desktop_400x598",
+      "note": "the desktop window, whose ratio the canvas was authored for: both stretches clamp at 1",
+      "screen_px": [
+        400,
+        598
+      ],
+      "density": 1.0,
+      "card_top_dp": 478.0,
+      "expect": {
+        "scale": 0.35,
+        "canvas_height_px": 598.6,
+        "canvas_pan_px": 0.0,
+        "foreground_shift_px": 67.61,
+        "landscape_top_px": 0.0,
+        "foreground_top_px": 67.61,
+        "landscape_bottom_px": 598.6,
+        "foreground_bottom_px": 666.21,
+        "foreground_band_top_px": 524.11,
+        "foreground_band_stretch": 1.0,
+        "feet_above_card_px": 16.0,
+        "band_starts_below_feet": true
+      }
+    },
+    {
+      "name": "android_1080x2400_card_expanded",
+      "note": "the connection details expanded: the shift shrinks, nothing lifts",
+      "screen_px": [
+        1080,
+        2400
+      ],
+      "density": 2.625,
+      "card_top_dp": 360.0,
+      "expect": {
+        "scale": 0.95,
+        "canvas_height_px": 1616.21,
+        "canvas_pan_px": -161.84,
+        "foreground_shift_px": 0.0,
+        "landscape_top_px": -161.84,
+        "foreground_top_px": -161.84,
+        "landscape_bottom_px": 1454.37,
+        "foreground_bottom_px": 2400.0,
+        "foreground_band_top_px": 1070.68,
+        "foreground_band_stretch": 3.46,
+        "feet_above_card_px": 42.0,
+        "band_starts_below_feet": true
+      }
+    }
+  ],
+  "max_band_stretch": 5.0
+}

@@ -19,4 +19,7 @@ dependencies {
     implementation(libs.kotlin.test)
     implementation(libs.kotlinx.coroutines.test)
     implementation(libs.junit.jupiter.api)
+    // ClientRulesFixtures reads the shared client-rule fixtures, so every
+    // module's tests can replay them from one reader instead of a copy.
+    api(libs.kotlinx.serialization.json)
 }

@@ -9,11 +9,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * The cross-platform client-rule fixtures (`fixtures/client-rules/README.md` at
- * the repository root), read here the way the Rust crates and the desktop
- * unit suite read them: one file, several readers, no copy. Located by walking
- * up from the module's working directory, so the tests run from Gradle and
- * from an IDE alike.
+ * The cross-platform client-rule fixtures (`fixtures/client-rules/README.md` at the repository
+ * root), read here the way the Rust crates and the desktop unit suite read them: one file, several
+ * readers, no copy. Located by walking up from the module's working directory, so the tests run
+ * from Gradle and from an IDE alike.
  */
 object ClientRulesFixtures {
     private const val DIR = "fixtures/client-rules"
@@ -33,6 +32,17 @@ object ClientRulesFixtures {
 
     fun JsonObject.cases(key: String): List<JsonObject> =
         (this[key] ?: error("`$key` is missing in $this")).jsonArray.map { it.jsonObject }
+
+    fun JsonObject.float(key: String): Float =
+        (this[key] ?: error("`$key` is missing in $this")).jsonPrimitive.content.toFloat()
+
+    fun JsonObject.floats(key: String): List<Float> =
+        (this[key] ?: error("`$key` is missing in $this")).jsonArray.map {
+            it.jsonPrimitive.content.toFloat()
+        }
+
+    fun JsonObject.obj(key: String): JsonObject =
+        (this[key] ?: error("`$key` is missing in $this")).jsonObject
 
     private fun dir(): File {
         var dir: File? = File("").absoluteFile
