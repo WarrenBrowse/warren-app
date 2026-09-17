@@ -67,6 +67,14 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default is `tools platform-tools`, and the legacy
+          # `tools` package is gone from Google's repository: sdkmanager now
+          # answers "Failed to find package 'tools'" and the step fails. That
+          # turned main red on 2026-09-17 with nothing in this repo having
+          # changed since the last green run on 09-08. `cmdline-tools`
+          # replaced it and the action installs it by itself.
+          packages: platform-tools
 
       # Checks out the pinned sibling engines (warrenguard, warren-sdk-rs,
       # warren-contract) that the Rust workspace consumes by path.
