@@ -13,10 +13,9 @@ import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * The connect-screen primitives Android draws with, enumerated against the
- * generated desktop tokens: a "let me just bump this to 16" edit fails here on
- * the platform that moved. Where Android deliberately deviates, the deviation
- * is pinned next to the desktop value it deviates from.
+ * The connect-screen primitives Android draws with, enumerated against the generated desktop
+ * tokens: a "let me just bump this to 16" edit fails here on the platform that moved. Where Android
+ * deliberately deviates, the deviation is pinned next to the desktop value it deviates from.
  */
 class DesignParityTest {
 
@@ -24,7 +23,10 @@ class DesignParityTest {
 
     @Test
     fun `the connection card keeps the desktop geometry`() {
-        assertEquals(DesignTokens.ConnectionCard.PaddingVertical, dims.connectionCardVerticalPadding)
+        assertEquals(
+            DesignTokens.ConnectionCard.PaddingVertical,
+            dims.connectionCardVerticalPadding,
+        )
         assertEquals(DesignTokens.ConnectionCard.PaddingHorizontal, dims.mediumPadding)
         assertEquals(DesignTokens.ConnectionCard.Radius, dims.connectionCardRadius)
         assertEquals(DesignTokens.Radius.Radius16, dims.connectionCardRadius)
@@ -43,13 +45,22 @@ class DesignParityTest {
     }
 
     @Test
-    fun `the badge stack gap is the documented touch-row deviation`() {
-        // Desktop stacks 22 px pills 5 px apart for a pointer. Every Android
-        // chip sits in its own 48 dp touch row, so the pills already fall 26 dp
-        // apart at a zero row gap; the desktop value is unreachable without
-        // shrinking the touch boxes under the platform floor.
+    fun `the badge stack gap is the desktop gap, reachable because chips carry no touch inflation`() {
+        // Measured on a 1080x2400 emulator before this was fixed: the pills fell
+        // exactly 48.00 dp centre to centre and 27.81 dp edge to edge, because
+        // each chip sat in its own minimum-interactive row. Desktop stacks its
+        // pills 5 px apart, so the stack read as six times too loose.
+        //
+        // The row inflation is off for the chip stack (chipInteractiveMinSize),
+        // which makes the desktop gap reachable exactly. The pills stay the
+        // desktop size, so a chip's own target is about 20 dp tall; WCAG 2.2 AA
+        // 2.5.8 is met through its spacing clause, since a 24 dp circle centred
+        // on one pill reaches no other pill's circle once the gap is 5 dp (the
+        // centres fall 25.2 dp apart). The chips are 100 dp wide shortcuts and
+        // every one of them is also reachable from Settings.
         assertEquals(5.dp, DesignTokens.ConnectionCard.BadgeGap)
-        assertEquals(0.dp, dims.chipStackGap)
+        assertEquals(DesignTokens.ConnectionCard.BadgeGap, dims.chipStackGap)
+        assertEquals(0.dp, dims.chipInteractiveMinSize)
     }
 
     @Test
@@ -65,8 +76,14 @@ class DesignParityTest {
     fun `the notification banner keeps the desktop card`() {
         assertEquals(DesignTokens.NotificationBanner.Radius, dims.notificationBannerRadius)
         assertEquals(DesignTokens.NotificationBanner.EdgeWidth, dims.notificationBannerEdge)
-        assertEquals(DesignTokens.NotificationBanner.PaddingVertical, dims.notificationBannerVerticalPadding)
-        assertEquals(DesignTokens.NotificationBanner.PaddingStart, dims.notificationBannerStartPadding)
+        assertEquals(
+            DesignTokens.NotificationBanner.PaddingVertical,
+            dims.notificationBannerVerticalPadding,
+        )
+        assertEquals(
+            DesignTokens.NotificationBanner.PaddingStart,
+            dims.notificationBannerStartPadding,
+        )
         assertEquals(DesignTokens.NotificationBanner.PaddingEnd, dims.notificationBannerEndPadding)
         assertEquals(DesignTokens.NotificationBanner.Elevation, dims.notificationBannerElevation)
     }

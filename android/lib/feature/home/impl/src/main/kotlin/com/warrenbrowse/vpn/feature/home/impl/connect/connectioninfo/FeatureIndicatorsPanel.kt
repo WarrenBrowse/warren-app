@@ -11,7 +11,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,47 +66,53 @@ fun AlwaysExpandedFeatureIndicators(
             natPmpStatus = natPmpStatus,
         )
 
-    // Desktop stacks the badges in a left-aligned column. Each chip here is a
-    // 48 dp touch row around a 22 dp pill, so the rows touch and the pills
-    // fall 26 dp apart; the desktop's 5 px is not reachable without shrinking
-    // the touch boxes.
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(Dimens.chipStackGap),
-        horizontalAlignment = Alignment.Start,
+    // Desktop stacks the badges in a left-aligned column 5 px apart. The
+    // minimum-interactive row is off for this stack so a chip's layout height
+    // is its own pill and that 5 px is what the user sees; left on, it padded
+    // every chip to 48 dp and the pills fell 27.81 dp apart (measured on a
+    // 1080x2400 screen). Why a pill-sized target is still honest here:
+    // DesignParityTest.
+    CompositionLocalProvider(
+        LocalMinimumInteractiveComponentSize provides Dimens.chipInteractiveMinSize
     ) {
-        chips.forEach { chip ->
-            val sharedTransitionScope = LocalSharedTransitionScope.current
-            val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(Dimens.chipStackGap),
+            horizontalAlignment = Alignment.Start,
+        ) {
+            chips.forEach { chip ->
+                val sharedTransitionScope = LocalSharedTransitionScope.current
+                val animatedVisibilityScope = LocalNavAnimatedVisibilityScope.current
 
-            with(sharedTransitionScope) {
-                WarrenFeatureChip(
-                    text = chip.label,
-                    onClick = { onNavigateToFeature(chip.indicator) },
-                    isError = chip.isError,
-                    modifier =
-                        if (this@with != null && animatedVisibilityScope != null) {
-                            Modifier.sharedBounds(
-                                rememberSharedContentState(
-                                    key =
-                                        if (chip.indicator == FeatureIndicator.DAITA_MULTIHOP) {
-                                            FeatureIndicator.DAITA
-                                        } else {
-                                            chip.indicator
-                                        }
-                                ),
-                                animatedVisibilityScope = animatedVisibilityScope,
-                                // This flag should be set to `true` (default), which would allow
-                                // the element to animate above all other views. However, it makes
-                                // the expand/collapse animation janky.
-                                renderInOverlayDuringTransition = false,
-                                enter = fadeIn(tween(easing = EaseInQuart)),
-                                exit = fadeOut(tween(easing = EaseOutQuad)),
-                            )
-                        } else {
-                            Modifier
-                        },
-                )
+                with(sharedTransitionScope) {
+                    WarrenFeatureChip(
+                        text = chip.label,
+                        onClick = { onNavigateToFeature(chip.indicator) },
+                        isError = chip.isError,
+                        modifier =
+                            if (this@with != null && animatedVisibilityScope != null) {
+                                Modifier.sharedBounds(
+                                    rememberSharedContentState(
+                                        key =
+                                            if (chip.indicator == FeatureIndicator.DAITA_MULTIHOP) {
+                                                FeatureIndicator.DAITA
+                                            } else {
+                                                chip.indicator
+                                            }
+                                    ),
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                    // This flag should be set to `true` (default), which would
+                                    // allow the element to animate above all other views. However,
+                                    // it makes the expand/collapse animation janky.
+                                    renderInOverlayDuringTransition = false,
+                                    enter = fadeIn(tween(easing = EaseInQuart)),
+                                    exit = fadeOut(tween(easing = EaseOutQuad)),
+                                )
+                            } else {
+                                Modifier
+                            },
+                    )
+                }
             }
         }
     }

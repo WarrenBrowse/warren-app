@@ -26,13 +26,19 @@ data class Dimensions(
     val connectionCardMaxWidth: Dp = 480.dp,
     // Desktop ConnectionPanel: radius16 on the glass card.
     val connectionCardRadius: Dp = 16.dp,
-    // Desktop FeatureIndicator: 2 x 8 padding, radius8. The desktop stacks its
-    // 22 px pills 5 px apart; here every chip sits in a 48 dp touch row, so the
-    // gap is between rows, and the pills already fall 26 dp apart at 0.
+    // Desktop FeatureIndicator: 2 x 8 padding, radius8, pills stacked 5 px
+    // apart (ConnectionCard.BadgeGap).
     val chipVerticalPadding: Dp = 2.dp,
     val chipHorizontalPadding: Dp = 8.dp,
     val chipCornerRadius: Dp = 8.dp,
-    val chipStackGap: Dp = 0.dp,
+    val chipStackGap: Dp = 5.dp,
+    // The chip stack turns the minimum-interactive row off (0.dp is Material's
+    // documented "no enforcement"), so a chip's layout height is its pill and
+    // the 5 dp gap above is the gap the user sees. With the row left at 48 dp
+    // the pills measured 27.81 dp apart on a 1080x2400 screen, six times the
+    // desktop gap, which is what the stack was reported for. DesignParityTest
+    // carries why that is still an honest target.
+    val chipInteractiveMinSize: Dp = 0.dp,
     // Desktop AppMainFooter: 7 x 16.
     val footerVerticalPadding: Dp = 7.dp,
     // Desktop NotificationBanner: radius 14, 2 px status edge, 10 12 10 16 padding.
