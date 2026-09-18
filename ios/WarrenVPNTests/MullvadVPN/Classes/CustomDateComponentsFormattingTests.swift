@@ -39,7 +39,10 @@ class CustomDateComponentsFormattingTests: XCTestCase {
             unitsStyle: .full
         )
 
-        XCTAssertEqual(result, "Less than a day")
+        // The branch under test is "less than a day", not the English
+        // words for it: the string is translated, so pinning them here
+        // would make this pass in one language only.
+        XCTAssertEqual(result, NSLocalizedString("Less than a day", comment: ""))
     }
 
     func testLessThanTwoYearsFormatting() throws {
@@ -72,7 +75,10 @@ class CustomDateComponentsFormattingTests: XCTestCase {
             unitsStyle: .full
         )
 
-        XCTAssertEqual(result, "Less than a day")
+        // The branch under test is "less than a day", not the English
+        // words for it: the string is translated, so pinning them here
+        // would make this pass in one language only.
+        XCTAssertEqual(result, NSLocalizedString("Less than a day", comment: ""))
     }
 
     private func makeDateRange(addingComponents dateComponents: DateComponents) -> (Date, Date) {

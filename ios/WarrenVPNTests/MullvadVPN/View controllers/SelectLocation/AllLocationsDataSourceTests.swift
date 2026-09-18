@@ -35,7 +35,10 @@ class AllLocationsDataSourceTests: XCTestCase {
     func testAddAutomaticLocation() throws {
         let automaticNode = dataSource.nodes.compactMap { $0.asAutomaticLocationNode }.first!
 
-        XCTAssertTrue(automaticNode.name == "Automatic")
+        // The node carries the translated label, so pinning the English words
+        // here would make this test pass in one language only.
+        XCTAssertEqual(automaticNode.name, NSLocalizedString("Automatic", comment: ""))
+        XCTAssertFalse(automaticNode.name.isEmpty)
         XCTAssertTrue(automaticNode.code == "automatic")
         XCTAssertTrue(automaticNode.locations.isEmpty)
         XCTAssertTrue(automaticNode.locationInfo == nil)

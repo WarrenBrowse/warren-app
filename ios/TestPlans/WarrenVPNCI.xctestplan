@@ -10,6 +10,8 @@
   ],
   "defaultOptions" : {
     "defaultTestExecutionTimeAllowance" : 60,
+    "language" : "en",
+    "region" : "US",
     "targetForVariableExpansion" : {
       "containerPath" : "container:WarrenVPN.xcodeproj",
       "identifier" : "58CE5E5F224146200008646E",

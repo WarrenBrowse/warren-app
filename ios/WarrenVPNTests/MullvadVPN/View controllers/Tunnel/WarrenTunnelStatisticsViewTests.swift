@@ -41,14 +41,23 @@ final class WarrenTunnelStatisticsViewTests: XCTestCase {
         XCTAssertFalse(s.isEmpty)
     }
 
-    func test_formatBytes_nonZero_includesUnit() {
-        let s = WarrenTunnelStatisticsView.formatBytes(1_234_567)
-        // Binary count style → either "1.2 MB" or "1,2 MB" depending
-        // on the test runner's locale. Just assert the unit shows up.
-        XCTAssertTrue(
-            s.contains("MB") || s.contains("KB") || s.contains("GB"),
-            "Expected a binary unit in \(s)"
-        )
+    /// The unit is translated ("MB" in English, "Mo" in French), so naming the
+    /// English abbreviations here only ever tested one language. What the
+    /// formatter owes its caller is a unit, and a unit that climbs with the
+    /// count; both hold in every language.
+    func test_formatBytes_carriesAUnitThatScalesWithTheCount() {
+        func unit(_ formatted: String) -> String {
+            formatted.filter { !$0.isNumber && !$0.isWhitespace && $0 != "." && $0 != "," }
+        }
+
+        let kilo = WarrenTunnelStatisticsView.formatBytes(2_048)
+        let mega = WarrenTunnelStatisticsView.formatBytes(1_234_567)
+        let giga = WarrenTunnelStatisticsView.formatBytes(3_221_225_472)
+
+        XCTAssertFalse(unit(kilo).isEmpty, "no unit in \(kilo)")
+        XCTAssertFalse(unit(mega).isEmpty, "no unit in \(mega)")
+        XCTAssertNotEqual(unit(kilo), unit(mega), "2 KiB and 1.2 MiB print the same unit")
+        XCTAssertNotEqual(unit(mega), unit(giga), "1.2 MiB and 3 GiB print the same unit")
     }
 
     // MARK: - struct equality
