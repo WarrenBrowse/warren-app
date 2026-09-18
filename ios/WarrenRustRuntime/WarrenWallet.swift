@@ -77,6 +77,16 @@ public final class WarrenWallet {
         let trimmed = mnemonic.trimmingCharacters(in: .whitespacesAndNewlines)
         // 32-byte seed buffer (filled by FFI on success).
         var seedBuffer = [UInt8](repeating: 0, count: 32)
+        // Every exit wipes it, including the successful one, which used to
+        // walk out leaving the seed in the buffer. `Data(seedBuffer)` below is
+        // already its own copy by the time this runs. `memset_s` rather than a
+        // loop: a loop writing bytes nobody reads again is exactly what a
+        // compiler is allowed to delete.
+        defer {
+            seedBuffer.withUnsafeMutableBufferPointer { buffer in
+                memset_s(buffer.baseAddress, buffer.count, 0, buffer.count)
+            }
+        }
         let seedStatus: Int32 = trimmed.withCString { cstr in
             seedBuffer.withUnsafeMutableBufferPointer { ptr in
                 warren_wallet_seed_from_mnemonic(cstr, ptr.baseAddress)
@@ -93,8 +103,6 @@ public final class WarrenWallet {
             }
         }
         guard pubkeyStatus == 0 else {
-            // Wipe the seed before throwing.
-            for i in 0..<seedBuffer.count { seedBuffer[i] = 0 }
             throw WarrenWalletError.ffi(pubkeyStatus)
         }
         return WarrenWallet(

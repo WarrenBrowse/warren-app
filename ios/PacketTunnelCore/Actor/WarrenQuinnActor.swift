@@ -159,7 +159,11 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// to keep the memory window narrow.
     public func bindWalletSigningSeed(_ seed: Data) {
         stateLock.lock()
-        self.walletSigningSeed = seed
+        // A fresh, uniquely-referenced copy: `Data` is copy-on-write, so
+        // assigning the caller's value shares its buffer, and wiping it in
+        // `stop()` would then forge a copy the caller still holds rather than
+        // erase the one it meant to.
+        self.walletSigningSeed = Data(seed)
         stateLock.unlock()
     }
 
@@ -351,7 +355,12 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         stateLock.lock()
         let adapter = self.adapter
         // Clear the wallet seed so its memory window is narrow.
-        // bindWalletSigningSeed will re-push on next start.
+        // bindWalletSigningSeed will re-push on next start. Dropping the
+        // reference alone leaves the 32 bytes in the freed allocation, so they
+        // are zeroed first, the way `WarrenWallet.deinit` does.
+        self.walletSigningSeed?.withUnsafeMutableBytes { buffer in
+            memset_s(buffer.baseAddress, buffer.count, 0, buffer.count)
+        }
         self.walletSigningSeed = nil
         self.connectionContext = nil
         stateLock.unlock()

@@ -554,17 +554,25 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         var signingSeedBytes = try Self.fixedKeyBytes(
             config.walletSigningKey, count: 32, field: "walletSigningKey"
         )
+        var signingSeedTuple = tupleFrom32(signingSeedBytes)
         defer {
             // Wipe sensitive material before returning. The FFI has
             // copied anything it needs (the Rust struct holds the seed
             // by value, not by pointer).
-            for i in 0..<signingSeedBytes.count { signingSeedBytes[i] = 0 }
+            //
+            // `memset_s` rather than a loop: writing bytes nobody reads again
+            // is exactly what a compiler may delete. And the TUPLE is wiped
+            // too, not only the array it came from: `tupleFrom32` makes a
+            // second copy of the seed that outlived the first one's wipe.
+            signingSeedBytes.withUnsafeMutableBufferPointer { buffer in
+                memset_s(buffer.baseAddress, buffer.count, 0, buffer.count)
+            }
+            signingSeedTuple = tupleFrom32([UInt8](repeating: 0, count: 32))
         }
 
         let bypass = config.bypassCidrs
         let natPmpFlag: UInt8 = config.natPmpEnabled ? 1 : 0
         let exitPubkeyTuple = tupleFrom32(exitPubkeyBytes)
-        let signingSeedTuple = tupleFrom32(signingSeedBytes)
 
         // Pre-compute the DAITA bytes-tuple if present. The C struct
         // takes it by value so no pinning is needed below.
