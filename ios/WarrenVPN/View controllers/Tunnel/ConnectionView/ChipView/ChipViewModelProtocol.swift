@@ -13,41 +13,6 @@ protocol ChipViewModelProtocol: ObservableObject {
     func onPressed(item: ChipModel)
 }
 
-extension ChipViewModelProtocol {
-    func chipsToAdd(forContainerWidth containerWidth: CGFloat) -> (chips: [ChipModel], isOverflowing: Bool) {
-        var chipsToAdd = [ChipModel]()
-        var isOverflowing = false
-
-        let moreTextWidth =
-            String(format: NSLocalizedString("%d more...", comment: ""), chips.count)
-            .width(using: .preferredFont(forTextStyle: .subheadline)) + 4  // Some extra to be safe.
-        var totalChipsWidth: CGFloat = 0
-
-        for (index, chip) in chips.enumerated() {
-            let textWidth = chip.name.width(using: .preferredFont(forTextStyle: .subheadline))
-            let chipWidth =
-                textWidth
-                + UIMetrics.FeatureIndicators.chipViewHorizontalPadding * 2
-                + UIMetrics.FeatureIndicators.chipViewTrailingMargin
-            let isLastChip = index == chips.count - 1
-
-            totalChipsWidth += chipWidth
-
-            let chipWillFitWithMoreText = (totalChipsWidth + moreTextWidth) <= containerWidth
-            let chipWillFit = totalChipsWidth <= containerWidth
-
-            guard (chipWillFit && isLastChip) || chipWillFitWithMoreText else {
-                isOverflowing = true
-                break
-            }
-
-            chipsToAdd.append(chip)
-        }
-
-        return (chipsToAdd, isOverflowing)
-    }
-}
-
 class MockFeatureIndicatorsViewModel: ChipViewModelProtocol {
     func onPressed(item: ChipModel) {}
 

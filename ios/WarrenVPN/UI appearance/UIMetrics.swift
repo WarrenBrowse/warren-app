@@ -148,8 +148,10 @@ enum UIMetrics {
 
     enum FeatureIndicators {
         static let chipViewHorizontalPadding: CGFloat = 8
-        static let chipViewTrailingMargin: CGFloat = 6
         static let chipViewIconTextSpacing: CGFloat = 2
+        /// Air between two stacked pills. Named once per client: desktop's
+        /// `gap: '5px'`, Android's `Dimens.chipStackGap`.
+        static let chipStackGap: CGFloat = 5
     }
 }
 

@@ -31,13 +31,9 @@ struct ConnectionView: View {
 
             // Active features float ABOVE the glass card as a stack of pills
             // over the scenery (desktop StyledFeatureBadges), not inside it.
-            ChipContainerView(
-                viewModel: indicatorsViewModel,
-                tunnelState: connectionViewModel.tunnelStatus.state,
-                isExpanded: .constant(true)
-            )
-            .padding(.horizontal, 16)
-            .showIf(hasFeatureIndicators && connectionViewModel.showsConnectionDetails)
+            ChipContainerView(viewModel: indicatorsViewModel)
+                .padding(.horizontal, 16)
+                .showIf(hasFeatureIndicators && connectionViewModel.showsConnectionDetails)
 
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 0) {
