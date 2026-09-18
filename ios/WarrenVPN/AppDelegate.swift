@@ -461,6 +461,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         NotificationManager.shared.notificationProviders = [
             LatestChangesNotificationProvider(appPreferences: appPreferences),
             TunnelStatusNotificationProvider(tunnelManager: tunnelManager),
+            WarrenConnectingStuckNotificationProvider(tunnelManager: tunnelManager),
             AccountExpirySystemNotificationProvider(
                 isNotificationEnabled: appPreferences.notificationSettings.isAccountNotificationEnabled,
                 notificationSettingsUpdater: notificationSettingsUpdater, tunnelManager: tunnelManager),

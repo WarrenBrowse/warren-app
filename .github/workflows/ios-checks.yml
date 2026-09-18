@@ -60,7 +60,11 @@ jobs:
     # 6.2 type, and the Xcode 16.4 the shared setup action pins cannot compile
     # it. CI has to build with the toolchain the app is actually written for.
     runs-on: macos-26
-    timeout-minutes: 60
+    # A cold run compiles warren-ios for the simulator target from scratch,
+    # which takes most of an hour on a hosted macOS runner. The build-env
+    # action warms Swatinem/rust-cache, so a warm run is a fraction of that;
+    # this ceiling is sized for the cold one rather than flaking on it.
+    timeout-minutes: 120
     env:
       SOURCE_PACKAGES_PATH: .spm
     steps:

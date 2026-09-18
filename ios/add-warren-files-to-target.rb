@@ -58,6 +58,10 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # "TROUBLE CONNECTING?", the banner a stalled connect never had.
+  "WarrenVPN/Notifications/Notification Providers/WarrenConnectingStuckNotificationProvider.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Notifications/WarrenConnectingStuckNotificationProviderTests.swift" => "WarrenVPNTests",
+
   # Where a typed forum code is routed, and what the journal says about it.
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumCodeFlowTests.swift" => "WarrenVPNTests",
 
