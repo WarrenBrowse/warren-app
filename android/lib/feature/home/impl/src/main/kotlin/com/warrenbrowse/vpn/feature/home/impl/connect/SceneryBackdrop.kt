@@ -38,6 +38,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -75,8 +76,10 @@ private const val SCRIM_ALPHA = 0.6f
  * the landscape blurs and slowly zooms ("the destination is not in focus yet"); once protected Bula
  * ducks into the burrow.
  *
- * Every layer is drawn at full screen width with no side crop, so the country flag and the burrow
- * stay in frame, and in two parts: natural down to the row where the burrow layer turns fully
+ * No layer is ever side cropped, so the country flag and the burrow stay in frame. They fill the
+ * screen width wherever the screen is tall enough to carry the flag down to Bula's feet at that
+ * scale, and are centred at a smaller scale otherwise; each is drawn in two parts: natural down to
+ * the row where the burrow layer turns fully
  * opaque, then vertically scaled below it so the painted ground itself continues to the bottom of
  * the screen. That replaced a mirrored, blurred continuation band which read as a hard full-width
  * line and a smeared bottom quarter of the screen. The geometry is [SceneryLayout], replayed from
@@ -154,6 +157,7 @@ fun SceneryBackdrop(
         Box(
             Modifier.fillMaxSize().drawBehind {
                 val placement = placement(cardTop())
+                if (!placement.showsForeground) return@drawBehind
                 drawSceneryLayer(
                     image = burrow,
                     top = placement.foregroundTop,
@@ -164,6 +168,7 @@ fun SceneryBackdrop(
         Box(
             Modifier.fillMaxSize().drawBehind {
                 val placement = placement(cardTop())
+                if (!placement.showsForeground) return@drawBehind
                 // Bula's body ends above the split row, so his layer is never stretched.
                 drawWholeCanvas(
                     image = bula,
@@ -199,9 +204,40 @@ private fun DrawScope.drawWholeCanvas(
         image = image,
         srcOffset = IntOffset.Zero,
         srcSize = IntSize(image.width, image.height),
-        dstOffset = IntOffset(0, top.roundToInt()),
-        dstSize = IntSize(size.width.roundToInt(), placement.canvasHeight.roundToInt()),
+        dstOffset = IntOffset(placement.canvasLeft.roundToInt(), top.roundToInt()),
+        dstSize = IntSize(placement.canvasWidth.roundToInt(), placement.canvasHeight.roundToInt()),
         alpha = alpha,
+    )
+}
+
+/**
+ * The margins either side of a canvas too narrow for the screen, each carrying the colour of the
+ * canvas's own nearest column out to the screen edge. The column is sampled
+ * [SceneryLayout.BAND_OVERSCAN_COLUMNS] in, past the painter's paper edge, so what gets extended is
+ * the picture rather than the bare paper it fades into. Draws nothing on a portrait phone, where the
+ * canvas is the full width.
+ */
+private fun DrawScope.drawSideMargins(image: ImageBitmap, placement: SceneryLayout.Placement) {
+    val margin = placement.canvasLeft
+    if (margin <= 0.5f) return
+    val inset =
+        (SceneryLayout.BAND_OVERSCAN_COLUMNS / SceneryLayout.CANVAS_WIDTH * image.width).roundToInt()
+    if (inset + 1 >= image.width) return
+    val width = ceil(margin).toInt()
+    val height = size.height.roundToInt()
+    drawImage(
+        image = image,
+        srcOffset = IntOffset(inset, 0),
+        srcSize = IntSize(1, image.height),
+        dstOffset = IntOffset.Zero,
+        dstSize = IntSize(width, height),
+    )
+    drawImage(
+        image = image,
+        srcOffset = IntOffset(image.width - inset - 1, 0),
+        srcSize = IntSize(1, image.height),
+        dstOffset = IntOffset(size.width.roundToInt() - width, 0),
+        dstSize = IntSize(width, height),
     )
 }
 
@@ -225,8 +261,8 @@ private fun DrawScope.drawSceneryLayer(
         image = image,
         srcOffset = IntOffset.Zero,
         srcSize = IntSize(image.width, split),
-        dstOffset = IntOffset(0, top.roundToInt()),
-        dstSize = IntSize(size.width.roundToInt(), placement.groundOffset.roundToInt()),
+        dstOffset = IntOffset(placement.canvasLeft.roundToInt(), top.roundToInt()),
+        dstSize = IntSize(placement.canvasWidth.roundToInt(), placement.groundOffset.roundToInt()),
         alpha = alpha,
     )
     drawImage(
@@ -347,6 +383,7 @@ private fun LandscapeCrossfade(
             }
             .drawBehind {
                 val placement = placement(cardTop())
+                drawSideMargins(frontImage, placement)
                 if (back != front) {
                     drawWholeCanvas(backImage, placement.landscapeTop, placement)
                 }

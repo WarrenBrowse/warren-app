@@ -385,6 +385,14 @@ final class SceneryViewController: UIViewController {
     private let foregroundView = SceneryViewController.makeFullBleedImageView()
     private let foregroundGroundView = SceneryViewController.makeFullBleedImageView()
     private let bulaView = SceneryViewController.makeFullBleedImageView()
+    // A screen too short for the canvas at full width gets a narrower, centred
+    // canvas, and these carry its own edge colour out to the screen edges. Each
+    // shows one canvas column, sampled past the painter's paper margin, stretched
+    // across its margin: the join is exact by construction and there is nothing
+    // to invent. Both are empty on every portrait phone, where the canvas is the
+    // full width.
+    private let leftMarginView = SceneryViewController.makeFullBleedImageView()
+    private let rightMarginView = SceneryViewController.makeFullBleedImageView()
 
     /// The connection card's top edge in this view's coordinates, or nil before
     /// the card has been laid out. Drives the whole scene's placement.
@@ -446,6 +454,11 @@ final class SceneryViewController: UIViewController {
         connectingDimView.alpha = 0
         connectingDimView.isUserInteractionEnabled = false
 
+        // Behind everything, so the canvas covers them wherever it reaches.
+        [leftMarginView, rightMarginView].forEach {
+            $0.contentMode = .scaleToFill
+            view.addSubview($0)
+        }
         [backLandscapeView, frontLandscapeView, blurredLandscapeView, connectingDimView].forEach {
             landscapeContainer.addSubview($0)
         }
@@ -518,6 +531,69 @@ final class SceneryViewController: UIViewController {
         return parts
     }
 
+    /// One canvas column, taken past the painter's paper margin, as an image a
+    /// margin view can stretch across itself. Cached per landscape: it is two
+    /// columns of a picture that does not change while it is on screen.
+    private static func edgeColumns(of imageName: String) -> (left: UIImage, right: UIImage)? {
+        if let cached = edgeColumnCache.object(forKey: imageName as NSString) {
+            return (cached.left, cached.right)
+        }
+        guard let source = UIImage(named: imageName), let cgImage = source.cgImage else {
+            return nil
+        }
+        let inset = Int(
+            (SceneryLayout.bandOverscanColumns / SceneryLayout.canvasWidth
+                * CGFloat(cgImage.width)).rounded())
+        let width = max(1, inset)
+        guard inset + width <= cgImage.width,
+            let left = cgImage.cropping(
+                to: CGRect(x: inset, y: 0, width: 1, height: cgImage.height)),
+            let right = cgImage.cropping(
+                to: CGRect(
+                    x: cgImage.width - inset - 1, y: 0, width: 1, height: cgImage.height))
+        else { return nil }
+        let pair = EdgeColumns(
+            left: UIImage(cgImage: left, scale: source.scale, orientation: source.imageOrientation),
+            right: UIImage(cgImage: right, scale: source.scale, orientation: source.imageOrientation)
+        )
+        edgeColumnCache.setObject(pair, forKey: imageName as NSString)
+        return (pair.left, pair.right)
+    }
+
+    private final class EdgeColumns {
+        let left: UIImage
+        let right: UIImage
+        init(left: UIImage, right: UIImage) {
+            self.left = left
+            self.right = right
+        }
+    }
+
+    private static let edgeColumnCache = NSCache<NSString, EdgeColumns>()
+
+    private func layoutSideMargins(placement: SceneryLayout.Placement, in bounds: CGRect) {
+        let margin = placement.canvasLeft
+        guard margin > 0.5, let imageName = currentImageName,
+            let columns = Self.edgeColumns(of: imageName)
+        else {
+            leftMarginView.isHidden = true
+            rightMarginView.isHidden = true
+            return
+        }
+        leftMarginView.isHidden = false
+        rightMarginView.isHidden = false
+        if leftMarginView.image !== columns.left {
+            leftMarginView.image = columns.left
+            rightMarginView.image = columns.right
+        }
+        // Full screen height: the columns run the whole canvas, and past its top
+        // and bottom the nearest row is still the right colour to continue.
+        leftMarginView.frame = CGRect(x: 0, y: 0, width: margin.rounded(.up), height: bounds.height)
+        rightMarginView.frame = CGRect(
+            x: bounds.width - margin.rounded(.up), y: 0,
+            width: margin.rounded(.up), height: bounds.height)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
@@ -535,8 +611,7 @@ final class SceneryViewController: UIViewController {
         // SceneryLayout's, the formula the Android and desktop clients replay
         // from the same fixture.
         let placement = SceneryLayout.placement(in: bounds, cardTop: cardTop)
-        let landscapeRect = placement.canvasRect(
-            width: bounds.width, top: placement.landscapeTop)
+        let landscapeRect = placement.canvasRect(top: placement.landscapeTop)
         [backLandscapeView, frontLandscapeView, blurredLandscapeView, connectingDimView].forEach {
             $0.frame = landscapeRect
         }
@@ -553,8 +628,17 @@ final class SceneryViewController: UIViewController {
         // nothing below the canvas is ever left to fill.
         let headHeight = placement.groundOffset
         foregroundView.frame = CGRect(
-            x: 0, y: placement.foregroundTop, width: bounds.width, height: headHeight)
+            x: placement.canvasLeft, y: placement.foregroundTop,
+            width: placement.canvasWidth, height: headHeight)
         foregroundGroundView.frame = placement.bandRect
+
+        // Where the pair cannot clear the card, the country art stands alone rather than carrying a
+        // rabbit sunk to the ears behind it.
+        [foregroundView, foregroundGroundView, bulaView].forEach {
+            $0.isHidden = !placement.showsForeground
+        }
+
+        layoutSideMargins(placement: placement, in: bounds)
 
         // Bula rides the same placement as the burrow he sits on, registered to
         // it, and is never stretched: his body ends above the split row. Placed
@@ -562,7 +646,7 @@ final class SceneryViewController: UIViewController {
         // (setting frame under a transform is undefined).
         place(
             bulaView,
-            at: placement.canvasRect(width: bounds.width, top: placement.foregroundTop))
+            at: placement.canvasRect(top: placement.foregroundTop))
         bulaView.transform = bulaTransform(visible: bulaVisible)
 
         CATransaction.begin()

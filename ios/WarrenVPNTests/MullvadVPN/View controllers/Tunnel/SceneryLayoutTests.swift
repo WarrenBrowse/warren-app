@@ -57,6 +57,7 @@ final class SceneryLayoutTests: XCTestCase {
         XCTAssertEqual(SceneryLayout.groundRow, try number(fixture, "ground_row"))
         XCTAssertEqual(SceneryLayout.gap, try number(fixture, "gap_dp"))
         XCTAssertEqual(SceneryLayout.maxCanvasPan, try number(fixture, "max_canvas_pan_dp"))
+        XCTAssertEqual(SceneryLayout.flagTopRow, try number(fixture, "flag_top_row"))
     }
 
     func testEveryFixtureCasePlacesTheLayersWhereTheSharedFormulaSays() throws {
@@ -73,6 +74,11 @@ final class SceneryLayoutTests: XCTestCase {
                     accuracy: Self.tolerance, "\(name).\(key)")
             }
 
+            try check("canvas_width_px", got.canvasWidth)
+            try check("canvas_left_px", got.canvasLeft)
+            XCTAssertEqual(
+                expect["shows_foreground"] as? Bool, got.showsForeground,
+                "\(name).shows_foreground")
             try check("canvas_height_px", got.canvasHeight)
             try check("canvas_pan_px", got.canvasPan)
             try check("foreground_shift_px", got.foregroundShift)
@@ -124,6 +130,9 @@ final class SceneryLayoutTests: XCTestCase {
         for testCase in try ClientRulesFixtures.cases(try fixture(), "cases") {
             let name = try ClientRulesFixtures.string(testCase, "name")
             let (got, _, bounds, _) = try placement(for: testCase)
+            // Only where the canvas spans the screen: a centred canvas hands its side margins to
+            // the edge-column fill, and its band stops with it.
+            guard got.canvasLeft <= Self.tolerance else { continue }
             XCTAssertLessThan(got.bandLeft, 0, "\(name): the band does not overhang the left edge")
             XCTAssertGreaterThan(
                 got.bandLeft + got.bandWidth, bounds.width,
@@ -162,6 +171,51 @@ final class SceneryLayoutTests: XCTestCase {
             in: CGRect(x: 0, y: 0, width: 393, height: 852), cardTop: nil)
         XCTAssertEqual(got.canvasPan, 0)
         XCTAssertEqual(got.foregroundShift, 0)
+    }
+
+    /// The whole point of the placement, stated once as a property rather than as a column of
+    /// numbers: the flag, the burrow and Bula are on screen and clear of the card, on every
+    /// geometry in the fixture. Landscape used to fail all three at once, with Bula's feet 151 pt
+    /// below the bottom edge and the flag cropped off the top.
+    func testTheFlagTheBurrowAndBulaAreOnScreenAndClearOfTheCardEverywhere() throws {
+        for testCase in try ClientRulesFixtures.cases(try fixture(), "cases") {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let (got, _, bounds, cardTop) = try placement(for: testCase)
+
+            let flagTop = got.landscapeTop + SceneryLayout.flagTopRow * got.scale
+            XCTAssertGreaterThanOrEqual(
+                flagTop, -Self.tolerance, "\(name): the flag is cropped off the top")
+
+            if got.showsForeground {
+                let feet = got.foregroundTop + SceneryLayout.feetRow * got.scale
+                XCTAssertLessThanOrEqual(
+                    feet, cardTop + Self.tolerance, "\(name): Bula's feet are behind the card")
+                XCTAssertLessThanOrEqual(
+                    feet, bounds.height + Self.tolerance, "\(name): Bula's feet are off the bottom")
+            }
+
+            // The burrow mouth starts at x 0.094 of the canvas and the flag reaches x 0.945, so a
+            // canvas that stayed inside the screen keeps both; it is never side cropped.
+            XCTAssertGreaterThanOrEqual(
+                got.canvasLeft, -Self.tolerance, "\(name): the canvas is cropped on the left")
+            XCTAssertLessThanOrEqual(
+                got.canvasLeft + got.canvasWidth, bounds.width + Self.tolerance,
+                "\(name): the canvas is cropped on the right")
+        }
+    }
+
+    /// The short-screen rule must be inert wherever the screen is tall enough, which is every
+    /// portrait phone: a regression there is the one that would reach a user.
+    func testAPortraitPhoneStillFitsTheCanvasToTheFullScreenWidth() throws {
+        for testCase in try ClientRulesFixtures.cases(try fixture(), "cases") {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let (got, _, bounds, _) = try placement(for: testCase)
+            guard bounds.height > bounds.width else { continue }
+            XCTAssertEqual(
+                got.canvasWidth, bounds.width, accuracy: Self.tolerance,
+                "\(name): a portrait screen no longer draws the canvas full width")
+            XCTAssertEqual(got.canvasLeft, 0, accuracy: Self.tolerance, "\(name)")
+        }
     }
 
     func testTheConnectingAnimationCarriesTheValuesTheOtherClientsUse() throws {

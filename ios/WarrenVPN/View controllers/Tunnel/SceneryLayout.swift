@@ -41,6 +41,11 @@ enum SceneryLayout {
     /// hill's own sunlit edge rather than an artifact, so it is left alone.
     static let bandOverscanColumns: CGFloat = 20
 
+    /// The top of the country flag: the highest thing on the canvas that has to stay on screen.
+    /// Measured on the flag's own fabric (Finland rows 463 to 531), with headroom, and the other
+    /// flagged countries are drawn to the same template.
+    static let flagTopRow: CGFloat = 430
+
     /// Air kept between Bula's feet and the card's top edge.
     static let gap: CGFloat = 16
 
@@ -74,7 +79,15 @@ enum SceneryLayout {
     /// to hide, which a bare lift did.
     struct Placement: Equatable {
         let scale: CGFloat
+        /// How wide the canvas is actually drawn, and where its left edge sits. On every portrait
+        /// phone this is the full screen width at x 0; on a short screen the canvas is narrower and
+        /// centred, and the margins either side take its own edge colour.
+        let canvasWidth: CGFloat
+        let canvasLeft: CGFloat
         let canvasHeight: CGFloat
+        /// Whether Bula and the burrow are drawn at all. False only where they cannot clear the
+        /// connection card, which today is a landscape phone.
+        let showsForeground: Bool
         let canvasPan: CGFloat
         let foregroundShift: CGFloat
         let landscapeTop: CGFloat
@@ -89,8 +102,8 @@ enum SceneryLayout {
         var groundOffset: CGFloat { SceneryLayout.groundRow * scale }
 
         /// The whole canvas at its natural scale, from a given top edge.
-        func canvasRect(width: CGFloat, top: CGFloat) -> CGRect {
-            CGRect(x: 0, y: top, width: width, height: canvasHeight)
+        func canvasRect(top: CGFloat) -> CGRect {
+            CGRect(x: canvasLeft, y: top, width: canvasWidth, height: canvasHeight)
         }
 
         /// The stretched meadow, drawn wider and taller than it needs so the painter's paper
@@ -106,12 +119,33 @@ enum SceneryLayout {
     /// before the first layout, when there is nothing to track and the canvas sits where it is
     /// painted rather than guessing.
     static func placement(in bounds: CGRect, cardTop: CGFloat?) -> Placement {
-        let scale = bounds.width / canvasWidth
+        // Fitting the width is a MAXIMUM, not the rule. On any landscape geometry it puts the span
+        // from the flag down to Bula's feet taller than the room above the card (an iPad 11 in
+        // landscape wants 727 pt of the 485 it has), and the pan cap then leaves his feet below the
+        // bottom edge with the flag cropped off the top anyway. So the canvas shrinks until that
+        // span fits, and is centred. On every portrait phone the width term wins and nothing here
+        // changes.
+        let widthFit = bounds.width / canvasWidth
+        let heightFit = bounds.height / canvasHeight
+        let room = cardTop.map { $0 - gap } ?? bounds.height
+        let spanFit = max(0, room) / (feetRow - flagTopRow)
+        // Never below height-fit: a landscape phone leaves 84 pt above the card, and fitting the
+        // span into that would draw the canvas as a 293 px strip on a 2400 px screen. The canvas
+        // always covers the screen; where it then cannot clear the card, the foreground is not
+        // drawn at all rather than half buried (see `showsForeground`).
+        let scale = min(widthFit, max(spanFit, heightFit))
+        let drawnWidth = canvasWidth * scale
+        let canvasLeft = (bounds.width - drawnWidth) / 2
         let height = canvasHeight * scale
         let feetY = feetRow * scale
         let groundY = groundRow * scale
         let want = cardTop.map { $0 - gap - feetY } ?? 0
-        let panNeeded = min(maxCanvasPan, max(0, -want))
+        // The cap is the sky above the flag, or the header band, whichever is more generous.
+        // Panning by flagTopRow crops only rows the flag sits below, which is what that constant
+        // means, so it can never hide something that has to stay in frame; on a portrait phone the
+        // header band is the wider of the two and this reads as it always did.
+        let panLimit = max(maxCanvasPan, flagTopRow * scale)
+        let panNeeded = min(panLimit, max(0, -want))
         // Spelled out rather than negated in place: negating a zero yields -0.0, which reads as a
         // pan in a log and is not equal to 0.
         let canvasPan = panNeeded == 0 ? 0 : -panNeeded
@@ -122,6 +156,11 @@ enum SceneryLayout {
         // repeat its last row, which is pale paper at the edges and reads as a white strip.
         let foregroundShift = min(height - groundY, max(0, want - canvasPan))
         let foregroundTop = canvasPan + foregroundShift
+        // Bula and the burrow ride the same layer, so either both clear the card or neither is
+        // drawn. A landscape phone is the case that cannot: the card leaves 84 pt, and the choice
+        // there is between a rabbit sunk to the ears behind it and the country art alone. The art
+        // alone is a composition; the sunk rabbit is an accident.
+        let showsForeground = (foregroundTop + feetY) <= (cardTop ?? bounds.height) + 0.5
         // The band is scaled so meadowEndRow lands on the screen's bottom edge; the paper rows
         // under it are drawn past that edge and clipped. It is never compressed, so on a screen the
         // canvas already covers it draws at its natural size.
@@ -130,10 +169,15 @@ enum SceneryLayout {
         let bandHeight = max(
             bandNatural,
             bandNeeded * (canvasHeight - groundRow) / (meadowEndRow - groundRow))
-        let bandScaleX = bounds.width / (canvasWidth - 2 * bandOverscanColumns)
+        // The band spans the drawn canvas, inset past the paper margin, so on a short screen it
+        // stops with the canvas rather than running under the side margins.
+        let bandScaleX = drawnWidth / (canvasWidth - 2 * bandOverscanColumns)
         return Placement(
             scale: scale,
+            canvasWidth: drawnWidth,
+            canvasLeft: canvasLeft,
             canvasHeight: height,
+            showsForeground: showsForeground,
             canvasPan: canvasPan,
             foregroundShift: foregroundShift,
             landscapeTop: canvasPan,
@@ -142,7 +186,7 @@ enum SceneryLayout {
             // burrow layer's own opaque ground.
             landscapeBottom: canvasPan + height,
             foregroundBottom: max(foregroundTop + height, bounds.height),
-            bandLeft: -bandOverscanColumns * bandScaleX,
+            bandLeft: canvasLeft - bandOverscanColumns * bandScaleX,
             bandWidth: canvasWidth * bandScaleX,
             bandHeight: bandHeight
         )

@@ -10,6 +10,9 @@
   "feet_row_provenance": "bula.png: last row with alpha >= 128. The body ends at row 1114 at alpha >= 240; rows 1140 to 1326 are a flat alpha-120 cast shadow.",
   "ground_row": 1301,
   "ground_row_provenance": "terrier.png: the first row whose every column has alpha >= 250, contiguous to the last row (405 rows).",
+  "flag_top_row": 430,
+  "flag_top_row_provenance": "The top of the country flag, the highest thing on the canvas that must stay on screen. Measured on the flag's own saturated fabric: Finland rows 463 to 531 (blue with b - r > 60 at x >= 0.88 of the width), and the other three flagged countries are drawn to the same template within about 15 rows. 430 leaves the fabric a margin of headroom. Together with feet_row this is the span short_screen_rule keeps in frame.",
+  "short_screen_rule": "Fitting the canvas to the screen WIDTH puts the span flag_top_row..feet_row at (feet_row - flag_top_row) * screen_width / canvas_px[0], which on any landscape geometry is taller than the room above the card: an iPad 11 in landscape needs 727 pt of the 485 it has, and Bula's feet landed 151 pt below the bottom edge with the flag still cropped. So width-fit is a maximum, not the rule. scale = min(screen_width / canvas_px[0], (card_top - gap_dp * density) / (feet_row - flag_top_row)), and the canvas is centred horizontally at canvas_left = (screen_width - canvas_px[0] * scale) / 2. On every portrait phone the first term wins and nothing moves, which is why the portrait cases below are unchanged. The margins either side of a narrower canvas take the colour of its own nearest column, sampled band_overscan_columns in so the painter's paper edge is not what gets extended.",
   "gap_dp": 16,
   "max_canvas_pan_dp": 96,
   "formula": [
@@ -42,8 +45,11 @@
       "density": 2.625,
       "card_top_dp": 587.4,
       "expect": {
-        "scale": 0.95,
+        "scale": 0.9474,
+        "canvas_width_px": 1080.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1616.21,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 383.68,
         "landscape_top_px": 0.0,
@@ -56,6 +62,7 @@
         "foreground_band_width_px": 1119.27,
         "foreground_band_stretch": 2.24,
         "feet_above_card_px": 93.4,
+        "flag_top_on_screen_px": 407.37,
         "band_starts_below_feet": true
       }
     },
@@ -69,8 +76,11 @@
       "density": 2.625,
       "card_top_dp": 660.6,
       "expect": {
-        "scale": 0.95,
+        "scale": 0.9474,
+        "canvas_width_px": 1080.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1616.21,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 383.68,
         "landscape_top_px": 0.0,
@@ -83,6 +93,7 @@
         "foreground_band_width_px": 1119.27,
         "foreground_band_stretch": 2.79,
         "feet_above_card_px": 285.55,
+        "flag_top_on_screen_px": 407.37,
         "band_starts_below_feet": true
       }
     },
@@ -96,8 +107,11 @@
       "density": 2.625,
       "card_top_dp": 441.0,
       "expect": {
-        "scale": 0.95,
+        "scale": 0.9474,
+        "canvas_width_px": 1080.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1616.21,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 50.78,
         "landscape_top_px": 0.0,
@@ -110,6 +124,7 @@
         "foreground_band_width_px": 1119.27,
         "foreground_band_stretch": 1.82,
         "feet_above_card_px": 42.0,
+        "flag_top_on_screen_px": 407.37,
         "band_starts_below_feet": true
       }
     },
@@ -123,20 +138,24 @@
       "density": 2.625,
       "card_top_dp": 84.0,
       "expect": {
-        "scale": 2.11,
-        "canvas_height_px": 3591.58,
-        "canvas_pan_px": -252.0,
+        "scale": 0.6331,
+        "canvas_width_px": 721.69,
+        "canvas_left_px": 839.16,
+        "canvas_height_px": 1080.0,
+        "shows_foreground": false,
+        "canvas_pan_px": -272.22,
         "foreground_shift_px": 0.0,
-        "landscape_top_px": -252.0,
-        "foreground_top_px": -252.0,
-        "landscape_bottom_px": 3339.58,
-        "foreground_bottom_px": 3339.58,
-        "foreground_band_top_px": 2486.95,
-        "foreground_band_height_px": 852.63,
-        "foreground_band_left_px": -43.64,
-        "foreground_band_width_px": 2487.27,
-        "foreground_band_stretch": 1.0,
-        "feet_above_card_px": -1893.82,
+        "landscape_top_px": -272.22,
+        "foreground_top_px": -272.22,
+        "landscape_bottom_px": 807.78,
+        "foreground_bottom_px": 1080.0,
+        "foreground_band_top_px": 551.4,
+        "foreground_band_height_px": 580.18,
+        "foreground_band_left_px": 826.03,
+        "foreground_band_width_px": 747.93,
+        "foreground_band_stretch": 2.26,
+        "feet_above_card_px": -218.84,
+        "flag_top_on_screen_px": 0.0,
         "band_starts_below_feet": true
       }
     },
@@ -150,8 +169,11 @@
       "density": 3.0,
       "card_top_dp": 547.0,
       "expect": {
-        "scale": 1.06,
+        "scale": 1.0579,
+        "canvas_width_px": 1206.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1804.77,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 403.93,
         "landscape_top_px": 0.0,
@@ -164,6 +186,7 @@
         "foreground_band_width_px": 1249.85,
         "foreground_band_stretch": 2.16,
         "feet_above_card_px": 48.0,
+        "flag_top_on_screen_px": 454.89,
         "band_starts_below_feet": true
       }
     },
@@ -177,8 +200,11 @@
       "density": 3.0,
       "card_top_dp": 629.0,
       "expect": {
-        "scale": 1.16,
+        "scale": 1.1579,
+        "canvas_width_px": 1320.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1975.37,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 468.95,
         "landscape_top_px": 0.0,
@@ -191,6 +217,7 @@
         "foreground_band_width_px": 1368.0,
         "foreground_band_stretch": 2.09,
         "feet_above_card_px": 116.58,
+        "flag_top_on_screen_px": 497.89,
         "band_starts_below_feet": true
       }
     },
@@ -204,8 +231,11 @@
       "density": 2.0,
       "card_top_dp": 340.0,
       "expect": {
-        "scale": 0.66,
+        "scale": 0.6579,
+        "canvas_width_px": 750.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1122.37,
+        "shows_foreground": true,
         "canvas_pan_px": -91.47,
         "foreground_shift_px": 0.0,
         "landscape_top_px": -91.47,
@@ -218,6 +248,7 @@
         "foreground_band_width_px": 777.27,
         "foreground_band_stretch": 2.35,
         "feet_above_card_px": 32.0,
+        "flag_top_on_screen_px": 191.42,
         "band_starts_below_feet": true
       }
     },
@@ -231,8 +262,11 @@
       "density": 2.0,
       "card_top_dp": 867.0,
       "expect": {
-        "scale": 1.46,
+        "scale": 1.4632,
+        "canvas_width_px": 1668.0,
+        "canvas_left_px": -0.0,
         "canvas_height_px": 2496.15,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 57.41,
         "landscape_top_px": 0.0,
@@ -245,6 +279,7 @@
         "foreground_band_width_px": 1728.65,
         "foreground_band_stretch": 1.0,
         "feet_above_card_px": 32.0,
+        "flag_top_on_screen_px": 629.16,
         "band_starts_below_feet": true
       }
     },
@@ -258,20 +293,24 @@
       "density": 2.0,
       "card_top_dp": 507.0,
       "expect": {
-        "scale": 2.09,
-        "canvas_height_px": 3573.62,
-        "canvas_pan_px": -192.0,
+        "scale": 1.415,
+        "canvas_width_px": 1613.08,
+        "canvas_left_px": 387.46,
+        "canvas_height_px": 2413.97,
+        "shows_foreground": true,
+        "canvas_pan_px": -608.44,
         "foreground_shift_px": 0.0,
-        "landscape_top_px": -192.0,
-        "foreground_top_px": -192.0,
-        "landscape_bottom_px": 3381.62,
-        "foreground_bottom_px": 3381.62,
-        "foreground_band_top_px": 2533.25,
-        "foreground_band_height_px": 848.37,
-        "foreground_band_left_px": -43.42,
-        "foreground_band_width_px": 2474.84,
+        "landscape_top_px": -608.44,
+        "foreground_top_px": -608.44,
+        "landscape_bottom_px": 1805.52,
+        "foreground_bottom_px": 1805.52,
+        "foreground_band_top_px": 1232.45,
+        "foreground_band_height_px": 573.07,
+        "foreground_band_left_px": 358.13,
+        "foreground_band_width_px": 1671.74,
         "foreground_band_stretch": 1.0,
-        "feet_above_card_px": -1148.48,
+        "feet_above_card_px": 32.0,
+        "flag_top_on_screen_px": 0.0,
         "band_starts_below_feet": true
       }
     },
@@ -285,8 +324,11 @@
       "density": 1.0,
       "card_top_dp": 478.0,
       "expect": {
-        "scale": 0.35,
+        "scale": 0.3509,
+        "canvas_width_px": 400.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 598.6,
+        "shows_foreground": true,
         "canvas_pan_px": 0.0,
         "foreground_shift_px": 67.61,
         "landscape_top_px": 0.0,
@@ -299,6 +341,7 @@
         "foreground_band_width_px": 414.55,
         "foreground_band_stretch": 1.0,
         "feet_above_card_px": 16.0,
+        "flag_top_on_screen_px": 150.88,
         "band_starts_below_feet": true
       }
     },
@@ -312,8 +355,11 @@
       "density": 2.625,
       "card_top_dp": 360.0,
       "expect": {
-        "scale": 0.95,
+        "scale": 0.9474,
+        "canvas_width_px": 1080.0,
+        "canvas_left_px": 0.0,
         "canvas_height_px": 1616.21,
+        "shows_foreground": true,
         "canvas_pan_px": -161.84,
         "foreground_shift_px": 0.0,
         "landscape_top_px": -161.84,
@@ -326,6 +372,7 @@
         "foreground_band_width_px": 1119.27,
         "foreground_band_stretch": 3.8,
         "feet_above_card_px": 42.0,
+        "flag_top_on_screen_px": 245.53,
         "band_starts_below_feet": true
       }
     }

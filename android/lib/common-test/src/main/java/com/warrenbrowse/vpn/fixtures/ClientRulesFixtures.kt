@@ -41,6 +41,9 @@ object ClientRulesFixtures {
             it.jsonPrimitive.content.toFloat()
         }
 
+    fun JsonObject.boolean(key: String): Boolean =
+        (this[key] ?: error("`$key` is missing in $this")).jsonPrimitive.content.toBooleanStrict()
+
     fun JsonObject.obj(key: String): JsonObject =
         (this[key] ?: error("`$key` is missing in $this")).jsonObject
 

@@ -67,11 +67,22 @@ class SceneryForegroundShiftTest {
     }
 
     @Test
-    fun `the pan stops at the band the header already covers`() {
-        // A card so high that following it would crop painted content.
+    fun `the pan stops where the flag would leave the top of the screen`() {
+        // A card so high that following it would crop painted content. The pan stops at the sky
+        // above the flag, which is the last row that may go: the flag itself must stay in frame.
+        // On this screen that is the wider of the two caps, the other being the header band.
         val got = placement(0f)
-        assertEquals(-SceneryLayout.MAX_CANVAS_PAN_DP * density, got.canvasPan, 0.01f)
+        assertEquals(-SceneryLayout.FLAG_TOP_ROW * got.scale, got.canvasPan, 0.01f)
+        assertEquals(0f, got.landscapeTop + SceneryLayout.FLAG_TOP_ROW * got.scale, 0.01f)
         assertEquals(0f, got.foregroundShift, 0.01f)
+    }
+
+    @Test
+    fun `a card leaving no room drops the pair rather than burying it`() {
+        // Nothing can clear a card whose top edge is the top of the screen, so the country art
+        // stands alone instead of carrying a rabbit sunk behind the card.
+        assertTrue(!placement(0f).showsForeground)
+        assertTrue(placement(1400f).showsForeground)
     }
 
     @Test
