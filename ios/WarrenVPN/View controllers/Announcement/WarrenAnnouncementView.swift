@@ -116,10 +116,16 @@ struct WarrenVoucherWell: View {
     }
 
     private func copy() {
-        UIPasteboard.general.string = code
+        let voucher = code
+        // A bearer token worth a month of service, so it goes no further than
+        // this device and expires on its own.
+        WarrenSecureClipboard.copy(voucher)
         didCopy = true
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             didCopy = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + WarrenSecureClipboard.lifetime) {
+            WarrenSecureClipboard.clearIfStillHolding(voucher)
         }
     }
 }

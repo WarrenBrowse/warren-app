@@ -48,6 +48,10 @@ FILES_TO_ADD = {
   # `fixtures/client-rules/scenery_layout.json`.
   "WarrenVPN/View controllers/Tunnel/SceneryLayout.swift" => "WarrenVPN",
 
+  # Copying a secret without publishing it to Universal Clipboard.
+  "WarrenVPN/Classes/WarrenSecureClipboard.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenSecureClipboardTests.swift" => "WarrenVPNTests",
+
   # C.4.3 Warren Quinn tunnel implementation + actor scaffold inside
   # `PacketTunnelCore` (slots next to GotaTunTunnelImplementation +
   # GotaTunActor, conforms `TunnelImplementation` + `PacketTunnelActorProtocol`).

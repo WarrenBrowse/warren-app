@@ -190,12 +190,10 @@ public struct WarrenMnemonicCopyButton: View {
 
     private func copyMnemonic() {
         let phrase = mnemonic
-        UIPasteboard.general.string = phrase
+        WarrenSecureClipboard.copy(phrase)
         didCopy = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 60) {
-            if UIPasteboard.general.string == phrase {
-                UIPasteboard.general.string = ""
-            }
+        DispatchQueue.main.asyncAfter(deadline: .now() + WarrenSecureClipboard.lifetime) {
+            WarrenSecureClipboard.clearIfStillHolding(phrase)
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             didCopy = false
