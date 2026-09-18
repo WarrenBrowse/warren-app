@@ -13,6 +13,19 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+### Corrigé
+- Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le
+  tunnel démarrer puis le coupe. L'application demandait son adresse au serveur et attendait une
+  réponse qui n'arrivait jamais, ce qui consommait toute la tentative sur cette seule attente, sans
+  jamais atteindre le moment où elle bascule en TCP. Elle abandonne maintenant une réponse
+  silencieuse au bout de six secondes, et envoie la tentative suivante en TCP sur le port 443
+  directement.
+- Conserver un fichier de journal de plus sur Android. Rouvrir l'application deux fois après une
+  connexion échouée effaçait jusqu'ici les traces que l'on cherche justement dans un rapport de bug.
+- Afficher les notes de version de l'application installée dans la langue de l'application. L'écran
+  « Quoi de neuf » lisait un fichier unique, écrit en anglais, donc une application en français ou
+  en roumain annonçait ses propres changements en anglais. Les notes proposées avec une mise à jour
+  étaient déjà traduites.
 
 
 ## [1.1.30] - 2026-09-12

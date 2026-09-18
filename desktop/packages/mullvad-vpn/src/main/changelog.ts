@@ -4,17 +4,51 @@ import path from 'path';
 import { ChangelogBlock, ChangelogInline, IChangelog } from '../shared/ipc-types';
 import log from '../shared/logging';
 
-// Reads and parses the changelog file.
-export function readChangelog(): IChangelog {
-  try {
-    const changelogPath = path.join(import.meta.dirname, '..', 'changes.txt');
-    const contents = fs.readFileSync(changelogPath).toString();
-    return parseChangelog(contents);
-  } catch (e) {
-    const error = e as Error;
-    log.error('Failed to read changelog.txt', error.message);
-    return [];
+/** The English original, and the fallback for every language. */
+const ENGLISH_CHANGES_FILE = 'changes.txt';
+
+/**
+ * The bundled release-note files to try for `locale`, most specific first.
+ *
+ * The package ships one file per translated language next to the English
+ * original, all written by `scripts/release/generate-changes-txt.sh` from the
+ * `CHANGELOG*.md` set. A language nobody translated resolves to the English
+ * file rather than to nothing.
+ */
+export function changelogFileCandidates(locale: string): string[] {
+  const tags = localeCandidates(locale).filter((tag) => tag !== 'en');
+  return [...tags.map((tag) => `changes.${tag}.txt`), ENGLISH_CHANGES_FILE];
+}
+
+/**
+ * Reads the notes of the RUNNING version, in the app's language.
+ *
+ * These come from a file in the package rather than from the update manifest,
+ * because the app has to show them with no network and no newer release to
+ * offer. They were English for everyone until 1.1.31: the screen said "Quoi de
+ * neuf" in French and then listed the changes in English (forum topic 208).
+ */
+export function readChangelog(locale: string): IChangelog {
+  for (const fileName of changelogFileCandidates(locale)) {
+    const changelogPath = path.join(import.meta.dirname, '..', fileName);
+    let contents: string;
+    try {
+      contents = fs.readFileSync(changelogPath).toString();
+    } catch (e) {
+      // A language we ship no file for is the normal case, and the English
+      // file closes the loop. Only its own absence is worth a log line.
+      if (fileName === ENGLISH_CHANGES_FILE) {
+        log.error(`Failed to read ${fileName}`, (e as Error).message);
+      }
+      continue;
+    }
+    // An empty translated file would blank the screen, which reads as "this
+    // release changed nothing". Same rule as `selectChangelog`.
+    if (contents.trim() !== '') {
+      return parseChangelog(contents);
+    }
   }
+  return [];
 }
 
 // Resolved once at startup, like the gettext catalogs, because the release
@@ -50,12 +84,8 @@ export function selectChangelog(
   locale: string,
 ): string {
   const byTag = new Map(translations.map(([tag, text]) => [tag.toLowerCase(), text]));
-  const normalized = locale.replace('_', '-').toLowerCase();
-  // Regional first: pt-BR and pt are genuinely different translations, while
-  // fr-FR is served by fr.
-  const candidates = [normalized, normalized.split('-')[0]];
 
-  for (const candidate of candidates) {
+  for (const candidate of localeCandidates(locale)) {
     const translated = byTag.get(candidate);
     if (translated !== undefined && translated.trim() !== '') {
       return translated;
@@ -63,6 +93,18 @@ export function selectChangelog(
   }
 
   return english;
+}
+
+/**
+ * The language tags to try for `locale`, most specific first.
+ *
+ * Regional first: pt-BR and pt are genuinely different translations, while
+ * fr-FR is served by fr.
+ */
+function localeCandidates(locale: string): string[] {
+  const normalized = locale.replace('_', '-').toLowerCase();
+  const base = normalized.split('-')[0];
+  return normalized === base ? [normalized] : [normalized, base];
 }
 
 const HEADING = /^(#{1,6})\s+(.+)$/;

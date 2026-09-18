@@ -312,6 +312,10 @@ function newConfig() {
     files: [
       'package.json',
       'changes.txt',
+      // The same notes per language, resolved from the app locale by
+      // `readChangelog()`. Packaging only the English original is what left
+      // the what's-new screen English inside a French app.
+      'changes.*.txt',
       'build/',
       '!**/*.tsbuildinfo',
       '!test/',

@@ -156,7 +156,7 @@ class ApplicationMain {
     IpcMainEventChannel.guiSettings.handleSetPreferredLocale((locale) => {
       this.updateCurrentLocale(locale);
       IpcMainEventChannel.guiSettings.notify?.(this.guiSettings);
-      return Promise.resolve(this.translations);
+      return Promise.resolve({ translations: this.translations, changelog: [] });
     });
   }
 

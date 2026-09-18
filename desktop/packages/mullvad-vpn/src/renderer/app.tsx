@@ -843,7 +843,7 @@ export default class AppRenderer {
   }
 
   public setPreferredLocale = async (preferredLocale: string): Promise<void> => {
-    const translations =
+    const { translations, changelog } =
       await IpcRendererEventChannel.guiSettings.setPreferredLocale(preferredLocale);
 
     // set current locale
@@ -852,6 +852,10 @@ export default class AppRenderer {
     // load translations for new locale
     loadTranslations(messages, translations.locale, translations.messages);
     loadTranslations(relayLocations, translations.locale, translations.relayLocations);
+
+    // The running version's release notes are their own file per language, so
+    // they do not arrive with the catalogs above.
+    this.setChangelog(changelog);
   };
 
   public getPreferredLocaleDisplayName = (localeCode: string): string => {

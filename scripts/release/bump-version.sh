@@ -117,10 +117,10 @@ log_info "ios left untouched (calendar MARKETING_VERSION $CURRENT_IOS_MARKETING,
 # after the bump; `test/unit/changes-txt.spec.ts` then refuses the release
 # until this is run again.
 if bash "$SCRIPT_DIR/generate-changes-txt.sh" "${NEW_VERSION%%-*}" 2>/dev/null; then
-    log_info "changes.txt regenerated for ${NEW_VERSION%%-*}"
+    log_info "bundled release notes regenerated for ${NEW_VERSION%%-*}, in every language"
 else
-    log_warn "no [${NEW_VERSION%%-*}] section in CHANGELOG.md yet, so changes.txt still holds the previous release's notes"
-    log_warn "write the release notes, then: bash scripts/release/generate-changes-txt.sh"
+    log_warn "no [${NEW_VERSION%%-*}] section in one of the CHANGELOG files yet, so the bundled notes still hold the previous release's"
+    log_warn "write the release notes in every language, then: bash scripts/release/generate-changes-txt.sh"
 fi
 
 log_success "Done. Review with 'git diff' and commit when ready."

@@ -342,7 +342,6 @@ class ApplicationMain
     }
 
     this.settings.gui.load();
-    this.changelog = readChangelog();
 
     app.on('render-process-gone', (_event, _webContents, details) => {
       log.error(
@@ -1321,7 +1320,10 @@ class ApplicationMain
     IpcMainEventChannel.guiSettings.handleSetPreferredLocale((locale: string) => {
       this.settings.gui.preferredLocale = locale;
       this.updateCurrentLocale();
-      return Promise.resolve(this.translations);
+      return Promise.resolve({
+        translations: this.translations,
+        changelog: this.changelog ?? [],
+      });
     });
 
     IpcMainEventChannel.linuxSplitTunneling.handleGetApplications(() => {
@@ -1573,6 +1575,10 @@ class ApplicationMain
     // The update notes are translated per language too, and are resolved far
     // from here, in the gRPC conversion layer.
     setChangelogLocale(this.locale);
+    // The running version's own notes are a file per language in the package,
+    // so they are re-read here rather than once at startup: this also runs when
+    // the user picks another language in Settings.
+    this.changelog = readChangelog(this.locale);
 
     log.info(`Detected locale: ${this.locale}`);
 

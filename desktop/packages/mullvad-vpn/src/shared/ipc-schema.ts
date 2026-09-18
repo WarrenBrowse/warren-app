@@ -62,6 +62,19 @@ export interface ITranslations {
   relayLocations?: GetTextTranslations;
 }
 
+/**
+ * What picking another language hands back to the renderer.
+ *
+ * The release notes travel with the catalogs because they are not in them: the
+ * running version's notes are a separate file per language, read in the main
+ * process, so a renderer that only reloaded the catalogs would keep showing
+ * what's-new in the previous language until the next start.
+ */
+export interface ILocaleChange {
+  translations: ITranslations;
+  changelog: IChangelog;
+}
+
 export type LaunchApplicationResult = { success: true } | { error: string };
 
 export enum MacOsScrollbarVisibility {
@@ -382,7 +395,7 @@ export const ipcSchema = {
     setAutoConnect: send<boolean>(),
     setStartMinimized: send<boolean>(),
     setMonochromaticIcon: send<boolean>(),
-    setPreferredLocale: invoke<string, ITranslations>(),
+    setPreferredLocale: invoke<string, ILocaleChange>(),
     setUnpinnedWindow: send<boolean>(),
     setAnimateMap: send<boolean>(),
     // Onboarding wizard gate. Set true when a fresh identity is minted

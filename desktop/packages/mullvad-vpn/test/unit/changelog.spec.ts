@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseChangelog, selectChangelog } from '../../src/main/changelog';
+import { changelogFileCandidates, parseChangelog, selectChangelog } from '../../src/main/changelog';
 import { ChangelogBlock, ChangelogInline } from '../../src/shared/ipc-types';
 
 const mockPlatform = (platform: string) => {
@@ -246,5 +246,40 @@ describe('Changelog language selection', () => {
     // A release published with an empty entry for a language must not blank the
     // release notes for everyone running in it.
     expect(selectChangelog(english, [['fr', '   ']], 'fr')).to.equal(english);
+  });
+});
+
+describe('Bundled release notes, per language', () => {
+  // The installed version's own notes come from a file shipped in the package,
+  // not from the update manifest, so the language has to be resolved against
+  // file names instead of a map.
+
+  it('asks for the app language, then English', () => {
+    expect(changelogFileCandidates('fr')).to.deep.equal(['changes.fr.txt', 'changes.txt']);
+    expect(changelogFileCandidates('ro')).to.deep.equal(['changes.ro.txt', 'changes.txt']);
+  });
+
+  it('asks for the regional file, then its base language, then English', () => {
+    expect(changelogFileCandidates('pt-BR')).to.deep.equal([
+      'changes.pt-br.txt',
+      'changes.pt.txt',
+      'changes.txt',
+    ]);
+    expect(changelogFileCandidates('fr_FR')).to.deep.equal([
+      'changes.fr-fr.txt',
+      'changes.fr.txt',
+      'changes.txt',
+    ]);
+  });
+
+  it('asks only for the English file when the app runs in English', () => {
+    // `changes.txt` IS the English original, so a `changes.en.txt` would be a
+    // second copy of it that nothing generates and nothing keeps in step.
+    expect(changelogFileCandidates('en')).to.deep.equal(['changes.txt']);
+    expect(changelogFileCandidates('en-US')).to.deep.equal(['changes.en-us.txt', 'changes.txt']);
+  });
+
+  it('asks for the English file for a language nobody translated', () => {
+    expect(changelogFileCandidates('de')).to.deep.equal(['changes.de.txt', 'changes.txt']);
   });
 });

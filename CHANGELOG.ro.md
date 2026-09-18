@@ -12,6 +12,18 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
+### Reparat
+- Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă
+  tunelul să pornească și apoi îl taie. Aplicația cerea serverului adresa sa și aștepta un răspuns
+  care nu venea niciodată, consumând toată încercarea pe această singură așteptare, fără să ajungă
+  la momentul în care trece pe TCP. Acum renunță la un răspuns tăcut după șase secunde și trimite
+  următoarea încercare direct pe TCP, pe portul 443.
+- Păstrează încă un fișier de jurnal pe Android. Redeschiderea aplicației de două ori după o
+  conectare eșuată ștergea până acum tocmai urmele pentru care este citit un raport de eroare.
+- Afișează notele de versiune ale aplicației instalate în limba în care rulează aplicația. Ecranul
+  „Ce este nou” citea un singur fișier, scris în engleză, așa că o aplicație în franceză sau română
+  își anunța propriile modificări în engleză. Notele oferite odată cu o actualizare erau deja
+  traduse.
 
 
 ## [1.1.30] - 2026-09-12
