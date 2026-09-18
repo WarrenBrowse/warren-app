@@ -2424,6 +2424,29 @@ fn now_secs() -> u64 {
 mod tests {
     use std::sync::Arc;
 
+    // ---- Path health: what the goodput prober's verdict crosses as ----
+
+    /// Swift decodes the verdict by raw value, so these three numbers are the
+    /// contract. A renumbering would silently turn one degradation into
+    /// another, or a real one into "healthy", which is the state the whole
+    /// banner exists to contradict.
+    #[test]
+    fn the_path_health_codes_are_the_ones_swift_decodes() {
+        assert_eq!(super::PATH_HEALTH_HEALTHY, 0);
+        assert_eq!(super::PATH_HEALTH_DEGRADED_LARGE, 1);
+        assert_eq!(super::PATH_HEALTH_DEGRADED_BOTH, 2);
+    }
+
+    /// Healthy while nothing has measured anything, so a build with no
+    /// session can never report a tunnel as degraded.
+    #[test]
+    fn nothing_is_reported_as_degraded_before_a_session_has_measured() {
+        assert_eq!(
+            super::warren_tunnel_path_health(),
+            super::PATH_HEALTH_HEALTHY
+        );
+    }
+
     // ---- Terminal verdict: what the app is told a finished session ended as ----
 
     /// A policy refusal used to end the session as a plain `Disconnected`, so

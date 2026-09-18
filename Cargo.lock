@@ -6839,6 +6839,7 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "warren-api",
+ "warren-contract",
  "warren-discovery-core",
  "warren-forum",
  "warren-identity",

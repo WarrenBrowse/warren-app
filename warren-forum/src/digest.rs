@@ -62,7 +62,15 @@ pub struct DigestState {
     last: Option<VerifiedForumDigest>,
 }
 
+impl Default for DigestState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DigestState {
+    /// `const` because both mobile FFI crates hold one in a `static`: the
+    /// verified document is process state, never per-call.
     pub const fn new() -> Self {
         Self {
             etag: None,
