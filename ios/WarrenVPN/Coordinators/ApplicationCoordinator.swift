@@ -55,6 +55,14 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
 
     private var outOfTimeTimer: Timer?
 
+    /// The forum activity badge, computed once so the header slot, the local
+    /// notification and the panel cannot drift apart.
+    private let forumActivityMonitor = WarrenForumActivityMonitor()
+    private var forumDigestPoller: WarrenForumDigestPoller?
+    // Read back only by `deinit`, which runs off the main actor: the array is
+    // written once during init and never again.
+    nonisolated(unsafe) private var forumActivityObservers: [any NSObjectProtocol] = []
+
     var rootViewController: UIViewController {
         navigationContainer
     }
@@ -93,6 +101,12 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         }
 
         NotificationManager.shared.delegate = self
+
+        startForumActivity()
+    }
+
+    deinit {
+        forumActivityObservers.forEach(NotificationCenter.default.removeObserver)
     }
 
     func start() {
@@ -151,6 +165,9 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         case .changelog:
             presentChangeLog(animated: animated, completion: completion)
 
+        case .forumActivity:
+            presentForumActivity(animated: animated, completion: completion)
+
         case .tos:
             presentTOS(animated: animated, completion: completion)
 
@@ -205,7 +222,7 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
                 completion()
                 context.dismissedRoutes.forEach { $0.coordinator.removeFromParent() }
 
-            case .selectLocation, .account, .settings, .changelog, .alert:
+            case .selectLocation, .account, .settings, .changelog, .forumActivity, .alert:
                 guard let coordinator = dismissedRoute.coordinator as? Presentable else {
                     completion()
                     return assertionFailure("Expected presentable coordinator for \(dismissedRoute.route)")
@@ -469,6 +486,30 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         }
     }
 
+    /// The forum activity panel, opened from the header's forum slot. The
+    /// panel's own reading is what corrects the badge, so the coordinator
+    /// hands the view model the monitor rather than a copy of the count.
+    private func presentForumActivity(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+        let coordinator = WarrenForumActivityCoordinator(
+            navigationController: CustomNavigationController(),
+            viewModel: WarrenForumActivityViewModel(
+                observe: { [weak self] unread in
+                    self?.forumActivityMonitor.setObservedUnread(unread)
+                }
+            )
+        )
+
+        coordinator.didFinish = { [weak self] _ in
+            self?.router.dismiss(.forumActivity, animated: animated)
+        }
+
+        coordinator.start(animated: false)
+
+        presentChild(coordinator, animated: animated) {
+            completion(coordinator)
+        }
+    }
+
     private func presentMain(animated: Bool, completion: @Sendable @escaping (Coordinator) -> Void) {
         let tunnelCoordinator = makeTunnelCoordinator()
 
@@ -494,6 +535,73 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     /// verified verdict blocks the running version. The gate only replaces
     /// the UI: an established tunnel is deliberately left running so the
     /// user stays protected while updating.
+    /// Wires the forum activity surface: the monitor publishes to the header
+    /// slot, and the digest poller feeds it while the app is in the
+    /// foreground and something on this installation reads the result.
+    ///
+    /// No background cadence carries the fetch: that would make the app a
+    /// periodic presence signal for a badge nobody is looking at, and the
+    /// fetch on foreground already catches up on whatever happened meanwhile.
+    private func startForumActivity() {
+        forumActivityMonitor.delegate = self
+        forumDigestPoller = WarrenForumDigestPoller(
+            preflight: { [weak self] in
+                guard let self else { return false }
+                return WarrenForumPreflight.verdict(for: tunnelManager.tunnelStatus.state) == .proceed
+            },
+            apply: { [weak self] counts in
+                self?.forumActivityMonitor.setDigest(counts)
+            }
+        )
+        refreshForumActivityIdentity()
+
+        let center = NotificationCenter.default
+        forumActivityObservers = [
+            center.addObserver(
+                forName: WarrenForumIdentityStore.didChangeNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.refreshForumActivityIdentity() }
+            },
+            center.addObserver(
+                forName: UIApplication.didBecomeActiveNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.refreshForumActivityIdentity() }
+            },
+            center.addObserver(
+                forName: UIApplication.didEnterBackgroundNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
+                MainActor.assumeIsolated { self?.forumDigestPoller?.stop() }
+            },
+        ]
+    }
+
+    /// Re-reads the two facts the whole surface rests on: whether this wallet
+    /// has a forum account, and whether the setting is on. Both can change
+    /// while the app is running (a sign-in, a wallet erase, a switch), and
+    /// the slot, the monitor and the poll all follow from them.
+    private func refreshForumActivityIdentity() {
+        let identity = WarrenForumIdentityStore.load()
+        let enabled = appPreferences.notificationSettings[.forumActivity]
+
+        navigationContainer.setForumSlot(
+            WarrenForumActivity.headerButton(hasAccount: identity != nil, enabled: enabled)
+        )
+        forumActivityMonitor.setEnabled(enabled)
+        forumActivityMonitor.setSlot(identity?.notifySlot.map(Int.init))
+
+        if warrenForumDigestWanted(notificationsEnabled: enabled, hasAccount: identity != nil) {
+            forumDigestPoller?.start()
+        } else {
+            forumDigestPoller?.stop()
+        }
+    }
+
     private func startVersionGateRefresh() {
         Task { [weak self] in
             let blocked = await WarrenAppVersionGate.shared.refreshIfDue()
@@ -1198,6 +1306,26 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         router.present(.settings(route), animated: animated)
     }
 
+    /// The header's forum slot. A wallet with a forum account opens the
+    /// activity panel; one without opens the forum itself, which is where an
+    /// account comes from.
+    func rootContainerViewControllerShouldShowForum(
+        _ controller: RootContainerViewController,
+        slot: WarrenForumHeaderButton,
+        animated: Bool
+    ) {
+        switch slot {
+        case .activity:
+            router.present(.forumActivity, animated: animated)
+        case .community:
+            if let url = URL(string: WarrenProductAnchors.current.forumPublicURL) {
+                UIApplication.shared.open(url)
+            }
+        case .none:
+            break
+        }
+    }
+
     func rootContainerViewSupportedInterfaceOrientations(_ controller: RootContainerViewController)
         -> UIInterfaceOrientationMask
     {
@@ -1286,5 +1414,26 @@ extension ApplicationCoordinator: @preconcurrency OnboardingWizardCoordinatorDel
         appPreferences.isShownOnboarding = true
         router.dismiss(.warrenOnboarding, animated: true)
         continueFlow(animated: true)
+    }
+}
+
+/// The forum activity badge's three surfaces, all from the one count the
+/// monitor publishes.
+extension ApplicationCoordinator: WarrenForumActivityMonitor.Delegate {
+    func forumActivityDidRise(to unread: Int) {
+        WarrenForumActivityAlert.post(unread: unread)
+    }
+
+    func forumActivityShowsIndicator(_ showing: Bool) {
+        // The app icon badge is the platform's own "something is waiting",
+        // and it is the one surface that survives the app being closed.
+        UNUserNotificationCenter.current().setBadgeCount(showing ? 1 : 0)
+        if !showing {
+            WarrenForumActivityAlert.clear()
+        }
+    }
+
+    func forumActivityDidPublish(unread: Int) {
+        navigationContainer.setForumUnread(unread)
     }
 }

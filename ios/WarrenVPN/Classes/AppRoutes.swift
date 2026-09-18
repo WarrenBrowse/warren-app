@@ -67,6 +67,11 @@ enum AppRouteGroup: AppRouteGroupProtocol {
     case changelog
 
     /**
+     Community-forum activity group.
+     */
+    case forumActivity
+
+    /**
      Alert group. Alert id should match the id of the alert being contained.
      */
     case alert(_ alertId: String)
@@ -76,7 +81,7 @@ enum AppRouteGroup: AppRouteGroupProtocol {
         case .primary:
             return false
 
-        case .selectLocation, .account, .settings, .changelog, .alert:
+        case .selectLocation, .account, .settings, .changelog, .forumActivity, .alert:
             return true
         }
     }
@@ -85,7 +90,7 @@ enum AppRouteGroup: AppRouteGroupProtocol {
         switch self {
         case .primary:
             return 0
-        case .account, .selectLocation, .changelog:
+        case .account, .selectLocation, .changelog, .forumActivity:
             return 1
         case .settings:
             return 2
@@ -156,6 +161,11 @@ enum AppRoute: AppRouteProtocol {
     case apiAccess
 
     /**
+     Community-forum activity panel, opened from the header's forum slot.
+     */
+    case forumActivity
+
+    /**
      Alert route. Alert id must be a unique string in order to produce a unique route
      that distinguishes between different kinds of alerts.
      */
@@ -208,6 +218,8 @@ enum AppRoute: AppRouteProtocol {
         case .settings, .daita, .changelog, .vpnSettings, .multihop, .dnsSettings, .ipOverrides,
             .includeAllNetworks, .apiAccess:
             return .settings
+        case .forumActivity:
+            return .forumActivity
         case let .alert(id):
             return .alert(id)
         }

@@ -238,6 +238,12 @@ FILES_TO_ADD = {
   "WarrenVPN/Classes/WarrenForumDigestPoller.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumDigestPollerTests.swift" => "WarrenVPNTests",
+  "WarrenVPN/Classes/WarrenForumActivityAlert.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenForumActivityPanel.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenForumActivityRow.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Forum/WarrenForumActivityView.swift" => "WarrenVPN",
+  "WarrenVPN/Coordinators/WarrenForumActivityCoordinator.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityPanelTests.swift" => "WarrenVPNTests",
 
   # The non-prod markers: the name iOS gives the VPN configuration in
   # Settings, General, VPN and Device Management, and the header chip.

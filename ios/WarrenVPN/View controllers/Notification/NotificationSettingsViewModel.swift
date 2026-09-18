@@ -81,7 +81,18 @@ final class NotificationSettingsViewModel: NotificationSettingsViewModelProtocol
     }
 
     func binding(for key: NotificationKeys) -> Binding<Bool> {
-        Binding(
+        // The forum switch governs more than a banner: the header bell and the
+        // app icon badge follow it too, and both work with system
+        // notifications denied. Tying it to the system permission would take
+        // the bell away from anyone who declined banners, which is a setting
+        // they never touched.
+        guard key.needsSystemPermission else {
+            return Binding(
+                get: { self.settings[key] },
+                set: { self.settings[key] = $0 }
+            )
+        }
+        return Binding(
             get: { self.settings[key] && self.isNotificationsAllowed },
             set: { self.settings[key] = $0 && self.isNotificationsAllowed }
         )

@@ -52,4 +52,83 @@ final class HeaderBarViewTests: XCTestCase {
         // the badged app icon carries.
         XCTAssertEqual(header.productChipLabel.backgroundColor, UIColor.Warren.yellow)
     }
+
+    // MARK: - The forum slot
+
+    /// The slot carries the bell, the lifebuoy or nothing, and the badge only
+    /// ever rides the bell: a count over the lifebuoy would promise activity
+    /// to a wallet that has no forum account to have any.
+    func testTheForumSlotShowsOnlyWhatThePairAllows() {
+        let header = HeaderBarView(frame: .zero)
+        header.forumUnread = 3
+
+        header.forumSlot = .none
+        XCTAssertTrue(header.forumButton.isHidden)
+        XCTAssertTrue(header.forumBadgeLabel.isHidden)
+
+        header.forumSlot = .community
+        XCTAssertFalse(header.forumButton.isHidden)
+        XCTAssertTrue(header.forumBadgeLabel.isHidden)
+
+        header.forumSlot = .activity
+        XCTAssertFalse(header.forumButton.isHidden)
+        XCTAssertFalse(header.forumBadgeLabel.isHidden)
+        XCTAssertEqual(header.forumBadgeLabel.text, "3")
+    }
+
+    /// An empty badge would invite a click into a panel with nothing in it.
+    func testAnEmptyCountShowsNoBadge() {
+        let header = HeaderBarView(frame: .zero)
+        header.forumSlot = .activity
+
+        header.forumUnread = 0
+        XCTAssertTrue(header.forumBadgeLabel.isHidden)
+
+        header.forumUnread = 1
+        XCTAssertFalse(header.forumBadgeLabel.isHidden)
+    }
+
+    /// The badge saturates rather than growing, on the rule
+    /// `fixtures/client-rules/forum_activity.json` pins for all three clients.
+    func testTheBadgeSaturatesRatherThanGrowing() {
+        let header = HeaderBarView(frame: .zero)
+        header.forumSlot = .activity
+
+        header.forumUnread = warrenUnreadSaturated
+        XCTAssertEqual(header.forumBadgeLabel.text, "15+")
+    }
+
+    /// What is drawn and what VoiceOver reads come from the same two facts,
+    /// so a count on screen is always a count spoken.
+    func testTheSpokenLabelFollowsTheSlotAndTheCount() throws {
+        let header = HeaderBarView(frame: .zero)
+
+        header.forumSlot = .community
+        let lifebuoy = try XCTUnwrap(header.forumButton.accessibilityLabel)
+
+        header.forumSlot = .activity
+        header.forumUnread = 0
+        let quiet = try XCTUnwrap(header.forumButton.accessibilityLabel)
+
+        header.forumUnread = 4
+        let waiting = try XCTUnwrap(header.forumButton.accessibilityLabel)
+
+        XCTAssertNotEqual(lifebuoy, quiet)
+        XCTAssertNotEqual(quiet, waiting)
+        XCTAssertTrue(waiting.contains("4"), waiting)
+    }
+
+    /// The forum glyph rides the same two backdrops as the rest of the header,
+    /// so it is re-tinted with them rather than fixed at init.
+    func testTheForumGlyphIsRetintedWithTheRestOfTheHeader() throws {
+        let header = HeaderBarView(frame: .zero)
+        header.forumSlot = .activity
+
+        header.tone = .light
+        let overCharcoal = try XCTUnwrap(header.forumButton.image(for: .normal))
+        header.tone = .dark
+        let overScenery = try XCTUnwrap(header.forumButton.image(for: .normal))
+
+        XCTAssertNotEqual(overCharcoal, overScenery)
+    }
 }

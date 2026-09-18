@@ -83,6 +83,12 @@ protocol RootContainerViewControllerDelegate: AnyObject, Sendable {
         animated: Bool
     )
 
+    func rootContainerViewControllerShouldShowForum(
+        _ controller: RootContainerViewController,
+        slot: WarrenForumHeaderButton,
+        animated: Bool
+    )
+
     func rootContainerViewSupportedInterfaceOrientations(_ controller: RootContainerViewController)
         -> UIInterfaceOrientationMask
 
@@ -326,6 +332,16 @@ class RootContainerViewController: UIViewController {
         )
     }
 
+    /// Request to open the header's forum slot: the activity panel for a
+    /// wallet that has a forum account, the forum itself for one that has not.
+    func showForum(animated: Bool) {
+        delegate?.rootContainerViewControllerShouldShowForum(
+            self,
+            slot: headerBarView.forumSlot,
+            animated: animated
+        )
+    }
+
     func setOverrideHeaderBarHidden(_ isHidden: Bool?, animated: Bool) {
         overrideHeaderBarHidden = isHidden
 
@@ -339,6 +355,17 @@ class RootContainerViewController: UIViewController {
     func enableHeaderBarButtons(_ enabled: Bool) {
         headerBarView.accountButton.isEnabled = enabled
         headerBarView.settingsButton.isEnabled = enabled
+        headerBarView.forumButton.isEnabled = enabled
+    }
+
+    /// Which button the header's forum slot carries.
+    func setForumSlot(_ slot: WarrenForumHeaderButton) {
+        headerBarView.forumSlot = slot
+    }
+
+    /// Unread forum notifications, as the activity monitor publishes them.
+    func setForumUnread(_ unread: Int) {
+        headerBarView.forumUnread = unread
     }
 
     // MARK: - Accessibility
@@ -386,6 +413,12 @@ class RootContainerViewController: UIViewController {
         headerBarView.settingsButton.addTarget(
             self,
             action: #selector(handleSettingsButtonTap),
+            for: .touchUpInside
+        )
+
+        headerBarView.forumButton.addTarget(
+            self,
+            action: #selector(handleForumButtonTap),
             for: .touchUpInside
         )
 
@@ -440,6 +473,10 @@ class RootContainerViewController: UIViewController {
 
     @objc private func handleSettingsButtonTap() {
         showSettings(animated: true)
+    }
+
+    @objc private func handleForumButtonTap() {
+        showForum(animated: true)
     }
 
     private func setViewControllersInternal(

@@ -21,7 +21,7 @@ struct NotificationSettingsView<ViewModel>: View where ViewModel: NotificationSe
                         ForEach(NotificationKeys.allCases, id: \.self) { key in
                             SwitchRowView(
                                 isOn: viewModel.binding(for: key),
-                                disabled: !viewModel.isNotificationsAllowed,
+                                disabled: key.needsSystemPermission && !viewModel.isNotificationsAllowed,
                                 text: NSLocalizedString(key.title, comment: ""),
                                 accessibilityId: key.identifier
                             )
@@ -90,6 +90,8 @@ private extension NotificationKeys {
         switch self {
         case .account:
             NSLocalizedString("Account time reminders", comment: "")
+        case .forumActivity:
+            NSLocalizedString("Community forum activity", comment: "")
         }
     }
 
@@ -97,6 +99,8 @@ private extension NotificationKeys {
         switch self {
         case .account:
             .accountNotificationSwitch
+        case .forumActivity:
+            .forumActivityNotificationSwitch
         }
     }
 }

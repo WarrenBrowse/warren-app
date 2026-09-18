@@ -307,6 +307,7 @@ public enum AccessibilityIdentifier: Equatable {
     // Notification settings
     case allNotificationSwitch
     case accountNotificationSwitch
+    case forumActivityNotificationSwitch
     case connectionStatusNotificationSwitch
 }
 

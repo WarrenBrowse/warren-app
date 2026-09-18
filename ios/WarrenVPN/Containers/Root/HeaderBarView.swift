@@ -90,7 +90,7 @@ class HeaderBarView: UIView {
     }()
 
     private lazy var buttonContainer: UIStackView = {
-        let stackView = UIStackView(arrangedSubviews: [accountButton, settingsButton])
+        let stackView = UIStackView(arrangedSubviews: [forumButton, accountButton, settingsButton])
         stackView.spacing = 12
         return stackView
     }()
@@ -116,6 +116,52 @@ class HeaderBarView: UIView {
         button.widthAnchor.constraint(equalTo: button.heightAnchor, multiplier: 1).isActive = true
         return button
     }()
+
+    /// The header's forum slot: the activity bell for a wallet that has a
+    /// forum account, the lifebuoy into the forum for one that has not, and
+    /// nothing at all while the setting is off. The desktop header's third
+    /// button and Android's, on the same rule
+    /// (`fixtures/client-rules/forum_activity.json`).
+    let forumButton: UIButton = {
+        let button = IncreasedHitButton(type: .system)
+        button.configureForAutoLayout()
+        button.heightAnchor.constraint(equalToConstant: UIMetrics.Button.barButtonSize).isActive = true
+        button.widthAnchor.constraint(equalTo: button.heightAnchor, multiplier: 1).isActive = true
+        button.isHidden = true
+        return button
+    }()
+
+    /// The unread count over the bell. Hidden at zero: an empty badge would
+    /// invite a click into a panel with nothing in it.
+    let forumBadgeLabel: UILabel = {
+        let label = InsetLabel()
+        label.insets = UIEdgeInsets(top: 1, left: 4, bottom: 1, right: 4)
+        label.font = .warrenMiniSemiBold
+        label.adjustsFontForContentSizeCategory = true
+        label.textAlignment = .center
+        label.backgroundColor = UIColor.Warren.yellow
+        label.textColor = UIColor.Warren.navy
+        label.layer.cornerRadius = 7
+        label.layer.masksToBounds = true
+        label.isHidden = true
+        // The button already carries the count in its accessibility label, so
+        // a second reading of the same number would only repeat it.
+        label.isAccessibilityElement = false
+        return label
+    }()
+
+    /// Which button the forum slot carries. Set from the same pair the other
+    /// two clients read: whether this wallet has a forum account, and whether
+    /// the forum notifications setting is on.
+    var forumSlot: WarrenForumHeaderButton = .none {
+        didSet { applyForumSlot() }
+    }
+
+    /// Unread forum notifications for this installation, as the monitor
+    /// publishes them.
+    var forumUnread: Int = 0 {
+        didSet { applyForumSlot() }
+    }
 
     let settingsButton: UIButton = {
         let button = makeHeaderBarButton(with: UIImage.Buttons.settings)
@@ -176,6 +222,9 @@ class HeaderBarView: UIView {
         )
         deviceNameLabel.textColor = subduedContentColor
         timeLeftLabel.textColor = subduedContentColor
+        // The forum glyph rides the same two backdrops as the rest, so it is
+        // re-tinted here rather than fixed at init.
+        applyForumSlot()
         // The chip has to be re-tinted here with everything else. It rides two
         // very different backdrops (the charcoal bar, and the bright scenery
         // sky on the connect screen), and an edge left in one tone's colour
@@ -183,6 +232,48 @@ class HeaderBarView: UIView {
         productChipLabel.backgroundColor = UIColor.Warren.yellow
         productChipLabel.textColor = UIColor.Warren.navy
         productChipLabel.layer.borderColor = contentColor.withAlphaComponent(0.35).cgColor
+    }
+
+    /// The glyph, the badge and the spoken label of the forum slot, all from
+    /// the same two facts, so what is drawn and what is read out can never
+    /// disagree.
+    private func applyForumSlot() {
+        forumButton.isHidden = forumSlot == .none
+        let symbol = forumSlot == .community ? "lifepreserver" : "bell"
+        forumButton.setImage(
+            UIImage(systemName: symbol)?
+                .withTintColor(contentColor, renderingMode: .alwaysOriginal),
+            for: .normal
+        )
+        let showsCount = forumSlot == .activity && forumUnread > 0
+        forumBadgeLabel.isHidden = !showsCount
+        forumBadgeLabel.text = showsCount ? WarrenForumActivity.label(unread: forumUnread) : nil
+        forumButton.accessibilityLabel = forumSlotAccessibilityLabel(showsCount: showsCount)
+    }
+
+    private func forumSlotAccessibilityLabel(showsCount: Bool) -> String {
+        guard forumSlot == .activity else {
+            return NSLocalizedString(
+                "Community forum",
+                tableName: "Settings",
+                comment: ""
+            )
+        }
+        guard showsCount else {
+            return NSLocalizedString(
+                "Forum activity",
+                tableName: "Settings",
+                comment: ""
+            )
+        }
+        return String(
+            format: NSLocalizedString(
+                "Forum activity, %@ waiting",
+                tableName: "Settings",
+                comment: ""
+            ),
+            WarrenForumActivity.label(unread: forumUnread)
+        )
     }
 
     private func applyProductBadge() {
@@ -282,6 +373,18 @@ class HeaderBarView: UIView {
 
         settingsButton.addConstrainedSubviews([breadcrumbImageView]) {
             breadcrumbImageView.pinEdgesToSuperview(.init([.top(-3), .trailing(-3)]))
+        }
+
+        forumButton.addConstrainedSubviews([forumBadgeLabel]) {
+            forumBadgeLabel.topAnchor.constraint(equalTo: forumButton.topAnchor, constant: -2)
+            forumBadgeLabel.leadingAnchor.constraint(
+                equalTo: forumButton.centerXAnchor,
+                constant: 2
+            )
+            forumBadgeLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 14)
+            forumBadgeLabel.widthAnchor.constraint(
+                greaterThanOrEqualTo: forumBadgeLabel.heightAnchor
+            )
         }
 
         [deviceNameLabel, timeLeftLabel].forEach { deviceInfoHolder.addArrangedSubview($0) }
