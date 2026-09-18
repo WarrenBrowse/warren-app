@@ -62,7 +62,11 @@ extension WarrenForumLinks {
         guard let raw, let components = URLComponents(string: raw), components.scheme != nil else {
             return nil
         }
-        return components.host ?? components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        // `scheme:///action` parses with an EMPTY host, not a missing one, so a
+        // plain `??` took the empty string and the link routed nowhere. That is
+        // the shape the beta scheme uses, which is the shipping channel.
+        let host = components.host.flatMap { $0.isEmpty ? nil : $0 }
+        return host ?? components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     }
 
     /// A topic id as a deep link spells it: decimal digits only (so no sign),
