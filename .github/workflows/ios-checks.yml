@@ -12,10 +12,10 @@
 # reached main.
 #
 # This is the Android gate's twin (`android-checks.yml`): the fast, hermetic
-# signal, no device and no signing identity. The runner is GitHub-hosted
-# `macos-15`, free on this public repository, so the gate needs nothing from
-# the self-hosted pool. The UI and screenshot suites need a booted app and
-# stay on the dispatch-only workflows.
+# signal, no device and no signing identity. The runner is GitHub-hosted and
+# free on this public repository, so the gate needs nothing from the
+# self-hosted pool. The UI and screenshot suites need a booted app and stay on
+# the dispatch-only workflows.
 
 name: iOS checks
 
@@ -56,7 +56,10 @@ permissions:
 jobs:
   unit-tests:
     name: iOS unit tests
-    runs-on: macos-15
+    # macos-26, not macos-15: the test sources use `SendableMetatype`, a Swift
+    # 6.2 type, and the Xcode 16.4 the shared setup action pins cannot compile
+    # it. CI has to build with the toolchain the app is actually written for.
+    runs-on: macos-26
     timeout-minutes: 60
     env:
       SOURCE_PACKAGES_PATH: .spm
@@ -97,6 +100,9 @@ jobs:
 
       - name: Setup project
         uses: ./.github/actions/ios/setup-project-toolchain
+        with:
+          # Empty keeps the image's own Xcode, which carries Swift 6.2.
+          xcode_version: ''
 
       # `WarrenVPNCI` is the plan the release job already runs: the six unit
       # test targets, no UI suite, no booted app.
@@ -111,7 +117,7 @@ jobs:
             -project WarrenVPN.xcodeproj \
             -scheme WarrenVPN \
             -testPlan WarrenVPNCI \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -destination "platform=iOS Simulator,name=iPhone 17" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
             -disableAutomaticPackageResolution \
             -resultBundlePath xcode-test-report \

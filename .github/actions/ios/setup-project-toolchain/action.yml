@@ -9,6 +9,13 @@ inputs:
       - aarch64-apple-ios-sim
       - aarch64-apple-ios
     required: true
+  xcode_version:
+    description: >
+      Xcode to select. Empty keeps the runner image's own default, which is
+      what a toolchain newer than the pin below needs: the test sources use
+      `SendableMetatype` (Swift 6.2), and 16.4 cannot compile it.
+    default: '16.4'
+    required: false
 
 runs:
   using: 'composite'
@@ -50,9 +57,10 @@ runs:
       shell: bash
 
     - name: Setup Xcode
+      if: inputs.xcode_version != ''
       uses: maxim-lobanov/setup-xcode@v1
       with:
-        xcode-version: '16.4'
+        xcode-version: ${{ inputs.xcode_version }}
 
     - name: Configure Xcode project
       run: |
