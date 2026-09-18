@@ -352,8 +352,13 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         _actor.reconnect(to: .preSelected(relays), reconnectReason: .connectionLoss)
     }
 
-    /// warren-api base URL (mirrors the account FFI's baked endpoint).
-    private static let warrenApiBaseURL = "https://api.warrenbrowse.com"
+    /// warren-api base URL, resolved from the product anchors rather than
+    /// written out. The literal that stood here was the PRODUCTION host, so a
+    /// beta build fetched its multi-hop directory from prod: the two names
+    /// resolve to the same box today, which is exactly what makes a wrong
+    /// binding invisible until production splits off. The release-channel rule
+    /// is that a component never hardcodes an API host.
+    private static var warrenApiBaseURL: String { WarrenProductAnchors.current.apiURL }
 
     /// Fetches the signed multi-hop directory JSON over URLSession
     /// (transport only; the trust-chain verification happens Rust-side in

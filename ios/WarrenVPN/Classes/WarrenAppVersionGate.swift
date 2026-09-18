@@ -79,8 +79,14 @@ final class WarrenAppVersionGate: @unchecked Sendable {
     static let shared = WarrenAppVersionGate()
 
     /// Same base as the other platforms' manifests
-    /// (`mullvad-update::defaults::WARREN_RELEASES_URL`).
-    private static let manifestURL = URL(string: "https://api.warrenbrowse.com/updates/desktop/ios.json")!
+    /// (`mullvad-update::defaults::WARREN_RELEASES_URL`), resolved from the
+    /// product anchors rather than written out: the literal here was the
+    /// PRODUCTION host, so a beta build asked production whether it was too
+    /// old to run. Both names resolve to the same box today, which is what
+    /// keeps a wrong binding invisible until production splits off.
+    private static var manifestURL: URL {
+        URL(string: "\(WarrenProductAnchors.current.apiURL)/updates/desktop/ios.json")!
+    }
     private static let checkInterval: TimeInterval = Duration.days(1).timeInterval
     private static let snapshotKey = "WarrenVersionGateSnapshot"
     private static let lastCheckKey = "WarrenVersionGateLastCheck"
