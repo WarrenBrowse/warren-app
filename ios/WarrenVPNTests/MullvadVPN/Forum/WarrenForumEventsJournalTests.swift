@@ -79,8 +79,20 @@ final class WarrenForumEventsJournalTests: XCTestCase {
 
     func testTheJournalKeepsItsNewestHalfPastTheCap() throws {
         let journal = WarrenForumEventsJournal(directory: directory)
-        // Well past the cap: every line is about 90 bytes.
-        let count = Int(WarrenForumEventsJournal.maxBytes) / 60
+        // The line length is measured rather than assumed: guessing it at 90
+        // bytes when it is about 60 put the run just under the cap, so the
+        // trim this test exists for never ran and it passed on nothing.
+        journal.record(.loginResult, .class("expired"))
+        journal.flush()
+        let lineBytes = try XCTUnwrap(
+            try String(contentsOf: journal.fileURL, encoding: .utf8).split(
+                separator: "\n", omittingEmptySubsequences: true
+            ).first
+        ).utf8.count + 1
+        XCTAssertGreaterThan(lineBytes, 0)
+
+        // Twice the cap, so the head must be dropped whatever the line length.
+        let count = 2 * WarrenForumEventsJournal.maxBytes / lineBytes
         for _ in 0..<count {
             journal.record(.loginResult, .class("expired"))
         }

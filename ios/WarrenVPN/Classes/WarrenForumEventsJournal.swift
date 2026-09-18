@@ -140,7 +140,14 @@ final class WarrenForumEventsJournal: @unchecked Sendable {
             do {
                 try FileManager.default.createDirectory(
                     at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-                if let size = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize, size > Self.maxBytes {
+                // Through FileManager, not `fileURL.resourceValues`: the URL
+                // caches the values it is asked for, and the same URL instance
+                // serves every write, so the size read back was the one taken
+                // on the first call and the cap never fired.
+                let size =
+                    (try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size])
+                    .flatMap { $0 as? NSNumber }?.intValue ?? 0
+                if size > Self.maxBytes {
                     truncateHead()
                 }
                 append(line + "\n")
