@@ -739,7 +739,7 @@ class TunnelViewController: UIViewController, RootContainment {
         // the alert can go now and the POST run behind it.
         dismissPinMismatchAlert()
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 self?.logger.info("pubkey mismatch report not sent: no identity")

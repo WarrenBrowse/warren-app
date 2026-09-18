@@ -245,6 +245,11 @@ FILES_TO_ADD = {
   "WarrenVPN/Coordinators/WarrenForumActivityCoordinator.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityPanelTests.swift" => "WarrenVPNTests",
 
+  # The recovery phrase, held somewhere it can actually be erased. In the
+  # runtime framework beside `WarrenWallet`, which is what consumes it.
+  "WarrenRustRuntime/WarrenSecureMnemonic.swift" => "WarrenRustRuntime",
+  "WarrenVPNTests/MullvadVPN/Wallet/WarrenSecureMnemonicTests.swift" => "WarrenVPNTests",
+
   # What a marked build is, and what its network costs the user in speed.
   "WarrenRustRuntime/WarrenNetworkInfo.swift" => "WarrenRustRuntime",
   "WarrenRustRuntimeTests/WarrenNetworkInfoTests.swift" => "WarrenRustRuntimeTests",

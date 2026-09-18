@@ -78,7 +78,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
     /// material is zeroed via `forgetSecret()` immediately after
     /// derivation.
     public func publicKeyAddress() -> String? {
-        guard let mnemonic = try? WarrenWalletKeychain.load(),
+        guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
         else {
             return nil
@@ -93,7 +93,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
     /// Keychain entry is unreadable. Retained for low-level diagnostics ;
     /// prefer `publicKeyAddress()` for anything user-facing.
     public func publicKeyHex() -> String? {
-        guard let mnemonic = try? WarrenWalletKeychain.load(),
+        guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
         else {
             return nil
@@ -307,7 +307,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
             }
         #endif
         queue.async { [weak self] in
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 completion(.failure(.noWallet))
@@ -336,7 +336,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         completion: @escaping @Sendable (Result<Date, WarrenWalletInteractorError>) -> Void
     ) {
         queue.async { [weak self] in
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 completion(.failure(.noWallet))
@@ -362,7 +362,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         completion: @escaping @Sendable (Result<String, WarrenWalletInteractorError>) -> Void
     ) {
         queue.async { [weak self] in
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 completion(.failure(.noWallet))
@@ -388,7 +388,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         completion: @escaping @Sendable (Result<Date, WarrenWalletInteractorError>) -> Void
     ) {
         queue.async { [weak self] in
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 completion(.failure(.noWallet))
@@ -412,7 +412,7 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         completion: @escaping @Sendable (Result<Void, WarrenWalletInteractorError>) -> Void
     ) {
         queue.async { [weak self] in
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 completion(.failure(.noWallet))

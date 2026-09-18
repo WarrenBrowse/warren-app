@@ -49,6 +49,10 @@ public struct WarrenWalletKeychain {
         guard let data = mnemonic.data(using: .utf8) else {
             throw WarrenWalletKeychainError.decodingFailed
         }
+        try save(data: data)
+    }
+
+    private static func save(data: Data) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -75,8 +79,29 @@ public struct WarrenWalletKeychain {
         throw WarrenWalletKeychainError.secStatus(updateStatus)
     }
 
-    /// Loads the mnemonic from the Keychain.
+    /// Loads the phrase into a buffer that can be wiped, which a `String`
+    /// cannot be. Every caller that only passes the phrase on to Rust uses
+    /// this; [`load()`] stays for the one screen that has to draw it.
+    public static func loadSecure() throws -> WarrenSecureMnemonic {
+        WarrenSecureMnemonic(data: try loadData())
+    }
+
+    /// Saves `mnemonic` without ever making a `String` of it.
+    public static func save(mnemonic: WarrenSecureMnemonic) throws {
+        try mnemonic.withData { try save(data: $0) }
+    }
+
+    /// Loads the mnemonic as text. Reserved for the backup screen, which has
+    /// to draw it; everything else takes [`loadSecure()`].
     public static func load() throws -> String {
+        guard let mnemonic = String(data: try loadData(), encoding: .utf8) else {
+            throw WarrenWalletKeychainError.decodingFailed
+        }
+        return mnemonic
+    }
+
+    /// The stored bytes, the one read both loaders share.
+    private static func loadData() throws -> Data {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -88,11 +113,10 @@ public struct WarrenWalletKeychain {
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         switch status {
         case errSecSuccess:
-            guard let data = item as? Data,
-                  let mnemonic = String(data: data, encoding: .utf8) else {
+            guard let data = item as? Data else {
                 throw WarrenWalletKeychainError.decodingFailed
             }
-            return mnemonic
+            return data
         case errSecItemNotFound:
             throw WarrenWalletKeychainError.notFound
         default:

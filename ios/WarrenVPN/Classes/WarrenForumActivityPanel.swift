@@ -54,7 +54,7 @@ public struct WarrenForumActivityReader: WarrenForumActivityReading {
         _ body: @escaping @Sendable (Data) -> T
     ) async -> T {
         await Task.detached(priority: .userInitiated) {
-            guard let mnemonic = try? WarrenWalletKeychain.load(),
+            guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             else {
                 return failure

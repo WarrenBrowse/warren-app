@@ -33,16 +33,18 @@ public enum WarrenWalletError: Error, Equatable {
 /// another long-lived `Data` ; instead, pass `seed` directly to
 /// `signCanonicalMessage(_:)` which keeps the secret inside Rust.
 public final class WarrenWallet {
-    /// The BIP39 mnemonic in cleartext. Hold only for the duration of
-    /// the backup-display step ; zero out via `forgetSecret()` once
-    /// persisted to the Keychain by the consumer.
-    private(set) public var mnemonic: String
+    /// The BIP39 mnemonic in cleartext, for the generate-and-show-once flow
+    /// that is the only place a wallet is created from a phrase nobody has
+    /// stored yet. Nil for a wallet derived from a `WarrenSecureMnemonic`,
+    /// which is how every signing flow loads one: a `String` cannot be wiped,
+    /// so a wallet used only to sign must not carry one.
+    private(set) public var mnemonic: String?
     /// 32-byte HKDF-derived Ed25519 seed.
     private(set) public var seed: Data
     /// 32-byte Ed25519 public key.
     public let publicKey: Data
 
-    private init(mnemonic: String, seed: Data, publicKey: Data) {
+    private init(mnemonic: String?, seed: Data, publicKey: Data) {
         self.mnemonic = mnemonic
         self.seed = seed
         self.publicKey = publicKey
@@ -71,10 +73,34 @@ public final class WarrenWallet {
         return try fromMnemonic(phrase)
     }
 
+    /// Loads a wallet from a phrase held in a buffer that can be wiped.
+    ///
+    /// The one path a signing flow should take: the phrase goes Keychain to
+    /// Rust without ever becoming a `String`, which cannot be erased. The
+    /// wallet it returns holds no phrase for the same reason, so the caller
+    /// keeps the `WarrenSecureMnemonic` for as long as it needs the words and
+    /// wipes it.
+    public static func fromMnemonic(_ mnemonic: WarrenSecureMnemonic) throws -> WarrenWallet {
+        try mnemonic.withCString { cstr in
+            try derive(from: cstr, phrase: nil)
+        }
+    }
+
     /// Loads a wallet from an existing 12-word BIP39 mnemonic, validating
     /// the phrase against the BIP39 wordlist + checksum.
     public static func fromMnemonic(_ mnemonic: String) throws -> WarrenWallet {
         let trimmed = mnemonic.trimmingCharacters(in: .whitespacesAndNewlines)
+        return try trimmed.withCString { cstr in
+            try derive(from: cstr, phrase: trimmed)
+        }
+    }
+
+    /// Seed and pubkey from a phrase already in C form, the one derivation
+    /// both entries share.
+    private static func derive(
+        from cstr: UnsafePointer<CChar>,
+        phrase: String?
+    ) throws -> WarrenWallet {
         // 32-byte seed buffer (filled by FFI on success).
         var seedBuffer = [UInt8](repeating: 0, count: 32)
         // Every exit wipes it, including the successful one, which used to
@@ -87,10 +113,8 @@ public final class WarrenWallet {
                 memset_s(buffer.baseAddress, buffer.count, 0, buffer.count)
             }
         }
-        let seedStatus: Int32 = trimmed.withCString { cstr in
-            seedBuffer.withUnsafeMutableBufferPointer { ptr in
-                warren_wallet_seed_from_mnemonic(cstr, ptr.baseAddress)
-            }
+        let seedStatus: Int32 = seedBuffer.withUnsafeMutableBufferPointer { ptr in
+            warren_wallet_seed_from_mnemonic(cstr, ptr.baseAddress)
         }
         guard seedStatus == 0 else {
             throw WarrenWalletError.invalidMnemonic
@@ -106,7 +130,7 @@ public final class WarrenWallet {
             throw WarrenWalletError.ffi(pubkeyStatus)
         }
         return WarrenWallet(
-            mnemonic: trimmed,
+            mnemonic: phrase,
             seed: Data(seedBuffer),
             publicKey: Data(pubkeyBuffer)
         )
@@ -115,7 +139,7 @@ public final class WarrenWallet {
     /// Returns the underlying BIP39 phrase. Avoid leaking to UI without
     /// the blur+reveal pattern enforced by `WarrenMnemonicDisplayView`.
     public func revealMnemonic() -> String {
-        mnemonic
+        mnemonic ?? ""
     }
 
     /// Returns the public key as a lower-case hex string (exactly 64
@@ -147,12 +171,20 @@ public final class WarrenWallet {
         }
     }
 
-    /// Wipes the in-memory mnemonic string. Idempotent. Call after the
-    /// consumer has persisted the mnemonic to the Keychain.
+    /// Drops the phrase and zeroes the seed. Idempotent. Call as soon as the
+    /// consumer has persisted the phrase to the Keychain, or finished
+    /// signing.
+    ///
+    /// The seed is wiped for real; the phrase, when this wallet carries one at
+    /// all, can only be dropped, which is why every signing flow loads through
+    /// `WarrenSecureMnemonic` and this wallet then holds none.
     public func forgetSecret() {
-        // Swift strings on the heap cannot be reliably zeroed (CoW +
-        // small-string optimisation), but we can drop the reference.
-        mnemonic = ""
+        mnemonic = nil
+        let count = seed.count
+        guard count > 0 else { return }
+        seed.withUnsafeMutableBytes { buffer in
+            memset_s(buffer.baseAddress, count, 0, count)
+        }
     }
 
     /// Signs `payload` with the Ed25519 derived signing key.

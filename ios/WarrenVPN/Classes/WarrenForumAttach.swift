@@ -430,7 +430,7 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
         let journalURL = journal.fileURL
         return WarrenForumAttachUpload(
             loadWallet: {
-                guard let mnemonic = try? WarrenWalletKeychain.load() else { return nil }
+                guard let mnemonic = try? WarrenWalletKeychain.loadSecure() else { return nil }
                 return try? WarrenWallet.fromMnemonic(mnemonic)
             },
             collectGzipped: { address in
@@ -463,7 +463,7 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
     /// The wallet's SS58 address for the preview's redaction, the seed
     /// forgotten right after; `nil` with no wallet.
     private static func walletAddress() -> String? {
-        guard let mnemonic = try? WarrenWalletKeychain.load(),
+        guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
         else {
             return nil

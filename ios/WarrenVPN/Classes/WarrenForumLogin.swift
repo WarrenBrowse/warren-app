@@ -234,7 +234,7 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
         }
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let outcome: WarrenForumLoginOutcome
-            if let mnemonic = try? WarrenWalletKeychain.load(),
+            if let mnemonic = try? WarrenWalletKeychain.loadSecure(),
                 let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
             {
                 defer { wallet.forgetSecret() }

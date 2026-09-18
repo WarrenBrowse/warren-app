@@ -553,7 +553,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// account is never shown the offer drawn for another, and it is never
     /// logged.
     private static func walletAddress() -> String? {
-        guard let mnemonic = try? WarrenWalletKeychain.load(),
+        guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
         else {
             return nil
@@ -573,7 +573,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// never logged, not even as a length: it is a bearer token worth a month
     /// of service and its only destination is the reader's own screen.
     private static func campaignVoucher(_ campaignID: String) -> WarrenCampaignVoucherAnswer {
-        guard let mnemonic = try? WarrenWalletKeychain.load(),
+        guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
             let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
         else {
             return .unanswered

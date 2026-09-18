@@ -167,7 +167,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // Failure here means the wallet was never provisioned: the actor's
         // `start(options:)` logs + bails out cleanly.
         do {
-            let mnemonic = try WarrenWalletKeychain.load()
+            let mnemonic = try WarrenWalletKeychain.loadSecure()
             let wallet = try WarrenWallet.fromMnemonic(mnemonic)
             _actor.bindWalletSigningSeed(wallet.seed)
             wallet.forgetSecret()
