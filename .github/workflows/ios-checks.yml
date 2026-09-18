@@ -28,6 +28,12 @@ on:
     paths: &ios_paths
       - "ios/**"
       - "warren-ios/**"
+      # Compiled into the iOS FFI: the forum wire and the incident reports are
+      # shared crates, so a change there reaches this app without touching a
+      # path named after it.
+      - "warren-forum/**"
+      - "warren-incidents/**"
+      - "warren-product-env/**"
       # Replayed by the Swift unit tests: the scenery placement formula, the
       # forum link classes, the outcome envelopes.
       - "fixtures/client-rules/**"
