@@ -72,6 +72,12 @@ public enum WarrenAppGroupKey: String, CaseIterable {
 
     case natPmpRateLimitedAt = "WarrenTunnel.natPmpRateLimitedAt"
 
+    /// `Int`. The goodput prober's verdict for the live session, as
+    /// `WarrenPathHealth`. The supervisor's dead-path watches see QUIC
+    /// keep-alives, so this is the only signal that can see an exit that
+    /// stays up while forwarding nothing.
+    case pathHealth = "WarrenTunnel.pathHealth"
+
     /// `Int`. Cumulative bytes received over the tunnel since the
     /// PacketTunnel extension started. Surfaced by
     /// `WarrenTunnelStatisticsView`.

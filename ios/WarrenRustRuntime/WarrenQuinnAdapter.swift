@@ -213,6 +213,23 @@ public enum WarrenTunnelEvent: Sendable {
     case natPmpRateLimited(retryAfter: UInt32)
 }
 
+/// What the goodput prober makes of the live datapath.
+///
+/// The supervisor's dead-path watches see QUIC keep-alives, so none of them
+/// can see the class where the transport stays up while nothing crosses the
+/// datapath. This is the one signal that can, and until it was read the app
+/// said "You are protected" over a tunnel carrying nothing.
+public enum WarrenPathHealth: Int32, Sendable, Equatable {
+    /// Paired probes deliver at both size classes.
+    case healthy = 0
+    /// Large probes are lost while small ones survive: a size-selective
+    /// blackhole. Bulk transfers are dead even though the tunnel is up.
+    case degradedLarge = 1
+    /// Both sizes are lost while the session stays up: the exit is not
+    /// forwarding.
+    case degradedBoth = 2
+}
+
 /// Exit-allocated IPv4 surfaced by the multi-hop circuit after its
 /// setup-stream returns an `IpAssign`. The consumer re-applies the tunnel
 /// network settings so the TUN source IP matches what the exit expects
@@ -439,6 +456,14 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         lock.unlock()
         guard let h else { return }
         _ = warren_tunnel_resume(rawTunnelHandle(h))
+    }
+
+    /// What the goodput prober makes of the live datapath. Healthy while no
+    /// session is running and reset when one ends, so a stale verdict can
+    /// never describe a tunnel that no longer exists. One relaxed atomic load
+    /// on the Rust side; safe to call from any thread.
+    public static func pathHealth() -> WarrenPathHealth {
+        WarrenPathHealth(rawValue: warren_tunnel_path_health()) ?? .healthy
     }
 
     /// Returns the current tunnel status. Reads from atomic counters

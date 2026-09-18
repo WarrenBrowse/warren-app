@@ -71,6 +71,7 @@
 		0BF075EF918D344849E95E01 /* WarrenGzipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 290FFF2D6A88B5AB30BD7FF4 /* WarrenGzipTests.swift */; };
 		0CF221770199A1037C69AB60 /* WarrenQuinnAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF686FB1FFD31D8827125C3 /* WarrenQuinnAdapterTests.swift */; };
 		1091DCD9DF532738D446B104 /* WarrenForumDigestPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FE1CB34DC0FB0229766FAC /* WarrenForumDigestPoller.swift */; };
+		1107B2061DEF743AB70402B0 /* WarrenPathHealthNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5482EB9EBE8D4224BEEBA33 /* WarrenPathHealthNotificationProvider.swift */; };
 		11D56B7245D32CCA7D6E2C7D /* WarrenForumActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 432FD3482738B15BD504D4C0 /* WarrenForumActivityView.swift */; };
 		1250A78DE015AFFFCB8A5388 /* StoreSubscriptionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21B9E41732A255F7BEF938A1 /* StoreSubscriptionTests.swift */; };
 		1553A67903D811C3B2B0758B /* OnboardingWizardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3551208643554FEF36479DE8 /* OnboardingWizardView.swift */; };
@@ -896,6 +897,7 @@
 		E9D32F56F6E20F4C4C5EC257 /* WarrenVersionCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = B853DF8703B360F81B91110A /* WarrenVersionCheck.swift */; };
 		EA3C11B58AB23772EB21A7B3 /* WarrenAppVersionGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F0EFDA343987F5CE71FEC08 /* WarrenAppVersionGate.swift */; };
 		EA58E43AEF9C45C18CB7EDA4 /* ConnectionViewActionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB7363BBA27EE2B775D859D4 /* ConnectionViewActionsTests.swift */; };
+		EAF5D1B60F5B7947246D6477 /* WarrenPathHealthNotificationProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1CC92EF81A4B7C459704C600 /* WarrenPathHealthNotificationProviderTests.swift */; };
 		EB23CD6DF1096707C4CE4778 /* WarrenAboutViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94342F191F024445630175FD /* WarrenAboutViewTests.swift */; };
 		EEB2ADE15D2589FB333B3D13 /* WarrenWalletRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117BD68BE2C77CD7DD746086 /* WarrenWalletRoutingTests.swift */; };
 		F006CCFC2B99CC8400C6C2AC /* EditLocationsCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F006CCFB2B99CC8400C6C2AC /* EditLocationsCoordinator.swift */; };
@@ -1696,6 +1698,7 @@
 		197FF985CD18EA65FE765862 /* WarrenWallet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWallet.swift; sourceTree = "<group>"; };
 		1A936A414CE52F9EA1F098C1 /* WarrenWalletLogout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletLogout.swift; sourceTree = "<group>"; };
 		1BF1B043F5FC0467E7AC28C7 /* WarrenProductAnchorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenProductAnchorsTests.swift; sourceTree = "<group>"; };
+		1CC92EF81A4B7C459704C600 /* WarrenPathHealthNotificationProviderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenPathHealthNotificationProviderTests.swift; sourceTree = "<group>"; };
 		1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenAppGroupKey.swift; sourceTree = "<group>"; };
 		1E4FB03D7DE036E6679D6CE0 /* WarrenWalletEraseViewController.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletEraseViewController.swift; sourceTree = "<group>"; };
 		1ED79C22AF41DDCD08BF4E1B /* WarrenForumActivity.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenForumActivity.swift; sourceTree = "<group>"; };
@@ -2459,6 +2462,7 @@
 		B24C2F93919B5526A741ADA8 /* TunnelImplementation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TunnelImplementation.swift; sourceTree = "<group>"; };
 		B364DC07F3CF4B63A5B1BB6C /* FloatingSearchBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingSearchBar.swift; sourceTree = "<group>"; };
 		B5248552DB197C896789682D /* SceneryLayoutTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SceneryLayoutTests.swift; sourceTree = "<group>"; };
+		B5482EB9EBE8D4224BEEBA33 /* WarrenPathHealthNotificationProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenPathHealthNotificationProvider.swift; sourceTree = "<group>"; };
 		B5AC42C612767C196C474BC0 /* WarrenPinMismatchDetails.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenPinMismatchDetails.swift; sourceTree = "<group>"; };
 		B75ECF1A086E07899D640B8C /* MetadataProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MetadataProvider.swift; sourceTree = "<group>"; };
 		B853DF8703B360F81B91110A /* WarrenVersionCheck.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenVersionCheck.swift; sourceTree = "<group>"; };
@@ -3005,6 +3009,7 @@
 				CA4D5CB7D3CE16E432EC74D2 /* WarrenEnvStandDownNotificationProviderTests.swift */,
 				26C6C88FF811F04678F88CC2 /* WarrenAnnouncementNotificationProviderTests.swift */,
 				B952F23DA76E69854876D1B5 /* WarrenConnectingStuckNotificationProviderTests.swift */,
+				1CC92EF81A4B7C459704C600 /* WarrenPathHealthNotificationProviderTests.swift */,
 			);
 			path = Notifications;
 			sourceTree = "<group>";
@@ -3867,6 +3872,7 @@
 				EE499E2BBAED720F9573A6DD /* WarrenEnvStandDownNotificationProvider.swift */,
 				A013140D75E50FA8C0A4EFF0 /* WarrenAnnouncementNotificationProvider.swift */,
 				4D576A77440D3913D84E26B6 /* WarrenConnectingStuckNotificationProvider.swift */,
+				B5482EB9EBE8D4224BEEBA33 /* WarrenPathHealthNotificationProvider.swift */,
 			);
 			path = "Notification Providers";
 			sourceTree = "<group>";
@@ -6335,6 +6341,7 @@
 				D585D45FCBB626E40E37832E /* WarrenForumDigestPollerTests.swift in Sources */,
 				F8D284992DE7518B6B153583 /* WarrenForumActivityPanelTests.swift in Sources */,
 				37B1D98588B163B20B2A5351 /* WarrenPortForwardingTests.swift in Sources */,
+				EAF5D1B60F5B7947246D6477 /* WarrenPathHealthNotificationProviderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6943,6 +6950,7 @@
 				11D56B7245D32CCA7D6E2C7D /* WarrenForumActivityView.swift in Sources */,
 				50D40ED9F014F2BF2265C6CB /* WarrenForumActivityCoordinator.swift in Sources */,
 				366696F18279A4B75F754D60 /* WarrenPortForwarding.swift in Sources */,
+				1107B2061DEF743AB70402B0 /* WarrenPathHealthNotificationProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

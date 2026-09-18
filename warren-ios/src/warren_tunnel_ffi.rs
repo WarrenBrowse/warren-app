@@ -1349,6 +1349,27 @@ fn spawn_multi_hop(
                 }
             });
         }
+        // Publish the goodput prober's verdict for Swift to read. The
+        // supervisor's dead-path watches cannot see the degradation class
+        // where the transport stays up while nothing crosses the datapath, so
+        // without this the app tells the user "You are protected" on a tunnel
+        // that carries nothing. Taken before `run` consumes the supervisor.
+        // The task ends on its own when the channel closes at teardown, and
+        // the handle's stop path clears the last verdict.
+        let mut health_rx = supervisor.path_health_rx();
+        tokio::spawn(async move {
+            use warrenguard_transport::path_health::PathHealth;
+            loop {
+                set_path_health(match *health_rx.borrow_and_update() {
+                    PathHealth::Healthy => PATH_HEALTH_HEALTHY,
+                    PathHealth::DegradedLarge => PATH_HEALTH_DEGRADED_LARGE,
+                    PathHealth::DegradedBoth => PATH_HEALTH_DEGRADED_BOTH,
+                });
+                if health_rx.changed().await.is_err() {
+                    break;
+                }
+            }
+        });
         // Subscribed BEFORE the spawn: `run` consumes the supervisor, and the
         // API requires the subscription to be taken while it is still alive.
         // Without it a policy refusal was indistinguishable from an ordinary
@@ -1489,6 +1510,47 @@ static LAST_GRANTED_NATPMP_EXTERNAL_PORT: std::sync::atomic::AtomicU16 =
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 static LAST_GRANTED_NATPMP_IS_TCP: std::sync::atomic::AtomicBool =
     std::sync::atomic::AtomicBool::new(false);
+
+/// The goodput prober's last verdict, for Swift to read.
+///
+/// The supervisor's dead-path watches see QUIC keep-alives, so they cannot
+/// see the class where the transport stays up while nothing crosses the
+/// datapath. A process-wide cell rather than handle state: it is written from
+/// the supervisor's own task and read from the app process's poll, neither of
+/// which holds the handle.
+static PATH_HEALTH: std::sync::atomic::AtomicI32 =
+    std::sync::atomic::AtomicI32::new(PATH_HEALTH_HEALTHY);
+
+/// Paired probes deliver at both size classes.
+pub const PATH_HEALTH_HEALTHY: i32 = 0;
+/// Large probes are lost while small ones survive: a size-selective
+/// blackhole. Bulk transfers are dead for the user even though the tunnel is
+/// up.
+pub const PATH_HEALTH_DEGRADED_LARGE: i32 = 1;
+/// Both sizes are lost while the session stays up: the exit is not forwarding.
+pub const PATH_HEALTH_DEGRADED_BOTH: i32 = 2;
+
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn set_path_health(value: i32) {
+    PATH_HEALTH.store(value, std::sync::atomic::Ordering::Relaxed);
+}
+
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn reset_path_health() {
+    PATH_HEALTH.store(PATH_HEALTH_HEALTHY, std::sync::atomic::Ordering::Relaxed);
+}
+
+/// The goodput prober's verdict for the live session:
+/// [`PATH_HEALTH_HEALTHY`], [`PATH_HEALTH_DEGRADED_LARGE`] or
+/// [`PATH_HEALTH_DEGRADED_BOTH`].
+///
+/// Healthy while no session is running, and reset when one ends, so a stale
+/// verdict can never describe a tunnel that no longer exists. Cheap enough to
+/// poll: one relaxed atomic load, no allocation and no lock.
+#[unsafe(no_mangle)]
+pub extern "C" fn warren_tunnel_path_health() -> i32 {
+    PATH_HEALTH.load(std::sync::atomic::Ordering::Relaxed)
+}
 
 /// The mapping a session asks the exit for, read once off the C ABI and
 /// carried to the spawn that happens later, when the inner address is known.
@@ -1775,6 +1837,9 @@ pub unsafe extern "C" fn warren_tunnel_stop(handle: *mut WarrenTunnelHandle) {
         // how `run_watchdog` exits on its own, and it must not outlive the
         // session it probes.
         clear_path_change_channel();
+        // The verdict describes the session that is ending; leaving it set
+        // would tell the next screen the new tunnel is already degraded.
+        reset_path_health();
         // SAFETY: caller upholds the precondition that `handle` came
         // from `warren_tunnel_start` and has not been stopped yet. We
         // reconstitute the Box so Drop runs (runtime shutdown, channel

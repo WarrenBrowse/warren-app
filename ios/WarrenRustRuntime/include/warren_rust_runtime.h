@@ -6,6 +6,23 @@
 #include <stdlib.h>
 
 /**
+ * Paired probes deliver at both size classes.
+ */
+#define PATH_HEALTH_HEALTHY 0
+
+/**
+ * Large probes are lost while small ones survive: a size-selective
+ * blackhole. Bulk transfers are dead for the user even though the tunnel is
+ * up.
+ */
+#define PATH_HEALTH_DEGRADED_LARGE 1
+
+/**
+ * Both sizes are lost while the session stays up: the exit is not forwarding.
+ */
+#define PATH_HEALTH_DEGRADED_BOTH 2
+
+/**
  * Used by Swift to instruct which access method kind it is trying to convert
  */
 enum SwiftAccessMethodKind {
@@ -406,6 +423,17 @@ typedef struct SwiftServerMock {
  * - `message`: Null-terminated UTF-8 string containing the log message
  */
 typedef void (*LogCallback)(uint8_t level, const char *message);
+
+/**
+ * The goodput prober's verdict for the live session:
+ * [`PATH_HEALTH_HEALTHY`], [`PATH_HEALTH_DEGRADED_LARGE`] or
+ * [`PATH_HEALTH_DEGRADED_BOTH`].
+ *
+ * Healthy while no session is running, and reset when one ends, so a stale
+ * verdict can never describe a tunnel that no longer exists. Cheap enough to
+ * poll: one relaxed atomic load, no allocation and no lock.
+ */
+int32_t warren_tunnel_path_health(void);
 
 /**
  * Starts a Warren tunnel with the given parameters. Returns an opaque

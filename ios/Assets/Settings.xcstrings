@@ -13204,6 +13204,602 @@
           }
         }
       }
+    },
+    "SERVER NOT FORWARDING TRAFFIC": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخادم لا يمرّر البيانات"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVEREN VIDERESENDER IKKE TRAFIK"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVER LEITET KEINEN VERKEHR WEITER"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVER NOT FORWARDING TRAFFIC"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EL SERVIDOR NO REENVÍA EL TRÁFICO"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سرور ترافیک را عبور نمی‌دهد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PALVELIN EI VÄLITÄ LIIKENNETTÄ"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LE SERVEUR NE TRANSMET PLUS LE TRAFIC"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "IL SERVER NON INOLTRA IL TRAFFICO"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーがトラフィックを転送していません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버가 트래픽을 전달하지 않습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆာဗာသည် ဒေတာကို မဖြတ်သန်းစေပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVEREN VIDERESENDER IKKE TRAFIKK"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVER STUURT GEEN VERKEER DOOR"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERWER NIE PRZEKAZUJE RUCHU"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O SERVIDOR NÃO ESTÁ A ENCAMINHAR O TRÁFEGO"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVERUL NU MAI TRANSMITE TRAFICUL"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "СЕРВЕР НЕ ПРОПУСКАЕТ ТРАФИК"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SERVERN VIDAREBEFORDRAR INTE TRAFIK"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์ไม่ส่งต่อทราฟฟิก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "SUNUCU TRAFİĞİ İLETMİYOR"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "СЕРВЕР НЕ ПЕРЕДАЄ ТРАФІК"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器未转发流量"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器未轉發流量"
+          }
+        }
+      }
+    },
+    "CONNECTION CARRYING LITTLE": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاتصال يمرّر القليل"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FORBINDELSEN BÆRER LIDT"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERBINDUNG TRÄGT WENIG"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONNECTION CARRYING LITTLE"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA CONEXIÓN TRANSPORTA POCO"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال کم عبور می‌دهد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "YHTEYS KANTAA VÄHÄN"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA CONNEXION NE PASSE PRESQUE RIEN"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "LA CONNESSIONE TRASPORTA POCO"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続がほとんど通っていません"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결이 거의 통하지 않습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ချိတ်ဆက်မှုမှ အနည်းငယ်သာ ဖြတ်သန်းနေသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FORBINDELSEN BÆRER LITE"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VERBINDING DRAAGT WEINIG"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "POŁĄCZENIE PRZENOSI NIEWIELE"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A LIGAÇÃO TRANSPORTA POUCO"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CONEXIUNEA TRANSPORTĂ PUȚIN"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "СОЕДИНЕНИЕ ПРОПУСКАЕТ МАЛО"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ANSLUTNINGEN BÄR LITE"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเชื่อมต่อส่งข้อมูลได้น้อย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "BAĞLANTI ÇOK AZ TAŞIYOR"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "З'ЄДНАННЯ ПРОПУСКАЄ МАЛО"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "连接几乎不通"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連線幾乎不通"
+          }
+        }
+      }
+    },
+    "The server stopped forwarding your traffic. Warren will switch or reconnect automatically.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توقّف الخادم عن تمرير بياناتك. ستقوم Warren بالتبديل أو إعادة الاتصال تلقائيًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveren er holdt op med at videresende din trafik. Warren skifter eller genopretter forbindelsen automatisk."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Server leitet deinen Verkehr nicht mehr weiter. Warren wechselt oder verbindet sich automatisch neu."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor ha dejado de reenviar tu tráfico. Warren cambiará de servidor o se reconectará automáticamente."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سرور دیگر ترافیک شما را عبور نمی‌دهد. Warren به‌طور خودکار جابه‌جا یا دوباره وصل می‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Palvelin lakkasi välittämästä liikennettäsi. Warren vaihtaa palvelinta tai yhdistää uudelleen automaattisesti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le serveur ne transmet plus votre trafic. Warren va changer de serveur ou se reconnecter automatiquement."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il server ha smesso di inoltrare il tuo traffico. Warren cambierà server o si riconnetterà automaticamente."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーがトラフィックの転送を停止しました。Warren が自動的に切り替えるか再接続します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버가 트래픽 전달을 멈췄습니다. Warren이 자동으로 서버를 바꾸거나 다시 연결합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆာဗာသည် သင့်ဒေတာကို ဖြတ်သန်းစေခြင်း ရပ်လိုက်ပြီ။ Warren သည် အလိုအလျောက် ပြောင်းလဲ သို့မဟုတ် ပြန်ချိတ်ဆက်ပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serveren har sluttet å videresende trafikken din. Warren bytter eller kobler til på nytt automatisk."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De server stuurt je verkeer niet meer door. Warren wisselt of maakt automatisch opnieuw verbinding."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serwer przestał przekazywać Twój ruch. Warren automatycznie zmieni serwer lub połączy się ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O servidor deixou de encaminhar o teu tráfego. A Warren vai mudar de servidor ou reconectar automaticamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serverul nu îți mai transmite traficul. Warren va schimba serverul sau se va reconecta automat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер перестал пропускать ваш трафик. Warren автоматически сменит сервер или переподключится."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servern har slutat vidarebefordra din trafik. Warren byter server eller återansluter automatiskt."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เซิร์ฟเวอร์หยุดส่งต่อทราฟฟิกของคุณ Warren จะสลับเซิร์ฟเวอร์หรือเชื่อมต่อใหม่โดยอัตโนมัติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sunucu trafiğinizi iletmeyi bıraktı. Warren otomatik olarak sunucu değiştirecek veya yeniden bağlanacak."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сервер перестав передавати ваш трафік. Warren автоматично змінить сервер або перепідключиться."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "服务器已停止转发你的流量。Warren 会自动切换服务器或重新连接。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "伺服器已停止轉發你的流量。Warren 會自動切換伺服器或重新連線。"
+          }
+        }
+      }
+    },
+    "Something on the way is dropping the larger packets, so downloads and calls will struggle. Warren keeps measuring and will move you if it does not clear.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شيء ما في الطريق يسقط الحزم الكبيرة، لذا ستتعثر التنزيلات والمكالمات. تواصل Warren القياس وستنقلك إن لم تتحسن الحالة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noget undervejs smider de større pakker væk, så downloads og opkald vil hakke. Warren bliver ved med at måle og flytter dig, hvis det ikke retter sig."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etwas auf dem Weg verwirft die größeren Pakete, deshalb hängen Downloads und Anrufe. Warren misst weiter und verlegt dich, wenn es nicht besser wird."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Something on the way is dropping the larger packets, so downloads and calls will struggle. Warren keeps measuring and will move you if it does not clear."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo en el camino está descartando los paquetes grandes, así que las descargas y las llamadas irán a trompicones. Warren sigue midiendo y te cambiará de servidor si no mejora."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "چیزی در مسیر بسته‌های بزرگ‌تر را دور می‌اندازد، بنابراین دانلودها و تماس‌ها دچار مشکل می‌شوند. Warren اندازه‌گیری را ادامه می‌دهد و اگر برطرف نشود شما را جابه‌جا می‌کند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jokin matkan varrella pudottaa isommat paketit, joten lataukset ja puhelut takkuavat. Warren jatkaa mittaamista ja siirtää sinut, jos tilanne ei korjaannu."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quelque chose sur le trajet jette les gros paquets, les téléchargements et les appels vont donc peiner. Warren continue de mesurer et vous déplacera si cela ne se rétablit pas."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qualcosa lungo il percorso scarta i pacchetti più grandi, quindi download e chiamate faranno fatica. Warren continua a misurare e ti sposterà se non si risolve."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "経路のどこかで大きなパケットが落とされており、ダウンロードや通話が滞ります。Warren は計測を続け、解消しなければ別のサーバーへ移します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "경로의 어딘가에서 큰 패킷이 버려지고 있어 다운로드와 통화가 원활하지 않습니다. Warren은 계속 측정하며 해소되지 않으면 다른 서버로 옮깁니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "လမ်းတစ်နေရာတွင် ပက်ကတ်ကြီးများကို ဖျက်နေသဖြင့် ဒေါင်းလုဒ်နှင့် ခေါ်ဆိုမှုများ အခက်အခဲရှိမည်။ Warren သည် ဆက်လက် တိုင်းတာပြီး မပြေလည်ပါက သင့်ကို ရွှေ့ပေးပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noe underveis forkaster de større pakkene, så nedlastinger og samtaler vil slite. Warren fortsetter å måle og flytter deg hvis det ikke løser seg."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iets onderweg laat de grotere pakketten vallen, waardoor downloads en gesprekken haperen. Warren blijft meten en verplaatst je als het niet overgaat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Coś po drodze odrzuca większe pakiety, więc pobieranie i rozmowy będą się rwać. Warren mierzy dalej i przeniesie Cię, jeśli to nie ustąpi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo pelo caminho está a descartar os pacotes maiores, por isso descarregamentos e chamadas vão sofrer. A Warren continua a medir e vai mudar-te de servidor se não melhorar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceva pe traseu aruncă pachetele mai mari, așa că descărcările și apelurile vor avea de suferit. Warren continuă să măsoare și te va muta dacă situația nu se limpezește."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Что-то на пути отбрасывает крупные пакеты, поэтому загрузки и звонки будут спотыкаться. Warren продолжает измерять и переведёт вас, если это не пройдёт."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Något längs vägen kastar de större paketen, så nedladdningar och samtal kommer att hacka. Warren fortsätter mäta och flyttar dig om det inte reder ut sig."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "บางอย่างระหว่างทางกำลังทิ้งแพ็กเก็ตขนาดใหญ่ ทำให้การดาวน์โหลดและการโทรติดขัด Warren จะวัดต่อไปและย้ายคุณหากอาการไม่หาย"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yol üzerindeki bir şey büyük paketleri düşürüyor, bu yüzden indirmeler ve aramalar zorlanacak. Warren ölçmeyi sürdürür ve durum düzelmezse sizi taşır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щось на шляху відкидає більші пакети, тож завантаження та дзвінки будуть спотикатися. Warren продовжує вимірювати і перенесе вас, якщо це не мине."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路上有环节在丢弃较大的数据包，下载和通话会很吃力。Warren 会持续测量，若情况不消失就把你迁到别处。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "路上有環節在丟棄較大的封包，下載和通話會很吃力。Warren 會持續測量，若情況不消失就把你遷到別處。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

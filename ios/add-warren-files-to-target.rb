@@ -245,6 +245,13 @@ FILES_TO_ADD = {
   "WarrenVPN/Coordinators/WarrenForumActivityCoordinator.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityPanelTests.swift" => "WarrenVPNTests",
 
+  # "SERVER NOT FORWARDING TRAFFIC": the one verdict that can see an exit
+  # which answers keep-alives while forwarding nothing.
+  "WarrenVPN/Notifications/Notification Providers/WarrenPathHealthNotificationProvider.swift" =>
+    "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Notifications/WarrenPathHealthNotificationProviderTests.swift" =>
+    "WarrenVPNTests",
+
   # Port forwarding: what the screen shows for each mapping the exit reports.
   "WarrenVPN/Classes/WarrenPortForwarding.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/View controllers/Settings/WarrenPortForwardingTests.swift" =>

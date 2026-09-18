@@ -462,6 +462,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             LatestChangesNotificationProvider(appPreferences: appPreferences),
             TunnelStatusNotificationProvider(tunnelManager: tunnelManager),
             WarrenConnectingStuckNotificationProvider(tunnelManager: tunnelManager),
+            WarrenPathHealthNotificationProvider(tunnelManager: tunnelManager),
             AccountExpirySystemNotificationProvider(
                 isNotificationEnabled: appPreferences.notificationSettings.isAccountNotificationEnabled,
                 notificationSettingsUpdater: notificationSettingsUpdater, tunnelManager: tunnelManager),

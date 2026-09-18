@@ -226,6 +226,13 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // driving the main app's obfuscation indicator.
         let obfuscationActive = if case .connected = status.state { true } else { false }
         defaults.set(obfuscationActive, forKey: WarrenAppGroupKey.obfuscationActive.rawValue)
+        // The one verdict that can see an exit which answers keep-alives
+        // while forwarding nothing. Rides this 2 s tick rather than an event:
+        // it is a level, not an edge, and the app polls the same snapshot.
+        defaults.set(
+            Int(WarrenQuinnAdapter.pathHealth().rawValue),
+            forKey: WarrenAppGroupKey.pathHealth.rawValue
+        )
     }
 
     /// Localized label for the current state. Falls back to "Failed"
@@ -397,6 +404,10 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             // frees the lease when the session closes, so a lingering
             // "open"+port would lie to the settings view on next launch.
             Self.clearNatPmpKeys(in: defaults)
+            // Same rationale: a verdict describes the session that just
+            // ended, and leaving it set would report the next tunnel as
+            // already degraded before it has carried a packet.
+            defaults.removeObject(forKey: WarrenAppGroupKey.pathHealth.rawValue)
         }
     }
 

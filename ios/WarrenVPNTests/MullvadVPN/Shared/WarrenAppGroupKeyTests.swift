@@ -22,7 +22,7 @@ final class WarrenAppGroupKeyTests: XCTestCase {
     /// test fails fast so the omission is caught at build time.
     func test_allCases_includesAllExpectedKeys() {
         let cases = WarrenAppGroupKey.allCases
-        XCTAssertEqual(cases.count, 17, "Add the new key to consumers before expanding allCases")
+        XCTAssertEqual(cases.count, 18, "Add the new key to consumers before expanding allCases")
         // Event surfaces (PacketTunnel extension to main app observer).
         XCTAssertTrue(cases.contains(.lastFailoverExit))
         XCTAssertTrue(cases.contains(.lastFailoverAt))
@@ -35,6 +35,8 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         XCTAssertTrue(cases.contains(.natPmpFailureReason))
         XCTAssertTrue(cases.contains(.natPmpRetryAfterSeconds))
         XCTAssertTrue(cases.contains(.natPmpRateLimitedAt))
+        // The goodput prober's verdict for the live session.
+        XCTAssertTrue(cases.contains(.pathHealth))
         // Tunnel statistics snapshot (WarrenTunnelStatisticsView).
         XCTAssertTrue(cases.contains(.bytesIn))
         XCTAssertTrue(cases.contains(.bytesOut))
@@ -73,6 +75,7 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         XCTAssertEqual(
             WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue, "WarrenTunnel.natPmpRetryAfterSeconds")
         XCTAssertEqual(WarrenAppGroupKey.natPmpRateLimitedAt.rawValue, "WarrenTunnel.natPmpRateLimitedAt")
+        XCTAssertEqual(WarrenAppGroupKey.pathHealth.rawValue, "WarrenTunnel.pathHealth")
         XCTAssertEqual(WarrenAppGroupKey.bytesIn.rawValue, "WarrenTunnel.bytesIn")
         XCTAssertEqual(WarrenAppGroupKey.bytesOut.rawValue, "WarrenTunnel.bytesOut")
         XCTAssertEqual(WarrenAppGroupKey.connectedDurationSeconds.rawValue, "WarrenTunnel.connectedDurationSeconds")
