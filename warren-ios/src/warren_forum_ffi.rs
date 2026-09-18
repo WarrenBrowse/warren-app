@@ -1,11 +1,13 @@
-//! Community-forum wallet login FFI for iOS (`POST /v1/forum/login`, doc 55)
-//! and the forum page's attach-logs upload (`POST /v1/forum/attach-logs`).
+//! Community-forum wallet login FFI for iOS (`POST /v1/forum/login`, doc 55),
+//! the forum page's attach-logs upload (`POST /v1/forum/attach-logs`), the
+//! broadcast activity digest and the caller's own notification panel.
 //!
 //! iOS counterpart of Android's `warren-jni` `forumLogin`, `forumAttachLogs`,
-//! `forumAttachCancel` and `forumCodeProbe`: every signed request is signed AND
-//! POSTed entirely in Rust, so only the opaque `sid`, the connect `host`, the
-//! topic and the gzipped report cross the boundary and the wallet signature
-//! never surfaces to Swift. The wire bytes + validation + outcome mapping live
+//! `forumAttachCancel`, `forumCodeProbe`, `forumDigestFetch`,
+//! `forumNotifications` and `forumNotificationsSeen`: every signed request is
+//! signed AND POSTed entirely in Rust, so only the opaque `sid`, the connect
+//! `host`, the topic and the gzipped report cross the boundary and the wallet
+//! signature never surfaces to Swift. The wire bytes + validation + outcome mapping live
 //! in the host-tested [`crate::forum`] module; this layer only reads the FFI
 //! inputs, executes the requests on the shared iOS runtime through reqwest,
 //! and returns a JSON envelope `CString`.
@@ -35,8 +37,9 @@ use zeroize::Zeroizing;
 
 use crate::forum::{
     self, CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome,
-    ForumRequestError, SessionPreflight,
+    ForumNotificationsOutcome, ForumRequestError, SessionPreflight,
 };
+use warren_forum::digest::{DigestState, Fetched, Refresh};
 
 const SEED_LEN: usize = 32;
 
@@ -587,4 +590,230 @@ fn forum_code_probe(sid: &str, host: &str) -> CodePlacement {
         placement
     );
     placement
+}
+
+/// The verified digest held for this process, and the facts that guard it.
+/// In memory only, like Android's and the daemon's: a badge is never read off
+/// a disk cache.
+static DIGEST: std::sync::Mutex<DigestState> = std::sync::Mutex::new(DigestState::new());
+
+/// One conditional fetch of the broadcast forum activity digest
+/// (`GET /v1/forum/digest` on the API host), verified against the pinned
+/// server key with the anti-rollback and freshness rules of
+/// [`warren_forum::digest`]. Returns `{"counts":"<hex>"|null,"fetch":"<class>"}`:
+/// `counts` is the whole anonymous document while a fresh one is held (Swift
+/// indexes its own slot into it), `fetch` is `ok`, `not-modified`, `rejected`
+/// or `transport`, on which Swift sizes its next delay.
+///
+/// The document is identical for every client and carries no account, so
+/// fetching it says nothing about the user and no cadence can be tied to one.
+/// Swift runs that cadence, exactly as Kotlin does.
+///
+/// Blocks on a network GET: invoke off the main thread.
+///
+/// # Safety
+/// The returned pointer must be freed exactly once via
+/// `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub extern "C" fn warren_forum_digest_fetch() -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        json_cstring(forum_digest_fetch())
+    })
+}
+
+fn forum_digest_fetch() -> String {
+    let Ok(handle) = crate::warren_ios_runtime() else {
+        log::warn!("forumDigest: the shared runtime is unavailable");
+        return warren_forum::digest::envelope(None, Refresh::Transport);
+    };
+    let Some(client) = client() else {
+        return warren_forum::digest::envelope(None, Refresh::Transport);
+    };
+    let url = format!(
+        "{}/v1/forum/digest",
+        warren_product_env::API_URL.trim_end_matches('/')
+    );
+    // The lock is taken to read the validator and released before the GET, so
+    // a slow network never holds the badge read of another thread.
+    let etag = match DIGEST.lock() {
+        Ok(state) => state.etag(),
+        Err(_) => return warren_forum::digest::envelope(None, Refresh::Transport),
+    };
+    let fetched = handle.block_on(get_conditional(&client, url, etag.as_deref()));
+    let pins = [crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX];
+    let Ok(mut state) = DIGEST.lock() else {
+        return warren_forum::digest::envelope(None, Refresh::Transport);
+    };
+    let refresh = state.accept(fetched, &pins);
+    let counts = state.counts(device_now());
+    warren_forum::digest::envelope(counts.as_deref(), refresh)
+}
+
+/// One conditional GET, mapped to what the shared digest state accepts.
+/// `If-None-Match` is sent only when a validator is held, so the first fetch
+/// of a process is an ordinary GET.
+async fn get_conditional(
+    client: &reqwest::Client,
+    url: String,
+    etag: Option<&str>,
+) -> Fetched {
+    let mut request = client.get(&url).timeout(READ_TIMEOUT);
+    if let Some(etag) = etag {
+        request = request.header(reqwest::header::IF_NONE_MATCH, etag);
+    }
+    match request.send().await {
+        Ok(response) => {
+            let status = response.status().as_u16();
+            let new_etag = response
+                .headers()
+                .get(reqwest::header::ETAG)
+                .and_then(|value| value.to_str().ok())
+                .map(str::to_owned);
+            match status {
+                304 => Fetched::NotModified,
+                200 => Fetched::Body {
+                    body: response.text().await.unwrap_or_default(),
+                    etag: new_etag,
+                },
+                other => Fetched::Status(other),
+            }
+        }
+        Err(err) => {
+            let class = if err.is_timeout() {
+                "timeout"
+            } else {
+                "transport"
+            };
+            log::debug!("forumDigest: fetch failed ({class})");
+            Fetched::Transport
+        }
+    }
+}
+
+/// The caller's own forum notifications (`POST /v1/forum/notifications`),
+/// signed with the wallet and sent here like the login. Called when the user
+/// opens the activity panel, never on a timer: this is the one forum request
+/// tied to an account. Returns the envelope of
+/// [`warren_forum::notifications_envelope`]:
+/// `{"ok":true,"notifications":[..]}` with rows already validated in the
+/// shared crate, or `{"ok":false,"error":"error","reason":"<class>"}`. The
+/// seed, the signature and the body are never logged.
+///
+/// Blocking; call off the main thread.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes. The
+/// returned pointer must be freed exactly once via
+/// `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_forum_notifications(seed: *const u8) -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: the input upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return json_cstring(forum::notifications_envelope(
+                &ForumNotificationsOutcome::Failed(FailReason::Build),
+            ));
+        };
+        let outcome = match signed_forum_post(
+            &seed,
+            "forumNotifications",
+            forum::build_signed_notifications_request,
+        ) {
+            Ok((status, body)) => {
+                let outcome = forum::notifications_outcome_for_response(status, &body);
+                log::info!(
+                    "forumNotifications: provider answered {status} ({})",
+                    match &outcome {
+                        ForumNotificationsOutcome::Ok(rows) => format!("{} rows", rows.len()),
+                        ForumNotificationsOutcome::Failed(_) => "failed".to_owned(),
+                    }
+                );
+                outcome
+            }
+            Err(reason) => ForumNotificationsOutcome::Failed(reason),
+        };
+        json_cstring(forum::notifications_envelope(&outcome))
+    })
+}
+
+/// Marks the caller's own forum notification list seen
+/// (`POST /v1/forum/notifications/seen`), what opening the activity panel
+/// does. Signed over its own path, so the read's signature cannot be replayed
+/// as this write. Returns `{"ok":true}` or the classed failure.
+///
+/// Blocking; call off the main thread.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes. The
+/// returned pointer must be freed exactly once via
+/// `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_forum_notifications_seen(seed: *const u8) -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: the input upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return json_cstring(forum::seen_envelope(&Err(FailReason::Build)));
+        };
+        let outcome = signed_forum_post(
+            &seed,
+            "forumNotificationsSeen",
+            forum::build_signed_notifications_seen_request,
+        )
+        .and_then(|(status, _)| {
+            let outcome = forum::seen_outcome_for_response(status);
+            log::info!(
+                "forumNotificationsSeen: provider answered {status} ({})",
+                if outcome.is_ok() { "seen" } else { "failed" }
+            );
+            outcome
+        });
+        json_cstring(forum::seen_envelope(&outcome))
+    })
+}
+
+/// The shape the two account-bound panel calls share: the clock preflight
+/// against the connect host, the signed request at the corrected time, the
+/// POST. `build` is the shared-crate builder for the route, so the signature
+/// always covers the path actually taken.
+fn signed_forum_post(
+    seed: &[u8; SEED_LEN],
+    flow: &str,
+    build: fn(&WarrenIdentity, u64) -> Result<forum::SignedForumRequest, ForumRequestError>,
+) -> Result<(u16, Vec<u8>), FailReason> {
+    let handle = crate::warren_ios_runtime().map_err(|_| FailReason::Runtime)?;
+    let client = client().ok_or(FailReason::Build)?;
+    let offset_secs = handle.block_on(connect_clock_offset(&client, flow));
+    let timestamp = forum::timestamp_with_offset(offset_secs).ok_or(FailReason::Build)?;
+    let identity = WarrenIdentity::from_seed(seed);
+    let signed = build(&identity, timestamp).map_err(|_| FailReason::Build)?;
+    let request = HttpRequest {
+        method: Method::Post,
+        url: signed.url,
+        headers: signed.headers,
+        body: signed.body,
+        use_sni: true,
+    };
+    handle
+        .block_on(ReqwestTransport::new().execute(request))
+        .map(|response| (response.status, response.body))
+        .map_err(|_| FailReason::Transport)
+}
+
+/// The connect host's clock, as its `Date` header states it, minus this
+/// device's. The two account-bound calls carry no session to preflight, so
+/// the health endpoint answers for the clock instead; a failed read signs at
+/// the device clock and lets the provider decide, as before the preflight
+/// existed.
+async fn connect_clock_offset(client: &reqwest::Client, flow: &str) -> i64 {
+    let url = format!("https://{}/healthz", forum::connect_host());
+    match get_plain(client, url, flow, "clock preflight").await {
+        Some((_, date, _)) => date
+            .as_deref()
+            .and_then(|d| forum::clock_offset_secs(d, device_now()))
+            .unwrap_or(0),
+        None => {
+            log::warn!("{flow}: clock preflight failed, signing anyway");
+            0
+        }
+    }
 }

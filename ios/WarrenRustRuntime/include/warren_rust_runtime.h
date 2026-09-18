@@ -997,6 +997,61 @@ uintptr_t warren_forum_max_log_gz_bytes(void);
 char *warren_forum_code_probe(const char *sid, const char *host);
 
 /**
+ * One conditional fetch of the broadcast forum activity digest
+ * (`GET /v1/forum/digest` on the API host), verified against the pinned
+ * server key with the anti-rollback and freshness rules of
+ * [`warren_forum::digest`]. Returns `{"counts":"<hex>"|null,"fetch":"<class>"}`:
+ * `counts` is the whole anonymous document while a fresh one is held (Swift
+ * indexes its own slot into it), `fetch` is `ok`, `not-modified`, `rejected`
+ * or `transport`, on which Swift sizes its next delay.
+ *
+ * The document is identical for every client and carries no account, so
+ * fetching it says nothing about the user and no cadence can be tied to one.
+ * Swift runs that cadence, exactly as Kotlin does.
+ *
+ * Blocks on a network GET: invoke off the main thread.
+ *
+ * # Safety
+ * The returned pointer must be freed exactly once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_digest_fetch(void);
+
+/**
+ * The caller's own forum notifications (`POST /v1/forum/notifications`),
+ * signed with the wallet and sent here like the login. Called when the user
+ * opens the activity panel, never on a timer: this is the one forum request
+ * tied to an account. Returns the envelope of
+ * [`warren_forum::notifications_envelope`]:
+ * `{"ok":true,"notifications":[..]}` with rows already validated in the
+ * shared crate, or `{"ok":false,"error":"error","reason":"<class>"}`. The
+ * seed, the signature and the body are never logged.
+ *
+ * Blocking; call off the main thread.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed exactly once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_notifications(const uint8_t *seed);
+
+/**
+ * Marks the caller's own forum notification list seen
+ * (`POST /v1/forum/notifications/seen`), what opening the activity panel
+ * does. Signed over its own path, so the read's signature cannot be replayed
+ * as this write. Returns `{"ok":true}` or the classed failure.
+ *
+ * Blocking; call off the main thread.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed exactly once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_notifications_seen(const uint8_t *seed);
+
+/**
  * Files the signed pubkey-mismatch report for the exit the user was just
  * warned about.
  *

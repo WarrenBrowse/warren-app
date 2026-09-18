@@ -14,11 +14,13 @@ pub use warren_forum::{ForumRequestError, SignedForumRequest};
 // internally and no iOS caller consumes them directly.
 #[cfg(target_os = "ios")]
 pub use warren_forum::{
-    CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome, SessionPreflight,
-    attach_envelope, attach_outcome_for_response, build_attach_cancel_url, build_attach_meta_url,
-    build_attach_status_url, build_cancel_url, build_status_url, classify_code_probe,
-    classify_status_preflight, code_placement_envelope, envelope, outcome_for_response, place_code,
-    refuse_before_transport, timestamp_with_offset, upload_deadline,
+    CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome,
+    ForumNotificationsOutcome, SessionPreflight, attach_envelope, attach_outcome_for_response,
+    build_attach_cancel_url, build_attach_meta_url, build_attach_status_url, build_cancel_url,
+    build_status_url, classify_code_probe, classify_status_preflight, clock_offset_secs,
+    code_placement_envelope, connect_host, envelope, notifications_envelope,
+    notifications_outcome_for_response, outcome_for_response, place_code, refuse_before_transport,
+    seen_envelope, seen_outcome_for_response, timestamp_with_offset, upload_deadline,
 };
 use warren_identity::WarrenIdentity;
 
@@ -70,6 +72,34 @@ pub fn build_signed_attach_request(
         log_gz,
         timestamp,
     )
+}
+
+/// Build the signed read of the caller's own forum notifications, stamped
+/// with `timestamp` (the value corrected against the connect host's clock).
+/// Delegates to [`warren_forum::build_signed_notifications_request`].
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the RNG is unusable.
+pub fn build_signed_notifications_request(
+    identity: &WarrenIdentity,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    warren_forum::build_signed_notifications_request(&identity.signing_key(), timestamp)
+}
+
+/// Build the signed mark-seen write. Signed over its own path, so the read's
+/// signature can never be replayed as this write. Delegates to
+/// [`warren_forum::build_signed_notifications_seen_request`].
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the RNG is unusable.
+pub fn build_signed_notifications_seen_request(
+    identity: &WarrenIdentity,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    warren_forum::build_signed_notifications_seen_request(&identity.signing_key(), timestamp)
 }
 
 #[cfg(test)]
@@ -128,6 +158,35 @@ mod tests {
             ),
             Err(ForumRequestError::LogTooLarge)
         );
+    }
+
+    /// The read and the write are signed over their own paths, so the panel
+    /// read's signature cannot be replayed to clear the badge.
+    #[test]
+    fn the_two_notification_calls_sign_their_own_routes_from_a_seed_identity() {
+        let identity = WarrenIdentity::from_seed(&[0x11u8; 32]);
+
+        let read = build_signed_notifications_request(&identity, 1_800_000_000)
+            .expect("a valid identity must build the panel read");
+        let seen = build_signed_notifications_seen_request(&identity, 1_800_000_000)
+            .expect("a valid identity must build the mark-seen write");
+
+        assert_eq!(
+            read.url,
+            "https://connect.warrenbrowse.com/v1/forum/notifications"
+        );
+        assert_eq!(
+            seen.url,
+            "https://connect.warrenbrowse.com/v1/forum/notifications/seen"
+        );
+        let signature = |req: &SignedForumRequest| {
+            req.headers
+                .iter()
+                .find(|(n, _)| n == "X-Warren-Sig")
+                .map(|(_, v)| v.clone())
+                .expect("every signed request carries its signature")
+        };
+        assert_ne!(signature(&read), signature(&seen));
     }
 
     #[test]

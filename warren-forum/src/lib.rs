@@ -15,6 +15,8 @@
 
 #![forbid(unsafe_code)]
 
+pub mod digest;
+
 use warren_identity::ed25519_dalek::SigningKey;
 use warren_identity::signing::sign_request;
 

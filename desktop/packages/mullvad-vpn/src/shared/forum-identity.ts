@@ -60,6 +60,15 @@ export function parseForumIdentity(blob: string): ForumIdentity | undefined {
 }
 
 /**
+ * The count as shown, saturating rather than growing the badge. One digest
+ * character per slot, so the number stops climbing at its ceiling and the
+ * badge says so instead of stating a count it cannot measure.
+ */
+export function unreadLabel(unread: number): string {
+  return unread >= UNREAD_SATURATED ? `${UNREAD_SATURATED}+` : String(unread);
+}
+
+/**
  * Whether the app shows forum ACTIVITY at all: the header bell, the desktop
  * banner and the mark on the tray icon alike.
  *

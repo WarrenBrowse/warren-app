@@ -27,7 +27,7 @@ use crate::forum::{
     self, CodeKind, CodePlacement, FailReason, ForumAttachOutcome, ForumLoginOutcome,
     ForumNotificationsOutcome, ForumRequestError, ReportOutcome, SessionPreflight,
 };
-use crate::forum_digest::{DigestState, Fetched, Refresh};
+use warren_forum::digest::{DigestState, Fetched, Refresh};
 
 /// The transport the forum requests ride: the VpnService-protected one when
 /// the crate carries it, so the request never black-holes into a TUN that is
@@ -821,7 +821,7 @@ static DIGEST: parking_lot::Mutex<DigestState> = parking_lot::Mutex::new(DigestS
 /// One conditional fetch of the broadcast forum activity digest
 /// (`GET /v1/forum/digest` on the API host), verified against the pinned
 /// server key with the anti-rollback and freshness rules of
-/// [`crate::forum_digest`]. Returns `{"counts":"<hex>"|null,"fetch":"<class>"}`:
+/// [`warren_forum::digest`]. Returns `{"counts":"<hex>"|null,"fetch":"<class>"}`:
 /// `counts` is the whole anonymous document while a fresh one is held (Kotlin
 /// indexes its own slot into it), `fetch` is `ok`, `not-modified`, `rejected`
 /// or `transport`, on which Kotlin sizes its next delay. Kotlin runs the
@@ -847,7 +847,7 @@ fn forum_digest_fetch() -> String {
         .unwrap_or(0);
     let Some(runtime) = crate::android_jni::runtime() else {
         log::warn!("forumDigest: initLogger must run first");
-        return crate::forum_digest::envelope(None, Refresh::Transport);
+        return warren_forum::digest::envelope(None, Refresh::Transport);
     };
     let url = format!(
         "{}/v1/forum/digest",
@@ -873,7 +873,7 @@ fn forum_digest_fetch() -> String {
     let mut state = DIGEST.lock();
     let refresh = state.accept(fetched, &pins);
     let counts = state.counts(now);
-    crate::forum_digest::envelope(counts.as_deref(), refresh)
+    warren_forum::digest::envelope(counts.as_deref(), refresh)
 }
 
 /// The caller's own forum notifications (`POST /v1/forum/notifications`),

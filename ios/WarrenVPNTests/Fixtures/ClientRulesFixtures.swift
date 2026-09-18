@@ -56,4 +56,24 @@ enum ClientRulesFixtures {
         guard let value = object[key] as? [String: Any] else { throw Failure.missingKey(key) }
         return value
     }
+
+    static func int(_ object: [String: Any], _ key: String) throws -> Int {
+        guard let value = object[key] as? NSNumber else { throw Failure.missingKey(key) }
+        return value.intValue
+    }
+
+    static func ints(_ object: [String: Any], _ key: String) throws -> [Int] {
+        guard let value = object[key] as? [NSNumber] else { throw Failure.missingKey(key) }
+        return value.map(\.intValue)
+    }
+
+    static func bool(_ object: [String: Any], _ key: String) throws -> Bool {
+        guard let value = object[key] as? Bool else { throw Failure.missingKey(key) }
+        return value
+    }
+
+    /// A field the fixture may leave out, defaulting to `fallback`.
+    static func bool(_ object: [String: Any], _ key: String, or fallback: Bool) -> Bool {
+        object[key] as? Bool ?? fallback
+    }
 }

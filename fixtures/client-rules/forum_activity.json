@@ -1,0 +1,157 @@
+{
+  "_comment": "How the broadcast forum activity digest becomes one user's badge, and what the connect header's forum slot carries. The document is one anonymous array of unread counts, identical for every client; only the installation knows its own slot, so every client indexes the same way. Written against the behaviour at HEAD; the readers and the skip lists are described in README.md.",
+  "version": 1,
+  "unread_saturated": 15,
+  "relative_age_limit_secs": 604800,
+  "unread_for_slot_cases": [
+    {
+      "name": "the_slot_is_read_as_one_hex_digit",
+      "digest": "03f",
+      "slot": 1,
+      "expect": 3
+    },
+    {
+      "name": "a_full_character_is_the_saturated_count",
+      "digest": "03f",
+      "slot": 2,
+      "expect": 15
+    },
+    {
+      "name": "no_document_is_no_badge",
+      "_comment": "A fetch that could not refresh drops the document. Reading that gap as zero would announce as new whatever the user had already seen once it came back.",
+      "digest": null,
+      "slot": 1,
+      "expect": 0
+    },
+    {
+      "name": "an_account_with_no_slot_has_no_badge",
+      "digest": "03f",
+      "slot": null,
+      "expect": 0
+    },
+    {
+      "name": "a_slot_past_the_published_document_is_no_badge",
+      "_comment": "The normal state of an account registered since the last server rebuild.",
+      "digest": "03f",
+      "slot": 7,
+      "expect": 0
+    },
+    {
+      "name": "a_character_that_is_not_hex_is_no_badge",
+      "digest": "0z3",
+      "slot": 1,
+      "expect": 0
+    }
+  ],
+  "unread_label_cases": [
+    { "unread": 0, "expect": "0" },
+    { "unread": 9, "expect": "9" },
+    { "unread": 15, "expect": "15+" }
+  ],
+  "header_button_cases": [
+    {
+      "name": "an_account_gets_the_bell",
+      "has_account": true,
+      "enabled": true,
+      "expect": "activity"
+    },
+    {
+      "name": "a_wallet_with_no_forum_account_gets_the_lifebuoy",
+      "_comment": "The bell would be inert for them, and the forum is where an account comes from.",
+      "has_account": false,
+      "enabled": true,
+      "expect": "community"
+    },
+    {
+      "name": "the_setting_governs_the_whole_slot",
+      "has_account": true,
+      "enabled": false,
+      "expect": "none"
+    },
+    {
+      "name": "the_setting_governs_the_lifebuoy_too",
+      "has_account": false,
+      "enabled": false,
+      "expect": "none"
+    }
+  ],
+  "shows_activity_cases": [
+    { "has_account": true, "enabled": true, "expect": true },
+    { "has_account": true, "enabled": false, "expect": false },
+    { "has_account": false, "enabled": true, "expect": false }
+  ],
+  "wording_cases": [
+    { "unread": 1, "expect": { "kind": "single" } },
+    { "unread": 4, "expect": { "kind": "several", "count": 4 } },
+    {
+      "name": "a_saturated_count_is_stated_as_more_than_what_can_be_measured",
+      "_comment": "One digest character per slot, so the count stops climbing at its ceiling; saying 15 there would be a number the user can check and find wrong.",
+      "unread": 15,
+      "expect": { "kind": "more_than", "count": 14 }
+    }
+  ],
+  "monitor_cases": [
+    {
+      "name": "the_count_already_waiting_at_start_gets_the_badge_but_no_notification",
+      "_comment": "Otherwise every relaunch re-announces the same notifications.",
+      "slot": 1,
+      "steps": [{ "digest": "030" }],
+      "expect": { "unread": 3, "notified": [] }
+    },
+    {
+      "name": "a_rise_while_this_run_was_watching_is_announced",
+      "slot": 1,
+      "steps": [{ "digest": "030" }, { "digest": "050" }],
+      "expect": { "unread": 5, "notified": [5] }
+    },
+    {
+      "name": "a_fall_is_never_announced",
+      "slot": 1,
+      "steps": [{ "digest": "050" }, { "digest": "010" }],
+      "expect": { "unread": 1, "notified": [] }
+    },
+    {
+      "name": "a_lost_document_is_unknown_not_zero",
+      "_comment": "The gap drops the badge, but the watermark is kept, so the same five come back without being announced as new.",
+      "slot": 1,
+      "steps": [{ "digest": "050" }, { "digest": null }, { "digest": "050" }],
+      "expect": { "unread": 5, "notified": [] }
+    },
+    {
+      "name": "what_the_panel_proved_beats_a_digest_that_has_not_caught_up",
+      "_comment": "The document is up to a server refresh plus a client poll behind, so the badge would otherwise sit on a stale number for minutes after the user read the panel.",
+      "slot": 1,
+      "steps": [{ "digest": "050" }, { "observed": 0 }],
+      "expect": { "unread": 0, "notified": [] }
+    },
+    {
+      "name": "a_changed_document_takes_the_badge_back_from_the_observation",
+      "_comment": "The panel read left nothing unread, so two in a later document is activity that arrived after it and is announced as such.",
+      "slot": 1,
+      "steps": [{ "digest": "050" }, { "observed": 0 }, { "digest": "020" }],
+      "expect": { "unread": 2, "notified": [2] }
+    },
+    {
+      "name": "another_account_starts_from_nothing_known",
+      "_comment": "Its predecessor's count says nothing about it, and neither does what the app observed for the previous one.",
+      "slot": 1,
+      "steps": [{ "digest": "050" }, { "slot": 2 }],
+      "expect": { "unread": 0, "notified": [] }
+    },
+    {
+      "name": "the_setting_off_announces_nothing_and_shows_nothing",
+      "slot": 1,
+      "enabled": false,
+      "steps": [{ "digest": "030" }, { "digest": "050" }],
+      "expect": { "unread": 5, "indicator": false, "notified": [] }
+    },
+    {
+      "name": "turning_the_setting_back_on_does_not_announce_what_happened_meanwhile",
+      "_comment": "The watermark advances even while the setting is off.",
+      "slot": 1,
+      "enabled": false,
+      "steps": [{ "digest": "030" }, { "digest": "050" }, { "enabled": true }],
+      "expect": { "unread": 5, "indicator": true, "notified": [] }
+    }
+  ]
+}

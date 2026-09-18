@@ -13,6 +13,12 @@ license.workspace = true
 # format + validation + outcome mapping instead of duplicating them.
 [dependencies]
 warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# The broadcast activity digest is signed by the server key and verified with
+# the contract's own routine, so a badge can only ever come from a document the
+# pinned key signed.
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
+# A rejected digest is accounted for in the platform log, never silently.
+log = { workspace = true }
 # The connect host every signed request goes to and the forum origin a topic
 # link may name are rows of the product table, not constants of this crate.
 warren-product-env = { path = "../warren-product-env" }

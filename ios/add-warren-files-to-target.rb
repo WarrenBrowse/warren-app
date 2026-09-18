@@ -229,6 +229,16 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Notifications/WarrenAnnouncementNotificationProviderTests.swift" =>
     "WarrenVPNTests",
 
+  # The community forum's activity surface: the broadcast digest that raises
+  # the header badge, the caller's own panel behind it, and the rules
+  # `fixtures/client-rules/forum_activity.json` pins for all three clients.
+  "WarrenRustRuntime/WarrenForumActivityClient.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntimeTests/WarrenForumActivityClientTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenVPN/Classes/WarrenForumActivity.swift" => "WarrenVPN",
+  "WarrenVPN/Classes/WarrenForumDigestPoller.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumDigestPollerTests.swift" => "WarrenVPNTests",
+
   # The non-prod markers: the name iOS gives the VPN configuration in
   # Settings, General, VPN and Device Management, and the header chip.
   "WarrenVPNTests/MullvadVPN/TunnelManager/TunnelConfigurationTests.swift" => "WarrenVPNTests",

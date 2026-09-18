@@ -41,6 +41,21 @@ object ClientRulesFixtures {
             it.jsonPrimitive.content.toFloat()
         }
 
+    fun JsonObject.int(key: String): Int =
+        (this[key] ?: error("`$key` is missing in $this")).jsonPrimitive.content.toInt()
+
+    /** An integer field that the fixture may set to `null` on purpose. */
+    fun JsonObject.intOrNull(key: String): Int? = this[key]?.jsonPrimitive?.contentOrNull?.toInt()
+
+    fun JsonObject.ints(key: String): List<Int> =
+        (this[key] ?: error("`$key` is missing in $this")).jsonArray.map {
+            it.jsonPrimitive.content.toInt()
+        }
+
+    /** A boolean field that the fixture may leave out, defaulting to [fallback]. */
+    fun JsonObject.booleanOr(key: String, fallback: Boolean): Boolean =
+        this[key]?.jsonPrimitive?.content?.toBooleanStrict() ?: fallback
+
     fun JsonObject.boolean(key: String): Boolean =
         (this[key] ?: error("`$key` is missing in $this")).jsonPrimitive.content.toBooleanStrict()
 

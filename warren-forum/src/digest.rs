@@ -1,11 +1,11 @@
-//! The broadcast forum activity digest (`GET /v1/forum/digest`) on Android:
-//! the daemon's `warren_forum_digest_updater` with the loop left to Kotlin.
+//! The broadcast forum activity digest (`GET /v1/forum/digest`): the
+//! daemon's `warren_forum_digest_updater` with the loop left to the platform.
 //!
 //! The document is one anonymous array of unread counts, identical for every
 //! client, so fetching it says nothing about the user: it carries no account,
 //! and the cadence cannot be tied to one. The slot that turns the array into
-//! a badge is known only to Kotlin, which holds it beside the forum handle,
-//! so the counts are handed over verbatim and indexed there.
+//! a badge is known only to the platform layer, which holds it beside the forum
+//! handle, so the counts are handed over verbatim and indexed there.
 //!
 //! What this module owns is everything that decides whether a fetched
 //! document may become a badge: the signature against the pinned server key,
@@ -17,7 +17,7 @@
 use warren_discovery_core::{ForumDigestError, VerifiedForumDigest, verify_forum_digest_any};
 
 /// What one conditional GET brought back, as the transport saw it.
-pub(crate) enum Fetched {
+pub enum Fetched {
     /// `304`: the held document is current.
     NotModified,
     /// `200`: a fresh body; `etag` is the response validator when the server
@@ -29,10 +29,10 @@ pub(crate) enum Fetched {
     Transport,
 }
 
-/// Outcome of one refresh; what Kotlin's cadence reads. The tokens are the
+/// Outcome of one refresh; what the platform cadence reads. The tokens are the
 /// FFI contract of [`envelope`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Refresh {
+pub enum Refresh {
     /// A fresh document verified and is held.
     Ok,
     /// The server confirmed the held document is current.
@@ -55,7 +55,7 @@ impl Refresh {
 }
 
 /// The verified document held in memory, plus the two facts that guard it.
-pub(crate) struct DigestState {
+pub struct DigestState {
     etag: Option<String>,
     /// Highest generation ever accepted (anti-rollback high-water mark).
     highest_generation: u64,
@@ -63,7 +63,7 @@ pub(crate) struct DigestState {
 }
 
 impl DigestState {
-    pub(crate) const fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             etag: None,
             highest_generation: 0,
@@ -72,7 +72,7 @@ impl DigestState {
     }
 
     /// The validator of the held document, for the next conditional GET.
-    pub(crate) fn etag(&self) -> Option<String> {
+    pub fn etag(&self) -> Option<String> {
         self.etag.clone()
     }
 
@@ -81,7 +81,7 @@ impl DigestState {
     /// put back a badge the reader has already cleared); a 304 or a failure
     /// leaves the held document as it is, freshness deciding whether it still
     /// shows.
-    pub(crate) fn accept(&mut self, fetched: Fetched, pins: &[&str]) -> Refresh {
+    pub fn accept(&mut self, fetched: Fetched, pins: &[&str]) -> Refresh {
         match fetched {
             Fetched::NotModified => Refresh::NotModified,
             Fetched::Transport => Refresh::Transport,
@@ -121,7 +121,7 @@ impl DigestState {
 
     /// The counts while the held document is fresh at `now`, `None`
     /// otherwise: a server that stops answering must let the badge lapse.
-    pub(crate) fn counts(&self, now_unix: u64) -> Option<String> {
+    pub fn counts(&self, now_unix: u64) -> Option<String> {
         self.last
             .as_ref()
             .filter(|verified| !verified.is_expired(now_unix))
@@ -130,9 +130,9 @@ impl DigestState {
 }
 
 /// The FFI envelope: `{"counts":"03f","fetch":"ok"}`, `counts` null while no
-/// fresh document is held. Kotlin indexes its slot into `counts` and sizes its
-/// next delay on `fetch`.
-pub(crate) fn envelope(counts: Option<&str>, refresh: Refresh) -> String {
+/// fresh document is held. The platform indexes its slot into `counts` and
+/// sizes its next delay on `fetch`.
+pub fn envelope(counts: Option<&str>, refresh: Refresh) -> String {
     let counts = counts.map_or("null".to_owned(), |c| format!("\"{c}\""));
     format!(r#"{{"counts":{counts},"fetch":"{}"}}"#, refresh.token())
 }
@@ -156,7 +156,7 @@ fn describe(e: &ForumDigestError) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use ed25519_dalek::SigningKey;
+    use warren_identity::ed25519_dalek::SigningKey;
     use warren_discovery_core::{pack_unread_counts, sign_forum_digest};
 
     use super::*;
@@ -189,7 +189,7 @@ mod tests {
     }
 
     #[test]
-    fn a_verified_document_is_handed_over_verbatim_for_kotlin_to_index() {
+    fn a_verified_document_is_handed_over_verbatim_for_the_platform_to_index() {
         let mut state = DigestState::new();
         let pin = pin();
 

@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import styled from 'styled-components';
 
 import { urls } from '../../../../shared/constants';
-import { UNREAD_SATURATED } from '../../../../shared/forum-identity';
+import { unreadLabel } from '../../../../shared/forum-identity';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
@@ -94,7 +94,7 @@ export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
         // TRANSLATORS: %(count)s - number of unread notifications
         messages
           .pgettext('accessibility', 'Forum, %(count)s new')
-          .replace('%(count)s', countLabel(unread))
+          .replace('%(count)s', unreadLabel(unread))
       : messages.pgettext('accessibility', 'Forum');
 
   return (
@@ -107,13 +107,8 @@ export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
           and the two buttons beside it. */}
       <StyledDiv>
         <IconButton.Icon icon="bell-outline" />
-        {unread > 0 && <StyledCount aria-hidden="true">{countLabel(unread)}</StyledCount>}
+        {unread > 0 && <StyledCount aria-hidden="true">{unreadLabel(unread)}</StyledCount>}
       </StyledDiv>
     </MainHeader.IconButton>
   );
-}
-
-/** The count as shown, saturating rather than growing the badge. */
-function countLabel(unread: number): string {
-  return unread >= UNREAD_SATURATED ? `${UNREAD_SATURATED}+` : String(unread);
 }
