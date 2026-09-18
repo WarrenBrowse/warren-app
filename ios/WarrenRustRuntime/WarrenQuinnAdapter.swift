@@ -44,6 +44,13 @@ public struct WarrenTunnelConfig: Sendable {
     /// Enables NAT-PMP port mapping request through the tunnel after
     /// the Quinn connection is established.
     public let natPmpEnabled: Bool
+    /// The mapping the session asks the exit for: 0 lets it pick (and
+    /// carries the last granted port over across an exit change), a pin is
+    /// honour-or-error there.
+    public let natPmpExternalPort: UInt16
+    public let natPmpIsTcp: Bool
+    /// 0 asks for the engine's default hour.
+    public let natPmpLifetimeSeconds: UInt32
     /// CIDRs to bypass the tunnel routing (`--bypass-cidr`).
     public let bypassCidrs: [String]
     /// Signed multi-hop directory JSON (fetched from
@@ -78,6 +85,9 @@ public struct WarrenTunnelConfig: Sendable {
         multiHopRelay: WarrenRelayConfig? = nil,
         daitaSpec: WarrenDaitaSpec? = nil,
         natPmpEnabled: Bool = false,
+        natPmpExternalPort: UInt16 = 0,
+        natPmpIsTcp: Bool = false,
+        natPmpLifetimeSeconds: UInt32 = 0,
         bypassCidrs: [String] = [],
         multihopDirectoryJSON: String? = nil,
         multihopTwoHop: Bool = false,
@@ -92,6 +102,9 @@ public struct WarrenTunnelConfig: Sendable {
         self.multiHopRelay = multiHopRelay
         self.daitaSpec = daitaSpec
         self.natPmpEnabled = natPmpEnabled
+        self.natPmpExternalPort = natPmpExternalPort
+        self.natPmpIsTcp = natPmpIsTcp
+        self.natPmpLifetimeSeconds = natPmpLifetimeSeconds
         self.bypassCidrs = bypassCidrs
         self.multihopDirectoryJSON = multihopDirectoryJSON
         self.multihopTwoHop = multihopTwoHop
@@ -194,6 +207,10 @@ public enum WarrenTunnelEvent: Sendable {
     case natPmpMapped(internalPort: UInt16, externalPort: UInt16, lifetime: UInt32)
     case natPmpRenewed(externalPort: UInt16)
     case natPmpFailed(reason: String)
+    /// The exit is refusing new allocations for `retryAfter` seconds. A
+    /// class of its own, not a failure: the request will work again on its
+    /// own, and the screen can say when.
+    case natPmpRateLimited(retryAfter: UInt32)
 }
 
 /// Exit-allocated IPv4 surfaced by the multi-hop circuit after its
@@ -642,6 +659,9 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                                                     multi_hop_relay: relayPtr,
                                                     daita_spec: daitaPtr,
                                                     nat_pmp_enabled: natPmpFlag,
+                                                    nat_pmp_external_port: config.natPmpExternalPort,
+                                                    nat_pmp_is_tcp: config.natPmpIsTcp ? 1 : 0,
+                                                    nat_pmp_lifetime_secs: config.natPmpLifetimeSeconds,
                                                     bypass_cidrs: bypassBase,
                                                     bypass_cidrs_count: bypassCount,
                                                     multihop_directory_json: dirPtr,
@@ -848,6 +868,8 @@ private let eventCallbackBridge:
         case EventNatPmpFailed:
             let reason = event.data_nat_pmp_failure_reason.flatMap { String(cString: $0) } ?? ""
             mapped = .natPmpFailed(reason: reason)
+        case EventNatPmpRateLimited:
+            mapped = .natPmpRateLimited(retryAfter: event.data_nat_pmp_retry_after_seconds)
         default:
             return
         }

@@ -58,6 +58,20 @@ public enum WarrenAppGroupKey: String, CaseIterable {
     /// Mapped/Renewed event.
     case natPmpLifetimeSeconds = "WarrenTunnel.natPmpLifetimeSeconds"
 
+    /// `String`. The stable failure CATEGORY of the last refused NAT-PMP
+    /// request (the engine's own enum name, e.g. `SuggestedPortInUse`),
+    /// never a raw error string and never identity material. It is what
+    /// lets the screen offer a way out of a port conflict instead of a bare
+    /// "failed".
+    case natPmpFailureReason = "WarrenTunnel.natPmpFailureReason"
+
+    /// `Int`. Seconds the exit said it would keep refusing allocations, and
+    /// `Date` when that was said. Together they are the countdown the screen
+    /// shows instead of leaving the controls inert with no reason.
+    case natPmpRetryAfterSeconds = "WarrenTunnel.natPmpRetryAfterSeconds"
+
+    case natPmpRateLimitedAt = "WarrenTunnel.natPmpRateLimitedAt"
+
     /// `Int`. Cumulative bytes received over the tunnel since the
     /// PacketTunnel extension started. Surfaced by
     /// `WarrenTunnelStatisticsView`.

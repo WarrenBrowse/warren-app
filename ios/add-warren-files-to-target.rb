@@ -245,6 +245,11 @@ FILES_TO_ADD = {
   "WarrenVPN/Coordinators/WarrenForumActivityCoordinator.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityPanelTests.swift" => "WarrenVPNTests",
 
+  # Port forwarding: what the screen shows for each mapping the exit reports.
+  "WarrenVPN/Classes/WarrenPortForwarding.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/View controllers/Settings/WarrenPortForwardingTests.swift" =>
+    "WarrenVPNTests",
+
   # The non-prod markers: the name iOS gives the VPN configuration in
   # Settings, General, VPN and Device Management, and the header chip.
   "WarrenVPNTests/MullvadVPN/TunnelManager/TunnelConfigurationTests.swift" => "WarrenVPNTests",

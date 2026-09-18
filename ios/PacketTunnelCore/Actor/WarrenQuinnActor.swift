@@ -176,7 +176,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         // NAT-PMP events are state-neutral (surfaced via the App Group
         // broadcast layer), so they never touch the observed state.
         switch event {
-        case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
+        case .natPmpMapped, .natPmpRenewed, .natPmpFailed, .natPmpRateLimited:
             return
         default:
             break
@@ -206,7 +206,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             // a plain disconnect, none of that ran and the user was told
             // nothing at all.
             nextState = .error(ObservedBlockedState(reason: .accountExpired))
-        case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
+        case .natPmpMapped, .natPmpRenewed, .natPmpFailed, .natPmpRateLimited:
             stateLock.unlock()
             return
         }
@@ -322,6 +322,9 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             // tunnel (TunnelSettingsStrategy treats any diff as a relay
             // reconnect), so this re-read picks up the new value.
             natPmpEnabled: settings?.natPmp.isEnabled ?? false,
+            natPmpExternalPort: settings?.natPmp.externalPort ?? 0,
+            natPmpIsTcp: settings?.natPmp.networkProtocol.isTcp ?? false,
+            natPmpLifetimeSeconds: settings?.natPmp.lifetimeSeconds ?? 0,
             bypassCidrs: [],
             multihopDirectoryJSON: multihopDirectoryJSON,
             multihopTwoHop: twoHop,

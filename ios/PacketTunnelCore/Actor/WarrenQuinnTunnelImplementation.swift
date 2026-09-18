@@ -423,6 +423,9 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         case .natPmpMapped(_, let externalPort, let lifetime):
             defaults.set(Int(externalPort), forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
             defaults.set("open", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
+            // A grant answers whatever the last refusal said.
+            defaults.removeObject(forKey: WarrenAppGroupKey.natPmpFailureReason.rawValue)
+            defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
             defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpMappedAt.rawValue)
             defaults.set(Int(lifetime), forKey: WarrenAppGroupKey.natPmpLifetimeSeconds.rawValue)
         case .natPmpRenewed(let externalPort):
@@ -432,11 +435,19 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             defaults.set(Int(externalPort), forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
             defaults.set("open", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
             defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpMappedAt.rawValue)
-        case .natPmpFailed:
-            // No-log: the event's failure category is not persisted; the
-            // main app only renders a generic failed state.
+        case .natPmpFailed(let reason):
+            // The CATEGORY only, which is what tells a port conflict apart
+            // from any other refusal and lets the screen offer a way out of
+            // it. Never a raw error string and never identity material.
             defaults.set("failed", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
+            defaults.set(reason, forKey: WarrenAppGroupKey.natPmpFailureReason.rawValue)
             defaults.removeObject(forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
+        case .natPmpRateLimited(let retryAfter):
+            // A window, not a failure: the request works again by itself, so
+            // the screen counts down rather than reporting a breakage.
+            defaults.set("rate-limited", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
+            defaults.set(Int(retryAfter), forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
+            defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
         case .disconnected, .unauthorized:
             // The mapping dies with the session (the exit frees the lease
             // and the refresh loop is torn down), so a stale "open" must
@@ -458,6 +469,9 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpMappedAt.rawValue)
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpLifetimeSeconds.rawValue)
+        defaults.removeObject(forKey: WarrenAppGroupKey.natPmpFailureReason.rawValue)
+        defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
+        defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
     }
 
     /// Mirror an exit-pubkey TOFU mismatch into the App Group `UserDefaults`

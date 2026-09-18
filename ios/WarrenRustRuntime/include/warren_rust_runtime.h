@@ -44,6 +44,12 @@ typedef enum WarrenTunnelEventTagC {
    * `EventDisconnected` when the session ended in a policy refusal.
    */
   EventUnauthorized = 8,
+  /**
+   * The exit is refusing new allocations for a while. Carries the window
+   * in `data_nat_pmp_retry_after_seconds`, so the screen can say when the
+   * controls come back instead of leaving them inert with no reason.
+   */
+  EventNatPmpRateLimited = 9,
 } WarrenTunnelEventTagC;
 
 /**
@@ -159,6 +165,26 @@ typedef struct WarrenTunnelParametersC {
    */
   uint8_t nat_pmp_enabled;
   /**
+   * Preferred external (public) port, or 0 to let the exit pick one.
+   * A pin is honour-or-error: the exit refuses rather than silently
+   * granting a different port, so a conflict is visible and the user can
+   * act on it. 0 carries the last granted port over instead, so the public
+   * port follows the client across an exit change.
+   */
+  uint16_t nat_pmp_external_port;
+  /**
+   * 1 requests a TCP mapping, 0 a UDP one. The transport scopes the
+   * carried-over port: re-suggesting a UDP-granted port for TCP would
+   * collide with the client's own still-running lease.
+   */
+  uint8_t nat_pmp_is_tcp;
+  /**
+   * Requested mapping lifetime in seconds, or 0 for the default hour. The
+   * client renews at half of what the exit actually granted, which may be
+   * less than this.
+   */
+  uint32_t nat_pmp_lifetime_secs;
+  /**
    * Pointer to an array of null-terminated UTF-8 CIDRs to bypass
    * (see `--bypass-cidr`). Length given by `bypass_cidrs_count`.
    */
@@ -253,6 +279,11 @@ typedef struct WarrenTunnelEventC {
    * NatPmpFailed : null-terminated UTF-8 reason.
    */
   const char *data_nat_pmp_failure_reason;
+  /**
+   * NatPmpRateLimited : seconds until the exit accepts an allocation
+   * again. Zero for every other event.
+   */
+  uint32_t data_nat_pmp_retry_after_seconds;
 } WarrenTunnelEventC;
 
 /**

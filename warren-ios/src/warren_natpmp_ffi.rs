@@ -65,8 +65,10 @@ pub(crate) enum NatPmpEventKind {
     },
     /// Last request failed: `reason` is the stable category only.
     Failed { reason: String },
-    /// Event with no FFI representation (the C surface exposes only
-    /// Mapped/Renewed/Failed): `RateLimited` and `Cancelled` land here.
+    /// The exit is refusing new allocations for `retry_after_secs`.
+    RateLimited { retry_after_secs: u32 },
+    /// Event with no FFI representation: `Cancelled` lands here, since
+    /// teardown already resets what the screen shows.
     Ignored,
 }
 
@@ -86,6 +88,12 @@ pub(crate) struct NatPmpFfiEvent {
     pub lifetime_secs: u32,
     /// Stable failure category for a Failed; `None` for a Mapped/Renewed.
     pub reason: Option<String>,
+    /// Seconds until the exit accepts an allocation again, for a
+    /// RateLimited; `0` for every other event. Kept apart from
+    /// `lifetime_secs` on purpose: they are both seconds and they mean
+    /// opposite things, and a screen that mixed them would count down a
+    /// lease as a refusal.
+    pub retry_after_secs: u32,
 }
 
 /// Projects a reduced NAT-PMP event onto the FFI event surface. Returns
@@ -101,6 +109,7 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             external_port: *external_port,
             lifetime_secs: *lifetime_secs,
             reason: None,
+            retry_after_secs: 0,
         }),
         NatPmpEventKind::Renewed {
             external_port,
@@ -110,12 +119,21 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             external_port: *external_port,
             lifetime_secs: *lifetime_secs,
             reason: None,
+            retry_after_secs: 0,
         }),
         NatPmpEventKind::Failed { reason } => Some(NatPmpFfiEvent {
             tag: WarrenTunnelEventTagC::EventNatPmpFailed,
             external_port: 0,
             lifetime_secs: 0,
             reason: Some(reason.clone()),
+            retry_after_secs: 0,
+        }),
+        NatPmpEventKind::RateLimited { retry_after_secs } => Some(NatPmpFfiEvent {
+            tag: WarrenTunnelEventTagC::EventNatPmpRateLimited,
+            external_port: 0,
+            lifetime_secs: 0,
+            reason: None,
+            retry_after_secs: *retry_after_secs,
         }),
         NatPmpEventKind::Ignored => None,
     }
@@ -193,10 +211,46 @@ mod tests {
         assert_eq!(ffi.lifetime_secs, 0, "a failure carries no lifetime");
     }
 
+    /// A refusal window and a granted lease are both seconds and mean
+    /// opposite things, so they travel in different fields: a screen that
+    /// read one as the other would count down a lease as a refusal.
+    #[test]
+    fn a_refusal_window_never_arrives_as_a_lease() {
+        let ffi = project_natpmp_event(&NatPmpEventKind::RateLimited {
+            retry_after_secs: 90,
+        })
+        .expect("RateLimited must project to an FFI event");
+        assert_eq!(ffi.tag, WarrenTunnelEventTagC::EventNatPmpRateLimited);
+        assert_eq!(ffi.retry_after_secs, 90);
+        assert_eq!(ffi.lifetime_secs, 0);
+        assert_eq!(ffi.external_port, 0);
+        assert_eq!(ffi.reason, None);
+    }
+
+    #[test]
+    fn a_grant_carries_no_refusal_window() {
+        for kind in [
+            NatPmpEventKind::Mapped {
+                external_port: 51820,
+                lifetime_secs: 3600,
+            },
+            NatPmpEventKind::Renewed {
+                external_port: 51820,
+                lifetime_secs: 3600,
+            },
+            NatPmpEventKind::Failed {
+                reason: "SuggestedPortInUse".to_owned(),
+            },
+        ] {
+            let ffi = project_natpmp_event(&kind).expect("must project");
+            assert_eq!(ffi.retry_after_secs, 0, "{kind:?}");
+        }
+    }
+
     #[test]
     fn ignored_events_produce_no_ffi_event() {
-        // RateLimited / Cancelled have no C event tag, so the drain fires
-        // nothing for them.
+        // Cancelled has no C event tag: teardown already resets what the
+        // screen shows, so the drain fires nothing for it.
         assert_eq!(project_natpmp_event(&NatPmpEventKind::Ignored), None);
     }
 }

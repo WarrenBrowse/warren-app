@@ -10,10 +10,10 @@
 //  unexpected port exposure ; users opt in when they need it (e.g.
 //  qBittorrent torrenting).
 //
-//  The toggle persists to `LatestTunnelSettings.natPmp`; the tunnel
+//  The settings persist to `LatestTunnelSettings.natPmp`; the tunnel
 //  reconnects on the change (TunnelSettingsStrategy) and the PacketTunnel
-//  extension requests the mapping through the in-tunnel NAT-PMP client
-//  (cf. warren-ios `maybe_spawn_nat_pmp`). Live mapping state arrives
+//  extension asks the exit for that mapping through the in-tunnel NAT-PMP
+//  client (cf. warren-ios `maybe_spawn_nat_pmp`). Live mapping state arrives
 //  back through App Group `UserDefaults` keys written by
 //  `WarrenQuinnTunnelImplementation.broadcastEvent`.
 //
@@ -28,6 +28,12 @@ struct WarrenNatPmpSnapshot: Equatable {
     var externalPort: Int?
     var mappedAt: Date?
     var lifetimeSeconds: Int?
+    /// The stable refusal CATEGORY of the last failed request, never a raw
+    /// error string. It is what tells a port conflict, which the user can
+    /// act on, from every other refusal.
+    var failureReason: String?
+    var retryAfterSeconds: Int?
+    var rateLimitedAt: Date?
 
     static func read(fromSuite suiteName: String?) -> WarrenNatPmpSnapshot {
         guard let suiteName, let defaults = UserDefaults(suiteName: suiteName) else {
@@ -38,7 +44,10 @@ struct WarrenNatPmpSnapshot: Equatable {
             status: defaults.string(forKey: WarrenAppGroupKey.natPmpStatus.rawValue),
             externalPort: port,
             mappedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpMappedAt.rawValue) as? Date,
-            lifetimeSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpLifetimeSeconds.rawValue) as? Int
+            lifetimeSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpLifetimeSeconds.rawValue) as? Int,
+            failureReason: defaults.string(forKey: WarrenAppGroupKey.natPmpFailureReason.rawValue),
+            retryAfterSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue) as? Int,
+            rateLimitedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue) as? Date
         )
     }
 }
@@ -48,15 +57,34 @@ final class WarrenNatPmpSettingsViewModel: ObservableObject {
     @Published var isEnabled: Bool {
         didSet {
             guard oldValue != isEnabled else { return }
-            // The settings diff makes TunnelSettingsStrategy reconnect the
-            // tunnel, so the extension re-reads the flag and starts (or
-            // skips) the NAT-PMP refresh loop on the new session.
-            tunnelManager?.updateSettings([
-                .natPmp(WarrenNatPmpSettings(state: isEnabled ? .on : .off))
-            ])
+            apply()
         }
     }
 
+    @Published var networkProtocol: WarrenNatPmpProtocol {
+        didSet {
+            guard oldValue != networkProtocol else { return }
+            apply()
+        }
+    }
+
+    @Published var lifetimeSeconds: UInt32 {
+        didSet {
+            guard oldValue != lifetimeSeconds else { return }
+            apply()
+        }
+    }
+
+    /// The port as typed, committed only when it is one an exit will
+    /// consider: a half-typed "6" must not reach the tunnel as a pin.
+    @Published var portInput: String
+
+    /// Whether what is in the field right now can be committed.
+    var portInputIsValid: Bool {
+        WarrenPortForwarding.port(fromInput: portInput) != nil
+    }
+
+    private var externalPort: UInt16
     private let tunnelManager: TunnelManager?
 
     /// Whether a live tunnel session exists for the mapping to ride on.
@@ -71,9 +99,55 @@ final class WarrenNatPmpSettingsViewModel: ObservableObject {
         WarrenNatPmpSnapshot(fromSuite: ApplicationConfiguration.securityGroupIdentifier)
     }
 
+    func state(now: Date) -> WarrenPortForwardingState {
+        WarrenPortForwarding.state(
+            snapshot: snapshot(),
+            tunnelIsSecured: tunnelIsSecured,
+            now: now
+        )
+    }
+
     init(tunnelManager: TunnelManager?) {
+        let settings = tunnelManager?.settings.natPmp ?? WarrenNatPmpSettings()
         self.tunnelManager = tunnelManager
-        self.isEnabled = tunnelManager?.settings.natPmp.isEnabled ?? false
+        self.isEnabled = settings.isEnabled
+        self.networkProtocol = settings.networkProtocol
+        self.lifetimeSeconds = settings.lifetimeSeconds
+        self.externalPort = settings.externalPort
+        self.portInput = WarrenPortForwarding.input(forPort: settings.externalPort)
+    }
+
+    /// Commits the typed port, if it is one. Called when the field loses
+    /// focus or the user submits, never on every keystroke.
+    func commitPort() {
+        guard let port = WarrenPortForwarding.port(fromInput: portInput), port != externalPort else {
+            return
+        }
+        externalPort = port
+        apply()
+    }
+
+    /// Lets the exit pick any free port. One of the two ways out of a port
+    /// conflict; editing the field is the third.
+    func assignFreePort() {
+        portInput = ""
+        externalPort = 0
+        apply()
+    }
+
+    private func apply() {
+        // The settings diff makes TunnelSettingsStrategy reconnect the
+        // tunnel, so the extension re-reads the mapping and asks the exit for
+        // it on the new session.
+        tunnelManager?.updateSettings([
+            .natPmp(
+                WarrenNatPmpSettings(
+                    state: isEnabled ? .on : .off,
+                    networkProtocol: networkProtocol,
+                    externalPort: externalPort,
+                    lifetimeSeconds: lifetimeSeconds
+                ))
+        ])
     }
 }
 
@@ -85,9 +159,16 @@ extension WarrenNatPmpSnapshot {
 
 public struct WarrenNatPmpSettingsView: View {
     @ObservedObject private var viewModel: WarrenNatPmpSettingsViewModel
+    /// Opens the abuse-report page. Handed in so the view never reaches for
+    /// `UIApplication` itself.
+    private let openURL: (URL) -> Void
 
-    init(viewModel: WarrenNatPmpSettingsViewModel) {
+    init(
+        viewModel: WarrenNatPmpSettingsViewModel,
+        openURL: @escaping (URL) -> Void = { UIApplication.shared.open($0) }
+    ) {
         self.viewModel = viewModel
+        self.openURL = openURL
     }
 
     public var body: some View {
@@ -96,17 +177,43 @@ public struct WarrenNatPmpSettingsView: View {
                 Toggle(String(localized: "Enable port forwarding", table: "Settings"), isOn: $viewModel.isEnabled)
                     .tint(.Warren.yellow)
             } footer: {
-                Text(String(localized: "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections.", table: "Settings"))
-                    .font(.warrenMicro)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(String(localized: "Requests an external port from the Warren exit relay via NAT-PMP so peer-to-peer apps (BitTorrent, video calls, self-hosted services) can receive incoming connections.", table: "Settings"))
+                    abuseNotice
+                }
+                .font(.warrenMicro)
             }
 
             if viewModel.isEnabled {
                 Section(String(localized: "Forwarded port", table: "Settings")) {
-                    // 1 s cadence keeps the renew countdown honest without a
+                    // 1 s cadence keeps the countdowns honest without a
                     // Combine pipeline; the view only exists while on screen.
                     TimelineView(.periodic(from: .now, by: 1)) { context in
-                        statusRows(snapshot: viewModel.snapshot(), now: context.date)
+                        statusRows(state: viewModel.state(now: context.date))
                     }
+                }
+
+                Section(String(localized: "Mapping", table: "Settings")) {
+                    Picker(
+                        String(localized: "Protocol", table: "Settings"),
+                        selection: $viewModel.networkProtocol
+                    ) {
+                        Text("UDP").tag(WarrenNatPmpProtocol.udp)
+                        Text("TCP").tag(WarrenNatPmpProtocol.tcp)
+                    }
+                    .pickerStyle(.segmented)
+
+                    preferredPortRow
+
+                    Picker(
+                        String(localized: "Lease", table: "Settings"),
+                        selection: $viewModel.lifetimeSeconds
+                    ) {
+                        ForEach(WarrenNatPmpSettings.lifetimeChoices, id: \.self) { seconds in
+                            Text(Self.lifetimeLabel(seconds)).tag(seconds)
+                        }
+                    }
+                    .pickerStyle(.segmented)
                 }
             }
         }
@@ -119,68 +226,125 @@ public struct WarrenNatPmpSettingsView: View {
         .navigationTitle(String(localized: "Port forwarding", table: "Settings"))
     }
 
-    /// Live status rows: requesting spinner until the first grant, the
-    /// granted port + renew countdown while open, a generic failure row
-    /// otherwise. The extension never persists the failure category
-    /// (no-log), so there is nothing more detailed to show.
+    /// An open port is reachable by anyone, so a third-party abuse report can
+    /// reach Warren about it. Stating the rule here, rather than only in the
+    /// terms, is what makes the consequence foreseeable to whoever opens the
+    /// port.
     @ViewBuilder
-    private func statusRows(snapshot: WarrenNatPmpSnapshot, now: Date) -> some View {
-        if !viewModel.tunnelIsSecured {
+    private var abuseNotice: some View {
+        Text(String(localized: "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a strike on the account; three strikes within 90 days revoke access.", table: "Settings"))
+            .foregroundColor(.white.opacity(0.7))
+        if let url = URL(string: Self.abuseReportsURL) {
+            Button(String(localized: "Details, and how to contest a strike", table: "Settings")) {
+                openURL(url)
+            }
+            .font(.warrenMicro)
+        }
+    }
+
+    private var preferredPortRow: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(String(localized: "Preferred port", table: "Settings"))
+                Spacer()
+                TextField(
+                    String(localized: "Any", table: "Settings"),
+                    text: $viewModel.portInput
+                )
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .font(.warrenSmallSemiBold.monospacedDigit())
+                .onSubmit { viewModel.commitPort() }
+            }
+            Text(
+                viewModel.portInputIsValid
+                    ? String(
+                        format: String(localized: "Leave empty to let the exit pick. %d to %d otherwise.", table: "Settings"),
+                        Int(WarrenNatPmpSettings.portRange.lowerBound),
+                        Int(WarrenNatPmpSettings.portRange.upperBound))
+                    : String(
+                        format: String(localized: "A port is a number from %d to %d.", table: "Settings"),
+                        Int(WarrenNatPmpSettings.portRange.lowerBound),
+                        Int(WarrenNatPmpSettings.portRange.upperBound))
+            )
+            .font(.warrenMicro)
+            .foregroundColor(viewModel.portInputIsValid ? .white.opacity(0.7) : .Warren.error)
+        }
+        .onChange(of: viewModel.portInput) { _, _ in
+            // Committing on every keystroke would reconnect the tunnel while
+            // the number is still being typed.
+            guard viewModel.portInputIsValid else { return }
+        }
+        .onDisappear { viewModel.commitPort() }
+    }
+
+    /// Live status rows, one per state the snapshot can be in.
+    @ViewBuilder
+    private func statusRows(state: WarrenPortForwardingState) -> some View {
+        switch state {
+        case .noTunnel:
             Text(String(localized: "Connect to the VPN to request a port.", table: "Settings"))
                 .font(.warrenMicro)
                 .foregroundColor(.white.opacity(0.7))
-        } else {
-            switch snapshot.status {
-            case "open":
+        case .requesting:
+            HStack {
+                Text(String(localized: "External port", table: "Settings"))
+                    .foregroundColor(.white.opacity(0.7))
+                Spacer()
+                ProgressView()
+                    .tint(.Warren.yellow)
+            }
+        case let .mapped(port, renewsIn):
+            HStack {
+                Text(String(localized: "External port", table: "Settings"))
+                    .foregroundColor(.white.opacity(0.7))
+                Spacer()
+                Text("\(port)")
+                    .font(.warrenSmallSemiBold.monospacedDigit())
+                    .foregroundColor(.Warren.yellow)
+            }
+            if let renewsIn {
                 HStack {
-                    Text(String(localized: "External port", table: "Settings"))
+                    Text(String(localized: "Renews in", table: "Settings"))
                         .foregroundColor(.white.opacity(0.7))
                     Spacer()
-                    Text(snapshot.externalPort.map { "\($0)" } ?? "-")
+                    Text(WarrenPortForwarding.countdown(renewsIn))
                         .font(.warrenSmallSemiBold.monospacedDigit())
-                        .foregroundColor(.Warren.yellow)
+                        .foregroundColor(.white)
                 }
-                if let remaining = renewCountdown(snapshot: snapshot, now: now) {
-                    HStack {
-                        Text(String(localized: "Renews in", table: "Settings"))
-                            .foregroundColor(.white.opacity(0.7))
-                        Spacer()
-                        Text(Self.formatLifetime(remaining))
-                            .font(.warrenSmallSemiBold.monospacedDigit())
-                            .foregroundColor(.white)
-                    }
+            }
+        case let .rateLimited(remaining):
+            Text(
+                String(
+                    format: String(localized: "The exit is not handing out ports right now. Try again in %@.", table: "Settings"),
+                    WarrenPortForwarding.countdown(remaining))
+            )
+            .font(.warrenMicro)
+            .foregroundColor(.Warren.error)
+        case let .failed(portConflict):
+            if portConflict {
+                Text(String(localized: "That port is already taken on this exit.", table: "Settings"))
+                    .font(.warrenMicro)
+                    .foregroundColor(.Warren.error)
+                Button(String(localized: "Let the exit pick a port", table: "Settings")) {
+                    viewModel.assignFreePort()
                 }
-            case "failed":
+            } else {
                 Text(String(localized: "Port request failed. Warren retries automatically; reconnect to force a new request.", table: "Settings"))
                     .font(.warrenMicro)
                     .foregroundColor(.white.opacity(0.7))
-            default:
-                HStack {
-                    Text(String(localized: "External port", table: "Settings"))
-                        .foregroundColor(.white.opacity(0.7))
-                    Spacer()
-                    ProgressView()
-                        .tint(.Warren.yellow)
-                }
             }
         }
     }
 
-    /// Seconds until the tunnel's refresh loop renews the mapping. The
-    /// client renews at half the granted lifetime (RFC 6886 practice),
-    /// clamped at zero while a renewal is in flight.
-    private func renewCountdown(snapshot: WarrenNatPmpSnapshot, now: Date) -> TimeInterval? {
-        guard let mappedAt = snapshot.mappedAt, let lifetime = snapshot.lifetimeSeconds else {
-            return nil
-        }
-        let renewAt = mappedAt.addingTimeInterval(TimeInterval(lifetime) / 2)
-        return max(0, renewAt.timeIntervalSince(now))
-    }
+    /// The page that states the strike rule and the way to contest one, the
+    /// same the Android screen links.
+    static let abuseReportsURL = "https://warren.ro/signalements"
 
-    private static func formatLifetime(_ seconds: TimeInterval) -> String {
+    private static func lifetimeLabel(_ seconds: UInt32) -> String {
         let formatter = DateComponentsFormatter()
-        formatter.allowedUnits = [.hour, .minute, .second]
-        formatter.zeroFormattingBehavior = .pad
-        return formatter.string(from: seconds) ?? "--:--"
+        formatter.allowedUnits = seconds >= 3600 ? [.hour] : [.minute]
+        formatter.unitsStyle = .abbreviated
+        return formatter.string(from: TimeInterval(seconds)) ?? "\(seconds)"
     }
 }

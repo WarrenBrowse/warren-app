@@ -20,26 +20,79 @@ public enum WarrenNatPmpState: Codable, Sendable {
     }
 }
 
+/// Which transport a forwarded port carries.
+public enum WarrenNatPmpProtocol: String, Codable, Sendable, CaseIterable {
+    case udp
+    case tcp
+
+    public var isTcp: Bool { self == .tcp }
+}
+
 /// NAT-PMP port-forwarding settings (Warren's differentiator vs the
 /// Mullvad/IVPN abandonment of port forwarding). Default OFF: opening a
-/// public port is an explicit opt-in, never a surprise. The protocol
-/// (UDP) and external port (exit-picked, sticky across exit changes) are
-/// fixed by the tunnel FFI for now, so the only knob is the toggle.
+/// public port is an explicit opt-in, never a surprise.
 /// Declared next to `TunnelSettingsV8` (its first carrier) rather than in
 /// its own file to keep the fork's Xcode project surface minimal.
 public struct WarrenNatPmpSettings: Codable, Equatable, Sendable, CustomDebugStringConvertible {
     public var state: WarrenNatPmpState
 
+    /// The transport the mapping is for. The exit keys allocations by
+    /// external port and refuses a different-protocol request on one it
+    /// already holds, so this is part of what identifies the mapping.
+    public var networkProtocol: WarrenNatPmpProtocol
+
+    /// The port the user asked the exit for, or 0 to let it pick. A pin is
+    /// honour-or-error at the exit, so a conflict is visible instead of
+    /// silently landing on another port; 0 carries the last granted port
+    /// over so the public port follows the client across an exit change.
+    public var externalPort: UInt16
+
+    /// Requested lease length. The client renews at half of what the exit
+    /// actually granted, which may be less than this.
+    public var lifetimeSeconds: UInt32
+
+    /// The lease lengths the screen offers, and the one a record with none
+    /// of them decodes to.
+    public static let lifetimeChoices: [UInt32] = [3600, 21600, 86400]
+
+    /// The port range an exit will consider. Below 1024 is the privileged
+    /// range no exit hands out.
+    public static let portRange: ClosedRange<UInt16> = 1024...65535
+
     public var isEnabled: Bool {
         state.isEnabled
     }
 
-    public init(state: WarrenNatPmpState = .off) {
+    public init(
+        state: WarrenNatPmpState = .off,
+        networkProtocol: WarrenNatPmpProtocol = .udp,
+        externalPort: UInt16 = 0,
+        lifetimeSeconds: UInt32 = 3600
+    ) {
         self.state = state
+        self.networkProtocol = networkProtocol
+        self.externalPort = externalPort
+        self.lifetimeSeconds = lifetimeSeconds
+    }
+
+    /// A record written before the protocol, port and lifetime were
+    /// settable carries none of them. Each missing field decodes to the
+    /// behaviour that record actually had, so an upgrade never changes a
+    /// live mapping.
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        state = try container.decode(WarrenNatPmpState.self, forKey: .state)
+        networkProtocol =
+            try container.decodeIfPresent(WarrenNatPmpProtocol.self, forKey: .networkProtocol) ?? .udp
+        externalPort = try container.decodeIfPresent(UInt16.self, forKey: .externalPort) ?? 0
+        lifetimeSeconds = try container.decodeIfPresent(UInt32.self, forKey: .lifetimeSeconds) ?? 3600
     }
 
     public var debugDescription: String {
-        "WarrenNatPmpSettings(state: \(state))"
+        // The port is the user's own choice, not identity material, and it
+        // is what a support log needs to explain a refused mapping.
+        "WarrenNatPmpSettings(state: \(state), protocol: \(networkProtocol.rawValue), "
+            + "port: \(externalPort), lifetime: \(lifetimeSeconds)s)"
     }
 }
 
