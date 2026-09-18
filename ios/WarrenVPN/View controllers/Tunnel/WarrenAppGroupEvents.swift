@@ -10,12 +10,20 @@
 //  UserDefaults container. Surfacing happens here only - the producer
 //  side lives in the tunnel extension.
 //
-//  Until the tunnel extension actually writes these
-//  keys, this observer simply emits no events.
+//  The bridge PULLS. `UserDefaults.didChangeNotification` is posted only
+//  for changes made inside the receiving process, and the producer is the
+//  packet tunnel extension, a process of its own: subscribing to it here
+//  meant the failover banner and the pin-mismatch alert had no trigger at
+//  all on a real device. The extension rewrites the suite every 2 seconds
+//  (`WarrenQuinnTunnelImplementation.startStatsBroadcastTask`), so reading
+//  it back on the same cadence while the screen is visible surfaces an
+//  event well inside its freshness window, and a read on foreground entry
+//  catches whatever was written while the app was away.
 //
 
 import Combine
 import Foundation
+import UIKit
 import WarrenRustRuntime
 
 // `WarrenAppGroupKey` lives in `Shared/WarrenAppGroupKey.swift` so the
@@ -60,15 +68,20 @@ public final class WarrenAppGroupEvents: ObservableObject {
     @Published public private(set) var obfuscationActive: Bool = false
     @Published public private(set) var lastPinMismatch: WarrenPinMismatchEvent?
 
+    /// The cadence the extension rewrites the suite on, so reading it back any
+    /// faster only burns wakeups.
+    public static let pollInterval: TimeInterval = 2
+
     private let defaults: UserDefaults?
-    private var observer: NSObjectProtocol?
+    private var pollTask: Task<Void, Never>?
+    private var foregroundObserver: NSObjectProtocol?
 
     public init(suiteName: String) {
         defaults = UserDefaults(suiteName: suiteName)
         refresh()
-        observer = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification,
-            object: defaults,
+        foregroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
             queue: .main
         ) { [weak self] _ in
             // Hop back onto the main actor; the observer's queue is .main
@@ -82,13 +95,35 @@ public final class WarrenAppGroupEvents: ObservableObject {
     deinit {
         // NotificationCenter automatically drops weak observer references
         // when the observed object is deallocated. The explicit unregister
-        // would require accessing the @MainActor-isolated `observer`
-        // ivar from a nonisolated deinit - disallowed under Swift 6
-        // strict concurrency. The block-based observer holds `self`
-        // weakly, so leaking is bounded.
+        // would require accessing the @MainActor-isolated ivars from a
+        // nonisolated deinit, disallowed under Swift 6 strict concurrency.
+        // The block-based observer holds `self` weakly, so leaking is
+        // bounded, and `pollTask` holds `self` weakly for the same reason.
     }
 
-    private func refresh() {
+    /// Start reading the suite back. Idempotent, so a screen may call it from
+    /// every `viewDidAppear` without stacking timers.
+    public func startPolling(every interval: TimeInterval = pollInterval) {
+        stopPolling()
+        pollTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+                guard !Task.isCancelled else { return }
+                await MainActor.run { self?.refresh() }
+            }
+        }
+    }
+
+    /// Stop reading. The poll costs nothing when no screen is showing what it
+    /// feeds, which is why it is not started in `init`.
+    public func stopPolling() {
+        pollTask?.cancel()
+        pollTask = nil
+    }
+
+    /// Read the suite now. Public because the only way a cross-process write
+    /// reaches this object is somebody asking for it.
+    public func refresh() {
         guard let defaults else { return }
         if let country = defaults.string(forKey: WarrenAppGroupKey.lastFailoverExit.rawValue),
             let date = defaults.object(forKey: WarrenAppGroupKey.lastFailoverAt.rawValue) as? Date

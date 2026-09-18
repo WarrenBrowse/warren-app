@@ -298,6 +298,19 @@ class TunnelViewController: UIViewController, RootContainment {
         subscribeToPinMismatchEvents()
     }
 
+    // The tunnel extension writes its events from a process of its own, so the
+    // bridge only sees them when it is asked to look. Reading is tied to this
+    // screen being on screen: nothing it feeds is visible otherwise.
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        appGroupEvents.startPolling()
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        appGroupEvents.stopPolling()
+    }
+
     func setMainContentHidden(_ isHidden: Bool, animated: Bool) {
         let actions = {
             _ = self.connectionView.opacity(isHidden ? 0 : 1)

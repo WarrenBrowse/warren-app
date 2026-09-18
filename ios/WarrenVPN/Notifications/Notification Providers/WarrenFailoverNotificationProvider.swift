@@ -8,7 +8,7 @@
 import Foundation
 import WarrenSettings
 import WarrenTypes
-import UIKit.UIImage
+import UIKit
 
 /// Persisted high-water mark of the multi-exit failover count the user has
 /// already acknowledged (dismissed). Kept behind a protocol so the banner
@@ -40,7 +40,9 @@ final class WarrenFailoverNotificationProvider: NotificationProvider,
 
     private let acknowledgeStore: WarrenFailoverAcknowledging
     private let failoverCountReader: () -> Int
-    private var observer: NSObjectProtocol?
+    private var foregroundObserver: NSObjectProtocol?
+    private var backgroundObserver: NSObjectProtocol?
+    private var pollTimer: DispatchSourceTimer?
 
     init(
         acknowledgeStore: WarrenFailoverAcknowledging,
@@ -49,11 +51,12 @@ final class WarrenFailoverNotificationProvider: NotificationProvider,
         self.acknowledgeStore = acknowledgeStore
         self.failoverCountReader = failoverCountReader
         super.init()
-        addAppGroupObserver()
+        observeForeground()
     }
 
     deinit {
-        if let observer {
+        pollTimer?.cancel()
+        for observer in [foregroundObserver, backgroundObserver].compactMap({ $0 }) {
             NotificationCenter.default.removeObserver(observer)
         }
     }
@@ -99,15 +102,45 @@ final class WarrenFailoverNotificationProvider: NotificationProvider,
         )
     }
 
-    private func addAppGroupObserver() {
-        guard let defaults = Self.appGroupDefaults() else { return }
-        observer = NotificationCenter.default.addObserver(
-            forName: UserDefaults.didChangeNotification,
-            object: defaults,
+    /// The counter is written by the packet tunnel extension, a process of its
+    /// own, and `UserDefaults.didChangeNotification` is posted only for writes
+    /// made inside the receiving process: subscribing to it left this banner
+    /// with no trigger at all. So read the counter back instead, and only while
+    /// the app is in front, where the banner can actually be seen.
+    private func observeForeground() {
+        foregroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didBecomeActiveNotification,
+            object: nil,
             queue: .main
         ) { [weak self] _ in
             self?.invalidate()
+            self?.startPolling()
         }
+        backgroundObserver = NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.stopPolling()
+        }
+    }
+
+    private func startPolling() {
+        stopPolling()
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        // The extension rewrites the suite every 2 seconds; matching it keeps
+        // the banner within one write of the failover.
+        timer.schedule(deadline: .now() + 2, repeating: 2)
+        timer.setEventHandler { [weak self] in
+            self?.invalidate()
+        }
+        timer.resume()
+        pollTimer = timer
+    }
+
+    private func stopPolling() {
+        pollTimer?.cancel()
+        pollTimer = nil
     }
 
     private static func appGroupDefaults() -> UserDefaults? {
