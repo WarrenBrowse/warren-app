@@ -1132,6 +1132,24 @@ char *warren_report_pubkey_mismatch(const uint8_t *seed,
                                     const char *city);
 
 /**
+ * Fetches the environment descriptor.
+ *
+ * Returns `{"ok":true,"environment":..,"degraded":..,"default_rate_bps":..,
+ * "payments_enabled":..}` or `{"ok":false}` for any failure, including an API
+ * that predates the endpoint; Swift reads both as "no info" and says the
+ * shorter thing.
+ *
+ * Blocking: runs the GET on the shared iOS runtime, so call it off the main
+ * thread.
+ *
+ * # Safety
+ *
+ * The returned pointer must be freed exactly once via
+ * `warren_wallet_free_mnemonic`. Never null except on allocation failure.
+ */
+char *warren_fetch_network_info(void);
+
+/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,

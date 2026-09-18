@@ -13800,6 +13800,1198 @@
           }
         }
       }
+    },
+    "Free beta network, limited bandwidth": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبكة بيتا مجانية، نطاق محدود"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis beta-netværk, begrænset båndbredde"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenloses Beta-Netz, begrenzte Bandbreite"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free beta network, limited bandwidth"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red beta gratuita, ancho de banda limitado"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه بتای رایگان، پهنای باند محدود"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilmainen beetaverkko, rajoitettu kaistanleveys"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réseau beta gratuit, bande passante limitée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rete beta gratuita, banda limitata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料ベータ回線、帯域は制限つき"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무료 베타 네트워크, 대역폭 제한"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခမဲ့ ဘီတာ ကွန်ရက်၊ လိုင်းအကျယ် ကန့်သတ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis beta-nettverk, begrenset båndbredde"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis betanetwerk, beperkte bandbreedte"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darmowa sieć beta, ograniczone pasmo"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rede beta gratuita, largura de banda limitada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rețea beta gratuită, lățime de bandă limitată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бесплатная бета-сеть, ограниченная полоса"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis betanätverk, begränsad bandbredd"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เครือข่ายเบต้าฟรี แบนด์วิดท์จำกัด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücretsiz beta ağı, sınırlı bant genişliği"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Безкоштовна бета-мережа, обмежена смуга"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费 Beta 网络，带宽受限"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免費 Beta 網路，頻寬受限"
+          }
+        }
+      }
+    },
+    "Free beta network, speed capped at %d Mbps": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبكة بيتا مجانية، السرعة محدودة بـ %d ميغابت/ث"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis beta-netværk, hastighed begrænset til %d Mbit/s"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kostenloses Beta-Netz, Geschwindigkeit auf %d Mbit/s begrenzt"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free beta network, speed capped at %d Mbps"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red beta gratuita, velocidad limitada a %d Mbps"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شبکه بتای رایگان، سرعت محدود به %d مگابیت بر ثانیه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ilmainen beetaverkko, nopeus rajattu %d Mbit/s"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Réseau beta gratuit, débit plafonné à %d Mb/s"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rete beta gratuita, velocità limitata a %d Mbps"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無料ベータ回線、速度は %d Mbps 上限"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "무료 베타 네트워크, 속도 %d Mbps 제한"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခမဲ့ ဘီတာ ကွန်ရက်၊ အမြန်နှုန်း %d Mbps ကန့်သတ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis beta-nettverk, hastighet begrenset til %d Mbit/s"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis betanetwerk, snelheid begrensd op %d Mbps"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darmowa sieć beta, prędkość ograniczona do %d Mb/s"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rede beta gratuita, velocidade limitada a %d Mbps"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rețea beta gratuită, viteză limitată la %d Mbps"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бесплатная бета-сеть, скорость ограничена %d Мбит/с"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gratis betanätverk, hastighet begränsad till %d Mbit/s"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เครือข่ายเบต้าฟรี จำกัดความเร็วที่ %d Mbps"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ücretsiz beta ağı, hız %d Mbps ile sınırlı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Безкоштовна бета-мережа, швидкість обмежена %d Мбіт/с"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免费 Beta 网络，速度上限 %d Mbps"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "免費 Beta 網路，速度上限 %d Mbps"
+          }
+        }
+      }
+    },
+    "Warren beta": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيتا Warren"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren Beta"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بتای Warren"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ベータ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren 베타"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ဘီတာ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бета Warren"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren เบต้า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren beta"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Бета Warren"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren Beta"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren Beta"
+          }
+        }
+      }
+    },
+    "This app uses the free Warren beta, here to help us validate Warren in real conditions.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يستخدم هذا التطبيق بيتا Warren المجانية، الموجودة لمساعدتنا على التحقق من Warren في ظروف حقيقية."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne app bruger den gratis Warren-beta, som er her for at hjælpe os med at validere Warren under virkelige forhold."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese App nutzt die kostenlose Warren-Beta, die uns hilft, Warren unter echten Bedingungen zu prüfen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app uses the free Warren beta, here to help us validate Warren in real conditions."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta aplicación usa la beta gratuita de Warren, que nos sirve para validar Warren en condiciones reales."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این برنامه از بتای رایگان Warren استفاده می‌کند که برای اعتبارسنجی Warren در شرایط واقعی اینجاست."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämä sovellus käyttää ilmaista Warren-beetaa, joka auttaa meitä todentamaan Warrenin oikeissa oloissa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cette application utilise la beta gratuite de Warren, qui nous sert à valider Warren en conditions réelles."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questa app usa la beta gratuita di Warren, qui per aiutarci a validare Warren in condizioni reali."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このアプリは無料の Warren ベータを使っています。実環境で Warren を検証するためのものです。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 앱은 무료 Warren 베타를 사용합니다. 실제 환경에서 Warren을 검증하기 위한 것입니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအက်ပ်သည် အခမဲ့ Warren ဘီတာကို အသုံးပြုသည်။ ၎င်းသည် Warren ကို လက်တွေ့အခြေအနေတွင် စစ်ဆေးရန် ဖြစ်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne appen bruker den gratis Warren-betaen, som er her for å hjelpe oss å validere Warren under virkelige forhold."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze app gebruikt de gratis Warren-beta, die ons helpt Warren onder echte omstandigheden te valideren."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ta aplikacja korzysta z darmowej bety Warrena, która pomaga nam sprawdzić Warrena w rzeczywistych warunkach."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta aplicação usa a beta gratuita da Warren, que nos ajuda a validar a Warren em condições reais."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Această aplicație folosește beta gratuită Warren, care ne ajută să validăm Warren în condiții reale."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это приложение использует бесплатную бету Warren, которая помогает нам проверить Warren в реальных условиях."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den här appen använder den gratis Warren-betan, som hjälper oss att validera Warren under verkliga förhållanden."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แอปนี้ใช้เบต้าของ Warren แบบฟรี ซึ่งมีไว้ช่วยเราตรวจสอบ Warren ในสภาพการใช้งานจริง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu uygulama, Warren'ı gerçek koşullarda doğrulamamıza yardımcı olan ücretsiz Warren betasını kullanır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей застосунок використовує безкоштовну бету Warren, яка допомагає нам перевірити Warren у реальних умовах."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本应用使用免费的 Warren Beta，用于在真实环境中验证 Warren。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本應用使用免費的 Warren Beta，用於在真實環境中驗證 Warren。"
+          }
+        }
+      }
+    },
+    "It runs on a separate network with limited bandwidth.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وهي تعمل على شبكة منفصلة ذات نطاق محدود."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den kører på et separat netværk med begrænset båndbredde."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie läuft auf einem separaten Netz mit begrenzter Bandbreite."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It runs on a separate network with limited bandwidth."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funciona en una red aparte con ancho de banda limitado."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روی شبکه‌ای جدا با پهنای باند محدود اجرا می‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se toimii erillisessä verkossa, jonka kaistanleveys on rajattu."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elle tourne sur un réseau distinct à bande passante limitée."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funziona su una rete separata con banda limitata."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のネットワークで動作し、帯域には制限があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "별도의 네트워크에서 동작하며 대역폭이 제한됩니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "၎င်းသည် လိုင်းအကျယ် ကန့်သတ်ထားသော သီးခြားကွန်ရက်တွင် လည်ပတ်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den kjører på et separat nettverk med begrenset båndbredde."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij draait op een apart netwerk met beperkte bandbreedte."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Działa w osobnej sieci o ograniczonym paśmie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funciona numa rede separada com largura de banda limitada."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rulează pe o rețea separată, cu lățime de bandă limitată."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Она работает в отдельной сети с ограниченной полосой."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den körs på ett separat nätverk med begränsad bandbredd."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำงานบนเครือข่ายแยกต่างหากที่มีแบนด์วิดท์จำกัด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sınırlı bant genişliğine sahip ayrı bir ağda çalışır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вона працює в окремій мережі з обмеженою смугою."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它运行在一个带宽受限的独立网络上。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它運行在一個頻寬受限的獨立網路上。"
+          }
+        }
+      }
+    },
+    "It runs on a separate network with bandwidth capped at %d Mbps.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وهي تعمل على شبكة منفصلة نطاقها محدود بـ %d ميغابت/ث."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den kører på et separat netværk med båndbredden begrænset til %d Mbit/s."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sie läuft auf einem separaten Netz mit einer Bandbreite von höchstens %d Mbit/s."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It runs on a separate network with bandwidth capped at %d Mbps."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funciona en una red aparte con el ancho de banda limitado a %d Mbps."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "روی شبکه‌ای جدا با پهنای باند محدود به %d مگابیت بر ثانیه اجرا می‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se toimii erillisessä verkossa, jonka kaistanleveys on rajattu %d Mbit/s."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elle tourne sur un réseau distinct dont la bande passante est plafonnée à %d Mb/s."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funziona su una rete separata con banda limitata a %d Mbps."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "別のネットワークで動作し、帯域は %d Mbps が上限です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "별도의 네트워크에서 동작하며 대역폭은 %d Mbps로 제한됩니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "၎င်းသည် လိုင်းအကျယ် %d Mbps ကန့်သတ်ထားသော သီးခြားကွန်ရက်တွင် လည်ပတ်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den kjører på et separat nettverk med båndbredden begrenset til %d Mbit/s."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hij draait op een apart netwerk met de bandbreedte begrensd op %d Mbps."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Działa w osobnej sieci z pasmem ograniczonym do %d Mb/s."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Funciona numa rede separada com a largura de banda limitada a %d Mbps."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rulează pe o rețea separată, cu lățimea de bandă limitată la %d Mbps."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Она работает в отдельной сети с полосой, ограниченной %d Мбит/с."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den körs på ett separat nätverk med bandbredden begränsad till %d Mbit/s."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำงานบนเครือข่ายแยกต่างหากที่จำกัดแบนด์วิดท์ไว้ที่ %d Mbps"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bant genişliği %d Mbps ile sınırlı ayrı bir ağda çalışır."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вона працює в окремій мережі зі смугою, обмеженою %d Мбіт/с."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它运行在一个带宽上限为 %d Mbps 的独立网络上。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它運行在一個頻寬上限為 %d Mbps 的獨立網路上。"
+          }
+        }
+      }
+    },
+    "These are not the final service conditions: the full-speed network is a separate, paid product.": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه ليست شروط الخدمة النهائية: الشبكة كاملة السرعة منتج منفصل مدفوع."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette er ikke de endelige servicevilkår: netværket med fuld hastighed er et separat, betalt produkt."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das sind nicht die endgültigen Bedingungen: das Netz mit voller Geschwindigkeit ist ein separates, kostenpflichtiges Produkt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These are not the final service conditions: the full-speed network is a separate, paid product."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas no son las condiciones definitivas del servicio: la red a plena velocidad es un producto aparte, de pago."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این شرایط نهایی سرویس نیست: شبکه با سرعت کامل محصولی جداگانه و پولی است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nämä eivät ole lopulliset palveluehdot: täysinopeuksinen verkko on erillinen, maksullinen tuote."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce ne sont pas les conditions finales du service : le réseau à pleine vitesse est un produit distinct et payant."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queste non sono le condizioni finali del servizio: la rete a piena velocità è un prodotto separato, a pagamento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これは最終的なサービス条件ではありません。フルスピードの回線は別の有料製品です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이는 최종 서비스 조건이 아닙니다. 전속도 네트워크는 별도의 유료 제품입니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤသည်မှာ နောက်ဆုံး ဝန်ဆောင်မှု အခြေအနေများ မဟုတ်ပါ။ အမြန်နှုန်းပြည့် ကွန်ရက်သည် သီးခြား အခကြေးငွေ ထုတ်ကုန်ဖြစ်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette er ikke de endelige tjenestevilkårene: nettverket med full hastighet er et separat, betalt produkt."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit zijn niet de definitieve voorwaarden: het netwerk op volle snelheid is een apart, betaald product."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To nie są docelowe warunki usługi: sieć o pełnej prędkości to osobny, płatny produkt."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estas não são as condições finais do serviço: a rede à velocidade máxima é um produto separado e pago."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acestea nu sunt condițiile finale ale serviciului: rețeaua la viteză completă este un produs separat, cu plată."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это не окончательные условия обслуживания: сеть на полной скорости, это отдельный платный продукт."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det här är inte de slutliga villkoren: nätverket med full hastighet är en separat, betald produkt."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นี่ไม่ใช่เงื่อนไขบริการขั้นสุดท้าย เครือข่ายความเร็วเต็มเป็นผลิตภัณฑ์แยกต่างหากที่ต้องเสียเงิน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bunlar hizmetin nihai koşulları değildir: tam hızlı ağ ayrı ve ücretli bir üründür."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це не остаточні умови обслуговування: мережа на повній швидкості, це окремий платний продукт."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这不是最终的服务条件：全速网络是一项单独的付费产品。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這不是最終的服務條件：全速網路是一項單獨的付費產品。"
+          }
+        }
+      }
+    },
+    "%@ build, about this network": {
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إصدار %@، عن هذه الشبكة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-build, om dette netværk"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-Build, über dieses Netz"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ build, about this network"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilación %@, acerca de esta red"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخه %@، درباره این شبکه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-koontiversio, tietoa tästä verkosta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@, à propos de ce réseau"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@, informazioni su questa rete"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ビルド、このネットワークについて"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 빌드, 이 네트워크 정보"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ တည်ဆောက်မှု၊ ဤကွန်ရက်အကြောင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-bygg, om dette nettverket"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-build, over dit netwerk"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kompilacja %@, o tej sieci"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compilação %@, sobre esta rede"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versiune %@, despre această rețea"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сборка %@, об этой сети"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@-bygge, om det här nätverket"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "บิลด์ %@ เกี่ยวกับเครือข่ายนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sürümü, bu ağ hakkında"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Збірка %@, про цю мережу"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 版本，关于此网络"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ 版本，關於此網路"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -89,6 +89,10 @@ tracing-subscriber = { workspace = true }
 # the bundled reqwest transport. iOS-only: the module's only consumer is
 # `#[cfg(target_os = "ios")]`.
 warren-api = { path = "../../warren-sdk-rs/crates/warren-api", features = ["reqwest-transport"] }
+# The `/v1/network` environment descriptor the beta badge reads (the label,
+# the degraded flag and the bandwidth cap), decoded through the contract's own
+# DTO so the app cannot drift from the server's shape.
+warren-contract = { path = "../../warren-contract" }
 # The forum login preflight reads the connect host's `Date` header, and the
 # SDK transport's response type carries no headers, so that one GET is made
 # on the same reqwest the SDK transport is built on (`warren_forum_ffi`).

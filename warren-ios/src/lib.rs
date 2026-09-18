@@ -82,6 +82,9 @@ mod warren_forum_ffi;
 mod warren_incidents_ffi;
 #[cfg(target_os = "ios")]
 mod warren_multihop_ffi;
+// The public environment descriptor the beta badge reads.
+#[cfg(target_os = "ios")]
+mod warren_network_info_ffi;
 
 // Upstream Mullvad API client retained transitionally. Each call site here
 // still calls into `mullvad-api` (account number flows, device management,

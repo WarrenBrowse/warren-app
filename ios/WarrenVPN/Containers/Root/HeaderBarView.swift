@@ -279,6 +279,23 @@ class HeaderBarView: UIView {
     private func applyProductBadge() {
         productChipLabel.text = productBadge
         productChipLabel.isHidden = productBadge == nil
+        // The chip is the only place in the app that names this build's
+        // network, so on a marked build it is also the way in to what that
+        // network costs the user in speed. Prod shows no chip and nothing to
+        // open.
+        productChipLabel.isUserInteractionEnabled = productBadge != nil
+        productChipLabel.isAccessibilityElement = productBadge != nil
+        productChipLabel.accessibilityTraits = .button
+        productChipLabel.accessibilityLabel = productBadge.map { badge in
+            String(
+                format: NSLocalizedString(
+                    "%@ build, about this network",
+                    tableName: "Settings",
+                    comment: ""
+                ),
+                badge
+            )
+        }
     }
 
     var showsDivider = false {
@@ -437,12 +454,24 @@ class HeaderBarView: UIView {
             )
         }
 
+        productChipLabel.addGestureRecognizer(
+            UITapGestureRecognizer(target: self, action: #selector(handleProductChipTap))
+        )
+
         applyProductBadge()
         applyTone()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    /// What a tap on the product chip opens. Set by the container, which owns
+    /// the presentation.
+    var onProductChipTap: (() -> Void)?
+
+    @objc private func handleProductChipTap() {
+        onProductChipTap?()
     }
 
     override func layoutSubviews() {

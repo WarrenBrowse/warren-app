@@ -245,6 +245,12 @@ FILES_TO_ADD = {
   "WarrenVPN/Coordinators/WarrenForumActivityCoordinator.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityPanelTests.swift" => "WarrenVPNTests",
 
+  # What a marked build is, and what its network costs the user in speed.
+  "WarrenRustRuntime/WarrenNetworkInfo.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntimeTests/WarrenNetworkInfoTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenVPN/Classes/WarrenBetaExplanation.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenBetaExplanationTests.swift" => "WarrenVPNTests",
+
   # "SERVER NOT FORWARDING TRAFFIC": the one verdict that can see an exit
   # which answers keep-alives while forwarding nothing.
   "WarrenVPN/Notifications/Notification Providers/WarrenPathHealthNotificationProvider.swift" =>

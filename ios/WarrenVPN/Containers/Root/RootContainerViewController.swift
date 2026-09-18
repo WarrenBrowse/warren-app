@@ -89,6 +89,12 @@ protocol RootContainerViewControllerDelegate: AnyObject, Sendable {
         animated: Bool
     )
 
+    /// The product chip was tapped on a marked build: explain the network
+    /// this app is on and what it costs the user in speed.
+    func rootContainerViewControllerShouldExplainNetwork(
+        _ controller: RootContainerViewController
+    )
+
     func rootContainerViewSupportedInterfaceOrientations(_ controller: RootContainerViewController)
         -> UIInterfaceOrientationMask
 
@@ -421,6 +427,11 @@ class RootContainerViewController: UIViewController {
             action: #selector(handleForumButtonTap),
             for: .touchUpInside
         )
+
+        headerBarView.onProductChipTap = { [weak self] in
+            guard let self else { return }
+            delegate?.rootContainerViewControllerShouldExplainNetwork(self)
+        }
 
         view.addSubview(headerBarView)
 

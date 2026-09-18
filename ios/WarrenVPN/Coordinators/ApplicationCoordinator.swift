@@ -1326,6 +1326,37 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         }
     }
 
+    /// What a marked build is, and what its network costs in speed. The chip
+    /// named the environment and said nothing else, so a user on the free beta
+    /// had no way to learn that the speed is the network's cap rather than
+    /// their own line.
+    func rootContainerViewControllerShouldExplainNetwork(
+        _ controller: RootContainerViewController
+    ) {
+        // Fetched rather than cached: the cap is an operator decision that can
+        // change between launches, and the answer is only ever read here.
+        Task { [weak self] in
+            let info = await Task.detached(priority: .userInitiated) {
+                WarrenNetworkInfoClient.fetch()
+            }.value
+            self?.presentNetworkExplanation(info)
+        }
+    }
+
+    private func presentNetworkExplanation(_ info: WarrenNetworkInfo?) {
+        let alert = UIAlertController(
+            title: WarrenBetaExplanation.title(),
+            message: WarrenBetaExplanation.paragraphs(networkInfo: info).joined(separator: "\n\n"),
+            preferredStyle: .alert
+        )
+        alert.addAction(
+            UIAlertAction(
+                title: NSLocalizedString("Got it!", comment: ""),
+                style: .default
+            ))
+        navigationContainer.present(alert, animated: true)
+    }
+
     func rootContainerViewSupportedInterfaceOrientations(_ controller: RootContainerViewController)
         -> UIInterfaceOrientationMask
     {
