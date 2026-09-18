@@ -111,6 +111,9 @@ class TunnelViewController: UIViewController, RootContainment {
     private var pinMismatchCancellable: Combine.AnyCancellable?
     private var lastShownPinMismatchDate: Date?
     private var pinMismatchAlertController: AlertViewController?
+    /// The mismatch the user just answered by trusting, while the reconnect
+    /// that follows has not resolved. Nil at every other moment.
+    private var pendingTrust: WarrenPinMismatch?
 
     var shouldShowSelectLocationPicker: (() -> Void)?
     var shouldShowCancelTunnelAlert: (() -> Void)?
@@ -228,6 +231,7 @@ class TunnelViewController: UIViewController, RootContainment {
         }
 
         interactor.didUpdateTunnelStatus = { [weak self] tunnelStatus in
+            self?.resolvePendingTrust(tunnelStatus.state)
             self?.connectionViewViewModel.update(tunnelStatus: tunnelStatus)
             self?.setTunnelState(tunnelStatus.state, animated: true)
             self?.indicatorsViewViewModel.tunnelState = tunnelStatus.state
@@ -558,7 +562,10 @@ class TunnelViewController: UIViewController, RootContainment {
                     return
                 }
                 self.lastShownPinMismatchDate = event.occurredAt
-                self.showPinMismatchAlert(event.mismatch)
+                self.showPinMismatchAlert(
+                    event.mismatch,
+                    error: self.pinTrustError(for: event.mismatch)
+                )
             }
     }
 
@@ -702,30 +709,75 @@ class TunnelViewController: UIViewController, RootContainment {
     }
 
     private func handlePinMismatchTrust(_ mismatch: WarrenPinMismatch) {
-        let trusted = WarrenQuinnAdapter.pinTrust(
+        let saved = WarrenQuinnAdapter.pinTrust(
             pinStorePath: pinStorePath,
             exitIdHex: mismatch.exitId,
             pubkeyHex: mismatch.observed,
             country: mismatch.country
         )
-        guard trusted else {
+        guard saved else {
             // Dismissing here left the user believing the key was trusted while
             // the pin had not been written, and the only trace was a log line.
             logger.error("Failed to trust new exit pubkey for exit \(mismatch.exitId)")
             showPinMismatchAlert(
                 mismatch,
-                error: NSLocalizedString(
-                    "Could not save the new key. Please try again.",
-                    tableName: "Settings",
-                    comment: "Shown in the exit-key alert when pinning the new key failed."
-                )
+                error: WarrenPinTrust.message(for: .saveFailed)
             )
             return
         }
+        // Remember what was just trusted: a mismatch that comes back for this
+        // exit with a DIFFERENT key is a key that changed twice between the
+        // question and the answer, which is the shape an attack takes and
+        // which the user was never told about.
+        pendingTrust = mismatch
         dismissPinMismatchAlert()
         // The tunnel failed closed; reconnect now that the new key is
         // pinned. Keep the same relay selection (no new relay).
         interactor.reconnectTunnel(selectNewRelay: false)
+    }
+
+    /// What became of the reconnect the trust dispatched.
+    ///
+    /// Connected settles it. An error with no fresh mismatch is either an exit
+    /// that has left the roster, an ordinary fleet change, or a failure with
+    /// no better name; the two used to read the same, which sent the user
+    /// looking for a security problem in a server that had simply been
+    /// retired.
+    private func resolvePendingTrust(_ state: TunnelState) {
+        guard let pending = pendingTrust else { return }
+        switch state {
+        case .connected:
+            pendingTrust = nil
+        case .error:
+            pendingTrust = nil
+            let outcome = WarrenPinTrust.outcome(
+                saved: true,
+                observedAgain: nil,
+                trusted: pending.observed,
+                exitStillKnown: interactor.rosterHasExit(servingPubkeyHex: pending.observed),
+                reconnected: false
+            )
+            guard let message = WarrenPinTrust.message(for: outcome) else { return }
+            showPinMismatchAlert(pending, error: message)
+        default:
+            break
+        }
+    }
+
+    /// What a fresh mismatch means while a trust is still pending for the same
+    /// exit: the same key back is the reconnect catching up, a different one is
+    /// a second change.
+    private func pinTrustError(for mismatch: WarrenPinMismatch) -> String? {
+        guard let pending = pendingTrust, pending.exitId == mismatch.exitId else { return nil }
+        pendingTrust = nil
+        let outcome = WarrenPinTrust.outcome(
+            saved: true,
+            observedAgain: mismatch.observed,
+            trusted: pending.observed,
+            exitStillKnown: true,
+            reconnected: false
+        )
+        return WarrenPinTrust.message(for: outcome)
     }
 
     /// Files the signed report the button names.

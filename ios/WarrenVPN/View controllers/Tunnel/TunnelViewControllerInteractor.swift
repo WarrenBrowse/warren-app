@@ -37,6 +37,36 @@ final class TunnelViewControllerInteractor: @unchecked Sendable {
         tunnelManager.envStandDownRecord.isStandingDown
     }
 
+    /// Whether any exit in the roster serves `pubkeyHex`.
+    ///
+    /// After the user trusts a key, the exit they will reach is the one
+    /// advertising it. A key no exit advertises means that exit is gone from
+    /// the fleet, which is an ordinary roster change and reads nothing like
+    /// the security question the alert just asked.
+    func rosterHasExit(servingPubkeyHex pubkeyHex: String) -> Bool {
+        guard let wanted = Self.bytes(fromHex: pubkeyHex),
+            let cached = try? relayCacheTracker.getCachedRelays()
+        else {
+            // Nothing to contradict the roster with: say it is still there
+            // rather than announce a disappearance on no evidence.
+            return true
+        }
+        return cached.relays.wireguard.relays.contains { $0.publicKey == wanted }
+    }
+
+    private static func bytes(fromHex hex: String) -> Data? {
+        let characters = Array(hex)
+        guard !characters.isEmpty, characters.count.isMultiple(of: 2) else { return nil }
+        var bytes = Data(capacity: characters.count / 2)
+        for index in stride(from: 0, to: characters.count, by: 2) {
+            guard let byte = UInt8(String(characters[index...index + 1]), radix: 16) else {
+                return nil
+            }
+            bytes.append(byte)
+        }
+        return bytes
+    }
+
     init(
         tunnelManager: TunnelManager,
         relayCacheTracker: RelayCacheTrackerProtocol

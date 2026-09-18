@@ -245,6 +245,11 @@ FILES_TO_ADD = {
   "WarrenVPN/Coordinators/WarrenForumActivityCoordinator.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumActivityPanelTests.swift" => "WarrenVPNTests",
 
+  # What the user is told when trusting a key does not take: a key that
+  # changed twice, and an exit that has simply left the roster.
+  "WarrenVPN/Classes/WarrenPinTrustOutcome.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenPinTrustOutcomeTests.swift" => "WarrenVPNTests",
+
   # The recovery phrase, held somewhere it can actually be erased. In the
   # runtime framework beside `WarrenWallet`, which is what consumes it.
   "WarrenRustRuntime/WarrenSecureMnemonic.swift" => "WarrenRustRuntime",
