@@ -6796,6 +6796,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "warren-incidents"
+version = "0.0.0"
+dependencies = [
+ "serde_json",
+ "warren-api",
+]
+
+[[package]]
 name = "warren-ios"
 version = "0.0.0"
 dependencies = [
@@ -6832,6 +6840,7 @@ dependencies = [
  "warren-discovery-core",
  "warren-forum",
  "warren-identity",
+ "warren-incidents",
  "warren-product-env",
  "warrenguard-backoff",
  "warrenguard-config",
@@ -6882,6 +6891,7 @@ dependencies = [
  "warren-discovery-core",
  "warren-forum",
  "warren-identity",
+ "warren-incidents",
  "warren-product-env",
  "warren-quinn",
  "warrenguard-backoff",
