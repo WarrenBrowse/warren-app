@@ -446,6 +446,18 @@ mod test {
         Ok(())
     }
 
+    /// The read timeout these tests run under.
+    ///
+    /// Deliberately NOT the production [`READ_TIMEOUT`]: one second is a
+    /// sensible policy for a real network, and none of the tests below
+    /// exercises the policy. What they exercise is a megabyte crossing a
+    /// loopback mock server, and on a contended runner one read of that stream
+    /// takes longer than a second, which aborts the download and fails a green
+    /// tree ("Complete download failed", twice on 2026-09-18). A generous
+    /// budget removes the bet on how fast the machine is without weakening a
+    /// single assertion.
+    const TEST_READ_TIMEOUT: Duration = Duration::from_secs(60);
+
     #[derive(Default)]
     struct FakeProgressUpdater {
         complete: f32,
@@ -487,7 +499,7 @@ mod test {
             &file_url,
             &mut progress_updater,
             SizeHint::Exact(file_data.len()),
-            READ_TIMEOUT,
+            TEST_READ_TIMEOUT,
         )
         .await
         .context("Complete download failed")?;
@@ -522,7 +534,7 @@ mod test {
             &file_url,
             &mut progress_updater,
             SizeHint::Exact(file_data.len()),
-            READ_TIMEOUT,
+            TEST_READ_TIMEOUT,
         )
         .await
         .expect_err("Expected interrupted download");
@@ -553,7 +565,7 @@ mod test {
             &file_url,
             &mut progress_updater,
             SizeHint::Exact(file_data.len()),
-            READ_TIMEOUT,
+            TEST_READ_TIMEOUT,
         )
         .await
         .context("Partial download failed")?;
@@ -614,7 +626,7 @@ mod test {
             &file_url,
             &mut FakeProgressUpdater::default(),
             SizeHint::Exact(1),
-            READ_TIMEOUT,
+            TEST_READ_TIMEOUT,
         )
         .await
         .expect_err("Reject unexpected content length");
@@ -639,7 +651,7 @@ mod test {
             &file_url,
             &mut FakeProgressUpdater::default(),
             SizeHint::Exact(file_data.len()),
-            READ_TIMEOUT,
+            TEST_READ_TIMEOUT,
         )
         .await
         .expect_err("Reject unexpected chunk sizes");

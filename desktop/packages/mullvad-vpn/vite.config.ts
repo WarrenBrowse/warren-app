@@ -100,6 +100,13 @@ const viteConfig = defineConfig({
     alias: {
       electron: fileURLToPath(new URL('./test/unit/electron-stub.cjs', import.meta.url)),
     },
+    // The product-environment specs re-import a whole main-process module
+    // graph per case (`importForProductEnv` resets the module registry so a
+    // build-time define can be re-read), and that transform is what the clock
+    // is measuring, not any behaviour under test. The default 5 s is a bet on
+    // how fast the machine is: it holds here and loses on a contended runner,
+    // which is how `notification-icon-beta-badge` failed a green tree.
+    testTimeout: 30_000,
   },
   plugins: [
     electron({
