@@ -1,0 +1,110 @@
+---
+# Warren: the iOS app's push/PR gate.
+#
+# No Swift line was compiled by any automatic CI. Every inherited `ios-*.yml`
+# workflow is dispatch-only in this fork AND disabled in the Actions tab (a
+# dispatch answers "Cannot trigger a 'workflow_dispatch' on a disabled
+# workflow"), and `warren-checks.yml` matches four narrow iOS paths
+# (Configurations, Info.plist, project.pbxproj, Assets.xcassets) to run Rust
+# and desktop tests, never a Swift step. An iOS-only change therefore
+# triggered nothing at all, which is how a deep link that routed nowhere, a
+# log cap that never fired and a link to Mullvad's App Store listing all
+# reached main.
+#
+# This is the Android gate's twin (`android-checks.yml`): the fast, hermetic
+# signal, no device and no signing identity. The runner is GitHub-hosted
+# `macos-15`, free on this public repository, so the gate needs nothing from
+# the self-hosted pool. The UI and screenshot suites need a booted app and
+# stay on the dispatch-only workflows.
+
+name: iOS checks
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - warren-base
+    paths: &ios_paths
+      - "ios/**"
+      - "warren-ios/**"
+      # Replayed by the Swift unit tests: the scenery placement formula, the
+      # forum link classes, the outcome envelopes.
+      - "fixtures/client-rules/**"
+      - ".github/workflows/ios-checks.yml"
+      - ".github/actions/ios/**"
+  pull_request:
+    branches:
+      - main
+      - warren-base
+    paths: *ios_paths
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  swift-format:
+    name: Swift format lint
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Run swift format lint
+        run: ./format.sh lint -s
+        working-directory: ios
+
+  unit-tests:
+    name: iOS unit tests
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      SOURCE_PACKAGES_PATH: .spm
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+
+      # Checks out the pinned sibling engines (warrenguard, warren-sdk-rs,
+      # warren-contract) that warren-ios consumes by path. The Xcode build
+      # phase that cross-compiles the crate needs them present.
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Setup project
+        uses: ./.github/actions/ios/setup-project-toolchain
+
+      # `WarrenVPNCI` is the plan the release job already runs: the six unit
+      # test targets, no UI suite, no booted app.
+      #
+      # Ad-hoc signing rather than `CODE_SIGNING_ALLOWED=NO`: the app force
+      # unwraps its App Group container at startup
+      # (`ApplicationConfiguration.swift`), and stripping entitlements makes
+      # every host-application test crash on launch with no useful message.
+      - name: Run unit tests
+        run: |
+          set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
+            -project WarrenVPN.xcodeproj \
+            -scheme WarrenVPN \
+            -testPlan WarrenVPNCI \
+            -destination "platform=iOS Simulator,name=iPhone 16" \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
+            -disableAutomaticPackageResolution \
+            -resultBundlePath xcode-test-report \
+            CODE_SIGN_IDENTITY="-" \
+            test 2>&1 | xcbeautify
+        working-directory: ios/
+
+      - name: Store test report artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-test-report
+          path: ios/xcode-test-report.xcresult
