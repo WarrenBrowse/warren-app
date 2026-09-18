@@ -21,14 +21,15 @@ import WarrenLogging
 import WarrenRustRuntime
 import WarrenTypes
 
-/// App Store listing opened by the forced-update gate and the
-/// "update available" flows.
+/// Where the forced-update gate and the "update available" notice send the
+/// user to get a newer build.
 ///
-/// PLACEHOLDER: this is the Mullvad VPN listing id (1488466513) inherited
-/// from upstream, kept as the single constant to swap once Warren has its
-/// own App Store listing.
+/// Warren has no App Store listing yet, so this is the download page, the
+/// same one Android ships as `download_url`. It was the Mullvad VPN listing
+/// id inherited from upstream, which sent a user the gate had locked out of
+/// Warren to another company's app.
 enum WarrenAppStoreListing {
-    static let url = URL(string: "itms-apps://itunes.apple.com/app/id1488466513")!
+    static let url = URL(string: "https://warren.ro/telecharger")!
 }
 
 /// Last verified manifest verdict, persisted across launches.

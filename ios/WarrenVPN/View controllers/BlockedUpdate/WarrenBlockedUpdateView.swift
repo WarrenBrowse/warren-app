@@ -43,7 +43,7 @@ struct WarrenBlockedUpdateView: View {
                 .padding(.top, 24)
             }
             .scrollBounceBehavior(.automatic)
-            MainButton(text: "Open the App Store", style: .success) {
+            MainButton(text: "Get the latest version", style: .success) {
                 onOpenAppStore?()
             }
         }
