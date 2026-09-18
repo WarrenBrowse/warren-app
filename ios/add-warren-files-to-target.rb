@@ -58,6 +58,13 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # The evidence behind an exit-key change, shown in the alert that asks about it.
+  "WarrenVPN/Classes/WarrenPinMismatchDetails.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenPinMismatchDetailsTests.swift" => "WarrenVPNTests",
+
+  # The DAITA chip says what the datapath actually does.
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/DaitaTruthfulnessTests.swift" => "WarrenVPNTests",
+
   # One location control with the shuffle on its side, no reconnect button.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectionViewActionsTests.swift" => "WarrenVPNTests",
 

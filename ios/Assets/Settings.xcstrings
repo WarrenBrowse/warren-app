@@ -1,6 +1,154 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A sign-in code is 32 letters and digits, as shown on the forum page.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sign-in code is 32 letters and digits, as shown on the forum page."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يتكون رمز تسجيل الدخول من 32 حرفًا ورقمًا، كما هو معروض في صفحة المنتدى."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En loginkode består af 32 bogstaver og tal, som vist på forumsiden."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Anmeldecode besteht aus 32 Buchstaben und Ziffern, wie auf der Forumseite angezeigt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un código de inicio de sesión tiene 32 letras y cifras, tal como aparece en la página del foro."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد ورود از ۳۲ حرف و رقم تشکیل شده است، همان‌طور که در صفحهٔ انجمن نشان داده می‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautumiskoodissa on 32 kirjainta ja numeroa, kuten foorumisivulla näkyy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un code de connexion compte 32 lettres et chiffres, tel qu'affiché sur la page du forum."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un codice di accesso è composto da 32 lettere e cifre, come mostrato nella pagina del forum."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインコードは、フォーラムページに表示されている32文字の英数字です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 코드는 포럼 페이지에 표시된 대로 32자의 영문자와 숫자입니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်မှုကုဒ်သည် ဖိုရမ်စာမျက်နှာတွင် ပြထားသည့်အတိုင်း စာလုံးနှင့် ဂဏန်း ၃၂ လုံး ဖြစ်သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En innloggingskode består av 32 bokstaver og sifre, slik den vises på forumsiden."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een aanmeldcode bestaat uit 32 letters en cijfers, zoals op de forumpagina staat."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod logowania składa się z 32 liter i cyfr, tak jak na stronie forum."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um código de início de sessão tem 32 letras e algarismos, tal como aparece na página do fórum."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un cod de autentificare are 32 de litere și cifre, așa cum apare pe pagina forumului."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входа состоит из 32 букв и цифр, как показано на странице форума."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En inloggningskod består av 32 bokstäver och siffror, som på forumsidan."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รหัสลงชื่อเข้าใช้ประกอบด้วยตัวอักษรและตัวเลข 32 ตัว ตามที่แสดงบนหน้าฟอรัม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir giriş kodu, forum sayfasında gösterildiği gibi 32 harf ve rakamdan oluşur."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входу складається з 32 літер і цифр, як показано на сторінці форуму."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录代码由 32 个字母和数字组成，与论坛页面上显示的一致。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入代碼由 32 個字母和數字組成，與論壇頁面上顯示的一致。"
+          }
+        }
+      }
+    },
     "Checking the code, please wait.": {
       "localizations": {
         "en": {
@@ -297,6 +445,598 @@
         }
       }
     },
+    "Continue": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متابعة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsæt"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادامه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jatka"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continua"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "続行"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계속"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဆက်လုပ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsett"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doorgaan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kontynuuj"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продолжить"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortsätt"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ดำเนินการต่อ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam et"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Продовжити"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "继续"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "繼續"
+          }
+        }
+      }
+    },
+    "Could not find that exit server anymore. Try reconnecting.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يعد العثور على خادم الخروج هذا ممكنًا. جرِّب إعادة الاتصال."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den udgangsserver kan ikke længere findes. Prøv at oprette forbindelse igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Exit-Server konnte nicht mehr gefunden werden. Versuchen Sie, sich erneut zu verbinden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not find that exit server anymore. Try reconnecting."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya no se encuentra ese servidor de salida. Prueba a volver a conectarte."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آن سرور خروجی دیگر پیدا نشد. دوباره متصل شوید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kyseistä lähtöpalvelinta ei enää löydy. Kokeile yhdistää uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce serveur de sortie est introuvable. Essayez de vous reconnecter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è più possibile trovare quel server di uscita. Prova a riconnetterti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その出口サーバーが見つからなくなりました。再接続してみてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "해당 출구 서버를 더 이상 찾을 수 없습니다. 다시 연결해 보세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထိုထွက်ပေါက်ဆာဗာကို ရှာမတွေ့တော့ပါ။ ပြန်လည်ချိတ်ဆက်ကြည့်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finner ikke den utgangsserveren lenger. Prøv å koble til på nytt."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die exitserver is niet meer te vinden. Probeer opnieuw verbinding te maken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie można już znaleźć tego serwera wyjściowego. Spróbuj połączyć się ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Já não é possível encontrar esse servidor de saída. Tenta voltar a ligar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest server de ieșire nu mai poate fi găsit. Încercați să vă reconectați."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Этот выходной сервер больше не найден. Попробуйте подключиться заново."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den utgångsservern hittas inte längre. Prova att återansluta."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่พบเซิร์ฟเวอร์ทางออกนั้นอีกต่อไป ลองเชื่อมต่อใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu çıkış sunucusu artık bulunamıyor. Yeniden bağlanmayı deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей вихідний сервер більше не знайдено. Спробуйте перепідключитися."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已无法找到该出口服务器。请尝试重新连接。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已找不到該出口伺服器。請嘗試重新連線。"
+          }
+        }
+      }
+    },
+    "Could not save the new key. Please try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذَّر حفظ المفتاح الجديد. يُرجى إعادة المحاولة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den nye nøgle kunne ikke gemmes. Prøv igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der neue Schlüssel konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not save the new key. Please try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido guardar la nueva clave. Inténtalo de nuevo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید جدید ذخیره نشد. لطفاً دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uuden avaimen tallentaminen ei onnistunut. Yritä uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible d\\'enregistrer la nouvelle clé. Veuillez réessayer."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile salvare la nuova chiave. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい鍵を保存できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 키를 저장하지 못했습니다. 다시 시도하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သော့အသစ်ကို သိမ်း၍ မရပါ။ ထပ်ကြိုးစားပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunne ikke lagre den nye nøkkelen. Prøv på nytt."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon de nieuwe sleutel niet opslaan. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zapisać nowego klucza. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível guardar a nova chave. Tenta novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noua cheie nu a putut fi salvată. Încercați din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось сохранить новый ключ. Повторите попытку."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det gick inte att spara den nya nyckeln. Försök igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถบันทึกกุญแจใหม่ได้ โปรดลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni anahtar kaydedilemedi. Lütfen tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося зберегти новий ключ. Повторіть спробу."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法保存新密钥。请重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法儲存新金鑰。請再試一次。"
+          }
+        }
+      }
+    },
+    "Could not trust the new key.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذَّر منح الثقة للمفتاح الجديد."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den nye nøgle kunne ikke betros."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dem neuen Schlüssel konnte nicht vertraut werden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not trust the new key."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha podido confiar en la nueva clave."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نمی‌توان به کلید جدید اعتماد کرد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uuteen avaimeen ei voitu luottaa."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de faire confiance à la nouvelle clé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile affidarsi alla nuova chiave."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新しい鍵を信頼できませんでした。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새 키를 신뢰할 수 없습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သော့အသစ်ကို ယုံကြည်၍ မရပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunne ikke stole på den nye nøkkelen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kon de nieuwe sleutel niet vertrouwen."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zaufać nowemu kluczowi."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível confiar na nova chave."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu s-a putut acorda încredere noii chei."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось установить доверие новому ключу."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det gick inte att lita på den nya nyckeln."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถเชื่อถือกุญแจใหม่ได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni anahtara güvenilemedi."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося встановити довіру до нового ключа."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法信任新密钥。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法信任新金鑰。"
+          }
+        }
+      }
+    },
     "Country": {
       "localizations": {
         "ar": {
@@ -441,6 +1181,154 @@
           "stringUnit": {
             "state": "translated",
             "value": "國家/地區"
+          }
+        }
+      }
+    },
+    "Cryptographic mismatch details": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تفاصيل عدم التطابق التشفيري"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detaljer om kryptografisk uoverensstemmelse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details zur kryptografischen Diskrepanz"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cryptographic mismatch details"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles de la discrepancia criptográfica"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جزئیات ناهماهنگی رمزنگاری"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kryptografisen ristiriidan tiedot"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Détails de la divergence cryptographique"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dettagli della discrepanza crittografica"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "暗号的不一致の詳細"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "암호화 불일치 세부 정보"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cryptographic မကိုက်ညီမှု အသေးစိတ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detaljer om kryptografisk avvik"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details van cryptografische mismatch"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Szczegóły niezgodności kryptograficznej"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalhes da discrepância criptográfica"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalii privind neconcordanțele criptografice"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подробности криптографического несоответствия"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detaljer om kryptografisk avvikelse"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รายละเอียดความไม่ตรงกันทางการเข้ารหัส"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kriptografik uyumsuzluk ayrıntıları"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Подробиці криптографічної невідповідності"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "加密身份不匹配的详情"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "密碼學不符的詳細資訊"
           }
         }
       }
@@ -1925,6 +2813,154 @@
         }
       }
     },
+    "Exit ID": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معرّف الخروج"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Udgangs-ID"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgangs-ID"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit ID"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID de salida"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شناسه خروجی"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lähtötunnus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Identifiant du serveur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID di uscita"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口 ID"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "출구 ID"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit ID"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utgangs-ID"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uitgangs-ID"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID wyjścia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID de saída"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID ieșire"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID выхода"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Utgångs-ID"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รหัสทางออก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkış kimliği"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ID виходу"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口 ID"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "出口 ID"
+          }
+        }
+      }
+    },
     "Exit relay": {
       "localizations": {
         "ar": {
@@ -2665,6 +3701,154 @@
         }
       }
     },
+    "Location": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموقع"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Placering"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standort"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Location"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubicación"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مکان"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sijainti"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emplacement"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Posizione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "場所"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위치"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "တည်နေရာ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plassering"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locatie"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokalizacja"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Localização"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Locație"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Местоположение"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plats"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ตำแหน่งที่ตั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konum"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розташування"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "位置"
+          }
+        }
+      }
+    },
     "Multi-hop": {
       "localizations": {
         "ar": {
@@ -2809,6 +3993,302 @@
           "stringUnit": {
             "state": "translated",
             "value": "多點跳躍"
+          }
+        }
+      }
+    },
+    "Newly observed key": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المفتاح المرصود حديثًا"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyligt observeret nøgle"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu beobachteter Schlüssel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Newly observed key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clave recién observada"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید تازه مشاهده‌شده"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vasta havaittu avain"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nouvelle clé observée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuova chiave osservata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新たに観測された鍵"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "새로 관찰된 키"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အသစ်တွေ့ရှိသော သော့"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nylig observert nøkkel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nieuw waargenomen sleutel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nowo zaobserwowany klucz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chave recém-observada"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheie recent observată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новый наблюдаемый ключ"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyligen observerad nyckel"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กุญแจที่พบใหม่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni gözlemlenen anahtar"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Новий спостережений ключ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新观察到的密钥"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新觀察到的金鑰"
+          }
+        }
+      }
+    },
+    "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في صفحة تسجيل الدخول إلى المنتدى، يظهر رمز الجلسة أسفل الزر. أدخله هنا للموافقة على تسجيل الدخول هذا من هذا التطبيق. تواصل الصفحة الانتظار في هذه الأثناء."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På forummets loginside vises sessionskoden under knappen. Indtast den her for at godkende det login fra denne app. Siden venter imens."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf der Anmeldeseite des Forums steht der Sitzungscode unter der Schaltfläche. Gib ihn hier ein, um diese Anmeldung aus der App zu bestätigen. Die Seite wartet währenddessen weiter."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la página de inicio de sesión del foro, el código de sesión aparece debajo del botón. Escríbelo aquí para aprobar ese inicio de sesión desde esta aplicación. La página sigue esperando mientras tanto."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در صفحهٔ ورود انجمن، کد نشست زیر دکمه نمایش داده می‌شود. آن را اینجا وارد کنید تا آن ورود را از این برنامه تأیید کنید. صفحه در این مدت همچنان منتظر می‌ماند."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foorumin kirjautumissivulla istuntokoodi näkyy painikkeen alla. Kirjoita se tähän hyväksyäksesi kirjautumisen tästä sovelluksesta. Sivu odottaa sillä välin."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur la page de connexion du forum, le code de session est affiché sous le bouton. Saisissez-le ici pour approuver cette connexion depuis l'application. La page continue d'attendre pendant ce temps."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nella pagina di accesso del forum, il codice di sessione è mostrato sotto il pulsante. Inseriscilo qui per approvare quell'accesso da questa app. La pagina continua ad attendere nel frattempo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フォーラムのサインインページでは、ボタンの下にセッションコードが表示されています。ここに入力すると、このアプリからそのサインインを承認できます。その間、ページは待機し続けます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포럼 로그인 페이지에서 세션 코드는 버튼 아래에 표시됩니다. 여기에 입력하면 이 앱에서 해당 로그인을 승인할 수 있습니다. 그동안 페이지는 계속 기다립니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဖိုရမ်၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ဆက်ရှင်ကုဒ်ကို ခလုတ်အောက်၌ ပြထားသည်။ ဤအက်ပ်မှ ထိုဝင်ရောက်မှုကို အတည်ပြုရန် ဤနေရာတွင် ရိုက်ထည့်ပါ။ ထိုအတောအတွင်း စာမျက်နှာက ဆက်စောင့်နေပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På forumets innloggingsside vises øktkoden under knappen. Skriv den inn her for å godkjenne den innloggingen fra denne appen. Siden fortsetter å vente imens."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Op de aanmeldpagina van het forum staat de sessiecode onder de knop. Typ hem hier om die aanmelding vanuit deze app goed te keuren. De pagina blijft ondertussen wachten."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na stronie logowania forum kod sesji jest wyświetlony pod przyciskiem. Wpisz go tutaj, aby zatwierdzić to logowanie z tej aplikacji. Strona w tym czasie nadal czeka."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Na página de início de sessão do fórum, o código de sessão aparece por baixo do botão. Escreve-o aqui para aprovar esse início de sessão a partir desta aplicação. A página continua à espera entretanto."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pe pagina de autentificare a forumului, codul de sesiune este afișat sub buton. Introdu-l aici pentru a aproba acea autentificare din această aplicație. Pagina așteaptă în continuare între timp."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На странице входа на форум код сеанса показан под кнопкой. Введите его здесь, чтобы подтвердить этот вход из приложения. Страница тем временем продолжает ждать."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "På forumets inloggningssida visas sessionskoden under knappen. Skriv in den här för att godkänna den inloggningen från den här appen. Sidan fortsätter vänta under tiden."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ในหน้าลงชื่อเข้าใช้ของฟอรัม รหัสเซสชันจะแสดงอยู่ใต้ปุ่ม พิมพ์รหัสที่นี่เพื่ออนุมัติการลงชื่อเข้าใช้นั้นจากแอปนี้ หน้าเว็บจะรอต่อไประหว่างนั้น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Forumun giriş sayfasında oturum kodu düğmenin altında gösterilir. Bu girişi bu uygulamadan onaylamak için kodu buraya yazın. Sayfa bu sırada beklemeye devam eder."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "На сторінці входу на форум код сеансу показано під кнопкою. Введіть його тут, щоб підтвердити цей вхід із застосунку. Сторінка тим часом продовжує чекати."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在论坛登录页面，会话代码显示在按钮下方。在此输入该代码，即可从本应用批准该次登录。在此期间页面会继续等待。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在論壇登入頁面，工作階段代碼顯示在按鈕下方。在此輸入該代碼，即可從本應用程式核准該次登入。在此期間頁面會持續等待。"
           }
         }
       }
@@ -3253,6 +4733,302 @@
           "stringUnit": {
             "state": "translated",
             "value": "連接埠要求失敗。Warren 會自動重試；重新連線可強制發出新的要求。"
+          }
+        }
+      }
+    },
+    "Previously pinned key": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المفتاح المثبَّت سابقًا"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidligere fastlåst nøgle"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuvor angeheftete Schlüssel"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Previously pinned key"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clave anclada anteriormente"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید سنجاق‌شده پیشین"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aiemmin kiinnitetty avain"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clé précédemment épinglée"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiave precedentemente bloccata"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以前ピン留めされた鍵"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전에 고정된 키"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ယခင်ပင်ထိုးထားသော သော့"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidligere festet nøkkel"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eerder vastgepinde sleutel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wcześniej przypięty klucz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chave fixada anteriormente"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheie marcată anterior"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ранее закреплённый ключ"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidigare fastnålad nyckel"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กุญแจที่ปักหมุดไว้ก่อนหน้า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceden sabitlenmiş anahtar"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Раніше закріплений ключ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先前已固定的密钥"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "先前釘選的金鑰"
+          }
+        }
+      }
+    },
+    "Processing your choice, please wait.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ معالجة اختيارك، يُرجى الانتظار."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behandler dit valg, vent venligst."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Auswahl wird verarbeitet, bitte warten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing your choice, please wait."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Procesando tu elección, espera un momento."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال پردازش انتخاب شما، لطفاً صبر کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käsitellään valintaasi, odota."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traitement de votre choix en cours, veuillez patienter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elaborazione della tua scelta in corso, attendere."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "選択内容を処理しています。しばらくお待ちください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "선택을 처리하는 중입니다. 잠시 기다려 주세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်ရွေးချယ်မှုကို ဆောင်ရွက်နေသည်၊ ကျေးဇူးပြု၍ စောင့်ဆိုင်းပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behandler valget ditt, vennligst vent."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je keuze wordt verwerkt, even geduld."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przetwarzanie wyboru, proszę czekać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A processar a tua escolha, aguarda."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se procesează opțiunea aleasă, vă rugăm să așteptați."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обработка вашего выбора, пожалуйста, подождите."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Behandlar ditt val, vänta."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังประมวลผลตัวเลือกของคุณ โปรดรอสักครู่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçimin işleniyor, lütfen bekle."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обробка вашого вибору, зачекайте."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在处理您的选择，请稍候。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在處理您的選擇，請稍候。"
           }
         }
       }
@@ -4885,6 +6661,302 @@
         }
       }
     },
+    "Sign in to the forum with a code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign in to the forum with a code"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول إلى المنتدى برمز"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log ind på forummet med en kode"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mit einem Code im Forum anmelden"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sesión en el foro con un código"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ورود به انجمن با کد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjaudu foorumille koodilla"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se connecter au forum avec un code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accedi al forum con un codice"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コードでフォーラムにサインイン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "코드로 포럼에 로그인"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကုဒ်ဖြင့် ဖိုရမ်သို့ ဝင်ရောက်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logg inn på forumet med en kode"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmelden bij het forum met een code"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaloguj się na forum za pomocą kodu"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciar sessão no fórum com um código"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autentifică-te pe forum cu un cod"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Войти на форум по коду"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Logga in på forumet med en kod"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลงชื่อเข้าใช้ฟอรัมด้วยรหัส"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foruma bir kodla giriş yap"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Увійти на форум за кодом"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用代码登录论坛"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "使用代碼登入論壇"
+          }
+        }
+      }
+    },
+    "Sign-in code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sign-in code"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمز تسجيل الدخول"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loginkode"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmeldecode"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de inicio de sesión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد ورود"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautumiskoodi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Code de connexion"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codice di accesso"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 코드"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်မှုကုဒ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Innloggingskode"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aanmeldcode"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kod logowania"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código de início de sessão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cod de autentificare"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входа"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggningskod"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "รหัสลงชื่อเข้าใช้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Giriş kodu"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Код входу"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录代码"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入代碼"
+          }
+        }
+      }
+    },
     "Switched exit relay": {
       "localizations": {
         "ar": {
@@ -5329,6 +7401,154 @@
         }
       }
     },
+    "The key changed again before it could be trusted. Review the new key and try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيَّر المفتاح مرة أخرى قبل أن يتم منحه الثقة. راجع المفتاح الجديد وأعد المحاولة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nøglen blev ændret igen, før den kunne betros. Gennemgå den nye nøgle, og prøv igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Schlüssel hat sich erneut geändert, bevor ihm vertraut werden konnte. Prüfen Sie den neuen Schlüssel und versuchen Sie es erneut."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The key changed again before it could be trusted. Review the new key and try again."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clave ha vuelto a cambiar antes de poder confiar en ella. Revisa la nueva clave e inténtalo de nuevo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کلید پیش از آنکه مورد اعتماد قرار گیرد، دوباره تغییر کرد. کلید جدید را بررسی کنید و دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avain vaihtui uudelleen ennen kuin siihen ehdittiin luottaa. Tarkista uusi avain ja yritä uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La clé a de nouveau changé avant d\\'avoir pu être approuvée. Vérifiez la nouvelle clé et réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La chiave è cambiata di nuovo prima che fosse possibile affidarsi a essa. Controlla la nuova chiave e riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "鍵を信頼する前に再び変更されました。新しい鍵を確認して、もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "키를 신뢰하기 전에 키가 다시 변경되었습니다. 새 키를 확인하고 다시 시도하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သော့ကို ယုံကြည်မှတ်သားနိုင်ခြင်း မပြုမီ နောက်တစ်ကြိမ် ပြောင်းလဲသွားပါသည်။ သော့အသစ်ကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nøkkelen ble endret igjen før den kunne godkjennes. Se gjennom den nye nøkkelen og prøv på nytt."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De sleutel is opnieuw gewijzigd voordat deze kon worden vertrouwd. Bekijk de nieuwe sleutel en probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klucz zmienił się ponownie, zanim udało się mu zaufać. Sprawdź nowy klucz i spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A chave voltou a mudar antes de ser possível confiar nela. Verifica a nova chave e tenta novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cheia s-a schimbat din nou înainte de a i se putea acorda încredere. Verificați noua cheie și încercați din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ снова изменился, прежде чем ему было установлено доверие. Проверьте новый ключ и повторите попытку."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nyckeln ändrades igen innan den hann godkännas. Granska den nya nyckeln och försök igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กุญแจเปลี่ยนอีกครั้งก่อนที่จะเชื่อถือได้ ตรวจสอบกุญแจใหม่แล้วลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtara güvenilmeden önce anahtar yeniden değişti. Yeni anahtarı inceleyip tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ключ знову змінився, перш ніж до нього було встановлено довіру. Перевірте новий ключ і повторіть спробу."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在该密钥被信任之前，它再次发生了变化。请检查新密钥并重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在信任該金鑰之前，金鑰又再次變更。請檢查新金鑰並再試一次。"
+          }
+        }
+      }
+    },
     "The pinned exit keys could not be cleared.": {
       "localizations": {
         "ar": {
@@ -5473,6 +7693,154 @@
           "stringUnit": {
             "state": "translated",
             "value": "無法清除已固定的出口金鑰。"
+          }
+        }
+      }
+    },
+    "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعني هذا عادةً أن المشغّل بدّل المفتاح، لكنه قد يشير أيضًا إلى استبدال الخادم أو اختراقه. ارفض إذا لم تكن تتوقع تغييرًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette betyder normalt, at operatøren har udskiftet nøglen, men det kan også indikere, at serveren er blevet udskiftet eller kompromitteret. Afvis, hvis du ikke forventede en ændring."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das bedeutet in der Regel, dass der Betreiber den Schlüssel gewechselt hat, kann aber auch darauf hindeuten, dass der Server ausgetauscht oder kompromittiert wurde. Lehne ab, wenn du keine Änderung erwartet hast."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente esto significa que el operador rotó la clave, pero también puede indicar que el servidor ha sido reemplazado o comprometido. Recházalo si no esperabas un cambio."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این معمولاً یعنی گرداننده کلید را چرخانده است، اما می‌تواند نشانهٔ جایگزینی یا به خطر افتادن سرور هم باشد. اگر انتظار تغییر نداشتید، رد کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämä tarkoittaa yleensä, että operaattori on vaihtanut avaimen, mutta se voi myös viitata siihen, että palvelin on korvattu tai vaarannettu. Hylkää, jos et odottanut muutosta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cela signifie généralement que l'opérateur a renouvelé la clé, mais cela peut aussi indiquer que le serveur a été remplacé ou compromis. Refusez si vous n'attendiez pas de changement."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di solito ciò significa che l'operatore ha ruotato la chiave, ma può anche indicare che il server è stato sostituito o compromesso. Rifiuta se non ti aspettavi un cambiamento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "これは通常、運営者がキーをローテーションしたことを意味しますが、サーバーが差し替えられた、または侵害された可能性を示している場合もあります。変更を予期していなかった場合は拒否してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이는 보통 운영자가 키를 교체했음을 의미하지만, 서버가 교체되었거나 침해되었음을 나타낼 수도 있습니다. 변경을 예상하지 못했다면 거부하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအရာသည် များသောအားဖြင့် အော်ပရေတာက ကီးကို လှည့်လဲထားကြောင်း ဆိုလိုသော်လည်း၊ ဆာဗာကို အစားထိုးထားခြင်း သို့မဟုတ် ချိုးဖောက်ခံထားရခြင်းကိုလည်း ညွှန်ပြနိုင်ပါသည်။ ပြောင်းလဲမှုကို သင်မမျှော်လင့်ထားပါက ငြင်းပယ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette betyr vanligvis at operatøren har rotert nøkkelen, men det kan også tyde på at serveren er blitt erstattet eller kompromittert. Avvis hvis du ikke ventet en endring."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit betekent meestal dat de operator de sleutel heeft geroteerd, maar het kan ook aangeven dat de server is vervangen of gecompromitteerd. Weiger als je geen wijziging verwachtte."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwykle oznacza to, że operator zmienił klucz, ale może to również wskazywać, że serwer został podmieniony lub przejęty. Odmów, jeśli nie spodziewałeś się zmiany."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normalmente, isto significa que o operador rodou a chave, mas também pode indicar que o servidor foi substituído ou comprometido. Recuse se não estava à espera de uma alteração."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De obicei, acest lucru înseamnă că operatorul a rotit cheia, dar poate indica și faptul că serverul a fost înlocuit sau compromis. Refuză dacă nu te așteptai la o schimbare."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Обычно это означает, что оператор сменил ключ, но также может указывать на то, что сервер был заменён или скомпрометирован. Откажитесь, если вы не ожидали изменения."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detta betyder vanligtvis att operatören roterade nyckeln, men det kan också tyda på att servern har bytts ut eller komprometterats. Avvisa om du inte förväntade dig en ändring."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โดยทั่วไปหมายความว่าผู้ดูแลได้หมุนเวียนคีย์ แต่ก็อาจบ่งชี้ว่าเซิร์ฟเวอร์ถูกเปลี่ยนใหม่หรือถูกบุกรุกได้เช่นกัน ปฏิเสธหากคุณไม่ได้คาดหมายว่าจะมีการเปลี่ยนแปลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu genellikle operatörün anahtarı değiştirdiği anlamına gelir, ancak sunucunun değiştirilmiş ya da ele geçirilmiş olabileceğini de gösterebilir. Bir değişiklik beklemiyorduysanız reddedin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Зазвичай це означає, що оператор змінив ключ, але це також може свідчити про заміну або компрометацію сервера. Відхиліть, якщо ви не очікували зміни."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这通常意味着运营方轮换了密钥，但也可能表明该服务器已被替换或已遭入侵。如果你并未预期会发生更改，请予以拒绝。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "這通常表示營運者輪換了金鑰，但也可能代表伺服器已被替換或已遭入侵。如果你並未預期會有變更，請拒絕。"
           }
         }
       }
@@ -6065,894 +8433,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "您的 VPN 流量與普通 HTTPS 瀏覽無法區分。"
-          }
-        }
-      }
-    },
-    "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "This usually means the operator rotated the key, but it can also indicate that the server has been replaced or compromised. Refuse if you did not expect a change."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يعني هذا عادةً أن المشغّل بدّل المفتاح، لكنه قد يشير أيضًا إلى استبدال الخادم أو اختراقه. ارفض إذا لم تكن تتوقع تغييرًا."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dette betyder normalt, at operatøren har udskiftet nøglen, men det kan også indikere, at serveren er blevet udskiftet eller kompromitteret. Afvis, hvis du ikke forventede en ændring."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Das bedeutet in der Regel, dass der Betreiber den Schlüssel gewechselt hat, kann aber auch darauf hindeuten, dass der Server ausgetauscht oder kompromittiert wurde. Lehne ab, wenn du keine Änderung erwartet hast."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Normalmente esto significa que el operador rotó la clave, pero también puede indicar que el servidor ha sido reemplazado o comprometido. Recházalo si no esperabas un cambio."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "این معمولاً یعنی گرداننده کلید را چرخانده است، اما می‌تواند نشانهٔ جایگزینی یا به خطر افتادن سرور هم باشد. اگر انتظار تغییر نداشتید، رد کنید."
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tämä tarkoittaa yleensä, että operaattori on vaihtanut avaimen, mutta se voi myös viitata siihen, että palvelin on korvattu tai vaarannettu. Hylkää, jos et odottanut muutosta."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cela signifie généralement que l'opérateur a renouvelé la clé, mais cela peut aussi indiquer que le serveur a été remplacé ou compromis. Refusez si vous n'attendiez pas de changement."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Di solito ciò significa che l'operatore ha ruotato la chiave, ma può anche indicare che il server è stato sostituito o compromesso. Rifiuta se non ti aspettavi un cambiamento."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "これは通常、運営者がキーをローテーションしたことを意味しますが、サーバーが差し替えられた、または侵害された可能性を示している場合もあります。変更を予期していなかった場合は拒否してください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "이는 보통 운영자가 키를 교체했음을 의미하지만, 서버가 교체되었거나 침해되었음을 나타낼 수도 있습니다. 변경을 예상하지 못했다면 거부하세요."
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဤအရာသည် များသောအားဖြင့် အော်ပရေတာက ကီးကို လှည့်လဲထားကြောင်း ဆိုလိုသော်လည်း၊ ဆာဗာကို အစားထိုးထားခြင်း သို့မဟုတ် ချိုးဖောက်ခံထားရခြင်းကိုလည်း ညွှန်ပြနိုင်ပါသည်။ ပြောင်းလဲမှုကို သင်မမျှော်လင့်ထားပါက ငြင်းပယ်ပါ။"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dette betyr vanligvis at operatøren har rotert nøkkelen, men det kan også tyde på at serveren er blitt erstattet eller kompromittert. Avvis hvis du ikke ventet en endring."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Dit betekent meestal dat de operator de sleutel heeft geroteerd, maar het kan ook aangeven dat de server is vervangen of gecompromitteerd. Weiger als je geen wijziging verwachtte."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zwykle oznacza to, że operator zmienił klucz, ale może to również wskazywać, że serwer został podmieniony lub przejęty. Odmów, jeśli nie spodziewałeś się zmiany."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Normalmente, isto significa que o operador rodou a chave, mas também pode indicar que o servidor foi substituído ou comprometido. Recuse se não estava à espera de uma alteração."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "De obicei, acest lucru înseamnă că operatorul a rotit cheia, dar poate indica și faptul că serverul a fost înlocuit sau compromis. Refuză dacă nu te așteptai la o schimbare."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Обычно это означает, что оператор сменил ключ, но также может указывать на то, что сервер был заменён или скомпрометирован. Откажитесь, если вы не ожидали изменения."
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Detta betyder vanligtvis att operatören roterade nyckeln, men det kan också tyda på att servern har bytts ut eller komprometterats. Avvisa om du inte förväntade dig en ändring."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "โดยทั่วไปหมายความว่าผู้ดูแลได้หมุนเวียนคีย์ แต่ก็อาจบ่งชี้ว่าเซิร์ฟเวอร์ถูกเปลี่ยนใหม่หรือถูกบุกรุกได้เช่นกัน ปฏิเสธหากคุณไม่ได้คาดหมายว่าจะมีการเปลี่ยนแปลง"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bu genellikle operatörün anahtarı değiştirdiği anlamına gelir, ancak sunucunun değiştirilmiş ya da ele geçirilmiş olabileceğini de gösterebilir. Bir değişiklik beklemiyorduysanız reddedin."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Зазвичай це означає, що оператор змінив ключ, але це також може свідчити про заміну або компрометацію сервера. Відхиліть, якщо ви не очікували зміни."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "这通常意味着运营方轮换了密钥，但也可能表明该服务器已被替换或已遭入侵。如果你并未预期会发生更改，请予以拒绝。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "這通常表示營運者輪換了金鑰，但也可能代表伺服器已被替換或已遭入侵。如果你並未預期會有變更，請拒絕。"
-          }
-        }
-      }
-    },
-    "Sign in to the forum with a code": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign in to the forum with a code"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "تسجيل الدخول إلى المنتدى برمز"
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Log ind på forummet med en kode"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mit einem Code im Forum anmelden"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Iniciar sesión en el foro con un código"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ورود به انجمن با کد"
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kirjaudu foorumille koodilla"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Se connecter au forum avec un code"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Accedi al forum con un codice"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "コードでフォーラムにサインイン"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "코드로 포럼에 로그인"
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ကုဒ်ဖြင့် ဖိုရမ်သို့ ဝင်ရောက်ရန်"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logg inn på forumet med en kode"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aanmelden bij het forum met een code"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zaloguj się na forum za pomocą kodu"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Iniciar sessão no fórum com um código"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Autentifică-te pe forum cu un cod"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Войти на форум по коду"
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Logga in på forumet med en kod"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ลงชื่อเข้าใช้ฟอรัมด้วยรหัส"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Foruma bir kodla giriş yap"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Увійти на форум за кодом"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用代码登录论坛"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "使用代碼登入論壇"
-          }
-        }
-      }
-    },
-    "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "في صفحة تسجيل الدخول إلى المنتدى، يظهر رمز الجلسة أسفل الزر. أدخله هنا للموافقة على تسجيل الدخول هذا من هذا التطبيق. تواصل الصفحة الانتظار في هذه الأثناء."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "På forummets loginside vises sessionskoden under knappen. Indtast den her for at godkende det login fra denne app. Siden venter imens."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Auf der Anmeldeseite des Forums steht der Sitzungscode unter der Schaltfläche. Gib ihn hier ein, um diese Anmeldung aus der App zu bestätigen. Die Seite wartet währenddessen weiter."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En la página de inicio de sesión del foro, el código de sesión aparece debajo del botón. Escríbelo aquí para aprobar ese inicio de sesión desde esta aplicación. La página sigue esperando mientras tanto."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "در صفحهٔ ورود انجمن، کد نشست زیر دکمه نمایش داده می‌شود. آن را اینجا وارد کنید تا آن ورود را از این برنامه تأیید کنید. صفحه در این مدت همچنان منتظر می‌ماند."
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Foorumin kirjautumissivulla istuntokoodi näkyy painikkeen alla. Kirjoita se tähän hyväksyäksesi kirjautumisen tästä sovelluksesta. Sivu odottaa sillä välin."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sur la page de connexion du forum, le code de session est affiché sous le bouton. Saisissez-le ici pour approuver cette connexion depuis l'application. La page continue d'attendre pendant ce temps."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Nella pagina di accesso del forum, il codice di sessione è mostrato sotto il pulsante. Inseriscilo qui per approvare quell'accesso da questa app. La pagina continua ad attendere nel frattempo."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "フォーラムのサインインページでは、ボタンの下にセッションコードが表示されています。ここに入力すると、このアプリからそのサインインを承認できます。その間、ページは待機し続けます。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "포럼 로그인 페이지에서 세션 코드는 버튼 아래에 표시됩니다. 여기에 입력하면 이 앱에서 해당 로그인을 승인할 수 있습니다. 그동안 페이지는 계속 기다립니다."
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဖိုရမ်၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ဆက်ရှင်ကုဒ်ကို ခလုတ်အောက်၌ ပြထားသည်။ ဤအက်ပ်မှ ထိုဝင်ရောက်မှုကို အတည်ပြုရန် ဤနေရာတွင် ရိုက်ထည့်ပါ။ ထိုအတောအတွင်း စာမျက်နှာက ဆက်စောင့်နေပါမည်။"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "På forumets innloggingsside vises øktkoden under knappen. Skriv den inn her for å godkjenne den innloggingen fra denne appen. Siden fortsetter å vente imens."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Op de aanmeldpagina van het forum staat de sessiecode onder de knop. Typ hem hier om die aanmelding vanuit deze app goed te keuren. De pagina blijft ondertussen wachten."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Na stronie logowania forum kod sesji jest wyświetlony pod przyciskiem. Wpisz go tutaj, aby zatwierdzić to logowanie z tej aplikacji. Strona w tym czasie nadal czeka."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Na página de início de sessão do fórum, o código de sessão aparece por baixo do botão. Escreve-o aqui para aprovar esse início de sessão a partir desta aplicação. A página continua à espera entretanto."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pe pagina de autentificare a forumului, codul de sesiune este afișat sub buton. Introdu-l aici pentru a aproba acea autentificare din această aplicație. Pagina așteaptă în continuare între timp."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "На странице входа на форум код сеанса показан под кнопкой. Введите его здесь, чтобы подтвердить этот вход из приложения. Страница тем временем продолжает ждать."
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "På forumets inloggningssida visas sessionskoden under knappen. Skriv in den här för att godkänna den inloggningen från den här appen. Sidan fortsätter vänta under tiden."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ในหน้าลงชื่อเข้าใช้ของฟอรัม รหัสเซสชันจะแสดงอยู่ใต้ปุ่ม พิมพ์รหัสที่นี่เพื่ออนุมัติการลงชื่อเข้าใช้นั้นจากแอปนี้ หน้าเว็บจะรอต่อไประหว่างนั้น"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Forumun giriş sayfasında oturum kodu düğmenin altında gösterilir. Bu girişi bu uygulamadan onaylamak için kodu buraya yazın. Sayfa bu sırada beklemeye devam eder."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "На сторінці входу на форум код сеансу показано під кнопкою. Введіть його тут, щоб підтвердити цей вхід із застосунку. Сторінка тим часом продовжує чекати."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在论坛登录页面，会话代码显示在按钮下方。在此输入该代码，即可从本应用批准该次登录。在此期间页面会继续等待。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "在論壇登入頁面，工作階段代碼顯示在按鈕下方。在此輸入該代碼，即可從本應用程式核准該次登入。在此期間頁面會持續等待。"
-          }
-        }
-      }
-    },
-    "Sign-in code": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sign-in code"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "رمز تسجيل الدخول"
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Loginkode"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Anmeldecode"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código de inicio de sesión"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "کد ورود"
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kirjautumiskoodi"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Code de connexion"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Codice di accesso"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サインインコード"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 코드"
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဝင်ရောက်မှုကုဒ်"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Innloggingskode"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aanmeldcode"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kod logowania"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Código de início de sessão"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cod de autentificare"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Код входа"
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Inloggningskod"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "รหัสลงชื่อเข้าใช้"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Giriş kodu"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Код входу"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录代码"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登入代碼"
-          }
-        }
-      }
-    },
-    "A sign-in code is 32 letters and digits, as shown on the forum page.": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "A sign-in code is 32 letters and digits, as shown on the forum page."
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "يتكون رمز تسجيل الدخول من 32 حرفًا ورقمًا، كما هو معروض في صفحة المنتدى."
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En loginkode består af 32 bogstaver og tal, som vist på forumsiden."
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ein Anmeldecode besteht aus 32 Buchstaben und Ziffern, wie auf der Forumseite angezeigt."
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un código de inicio de sesión tiene 32 letras y cifras, tal como aparece en la página del foro."
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "کد ورود از ۳۲ حرف و رقم تشکیل شده است، همان‌طور که در صفحهٔ انجمن نشان داده می‌شود."
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kirjautumiskoodissa on 32 kirjainta ja numeroa, kuten foorumisivulla näkyy."
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un code de connexion compte 32 lettres et chiffres, tel qu'affiché sur la page du forum."
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un codice di accesso è composto da 32 lettere e cifre, come mostrato nella pagina del forum."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "サインインコードは、フォーラムページに表示されている32文字の英数字です。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "로그인 코드는 포럼 페이지에 표시된 대로 32자의 영문자와 숫자입니다."
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဝင်ရောက်မှုကုဒ်သည် ဖိုရမ်စာမျက်နှာတွင် ပြထားသည့်အတိုင်း စာလုံးနှင့် ဂဏန်း ၃၂ လုံး ဖြစ်သည်။"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En innloggingskode består av 32 bokstaver og sifre, slik den vises på forumsiden."
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Een aanmeldcode bestaat uit 32 letters en cijfers, zoals op de forumpagina staat."
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kod logowania składa się z 32 liter i cyfr, tak jak na stronie forum."
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Um código de início de sessão tem 32 letras e algarismos, tal como aparece na página do fórum."
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Un cod de autentificare are 32 de litere și cifre, așa cum apare pe pagina forumului."
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Код входа состоит из 32 букв и цифр, как показано на странице форума."
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "En inloggningskod består av 32 bokstäver och siffror, som på forumsidan."
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "รหัสลงชื่อเข้าใช้ประกอบด้วยตัวอักษรและตัวเลข 32 ตัว ตามที่แสดงบนหน้าฟอรัม"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bir giriş kodu, forum sayfasında gösterildiği gibi 32 harf ve rakamdan oluşur."
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Код входу складається з 32 літер і цифр, як показано на сторінці форуму."
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登录代码由 32 个字母和数字组成，与论坛页面上显示的一致。"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "登入代碼由 32 個字母和數字組成，與論壇頁面上顯示的一致。"
-          }
-        }
-      }
-    },
-    "Continue": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continue"
-          }
-        },
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "متابعة"
-          }
-        },
-        "da": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fortsæt"
-          }
-        },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Weiter"
-          }
-        },
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continuar"
-          }
-        },
-        "fa": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ادامه"
-          }
-        },
-        "fi": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Jatka"
-          }
-        },
-        "fr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continuer"
-          }
-        },
-        "it": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continua"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "続行"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "계속"
-          }
-        },
-        "my": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ဆက်လုပ်ပါ"
-          }
-        },
-        "nb": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fortsett"
-          }
-        },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Doorgaan"
-          }
-        },
-        "pl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Kontynuuj"
-          }
-        },
-        "pt": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continuar"
-          }
-        },
-        "ro": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Continuă"
-          }
-        },
-        "ru": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Продолжить"
-          }
-        },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Fortsätt"
-          }
-        },
-        "th": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ดำเนินการต่อ"
-          }
-        },
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Devam et"
-          }
-        },
-        "uk": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Продовжити"
-          }
-        },
-        "zh-Hans": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "继续"
-          }
-        },
-        "zh-Hant": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "繼續"
           }
         }
       }

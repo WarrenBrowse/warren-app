@@ -568,9 +568,12 @@ class TunnelViewController: UIViewController, RootContainment {
         ApplicationConfiguration.containerURL.appendingPathComponent("warren-exit-pins.json").path
     }
 
-    private func showPinMismatchAlert(_ mismatch: WarrenPinMismatch) {
-        // Avoid stacking duplicate alerts if one is already up.
-        guard pinMismatchAlertController == nil else { return }
+    private func showPinMismatchAlert(_ mismatch: WarrenPinMismatch, error: String? = nil) {
+        // Avoid stacking duplicate alerts if one is already up, unless this is
+        // the same alert coming back to report that the choice failed.
+        guard pinMismatchAlertController == nil || error != nil else { return }
+        pinMismatchAlertController?.dismiss(animated: false)
+        pinMismatchAlertController = nil
 
         let title = NSLocalizedString(
             "Server identity changed",
@@ -594,7 +597,8 @@ class TunnelViewController: UIViewController, RootContainment {
             id: "warren-pubkey-mismatch-alert",
             icon: .warning,
             title: title,
-            message: messageLines.joined(separator: "\n\n"),
+            attributedMessage: Self.pinMismatchMessage(
+                bodyLines: messageLines, mismatch: mismatch, error: error),
             buttons: [
                 AlertAction(
                     title: NSLocalizedString(
@@ -640,6 +644,57 @@ class TunnelViewController: UIViewController, RootContainment {
         present(alert, animated: true)
     }
 
+    /// The alert body: the two explanatory lines, then the evidence the user is
+    /// being asked to judge. The keys and the exit they belong to were missing
+    /// entirely, which left "trust this new key" a question with nothing to
+    /// answer it. Monospaced, because two hex fingerprints are only comparable
+    /// when their digits line up.
+    private static func pinMismatchMessage(
+        bodyLines: [String],
+        mismatch: WarrenPinMismatch,
+        error: String?
+    ) -> NSAttributedString {
+        let body = NSMutableAttributedString(
+            string: bodyLines.joined(separator: "\n\n") + "\n\n",
+            attributes: [.font: UIFont.preferredFont(forTextStyle: .footnote)]
+        )
+        body.append(
+            NSAttributedString(
+                string: NSLocalizedString(
+                    "Cryptographic mismatch details", tableName: "Settings", comment: "")
+                    + "\n",
+                attributes: [
+                    .font: UIFont.preferredFont(forTextStyle: .caption1)
+                ]
+            ))
+        let rows = WarrenPinMismatchDetails.rows(
+            exitId: mismatch.exitId,
+            pinned: mismatch.pinned,
+            observed: mismatch.observed,
+            country: mismatch.country
+        )
+        for row in rows {
+            body.append(
+                NSAttributedString(
+                    string: "\(row.label): \(row.value)\n",
+                    attributes: [
+                        .font: UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+                    ]
+                ))
+        }
+        if let error {
+            body.append(
+                NSAttributedString(
+                    string: "\n" + error,
+                    attributes: [
+                        .font: UIFont.preferredFont(forTextStyle: .footnote),
+                        .foregroundColor: UIColor.dangerTextColor,
+                    ]
+                ))
+        }
+        return body
+    }
+
     private func dismissPinMismatchAlert() {
         appGroupEvents.clearPinMismatch()
         pinMismatchAlertController?.dismiss(animated: true)
@@ -653,8 +708,19 @@ class TunnelViewController: UIViewController, RootContainment {
             pubkeyHex: mismatch.observed,
             country: mismatch.country
         )
-        if !trusted {
+        guard trusted else {
+            // Dismissing here left the user believing the key was trusted while
+            // the pin had not been written, and the only trace was a log line.
             logger.error("Failed to trust new exit pubkey for exit \(mismatch.exitId)")
+            showPinMismatchAlert(
+                mismatch,
+                error: NSLocalizedString(
+                    "Could not save the new key. Please try again.",
+                    tableName: "Settings",
+                    comment: "Shown in the exit-key alert when pinning the new key failed."
+                )
+            )
+            return
         }
         dismissPinMismatchAlert()
         // The tunnel failed closed; reconnect now that the new key is
