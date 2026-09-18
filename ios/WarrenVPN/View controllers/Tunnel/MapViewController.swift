@@ -348,18 +348,18 @@ final class SceneryViewController: UIViewController {
     private static let zoomDuration: TimeInterval = 6.0
     private static let bulaDuration: TimeInterval = 0.55
 
-    private static let connectingZoom: CGFloat = 1.08
+    private static let connectingZoom = SceneryLayout.connectingZoom
     // The desktop dims the connecting landscape to brightness(0.92); over
     // opaque art that is a black overlay at 8 %, on the blur's own clock.
     // Android carries the same value as CONNECTING_DIM.
-    private static let connectingDim: CGFloat = 0.08
+    private static let connectingDim = SceneryLayout.connectingDim
     private static let washAlpha: Float = 0.14
     private static let scrimStart: NSNumber = 0.66
     private static let scrimAlpha: CGFloat = 0.6
 
-    // Gaussian radius in source-image pixels approximating the desktop
-    // blur(14px): the 1706px-tall art shows at roughly half size on a phone.
-    private static let blurRadius: Double = 30
+    private static func blurRadius(forWidth width: CGFloat) -> Double {
+        Double(SceneryLayout.blurRadius(forWidth: width))
+    }
 
     private struct Scenery: Equatable {
         let imageName: String
@@ -402,6 +402,9 @@ final class SceneryViewController: UIViewController {
     private var currentImageName: String?
     private var bulaVisible = true
     private var isBlurred = false
+    /// The width the visible blurred render was made for, so a resize re-renders
+    /// once rather than on every layout pass.
+    private var lastBlurredWidth: CGFloat = 0
 
     // Blurring the full-resolution art costs tens of milliseconds; cache the
     // result per landscape. NSCache rather than a dictionary: these are 7 MB
@@ -538,6 +541,13 @@ final class SceneryViewController: UIViewController {
             $0.frame = landscapeRect
         }
 
+        // The blur radius is a fraction of the drawn width, so a rotation or a
+        // split-view resize needs a fresh render at the new width.
+        if isBlurred, bounds.width != lastBlurredWidth {
+            lastBlurredWidth = bounds.width
+            refreshBlurredLandscape(animated: false)
+        }
+
         // The burrow's head keeps its painted scale; its ground band is the
         // only thing that stretches, and it reaches the bottom of the screen so
         // nothing below the canvas is ever left to fill.
@@ -667,15 +677,24 @@ final class SceneryViewController: UIViewController {
     private func refreshBlurredLandscape(animated: Bool) {
         guard let imageName = currentImageName else { return }
 
-        if let cached = Self.blurredImageCache.object(forKey: imageName as NSString) {
+        // The radius depends on how wide the canvas is drawn, so it belongs in
+        // the key: a rotation or a split-view resize needs its own render, not
+        // the one cached for the previous width.
+        let width = view.bounds.width
+        let radius = Self.blurRadius(forWidth: width)
+        // Carried across the hop as a String: NSString is a class, so it is not
+        // Sendable and crossing with it is a data race under Swift 6.
+        let key = "\(imageName)@\(Int(width.rounded()))"
+
+        if let cached = Self.blurredImageCache.object(forKey: key as NSString) {
             applyBlurredImage(cached, animated: animated)
             return
         }
         guard let source = UIImage(named: imageName) else { return }
         DispatchQueue.global(qos: .userInitiated).async {
-            guard let blurred = Self.gaussianBlurred(source, radius: Self.blurRadius) else { return }
+            guard let blurred = Self.gaussianBlurred(source, radius: radius) else { return }
             DispatchQueue.main.async {
-                Self.blurredImageCache.setObject(blurred, forKey: imageName as NSString)
+                Self.blurredImageCache.setObject(blurred, forKey: key as NSString)
                 // Only apply if this landscape is still the visible one.
                 if self.currentImageName == imageName {
                     self.applyBlurredImage(blurred, animated: true)

@@ -163,4 +163,32 @@ final class SceneryLayoutTests: XCTestCase {
         XCTAssertEqual(got.canvasPan, 0)
         XCTAssertEqual(got.foregroundShift, 0)
     }
+
+    func testTheConnectingAnimationCarriesTheValuesTheOtherClientsUse() throws {
+        let fixture = try self.fixture()
+        XCTAssertEqual(SceneryLayout.connectingBlur, try number(fixture, "connecting_blur_dp"))
+        XCTAssertEqual(SceneryLayout.connectingZoom, try number(fixture, "connecting_zoom"))
+        XCTAssertEqual(SceneryLayout.connectingDim, try number(fixture, "connecting_dim"))
+    }
+
+    /// iOS blurs the source canvas, the other two blur the rendered view, so the
+    /// radius only reads the same at the width it is computed for. Pinned across
+    /// the whole range of iOS widths because a single constant stood here and was
+    /// off by 0.60 to 1.9 times depending on the device.
+    func testTheBlurIsTheSameStrengthOnScreenAtEveryWidth() throws {
+        let displayed = try number(try fixture(), "connecting_blur_dp")
+        for width in [CGFloat(320), 375, 393, 430, 744, 1024] {
+            let canvasRadius = SceneryLayout.blurRadius(forWidth: width)
+            // Carried back to display size, every width must give the fixture's
+            // radius again.
+            let onScreen = canvasRadius * width / SceneryLayout.canvasWidth
+            XCTAssertEqual(
+                onScreen, displayed, accuracy: 0.001,
+                "a \(width) pt screen blurs at \(onScreen) where the other clients blur at \(displayed)")
+        }
+    }
+
+    func testAZeroWidthCannotDivideTheBlurByNothing() {
+        XCTAssertEqual(SceneryLayout.blurRadius(forWidth: 0), SceneryLayout.connectingBlur)
+    }
 }

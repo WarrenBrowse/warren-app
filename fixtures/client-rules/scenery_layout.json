@@ -334,5 +334,9 @@
   "meadow_end_row": 1670,
   "meadow_end_row_provenance": "terrier.png: the last row of the meadow before the wash runs out into bare paper. The band's row mean climbs 34 levels of 255 over rows 1681 to 1705.",
   "band_overscan_columns": 20,
-  "band_overscan_provenance": "terrier.png: the watercolour fades into paper at the canvas edges. Measured on a 1080x2400 screen, the leftmost screen column read 1.60 times the mid-frame brightness with no overscan and 0.98 with 20 columns dropped; the right side fades over about 60 columns and is the hill's own sunlit edge, so it is left alone."
+  "band_overscan_provenance": "terrier.png: the watercolour fades into paper at the canvas edges. Measured on a 1080x2400 screen, the leftmost screen column read 1.60 times the mid-frame brightness with no overscan and 0.98 with 20 columns dropped; the right side fades over about 60 columns and is the hill's own sunlit edge, so it is left alone.",
+  "connecting_blur_dp": 14,
+  "connecting_blur_provenance": "The connecting blur, as a radius at DISPLAY size: desktop's blur(14px) on its 400 px window (CountryBackdrop/index.tsx), Android's LANDSCAPE_BLUR_RADIUS = 14.dp (SceneryBackdrop.kt). iOS blurs the source canvas rather than the rendered view, so it converts: radius_canvas = connecting_blur_dp * canvas_px[0] / screen_width. It used to hardcode 30 canvas px, which is 0.75 of the other two on a 393 pt phone, 0.60 on a 320 pt one and 1.9 times too strong on a 1024 pt iPad.",
+  "connecting_zoom": 1.08,
+  "connecting_dim": 0.08
 }

@@ -159,6 +159,19 @@ class SceneryLayoutFixtureTest {
         assertEquals(0f, got.foregroundShift)
     }
 
+    /**
+     * The connecting animation's three values, which Android expresses directly and iOS has to
+     * convert (it blurs the source canvas rather than the rendered view). iOS carried a canvas-space
+     * constant that matched these at no screen size in particular, so the fixture now names the
+     * display-size radius and both clients answer to it.
+     */
+    @Test
+    fun `the connecting animation carries the values every client uses`() {
+        assertEquals(fixture.float("connecting_blur_dp"), LANDSCAPE_BLUR_RADIUS.value)
+        assertEquals(fixture.float("connecting_zoom"), CONNECTING_ZOOM)
+        assertEquals(fixture.float("connecting_dim"), CONNECTING_DIM)
+    }
+
     private companion object {
         const val TOLERANCE = 0.02f
     }

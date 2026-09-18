@@ -48,6 +48,23 @@ enum SceneryLayout {
     /// can only ever crop rows the header was covering.
     static let maxCanvasPan: CGFloat = 96
 
+    /// The connecting blur, as a radius at DISPLAY size: desktop's `blur(14px)` on its 400 px
+    /// window, Android's `LANDSCAPE_BLUR_RADIUS = 14.dp`.
+    static let connectingBlur: CGFloat = 14
+
+    /// The connecting zoom and dim, the same on all three clients.
+    static let connectingZoom: CGFloat = 1.08
+    static let connectingDim: CGFloat = 0.08
+
+    /// [connectingBlur] carried into canvas pixels, because iOS blurs the source image rather than
+    /// the rendered view and the two only agree at one screen width. A fixed canvas-space radius
+    /// stood here and was right at no width in particular: 0.75 of the other two clients on a
+    /// 393 pt phone, 0.60 on a 320 pt one, and 1.9 times too strong on a 1024 pt iPad.
+    static func blurRadius(forWidth width: CGFloat) -> CGFloat {
+        guard width > 0 else { return connectingBlur }
+        return connectingBlur * canvasWidth / width
+    }
+
     /// The resolved placement, in points from the top of the backdrop.
     ///
     /// `canvasPan` is never positive and `foregroundShift` never negative, and exactly one of them
