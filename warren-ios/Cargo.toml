@@ -25,6 +25,9 @@ base64 = "0.22"
 # single-sourced with Android (`warren-jni`). This crate only adds the iOS
 # seed-derived-identity signing entry on top.
 warren-forum = { path = "../warren-forum" }
+# The incident request builders and outcome envelope, shared with the Android
+# FFI so one client cannot drift from the other on the wire shape.
+warren-incidents = { path = "../warren-incidents" }
 bip39 = { version = "2", features = ["rand"] }
 # Pinned (=2.2.0) to align with every other Warren crate that handles
 # signing keys. A silent minor bump of a crypto crate that produces

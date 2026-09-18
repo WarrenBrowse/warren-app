@@ -142,8 +142,6 @@ mod android_jni;
 // drowning the operator feed; host-tested, the JNI exports are in
 // `android_jni`.
 #[cfg(any(test, target_os = "android"))]
-mod incidents;
-
 // The verified operator broadcast notices and their anti-rollback and
 // freshness rules, host-tested; `android_jni` fetches them on Kotlin's
 // cadence.

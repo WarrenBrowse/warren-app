@@ -1,0 +1,25 @@
+[package]
+name = "warren-incidents"
+edition.workspace = true
+rust-version.workspace = true
+description = "Shared incident-telemetry request building and throttling for the Warren mobile FFI crates (warren-jni, warren-ios)"
+repository.workspace = true
+license.workspace = true
+
+# Pure, host-tested logic shared by the Android (`warren-jni`) and iOS
+# (`warren-ios`) incident FFI, the same shape as `warren-forum`. No platform
+# deps and no transport: it validates the inputs, builds the request bodies and
+# maps an outcome to the envelope both platforms answer with, so the exit-down
+# budget and the wire shape live in one place instead of being reimplemented
+# per client. `fixtures/client-rules/incident_reports.json` pins the numbers.
+[dependencies]
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
+
+[dev-dependencies]
+# The budget storms and the wire shape are replayed from
+# `fixtures/client-rules/incident_reports.json`, the file the desktop daemon's
+# own copy is held to.
+serde_json = { workspace = true }
+
+[lints]
+workspace = true

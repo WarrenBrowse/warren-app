@@ -1712,7 +1712,7 @@ type IncidentTransport = warren_api::reqwest_transport::ReqwestTransport;
 /// The token bucket over `POST /v1/incidents/exit-down`, one per process like
 /// the daemon's one per run. Built on first use because its epoch is an
 /// `Instant`, which no `static` can name.
-static EXIT_DOWN_BUDGET: Mutex<Option<crate::incidents::ExitDownReportBudget>> = Mutex::new(None);
+static EXIT_DOWN_BUDGET: Mutex<Option<warren_incidents::ExitDownReportBudget>> = Mutex::new(None);
 
 /// Reports an exit this client gave up on (`POST /v1/incidents/exit-down`),
 /// so a client-visible outage reaches `GET /v1/admin/exits/health` instead of
@@ -1735,7 +1735,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportExitDown<'l
     let exit_pubkey_hex = String::from_java(&jnix_env, exit_pubkey_hex);
     let outcome = report_exit_down(&phrase, &exit_pubkey_hex);
     log::info!("reportExitDown: {}", outcome_class(outcome));
-    match jnix_env.new_string(crate::incidents::envelope(outcome)) {
+    match jnix_env.new_string(warren_incidents::envelope(outcome)) {
         Ok(s) => s.into_inner() as jstring,
         Err(_) => std::ptr::null_mut(),
     }
@@ -1744,20 +1744,20 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportExitDown<'l
 fn report_exit_down(
     mnemonic: &str,
     exit_pubkey_hex: &str,
-) -> Result<(), crate::incidents::NotSent> {
-    use crate::incidents::NotSent;
+) -> Result<(), warren_incidents::NotSent> {
+    use warren_incidents::NotSent;
 
     // Spent before the body is built, the daemon's order: a client whose
     // failover loop keeps producing the same report is throttled whatever the
     // report says.
     let allowed = EXIT_DOWN_BUDGET
         .lock()
-        .get_or_insert_with(crate::incidents::ExitDownReportBudget::new)
+        .get_or_insert_with(warren_incidents::ExitDownReportBudget::new)
         .try_acquire(std::time::Instant::now());
     if !allowed {
         return Err(NotSent::Budget);
     }
-    let request = crate::incidents::exit_down_request(exit_pubkey_hex, unix_now())?;
+    let request = warren_incidents::exit_down_request(exit_pubkey_hex, unix_now())?;
     let (runtime, client) = incident_client(mnemonic)?;
     runtime
         .block_on(client.report_exit_down(&request))
@@ -1786,7 +1786,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportPubkeyMisma
 ) -> jstring {
     let jnix_env = JnixEnv::from(env);
     let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
-    let request = crate::incidents::pubkey_mismatch_request(
+    let request = warren_incidents::pubkey_mismatch_request(
         &String::from_java(&jnix_env, exit_id_hex),
         &String::from_java(&jnix_env, old_pubkey_hex),
         &String::from_java(&jnix_env, new_pubkey_hex),
@@ -1796,7 +1796,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportPubkeyMisma
     );
     let outcome = report_pubkey_mismatch(&phrase, &request);
     log::info!("reportPubkeyMismatch: {}", outcome_class(outcome));
-    match jnix_env.new_string(crate::incidents::envelope(outcome)) {
+    match jnix_env.new_string(warren_incidents::envelope(outcome)) {
         Ok(s) => s.into_inner() as jstring,
         Err(_) => std::ptr::null_mut(),
     }
@@ -1805,7 +1805,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportPubkeyMisma
 fn report_pubkey_mismatch(
     mnemonic: &str,
     request: &warren_api::IncidentPubkeyMismatchRequest,
-) -> Result<(), crate::incidents::NotSent> {
+) -> Result<(), warren_incidents::NotSent> {
     let (runtime, client) = incident_client(mnemonic)?;
     runtime
         .block_on(client.report_pubkey_mismatch(request))
@@ -1823,9 +1823,9 @@ fn incident_client(
         &'static tokio::runtime::Runtime,
         warren_api::WarrenApiClient<IncidentTransport>,
     ),
-    crate::incidents::NotSent,
+    warren_incidents::NotSent,
 > {
-    use crate::incidents::NotSent;
+    use warren_incidents::NotSent;
 
     let runtime = runtime().ok_or(NotSent::Runtime)?;
     let identity =
@@ -1840,23 +1840,23 @@ fn incident_client(
 
 /// A client failure as one of the report classes. The error itself is never
 /// rendered: a server body may echo identity material.
-fn client_error_class(error: warren_api::ClientError) -> crate::incidents::NotSent {
+fn client_error_class(error: warren_api::ClientError) -> warren_incidents::NotSent {
     match error {
-        warren_api::ClientError::ServerStatus { .. } => crate::incidents::NotSent::Rejected,
-        _ => crate::incidents::NotSent::Transport,
+        warren_api::ClientError::ServerStatus { .. } => warren_incidents::NotSent::Rejected,
+        _ => warren_incidents::NotSent::Transport,
     }
 }
 
 /// The one word an incident log line carries.
-fn outcome_class(outcome: Result<(), crate::incidents::NotSent>) -> &'static str {
+fn outcome_class(outcome: Result<(), warren_incidents::NotSent>) -> &'static str {
     match outcome {
         Ok(()) => "sent",
-        Err(crate::incidents::NotSent::Budget) => "suppressed by the local budget",
-        Err(crate::incidents::NotSent::Malformed) => "malformed",
-        Err(crate::incidents::NotSent::Identity) => "no identity",
-        Err(crate::incidents::NotSent::Runtime) => "runtime not up",
-        Err(crate::incidents::NotSent::Transport) => "transport failed",
-        Err(crate::incidents::NotSent::Rejected) => "refused by the server",
+        Err(warren_incidents::NotSent::Budget) => "suppressed by the local budget",
+        Err(warren_incidents::NotSent::Malformed) => "malformed",
+        Err(warren_incidents::NotSent::Identity) => "no identity",
+        Err(warren_incidents::NotSent::Runtime) => "runtime not up",
+        Err(warren_incidents::NotSent::Transport) => "transport failed",
+        Err(warren_incidents::NotSent::Rejected) => "refused by the server",
     }
 }
 

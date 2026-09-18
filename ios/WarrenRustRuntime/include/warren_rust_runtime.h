@@ -997,6 +997,27 @@ uintptr_t warren_forum_max_log_gz_bytes(void);
 char *warren_forum_code_probe(const char *sid, const char *host);
 
 /**
+ * Files the signed pubkey-mismatch report for the exit the user was just
+ * warned about.
+ *
+ * Returns the shared envelope, `{"ok":true}` or `{"ok":false,"reason":"…"}`,
+ * as a heap `CString` the caller frees once with
+ * `warren_wallet_free_mnemonic`. Never null except on allocation failure.
+ *
+ * # Safety
+ *
+ * - `seed` points to at least 32 readable bytes, or is null.
+ * - Every other pointer is a valid NUL-terminated UTF-8 C string, or null.
+ * - None of the pointers need outlive the call: everything is copied.
+ */
+char *warren_report_pubkey_mismatch(const uint8_t *seed,
+                                    const char *exit_id_hex,
+                                    const char *old_pubkey_hex,
+                                    const char *new_pubkey_hex,
+                                    const char *country_code,
+                                    const char *city);
+
+/**
  * Called by Swift to set the available access methods
  */
 void mullvad_api_update_access_methods(struct SwiftApiContext api_context,

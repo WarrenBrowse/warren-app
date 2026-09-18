@@ -619,7 +619,7 @@ class TunnelViewController: UIViewController, RootContainment {
                     ),
                     style: .default,
                     handler: { [weak self] in
-                        self?.handlePinMismatchReport()
+                        self?.handlePinMismatchReport(mismatch)
                     }
                 ),
                 AlertAction(
@@ -728,11 +728,43 @@ class TunnelViewController: UIViewController, RootContainment {
         interactor.reconnectTunnel(selectNewRelay: false)
     }
 
-    private func handlePinMismatchReport() {
-        let language = Bundle.preferredLocalizations(from: ["en"]).first ?? "en"
-        UIApplication.shared.open(ApplicationConfiguration.faqAndGuidesURL(for: language))
-        // Reporting does not trust the key; stay disconnected.
+    /// Files the signed report the button names.
+    ///
+    /// It used to open the static FAQ page instead, so the report never left
+    /// the device and the operator feed never learned of the mismatch, while
+    /// the desktop daemon and Android both post it. The request shape and the
+    /// outcome classes are the shared `warren-incidents` crate's.
+    private func handlePinMismatchReport(_ mismatch: WarrenPinMismatch) {
+        // Reporting never trusts the key: the tunnel stays down either way, so
+        // the alert can go now and the POST run behind it.
         dismissPinMismatchAlert()
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            guard let mnemonic = try? WarrenWalletKeychain.load(),
+                let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+            else {
+                self?.logger.info("pubkey mismatch report not sent: no identity")
+                return
+            }
+            // The wallet zeroes its own seed on `forgetSecret`, and its deinit
+            // does the same, so the 32 bytes live only as long as the POST.
+            defer { wallet.forgetSecret() }
+            let outcome = WarrenIncidentReport.pubkeyMismatch(
+                seed: wallet.seed,
+                exitIdHex: mismatch.exitId,
+                oldPubkeyHex: mismatch.pinned,
+                newPubkeyHex: mismatch.observed,
+                countryCode: mismatch.country,
+                city: ""
+            )
+            switch outcome {
+            case .sent:
+                self?.logger.info("pubkey mismatch reported")
+            case let .notSent(reason):
+                // The class only: a gap in the feed is diagnosed from it, never
+                // from a value the report would have carried.
+                self?.logger.info("pubkey mismatch report not sent: \(reason)")
+            }
+        }
     }
 
     private func handlePinMismatchReject() {

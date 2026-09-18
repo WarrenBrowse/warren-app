@@ -58,6 +58,10 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # The signed incident report the exit key-change alert files.
+  "WarrenRustRuntime/WarrenIncidentReport.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntimeTests/WarrenIncidentReportTests.swift" => "WarrenRustRuntimeTests",
+
   # What the attach and login flows record when a link reaches them.
   "WarrenVPNTests/MullvadVPN/Forum/WarrenForumFlowJournalTests.swift" => "WarrenVPNTests",
 

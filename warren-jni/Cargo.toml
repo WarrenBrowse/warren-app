@@ -19,6 +19,9 @@ hex = "0.4"
 # single-sourced with iOS (`warren-ios`). This crate only adds the Android
 # mnemonic -> signing-key derivation on top.
 warren-forum = { path = "../warren-forum" }
+# The incident request builders and the exit-down budget, shared with the iOS
+# FFI so one client cannot drift from the other on either.
+warren-incidents = { path = "../warren-incidents" }
 # Explicit versions (rather than `{ workspace = true }`): warren-app's
 # workspace.dependencies does not pin bip39 / ed25519-dalek. Both are
 # pinned with `=` to the same exact versions that warren-core uses so

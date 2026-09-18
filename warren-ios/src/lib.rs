@@ -78,6 +78,8 @@ mod warren_natpmp_ffi;
 mod warren_account_ffi;
 #[cfg(target_os = "ios")]
 mod warren_forum_ffi;
+// The signed pubkey-mismatch report the exit key-change alert files.
+mod warren_incidents_ffi;
 #[cfg(target_os = "ios")]
 mod warren_multihop_ffi;
 
