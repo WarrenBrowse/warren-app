@@ -616,9 +616,7 @@ static DIGEST: std::sync::Mutex<DigestState> = std::sync::Mutex::new(DigestState
 /// `warren_wallet_free_mnemonic`.
 #[unsafe(no_mangle)]
 pub extern "C" fn warren_forum_digest_fetch() -> *mut c_char {
-    crate::ffi_guard(std::ptr::null_mut(), || {
-        json_cstring(forum_digest_fetch())
-    })
+    crate::ffi_guard(std::ptr::null_mut(), || json_cstring(forum_digest_fetch()))
 }
 
 fn forum_digest_fetch() -> String {
@@ -652,11 +650,7 @@ fn forum_digest_fetch() -> String {
 /// One conditional GET, mapped to what the shared digest state accepts.
 /// `If-None-Match` is sent only when a validator is held, so the first fetch
 /// of a process is an ordinary GET.
-async fn get_conditional(
-    client: &reqwest::Client,
-    url: String,
-    etag: Option<&str>,
-) -> Fetched {
+async fn get_conditional(client: &reqwest::Client, url: String, etag: Option<&str>) -> Fetched {
     let mut request = client.get(&url).timeout(READ_TIMEOUT);
     if let Some(etag) = etag {
         request = request.header(reqwest::header::IF_NONE_MATCH, etag);

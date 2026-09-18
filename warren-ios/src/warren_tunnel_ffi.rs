@@ -1401,8 +1401,7 @@ fn spawn_multi_hop(
                     // re-bind never leaves two refresh loops racing the same
                     // mapping.
                     drop(nat_pmp_guard.take());
-                    nat_pmp_guard =
-                        maybe_spawn_nat_pmp(&reassign_arc, nat_pmp, spec.assigned);
+                    nat_pmp_guard = maybe_spawn_nat_pmp(&reassign_arc, nat_pmp, spec.assigned);
                 }
                 if reassign_rx.changed().await.is_err() {
                     break;

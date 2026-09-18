@@ -156,8 +156,8 @@ fn describe(e: &ForumDigestError) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use warren_identity::ed25519_dalek::SigningKey;
     use warren_discovery_core::{pack_unread_counts, sign_forum_digest};
+    use warren_identity::ed25519_dalek::SigningKey;
 
     use super::*;
 
