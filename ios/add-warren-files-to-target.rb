@@ -58,6 +58,9 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # What the attach and login flows record when a link reaches them.
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumFlowJournalTests.swift" => "WarrenVPNTests",
+
   # The adapter's pure seams, which only ever appeared in the corpus as a mock.
   "WarrenRustRuntimeTests/WarrenQuinnAdapterTests.swift" => "WarrenRustRuntimeTests",
 
