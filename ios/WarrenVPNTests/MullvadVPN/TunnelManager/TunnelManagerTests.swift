@@ -100,10 +100,20 @@ class TunnelManagerTests: XCTestCase {
         )
         SimulatorTunnelProvider.shared.delegate = simulatorTunnelProviderHost
 
+        // The manager can report the blocked state more than once before the
+        // swapped selector takes effect, and both fulfilling an expectation
+        // twice and asking for a second reconnect are errors: the first aborts
+        // the process on `assertForOverFulfill`, which is how this test brought
+        // the whole run down.
+        nonisolated(unsafe) var didHandleBlockedState = false
+        nonisolated(unsafe) var didHandleConnected = false
+
         let tunnelObserver = TunnelBlockObserver(
             didUpdateTunnelStatus: { _, tunnelStatus in
                 switch tunnelStatus.state {
                 case let .error(blockedStateReason) where blockedStateReason == .noRelaysSatisfyingConstraints:
+                    guard !didHandleBlockedState else { return }
+                    didHandleBlockedState = true
                     blockedExpectation.fulfill()
                     relaySelector.selectedRelaysResult = { connectionAttemptCount in
                         try RelaySelectorStub.nonFallible().selectRelays(
@@ -114,6 +124,8 @@ class TunnelManagerTests: XCTestCase {
                     tunnelManager.reconnectTunnel(selectNewRelay: true)
 
                 case .connected:
+                    guard !didHandleConnected else { return }
+                    didHandleConnected = true
                     connectedExpectation.fulfill()
                 default:
                     return
