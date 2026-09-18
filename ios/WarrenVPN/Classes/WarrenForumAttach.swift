@@ -191,6 +191,48 @@ final class WarrenForumAttachPromptState: ObservableObject {
     func closePreview() {
         preview = nil
     }
+
+    /// What VoiceOver should say about the current state, and how urgently.
+    ///
+    /// The six status and error lines of this screen were never announced: they
+    /// appear and disappear without focus moving, and `.updatesFrequently` is a
+    /// trait, not a live region, so nothing spoke them. A sighted user saw
+    /// "Attaching the logs, please wait"; a VoiceOver user got silence.
+    ///
+    /// Held here rather than in the view so the decision is a pure function of
+    /// the state and can be tested without a screen. Errors are assertive (they
+    /// interrupt: the thing the user asked for did not happen), progress is
+    /// polite (it waits its turn).
+    var announcement: (text: String, assertive: Bool)? {
+        if let failure {
+            return (failure, true)
+        }
+        if collectFailed {
+            return (
+                NSLocalizedString(
+                    "The logs could not be collected. Try again in a moment.",
+                    comment: "Forum attach, the report could not be collected"),
+                true
+            )
+        }
+        if collecting {
+            return (
+                NSLocalizedString(
+                    "Preparing the report, please wait.",
+                    comment: "Forum attach, collecting the report"),
+                false
+            )
+        }
+        if busy {
+            return (
+                NSLocalizedString(
+                    "Attaching the logs, please wait.",
+                    comment: "Forum attach, the upload is in flight"),
+                false
+            )
+        }
+        return nil
+    }
 }
 
 /// Drives one attach-logs request from a link or a typed code to its result.

@@ -28,6 +28,17 @@ public struct WarrenForumSignInCodeView: View {
     @State private var invalid = false
     @State private var checking = false
 
+    // Named once: each is both drawn and spoken, and the two must not drift.
+    private static let invalidCodeMessage = String(
+        localized: "A sign-in code is 32 letters and digits, as shown on the forum page.",
+        table: "Settings",
+        comment: "Shown when the typed forum sign-in code is not a 32-character session id"
+    )
+    private static let checkingMessage = String(
+        localized: "Checking the code, please wait.", table: "Settings",
+        comment: "Shown while the broker is asked which consent a typed code calls for"
+    )
+
     public init(onSubmit: @escaping (_ code: String, _ placed: @escaping @MainActor () -> Void) -> Bool) {
         self.onSubmit = onSubmit
     }
@@ -78,17 +89,15 @@ public struct WarrenForumSignInCodeView: View {
                                 .stroke(invalid ? Color.red : Color.clear, lineWidth: 1)
                         )
                         .accessibilityIdentifier("forumSignInCodeField")
+                        // Desktop ties the error to the field with
+                        // aria-describedby, so refocusing repeats it. The value
+                        // is the iOS equivalent: heard on every focus, not once.
+                        .accessibilityValue(invalid ? Self.invalidCodeMessage : "")
 
                     if invalid {
-                        Text(
-                            String(
-                                localized: "A sign-in code is 32 letters and digits, as shown on the forum page.",
-                                table: "Settings",
-                                comment: "Shown when the typed forum sign-in code is not a 32-character session id"
-                            )
-                        )
-                        .font(.warrenMicro)
-                        .foregroundColor(.red)
+                        Text(Self.invalidCodeMessage)
+                            .font(.warrenMicro)
+                            .foregroundColor(.red)
                     }
                 }
 
@@ -117,20 +126,19 @@ public struct WarrenForumSignInCodeView: View {
                 .accessibilityIdentifier("forumSignInCodeContinue")
 
                 if checking {
-                    Text(
-                        String(
-                            localized: "Checking the code, please wait.", table: "Settings",
-                            comment: "Shown while the broker is asked which consent a typed code calls for")
-                    )
-                    .font(.warrenMicro)
-                    .foregroundColor(.white.opacity(0.7))
-                    .accessibilityAddTraits(.updatesFrequently)
+                    Text(Self.checkingMessage)
+                        .font(.warrenMicro)
+                        .foregroundColor(.white.opacity(0.7))
                 }
 
                 Spacer()
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // Both lines appear without focus moving, so nothing would speak
+            // them: the refusal interrupts, the progress waits its turn.
+            .announce(invalid ? Self.invalidCodeMessage : nil, assertive: true)
+            .announce(checking ? Self.checkingMessage : nil)
         }
         .background(Color.Warren.navy)
     }

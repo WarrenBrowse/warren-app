@@ -94,4 +94,45 @@ final class WarrenForumAttachPromptStateTests: XCTestCase {
         state.beginCollect()
         XCTAssertFalse(state.collectFailed, "a new attempt clears the last failure")
     }
+
+    /// The six status and error lines of this screen were never announced: they
+    /// appear without focus moving, and `.updatesFrequently` is a trait rather
+    /// than a live region, so VoiceOver said nothing at all. The decision of
+    /// what to say, and how urgently, is a pure function of the state so it can
+    /// be checked here rather than on a screen.
+    func testNothingIsAnnouncedWhileThePromptIsJustSittingThere() {
+        XCTAssertNil(state().announcement)
+    }
+
+    func testProgressIsAnnouncedPolitelyAndFailuresInterrupt() {
+        let collecting = state()
+        collecting.beginCollect()
+        XCTAssertEqual(collecting.announcement?.assertive, false, "progress should wait its turn")
+        XCTAssertEqual(
+            collecting.announcement?.text, "Preparing the report, please wait.")
+
+        let collectFailed = state()
+        collectFailed.beginCollect()
+        collectFailed.previewFailed()
+        XCTAssertEqual(collectFailed.announcement?.assertive, true, "a failure should interrupt")
+
+        let uploading = state()
+        uploading.begin()
+        XCTAssertEqual(uploading.announcement?.assertive, false)
+        XCTAssertEqual(uploading.announcement?.text, "Attaching the logs, please wait.")
+
+        let failed = state()
+        failed.fail(message: "That report is no longer waiting for logs.")
+        XCTAssertEqual(failed.announcement?.assertive, true)
+        XCTAssertEqual(failed.announcement?.text, "That report is no longer waiting for logs.")
+    }
+
+    /// An upload that succeeds leaves nothing to say: the flow dismisses the
+    /// prompt, and announcing "please wait" after the fact would be wrong.
+    func testAnAttachedReportAnnouncesNothingFurther() {
+        let state = state()
+        state.begin()
+        state.markAttached()
+        XCTAssertNil(state.announcement)
+    }
 }

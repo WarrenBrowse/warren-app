@@ -78,7 +78,6 @@ struct WarrenForumAttachConsentView: View {
                     Text(failure)
                         .font(.warrenMicro)
                         .foregroundColor(.Warren.error)
-                        .accessibilityAddTraits(.updatesFrequently)
                 }
                 if state.busy {
                     Text(
@@ -93,6 +92,12 @@ struct WarrenForumAttachConsentView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
+            // These lines appear and disappear without focus moving, so nothing
+            // would speak them. The tier comes from the state, not from here.
+            .announce(
+                state.announcement?.assertive == true ? state.announcement?.text : nil,
+                assertive: true)
+            .announce(state.announcement?.assertive == false ? state.announcement?.text : nil)
         }
         .background(Color.Warren.navy)
         .sheet(
