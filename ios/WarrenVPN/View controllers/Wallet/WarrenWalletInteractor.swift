@@ -20,6 +20,10 @@ import WarrenRustRuntime
 public enum WarrenWalletInteractorError: Error, Equatable {
     /// BIP39 phrase failed to parse / verify.
     case invalidMnemonic
+    /// The phrase is neither 12 nor 24 words. Held apart from
+    /// `invalidMnemonic` because the remedy is different: count the words
+    /// again, rather than check their spelling and order.
+    case wrongWordCount
     /// Generation failed (RNG / FFI).
     case generationFailed
     /// Keychain operation failed.
@@ -35,6 +39,7 @@ public enum WarrenWalletInteractorError: Error, Equatable {
     public static func == (lhs: WarrenWalletInteractorError, rhs: WarrenWalletInteractorError) -> Bool {
         switch (lhs, rhs) {
         case (.invalidMnemonic, .invalidMnemonic),
+            (.wrongWordCount, .wrongWordCount),
             (.generationFailed, .generationFailed),
             (.noWallet, .noWallet):
             return true
@@ -141,6 +146,16 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         _ mnemonic: String,
         completion: @escaping @Sendable @MainActor (Result<Void, WarrenWalletInteractorError>) -> Void
     ) {
+        // Checked here rather than only in the view: the interactor is also the
+        // entry point for the deep link and the UI tests, and a phrase of the
+        // wrong length is worth naming as such before the daemon answers with
+        // the generic "invalid".
+        guard WarrenMnemonicText.isValidWordCount(mnemonic) else {
+            Task { @MainActor in
+                completion(.failure(.wrongWordCount))
+            }
+            return
+        }
         queue.async { [weak self] in
             do {
                 _ = try WarrenWallet.fromMnemonic(mnemonic)

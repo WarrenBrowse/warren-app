@@ -102,6 +102,12 @@ final class WarrenWalletImportViewController: UIViewController {
                 tableName: "Wallet",
                 comment: ""
             )
+        case .wrongWordCount:
+            message = NSLocalizedString(
+                "Enter exactly 12 (or 24) words, separated by spaces.",
+                tableName: "Wallet",
+                comment: ""
+            )
         case .keychain:
             message = NSLocalizedString(
                 "Failed to securely store the wallet. Make sure your device is unlocked and try again.",

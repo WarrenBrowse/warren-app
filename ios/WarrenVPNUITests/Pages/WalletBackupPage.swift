@@ -56,33 +56,23 @@ class WalletMnemonicInputPage: Page {
     @discardableResult override init(_ app: XCUIApplication) {
         super.init(app)
 
-        self.pageElement = app.textFields["walletMnemonicWordField_0"]
+        self.pageElement = app.textViews[AccessibilityIdentifier.walletMnemonicPhraseField]
         waitForPageToBeShown()
     }
 
-    /// Accessibility identifier of the word field at `index` (0-based).
-    /// Mirrors the per-cell identifier set in `WarrenMnemonicInputView`.
-    private func wordFieldIdentifier(_ index: Int) -> String {
-        "walletMnemonicWordField_\(index)"
-    }
-
-    /// Pastes the full space-separated phrase into the first word field.
-    /// `WarrenMnemonicInputView` splits on spaces and fills all 12 cells.
+    /// Types the whole space-separated phrase into the one field the screen
+    /// has. There used to be twelve, which is why a 24-word phrase could not
+    /// be entered at all.
     @discardableResult func enterFullPhrase(_ mnemonic: String) -> Self {
-        let firstField = app.textFields[wordFieldIdentifier(0)]
-        firstField.tap()
-        firstField.typeText(mnemonic)
+        let field = app.textViews[AccessibilityIdentifier.walletMnemonicPhraseField]
+        field.tap()
+        field.typeText(mnemonic)
         return self
     }
 
-    /// Types each word into its own field (when paste-fill is not desired).
-    @discardableResult func enterWords(_ words: [String]) -> Self {
-        for (index, word) in words.enumerated() {
-            let field = app.textFields[wordFieldIdentifier(index)]
-            field.tap()
-            field.typeText(word)
-        }
-        return self
+    /// Whether the Restore button is offered for what is currently typed.
+    var isRestoreEnabled: Bool {
+        app.buttons[AccessibilityIdentifier.walletMnemonicRestoreSubmitButton].isEnabled
     }
 
     @discardableResult func tapRestoreWalletButton() -> Self {
