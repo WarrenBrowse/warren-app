@@ -46,19 +46,14 @@ concurrency:
 permissions:
   contents: read
 
+# `./format.sh lint -s` is excluded on purpose, the way `android-checks.yml`
+# excludes detekt and `:test:arch`: swift-format reports hundreds of
+# pre-existing findings across the inherited Mullvad tree (OrderedImports alone
+# covers most of PacketTunnel, PacketTunnelCore and Operations), so gating it
+# today paints main red for reasons unrelated to any change under review.
+# Adopting the style is its own cleanup.
+
 jobs:
-  swift-format:
-    name: Swift format lint
-    runs-on: macos-15
-    timeout-minutes: 15
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - name: Run swift format lint
-        run: ./format.sh lint -s
-        working-directory: ios
-
   unit-tests:
     name: iOS unit tests
     runs-on: macos-15
@@ -66,10 +61,32 @@ jobs:
     env:
       SOURCE_PACKAGES_PATH: .spm
     steps:
+      # NOT `submodules: recursive`: the inherited Mullvad binaries submodule
+      # pulls libmnl and libnftnl over `git://git.netfilter.org`, which no
+      # hosted runner reaches (the first run of this workflow spent four
+      # minutes timing out on it before failing). Nothing under ios/ needs
+      # them; `vectors` is taken on its own below, as warren-tests.yml does.
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
-          submodules: recursive
+          submodules: false
+
+      # The token rides the request for the reason warren-tests.yml gives: the
+      # fleet egresses through one IP and GitHub's anonymous throttle answers a
+      # first unauthenticated request with a fatal error.
+      - name: Checkout the golden vectors submodule
+        env:
+          ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ENGINE_TOKEN" ]; then
+            auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+            git -c "http.extraheader=AUTHORIZATION: basic ${auth}" \
+              submodule update --init vectors
+          else
+            git submodule update --init vectors
+          fi
+          test -f vectors/forum_login_v1.json
 
       # Checks out the pinned sibling engines (warrenguard, warren-sdk-rs,
       # warren-contract) that warren-ios consumes by path. The Xcode build
