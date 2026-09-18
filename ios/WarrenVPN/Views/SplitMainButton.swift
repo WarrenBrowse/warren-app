@@ -10,12 +10,19 @@ import SwiftUI
 
 struct SplitMainButton: View {
     var text: LocalizedStringKey
-    var image: ImageResource
+    /// The side button's glyph as an asset. Leave nil and set `systemImage`
+    /// for a symbol the asset catalog does not carry.
+    var image: ImageResource?
+    var systemImage: String?
     var style: MainButtonStyle.Style
     var accessibilityId: AccessibilityIdentifier?
     var secondaryAccessibilityId: AccessibilityIdentifier?
     var secondaryAccessibilityLabel: LocalizedStringKey?
     var secondaryAccessibilityHint: LocalizedStringKey?
+    /// The side button alone can be unavailable while the label still works,
+    /// as on Android where the shuffle is disabled until the relay list has an
+    /// active exit to pick from.
+    var secondaryEnabled: Bool = true
 
     @State private var secondaryButtonSize: CGSize = .zero
     @State private var primaryButtonSize: CGSize = .zero
@@ -44,7 +51,7 @@ struct SplitMainButton: View {
             Button(
                 action: secondaryAction,
                 label: {
-                    Image(image)
+                    secondaryGlyph
                         .resizable()
                         .scaledToFit()
                         .padding(10)
@@ -54,6 +61,7 @@ struct SplitMainButton: View {
                         .sizeOfView { secondaryButtonSize = $0 }
                 }
             )
+            .disabled(!secondaryEnabled)
             .ifLet(secondaryAccessibilityLabel) { view, label in
                 view.accessibilityLabel(label)
             }
@@ -66,6 +74,18 @@ struct SplitMainButton: View {
         }
         .buttonStyle(MainButtonStyle(style))
         .cornerRadius(UIMetrics.MainButton.cornerRadius)
+    }
+
+    /// Concrete `Image` rather than `some View`: the caller still needs
+    /// `.resizable()`, which only `Image` carries.
+    private var secondaryGlyph: Image {
+        if let image {
+            return Image(image)
+        }
+        if let systemImage {
+            return Image(systemName: systemImage)
+        }
+        return Image(.iconReload)
     }
 }
 

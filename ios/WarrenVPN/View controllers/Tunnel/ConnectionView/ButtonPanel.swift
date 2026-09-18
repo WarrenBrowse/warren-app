@@ -17,61 +17,34 @@ extension ConnectionView {
 
         var body: some View {
             VStack(spacing: 16) {
-                HStack(spacing: 8) {
-                    locationButton(with: action)
-                        .disabled(viewModel.disableButtons)
-                    shuffleButton(with: action)
-                        .disabled(viewModel.disableButtons)
-                }
+                locationButton(with: action)
+                    .disabled(viewModel.disableButtons)
                 actionButton(with: action)
                     .disabled(viewModel.disableButtons)
             }
         }
 
-        /// Desktop-parity "surprise me" button: connects to a randomly
-        /// picked exit instead of opening the location picker.
-        @ViewBuilder
-        private func shuffleButton(with action: Action?) -> some View {
-            Button(
-                action: { action?(.shuffleLocation) },
-                label: {
-                    Image(systemName: "shuffle")
-                        .resizable()
-                        .scaledToFit()
-                        .padding(12)
-                        .frame(width: 44, height: 44)
-                }
-            )
-            .buttonStyle(MainButtonStyle(.default))
-            .cornerRadius(UIMetrics.MainButton.cornerRadius)
-            .accessibilityLabel(LocalizedStringKey("Random location"))
-            .accessibilityHint(LocalizedStringKey("Connect to a randomly selected location"))
-            .accessibilityIdentifier(AccessibilityIdentifier.shuffleLocationButton.asString)
-        }
-
+        /// One control for the location, with the shuffle on its side, in every
+        /// tunnel state. It used to be three: a split button whose side half
+        /// was a reconnect the other clients no longer offer, plus a detached
+        /// shuffle square next to it, plus the plain label in the disconnected
+        /// states. Sharing the row with that square is what squeezed the label
+        /// enough to wrap "Changer de localisation" onto two lines.
+        /// Android's twin is `SwitchLocationButton.kt`.
         @ViewBuilder
         private func locationButton(with action: Action?) -> some View {
-            switch viewModel.tunnelStatus.state {
-            case .connecting, .connected, .reconnecting, .waitingForConnectivity, .negotiatingEphemeralPeer, .error:
-                SplitMainButton(
-                    text: viewModel.localizedTitleForSelectLocationButton,
-                    image: .iconReload,
-                    style: .default,
-                    accessibilityId: .selectLocationButton,
-                    secondaryAccessibilityId: .reconnectButton,
-                    secondaryAccessibilityLabel: LocalizedStringKey("Reconnect"),
-                    secondaryAccessibilityHint: LocalizedStringKey("Cycle through available servers"),
-                    primaryAction: { action?(.selectLocation) },
-                    secondaryAction: { action?(.reconnect) }
-                )
-            case .disconnecting, .pendingReconnect, .disconnected:
-                MainButton(
-                    text: viewModel.localizedTitleForSelectLocationButton,
-                    style: .default,
-                    action: { action?(.selectLocation) }
-                )
-                .accessibilityIdentifier(AccessibilityIdentifier.selectLocationButton.asString)
-            }
+            SplitMainButton(
+                text: viewModel.localizedTitleForSelectLocationButton,
+                systemImage: "shuffle",
+                style: .default,
+                accessibilityId: .selectLocationButton,
+                secondaryAccessibilityId: .shuffleLocationButton,
+                secondaryAccessibilityLabel: LocalizedStringKey("Random location"),
+                secondaryAccessibilityHint: LocalizedStringKey("Connect to a randomly selected location"),
+                secondaryEnabled: viewModel.shuffleEnabled,
+                primaryAction: { action?(.selectLocation) },
+                secondaryAction: { action?(.shuffleLocation) }
+            )
         }
 
         @ViewBuilder

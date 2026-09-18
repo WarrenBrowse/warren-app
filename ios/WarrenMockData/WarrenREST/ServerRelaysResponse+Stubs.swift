@@ -477,4 +477,18 @@ public enum ServerRelaysResponseStubs {
                 ),
             ])
     )
+
+    /// A cache that has been read but carries no exit at all, the state the
+    /// shuffle button has to stay disabled in.
+    public static let emptyRelays = REST.ServerRelaysResponse(
+        locations: [:],
+        wireguard: REST.ServerWireguardTunnels(
+            ipv4Gateway: .loopback,
+            ipv6Gateway: .loopback,
+            portRanges: wireguardPortRanges,
+            relays: [],
+            shadowsocksPortRanges: []
+        ),
+        bridge: REST.ServerBridges(shadowsocks: [], relays: [])
+    )
 }

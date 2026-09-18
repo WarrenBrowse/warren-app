@@ -87,7 +87,6 @@ class ConnectionViewViewModel: ObservableObject {
         case connect
         case disconnect
         case cancel
-        case reconnect
         case selectLocation
         case shuffleLocation
     }
@@ -101,6 +100,12 @@ class ConnectionViewViewModel: ObservableObject {
     @Published var isStandingDownForHigherEnvironment = false
 
     @Published var relayConstraints: RelayConstraints
+
+    /// Whether the shuffle has anything to pick from. The same predicate
+    /// `TunnelViewControllerInteractor.shuffleExitLocation()` picks with, so
+    /// the button is offered exactly when the action would do something.
+    @Published private(set) var shuffleEnabled: Bool = false
+
     let destinationDescriber: DestinationDescribing
 
     var tunnelIsConnected: Bool {
@@ -130,6 +135,12 @@ class ConnectionViewViewModel: ObservableObject {
             relayCache: relayCache,
             customListRepository: customListRepository
         )
+        self.shuffleEnabled = Self.hasAnActiveExit(in: relayCache)
+    }
+
+    private static func hasAnActiveExit(in relayCache: RelayCacheProtocol) -> Bool {
+        guard let cached = try? relayCache.read() else { return false }
+        return cached.relays.wireguard.relays.contains { $0.active }
     }
 
     func update(tunnelStatus: TunnelStatus) {

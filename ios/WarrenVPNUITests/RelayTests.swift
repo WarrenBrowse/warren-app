@@ -658,8 +658,12 @@ class RelayTests: LoggedInWithTimeUITestCase {
         SettingsPage(app)
             .tapDoneButton()
 
+        // The assertion below only needs a fresh tunnel, and the reconnect
+        // side button is gone: the location control's side half is the shuffle
+        // now, as on the other two clients.
         TunnelControlPage(app)
-            .tapReconnectButton()
+            .tapDisconnectButton()
+            .tapConnectButton()
             .waitForConnectedLabel()
 
         try Networking.verifyDNSServerProvider(dnsServerProviderName, isWarren: false)

@@ -11,11 +11,17 @@ import Foundation
 @testable import WarrenREST
 
 public struct MockRelayCache: RelayCacheProtocol {
-    public init() {}
+    /// Whether `read()` answers with a list at all. A cache that has never been
+    /// filled is the state the shuffle button has to stay disabled in.
+    public var isEmpty: Bool
+
+    public init(isEmpty: Bool = false) {
+        self.isEmpty = isEmpty
+    }
 
     public func read() throws -> WarrenREST.CachedRelays {
         CachedRelays(
-            relays: ServerRelaysResponseStubs.sampleRelays,
+            relays: isEmpty ? ServerRelaysResponseStubs.emptyRelays : ServerRelaysResponseStubs.sampleRelays,
             updatedAt: Date()
         )
     }

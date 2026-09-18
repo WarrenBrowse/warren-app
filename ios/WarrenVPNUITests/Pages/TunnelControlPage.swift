@@ -108,11 +108,6 @@ class TunnelControlPage: Page {
         return self
     }
 
-    @discardableResult func tapReconnectButton() -> Self {
-        app.buttons[AccessibilityIdentifier.reconnectButton].tap()
-        return self
-    }
-
     @discardableResult func tapCancelButton() -> Self {
         app.buttons[AccessibilityIdentifier.cancelButton].tap()
         return self

@@ -271,10 +271,6 @@ class TunnelViewController: UIViewController, RootContainment {
                 self?.logger.debug("User tapped disconnect button")
                 self?.interactor.stopTunnel()
 
-            case .reconnect:
-                self?.logger.debug("User tapped reconnect button")
-                self?.interactor.reconnectTunnel(selectNewRelay: true)
-
             case .selectLocation:
                 self?.shouldShowSelectLocationPicker?()
 

@@ -58,6 +58,13 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # One location control with the shuffle on its side, no reconnect button.
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectionViewActionsTests.swift" => "WarrenVPNTests",
+
+  # Counting and canonicalizing a typed recovery phrase, so 24 words import.
+  "WarrenVPN/View controllers/Wallet/WarrenMnemonicText.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Wallet/WarrenMnemonicTextTests.swift" => "WarrenVPNTests",
+
   # C.4.3 Warren Quinn tunnel implementation + actor scaffold inside
   # `PacketTunnelCore` (slots next to GotaTunTunnelImplementation +
   # GotaTunActor, conforms `TunnelImplementation` + `PacketTunnelActorProtocol`).

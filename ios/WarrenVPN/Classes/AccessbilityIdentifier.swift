@@ -34,7 +34,6 @@ public enum AccessibilityIdentifier: Equatable {
     case deleteButton
     case deviceCellRemoveButton
     case disconnectButton
-    case reconnectButton
     case revokedDeviceLoginButton
     case dnsSettingsEditButton
     case infoButton
@@ -63,6 +62,7 @@ public enum AccessibilityIdentifier: Equatable {
     case walletRestoreButton
     case walletMnemonicConfirmButton
     case walletMnemonicCopyButton
+    case walletMnemonicPhraseField
     case walletMnemonicRestoreSubmitButton
     case walletBackupAcknowledgeToggle
     // Onboarding wizard (post-login, desktop parity).
