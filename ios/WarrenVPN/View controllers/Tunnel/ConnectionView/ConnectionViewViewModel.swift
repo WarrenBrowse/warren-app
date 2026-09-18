@@ -54,6 +54,17 @@ enum ConnectionPhase {
         }
     }
 
+    /// The same accent as it must be written rather than filled. See the
+    /// lifted tints in `UIColor+Palette`; desktop's `getPhaseTitleColorName`.
+    var titleColor: UIColor {
+        switch self {
+        case .protected: .successTextColor
+        case .connecting, .interrupted: .pendingTextColor
+        case .exposed: .dangerTextColor
+        case .blocked: .white
+        }
+    }
+
     // A crossed-out eye reads as protected/hidden in the burrow (secured, blocked,
     // or the no-network hold where nothing can flow); an open eye reads as
     // exposed/visible. Mirrors the desktop status eye.
@@ -142,6 +153,13 @@ extension ConnectionViewViewModel {
     }
 
     var textColorForSecureLabel: UIColor {
+        connectionPhase.titleColor
+    }
+
+    /// The eye, the rails and the buttons keep the saturated fill. Held apart
+    /// from `textColorForSecureLabel` because the two used to be one property,
+    /// so lifting the title alone would have de-saturated the eye with it.
+    var accentColorForSecureLabel: UIColor {
         connectionPhase.accentColor
     }
 

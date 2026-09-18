@@ -19,7 +19,7 @@ extension ConnectionView {
                 // crossed-out = hidden/protected, open = visible/exposed.
                 Image(systemName: viewModel.eyeSymbolName)
                     .font(.title3.weight(.semibold))
-                    .foregroundStyle(viewModel.textColorForSecureLabel.color)
+                    .foregroundStyle(viewModel.accentColorForSecureLabel.color)
                     .accessibilityIdentifier("connectionStatusEye")
                     .accessibilityHidden(true)
 
@@ -34,7 +34,10 @@ extension ConnectionView {
                     if let subtitle = viewModel.localizedSubtitleForSecureLabel {
                         Text(subtitle)
                             .font(.footnote)
-                            .foregroundStyle(UIColor.primaryTextColor.color.opacity(0.6))
+                            // primaryTextColor at 0.8 IS desktop's whiteAlpha80,
+                            // rgba(247, 247, 248, 0.8), which secondaryTextColor
+                            // (pure white at 0.8) is not.
+                            .foregroundStyle(UIColor.primaryTextColor.color.opacity(0.8))
                             .accessibilityIdentifier("connectionStatusSubtitle")
                     }
                 }

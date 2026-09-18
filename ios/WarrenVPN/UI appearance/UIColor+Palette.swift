@@ -178,6 +178,14 @@ extension UIColor {
     // the secured green, so the transitional state reads as its own phase.
     static let pendingColor = UIColor(red: 224.0 / 255.0, green: 122.0 / 255.0, blue: 40.0 / 255.0, alpha: 1.0)
 
+    // The accents as they must be WRITTEN. The saturated fills above carry
+    // icons, rails and buttons, where 3:1 against the surface is the bar; a
+    // title at text size needs 4.5:1, which the fills miss on the card's
+    // neutral plate. Desktop's redText / greenText / orangeText, to the byte.
+    static let dangerTextColor = UIColor(red: 233.0 / 255.0, green: 142.0 / 255.0, blue: 122.0 / 255.0, alpha: 1.0)
+    static let successTextColor = UIColor(red: 150.0 / 255.0, green: 196.0 / 255.0, blue: 116.0 / 255.0, alpha: 1.0)
+    static let pendingTextColor = UIColor(red: 240.0 / 255.0, green: 163.0 / 255.0, blue: 96.0 / 255.0, alpha: 1.0)
+
     // True near-white #F7F7F8 (neutral, NOT cream).
     static let primaryTextColor = UIColor(red: 247.0 / 255.0, green: 247.0 / 255.0, blue: 248.0 / 255.0, alpha: 1.0)
     static let secondaryTextColor = UIColor(white: 1.0, alpha: 0.8)
