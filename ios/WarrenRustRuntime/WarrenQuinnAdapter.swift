@@ -458,6 +458,15 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         _ = warren_tunnel_resume(rawTunnelHandle(h))
     }
 
+    /// Whether the exit granted a DAITA machine for the live session.
+    ///
+    /// The setting says what was asked for; this says what is running. False
+    /// while no session is up, so a build with no tunnel can never claim the
+    /// defense. One relaxed atomic load on the Rust side.
+    public static func daitaActive() -> Bool {
+        warren_tunnel_daita_active()
+    }
+
     /// What the goodput prober makes of the live datapath. Healthy while no
     /// session is running and reset when one ends, so a stale verdict can
     /// never describe a tunnel that no longer exists. One relaxed atomic load

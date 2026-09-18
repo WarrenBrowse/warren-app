@@ -436,6 +436,14 @@ typedef void (*LogCallback)(uint8_t level, const char *message);
 int32_t warren_tunnel_path_health(void);
 
 /**
+ * Whether the exit granted a DAITA machine for the live session.
+ *
+ * The one honest source for the feature chip: the setting says what was
+ * asked, this says what is running. `false` while no session is up.
+ */
+bool warren_tunnel_daita_active(void);
+
+/**
  * Starts a Warren tunnel with the given parameters. Returns an opaque
  * handle on success, or null on failure (invalid parameters, tunnel
  * feature disabled at build time, runtime allocation failure).

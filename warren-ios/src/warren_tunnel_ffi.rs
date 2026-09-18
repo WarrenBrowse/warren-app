@@ -1251,6 +1251,13 @@ fn spawn_multi_hop(
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
         arc_for_task.set_supervisor(supervisor.handle());
+        // Publish what the exit actually GRANTED, not what the client asked
+        // for. The chip used to be drawn from the settings flag, which says
+        // nothing about the session: an exit that refuses the defense leaves
+        // the app claiming a protection that is not running. The spec reaches
+        // the caller through the published session, exactly as the desktop
+        // daemon reads it.
+        install_daita_watch(watch.clone());
         // Migration watchdog: a Wi-Fi to cellular handover rebinds the live
         // QUIC endpoint and revalidates the path in about one RTT instead of
         // re-handshaking. Fed by `warren_tunnel_notify_path_change` from the
@@ -1550,6 +1557,44 @@ fn reset_path_health() {
 #[unsafe(no_mangle)]
 pub extern "C" fn warren_tunnel_path_health() -> i32 {
     PATH_HEALTH.load(std::sync::atomic::Ordering::Relaxed)
+}
+
+/// Whether the live session carries a granted DAITA machine.
+///
+/// A process-wide cell rather than handle state: it is written from the
+/// session watch and read from the app's chip poll, and neither holds the
+/// handle. False while no session is up, so a build with no tunnel can never
+/// claim the defense.
+static DAITA_ACTIVE: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+/// Follows the published session and mirrors its DAITA grant into
+/// [`DAITA_ACTIVE`]. Ends when the supervisor drops its sender at teardown,
+/// clearing the flag on the way out so the next screen never reads the last
+/// session's answer.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn install_daita_watch(mut sessions: warrenguard_transport::supervisor::ClientWatch) {
+    tokio::spawn(async move {
+        loop {
+            let granted = sessions
+                .borrow_and_update()
+                .as_ref()
+                .is_some_and(|bundle| bundle.primary().daita_spec().is_some());
+            DAITA_ACTIVE.store(granted, std::sync::atomic::Ordering::Relaxed);
+            if sessions.changed().await.is_err() {
+                break;
+            }
+        }
+        DAITA_ACTIVE.store(false, std::sync::atomic::Ordering::Relaxed);
+    });
+}
+
+/// Whether the exit granted a DAITA machine for the live session.
+///
+/// The one honest source for the feature chip: the setting says what was
+/// asked, this says what is running. `false` while no session is up.
+#[unsafe(no_mangle)]
+pub extern "C" fn warren_tunnel_daita_active() -> bool {
+    DAITA_ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
 }
 
 /// The mapping a session asks the exit for, read once off the C ABI and

@@ -5,6 +5,7 @@
 //  Created by Mojgan on 2024-12-06.
 //  Copyright © 2026 Mullvad VPN AB. All rights reserved.
 //
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import PacketTunnelCore
@@ -55,15 +56,26 @@ struct DaitaFeature: ChipFeature {
     let state: TunnelState
     let settings: LatestTunnelSettings
 
+    /// Whether the live session actually carries a granted DAITA machine.
+    ///
+    /// Read from the datapath rather than assumed: the setting says what was
+    /// asked for, and an exit answers per session. A chip drawn from the
+    /// setting claimed a defense that was not running, which is the one thing
+    /// a privacy indicator must never do.
+    var isGranted: Bool = WarrenQuinnAdapter.daitaActive()
+
     /// Shown whenever the user asked for DAITA, because the point of the chip
-    /// is to tell them it is not happening. Reading the same toggle that used
-    /// to be presented as a grant.
+    /// is to tell them whether it is happening.
     var isEnabled: Bool {
         settings.daita.isEnabled
     }
 
+    /// What the chip says: the grant when the session carries one, and the
+    /// plain statement that it is not running otherwise.
     var name: String {
-        NSLocalizedString("DAITA: not active on this server", comment: "")
+        isGranted
+            ? NSLocalizedString("DAITA", comment: "")
+            : NSLocalizedString("DAITA: not active on this server", comment: "")
     }
 }
 

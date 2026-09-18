@@ -8,6 +8,7 @@
 import Network
 import WarrenMockData
 import WarrenREST
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import XCTest
@@ -16,18 +17,16 @@ import XCTest
 
 /// The connect screen showed a plain "DAITA" chip on every connection made with
 /// the DAITA toggle on, and `TunnelState.isDaita` is that toggle plumbed
-/// through, not a grant from the exit. The iOS datapath negotiates no DAITA at
-/// all: `warren_tunnel_ffi.rs` dials with the defense off and says so in a
-/// comment. So the chip asserted a protection that was not on the wire.
+/// through, not a grant from the exit. So the chip asserted a protection that
+/// was not on the wire.
 ///
 /// The desktop daemon reads the exit's own echo before claiming anything
 /// (`talpid-warren-tunnel/src/lib.rs`: "the Connected state never claims a
-/// protection that is not running"). Until iOS carries that echo, its chip says
-/// the defense is not active, which is true and is the wording the other two
-/// clients already use.
-///
-/// When iOS does start negotiating DAITA, this test is the thing that fails and
-/// points at the chip.
+/// protection that is not running"), and the chip now reads the same echo:
+/// `warren_tunnel_daita_active()` reports what the live session was granted.
+/// The iOS datapath still dials with the defense off, so today that is always
+/// false and the chip says so; the day it dials with DAITA on, the chip follows
+/// the grant with no second change.
 final class DaitaTruthfulnessTests: XCTestCase {
     private func connected(isDaita: Bool) -> TunnelState {
         let exit = SelectedRelay(
@@ -60,15 +59,31 @@ final class DaitaTruthfulnessTests: XCTestCase {
         return settings
     }
 
-    func testTheChipNeverClaimsDaitaIsRunning() {
-        let feature = DaitaFeature(
+    func testTheChipClaimsDaitaOnlyWhenTheSessionWasGrantedIt() {
+        let ungranted = DaitaFeature(
             state: connected(isDaita: true),
-            settings: settings(daita: true)
+            settings: settings(daita: true),
+            isGranted: false
         )
-        XCTAssertEqual(feature.name, "DAITA: not active on this server")
+        XCTAssertEqual(ungranted.name, "DAITA: not active on this server")
+
+        let granted = DaitaFeature(
+            state: connected(isDaita: true),
+            settings: settings(daita: true),
+            isGranted: true
+        )
+        XCTAssertEqual(granted.name, "DAITA")
+    }
+
+    /// The datapath is the source, not the toggle: what the chip reports by
+    /// default is what the live session carries, and with no session that is
+    /// nothing.
+    func testWithNoSessionTheDatapathReportsNoGrant() {
+        XCTAssertFalse(WarrenQuinnAdapter.daitaActive())
         XCTAssertFalse(
-            feature.name == "DAITA",
-            "the chip claims a defense this client does not negotiate")
+            DaitaFeature(state: connected(isDaita: true), settings: settings(daita: true))
+                .isGranted,
+            "the chip defaulted to a grant nothing measured")
     }
 
     /// The chip exists to tell the user the thing they asked for is not
@@ -85,10 +100,14 @@ final class DaitaTruthfulnessTests: XCTestCase {
     func testTheChipDoesNotReadTheStateFlagThatOnlyMirrorsTheToggle() {
         let on = settings(daita: true)
         for isDaita in [true, false] {
-            let feature = DaitaFeature(state: connected(isDaita: isDaita), settings: on)
+            let feature = DaitaFeature(
+                state: connected(isDaita: isDaita), settings: on, isGranted: false)
             XCTAssertTrue(
                 feature.isEnabled,
                 "the chip changed with isDaita, which carries no grant")
+            XCTAssertEqual(
+                feature.name, "DAITA: not active on this server",
+                "the wording changed with isDaita, which carries no grant")
         }
     }
 }
