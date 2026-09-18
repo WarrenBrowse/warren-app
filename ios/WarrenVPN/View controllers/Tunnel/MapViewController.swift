@@ -544,13 +544,7 @@ final class SceneryViewController: UIViewController {
         let headHeight = placement.groundOffset
         foregroundView.frame = CGRect(
             x: 0, y: placement.foregroundTop, width: bounds.width, height: headHeight)
-        let groundTop = placement.foregroundTop + headHeight
-        foregroundGroundView.frame = CGRect(
-            x: 0,
-            y: groundTop,
-            width: bounds.width,
-            height: max(0, placement.foregroundBottom - groundTop)
-        )
+        foregroundGroundView.frame = placement.bandRect
 
         // Bula rides the same placement as the burrow he sits on, registered to
         // it, and is never stretched: his body ends above the split row. Placed

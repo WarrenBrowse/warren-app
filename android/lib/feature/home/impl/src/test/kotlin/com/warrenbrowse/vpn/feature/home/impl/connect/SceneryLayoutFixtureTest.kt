@@ -62,7 +62,28 @@ class SceneryLayoutFixtureTest {
             check("foreground_top_px", got.foregroundTop)
             check("landscape_bottom_px", got.landscapeBottom)
             check("foreground_bottom_px", got.foregroundBottom)
-            check("foreground_band_top_px", got.foregroundTop + got.groundOffset)
+            check("foreground_band_top_px", got.bandTop)
+            check("foreground_band_height_px", got.bandHeight)
+            check("foreground_band_left_px", got.bandLeft)
+            check("foreground_band_width_px", got.bandWidth)
+        }
+    }
+
+    @Test
+    fun `the band overflows the screen on three sides, carrying the paper margin off it`() {
+        fixture.cases("cases").forEach { case ->
+            val name = case.string("name")
+            val screen = case.floats("screen_px")
+            val got = placementOf(case)
+            assertTrue(got.bandLeft < 0f, "$name: the band does not overhang the left edge")
+            assertTrue(
+                got.bandLeft + got.bandWidth > screen[0],
+                "$name: the band does not overhang the right edge",
+            )
+            assertTrue(
+                got.bandTop + got.bandHeight >= screen[1] - TOLERANCE,
+                "$name: the band stops above the screen bottom",
+            )
         }
     }
 
@@ -88,8 +109,7 @@ class SceneryLayoutFixtureTest {
             val got = placementOf(case)
             val feetY = SceneryLayout.FEET_ROW * got.scale
             assertTrue(got.groundOffset >= feetY, "$name: the split row would cut through Bula")
-            val natural = got.canvasHeight - got.groundOffset
-            val stretch = (got.foregroundBottom - got.foregroundTop - got.groundOffset) / natural
+            val stretch = got.bandHeight / (got.canvasHeight - got.groundOffset)
             assertTrue(stretch >= 1f, "$name: the band was compressed ($stretch)")
             assertTrue(stretch <= maxStretch, "$name: the band stretched $stretch")
         }

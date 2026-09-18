@@ -15,15 +15,18 @@
   "formula": [
     "scale = screen_width / canvas_px[0]",
     "canvas_height = canvas_px[1] * scale",
-    "feet_y = feet_row * scale",
-    "ground_y = ground_row * scale",
+    "feet_y = feet_row * scale ; ground_y = ground_row * scale",
     "want = card_top - gap_dp * density - feet_y",
     "canvas_pan = -min(max_canvas_pan_dp * density, max(0, -want))",
     "foreground_shift = min(canvas_height - ground_y, max(0, want - canvas_pan))",
     "landscape_top = canvas_pan, landscape_bottom = canvas_pan + canvas_height (the landscape is never stretched)",
     "foreground_top = canvas_pan + foreground_shift",
     "foreground_bottom = max(foreground_top + canvas_height, screen_height)",
-    "the foreground draws rows [0, ground_row) at natural scale from its own top, then rows [ground_row, canvas_px[1]) scaled vertically to reach foreground_bottom",
+    "the foreground draws rows [0, ground_row) at natural scale from its own top, then rows [ground_row, canvas_px[1]) into the band rect below",
+    "band_top = foreground_top + ground_y",
+    "band_height = max(canvas_height - ground_y, (screen_height - band_top) * (canvas_px[1] - ground_row) / (meadow_end_row - ground_row)), so meadow_end_row lands on the screen bottom and the paper rows below it are clipped",
+    "band_scale_x = screen_width / (canvas_px[0] - 2 * band_overscan_columns)",
+    "band_left = -band_overscan_columns * band_scale_x ; band_width = canvas_px[0] * band_scale_x",
     "Bula's layer is never stretched: his body ends above ground_row",
     "the slide is capped at canvas_height - ground_y so the burrow's opaque rows always still overlap the landscape above them, which is what lets the landscape be drawn whole",
     "the stretch never touches Bula or the burrow mouth: ground_row sits below feet_row, so the band begins under Bula's feet and only the meadow is ever scaled. A 2.54x stretch of that meadow measured imperceptible against the natural rows above it, so the factor is bounded only by max_band_stretch, as a guard rather than as a visual limit."
@@ -48,7 +51,10 @@
         "landscape_bottom_px": 1616.21,
         "foreground_bottom_px": 2400.0,
         "foreground_band_top_px": 1616.21,
-        "foreground_band_stretch": 2.04,
+        "foreground_band_height_px": 860.26,
+        "foreground_band_left_px": -19.64,
+        "foreground_band_width_px": 1119.27,
+        "foreground_band_stretch": 2.24,
         "feet_above_card_px": 93.4,
         "band_starts_below_feet": true
       }
@@ -72,7 +78,10 @@
         "landscape_bottom_px": 1616.21,
         "foreground_bottom_px": 2592.0,
         "foreground_band_top_px": 1616.21,
-        "foreground_band_stretch": 2.54,
+        "foreground_band_height_px": 1070.99,
+        "foreground_band_left_px": -19.64,
+        "foreground_band_width_px": 1119.27,
+        "foreground_band_stretch": 2.79,
         "feet_above_card_px": 285.55,
         "band_starts_below_feet": true
       }
@@ -96,7 +105,10 @@
         "landscape_bottom_px": 1616.21,
         "foreground_bottom_px": 1920.0,
         "foreground_band_top_px": 1283.31,
-        "foreground_band_stretch": 1.66,
+        "foreground_band_height_px": 698.81,
+        "foreground_band_left_px": -19.64,
+        "foreground_band_width_px": 1119.27,
+        "foreground_band_stretch": 1.82,
         "feet_above_card_px": 42.0,
         "band_starts_below_feet": true
       }
@@ -120,6 +132,9 @@
         "landscape_bottom_px": 3339.58,
         "foreground_bottom_px": 3339.58,
         "foreground_band_top_px": 2486.95,
+        "foreground_band_height_px": 852.63,
+        "foreground_band_left_px": -43.64,
+        "foreground_band_width_px": 2487.27,
         "foreground_band_stretch": 1.0,
         "feet_above_card_px": -1893.82,
         "band_starts_below_feet": true
@@ -144,7 +159,10 @@
         "landscape_bottom_px": 1804.77,
         "foreground_bottom_px": 2622.0,
         "foreground_band_top_px": 1780.25,
-        "foreground_band_stretch": 1.96,
+        "foreground_band_height_px": 923.87,
+        "foreground_band_left_px": -21.93,
+        "foreground_band_width_px": 1249.85,
+        "foreground_band_stretch": 2.16,
         "feet_above_card_px": 48.0,
         "band_starts_below_feet": true
       }
@@ -168,7 +186,10 @@
         "landscape_bottom_px": 1975.37,
         "foreground_bottom_px": 2868.0,
         "foreground_band_top_px": 1975.37,
-        "foreground_band_stretch": 1.9,
+        "foreground_band_height_px": 979.72,
+        "foreground_band_left_px": -24.0,
+        "foreground_band_width_px": 1368.0,
+        "foreground_band_stretch": 2.09,
         "feet_above_card_px": 116.58,
         "band_starts_below_feet": true
       }
@@ -192,7 +213,10 @@
         "landscape_bottom_px": 1030.89,
         "foreground_bottom_px": 1334.0,
         "foreground_band_top_px": 764.45,
-        "foreground_band_stretch": 2.14,
+        "foreground_band_height_px": 625.12,
+        "foreground_band_left_px": -13.64,
+        "foreground_band_width_px": 777.27,
+        "foreground_band_stretch": 2.35,
         "feet_above_card_px": 32.0,
         "band_starts_below_feet": true
       }
@@ -216,6 +240,9 @@
         "landscape_bottom_px": 2496.15,
         "foreground_bottom_px": 2553.56,
         "foreground_band_top_px": 1960.98,
+        "foreground_band_height_px": 592.58,
+        "foreground_band_left_px": -30.33,
+        "foreground_band_width_px": 1728.65,
         "foreground_band_stretch": 1.0,
         "feet_above_card_px": 32.0,
         "band_starts_below_feet": true
@@ -240,6 +267,9 @@
         "landscape_bottom_px": 3381.62,
         "foreground_bottom_px": 3381.62,
         "foreground_band_top_px": 2533.25,
+        "foreground_band_height_px": 848.37,
+        "foreground_band_left_px": -43.42,
+        "foreground_band_width_px": 2474.84,
         "foreground_band_stretch": 1.0,
         "feet_above_card_px": -1148.48,
         "band_starts_below_feet": true
@@ -264,6 +294,9 @@
         "landscape_bottom_px": 598.6,
         "foreground_bottom_px": 666.21,
         "foreground_band_top_px": 524.11,
+        "foreground_band_height_px": 142.11,
+        "foreground_band_left_px": -7.27,
+        "foreground_band_width_px": 414.55,
         "foreground_band_stretch": 1.0,
         "feet_above_card_px": 16.0,
         "band_starts_below_feet": true
@@ -288,11 +321,18 @@
         "landscape_bottom_px": 1454.37,
         "foreground_bottom_px": 2400.0,
         "foreground_band_top_px": 1070.68,
-        "foreground_band_stretch": 3.46,
+        "foreground_band_height_px": 1459.01,
+        "foreground_band_left_px": -19.64,
+        "foreground_band_width_px": 1119.27,
+        "foreground_band_stretch": 3.8,
         "feet_above_card_px": 42.0,
         "band_starts_below_feet": true
       }
     }
   ],
-  "max_band_stretch": 5.0
+  "max_band_stretch": 5.0,
+  "meadow_end_row": 1670,
+  "meadow_end_row_provenance": "terrier.png: the last row of the meadow before the wash runs out into bare paper. The band's row mean climbs 34 levels of 255 over rows 1681 to 1705.",
+  "band_overscan_columns": 20,
+  "band_overscan_provenance": "terrier.png: the watercolour fades into paper at the canvas edges. Measured on a 1080x2400 screen, the leftmost screen column read 1.60 times the mid-frame brightness with no overscan and 0.98 with 20 columns dropped; the right side fades over about 60 columns and is the hill's own sunlit edge, so it is left alone."
 }

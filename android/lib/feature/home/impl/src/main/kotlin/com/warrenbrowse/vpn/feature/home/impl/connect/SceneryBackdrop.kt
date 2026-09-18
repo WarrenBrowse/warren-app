@@ -157,7 +157,6 @@ fun SceneryBackdrop(
                 drawSceneryLayer(
                     image = burrow,
                     top = placement.foregroundTop,
-                    bottom = placement.foregroundBottom,
                     placement = placement,
                 )
             }
@@ -208,38 +207,35 @@ private fun DrawScope.drawWholeCanvas(
 
 /**
  * The burrow layer, in two parts: the rows above [SceneryLayout.GROUND_ROW] at their natural scale,
- * then the meadow below it scaled vertically to reach [bottom]. The band is never compressed, so on
- * a screen the canvas already covers, both parts are natural and this is the plain full-width draw
- * the desktop has always done.
+ * then the meadow below it scaled to reach the screen's bottom edge. The band is never compressed,
+ * so on a screen the canvas already covers, both parts are natural and this is the plain full-width
+ * draw the desktop has always done. The band is drawn a little wider than the screen and a little
+ * taller than it needs: the watercolour fades into bare paper at the canvas edges, and both
+ * overflows carry that paper off screen.
  */
 private fun DrawScope.drawSceneryLayer(
     image: ImageBitmap,
     top: Float,
-    bottom: Float,
     placement: SceneryLayout.Placement,
     alpha: Float = 1f,
 ) {
     if (alpha <= 0f) return
-    val width = size.width.roundToInt()
     val split = SceneryLayout.GROUND_ROW.roundToInt()
-    val headHeight = placement.groundOffset.roundToInt()
     drawImage(
         image = image,
         srcOffset = IntOffset.Zero,
         srcSize = IntSize(image.width, split),
         dstOffset = IntOffset(0, top.roundToInt()),
-        dstSize = IntSize(width, headHeight),
+        dstSize = IntSize(size.width.roundToInt(), placement.groundOffset.roundToInt()),
         alpha = alpha,
     )
-    val bandTop = top + placement.groundOffset
-    val bandHeight = (bottom - bandTop).roundToInt()
-    if (bandHeight <= 0) return
     drawImage(
         image = image,
         srcOffset = IntOffset(0, split),
         srcSize = IntSize(image.width, image.height - split),
-        dstOffset = IntOffset(0, bandTop.roundToInt()),
-        dstSize = IntSize(width, bandHeight),
+        dstOffset =
+            IntOffset(placement.bandLeft.roundToInt(), (top + placement.groundOffset).roundToInt()),
+        dstSize = IntSize(placement.bandWidth.roundToInt(), placement.bandHeight.roundToInt()),
         alpha = alpha,
     )
 }

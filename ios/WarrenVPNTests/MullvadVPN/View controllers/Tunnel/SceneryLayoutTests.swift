@@ -81,6 +81,9 @@ final class SceneryLayoutTests: XCTestCase {
             try check("landscape_bottom_px", got.landscapeBottom)
             try check("foreground_bottom_px", got.foregroundBottom)
             try check("foreground_band_top_px", got.foregroundTop + got.groundOffset)
+            try check("foreground_band_height_px", got.bandHeight)
+            try check("foreground_band_left_px", got.bandLeft)
+            try check("foreground_band_width_px", got.bandWidth)
             // The fixture's scale is pixels per canvas pixel; iOS lays out in points, so its own
             // scale is that divided by the density.
             XCTAssertEqual(
@@ -111,10 +114,23 @@ final class SceneryLayoutTests: XCTestCase {
             XCTAssertGreaterThanOrEqual(
                 got.groundOffset, SceneryLayout.feetRow * got.scale,
                 "\(name): the split row would cut through Bula")
-            let natural = got.canvasHeight - got.groundOffset
-            let stretch = (got.foregroundBottom - got.foregroundTop - got.groundOffset) / natural
+            let stretch = got.bandHeight / (got.canvasHeight - got.groundOffset)
             XCTAssertGreaterThanOrEqual(stretch, 1, "\(name): the band was compressed")
             XCTAssertLessThanOrEqual(stretch, maxStretch, "\(name): the band stretched \(stretch)")
+        }
+    }
+
+    func testTheBandOverflowsTheScreenOnThreeSidesCarryingThePaperMarginOffIt() throws {
+        for testCase in try ClientRulesFixtures.cases(try fixture(), "cases") {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let (got, _, bounds, _) = try placement(for: testCase)
+            XCTAssertLessThan(got.bandLeft, 0, "\(name): the band does not overhang the left edge")
+            XCTAssertGreaterThan(
+                got.bandLeft + got.bandWidth, bounds.width,
+                "\(name): the band does not overhang the right edge")
+            XCTAssertGreaterThanOrEqual(
+                got.bandRect.maxY, bounds.height - Self.tolerance,
+                "\(name): the band stops above the screen bottom")
         }
     }
 

@@ -35,6 +35,22 @@ internal object SceneryLayout {
      */
     const val GROUND_ROW = 1301f
 
+    /**
+     * The last canvas row of the meadow before the wash runs out into bare paper: the band's row
+     * mean climbs 34 levels of 255 over rows 1681 to 1705. The band is scaled so this row lands on
+     * the screen's bottom edge and the paper rows fall below it.
+     */
+    const val MEADOW_END_ROW = 1670f
+
+    /**
+     * Canvas columns dropped from each side of the stretched band. The watercolour fades into paper
+     * at the canvas edges, which the blurred band this replaced used to hide: measured on a
+     * 1080x2400 screen, the leftmost screen column read 1.60 times the mid-frame brightness, and
+     * dropping 20 columns brings it to 0.98. The right side fades over about 60 columns and is the
+     * hill's own sunlit edge rather than an artifact, so it is left alone.
+     */
+    const val BAND_OVERSCAN_COLUMNS = 20f
+
     /** Air kept between Bula's feet and the card's top edge. */
     const val GAP_DP = 16f
 
@@ -62,10 +78,17 @@ internal object SceneryLayout {
         val foregroundTop: Float,
         val landscapeBottom: Float,
         val foregroundBottom: Float,
+        val bandLeft: Float,
+        val bandWidth: Float,
+        val bandHeight: Float,
     ) {
         /** The canvas row the two-part draw splits at, in screen pixels from a layer's own top. */
         val groundOffset: Float
             get() = GROUND_ROW * scale
+
+        /** The screen row the stretched meadow starts at. */
+        val bandTop: Float
+            get() = foregroundTop + groundOffset
     }
 
     fun placement(
@@ -96,6 +119,17 @@ internal object SceneryLayout {
         val maxShift = canvasHeight - groundY
         val foregroundShift = minOf(maxShift, maxOf(0f, want - canvasPan))
         val foregroundTop = canvasPan + foregroundShift
+        // The band is scaled so MEADOW_END_ROW lands on the screen's bottom edge; the paper rows
+        // under it are drawn past that edge and clipped. It is never compressed, so on a screen the
+        // canvas already covers it draws at its natural size.
+        val bandNatural = canvasHeight - groundY
+        val bandNeeded = maxOf(0f, screenHeight - (foregroundTop + groundY))
+        val bandHeight =
+            maxOf(
+                bandNatural,
+                bandNeeded * (CANVAS_HEIGHT - GROUND_ROW) / (MEADOW_END_ROW - GROUND_ROW),
+            )
+        val bandScaleX = screenWidth / (CANVAS_WIDTH - 2f * BAND_OVERSCAN_COLUMNS)
         return Placement(
             scale = scale,
             canvasHeight = canvasHeight,
@@ -107,6 +141,9 @@ internal object SceneryLayout {
             // burrow layer's own opaque ground.
             landscapeBottom = canvasPan + canvasHeight,
             foregroundBottom = maxOf(foregroundTop + canvasHeight, screenHeight),
+            bandLeft = -BAND_OVERSCAN_COLUMNS * bandScaleX,
+            bandWidth = CANVAS_WIDTH * bandScaleX,
+            bandHeight = bandHeight,
         )
     }
 }

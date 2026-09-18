@@ -29,6 +29,18 @@ enum SceneryLayout {
     /// continues the ground with no seam and no repetition.
     static let groundRow: CGFloat = 1301
 
+    /// The last canvas row of the meadow before the wash runs out into bare paper: the band's row
+    /// mean climbs 34 levels of 255 over rows 1681 to 1705. The band is scaled so this row lands on
+    /// the screen's bottom edge and the paper rows fall below it.
+    static let meadowEndRow: CGFloat = 1670
+
+    /// Canvas columns dropped from each side of the stretched band. The watercolour fades into
+    /// paper at the canvas edges, which the blurred band this replaced used to hide: measured on a
+    /// 1080x2400 screen, the leftmost screen column read 1.60 times the mid-frame brightness, and
+    /// dropping 20 columns brings it to 0.98. The right side fades over about 60 columns and is the
+    /// hill's own sunlit edge rather than an artifact, so it is left alone.
+    static let bandOverscanColumns: CGFloat = 20
+
     /// Air kept between Bula's feet and the card's top edge.
     static let gap: CGFloat = 16
 
@@ -52,6 +64,9 @@ enum SceneryLayout {
         let foregroundTop: CGFloat
         let landscapeBottom: CGFloat
         let foregroundBottom: CGFloat
+        let bandLeft: CGFloat
+        let bandWidth: CGFloat
+        let bandHeight: CGFloat
 
         /// The canvas row the two-part draw splits at, in points from a layer's own top.
         var groundOffset: CGFloat { SceneryLayout.groundRow * scale }
@@ -59,6 +74,14 @@ enum SceneryLayout {
         /// The whole canvas at its natural scale, from a given top edge.
         func canvasRect(width: CGFloat, top: CGFloat) -> CGRect {
             CGRect(x: 0, y: top, width: width, height: canvasHeight)
+        }
+
+        /// The stretched meadow, drawn wider and taller than it needs so the painter's paper
+        /// margin at the canvas edges falls off screen.
+        var bandRect: CGRect {
+            CGRect(
+                x: bandLeft, y: foregroundTop + groundOffset,
+                width: bandWidth, height: bandHeight)
         }
     }
 
@@ -82,6 +105,15 @@ enum SceneryLayout {
         // repeat its last row, which is pale paper at the edges and reads as a white strip.
         let foregroundShift = min(height - groundY, max(0, want - canvasPan))
         let foregroundTop = canvasPan + foregroundShift
+        // The band is scaled so meadowEndRow lands on the screen's bottom edge; the paper rows
+        // under it are drawn past that edge and clipped. It is never compressed, so on a screen the
+        // canvas already covers it draws at its natural size.
+        let bandNatural = height - groundY
+        let bandNeeded = max(0, bounds.height - (foregroundTop + groundY))
+        let bandHeight = max(
+            bandNatural,
+            bandNeeded * (canvasHeight - groundRow) / (meadowEndRow - groundRow))
+        let bandScaleX = bounds.width / (canvasWidth - 2 * bandOverscanColumns)
         return Placement(
             scale: scale,
             canvasHeight: height,
@@ -92,7 +124,10 @@ enum SceneryLayout {
             // The landscape is never stretched: it is drawn whole, and everything below it is the
             // burrow layer's own opaque ground.
             landscapeBottom: canvasPan + height,
-            foregroundBottom: max(foregroundTop + height, bounds.height)
+            foregroundBottom: max(foregroundTop + height, bounds.height),
+            bandLeft: -bandOverscanColumns * bandScaleX,
+            bandWidth: canvasWidth * bandScaleX,
+            bandHeight: bandHeight
         )
     }
 }
