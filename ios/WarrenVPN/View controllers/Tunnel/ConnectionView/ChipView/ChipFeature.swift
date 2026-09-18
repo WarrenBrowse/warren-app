@@ -35,17 +35,35 @@ enum FeatureType {
     case allowExternalDns
 }
 
+/// The DAITA chip, which on this client can only ever say the defense is NOT
+/// running.
+///
+/// `TunnelState.isDaita` carries the settings toggle, not a grant: the iOS
+/// datapath never negotiates DAITA at all
+/// (`warren_tunnel_ffi.rs` dials with the defense off, and the comment there
+/// says so), so a plain "DAITA" chip claimed a protection that was not on the
+/// wire. In a privacy product that is the worst kind of wrong. The desktop
+/// daemon reads the exit's own echo (`primary().daita_spec()`) and refuses to
+/// claim what is not running; until iOS carries that echo too, this chip says
+/// what is true, in the same words the other two clients use
+/// (`features.rs`, `feature_daita_not_active_on_server`).
+///
+/// `DaitaTruthfulnessTests` holds this to the datapath: when iOS starts
+/// negotiating DAITA, that test is what tells the next reader to revisit here.
 struct DaitaFeature: ChipFeature {
     let id: FeatureType = .daita
     let state: TunnelState
     let settings: LatestTunnelSettings
 
+    /// Shown whenever the user asked for DAITA, because the point of the chip
+    /// is to tell them it is not happening. Reading the same toggle that used
+    /// to be presented as a grant.
     var isEnabled: Bool {
-        state.isDaita ?? false
+        settings.daita.isEnabled
     }
 
     var name: String {
-        NSLocalizedString("DAITA", comment: "")
+        NSLocalizedString("DAITA: not active on this server", comment: "")
     }
 }
 
