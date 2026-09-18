@@ -185,6 +185,10 @@ public struct WarrenTunnelStatus: Sendable {
 public enum WarrenTunnelEvent: Sendable {
     case connected
     case disconnected
+    /// The exit refused the session on policy grounds. Distinct from
+    /// `disconnected`, which is what a refusal used to arrive as, leaving the
+    /// app to report a tunnel that simply went down with no reason.
+    case unauthorized
     case reconnecting
     case failover(toExit: String)
     case natPmpMapped(internalPort: UInt16, externalPort: UInt16, lifetime: UInt32)
@@ -443,6 +447,9 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         case Connected: mappedState = .connected
         case Reconnecting: mappedState = .reconnecting
         case Failed: mappedState = .failed("ffi-reported failure")
+        // Named rather than swallowed by the default arm below, which is what
+        // turned a policy refusal into a plain disconnect.
+        case Unauthorized: mappedState = .failed("subscription expired")
         default: mappedState = .disconnected
         }
         let connectedDuration: UInt64? =
@@ -474,7 +481,13 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         // The returned heap string is freed via the type-agnostic free
         // routine the account/wallet FFIs use for their C strings.
         defer { warren_wallet_free_mnemonic(raw) }
-        let json = String(cString: raw)
+        return Self.decodePinMismatch(String(cString: raw))
+    }
+
+    /// The decode half of `takePinMismatch`, held apart so the mapping between
+    /// the Rust pin store's snake_case keys and this struct can be exercised
+    /// without a live tunnel. Returns nil for anything that is not a mismatch.
+    static func decodePinMismatch(_ json: String) -> WarrenPinMismatch? {
         guard let data = json.data(using: .utf8) else { return nil }
         return try? JSONDecoder().decode(WarrenPinMismatch.self, from: data)
     }
@@ -518,7 +531,9 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
     /// `invalidKeyLength` if the length differs. Crypto key material must
     /// not be silently truncated or zero-padded: a wrong-length key would
     /// otherwise yield a silently wrong identity instead of a clear error.
-    private static func fixedKeyBytes(_ data: Data, count: Int, field: String) throws -> [UInt8] {
+    // `internal`, not `private`: `private` is file-scoped even under
+    // `@testable`, and `WarrenQuinnAdapterTests` exercises both error paths.
+    static func fixedKeyBytes(_ data: Data, count: Int, field: String) throws -> [UInt8] {
         guard data.count == count else {
             throw WarrenQuinnAdapterError.invalidKeyLength(
                 field: field, expected: count, actual: data.count
@@ -817,6 +832,7 @@ private let eventCallbackBridge:
         switch event.tag {
         case EventConnected: mapped = .connected
         case EventDisconnected: mapped = .disconnected
+        case EventUnauthorized: mapped = .unauthorized
         case EventReconnecting: mapped = .reconnecting
         case EventFailover:
             let country = event.data_failover_country_code.flatMap { String(cString: $0) } ?? ""
@@ -861,7 +877,7 @@ private let ipAssignCallbackBridge:
     }
 
 /// Format a cbindgen `[u8; 4]` tuple as a dotted-decimal IPv4 string.
-private func dottedIPv4(_ octets: (UInt8, UInt8, UInt8, UInt8)) -> String {
+func dottedIPv4(_ octets: (UInt8, UInt8, UInt8, UInt8)) -> String {
     "\(octets.0).\(octets.1).\(octets.2).\(octets.3)"
 }
 
@@ -882,7 +898,7 @@ private func rawTunnelHandle(_ ptr: OpaquePointer) -> UnsafeMutablePointer<Warre
 /// Convert a `[UInt8]` of length 32 to the fixed-size tuple cbindgen
 /// emits for `[u8; 32]` C-array fields. cbindgen does not provide an
 /// idiomatic Swift helper, so we expand the array manually.
-private func tupleFrom32(_ array: [UInt8]) -> (
+func tupleFrom32(_ array: [UInt8]) -> (
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,
     UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8, UInt8,

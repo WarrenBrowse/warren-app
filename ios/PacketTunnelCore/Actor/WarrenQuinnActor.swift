@@ -198,6 +198,14 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
                 .map { .reconnecting(observedConnectionState(from: $0)) } ?? .initial
         case .disconnected:
             nextState = .disconnected
+        case .unauthorized:
+            // The exit refused this account, which is the same thing the app
+            // already knows how to present: `ApplicationCoordinator` routes an
+            // `.accountExpired` blocked state to the out-of-time screen, and
+            // the expiry notification provider raises its banner. Reported as
+            // a plain disconnect, none of that ran and the user was told
+            // nothing at all.
+            nextState = .error(ObservedBlockedState(reason: .accountExpired))
         case .natPmpMapped, .natPmpRenewed, .natPmpFailed:
             stateLock.unlock()
             return

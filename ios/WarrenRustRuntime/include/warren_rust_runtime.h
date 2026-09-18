@@ -39,6 +39,11 @@ typedef enum WarrenTunnelEventTagC {
    * "tunnel recovering".
    */
   EventConnecting = 7,
+  /**
+   * Terminal counterpart of `Unauthorized`: fired instead of
+   * `EventDisconnected` when the session ended in a policy refusal.
+   */
+  EventUnauthorized = 8,
 } WarrenTunnelEventTagC;
 
 /**
@@ -55,6 +60,15 @@ typedef enum WarrenTunnelStateC {
   Connected = 2,
   Reconnecting = 3,
   Failed = 4,
+  /**
+   * The exit definitively refused the session on policy grounds: the
+   * client's key is not on its allowlist, or it refused without saying
+   * more. Distinct from `Disconnected`, which is what this used to be
+   * reported as: a refusal ended the session with no reason at all, so the
+   * app could only say "disconnected" while the desktop daemon names the
+   * lapsed subscription and Android offers to renew.
+   */
+  Unauthorized = 5,
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;

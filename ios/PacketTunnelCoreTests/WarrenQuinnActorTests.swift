@@ -101,6 +101,33 @@ final class WarrenQuinnActorTests: XCTestCase {
         }
     }
 
+    /// A policy refusal used to arrive as `.disconnected`, so the session
+    /// ended with no reason at all: the out-of-time screen never opened and the
+    /// expiry banner never rose, while the desktop daemon names the lapsed
+    /// subscription and Android offers to renew. `.accountExpired` is the
+    /// reason the app already routes, so nothing downstream needed changing.
+    func test_applyEvent_unauthorized_surfacesTheExpiredAccountBlockedState() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.unauthorized)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .accountExpired)
+    }
+
+    /// The ordinary teardown must NOT be dressed up as an expiry.
+    func test_applyEvent_disconnected_staysAPlainDisconnect() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.disconnected)
+        let state = await actor.observedState
+        guard case .disconnected = state else {
+            return XCTFail("Expected .disconnected, got \(state)")
+        }
+    }
+
     // MARK: - reconnect(to:) relay change
 
     func test_reconnect_toPreSelected_restartsTheAdapterForTheNewExit() async {

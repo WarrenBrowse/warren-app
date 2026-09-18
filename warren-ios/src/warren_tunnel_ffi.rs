@@ -133,6 +133,13 @@ pub enum WarrenTunnelStateC {
     Connected = 2,
     Reconnecting = 3,
     Failed = 4,
+    /// The exit definitively refused the session on policy grounds: the
+    /// client's key is not on its allowlist, or it refused without saying
+    /// more. Distinct from `Disconnected`, which is what this used to be
+    /// reported as: a refusal ended the session with no reason at all, so the
+    /// app could only say "disconnected" while the desktop daemon names the
+    /// lapsed subscription and Android offers to renew.
+    Unauthorized = 5,
 }
 
 /// Tunnel status snapshot.
@@ -178,6 +185,9 @@ pub enum WarrenTunnelEventTagC {
     /// instead. Swift uses this to distinguish "tunnel starting" from
     /// "tunnel recovering".
     EventConnecting = 7,
+    /// Terminal counterpart of `Unauthorized`: fired instead of
+    /// `EventDisconnected` when the session ended in a policy refusal.
+    EventUnauthorized = 8,
 }
 
 /// Tagged-union event payload.
@@ -344,6 +354,63 @@ enum WatchTransition {
 /// ordering is unit-testable without a live supervisor. A reconnection (drop
 /// then re-establish) MUST re-emit `Connected`: gating every `Connected` on
 /// `connected_before` leaves the UI stuck at Reconnecting after any handover.
+/// What the client does about the verdict a finished session ended on.
+///
+/// A local mirror rather than the engine's `RejectionReason` directly: that
+/// type arrives with the `tunnel` feature, which is off for the host test
+/// build, and this decision is worth testing on the host. The conversion below
+/// is an exhaustive match, so a new rejection reason in the engine makes this
+/// file fail to compile rather than fall into a default.
+#[cfg_attr(test, derive(Debug, PartialEq, Eq))]
+#[derive(Clone, Copy)]
+enum TerminalVerdict {
+    /// The exit said this account may not use it, which on this client means
+    /// the subscription has lapsed.
+    Unauthorized,
+    /// Everything else: the user disconnected, the tunnel was torn down, or
+    /// the refusal was one iOS has nowhere to explain yet.
+    Ordinary,
+}
+
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
+    fn from(reason: Option<warrenguard_multihop::RejectionReason>) -> Self {
+        use warrenguard_multihop::RejectionReason;
+        match reason {
+            // The same pair the desktop daemon maps to `[EXPIRED_ACCOUNT]`
+            // (`talpid-warren-tunnel`'s `reject_error`).
+            Some(RejectionReason::NotAllowlisted | RejectionReason::PolicyRefused) => {
+                Self::Unauthorized
+            }
+            // A ban and an exhausted address pool are refusals too, but an
+            // expiry prompt is the wrong thing to say about either, so they
+            // stay ordinary until iOS has somewhere to say them.
+            Some(RejectionReason::Banned(_) | RejectionReason::IpExhausted) | None => {
+                Self::Ordinary
+            }
+        }
+    }
+}
+
+/// The state and event a finished session ends on.
+///
+/// Held as a pure function next to [`watch_transition`] for the same reason:
+/// the decision is unit-testable without a live supervisor. A policy refusal
+/// used to end as a plain `Disconnected`, so the app could only report that the
+/// tunnel went down, with no reason for it.
+fn terminal_for(verdict: TerminalVerdict) -> (WarrenTunnelStateC, WarrenTunnelEventTagC) {
+    match verdict {
+        TerminalVerdict::Unauthorized => (
+            WarrenTunnelStateC::Unauthorized,
+            WarrenTunnelEventTagC::EventUnauthorized,
+        ),
+        TerminalVerdict::Ordinary => (
+            WarrenTunnelStateC::Disconnected,
+            WarrenTunnelEventTagC::EventDisconnected,
+        ),
+    }
+}
+
 fn watch_transition(
     has_session: bool,
     was_connected: bool,
@@ -1259,6 +1326,11 @@ fn spawn_multi_hop(
                 }
             });
         }
+        // Subscribed BEFORE the spawn: `run` consumes the supervisor, and the
+        // API requires the subscription to be taken while it is still alive.
+        // Without it a policy refusal was indistinguishable from an ordinary
+        // teardown by the time the watch loop ended.
+        let fatal_rx = supervisor.fatal_rx();
         tokio::spawn(async move {
             if let Err(e) = supervisor.run().await {
                 tracing::error!(error = %e, "multi-hop supervisor terminated");
@@ -1370,8 +1442,9 @@ fn spawn_multi_hop(
                 break;
             }
         }
-        arc_for_task.set_state(WarrenTunnelStateC::Disconnected);
-        arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+        let (terminal_state, terminal_event) = terminal_for((*fatal_rx.borrow()).into());
+        arc_for_task.set_state(terminal_state);
+        arc_for_task.fire_event(terminal_event);
     });
 }
 
@@ -2226,6 +2299,33 @@ fn now_secs() -> u64 {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+
+    // ---- Terminal verdict: what the app is told a finished session ended as ----
+
+    /// A policy refusal used to end the session as a plain `Disconnected`, so
+    /// the app could only say the tunnel went down. The desktop daemon names
+    /// the lapsed subscription for exactly these two reasons
+    /// (`reject_error`'s `[EXPIRED_ACCOUNT]` arm) and so must iOS.
+    #[test]
+    fn a_refused_session_ends_unauthorized_rather_than_merely_disconnected() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::Unauthorized);
+        assert_eq!(state, super::WarrenTunnelStateC::Unauthorized);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventUnauthorized);
+    }
+
+    /// A ban and an exhausted address pool are refusals too, but an expiry
+    /// prompt is the wrong thing to say about either, and iOS has nowhere else
+    /// to say them yet. They stay on the plain path rather than claiming the
+    /// subscription lapsed.
+    /// Everything that is not a refusal of this account: the user
+    /// disconnected, the tunnel was torn down, or the refusal was a ban or an
+    /// exhausted address pool, which an expiry prompt would misdescribe.
+    #[test]
+    fn anything_else_ends_plainly_disconnected() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::Ordinary);
+        assert_eq!(state, super::WarrenTunnelStateC::Disconnected);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventDisconnected);
+    }
 
     // ---- Migration watchdog: the Swift path-change fan-in ----
 

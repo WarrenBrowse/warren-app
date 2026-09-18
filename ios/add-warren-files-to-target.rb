@@ -58,6 +58,9 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # The adapter's pure seams, which only ever appeared in the corpus as a mock.
+  "WarrenRustRuntimeTests/WarrenQuinnAdapterTests.swift" => "WarrenRustRuntimeTests",
+
   # "TROUBLE CONNECTING?", the banner a stalled connect never had.
   "WarrenVPN/Notifications/Notification Providers/WarrenConnectingStuckNotificationProvider.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Notifications/WarrenConnectingStuckNotificationProviderTests.swift" => "WarrenVPNTests",

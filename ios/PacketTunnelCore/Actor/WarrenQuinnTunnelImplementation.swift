@@ -437,10 +437,11 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             // main app only renders a generic failed state.
             defaults.set("failed", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
             defaults.removeObject(forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
-        case .disconnected:
+        case .disconnected, .unauthorized:
             // The mapping dies with the session (the exit frees the lease
             // and the refresh loop is torn down), so a stale "open" must
-            // not survive into the next session or app launch.
+            // not survive into the next session or app launch. A refusal ends
+            // the session just as surely as a teardown does.
             Self.clearNatPmpKeys(in: defaults)
         case .connected, .reconnecting:
             // Transient transitions surface via the actor's
