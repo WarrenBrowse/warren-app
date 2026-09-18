@@ -58,6 +58,12 @@ FILES_TO_ADD = {
   # The feature pills stack one per row, the same gap on all three clients.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
 
+  # Where a typed forum code is routed, and what the journal says about it.
+  "WarrenVPNTests/MullvadVPN/Forum/WarrenForumCodeFlowTests.swift" => "WarrenVPNTests",
+
+  # No Swift source writes an API host out by hand.
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenApiHostResolutionTests.swift" => "WarrenVPNTests",
+
   # Speaking a status line that appears without focus moving.
   "WarrenVPN/Accessibility/WarrenAccessibilityAnnouncement.swift" => "WarrenVPN",
 

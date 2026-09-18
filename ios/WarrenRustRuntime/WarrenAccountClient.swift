@@ -137,7 +137,7 @@ public enum WarrenForumAttachOutcome: Equatable {
 /// Where a session id typed by hand belongs, from the unsigned status reads
 /// (`warren_forum_code_probe`, the attach meta included). Single-sourced in
 /// the Rust crate (`code_placement_envelope`).
-public enum WarrenForumCodePlacement: Equatable {
+public enum WarrenForumCodePlacement: Equatable, Sendable {
     /// A pending sign-in session: the login consent applies.
     case login
     /// A pending attach-logs session and the topic its meta named (0 for a
