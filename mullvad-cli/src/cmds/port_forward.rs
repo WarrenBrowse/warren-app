@@ -82,7 +82,12 @@ pub struct StatusArgs {
 
     /// Give up waiting after this many seconds and exit 2 (only with
     /// --wait).
-    #[arg(long, requires = "wait", value_name = "SECS")]
+    #[arg(
+        long,
+        requires = "wait",
+        value_name = "SECS",
+        value_parser = clap::value_parser!(u64).range(1..=86_400),
+    )]
     timeout: Option<u64>,
 
     /// Run this command through the shell every time a rule's granted
@@ -91,8 +96,10 @@ pub struct StatusArgs {
     /// same port does not run it. `{{PORT}}` in the command is replaced
     /// by the new public port (empty on a loss), and the child is given
     /// WARREN_PF_PORT, WARREN_PF_INTERNAL_PORT, WARREN_PF_PROTOCOL and
-    /// WARREN_PF_STATE (mapped|lost). The command is killed after 30s;
-    /// a failure is reported on stderr and never stops the watch.
+    /// WARREN_PF_STATE (mapped|lost). The command and everything it
+    /// starts are killed after 30s; what it writes on stdout is
+    /// discarded so the JSON stream stays parseable, and a failure is
+    /// reported on stderr without ever stopping the watch.
     #[arg(long, requires = "watch", value_name = "COMMAND")]
     exec: Option<String>,
 }
@@ -265,10 +272,9 @@ impl PortForward {
             let item = match deadline {
                 Some(deadline) => match tokio::time::timeout_at(deadline, stream.next()).await {
                     Ok(item) => item,
-                    Err(_) => {
-                        print_status(&last, args.json)?;
-                        std::process::exit(WAIT_EXIT_TIMED_OUT);
-                    }
+                    // The wait ended on the verdict it was still
+                    // keeping, which is what the timeout code means.
+                    Err(_) => return finish_wait(&last, args.json, WaitVerdict::Keep),
                 },
                 None => stream.next().await,
             };
@@ -277,19 +283,8 @@ impl PortForward {
             };
             let mappings = status?.mappings;
             match wait_verdict(&mappings) {
-                WaitVerdict::Done => {
-                    print_status(&mappings, args.json)?;
-                    return Ok(());
-                }
-                WaitVerdict::Failed => {
-                    print_status(&mappings, args.json)?;
-                    std::process::exit(WAIT_EXIT_FAILED);
-                }
-                WaitVerdict::Nothing => {
-                    print_status(&mappings, args.json)?;
-                    std::process::exit(WAIT_EXIT_NOTHING_TO_WAIT_FOR);
-                }
                 WaitVerdict::Keep => last = mappings,
+                verdict => return finish_wait(&mappings, args.json, verdict),
             }
         }
     }
@@ -656,6 +651,32 @@ fn wait_verdict(mappings: &[Mapping]) -> WaitVerdict {
     WaitVerdict::Keep
 }
 
+/// The exit code a `--wait` leaves with, for the verdict it ended on.
+/// `Keep` is the timeout: the only way a wait ends while the verdict
+/// still says "read the next snapshot" is `--timeout` expiring on it.
+///
+/// Kept apart from the printing so the codes a script branches on are
+/// pinned by a test rather than by reading the process's exit status.
+fn wait_exit_code(verdict: WaitVerdict) -> i32 {
+    match verdict {
+        WaitVerdict::Done => 0,
+        WaitVerdict::Nothing => WAIT_EXIT_NOTHING_TO_WAIT_FOR,
+        WaitVerdict::Keep => WAIT_EXIT_TIMED_OUT,
+        WaitVerdict::Failed => WAIT_EXIT_FAILED,
+    }
+}
+
+/// Print the snapshot a `--wait` ended on and leave with its code. The
+/// zero case returns so `main` closes the process normally.
+fn finish_wait(mappings: &[Mapping], json: bool, verdict: WaitVerdict) -> Result<()> {
+    print_status(mappings, json)?;
+    match wait_exit_code(verdict) {
+        0 => Ok(()),
+        // `print_status` has already flushed the line above.
+        code => std::process::exit(code),
+    }
+}
+
 /// A rule whose granted public port is not what it was on the previous
 /// snapshot. `port` is `None` when the grant was lost.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -722,15 +743,18 @@ fn port_changes(previous: &[Mapping], next: &[Mapping]) -> Vec<PortChange> {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum HookOutcome {
     Succeeded,
+    /// Spawned and exited non-zero, or could not be spawned or waited
+    /// on at all. One variant because the caller treats them the same:
+    /// report it and keep watching.
     Failed,
-    SpawnFailed,
     TimedOut,
 }
 
-/// Secrets a hook must never inherit. A child gets this process's
-/// environment, so an operator who exported the recovery phrase would
-/// hand it to every hook command and to everything that command spawns,
-/// where it is readable from the process table.
+/// Secrets a hook must never inherit, a denylist to extend the day the
+/// CLI reads another one from its environment. A child gets this
+/// process's environment, so an operator who exported the recovery
+/// phrase would hand it to every hook command and to everything that
+/// command spawns, where it is readable from the process table.
 const SECRET_ENV: [&str; 2] = ["WARREN_MNEMONIC", "WARREN_MNEMONIC_FILE"];
 
 /// Build the child for one hook invocation: the operator's line through
@@ -743,18 +767,28 @@ fn hook_command(command: &str, change: &PortChange) -> tokio::process::Command {
     // platform's own shell rather than being parsed here; without this
     // the feature is dead on Windows, which has no `sh`.
     #[cfg(unix)]
-    let mut child = {
-        let mut child = tokio::process::Command::new("sh");
-        child.arg("-c").arg(&resolved);
-        child
+    let mut command = {
+        let mut command = tokio::process::Command::new("sh");
+        command.arg("-c").arg(&resolved);
+        // Own process group, so the timeout can reach everything the
+        // hook started. The trade: the hook leaves this process's group,
+        // so a Ctrl-C in the terminal no longer reaches it and it runs
+        // until it returns or its budget ends it.
+        command.process_group(0);
+        command
     };
     #[cfg(not(unix))]
-    let mut child = {
-        let mut child = tokio::process::Command::new("cmd");
-        child.arg("/C").arg(&resolved);
-        child
+    let mut command = {
+        let mut command = tokio::process::Command::new("cmd");
+        command.arg("/C").arg(&resolved);
+        command
     };
-    child
+    command
+        // A hook that prints would otherwise interleave its text with
+        // the NDJSON of `--watch --json`, which is the one stream this
+        // whole subcommand exists to keep parseable. Its stderr is
+        // inherited, so the operator still sees what it complains about.
+        .stdout(std::process::Stdio::null())
         .env("WARREN_PF_PORT", &port)
         .env("WARREN_PF_INTERNAL_PORT", change.internal_port.to_string())
         .env("WARREN_PF_PROTOCOL", proto_json_label(change.protocol))
@@ -767,9 +801,63 @@ fn hook_command(command: &str, change: &PortChange) -> tokio::process::Command {
             },
         );
     for name in SECRET_ENV {
-        child.env_remove(name);
+        command.env_remove(name);
     }
-    child
+    command
+}
+
+/// How long the hook's process group is given between its SIGTERM and
+/// its SIGKILL: enough for a shell trap to undo what the hook did,
+/// short enough that the watch is not held up by a hook that ignores the
+/// polite signal.
+#[cfg(unix)]
+const KILL_GRACE: Duration = Duration::from_millis(500);
+
+/// Kill a hook that outlived its budget, and everything it started.
+///
+/// Unix signals the process GROUP the child leads: `Child::kill` reaches
+/// the shell alone, and an operator hook is usually a pipeline or a
+/// `curl`, so the work that actually holds the port would run on past
+/// the budget. SIGTERM first so a hook with a trap can undo what it did,
+/// then SIGKILL for whatever ignored it.
+#[cfg(unix)]
+async fn kill_hook(child: &mut tokio::process::Child) {
+    use nix::{
+        sys::signal::{Signal, killpg},
+        unistd::Pid,
+    };
+
+    let group = child
+        .id()
+        .and_then(|pid| i32::try_from(pid).ok())
+        .map(Pid::from_raw);
+    let Some(group) = group else {
+        // Already reaped: no group id left to trust.
+        let _ = child.kill().await;
+        return;
+    };
+    let _ = killpg(group, Signal::SIGTERM);
+    // A wait that errored reaped nothing, so it must still take the
+    // escalation below rather than read as a clean exit.
+    let reaped = matches!(
+        tokio::time::timeout(KILL_GRACE, child.wait()).await,
+        Ok(Ok(_))
+    );
+    // Unconditional, even once the leader is gone: a descendant that
+    // ignores SIGTERM keeps the group alive, and this is the only thing
+    // that ends it. It cannot reach a stranger's group either, the
+    // kernel holds a pid allocated while it is still the pgid of a group
+    // that has members.
+    let _ = killpg(group, Signal::SIGKILL);
+    if !reaped {
+        let _ = child.kill().await;
+    }
+}
+
+/// Windows has no process group to signal here, so the child alone goes.
+#[cfg(not(unix))]
+async fn kill_hook(child: &mut tokio::process::Child) {
+    let _ = child.kill().await;
 }
 
 /// Run one hook invocation. Never returns an error: a broken hook must
@@ -780,7 +868,7 @@ async fn run_hook(command: &str, change: &PortChange, timeout: Duration) -> Hook
         Ok(child) => child,
         Err(err) => {
             eprintln!("port-forward hook failed to spawn: {err}");
-            return HookOutcome::SpawnFailed;
+            return HookOutcome::Failed;
         }
     };
     match tokio::time::timeout(timeout, child.wait()).await {
@@ -791,13 +879,10 @@ async fn run_hook(command: &str, change: &PortChange, timeout: Duration) -> Hook
         }
         Ok(Err(err)) => {
             eprintln!("port-forward hook could not be waited on: {err}");
-            HookOutcome::SpawnFailed
+            HookOutcome::Failed
         }
         Err(_) => {
-            // The shell alone, on purpose: it stays in this process's
-            // group, so Ctrl-C in the terminal still reaches the whole
-            // watch, hook included.
-            let _ = child.kill().await;
+            kill_hook(&mut child).await;
             eprintln!("port-forward hook exceeded {timeout:?} and was killed");
             HookOutcome::TimedOut
         }
@@ -980,6 +1065,15 @@ mod tests {
     }
 
     #[test]
+    fn get_json_pins_the_empty_rule_list() {
+        // The human "Rules: none" notice must not leak into the JSON.
+        assert_eq!(
+            settings_json(&NatPmpSettings::default()).expect("settings must serialize"),
+            "{\"enabled\":false,\"lifetime_secs\":0,\"rules\":[]}"
+        );
+    }
+
+    #[test]
     fn status_json_pins_the_empty_mapping_list() {
         // The human notice must not leak into the JSON: a consumer reads
         // an empty array, never a sentence.
@@ -1059,6 +1153,17 @@ mod tests {
     #[test]
     fn wait_has_nothing_to_wait_for_on_an_empty_snapshot() {
         assert_eq!(wait_verdict(&[]), WaitVerdict::Nothing);
+    }
+
+    #[test]
+    fn each_wait_verdict_has_its_documented_exit_code() {
+        // The codes are the machine contract of `--wait`, stated in the
+        // `--wait` help: swapping two of them silently changes what
+        // every wrapper script concludes.
+        assert_eq!(wait_exit_code(WaitVerdict::Done), 0);
+        assert_eq!(wait_exit_code(WaitVerdict::Nothing), 1);
+        assert_eq!(wait_exit_code(WaitVerdict::Keep), 2);
+        assert_eq!(wait_exit_code(WaitVerdict::Failed), 3);
     }
 
     #[test]
@@ -1256,6 +1361,39 @@ mod tests {
             "the timeout must cut the wait short, took {:?}",
             started.elapsed()
         );
+    }
+
+    /// A hook is an operator's shell line, so what it starts is what
+    /// holds the port open: a `curl` behind a pipe, a client restart.
+    /// Signalling the shell alone leaves that running past the budget.
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn what_a_hook_starts_is_killed_with_it() {
+        let marker =
+            std::env::temp_dir().join(format!("warren-pf-hook-orphan-{}", std::process::id()));
+        let _ = std::fs::remove_file(&marker);
+        // The descendant writes late enough that the kill has room to
+        // finish first on a loaded machine, and the wait below outlasts
+        // the write.
+        let command = format!(
+            "sh -c 'sleep 3; echo survived > {}' & sleep 30",
+            marker.display()
+        );
+
+        let outcome = run_hook(
+            &command,
+            &change_of(6881, Proto::Both, Some(58291)),
+            Duration::from_millis(200),
+        )
+        .await;
+
+        assert_eq!(outcome, HookOutcome::TimedOut);
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        assert!(
+            !marker.exists(),
+            "what the hook started must die with it, not outlive the budget"
+        );
+        let _ = std::fs::remove_file(&marker);
     }
 
     #[tokio::test]
