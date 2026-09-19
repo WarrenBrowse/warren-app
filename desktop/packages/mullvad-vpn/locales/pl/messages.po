@@ -2379,6 +2379,10 @@ msgid "Choose another exit"
 msgstr "Wybierz inny węzeł wyjściowy"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Kopiuj numer portu"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "wyłączone"
 

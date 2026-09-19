@@ -2367,6 +2367,10 @@ msgid "Choose another exit"
 msgstr "Scegli un altro server di uscita"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Copia il numero di porta"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "disattivato"
 

@@ -29,6 +29,9 @@ Line wrap the file at 100 chars.                                              Th
   per line, `status --wait` blocks until the public port is granted and reports the outcome
   through its exit code, and `status --watch --exec` runs a command of your choice every time the
   granted public port changes.
+- Copy the granted public port from the port forwarding screen. A copy button sits next to each
+  open port and puts the port number alone on the clipboard, ready to paste into a torrent
+  client's incoming port field.
 
 ### Fixed
 - Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start

@@ -2367,6 +2367,10 @@ msgid "Choose another exit"
 msgstr "Valitse toinen lähtöpalvelin"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Kopioi porttinumero"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "poistettu käytöstä"
 

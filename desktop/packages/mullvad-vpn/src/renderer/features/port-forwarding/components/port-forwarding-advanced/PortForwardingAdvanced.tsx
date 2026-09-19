@@ -10,18 +10,27 @@ import {
 } from '../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../shared/gettext';
 import { RoutePath } from '../../../../../shared/routes';
+import { useScheduler } from '../../../../../shared/scheduler';
 import { SettingsListItem } from '../../../../components/settings-list-item';
-import { Text } from '../../../../lib/components';
+import { copyToClipboard } from '../../../../lib/clipboard';
+import { Icon, IconButton, Text } from '../../../../lib/components';
 import { FlexColumn } from '../../../../lib/components/flex-column';
 import { spacings } from '../../../../lib/foundations';
 import { useHistory } from '../../../../lib/history';
+import { useBoolean } from '../../../../lib/utility-hooks';
 import {
   formatCountdown,
   NATPMP_MAX_RULES,
   useNatPmpPortBlock,
   usePortForwarding,
 } from '../../hooks';
-import { appliedPort, mappingForRule, protocolsOverlap, rulePort } from '../../mapping';
+import {
+  appliedPort,
+  clipboardTextForMapping,
+  mappingForRule,
+  protocolsOverlap,
+  rulePort,
+} from '../../mapping';
 
 const StyledRow = styled.div({
   display: 'flex',
@@ -108,6 +117,15 @@ const StyledAddButton = styled.button<{ $disabled: boolean }>(({ $disabled }) =>
 const StyledStatus = styled.div({
   minWidth: '11ch',
   textAlign: 'right',
+});
+
+// The granted port and its copy button read as one unit, pinned to the right
+// edge of the status column like the plain status label it replaces.
+const StyledMappedStatus = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'flex-end',
+  gap: '6px',
 });
 
 // Wraps the conflict explanation + actions with breathing room so they do
@@ -535,11 +553,14 @@ function RuleStatus({ mapping }: { mapping: NatPmpMapping | undefined }) {
   switch (status.state) {
     case 'mapped':
       return (
-        <Text variant="labelTiny" color="green">
-          {sprintf(messages.pgettext('port-forwarding-view', 'open: %(port)d'), {
-            port: status.externalPort,
-          })}
-        </Text>
+        <StyledMappedStatus>
+          <Text variant="labelTiny" color="green">
+            {sprintf(messages.pgettext('port-forwarding-view', 'open: %(port)d'), {
+              port: status.externalPort,
+            })}
+          </Text>
+          <CopyPortButton mapping={mapping} />
+        </StyledMappedStatus>
       );
     case 'rate-limited':
       return (
@@ -567,6 +588,47 @@ function RuleStatus({ mapping }: { mapping: NatPmpMapping | undefined }) {
         </Text>
       );
   }
+}
+
+const COPIED_ICON_DURATION = 2000;
+
+/** Copies the granted public port to the clipboard, and confirms it for two
+ * seconds. The clipboard carries the decimal port alone (see
+ * {@link clipboardTextForMapping}), because the next thing that happens to it
+ * is a paste into a torrent client's incoming-port field. */
+function CopyPortButton({ mapping }: { mapping: NatPmpMapping }) {
+  const [justCopied, setJustCopied, resetJustCopied] = useBoolean(false);
+  const copiedScheduler = useScheduler();
+  const text = clipboardTextForMapping(mapping);
+
+  const handleCopyClick = React.useCallback(async () => {
+    if (text === undefined) {
+      return;
+    }
+    if (await copyToClipboard(text)) {
+      copiedScheduler.schedule(resetJustCopied, COPIED_ICON_DURATION);
+      setJustCopied();
+    }
+  }, [copiedScheduler, resetJustCopied, setJustCopied, text]);
+
+  if (text === undefined) {
+    return null;
+  }
+
+  return justCopied ? (
+    <Icon icon="checkmark" size="tiny" color="green" />
+  ) : (
+    <IconButton
+      size="tiny"
+      onClick={handleCopyClick}
+      aria-label={
+        // TRANSLATORS: Provided to accessibility tools such as screenreaders to
+        // TRANSLATORS: describe the button that copies the granted public port.
+        messages.pgettext('port-forwarding-view', 'Copy port number')
+      }>
+      <IconButton.Icon icon="copy" />
+    </IconButton>
+  );
 }
 
 /** Short, inline failure label keyed on the structured reason. */

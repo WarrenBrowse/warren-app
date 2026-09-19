@@ -2361,6 +2361,10 @@ msgid "Choose another exit"
 msgstr "အခြား ထွက်ပေါက်ဆာဗာ ရွေးရန်"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "ပို့တ်နံပါတ် ကူးယူရန်"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "ပိတ်ထားသည်"
 

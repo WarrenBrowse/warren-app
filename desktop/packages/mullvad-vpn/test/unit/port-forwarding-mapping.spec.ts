@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   appliedPort,
+  clipboardTextForMapping,
   mappingForRule,
   protocolLabel,
   protocolsOverlap,
@@ -162,5 +163,35 @@ describe('protocolLabel', () => {
     expect(protocolLabel(NatPmpProto.both)).toBe('TCP+UDP');
     expect(protocolLabel(NatPmpProto.udp)).toBe('UDP');
     expect(protocolLabel(NatPmpProto.tcp)).toBe('TCP');
+  });
+});
+
+describe('clipboardTextForMapping', () => {
+  // What lands in the clipboard is pasted straight into a torrent client's
+  // "incoming port" field, so it carries the decimal port and nothing else:
+  // no protocol, no label, no whitespace.
+  it('copies the granted public port on its own', () => {
+    expect(clipboardTextForMapping(mappedMapping(58291, NatPmpProto.both, 58291))).toBe('58291');
+  });
+
+  it('copies the granted public port, not the internal one', () => {
+    expect(clipboardTextForMapping(mappedMapping(50000, NatPmpProto.udp, 51234))).toBe('51234');
+  });
+
+  it('has nothing to copy while the rule holds no grant', () => {
+    const requesting: NatPmpMapping = {
+      internalPort: 50000,
+      protocol: NatPmpProto.udp,
+      status: { state: 'requesting' },
+    };
+    const failed: NatPmpMapping = {
+      internalPort: 50000,
+      protocol: NatPmpProto.udp,
+      status: { state: 'failed', errorMessage: 'taken', errorReason: 'suggested-port-in-use' },
+    };
+
+    expect(clipboardTextForMapping(requesting)).toBeUndefined();
+    expect(clipboardTextForMapping(failed)).toBeUndefined();
+    expect(clipboardTextForMapping(undefined)).toBeUndefined();
   });
 });

@@ -2503,6 +2503,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Timpul dvs. Warren se reînnoiește în zilele următoare. Puteți dezactiva oricând reînnoirea automată în setările contului."
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Copiază numărul portului"
+
+msgctxt "port-forwarding-view"
 msgid "Mapping failed: %(error)s"
 msgstr "Eroare la generarea hărții: %(error)s"
 

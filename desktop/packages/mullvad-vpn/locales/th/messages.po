@@ -2361,6 +2361,10 @@ msgid "Choose another exit"
 msgstr "เลือกเซิร์ฟเวอร์ทางออกอื่น"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "คัดลอกหมายเลขพอร์ต"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "ปิดใช้งาน"
 

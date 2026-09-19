@@ -2382,6 +2382,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Votre temps Warren se renouvelle dans les prochains jours. Vous pouvez désactiver le renouvellement automatique à tout moment dans les paramètres du compte."
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Copier le numéro de port"
+
+msgctxt "port-forwarding-view"
 msgid "Mapping failed: %(error)s"
 msgstr "Échec du mappage : %(error)s"
 

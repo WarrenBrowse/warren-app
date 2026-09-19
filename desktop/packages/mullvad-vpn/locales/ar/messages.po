@@ -2391,6 +2391,10 @@ msgid "Choose another exit"
 msgstr "اختيار خادم خروج آخر"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "نسخ رقم المنفذ"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "معطَّل"
 

@@ -2379,6 +2379,10 @@ msgid "Choose another exit"
 msgstr "Вибрати інший вихідний сервер"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Копіювати номер порту"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "вимкнено"
 

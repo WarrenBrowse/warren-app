@@ -2361,6 +2361,10 @@ msgid "Choose another exit"
 msgstr "다른 출구 서버 선택"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "포트 번호 복사"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "비활성화됨"
 

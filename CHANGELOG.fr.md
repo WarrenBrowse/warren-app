@@ -20,6 +20,9 @@ par l'application, gardez-le tel quel.
   par ligne, `status --wait` attend que le port public soit accordé et indique le résultat par son
   code de sortie, et `status --watch --exec` lance la commande de votre choix à chaque changement
   du port public accordé.
+- Copier le port public accordé depuis l'écran de port forwarding. Un bouton de copie est placé à
+  côté de chaque port ouvert et met le seul numéro de port dans le presse-papiers, prêt à coller
+  dans le champ du port d'écoute d'un client torrent.
 
 ### Corrigé
 - Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le

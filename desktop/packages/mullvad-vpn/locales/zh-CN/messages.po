@@ -2361,6 +2361,10 @@ msgid "Choose another exit"
 msgstr "选择其他出口服务器"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "复制端口号"
+
+msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
 msgstr "该公共端口在此出口服务器上已被占用。您可以切换出口服务器以保留此端口，或让出口服务器分配一个空闲的公共端口，也可以在上方输入其他端口。"
 

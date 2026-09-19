@@ -19,6 +19,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   pe linie, `status --wait` așteaptă până când portul public este acordat și raportează rezultatul
   prin codul său de ieșire, iar `status --watch --exec` rulează comanda aleasă de tine la fiecare
   schimbare a portului public acordat.
+- Copiază portul public acordat din ecranul de port forwarding. Un buton de copiere stă lângă
+  fiecare port deschis și pune doar numărul portului în clipboard, gata de lipit în câmpul
+  portului de intrare al unui client torrent.
 
 ### Reparat
 - Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă

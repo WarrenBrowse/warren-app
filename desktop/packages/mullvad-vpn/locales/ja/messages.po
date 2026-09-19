@@ -2361,6 +2361,10 @@ msgid "Choose another exit"
 msgstr "別の出口サーバーを選ぶ"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "ポート番号をコピー"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "無効"
 

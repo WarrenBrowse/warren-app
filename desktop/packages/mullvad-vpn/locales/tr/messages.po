@@ -2367,6 +2367,10 @@ msgid "Choose another exit"
 msgstr "Başka bir çıkış sunucusu seç"
 
 msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr "Bağlantı noktası numarasını kopyala"
+
+msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "devre dışı"
 

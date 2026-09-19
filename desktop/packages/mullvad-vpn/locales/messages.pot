@@ -2560,6 +2560,12 @@ msgctxt "port-forwarding-view"
 msgid "Choose another exit"
 msgstr ""
 
+#. Provided to accessibility tools such as screenreaders to
+#. describe the button that copies the granted public port.
+msgctxt "port-forwarding-view"
+msgid "Copy port number"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr ""

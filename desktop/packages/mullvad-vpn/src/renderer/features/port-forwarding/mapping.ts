@@ -59,3 +59,12 @@ export function protocolLabel(protocol: NatPmpProto): string {
 export function protocolsOverlap(a: NatPmpProto, b: NatPmpProto): boolean {
   return a === b || a === NatPmpProto.both || b === NatPmpProto.both;
 }
+
+/** What the copy button puts in the clipboard for a rule: the decimal public
+ * port, alone, so it can be pasted straight into a torrent client's incoming
+ * port field. `undefined` while the rule holds no grant, which is what hides
+ * the button: a port carried on any other state is stale, and pasting it would
+ * point an application at a port the exit no longer forwards. */
+export function clipboardTextForMapping(mapping: NatPmpMapping | undefined): string | undefined {
+  return mapping?.status.state === 'mapped' ? String(mapping.status.externalPort) : undefined;
+}
