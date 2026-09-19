@@ -516,6 +516,8 @@ export default class AppRenderer {
     IpcRendererEventChannel.guiSettings.setEnableSystemNotifications(value);
   public setForumNotifications = (value: boolean) =>
     IpcRendererEventChannel.guiSettings.setForumNotifications(value);
+  public setPortForwardingNotifications = (value: boolean) =>
+    IpcRendererEventChannel.guiSettings.setPortForwardingNotifications(value);
   public setStartMinimized = (value: boolean) =>
     IpcRendererEventChannel.guiSettings.setStartMinimized(value);
   public setMonochromaticIcon = (value: boolean) =>

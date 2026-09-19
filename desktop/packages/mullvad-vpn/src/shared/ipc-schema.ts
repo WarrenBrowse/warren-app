@@ -392,6 +392,9 @@ export const ipcSchema = {
     // so a user can keep tunnel notifications and drop forum ones, or the
     // reverse.
     setForumNotifications: send<boolean>(),
+    // Toast when a forwarded public port opens, moves or closes. Separate
+    // from the global toggle so a user can keep this one and drop the rest.
+    setPortForwardingNotifications: send<boolean>(),
     setAutoConnect: send<boolean>(),
     setStartMinimized: send<boolean>(),
     setMonochromaticIcon: send<boolean>(),

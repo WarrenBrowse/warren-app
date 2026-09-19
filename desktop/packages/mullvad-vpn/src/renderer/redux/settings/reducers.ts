@@ -131,6 +131,7 @@ const initialState: ISettingsReduxState = {
     preferredLocale: 'system',
     enableSystemNotifications: true,
     forumNotifications: true,
+    portForwardingNotifications: true,
     autoConnect: true,
     monochromaticIcon: false,
     startMinimized: false,

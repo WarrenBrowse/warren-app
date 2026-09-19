@@ -120,6 +120,7 @@ import NotificationController, {
   NotificationSender,
 } from './notification-controller';
 import { isMacOs13OrNewer } from './platform-version';
+import { PortForwardingWatcher } from './port-forwarding-watcher';
 import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
 import PurchaseFlow from './purchase-flow';
@@ -181,6 +182,9 @@ class ApplicationMain
   // Subscription to the daemon NatPmpStatusUpdates push stream.
   // Same lifecycle as warrenStatusListener.
   private natPmpStatusListener?: SubscriptionListener<NatPmpStatus>;
+  // Baseline of that stream, reset with the subscription so the replay the
+  // daemon sends on reconnect is never announced as a change.
+  private portForwardingWatcher = new PortForwardingWatcher();
   private reconnectBackoff = new ReconnectionBackoff();
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
@@ -1103,6 +1107,7 @@ class ApplicationMain
     this.daemonAppUpgradeEventListener = undefined;
     this.warrenStatusListener = undefined;
     this.natPmpStatusListener = undefined;
+    this.portForwardingWatcher.reset();
 
     this.notificationController.closeNotificationsInCategory(
       SystemNotificationCategory.tunnelState,
@@ -1166,6 +1171,7 @@ class ApplicationMain
 
     if (this.natPmpStatusListener) {
       this.daemonRpc.unsubscribeNatPmpStatusListener(this.natPmpStatusListener);
+      this.portForwardingWatcher.reset();
     }
   }
 
@@ -1226,6 +1232,7 @@ class ApplicationMain
     const listener = new SubscriptionListener(
       (snapshot: NatPmpStatus) => {
         IpcMainEventChannel.natPmpStatus.notify?.(snapshot);
+        this.handleNatPmpStatus(snapshot);
       },
       (error: Error) => {
         log.warn(`Cannot deserialize the NAT-PMP status event: ${error.message}`);
@@ -1233,6 +1240,24 @@ class ApplicationMain
     );
     this.daemonRpc.subscribeNatPmpStatusListener(listener);
     return listener;
+  }
+
+  // Announces the public ports that changed since the previous snapshot. The
+  // first snapshot of a subscription is a baseline and says nothing: the daemon
+  // replays its live mappings as soon as the GUI reconnects, and announcing
+  // those would name the same port again on every restart.
+  private handleNatPmpStatus(snapshot: NatPmpStatus) {
+    const changes = this.portForwardingWatcher.observe(snapshot);
+    if (!this.settings.gui.portForwardingNotifications) {
+      return;
+    }
+    for (const change of changes) {
+      this.notificationController.notifyPortForwardingChange(
+        change,
+        this.userInterface?.isWindowVisible() ?? false,
+        this.settings.gui.enableSystemNotifications,
+      );
+    }
   }
 
   private setSettings(newSettings: ISettings) {

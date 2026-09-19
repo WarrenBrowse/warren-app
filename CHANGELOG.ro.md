@@ -22,6 +22,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - Copiază portul public acordat din ecranul de port forwarding. Un buton de copiere stă lângă
   fiecare port deschis și pune doar numărul portului în clipboard, gata de lipit în câmpul
   portului de intrare al unui client torrent.
+- Te anunță când un port public acordat se deschide, se schimbă sau se închide, printr-o
+  notificare de sistem care numește noul port și deschide ecranul de port forwarding. O reînnoire
+  care păstrează același port nu spune nimic. Notificarea se poate opri din ecranul de port
+  forwarding.
 
 ### Reparat
 - Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă

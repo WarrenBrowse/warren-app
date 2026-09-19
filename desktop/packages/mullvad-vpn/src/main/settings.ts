@@ -141,6 +141,10 @@ export default class Settings implements Readonly<ISettings> {
       this.delegate.handleForumNotificationsChange(flag);
     });
 
+    IpcMainEventChannel.guiSettings.handleSetPortForwardingNotifications((flag: boolean) => {
+      this.guiSettings.portForwardingNotifications = flag;
+    });
+
     IpcMainEventChannel.guiSettings.handleSetAutoConnect((autoConnect: boolean) => {
       this.guiSettings.autoConnect = autoConnect;
     });

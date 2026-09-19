@@ -2437,10 +2437,28 @@ msgctxt "notifications"
 msgid "Open"
 msgstr ""
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr ""
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
+msgstr ""
+
+#. Notification shown when a forwarded public port is not
+#. forwarded any more. Available placeholder:
+#. %(port)d - the public port that was forwarded until now
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr ""
+
+#. Notification shown when the exit grants a public port.
+#. Available placeholder:
+#. %(port)d - the public port that is now forwarded
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
 msgstr ""
 
 msgctxt "notifications"
@@ -2548,6 +2566,11 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr ""
 
+#. Description of the port-forwarding notification setting.
+msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "applying…"
 msgstr ""
@@ -2596,6 +2619,12 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "not allowed"
+msgstr ""
+
+#. Label of the setting that turns the notification
+#. about a changed public port on or off.
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
 msgstr ""
 
 msgctxt "port-forwarding-view"

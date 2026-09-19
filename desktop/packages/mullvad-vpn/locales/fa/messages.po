@@ -2223,11 +2223,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "هیچ سروری با تنظیمات شما مطابقت ندارد؛ لطفاً سرور یا سایر تنظیمات را تغییر دهید."
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "باز کردن هدایت درگاه"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "لطفاً برای به‌روزرسانی اکنون اینجا کلیک کنید"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "هدایت درگاه: درگاه عمومی %(port)d دیگر باز نیست"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "هدایت درگاه: درگاه عمومی %(port)d باز است"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2359,6 +2371,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "زمان Warren شما در روزهای آینده تمدید می‌شود. هر زمان بخواهید می‌توانید تمدید خودکار را در تنظیمات حساب خاموش کنید."
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "یک اعلان سیستمی شماره درگاه جدید را نشان می‌دهد."
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "اختصاص یک درگاه آزاد"
 
@@ -2373,6 +2389,10 @@ msgstr "کپی شماره درگاه"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "غیرفعال"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "وقتی درگاه عمومی تغییر کرد به من اطلاع بده"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

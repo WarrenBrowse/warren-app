@@ -32,6 +32,9 @@ Line wrap the file at 100 chars.                                              Th
 - Copy the granted public port from the port forwarding screen. A copy button sits next to each
   open port and puts the port number alone on the clipboard, ready to paste into a torrent
   client's incoming port field.
+- Tell you when a forwarded public port opens, moves or closes, with a system notification that
+  names the new port and opens the port forwarding screen. A renewal that keeps the same port
+  says nothing. The notification can be turned off from the port forwarding screen.
 
 ### Fixed
 - Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start

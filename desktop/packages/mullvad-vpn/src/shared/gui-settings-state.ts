@@ -20,6 +20,13 @@ export interface IGuiSettingsState {
   // validating.
   forumNotifications?: boolean;
 
+  // Enable or disable the system notification raised when a forwarded public
+  // port opens, moves or closes. On by default: an application listening on a
+  // forwarded port keeps working only while its user knows the port number,
+  // and the exit may move a grant at any renewal. Optional so settings files
+  // written before the setting existed keep validating.
+  portForwardingNotifications?: boolean;
+
   // Tells the app to activate auto-connect feature in the mullvad-daemon, but only if the app is
   // set to auto-start with the system.
   autoConnect: boolean;

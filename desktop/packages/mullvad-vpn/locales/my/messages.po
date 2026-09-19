@@ -2217,11 +2217,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "သင့်ဆက်တင်နှင့် ကိုက်ညီသော ဆာဗာများ မရှိပါ၊ ဆာဗာ သို့မဟုတ် အခြားဆက်တင်တို့ကို ပြောင်းလဲရန် ကြိုးစားကြည့်ပါ။"
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်းကို ဖွင့်ပါ"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "ယခု အပ်ဒိတ်လုပ်ရန် ဤနေရာကို နှိပ်ပါ"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း: အများသုံး ပို့တ် %(port)d ဖွင့်မထားတော့ပါ"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း: အများသုံး ပို့တ် %(port)d ဖွင့်ထားသည်"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2353,6 +2365,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "သင့် Warren အသုံးပြုချိန်သည် လာမည့်ရက်အနည်းငယ်အတွင်း သက်တမ်းတိုးပါမည်။ အလိုအလျောက် သက်တမ်းတိုးခြင်းကို အကောင့် ဆက်တင်တွင် အချိန်မရွေး ပိတ်နိုင်ပါသည်။"
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "စနစ် အသိပေးချက်က ပို့တ်နံပါတ်အသစ်ကို ပြပါမည်။"
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "အားလပ်နေသော ပို့တ်တစ်ခု သတ်မှတ်ရန်"
 
@@ -2367,6 +2383,10 @@ msgstr "ပို့တ်နံပါတ် ကူးယူရန်"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "ပိတ်ထားသည်"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "အများသုံး ပို့တ် ပြောင်းလဲသည့်အခါ အကြောင်းကြားပါ"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

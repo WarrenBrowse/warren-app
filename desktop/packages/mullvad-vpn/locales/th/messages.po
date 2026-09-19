@@ -2217,11 +2217,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "ไม่มีเซิร์ฟเวอร์ที่ตรงกับการตั้งค่าของคุณ โปรดลองเปลี่ยนเซิร์ฟเวอร์ หรือการตั้งค่าอื่นๆ"
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "เปิดการส่งต่อพอร์ต"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "โปรดคลิกที่นี่เพื่ออัปเดตทันที"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "การส่งต่อพอร์ต: พอร์ตสาธารณะ %(port)d ไม่เปิดอีกต่อไป"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "การส่งต่อพอร์ต: พอร์ตสาธารณะ %(port)d เปิดอยู่"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2353,6 +2365,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "เวลาใช้งาน Warren ของคุณจะต่ออายุภายในไม่กี่วันข้างหน้า คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อในการตั้งค่าบัญชี"
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "การแจ้งเตือนของระบบจะแสดงหมายเลขพอร์ตใหม่"
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "กำหนดพอร์ตที่ว่าง"
 
@@ -2367,6 +2383,10 @@ msgstr "คัดลอกหมายเลขพอร์ต"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "ปิดใช้งาน"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "แจ้งเตือนเมื่อพอร์ตสาธารณะเปลี่ยน"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

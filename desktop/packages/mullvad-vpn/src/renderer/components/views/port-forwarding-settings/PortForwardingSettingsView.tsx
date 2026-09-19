@@ -4,6 +4,7 @@ import { urls } from '../../../../shared/constants';
 import { messages } from '../../../../shared/gettext';
 import {
   PortForwardingAdvanced,
+  PortForwardingNotificationsSetting,
   PortForwardingSetting,
   PortForwardingStatus,
 } from '../../../features/port-forwarding/components';
@@ -76,6 +77,7 @@ export function PortForwardingSettingsView() {
                     </Text>
                   </FlexColumn>
                   <PortForwardingSetting />
+                  {settings.enabled ? <PortForwardingNotificationsSetting /> : null}
                   {settings.enabled ? <PortForwardingAdvanced /> : null}
                   <PortForwardingStatus />
                 </FlexColumn>

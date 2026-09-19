@@ -11,6 +11,7 @@ import {
   DaemonDisconnectedNotificationProvider,
   DisconnectedNotificationProvider,
   ErrorNotificationProvider,
+  PortForwardingNotificationProvider,
   ReconnectingNotificationProvider,
   SystemNotification,
   SystemNotificationAction,
@@ -18,6 +19,7 @@ import {
   SystemNotificationProvider,
   SystemNotificationSeverityType,
 } from '../shared/notifications';
+import { PortChange } from '../shared/port-forwarding-changes';
 import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
 
@@ -152,6 +154,21 @@ export default class NotificationController {
     }
 
     return false;
+  }
+
+  // A forwarded public port opened, moved or closed. Category `portForwarding`
+  // carries the replacement: `notifyImpl` closes the previous toast of the same
+  // category, so the newest port is the only one on screen.
+  public notifyPortForwardingChange(
+    change: PortChange,
+    isWindowVisible: boolean,
+    areSystemNotificationsEnabled: boolean,
+  ): boolean {
+    return this.notify(
+      new PortForwardingNotificationProvider(change).getSystemNotification(),
+      isWindowVisible,
+      areSystemNotificationsEnabled,
+    );
   }
 
   public notifyDaemonDisconnected(windowVisible: boolean, infoNotificationsEnabled: boolean) {

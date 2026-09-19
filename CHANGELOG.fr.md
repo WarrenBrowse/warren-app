@@ -23,6 +23,9 @@ par l'application, gardez-le tel quel.
 - Copier le port public accordé depuis l'écran de port forwarding. Un bouton de copie est placé à
   côté de chaque port ouvert et met le seul numéro de port dans le presse-papiers, prêt à coller
   dans le champ du port d'écoute d'un client torrent.
+- Vous prévenir quand un port public accordé s'ouvre, change ou se ferme, par une notification
+  système qui nomme le nouveau port et ouvre l'écran de port forwarding. Un renouvellement qui
+  garde le même port ne dit rien. La notification se désactive depuis l'écran de port forwarding.
 
 ### Corrigé
 - Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le

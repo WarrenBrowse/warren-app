@@ -9,6 +9,7 @@ export * from './error';
 export * from './forum-activity';
 export * from './inconsistent-version';
 export * from './notification';
+export * from './port-forwarding';
 export * from './reconnecting';
 export * from './renewal';
 export * from './unsupported-version';

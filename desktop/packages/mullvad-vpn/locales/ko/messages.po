@@ -2217,11 +2217,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "설정과 일치하는 서버가 없습니다. 서버 또는 기타 설정을 변경해 보세요."
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "포트 포워딩 열기"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "여기를 클릭하여 지금 업데이트하세요"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "포트 포워딩: 공용 포트 %(port)d이(가) 더 이상 열려 있지 않습니다"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "포트 포워딩: 공용 포트 %(port)d이(가) 열렸습니다"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2353,6 +2365,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Warren 이용 시간이 며칠 내에 갱신됩니다. 자동 갱신은 계정 설정에서 언제든지 끌 수 있습니다."
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "시스템 알림이 새 포트 번호를 보여줍니다."
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "사용 가능한 포트 할당"
 
@@ -2367,6 +2383,10 @@ msgstr "포트 번호 복사"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "비활성화됨"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "공용 포트가 바뀌면 알림 받기"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

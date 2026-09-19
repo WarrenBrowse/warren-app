@@ -2217,11 +2217,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "沒有與您的設定相符的伺服器，請嘗試變更伺服器或其他設定。"
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "開啟連接埠轉發"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "請按一下此處立即更新"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "連接埠轉發：公開連接埠 %(port)d 已不再開放"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "連接埠轉發：公開連接埠 %(port)d 已開放"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2353,6 +2365,10 @@ msgid "Your network looks unstable: the tunnel reconnected too many times in a r
 msgstr "您的網路似乎不穩定：通道連續重新連線的次數過多。請在連線穩定後重新連線。"
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "系統通知會顯示新的連接埠號碼。"
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "指派一個閒置連接埠"
 
@@ -2363,6 +2379,10 @@ msgstr "選擇其他出口伺服器"
 msgctxt "port-forwarding-view"
 msgid "Copy port number"
 msgstr "複製連接埠號碼"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "公開連接埠變更時通知我"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

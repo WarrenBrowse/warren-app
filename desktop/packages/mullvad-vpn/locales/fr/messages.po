@@ -2274,11 +2274,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "Aucun serveur ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d'autres paramètres."
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "Ouvrir le port forwarding"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "Veuillez cliquer ici pour mettre à jour maintenant"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "Port forwarding : le port public %(port)d n'est plus ouvert"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "Port forwarding : le port public %(port)d est ouvert"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2382,12 +2394,20 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Votre temps Warren se renouvelle dans les prochains jours. Vous pouvez désactiver le renouvellement automatique à tout moment dans les paramètres du compte."
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "Une notification système affiche le nouveau numéro de port."
+
+msgctxt "port-forwarding-view"
 msgid "Copy port number"
 msgstr "Copier le numéro de port"
 
 msgctxt "port-forwarding-view"
 msgid "Mapping failed: %(error)s"
 msgstr "Échec du mappage : %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "M'avertir quand un port public change"
 
 msgctxt "port-forwarding-view"
 msgid "Port forwarding"

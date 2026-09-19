@@ -10,6 +10,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   autoConnect: 'boolean',
   enableSystemNotifications: 'boolean',
   forumNotifications: 'boolean',
+  portForwardingNotifications: 'boolean',
   monochromaticIcon: 'boolean',
   startMinimized: 'boolean',
   unpinnedWindow: 'boolean',
@@ -29,6 +30,7 @@ const defaultSettings: IGuiSettingsState = {
   autoConnect: false,
   enableSystemNotifications: true,
   forumNotifications: true,
+  portForwardingNotifications: true,
   monochromaticIcon: false,
   startMinimized: false,
   unpinnedWindow: process.platform !== 'win32' && process.platform !== 'darwin',
@@ -77,6 +79,18 @@ export default class GuiSettings {
 
   get forumNotifications(): boolean {
     return this.stateValue.forumNotifications ?? true;
+  }
+
+  // Toast when a forwarded public port opens, moves or closes (see
+  // gui-settings-state.ts). Absent in a settings file written before the
+  // setting existed, and on there: a user who opened a port wants to be told
+  // when it moves.
+  set portForwardingNotifications(newValue: boolean) {
+    this.changeStateAndNotify({ ...this.stateValue, portForwardingNotifications: newValue });
+  }
+
+  get portForwardingNotifications(): boolean {
+    return this.stateValue.portForwardingNotifications ?? true;
   }
 
   set autoConnect(newValue: boolean) {

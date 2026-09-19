@@ -2223,11 +2223,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "Ingen servere matcher dine indstillinger. Prøv at ændre server eller andre indstillinger."
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "Åbn portvideresendelse"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "Klik her for at opdatere nu"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "Portvideresendelse: Den offentlige port %(port)d er ikke længere åben"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "Portvideresendelse: Den offentlige port %(port)d er åben"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2359,6 +2371,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Din Warren-tid fornyes i løbet af de kommende dage. Du kan slå automatisk fornyelse fra når som helst under Kontoindstillinger."
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "En systemnotifikation viser det nye portnummer."
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "Tildel en ledig port"
 
@@ -2373,6 +2389,10 @@ msgstr "Kopiér portnummer"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "deaktiveret"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "Giv mig besked, når en offentlig port ændrer sig"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

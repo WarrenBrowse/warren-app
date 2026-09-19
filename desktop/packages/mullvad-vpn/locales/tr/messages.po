@@ -2223,11 +2223,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "Ayarlarınızla eşleşen sunucu yok. Sunucuyu veya diğer ayarları değiştirmeyi deneyin."
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "Bağlantı noktası yönlendirmeyi aç"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "Şimdi güncellemek için lütfen buraya tıklayın"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "Bağlantı noktası yönlendirme: %(port)d numaralı genel bağlantı noktası artık açık değil"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "Bağlantı noktası yönlendirme: %(port)d numaralı genel bağlantı noktası açık"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2359,6 +2371,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Warren süreniz önümüzdeki günlerde yenilenecek. Otomatik yenilemeyi istediğiniz zaman hesap ayarlarından kapatabilirsiniz."
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "Bir sistem bildirimi yeni bağlantı noktası numarasını gösterir."
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "Boş bir bağlantı noktası ata"
 
@@ -2373,6 +2389,10 @@ msgstr "Bağlantı noktası numarasını kopyala"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "devre dışı"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "Genel bir bağlantı noktası değiştiğinde beni bilgilendir"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."

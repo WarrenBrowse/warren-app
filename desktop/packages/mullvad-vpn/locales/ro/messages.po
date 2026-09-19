@@ -2367,11 +2367,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "Nu există servere care să corespundă setărilor dvs.; încercați să schimbați serverul sau alte setări."
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "Deschide port forwarding"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "Vă rugăm să faceți clic aici pentru a actualiza acum"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "Port forwarding: portul public %(port)d nu mai este deschis"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "Port forwarding: portul public %(port)d este deschis"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2503,12 +2515,20 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Timpul dvs. Warren se reînnoiește în zilele următoare. Puteți dezactiva oricând reînnoirea automată în setările contului."
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "O notificare de sistem afișează noul număr de port."
+
+msgctxt "port-forwarding-view"
 msgid "Copy port number"
 msgstr "Copiază numărul portului"
 
 msgctxt "port-forwarding-view"
 msgid "Mapping failed: %(error)s"
 msgstr "Eroare la generarea hărții: %(error)s"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "Anunță-mă când se schimbă un port public"
 
 msgctxt "port-forwarding-view"
 msgid "Port forwarding"

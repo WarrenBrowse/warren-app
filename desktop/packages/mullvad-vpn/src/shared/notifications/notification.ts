@@ -110,6 +110,10 @@ export enum SystemNotificationCategory {
   // Community-forum activity. Its own category so a fresh count replaces the
   // previous banner instead of stacking one per refresh.
   forumActivity,
+  // A forwarded public port opened, moved or closed. Its own category so the
+  // newest port replaces the previous toast: two of them on screen name two
+  // ports and only one of them still forwards.
+  portForwarding,
 }
 
 interface NotificationProvider {

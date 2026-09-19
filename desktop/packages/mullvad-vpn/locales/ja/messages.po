@@ -2217,11 +2217,23 @@ msgctxt "notifications"
 msgid "No servers match your settings, try changing server or other settings."
 msgstr "設定に一致するサーバーはありません。サーバーまたは他の設定を変更してみてください。"
 
+msgctxt "notifications"
+msgid "Open port forwarding"
+msgstr "ポート転送を開く"
+
 #. A link in the in-app banner to encourage the user to update the app.
 #. The in-app banner is is displayed to the user when the running app becomes unsupported.
 msgctxt "notifications"
 msgid "Please click here to update now"
 msgstr "今すぐ更新するにはここをクリックしてください"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is no longer open"
+msgstr "ポート転送: パブリックポート %(port)d は開いていません"
+
+msgctxt "notifications"
+msgid "Port forwarding: public port %(port)d is open"
+msgstr "ポート転送: パブリックポート %(port)d が開きました"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2353,6 +2365,10 @@ msgid "Your Warren time renews in the next days. You can turn auto-renewal off a
 msgstr "Warren の利用時間が数日以内に更新されます。自動更新はアカウント設定でいつでもオフにできます。"
 
 msgctxt "port-forwarding-view"
+msgid "A system notification shows the new port number."
+msgstr "システム通知で新しいポート番号をお知らせします。"
+
+msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr "空きポートを割り当てる"
 
@@ -2367,6 +2383,10 @@ msgstr "ポート番号をコピー"
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr "無効"
+
+msgctxt "port-forwarding-view"
+msgid "Notify me when a public port changes"
+msgstr "パブリックポートが変わったら通知する"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
