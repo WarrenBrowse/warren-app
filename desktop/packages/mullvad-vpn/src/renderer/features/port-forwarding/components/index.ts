@@ -5,3 +5,4 @@ export * from './port-forwarding-notifications-switch';
 export * from './port-forwarding-setting';
 export * from './port-forwarding-status';
 export * from './port-forwarding-switch';
+export * from './torrent-client';

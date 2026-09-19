@@ -5392,6 +5392,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Edelleenohjattu portti on tavoitettavissa internetistä. Jos kolmas osapuoli ilmoittaa siitä tulevasta väärinkäytöstä, suljemme portin ja kirjaamme tilillesi rikkeen; kolme rikettä 90 päivän sisällä peruuttaa käyttöoikeuden. Tiedot ja riitauttaminen: %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s kuuntelee nyt porttia %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s hylkäsi kirjautumisen"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s hylkäsi portin: %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "Ota käyttöön nyt"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "Kohteeseen %(client)s ei saada yhteyttä osoitteessa %(url)s"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "Asiakasohjelma"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "Yhdistetty: %(client)s"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "Yhdistetty: %(client)s %(version)s, kuuntelee porttia %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "Ei mitään"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "Salasana"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "Sääntö"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "Tallennettu"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "Testaa yhteys"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "Tämä järjestelmä ei voi tallentaa salasanaa turvallisesti"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "Torrent-ohjelma"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "Käyttäjätunnus"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "Odotetaan julkista porttia"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren voi syöttää julkisen portin torrent-ohjelmaasi ja päivittää sen aina kun se muuttuu. Ota ensin käyttöön ohjelman verkkokäyttöliittymä."
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "Verkkokäyttöliittymän osoite"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "Käyttöehdot"

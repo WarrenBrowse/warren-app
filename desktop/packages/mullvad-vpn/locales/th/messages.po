@@ -5364,6 +5364,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "พอร์ตที่ส่งต่อสามารถเข้าถึงได้จากอินเทอร์เน็ต หากบุคคลที่สามรายงานการละเมิดที่มาจากพอร์ตนี้ เราจะปิดพอร์ตและบันทึกการกระทำผิดไว้ในบัญชีของคุณ สามครั้งภายใน 90 วันจะเพิกถอนสิทธิ์การใช้งาน รายละเอียดและวิธีโต้แย้ง: %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s กำลังฟังที่พอร์ต %(port)d แล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s ปฏิเสธการเข้าสู่ระบบ"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s ปฏิเสธพอร์ต: %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "ใช้งานตอนนี้"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "ไม่สามารถติดต่อ %(client)s ที่ %(url)s ได้"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "ไคลเอ็นต์"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "เชื่อมต่อกับ %(client)s แล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "เชื่อมต่อกับ %(client)s %(version)s แล้ว กำลังฟังที่พอร์ต %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "ไม่มี"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "รหัสผ่าน"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "กฎ"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "บันทึกแล้ว"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "ทดสอบการเชื่อมต่อ"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "ระบบนี้ไม่สามารถเก็บรหัสผ่านอย่างปลอดภัยได้"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "ไคลเอ็นต์ torrent"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "ชื่อผู้ใช้"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "กำลังรอพอร์ตสาธารณะ"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren สามารถใส่พอร์ตสาธารณะลงในไคลเอ็นต์ torrent ของคุณ และอัปเดตให้ทุกครั้งที่พอร์ตเปลี่ยน กรุณาเปิดใช้งานเว็บอินเทอร์เฟซของไคลเอ็นต์ก่อน"
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "ที่อยู่เว็บอินเทอร์เฟซ"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "ข้อกำหนดการใช้งาน"

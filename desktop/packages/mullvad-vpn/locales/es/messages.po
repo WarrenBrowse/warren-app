@@ -5392,6 +5392,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Un puerto redirigido es accesible desde internet. Si un tercero denuncia un abuso procedente de él, cerramos el puerto y anotamos un aviso en tu cuenta; tres avisos en 90 días revocan el acceso. Detalles y cómo impugnarlo: %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s ahora escucha en el puerto %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s rechazó el inicio de sesión"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s rechazó el puerto: %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "Aplicar ahora"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "No se puede contactar con %(client)s en %(url)s"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "Cliente"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "Conectado a %(client)s"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "Conectado a %(client)s %(version)s, escuchando en el puerto %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "Ninguno"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "Contraseña"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "Regla"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "Guardada"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "Probar la conexión"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "Este sistema no puede guardar la contraseña de forma segura"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "Cliente torrent"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "Nombre de usuario"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "Esperando un puerto público"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren puede introducir el puerto público en tu cliente torrent y actualizarlo cada vez que cambie. Activa primero la interfaz web del cliente."
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "Dirección de la interfaz web"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "Condiciones de uso"

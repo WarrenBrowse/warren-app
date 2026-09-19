@@ -49,6 +49,7 @@ import log, { ConsoleOutput } from '../shared/logging';
 import { LogLevel } from '../shared/logging-types';
 import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
+import { isTorrentClientConfigError, TorrentClientConfigUpdate } from '../shared/torrent-client';
 import AppRouter from './components/AppRouter';
 import { BlockingUpdateGate } from './components/BlockingUpdateGate';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -225,6 +226,13 @@ export default class AppRenderer {
       this.reduxActions.settings.updateNatPmpStatus(snapshot);
     });
 
+    // Where the write into the torrent client got to. Pushed rather than
+    // polled so the settings view shows the same thing as the port it is
+    // sitting under.
+    IpcRendererEventChannel.torrentClient.listen((status) => {
+      this.reduxActions.settings.updateTorrentClientStatus(status);
+    });
+
     IpcRendererEventChannel.relays.listen((relayListPair: IRelayListWithEndpointData) => {
       this.setRelayListPair(relayListPair);
       // Relay list (with city coordinates) may have arrived after settings,
@@ -399,6 +407,10 @@ export default class AppRenderer {
       // value (a published notice, the network descriptor) would never reach
       // the store.
       this.reduxActions.settings.updateWarrenStatus(initialState.warrenStatus);
+    }
+    this.reduxActions.settings.updateTorrentClient(initialState.torrentClient);
+    if (initialState.torrentClientStatus) {
+      this.reduxActions.settings.updateTorrentClientStatus(initialState.torrentClientStatus);
     }
     this.reduxActions.userInterface.setIsMacOs13OrNewer(initialState.isMacOs13OrNewer);
 
@@ -779,6 +791,22 @@ export default class AppRenderer {
     await IpcRendererEventChannel.settings.setNatPmpSettings(settings);
     actions.settings.updateNatPmpSettings(settings);
   };
+
+  // Torrent client integration. `setConfig` answers the stored settings as
+  // the renderer may see them, or the reason they were refused; the store is
+  // updated only on the first, so a refusal leaves the form showing what is
+  // actually saved.
+  public setTorrentClientConfig = async (update: TorrentClientConfigUpdate) => {
+    const result = await IpcRendererEventChannel.torrentClient.setConfig(update);
+    if (!isTorrentClientConfigError(result)) {
+      this.reduxActions.settings.updateTorrentClient(result);
+    }
+    return result;
+  };
+
+  public testTorrentClientConnection = () => IpcRendererEventChannel.torrentClient.testConnection();
+
+  public applyTorrentClientPort = () => IpcRendererEventChannel.torrentClient.applyNow();
 
   public setShowBetaReleases = async (showBetaReleases: boolean) => {
     const actions = this.reduxActions;

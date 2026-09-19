@@ -4541,6 +4541,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Un port redirecționat este accesibil de pe internet. Dacă un terț raportează un abuz care provine de acolo, închidem portul și înregistrăm un avertisment în contul tău; trei avertismente în 90 de zile revocă accesul. Detalii și cum contești: %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s ascultă acum pe portul %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s a refuzat autentificarea"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s a refuzat portul: %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "Aplică acum"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "%(client)s nu poate fi contactat la %(url)s"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "Client"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "Conectat la %(client)s"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "Conectat la %(client)s %(version)s, ascultă pe portul %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "Niciunul"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "Parolă"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "Regulă"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "Salvată"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "Testează conexiunea"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "Acest sistem nu poate păstra parola în siguranță"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "Client torrent"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "Nume de utilizator"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "Se așteaptă un port public"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren poate introduce portul public în clientul tău torrent și îl poate actualiza ori de câte ori se schimbă. Activează mai întâi interfața web a clientului."
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "Adresa interfeței web"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "Termeni de utilizare"

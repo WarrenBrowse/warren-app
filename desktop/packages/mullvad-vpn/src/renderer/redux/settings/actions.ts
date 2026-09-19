@@ -16,6 +16,7 @@ import {
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
 import { IGuiSettingsState } from '../../../shared/gui-settings-state';
+import { TorrentClientPublicConfig, TorrentClientStatus } from '../../../shared/torrent-client';
 import { IRelayLocationCountryRedux, RelaySettingsRedux } from './reducers';
 
 export interface IUpdateGuiSettingsAction {
@@ -79,6 +80,19 @@ export interface IUpdateWarrenStatusAction {
 export interface IUpdateNatPmpSettingsAction {
   type: 'UPDATE_NAT_PMP_SETTINGS';
   natPmpSettings: NatPmpSettings;
+}
+
+// Update action for the torrent client settings, as the renderer may see
+// them (no password, only whether one is stored).
+export interface IUpdateTorrentClientAction {
+  type: 'UPDATE_TORRENT_CLIENT';
+  torrentClient: TorrentClientPublicConfig;
+}
+
+// Update action for what the app is currently doing with the torrent client.
+export interface IUpdateTorrentClientStatusAction {
+  type: 'UPDATE_TORRENT_CLIENT_STATUS';
+  torrentClientStatus: TorrentClientStatus;
 }
 
 // Update action for the live NAT-PMP status (refresh-loop lifecycle).
@@ -193,6 +207,8 @@ export type SettingsAction =
   | IUpdateWarrenStatusAction
   | IUpdateNatPmpSettingsAction
   | IUpdateNatPmpStatusAction
+  | IUpdateTorrentClientAction
+  | IUpdateTorrentClientStatusAction
   | IUpdateEnableIpv6Action
   | IUpdateLockdownModeAction
   | IUpdateShowBetaReleasesAction
@@ -299,6 +315,22 @@ function updateNatPmpStatus(natPmpStatus: NatPmpStatus): IUpdateNatPmpStatusActi
     type: 'UPDATE_NAT_PMP_STATUS',
     natPmpStatus,
     receivedAt: Date.now(),
+  };
+}
+
+function updateTorrentClient(torrentClient: TorrentClientPublicConfig): IUpdateTorrentClientAction {
+  return {
+    type: 'UPDATE_TORRENT_CLIENT',
+    torrentClient,
+  };
+}
+
+function updateTorrentClientStatus(
+  torrentClientStatus: TorrentClientStatus,
+): IUpdateTorrentClientStatusAction {
+  return {
+    type: 'UPDATE_TORRENT_CLIENT_STATUS',
+    torrentClientStatus,
   };
 }
 
@@ -440,6 +472,8 @@ export default {
   updateWarrenStatus,
   updateNatPmpSettings,
   updateNatPmpStatus,
+  updateTorrentClient,
+  updateTorrentClientStatus,
   updateEnableIpv6,
   updateLockdownMode,
   updateShowBetaReleases,

@@ -31,6 +31,14 @@ par l'application, gardez-le tel quel.
   (`~/.config/Warren VPN/` sous Linux, `~/Library/Application Support/Warren VPN/` sous macOS,
   `%LOCALAPPDATA%\Warren VPN\` sous Windows). Le fichier se vide quand le tunnel est coupé, et
   il est réécrit sur place pour qu'une surveillance continue de le suivre.
+- Saisir le port public accordé dans votre client torrent, et l'y maintenir. Choisissez
+  qBittorrent, Transmission ou Deluge sur l'écran de port forwarding, donnez l'adresse de son
+  interface web et ses identifiants, et l'application écrit le port accordé dans le client via
+  l'API de ce client, à chaque fois que le serveur de sortie déplace le port. Elle désactive aussi
+  le tirage de port aléatoire et l'UPnP du client, qui le ramèneraient aussitôt hors du port
+  accordé. « Tester la connexion » rapporte la réponse du client et « Appliquer maintenant » écrit
+  le port courant sans attendre. Le mot de passe est conservé dans le trousseau du système
+  d'exploitation, jamais dans le fichier de réglages.
 - Relier l'écran de port forwarding au guide du site expliquant comment configurer un client
   torrent avec un port accordé.
 

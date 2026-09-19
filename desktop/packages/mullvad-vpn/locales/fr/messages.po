@@ -4545,6 +4545,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Un port redirigé est joignable depuis internet. Si un tiers signale un abus qui en provient, nous fermons le port et inscrivons un avertissement sur votre compte ; trois avertissements en 90 jours révoquent l'accès. Détails et contestation : %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s écoute maintenant sur le port %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s a refusé la connexion"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s a refusé le port : %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "Appliquer maintenant"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "Impossible de joindre %(client)s à %(url)s"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "Client"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "Connecté à %(client)s"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "Connecté à %(client)s %(version)s, à l'écoute sur le port %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "Aucun"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "Mot de passe"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "Règle"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "Enregistré"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "Tester la connexion"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "Ce système ne peut pas conserver le mot de passe en sécurité"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "Client torrent"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "En attente d'un port public"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren peut saisir le port public dans votre client torrent et le mettre à jour à chaque changement. Activez d'abord l'interface web du client."
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "Adresse de l'interface web"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "Conditions d'utilisation"

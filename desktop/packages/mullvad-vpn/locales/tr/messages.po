@@ -5392,6 +5392,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Yönlendirilmiş bir bağlantı noktasına internetten erişilebilir. Üçüncü bir taraf oradan gelen bir kötüye kullanımı bildirirse bağlantı noktasını kapatır ve hesabınıza bir ihlal kaydederiz; 90 gün içinde üç ihlal erişimi iptal eder. Ayrıntılar ve itiraz yolu: %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s artık %(port)d numaralı bağlantı noktasını dinliyor"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s oturum açmayı reddetti"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s bağlantı noktasını reddetti: %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "Şimdi uygula"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "%(client)s şu adreste erişilemiyor: %(url)s"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "İstemci"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "%(client)s ile bağlantı kuruldu"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "%(client)s %(version)s ile bağlantı kuruldu, %(port)d numaralı bağlantı noktası dinleniyor"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "Yok"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "Parola"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "Kural"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "Kaydedildi"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "Bağlantıyı sına"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "Bu sistem parolayı güvenli biçimde saklayamıyor"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "Torrent istemcisi"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "Kullanıcı adı"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "Genel bağlantı noktası bekleniyor"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren, genel bağlantı noktasını torrent istemcinize yazabilir ve her değiştiğinde güncelleyebilir. Önce istemcinin web arayüzünü etkinleştirin."
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "Web arayüzü adresi"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "Kullanım koşulları"

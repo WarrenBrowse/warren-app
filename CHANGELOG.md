@@ -40,6 +40,13 @@ Line wrap the file at 100 chars.                                              Th
   `~/Library/Application Support/Warren VPN/` on macOS, `%LOCALAPPDATA%\Warren VPN\` on
   Windows). The file empties while the tunnel is down, and is rewritten in place so a watcher
   keeps following it.
+- Enter the forwarded public port into your torrent client, and keep it there. Pick qBittorrent,
+  Transmission or Deluge on the port forwarding screen, give it the address of its web interface
+  and its credentials, and the app writes the granted port into the client over that client's own
+  API, every time the exit moves the port. It also turns the client's own port randomisation and
+  UPnP off, which would otherwise take it straight back off the granted port. "Test connection"
+  reports what the client answered and "Apply now" writes the current port without waiting. The
+  password is kept in the operating system keychain, never in the settings file.
 - Link the port forwarding screen to the website guide explaining how to set up a torrent client
   with a forwarded port.
 

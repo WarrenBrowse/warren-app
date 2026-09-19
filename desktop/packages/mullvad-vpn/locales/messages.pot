@@ -2558,6 +2558,29 @@ msgctxt "notifications"
 msgid "Your Warren time renews in the next days. You can turn auto-renewal off anytime in Account settings."
 msgstr ""
 
+#. Confirmation that the torrent client took the public
+#. port. Available placeholders:
+#. %(client)s - the torrent client name, e.g. qBittorrent
+#. %(port)d - the public port the exit forwards
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr ""
+
+#. Shown when the torrent client rejected the credentials.
+#. Available placeholder:
+#. %(client)s - the torrent client name, e.g. qBittorrent
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr ""
+
+#. Shown when the torrent client answered but would not
+#. take the port. Available placeholders:
+#. %(client)s - the torrent client name, e.g. qBittorrent
+#. %(detail)s - the client's own words, in English
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"
 msgstr ""
@@ -2572,6 +2595,10 @@ msgid "A system notification shows the new port number."
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "applying…"
 msgstr ""
 
@@ -2579,8 +2606,36 @@ msgctxt "port-forwarding-view"
 msgid "Assign a free port"
 msgstr ""
 
+#. Shown when the torrent client's web interface did not
+#. answer. Available placeholders:
+#. %(client)s - the torrent client name, e.g. qBittorrent
+#. %(url)s - the web interface address the user entered
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Choose another exit"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr ""
+
+#. Shown when the torrent client answered but did not say
+#. which port it listens on. Available placeholder:
+#. %(client)s - the torrent client name, e.g. qBittorrent
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr ""
+
+#. Result of the torrent client connection test. Available
+#. placeholders:
+#. %(client)s - the torrent client name, e.g. qBittorrent
+#. %(version)s - the version the client reported
+#. %(port)d - the port the client currently listens on
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
 msgstr ""
 
 #. Provided to accessibility tools such as screenreaders to
@@ -2624,6 +2679,10 @@ msgid "No port yet. Add one to open it on the exit."
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "None"
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "not allowed"
 msgstr ""
 
@@ -2639,6 +2698,10 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Password"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2678,7 +2741,21 @@ msgid "requesting…"
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr ""
+
+#. Placeholder of the password field, shown when a password is
+#. already stored and the field is empty.
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "Status: waiting for an active tunnel connection to set up the port mappings."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2690,7 +2767,34 @@ msgid "This public port is already in use on this exit. Keep your port by switch
 msgstr ""
 
 msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr ""
+
+msgctxt "port-forwarding-view"
 msgid "Too many port changes. You can change ports again in %(countdown)s."
+msgstr ""
+
+#. Title of the section that hands the forwarded port to
+#. a torrent client.
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr ""
+
+#. Description of the torrent client section.
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
 msgstr ""
 
 #. Cancel button label for voucher redemption.

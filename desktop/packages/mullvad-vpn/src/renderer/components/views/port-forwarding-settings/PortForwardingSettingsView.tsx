@@ -7,6 +7,7 @@ import {
   PortForwardingNotificationsSetting,
   PortForwardingSetting,
   PortForwardingStatus,
+  TorrentClientSetting,
 } from '../../../features/port-forwarding/components';
 import { usePortForwarding } from '../../../features/port-forwarding/hooks';
 import { Text } from '../../../lib/components';
@@ -96,6 +97,7 @@ export function PortForwardingSettingsView() {
                   <PortForwardingSetting />
                   {settings.enabled ? <PortForwardingNotificationsSetting /> : null}
                   {settings.enabled ? <PortForwardingAdvanced /> : null}
+                  {settings.enabled ? <TorrentClientSetting /> : null}
                   <PortForwardingStatus />
                 </FlexColumn>
               </View.Container>

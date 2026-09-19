@@ -5364,6 +5364,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "전달된 포트는 인터넷에서 접근할 수 있습니다. 제3자가 해당 포트에서 발생한 남용을 신고하면 포트를 닫고 계정에 위반을 기록합니다. 90일 안에 세 번이면 접근이 취소됩니다. 자세한 내용과 이의 제기: %(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s이(가) 이제 포트 %(port)d에서 수신합니다"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s이(가) 로그인을 거부했습니다"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s이(가) 포트를 거부했습니다: %(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "지금 적용"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "%(url)s에서 %(client)s에 연결할 수 없습니다"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "클라이언트"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "%(client)s에 연결됨"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "%(client)s %(version)s에 연결됨, 포트 %(port)d에서 수신 중"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "없음"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "비밀번호"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "규칙"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "저장됨"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "연결 테스트"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "이 시스템은 비밀번호를 안전하게 저장할 수 없습니다"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "torrent 클라이언트"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "사용자 이름"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "공개 포트를 기다리는 중"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren은 공개 포트를 torrent 클라이언트에 입력하고 변경될 때마다 업데이트할 수 있습니다. 먼저 클라이언트의 웹 인터페이스를 켜 주세요."
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "웹 인터페이스 주소"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "이용 약관"

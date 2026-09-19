@@ -25,6 +25,7 @@ import {
   WarrenStatus,
 } from '../../../shared/daemon-rpc-types';
 import { IGuiSettingsState } from '../../../shared/gui-settings-state';
+import { TorrentClientPublicConfig, TorrentClientStatus } from '../../../shared/torrent-client';
 import { ReduxAction } from '../store';
 
 export type NormalRelaySettingsRedux = {
@@ -108,6 +109,13 @@ export interface ISettingsReduxState {
   // rate-limit countdown anchors to this (see IUpdateNatPmpStatusAction)
   // so a stale snapshot self-expires instead of re-flashing on mount.
   natPmpStatusReceivedAt?: number;
+  // The torrent client the app writes the forwarded port into, as the
+  // renderer may see it. Never carries the password: the main process holds
+  // that sealed and answers only whether one is stored.
+  torrentClient: TorrentClientPublicConfig;
+  // Where the last write into that client got to. Undefined until the
+  // controller has had a reason to speak.
+  torrentClientStatus?: TorrentClientStatus;
   wireguard: {
     mtu?: number;
     quantumResistant: boolean;
@@ -183,6 +191,8 @@ const initialState: ISettingsReduxState = {
   },
   natPmpStatus: undefined,
   natPmpStatusReceivedAt: undefined,
+  torrentClient: { kind: 'none', url: '', username: '', hasPassword: false },
+  torrentClientStatus: undefined,
   wireguard: {
     quantumResistant: true,
   },
@@ -299,6 +309,18 @@ export default function (
         ...state,
         natPmpStatus: action.natPmpStatus,
         natPmpStatusReceivedAt: action.receivedAt,
+      };
+
+    case 'UPDATE_TORRENT_CLIENT':
+      return {
+        ...state,
+        torrentClient: action.torrentClient,
+      };
+
+    case 'UPDATE_TORRENT_CLIENT_STATUS':
+      return {
+        ...state,
+        torrentClientStatus: action.torrentClientStatus,
       };
 
     case 'UPDATE_ENABLE_IPV6':

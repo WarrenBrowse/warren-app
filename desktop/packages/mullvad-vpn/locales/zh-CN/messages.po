@@ -5364,6 +5364,82 @@ msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "转发端口可以从互联网访问。如果第三方举报来自该端口的滥用行为，我们会关闭端口并在你的账户上记一次违规；90 天内三次将吊销访问权限。详情与申诉方式：%(url)s"
 
+msgctxt "port-forwarding-view"
+msgid "%(client)s now listens on port %(port)d"
+msgstr "%(client)s 现在监听端口 %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s refused the login"
+msgstr "%(client)s 拒绝了登录"
+
+msgctxt "port-forwarding-view"
+msgid "%(client)s rejected the port: %(detail)s"
+msgstr "%(client)s 拒绝了该端口：%(detail)s"
+
+msgctxt "port-forwarding-view"
+msgid "Apply now"
+msgstr "立即应用"
+
+msgctxt "port-forwarding-view"
+msgid "Cannot reach %(client)s at %(url)s"
+msgstr "无法在 %(url)s 连接到 %(client)s"
+
+msgctxt "port-forwarding-view"
+msgid "Client"
+msgstr "客户端"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s"
+msgstr "已连接到 %(client)s"
+
+msgctxt "port-forwarding-view"
+msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
+msgstr "已连接到 %(client)s %(version)s，正在监听端口 %(port)d"
+
+msgctxt "port-forwarding-view"
+msgid "None"
+msgstr "无"
+
+msgctxt "port-forwarding-view"
+msgid "Password"
+msgstr "密码"
+
+msgctxt "port-forwarding-view"
+msgid "Rule"
+msgstr "规则"
+
+msgctxt "port-forwarding-view"
+msgid "Saved"
+msgstr "已保存"
+
+msgctxt "port-forwarding-view"
+msgid "Test connection"
+msgstr "测试连接"
+
+msgctxt "port-forwarding-view"
+msgid "This system cannot store the password securely"
+msgstr "此系统无法安全保存密码"
+
+msgctxt "port-forwarding-view"
+msgid "Torrent client"
+msgstr "torrent 客户端"
+
+msgctxt "port-forwarding-view"
+msgid "Username"
+msgstr "用户名"
+
+msgctxt "port-forwarding-view"
+msgid "Waiting for a public port"
+msgstr "正在等待公共端口"
+
+msgctxt "port-forwarding-view"
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgstr "Warren 可以把公共端口填入你的 torrent 客户端，并在端口变化时自动更新。请先启用客户端的 web 界面。"
+
+msgctxt "port-forwarding-view"
+msgid "Web interface address"
+msgstr "Web 界面地址"
+
 msgctxt "support-view"
 msgid "Terms of use"
 msgstr "使用条款"

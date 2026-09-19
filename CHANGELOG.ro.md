@@ -31,6 +31,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   Linux, `~/Library/Application Support/Warren VPN/` pe macOS, `%LOCALAPPDATA%\Warren VPN\` pe
   Windows). Fișierul se golește cât timp tunelul este oprit și este rescris pe loc, astfel încât o
   urmărire continuă să îl vadă.
+- Introdu portul public acordat în clientul tău torrent și păstrează-l acolo. Alege qBittorrent,
+  Transmission sau Deluge în ecranul de port forwarding, dă adresa interfeței web și datele de
+  autentificare, iar aplicația scrie portul acordat în client prin API-ul acelui client, de
+  fiecare dată când serverul de ieșire mută portul. Dezactivează și alegerea aleatorie a portului
+  și UPnP din client, care l-ar scoate imediat de pe portul acordat. „Testează conexiunea” arată
+  ce a răspuns clientul, iar „Aplică acum” scrie portul curent fără să aștepte. Parola este
+  păstrată în seiful sistemului de operare, niciodată în fișierul de setări.
 - Leagă ecranul de port forwarding de ghidul de pe site care explică cum se configurează un client
   torrent cu un port acordat.
 
