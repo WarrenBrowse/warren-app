@@ -60,7 +60,11 @@ import {
   SystemNotificationCategory,
 } from '../shared/notifications/notification';
 import { RoutePath } from '../shared/routes';
-import { TorrentClientKind, TorrentClientStatus } from '../shared/torrent-client';
+import {
+  isTorrentClientConfigError,
+  TorrentClientKind,
+  TorrentClientStatus,
+} from '../shared/torrent-client';
 import { shortenWarrenPubKey } from '../shared/utils';
 import Account, { AccountDelegate, LocaleProvider } from './account';
 import AppUpgrade from './app-upgrade';
@@ -1301,7 +1305,9 @@ class ApplicationMain
     // One call site, two consumers: the toast the user reads and the write
     // into their torrent client come from the same list of changes, so they
     // can never name different ports.
-    void this.torrentClientSync.onChanges(changes);
+    void this.torrentClientSync
+      .onChanges(changes)
+      .catch((error: Error) => log.warn(`Cannot update the torrent client: ${error.message}`));
 
     if (!this.settings.gui.portForwardingNotifications) {
       return;
@@ -1396,7 +1402,7 @@ class ApplicationMain
 
     IpcMainEventChannel.torrentClient.handleSetConfig((update) => {
       const result = this.torrentClientConfig.update(update);
-      if (!('error' in result)) {
+      if (!isTorrentClientConfigError(result)) {
         this.torrentClientSync.refresh();
       }
       return Promise.resolve(result);

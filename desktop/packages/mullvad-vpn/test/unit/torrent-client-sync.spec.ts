@@ -74,6 +74,9 @@ function fails(error: TorrentClientError): SetHandler {
 
 interface HarnessOptions {
   kind?: TorrentClientConfig['kind'];
+  /** Makes the daemon refuse the settings write, the way a gRPC failure
+   * during a reconnect does. */
+  refuseNatPmpWrites?: boolean;
   rules?: NatPmpRule[];
   configRule?: TorrentClientRuleRef;
   mappings?: NatPmpMapping[];
@@ -114,6 +117,9 @@ function buildHarness(options: HarnessOptions = {}) {
     natPmpSettings: () => settings,
     setNatPmpSettings: (next) => {
       natPmpWrites.push(next);
+      if (options.refuseNatPmpWrites === true) {
+        return Promise.reject(new Error('daemon gone'));
+      }
       if (options.ignoreNatPmpWrites !== true) {
         settings = next;
       }
@@ -167,6 +173,9 @@ function buildHarness(options: HarnessOptions = {}) {
     },
     setMappings: (next: NatPmpMapping[]) => {
       mappings = next;
+    },
+    setKind: (kind: TorrentClientConfig['kind']) => {
+      config = { ...config, kind };
     },
   };
 }
@@ -383,6 +392,111 @@ describe('the torrent client controller', () => {
       at: NOW,
     });
     expect(buildHarness().sync.refresh()).to.deep.equal({ state: 'waiting', at: NOW });
+  });
+
+  // The exit chooses this number, and it lands in the rule's `internalPort`,
+  // which is the local port the exit forwards inbound internet traffic to. An
+  // exit that answered with 22 would otherwise have the app open the user's
+  // SSH port to the internet, a number the port editor would have refused.
+  it('refuses to re-point onto a port outside the range the exit allocates from', async () => {
+    const harness = buildHarness({ rules: [autoRule(6881)] });
+
+    await harness.sync.onChanges([mapped(6881, 22)]);
+
+    expect(harness.natPmpWrites).to.deep.equal([]);
+    expect(harness.config.rule).to.equal(undefined);
+    expect(lastStatus(harness.statuses)).to.deep.equal({ state: 'waiting', at: NOW });
+  });
+
+  // The rule identity the exit allocator keys on is `(internalPort,
+  // protocol)`, so re-pointing onto a number another rule already holds would
+  // collapse two forwards into one.
+  it('refuses to re-point onto a port another rule already holds', async () => {
+    const harness = buildHarness({ rules: [autoRule(6881), rule(58291)] });
+
+    await harness.sync.onChanges([mapped(6881, 58291)]);
+
+    expect(harness.natPmpWrites).to.deep.equal([]);
+    expect(harness.attempts).to.deep.equal([]);
+  });
+
+  it('does not latch the re-point guard when the daemon refuses the write', async () => {
+    const harness = buildHarness({ rules: [autoRule(6881)], refuseNatPmpWrites: true });
+
+    await harness.sync.onChanges([mapped(6881, 58291)]);
+    await harness.sync.onChanges([mapped(6881, 58291)]);
+
+    expect(harness.natPmpWrites).to.have.length(2);
+    expect(lastStatus(harness.statuses).state).to.equal('error');
+  });
+
+  // qBittorrent bans the calling address after a handful of failed logins,
+  // and on the loopback that address is the user's own. A password that is
+  // wrong now will still be wrong in two seconds.
+  it('does not retry a refused login', async () => {
+    const harness = buildHarness({
+      handlers: [fails({ kind: 'login-refused' }), fails({ kind: 'login-refused' })],
+    });
+
+    await harness.sync.onChanges([mapped(6881, 6881)]);
+
+    expect(harness.attempts).to.deep.equal([6881]);
+    expect(harness.sleeps).to.deep.equal([]);
+    expect(lastStatus(harness.statuses)).to.deep.equal({
+      state: 'error',
+      port: 6881,
+      error: { kind: 'login-refused' },
+      at: NOW,
+    });
+  });
+
+  it('does not retry a port the client refused', async () => {
+    const harness = buildHarness({
+      handlers: [
+        fails({ kind: 'rejected', detail: 'no' }),
+        fails({ kind: 'rejected', detail: 'no' }),
+      ],
+    });
+
+    await harness.sync.onChanges([mapped(6881, 6881)]);
+
+    expect(harness.attempts).to.deep.equal([6881]);
+    expect(harness.sleeps).to.deep.equal([]);
+  });
+
+  it('reports off, not synced, when the client is turned off mid-retry', async () => {
+    const harness = buildHarness({ handlers: [fails({ kind: 'unreachable' })] });
+    const turnOff = () => harness.setKind('none');
+
+    const inFlight = harness.sync.onChanges([mapped(6881, 6881)]);
+    turnOff();
+    await inFlight;
+
+    expect(lastStatus(harness.statuses)).to.deep.equal({ state: 'off', at: NOW });
+  });
+
+  // `reset()` fires on every daemon disconnect, which is exactly when the
+  // mappings churn. A push abandoned there used to leave the last word on
+  // `pushing`, which disables the settings buttons for good.
+  it('says where it ended when a reset drops an in-flight push', async () => {
+    const gate = deferred();
+    const harness = buildHarness({ handlers: [() => gate.promise] });
+
+    const inFlight = harness.sync.onChanges([mapped(6881, 6881)]);
+    harness.sync.reset();
+    gate.resolve();
+    await inFlight;
+
+    expect(lastStatus(harness.statuses)).to.deep.equal({ state: 'waiting', at: NOW });
+  });
+
+  it('keeps the last status when a save leaves the client configured', async () => {
+    const harness = buildHarness({ mappings: [liveMapping(6881, 6881)] });
+    await harness.sync.applyNow();
+
+    const refreshed = harness.sync.refresh();
+
+    expect(refreshed).to.deep.equal({ state: 'synced', port: 6881, at: NOW });
   });
 
   // The status travels to the renderer and into any report a user pastes.

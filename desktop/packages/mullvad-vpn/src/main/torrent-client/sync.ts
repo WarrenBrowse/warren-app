@@ -25,6 +25,29 @@ import { TorrentClientAdapter, toTorrentClientError } from './adapters';
  */
 const PUSH_RETRY_DELAYS_MS = [2_000, 5_000, 10_000];
 
+/**
+ * The range the exit allocates public ports from
+ * (`warren_config::NATPMP_EXTERNAL_PORT_MIN/MAX`, the same bounds the port
+ * editor refuses outside of).
+ *
+ * A re-point writes the exit's number into the rule's `internalPort`, which
+ * is the LOCAL port the exit forwards inbound internet traffic to. Without
+ * this bound, an exit answering with 22 would have the app open the user's
+ * SSH port to the internet, and the rule would survive a restart and follow
+ * the user to another exit. The number the exit chooses is the one thing in
+ * this flow the user did not.
+ */
+const EXIT_PORT_MIN = 49152;
+const EXIT_PORT_MAX = 65535;
+
+/** Only a failure that can plausibly become a success is worth another try.
+ * Credentials and a refused port will not change in two seconds, and
+ * qBittorrent bans the calling address after a handful of failed logins,
+ * which on the loopback is the user's own. */
+function worthRetrying(error: TorrentClientError): boolean {
+  return error.kind === 'unreachable' || error.kind === 'bad-response';
+}
+
 export interface TorrentClientSyncDeps {
   config: () => TorrentClientConfig | undefined;
   password: () => string | undefined;
@@ -143,11 +166,23 @@ export class TorrentClientSync {
     }
   }
 
-  /** Re-states where things stand, after a configuration change. */
+  /**
+   * Re-states where things stand, after a configuration change.
+   *
+   * A client that is still configured keeps whatever the last push reported:
+   * the settings form saves on every blur, and discarding the line the user
+   * is reading on each of those would erase the one confirmation the feature
+   * gives them.
+   */
   public refresh(): TorrentClientStatus {
     const config = this.deps.config();
-    const off = config === undefined || config.kind === 'none';
-    return this.emit({ state: off ? 'off' : 'waiting', at: this.deps.now() });
+    if (config === undefined || config.kind === 'none') {
+      return this.emit({ state: 'off', at: this.deps.now() });
+    }
+    if (this.last !== undefined && this.last.state !== 'off') {
+      return this.emit(this.last);
+    }
+    return this.emit({ state: 'waiting', at: this.deps.now() });
   }
 
   /** Drops the in-flight state, the way a daemon disconnect drops the
@@ -195,25 +230,60 @@ export class TorrentClientSync {
     if (this.repointed.has(port)) {
       return;
     }
-    this.repointed.add(port);
 
     const settings = this.deps.natPmpSettings();
-    const rules = effectiveNatPmpRules(settings).map((candidate) =>
+    const configured = effectiveNatPmpRules(settings);
+    if (!this.acceptableRepoint(port, linked, configured)) {
+      this.emit({ state: 'waiting', at: this.deps.now() });
+      return;
+    }
+
+    const rules = configured.map((candidate) =>
       candidate.internalPort === linked.internalPort && candidate.protocol === linked.protocol
         ? { protocol: candidate.protocol, internalPort: port, suggestedExternalPort: port }
         : candidate,
     );
-    // Writes the rule list as the source of truth and zeroes the legacy
-    // single-port fields, the same way the settings view does.
-    await this.deps.setNatPmpSettings({
-      ...settings,
-      rules,
-      protocol: NatPmpProto.udp,
-      suggestedExternalPort: 0,
-      internalPort: 0,
-    });
+    try {
+      // Writes the rule list as the source of truth and zeroes the legacy
+      // single-port fields, the same way the settings view does.
+      await this.deps.setNatPmpSettings({
+        ...settings,
+        rules,
+        protocol: NatPmpProto.udp,
+        suggestedExternalPort: 0,
+        internalPort: 0,
+      });
+    } catch {
+      // Not remembered as re-pointed: a write the daemon refused once must
+      // be attempted again on the next grant, or the client never gets a
+      // port and nothing says why.
+      this.emit({
+        state: 'error',
+        port,
+        error: { kind: 'unreachable' },
+        at: this.deps.now(),
+      });
+      return;
+    }
+    this.repointed.add(port);
     this.deps.setRule({ internalPort: port, protocol: linked.protocol });
     this.emit({ state: 'waiting', at: this.deps.now() });
+  }
+
+  /** Whether the exit's number may become a rule's local port: inside the
+   * range the exit allocates from, and not already the identity of another
+   * rule (which the exit allocator keys on, so a collision would collapse
+   * two forwards into one). */
+  private acceptableRepoint(port: number, linked: NatPmpRule, configured: NatPmpRule[]): boolean {
+    if (!Number.isInteger(port) || port < EXIT_PORT_MIN || port > EXIT_PORT_MAX) {
+      return false;
+    }
+    return !configured.some(
+      (candidate) =>
+        candidate.protocol === linked.protocol &&
+        candidate.internalPort !== linked.internalPort &&
+        candidate.internalPort === port,
+    );
   }
 
   /**
@@ -234,15 +304,26 @@ export class TorrentClientSync {
       while (this.target !== undefined) {
         const current: number = this.target;
         this.emit({ state: 'pushing', port: current, at: this.deps.now() });
-        const failure = await this.attempt(current);
+        const outcome = await this.attempt(current);
         if (this.target !== current) {
+          // A newer port arrived, or a reset dropped this one. Either way the
+          // loop must not settle on a number that is already stale, and it
+          // must not leave `pushing` as the last word: the settings view
+          // disables its buttons on that state.
+          if (this.target === undefined) {
+            this.emit({ state: 'waiting', at: this.deps.now() });
+          }
           continue;
         }
         this.target = undefined;
+        if (outcome === 'abandoned') {
+          this.emit({ state: 'off', at: this.deps.now() });
+          continue;
+        }
         this.emit(
-          failure === undefined
+          outcome === undefined
             ? { state: 'synced', port: current, at: this.deps.now() }
-            : { state: 'error', port: current, error: failure, at: this.deps.now() },
+            : { state: 'error', port: current, error: outcome, at: this.deps.now() },
         );
       }
     } finally {
@@ -250,7 +331,16 @@ export class TorrentClientSync {
     }
   }
 
-  private async attempt(port: number): Promise<TorrentClientError | undefined> {
+  /**
+   * One push, with its retries.
+   *
+   * Answers `undefined` when the client took the port, the sealed error when
+   * it would not, and `abandoned` when the user turned the client off while
+   * the chain was running: that last case is neither a success nor a failure
+   * of the client, and reusing the success value for it made the app report
+   * a write it never performed.
+   */
+  private async attempt(port: number): Promise<TorrentClientError | undefined | 'abandoned'> {
     let failure: TorrentClientError | undefined;
     for (let retry = 0; retry <= PUSH_RETRY_DELAYS_MS.length; retry++) {
       if (retry > 0) {
@@ -258,13 +348,16 @@ export class TorrentClientSync {
       }
       const config = this.deps.config();
       if (config === undefined || config.kind === 'none') {
-        return undefined;
+        return 'abandoned';
       }
       try {
         await this.deps.adapterFor(config, this.deps.password()).setListenPort(port);
         return undefined;
       } catch (error) {
         failure = toTorrentClientError(error);
+      }
+      if (!worthRetrying(failure)) {
+        return failure;
       }
       // A port that moved again makes the rest of this chain pointless: the
       // loop above will start over on the new one.
