@@ -2415,6 +2415,10 @@ msgid "disabled"
 msgstr "معطَّل"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "كيفية إعداد عميل التورنت"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "أعلمني عند تغير منفذ عام"
 

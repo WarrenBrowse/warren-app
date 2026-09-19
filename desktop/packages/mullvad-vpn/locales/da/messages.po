@@ -2391,6 +2391,10 @@ msgid "disabled"
 msgstr "deaktiveret"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "Sådan opsætter du din torrent-klient"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "Giv mig besked, når en offentlig port ændrer sig"
 

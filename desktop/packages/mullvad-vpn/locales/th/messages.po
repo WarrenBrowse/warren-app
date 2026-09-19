@@ -2385,6 +2385,10 @@ msgid "disabled"
 msgstr "ปิดใช้งาน"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "วิธีตั้งค่าโปรแกรมทอร์เรนต์ของคุณ"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "แจ้งเตือนเมื่อพอร์ตสาธารณะเปลี่ยน"
 

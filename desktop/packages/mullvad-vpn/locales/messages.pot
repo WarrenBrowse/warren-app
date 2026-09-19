@@ -2601,6 +2601,12 @@ msgctxt "port-forwarding-view"
 msgid "failed"
 msgstr ""
 
+#. Link to the website page explaining how to
+#. use a forwarded port with a torrent client.
+msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Last port change before a temporary block. Wait a moment before changing it again."
 msgstr ""

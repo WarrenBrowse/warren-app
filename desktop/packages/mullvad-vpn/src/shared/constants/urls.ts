@@ -33,6 +33,10 @@ export const urls = {
   // authorities, and the page a user lands on to contest a port-forwarding
   // strike, so it is linked from the port-forwarding view and the ban notice.
   reports: 'https://warren.ro/signalements',
+  // How to point a torrent client at a forwarded port: the copy button, the
+  // notification and the status file the desktop app writes. Linked from the
+  // port-forwarding view.
+  portForwardingGuide: 'https://warren.ro/port-forwarding',
 } as const;
 
 type BaseUrl = (typeof urls)[keyof typeof urls];

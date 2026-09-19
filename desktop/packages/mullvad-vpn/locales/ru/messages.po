@@ -2403,6 +2403,10 @@ msgid "disabled"
 msgstr "отключено"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "Как настроить торрент-клиент"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "Уведомлять меня, когда публичный порт меняется"
 

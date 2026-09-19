@@ -2391,6 +2391,10 @@ msgid "disabled"
 msgstr "devre dışı"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "Torrent istemcinizi nasıl kurarsınız"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "Genel bir bağlantı noktası değiştiğinde beni bilgilendir"
 

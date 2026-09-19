@@ -2385,6 +2385,10 @@ msgid "disabled"
 msgstr "비활성화됨"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "토렌트 클라이언트 설정 방법"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "공용 포트가 바뀌면 알림 받기"
 

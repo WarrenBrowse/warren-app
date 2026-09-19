@@ -2381,6 +2381,10 @@ msgid "Copy port number"
 msgstr "複製連接埠號碼"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "如何設定您的 torrent 用戶端"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "公開連接埠變更時通知我"
 

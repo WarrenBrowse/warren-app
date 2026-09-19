@@ -31,6 +31,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   Linux, `~/Library/Application Support/Warren VPN/` pe macOS, `%LOCALAPPDATA%\Warren VPN\` pe
   Windows). Fișierul se golește cât timp tunelul este oprit și este rescris pe loc, astfel încât o
   urmărire continuă să îl vadă.
+- Leagă ecranul de port forwarding de ghidul de pe site care explică cum se configurează un client
+  torrent cu un port acordat.
 
 ### Reparat
 - Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă

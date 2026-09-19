@@ -31,6 +31,8 @@ par l'application, gardez-le tel quel.
   (`~/.config/Warren VPN/` sous Linux, `~/Library/Application Support/Warren VPN/` sous macOS,
   `%LOCALAPPDATA%\Warren VPN\` sous Windows). Le fichier se vide quand le tunnel est coupé, et
   il est réécrit sur place pour qu'une surveillance continue de le suivre.
+- Relier l'écran de port forwarding au guide du site expliquant comment configurer un client
+  torrent avec un port accordé.
 
 ### Corrigé
 - Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le

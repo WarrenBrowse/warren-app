@@ -40,6 +40,8 @@ Line wrap the file at 100 chars.                                              Th
   `~/Library/Application Support/Warren VPN/` on macOS, `%LOCALAPPDATA%\Warren VPN\` on
   Windows). The file empties while the tunnel is down, and is rewritten in place so a watcher
   keeps following it.
+- Link the port forwarding screen to the website guide explaining how to set up a torrent client
+  with a forwarded port.
 
 ### Fixed
 - Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start

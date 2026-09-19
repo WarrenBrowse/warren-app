@@ -2385,6 +2385,10 @@ msgid "disabled"
 msgstr "無効"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "トレントクライアントの設定方法"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "パブリックポートが変わったら通知する"
 

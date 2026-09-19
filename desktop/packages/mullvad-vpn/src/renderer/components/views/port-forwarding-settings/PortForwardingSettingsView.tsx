@@ -14,6 +14,7 @@ import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
 import { AppNavigationHeader } from '../..';
+import { ExternalLink } from '../../ExternalLink';
 import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
@@ -75,6 +76,22 @@ export function PortForwardingSettingsView() {
                         { url: urls.reports },
                       )}
                     </Text>
+                    <ExternalLink variant="labelTinySemiBold" to={urls.portForwardingGuide}>
+                      <ExternalLink.Text>
+                        {
+                          // TRANSLATORS: Link to the website page explaining how to
+                          // TRANSLATORS: use a forwarded port with a torrent client.
+                          messages.pgettext(
+                            'port-forwarding-view',
+                            'How to set up your torrent client',
+                          )
+                        }
+                      </ExternalLink.Text>
+                      <ExternalLink.Icon
+                        aria-description={messages.pgettext('accessibility', 'Opens externally')}
+                        icon="external"
+                      />
+                    </ExternalLink>
                   </FlexColumn>
                   <PortForwardingSetting />
                   {settings.enabled ? <PortForwardingNotificationsSetting /> : null}

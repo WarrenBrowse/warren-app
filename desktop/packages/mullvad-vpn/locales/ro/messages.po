@@ -2523,6 +2523,10 @@ msgid "Copy port number"
 msgstr "Copiază numărul portului"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "Cum configurezi clientul torrent"
+
+msgctxt "port-forwarding-view"
 msgid "Mapping failed: %(error)s"
 msgstr "Eroare la generarea hărții: %(error)s"
 

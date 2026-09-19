@@ -2385,6 +2385,10 @@ msgid "disabled"
 msgstr "ပိတ်ထားသည်"
 
 msgctxt "port-forwarding-view"
+msgid "How to set up your torrent client"
+msgstr "torrent ကလိုင်းယင့်ကို ဘယ်လို စီစဉ်မလဲ"
+
+msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
 msgstr "အများသုံး ပို့တ် ပြောင်းလဲသည့်အခါ အကြောင်းကြားပါ"
 
