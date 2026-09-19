@@ -119,7 +119,9 @@ export interface IGuiSettingsState {
  * it. The renderer works from `TorrentClientPublicConfig`, which carries
  * `hasPassword` and no password.
  */
-export function guiSettingsForRenderer(state: IGuiSettingsState): IGuiSettingsState {
+export function guiSettingsForRenderer(
+  state: IGuiSettingsState,
+): Omit<IGuiSettingsState, 'torrentClient'> {
   const forRenderer = { ...state };
   delete forRenderer.torrentClient;
   return forRenderer;

@@ -168,6 +168,75 @@ describe('the torrent client configuration store', () => {
     expect(store.password()).to.equal('hunter2');
   });
 
+  // A password sealed for one host must not be handed to another: an update
+  // is the only thing that chooses where the app sends it, and a renderer that
+  // sends a new address with no new password would otherwise redirect the
+  // stored one at a host of its choosing.
+  it('clears the stored password when the address moves to another host', () => {
+    const { store } = storeWith(fakeSecrets());
+    store.update({
+      kind: 'qbittorrent',
+      url: 'http://127.0.0.1:8080',
+      username: 'alice',
+      password: 'hunter2',
+    });
+
+    store.update({ kind: 'qbittorrent', url: 'http://attacker.example', username: 'alice' });
+
+    expect(store.password()).to.equal(undefined);
+    expect(store.publicConfig().hasPassword).to.equal(false);
+  });
+
+  it('keeps the stored password when only the port is corrected', () => {
+    const { store } = storeWith(fakeSecrets());
+    store.update({
+      kind: 'qbittorrent',
+      url: 'http://127.0.0.1:8080',
+      username: 'alice',
+      password: 'hunter2',
+    });
+
+    store.update({ kind: 'qbittorrent', url: 'http://127.0.0.1:9090', username: 'alice' });
+
+    expect(store.password()).to.equal('hunter2');
+  });
+
+  // `http://user:pass@host` would put a password in a file that is cleartext,
+  // in the renderer's store, and on screen in the "cannot reach it" line.
+  it('drops credentials embedded in the address', () => {
+    const { store, holder } = storeWith(fakeSecrets());
+
+    store.update({
+      kind: 'qbittorrent',
+      url: 'http://alice:hunter2@127.0.0.1:8080/',
+      username: 'alice',
+    });
+
+    expect(store.config().url).to.equal('http://127.0.0.1:8080');
+    expect(JSON.stringify(holder.value)).to.not.contain('hunter2');
+  });
+
+  it('refuses the update when sealing throws', () => {
+    const throwing: SecretStore = {
+      available: true,
+      encrypt: () => {
+        throw new Error('the keychain is locked');
+      },
+      decrypt: (cipher: string) => cipher,
+    };
+    const { store, holder } = storeWith(throwing);
+
+    const result = store.update({
+      kind: 'qbittorrent',
+      url: 'http://127.0.0.1:8080',
+      username: 'alice',
+      password: 'hunter2',
+    });
+
+    expect(result).to.deep.equal({ error: 'encryption-unavailable' });
+    expect(holder.value).to.equal(undefined);
+  });
+
   it('reads nothing at all as no client configured', () => {
     const { store } = storeWith(fakeSecrets());
 

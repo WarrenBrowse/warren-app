@@ -50,6 +50,37 @@ export class SafeStorageSecretStore implements SecretStore {
   }
 }
 
+/**
+ * The address as it is stored: scheme, host, port and path, nothing else.
+ *
+ * Userinfo (`http://user:pass@host`) is dropped rather than kept. The
+ * adapters already ignore it, because they rebuild the base from the origin,
+ * so keeping it would only put a password in a file that is cleartext, in the
+ * renderer's store, and on screen in the line that names the address.
+ * Anything that does not parse is stored trimmed and refused later, by the
+ * adapter, which is the one place that decides what is reachable.
+ */
+function storedUrl(raw: string): string {
+  const trimmed = raw.trim();
+  try {
+    const parsed = new URL(trimmed);
+    return `${parsed.origin}${parsed.pathname}`.replace(/\/+$/, '');
+  } catch {
+    return trimmed;
+  }
+}
+
+/** The host an address points at, or the address itself when it does not
+ * parse. Compared across an update to decide whether a stored password is
+ * still being handed to the machine it was typed for. */
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return raw.trim();
+  }
+}
+
 const EMPTY_CONFIG: TorrentClientConfig = {
   kind: 'none',
   url: '',
@@ -119,7 +150,16 @@ export class TorrentClientConfigStore {
    */
   public update(update: TorrentClientConfigUpdate): TorrentClientConfigResult {
     const current = this.read();
+    const url = storedUrl(update.url);
     let passwordEncrypted = current?.passwordEncrypted ?? '';
+
+    // A password is sealed for the machine it was typed for. Pointing the
+    // app at another host without typing a new one would otherwise hand that
+    // password to whoever answers there, and an update is the only thing that
+    // chooses where it goes.
+    if (current !== undefined && hostOf(current.url) !== hostOf(url)) {
+      passwordEncrypted = '';
+    }
 
     if (update.password !== undefined) {
       if (update.password === '') {
@@ -128,13 +168,20 @@ export class TorrentClientConfigStore {
         if (!this.secrets.available) {
           return { error: 'encryption-unavailable' };
         }
-        passwordEncrypted = this.secrets.encrypt(update.password);
+        try {
+          passwordEncrypted = this.secrets.encrypt(update.password);
+        } catch {
+          // A keychain that reports itself available can still refuse to
+          // seal (a locked login keyring). Refusing the whole update is the
+          // only answer that does not claim a password was kept.
+          return { error: 'encryption-unavailable' };
+        }
       }
     }
 
     const stored: StoredTorrentClient = {
       kind: update.kind,
-      url: update.url.trim(),
+      url,
       username: update.username,
       passwordEncrypted,
       rule: update.rule,
