@@ -120,6 +120,7 @@ import NotificationController, {
   NotificationSender,
 } from './notification-controller';
 import { isMacOs13OrNewer } from './platform-version';
+import { ForwardedPortFile, renderForwardedPortFile } from './port-forward-status-file';
 import { PortForwardingWatcher } from './port-forwarding-watcher';
 import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
@@ -185,6 +186,11 @@ class ApplicationMain
   // Baseline of that stream, reset with the subscription so the replay the
   // daemon sends on reconnect is never announced as a change.
   private portForwardingWatcher = new PortForwardingWatcher();
+  // Last snapshot of that stream, and the machine-readable file it feeds. A
+  // torrent client learns its port from the file rather than from the window,
+  // so it is republished on every snapshot AND on every tunnel-state change.
+  private natPmpStatus?: NatPmpStatus;
+  private forwardedPortFile = new ForwardedPortFile();
   private reconnectBackoff = new ReconnectionBackoff();
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
@@ -1247,6 +1253,9 @@ class ApplicationMain
   // replays its live mappings as soon as the GUI reconnects, and announcing
   // those would name the same port again on every restart.
   private handleNatPmpStatus(snapshot: NatPmpStatus) {
+    this.natPmpStatus = snapshot;
+    this.publishForwardedPortFile();
+
     const changes = this.portForwardingWatcher.observe(snapshot);
     if (!this.settings.gui.portForwardingNotifications) {
       return;
@@ -1258,6 +1267,21 @@ class ApplicationMain
         this.settings.gui.enableSystemNotifications,
       );
     }
+  }
+
+  // Publishes the granted public ports where a script can watch them, next to
+  // the GUI settings. A failure to write is reported and dropped: the file is a
+  // convenience, and nothing in the app depends on it.
+  private publishForwardedPortFile() {
+    const content = renderForwardedPortFile(
+      this.natPmpStatus,
+      this.tunnelState.tunnelState.state === 'connected',
+    );
+    void this.forwardedPortFile
+      .publish(app.getPath('userData'), content)
+      .catch((error: Error) =>
+        log.warn(`Cannot publish the forwarded port file: ${error.message}`),
+      );
   }
 
   private setSettings(newSettings: ISettings) {
@@ -1805,6 +1829,10 @@ class ApplicationMain
   // TunnelStateHandlerDelegate
   public handleTunnelStateUpdate = (tunnelState: TunnelState) => {
     this.userInterface?.updateTray(this.account.isLoggedIn(), tunnelState);
+
+    // A port carried on a down tunnel forwards nothing, so the file empties
+    // with the tunnel rather than waiting for the next NAT-PMP snapshot.
+    this.publishForwardedPortFile();
 
     this.notificationController.notifyTunnelState(
       tunnelState,

@@ -26,6 +26,11 @@ par l'application, gardez-le tel quel.
 - Vous prévenir quand un port public accordé s'ouvre, change ou se ferme, par une notification
   système qui nomme le nouveau port et ouvre l'écran de port forwarding. Un renouvellement qui
   garde le même port ne dit rien. La notification se désactive depuis l'écran de port forwarding.
+- Publier les ports publics accordés dans un fichier qu'un script peut surveiller, un port par
+  ligne, écrit à côté des réglages de l'application sous le nom `forwarded_port`
+  (`~/.config/Warren VPN/` sous Linux, `~/Library/Application Support/Warren VPN/` sous macOS,
+  `%LOCALAPPDATA%\Warren VPN\` sous Windows). Le fichier se vide quand le tunnel est coupé, et
+  il est réécrit sur place pour qu'une surveillance continue de le suivre.
 
 ### Corrigé
 - Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le

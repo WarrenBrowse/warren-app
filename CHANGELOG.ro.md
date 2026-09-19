@@ -26,6 +26,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   notificare de sistem care numește noul port și deschide ecranul de port forwarding. O reînnoire
   care păstrează același port nu spune nimic. Notificarea se poate opri din ecranul de port
   forwarding.
+- Publică porturile publice acordate într-un fișier pe care un script îl poate urmări, un port pe
+  linie, scris lângă setările aplicației sub numele `forwarded_port` (`~/.config/Warren VPN/` pe
+  Linux, `~/Library/Application Support/Warren VPN/` pe macOS, `%LOCALAPPDATA%\Warren VPN\` pe
+  Windows). Fișierul se golește cât timp tunelul este oprit și este rescris pe loc, astfel încât o
+  urmărire continuă să îl vadă.
 
 ### Reparat
 - Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă

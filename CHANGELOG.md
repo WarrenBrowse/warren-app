@@ -35,6 +35,11 @@ Line wrap the file at 100 chars.                                              Th
 - Tell you when a forwarded public port opens, moves or closes, with a system notification that
   names the new port and opens the port forwarding screen. A renewal that keeps the same port
   says nothing. The notification can be turned off from the port forwarding screen.
+- Publish the granted public ports to a file a script can watch, one port per line, written next
+  to the app settings as `forwarded_port` (`~/.config/Warren VPN/` on Linux,
+  `~/Library/Application Support/Warren VPN/` on macOS, `%LOCALAPPDATA%\Warren VPN\` on
+  Windows). The file empties while the tunnel is down, and is rewritten in place so a watcher
+  keeps following it.
 
 ### Fixed
 - Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start
