@@ -1339,12 +1339,12 @@ msgstr "Nu s-a putut reîmprospăta accesul beta. Verificați conexiunea și în
 #. could not be established.
 msgctxt "connect-view"
 msgid "Port forwarding: blocked"
-msgstr "Redirecționarea porturilor: blocată"
+msgstr "Port forwarding: blocată"
 
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
-msgstr "Redirecționarea porturilor: port ocupat"
+msgstr "Port forwarding: port ocupat"
 
 #. Feature indicator (warning) shown when the network path cannot carry
 #. full-size packets; the tunnel adapts automatically.
@@ -4169,7 +4169,7 @@ msgstr "Se verifică... (apasă pentru a reîmprospăta acum)"
 
 msgctxt "connect-view"
 msgid "Port forwarding: %(ports)s"
-msgstr "Redirecționare porturi: %(ports)s"
+msgstr "Port forwarding: %(ports)s"
 
 msgctxt "connection-info"
 msgid "Multihop (2 hops)"
