@@ -4,6 +4,7 @@ import * as path from 'path';
 
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import log from '../shared/logging';
+import { parseStoredTorrentClient, StoredTorrentClient } from '../shared/torrent-client';
 
 const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   preferredLocale: 'string',
@@ -11,6 +12,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   enableSystemNotifications: 'boolean',
   forumNotifications: 'boolean',
   portForwardingNotifications: 'boolean',
+  torrentClient: 'object',
   monochromaticIcon: 'boolean',
   startMinimized: 'boolean',
   unpinnedWindow: 'boolean',
@@ -91,6 +93,18 @@ export default class GuiSettings {
 
   get portForwardingNotifications(): boolean {
     return this.stateValue.portForwardingNotifications ?? true;
+  }
+
+  // The configured torrent client, with its password sealed (see
+  // gui-settings-state.ts). Parsed on every read rather than trusted: this
+  // file is on disk, a user may edit it, and a blob from a future version may
+  // name a client this build does not speak.
+  set torrentClient(newValue: StoredTorrentClient | undefined) {
+    this.changeStateAndNotify({ ...this.stateValue, torrentClient: newValue });
+  }
+
+  get torrentClient(): StoredTorrentClient | undefined {
+    return parseStoredTorrentClient(this.stateValue.torrentClient);
   }
 
   set autoConnect(newValue: boolean) {

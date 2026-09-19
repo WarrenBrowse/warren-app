@@ -1,3 +1,5 @@
+import { StoredTorrentClient } from './torrent-client';
+
 // This is a special value which is when contained within IGuiSettingsState.preferredLocale
 // indicates that app should use the active operating system locale to determine the UI language.
 export const SYSTEM_PREFERRED_LOCALE_KEY = 'system';
@@ -26,6 +28,14 @@ export interface IGuiSettingsState {
   // and the exit may move a grant at any renewal. Optional so settings files
   // written before the setting existed keep validating.
   portForwardingNotifications?: boolean;
+
+  // The torrent client the app writes the forwarded public port into, with
+  // its web interface address and the credentials to reach it. Optional so
+  // settings files written before the feature existed keep validating, and
+  // absent until a client is configured. Never sent to the renderer as it
+  // stands: it carries the sealed password, and the renderer gets
+  // `TorrentClientPublicConfig` instead (see `guiSettingsForRenderer`).
+  torrentClient?: StoredTorrentClient;
 
   // Tells the app to activate auto-connect feature in the mullvad-daemon, but only if the app is
   // set to auto-start with the system.
@@ -97,4 +107,20 @@ export interface IGuiSettingsState {
   // process PurchaseFlow; the renderer never reads it. Optional so
   // settings files written by older versions keep validating.
   pendingPurchases?: Array<string>;
+}
+
+/**
+ * The GUI settings as the renderer may see them.
+ *
+ * The torrent client blob is the one key of this object that carries a
+ * credential, sealed but still a credential, and the whole object is pushed to
+ * the renderer on every change. It is stripped here, at the boundary, rather
+ * than at each of the two call sites, so a third one cannot be added without
+ * it. The renderer works from `TorrentClientPublicConfig`, which carries
+ * `hasPassword` and no password.
+ */
+export function guiSettingsForRenderer(state: IGuiSettingsState): IGuiSettingsState {
+  const forRenderer = { ...state };
+  delete forRenderer.torrentClient;
+  return forRenderer;
 }

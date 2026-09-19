@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 
 import { ISettings } from '../shared/daemon-rpc-types';
+import { guiSettingsForRenderer } from '../shared/gui-settings-state';
 import { ICurrentAppVersionInfo } from '../shared/ipc-types';
 import log from '../shared/logging';
 import { getOpenAtLogin, setOpenAtLogin } from './autostart';
@@ -271,7 +272,10 @@ export default class Settings implements Readonly<ISettings> {
         this.updateDaemonsAutoConnect();
       }
 
-      IpcMainEventChannel.guiSettings.notify?.(newState);
+      // Redacted: the state carries the sealed torrent client password, and
+      // this is one of the two places it would otherwise cross to the
+      // renderer.
+      IpcMainEventChannel.guiSettings.notify?.(guiSettingsForRenderer(newState));
     };
   }
 
