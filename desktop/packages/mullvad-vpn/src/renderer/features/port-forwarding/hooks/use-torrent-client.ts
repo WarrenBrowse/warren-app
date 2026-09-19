@@ -23,17 +23,26 @@ export function useTorrentClient() {
   const { setTorrentClientConfig, testTorrentClientConnection, applyTorrentClientPort } =
     useAppContext();
 
-  /** Answers the refusal when there is one, so the form can name it, and
-   * `undefined` when the settings were stored. */
+  /**
+   * Answers the refusal when there is one, and `undefined` only when the
+   * settings really were stored.
+   *
+   * A call that never reached the main process answers `failed` rather than
+   * `undefined`: the form clears the password field on a successful save, and
+   * showing a cleared field for a password that was never kept is the one
+   * outcome the user cannot recover from on their own.
+   */
   const save = React.useCallback(
-    async (update: TorrentClientConfigUpdate): Promise<'encryption-unavailable' | undefined> => {
+    async (
+      update: TorrentClientConfigUpdate,
+    ): Promise<'encryption-unavailable' | 'failed' | undefined> => {
       try {
         const result = await setTorrentClientConfig(update);
         return isTorrentClientConfigError(result) ? result.error : undefined;
       } catch (error) {
         const message = error instanceof Error ? error.message : '';
         log.error('Could not save the torrent client settings', message);
-        return undefined;
+        return 'failed';
       }
     },
     [setTorrentClientConfig],

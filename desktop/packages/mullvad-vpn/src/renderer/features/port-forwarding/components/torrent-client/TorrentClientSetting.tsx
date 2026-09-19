@@ -95,7 +95,8 @@ export function TorrentClientSetting() {
         password: patch.password,
         rule: patch.rule ?? config.rule,
       });
-      setMessage(refusal === undefined ? undefined : torrentClientConfigErrorLine());
+      setMessage(refusal === 'encryption-unavailable' ? torrentClientConfigErrorLine() : undefined);
+      return refusal;
     },
     [save, config.kind, config.rule, url, username],
   );
@@ -133,13 +134,18 @@ export function TorrentClientSetting() {
   }, []);
 
   // The password leaves the renderer once, when the field is done with, never
-  // on a keystroke.
+  // on a keystroke. The field is cleared only once the main process says the
+  // password was stored: an emptied field over nothing saved is the one state
+  // the user cannot tell apart from a saved password.
   const handlePasswordBlur = React.useCallback(() => {
     if (password === '') {
       return;
     }
-    void persist({ password });
-    setPassword('');
+    void persist({ password }).then((refusal) => {
+      if (refusal === undefined) {
+        setPassword('');
+      }
+    });
   }, [persist, password]);
 
   const handleRuleChange = React.useCallback(
@@ -172,6 +178,14 @@ export function TorrentClientSetting() {
     setBusy(false);
   }, [applyNow]);
 
+  // The same fallback the controller applies: a recorded rule the user has
+  // since deleted is not in the list, and a select whose value matches no
+  // option shows an empty box next to a feature that is in fact running on
+  // the first rule.
+  const linkedRule =
+    rules.find(
+      (candidate) => config.rule !== undefined && ruleKey(candidate) === ruleKey(config.rule),
+    ) ?? rules[0];
   const configured = config.kind !== 'none';
   const line =
     message ?? (status === undefined ? undefined : torrentClientStatusLine(status, config));
@@ -258,7 +272,7 @@ export function TorrentClientSetting() {
                       {messages.pgettext('port-forwarding-view', 'Rule')}
                     </Text>
                     <StyledSelect
-                      value={config.rule === undefined ? ruleKey(rules[0]) : ruleKey(config.rule)}
+                      value={ruleKey(linkedRule)}
                       onChange={handleRuleChange}
                       aria-label={messages.pgettext('port-forwarding-view', 'Rule')}>
                       {rules.map((rule) => (
