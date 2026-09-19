@@ -143,6 +143,7 @@ class ApplicationMain {
       isMacOs13OrNewer: true,
       purchaseInFlight: false,
       forumUnread: 0,
+      torrentClient: { kind: 'none', url: '', username: '', hasPassword: false },
     }));
 
     // The renderer holds no settings state of its own: it sends a change and

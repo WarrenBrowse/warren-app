@@ -42,7 +42,7 @@ import {
   IForumReportForm,
 } from '../shared/forum-report';
 import { messages, relayLocations } from '../shared/gettext';
-import { SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
+import { guiSettingsForRenderer, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import { ITranslations, MacOsScrollbarVisibility } from '../shared/ipc-schema';
 import { IChangelog, IHistoryObject } from '../shared/ipc-types';
 import log, { ConsoleOutput, Logger } from '../shared/logging';
@@ -60,6 +60,7 @@ import {
   SystemNotificationCategory,
 } from '../shared/notifications/notification';
 import { RoutePath } from '../shared/routes';
+import { TorrentClientKind, TorrentClientStatus } from '../shared/torrent-client';
 import { shortenWarrenPubKey } from '../shared/utils';
 import Account, { AccountDelegate, LocaleProvider } from './account';
 import AppUpgrade from './app-upgrade';
@@ -129,6 +130,9 @@ import ReconnectionBackoff from './reconnection-backoff';
 import RenewalFlow, { RenewOutcome, renewOutcomeOfHttpStatus } from './renewal-flow';
 import SafeStorageRenewalStore from './renewal-store';
 import Settings, { SettingsDelegate } from './settings';
+import { createTorrentClientAdapter } from './torrent-client/adapters';
+import { SafeStorageSecretStore, TorrentClientConfigStore } from './torrent-client/config';
+import { TorrentClientSync } from './torrent-client/sync';
 import TunnelStateHandler, {
   TunnelStateHandlerDelegate,
   TunnelStateProvider,
@@ -191,6 +195,41 @@ class ApplicationMain
   // so it is republished on every snapshot AND on every tunnel-state change.
   private natPmpStatus?: NatPmpStatus;
   private forwardedPortFile = new ForwardedPortFile();
+  // The torrent client the forwarded port is written into, and the controller
+  // that writes it. Fed the very same `PortChange[]` the notification is fed,
+  // so the app can never tell the user one port and the client another.
+  private torrentClientConfig = new TorrentClientConfigStore(
+    new SafeStorageSecretStore(),
+    () => this.settings.gui.torrentClient,
+    (value) => {
+      this.settings.gui.torrentClient = value;
+    },
+  );
+  private torrentClientSync = new TorrentClientSync({
+    config: () => this.torrentClientConfig.config(),
+    password: () => this.torrentClientConfig.password(),
+    natPmpSettings: () => this.settings.warrenNatPmp,
+    setNatPmpSettings: (settings) => this.daemonRpc.setNatPmpSettings(settings),
+    natPmpStatus: () => this.natPmpStatus,
+    setRule: (rule) => this.torrentClientConfig.setRule(rule),
+    adapterFor: (config, password) =>
+      createTorrentClientAdapter({
+        // `onChanges` and every call below refuse to run on a config whose
+        // kind is `none`, so the cast only ever sees a real client.
+        kind: config.kind as TorrentClientKind,
+        url: config.url,
+        username: config.username,
+        password: password ?? '',
+        fetch,
+      }),
+    onStatus: (status) => {
+      this.torrentClientStatus = status;
+      IpcMainEventChannel.torrentClient.notify?.(status);
+    },
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+    now: () => Date.now(),
+  });
+  private torrentClientStatus?: TorrentClientStatus;
   private reconnectBackoff = new ReconnectionBackoff();
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
@@ -1114,6 +1153,7 @@ class ApplicationMain
     this.warrenStatusListener = undefined;
     this.natPmpStatusListener = undefined;
     this.portForwardingWatcher.reset();
+    this.torrentClientSync.reset();
 
     this.notificationController.closeNotificationsInCategory(
       SystemNotificationCategory.tunnelState,
@@ -1178,6 +1218,7 @@ class ApplicationMain
     if (this.natPmpStatusListener) {
       this.daemonRpc.unsubscribeNatPmpStatusListener(this.natPmpStatusListener);
       this.portForwardingWatcher.reset();
+      this.torrentClientSync.reset();
     }
   }
 
@@ -1257,6 +1298,11 @@ class ApplicationMain
     this.publishForwardedPortFile();
 
     const changes = this.portForwardingWatcher.observe(snapshot);
+    // One call site, two consumers: the toast the user reads and the write
+    // into their torrent client come from the same list of changes, so they
+    // can never name different ports.
+    void this.torrentClientSync.onChanges(changes);
+
     if (!this.settings.gui.portForwardingNotifications) {
       return;
     }
@@ -1331,7 +1377,7 @@ class ApplicationMain
       relayList: this.relayList,
       currentVersion: this.version.currentVersion,
       upgradeVersion: this.version.upgradeVersion,
-      guiSettings: this.settings.gui.state,
+      guiSettings: guiSettingsForRenderer(this.settings.gui.state),
       translations: this.translations,
       splitTunnelingApplications: this.splitTunnelingApplications,
       splitTunnelingSupported: this.splitTunnelingSupported,
@@ -1344,7 +1390,21 @@ class ApplicationMain
       forumIdentity: this.forumIdentityStore.get(),
       forumUnread: this.forumUnread,
       warrenStatus: this.warrenStatus,
+      torrentClient: this.torrentClientConfig.publicConfig(),
+      torrentClientStatus: this.torrentClientStatus,
     }));
+
+    IpcMainEventChannel.torrentClient.handleSetConfig((update) => {
+      const result = this.torrentClientConfig.update(update);
+      if (!('error' in result)) {
+        this.torrentClientSync.refresh();
+      }
+      return Promise.resolve(result);
+    });
+    IpcMainEventChannel.torrentClient.handleTestConnection(() =>
+      this.torrentClientSync.testConnection(),
+    );
+    IpcMainEventChannel.torrentClient.handleApplyNow(() => this.torrentClientSync.applyNow());
 
     IpcMainEventChannel.map.handleGetData(async () => {
       const readGeoFile = async (fileName: string) => {

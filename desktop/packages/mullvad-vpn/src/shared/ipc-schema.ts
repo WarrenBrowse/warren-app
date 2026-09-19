@@ -50,6 +50,14 @@ import {
 import { LogLevel } from './logging-types';
 import { RenewalUiState } from './renewal';
 import { RoutePath } from './routes';
+import {
+  ProbeResult,
+  TorrentClientConfigResult,
+  TorrentClientConfigUpdate,
+  TorrentClientError,
+  TorrentClientPublicConfig,
+  TorrentClientStatus,
+} from './torrent-client';
 
 interface ILogEntry {
   level: LogLevel;
@@ -128,6 +136,15 @@ export interface IAppStateSnapshot {
   // otherwise stay invisible until it next changed, which for a notice can be
   // never.
   warrenStatus?: WarrenStatus;
+  // The torrent client the app writes the forwarded port into, as the
+  // renderer may see it (no password, only whether one is stored). Part of
+  // the initial snapshot because the settings form has to render the saved
+  // address and client on first paint, and there is no push that would
+  // deliver it otherwise.
+  torrentClient: TorrentClientPublicConfig;
+  // Where the last push got to. Undefined until something has been pushed or
+  // the controller has had a reason to speak.
+  torrentClientStatus?: TorrentClientStatus;
 }
 
 export type IpcSchema = typeof ipcSchema;
@@ -323,6 +340,22 @@ export const ipcSchema = {
   // view rerenders with the current port + countdown.
   natPmpStatus: {
     '': notifyRenderer<NatPmpStatus>(),
+  },
+  // Torrent client integration: the app writes the forwarded public port
+  // into the user's torrent client over that client's own web API, and
+  // keeps it there whenever the exit moves the grant. `''` pushes every
+  // state change of that work; the three calls are the settings form's.
+  torrentClient: {
+    '': notifyRenderer<TorrentClientStatus>(),
+    // Answers the stored configuration as the renderer may see it, or the
+    // reason it was refused (a machine with no real encryption cannot be
+    // asked to keep a password).
+    setConfig: invoke<TorrentClientConfigUpdate, TorrentClientConfigResult>(),
+    // Asks the client who it is and what it listens on. Writes nothing.
+    testConnection: invoke<void, ProbeResult | TorrentClientError>(),
+    // Writes the port the linked rule holds right now, on the user's
+    // command, rather than waiting for the exit to move it.
+    applyNow: invoke<void, TorrentClientStatus>(),
   },
   settings: {
     '': notifyRenderer<ISettings>(),
