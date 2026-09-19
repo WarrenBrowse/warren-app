@@ -135,7 +135,12 @@ import RenewalFlow, { RenewOutcome, renewOutcomeOfHttpStatus } from './renewal-f
 import SafeStorageRenewalStore from './renewal-store';
 import Settings, { SettingsDelegate } from './settings';
 import { createTorrentClientAdapter } from './torrent-client/adapters';
-import { SafeStorageSecretStore, TorrentClientConfigStore } from './torrent-client/config';
+import { TorrentClientConfigStore } from './torrent-client/config';
+import {
+  SafeStorageSecretStore,
+  SealedTorrentClientPasswordStore,
+  TORRENT_CLIENT_PASSWORD_FILE,
+} from './torrent-client/password-store';
 import { TorrentClientSync } from './torrent-client/sync';
 import TunnelStateHandler, {
   TunnelStateHandlerDelegate,
@@ -202,8 +207,16 @@ class ApplicationMain
   // The torrent client the forwarded port is written into, and the controller
   // that writes it. Fed the very same `PortChange[]` the notification is fed,
   // so the app can never tell the user one port and the client another.
-  private torrentClientConfig = new TorrentClientConfigStore(
+  // The password is sealed in its own blob under the user-data directory,
+  // beside the renewal mandate and the forum identity; `gui_settings.json`
+  // keeps only which client, where, and which rule. The path is resolved
+  // lazily because `app.getPath` is not answerable before the app is ready.
+  private torrentClientPasswords = new SealedTorrentClientPasswordStore(
     new SafeStorageSecretStore(),
+    () => path.join(app.getPath('userData'), TORRENT_CLIENT_PASSWORD_FILE),
+  );
+  private torrentClientConfig = new TorrentClientConfigStore(
+    this.torrentClientPasswords,
     () => this.settings.gui.torrentClient,
     (value) => {
       this.settings.gui.torrentClient = value;

@@ -29,12 +29,13 @@ export interface IGuiSettingsState {
   // written before the setting existed keep validating.
   portForwardingNotifications?: boolean;
 
-  // The torrent client the app writes the forwarded public port into, with
-  // its web interface address and the credentials to reach it. Optional so
-  // settings files written before the feature existed keep validating, and
-  // absent until a client is configured. Never sent to the renderer as it
-  // stands: it carries the sealed password, and the renderer gets
-  // `TorrentClientPublicConfig` instead (see `guiSettingsForRenderer`).
+  // The torrent client the app writes the forwarded public port into: which
+  // client, where its web interface is, and which rule it follows. The
+  // password is NOT here, it is sealed in its own blob under the user-data
+  // directory. Optional so settings files written before the feature existed
+  // keep validating, and absent until a client is configured. Not sent to the
+  // renderer as it stands: the renderer works from
+  // `TorrentClientPublicConfig` (see `guiSettingsForRenderer`).
   torrentClient?: StoredTorrentClient;
 
   // Tells the app to activate auto-connect feature in the mullvad-daemon, but only if the app is
@@ -112,12 +113,13 @@ export interface IGuiSettingsState {
 /**
  * The GUI settings as the renderer may see them.
  *
- * The torrent client blob is the one key of this object that carries a
- * credential, sealed but still a credential, and the whole object is pushed to
- * the renderer on every change. It is stripped here, at the boundary, rather
- * than at each of the two call sites, so a third one cannot be added without
- * it. The renderer works from `TorrentClientPublicConfig`, which carries
- * `hasPassword` and no password.
+ * The torrent client blob is stripped because the renderer already has that
+ * configuration in the one shape it is meant to use,
+ * `TorrentClientPublicConfig`, which adds whether a password is stored and
+ * which this object cannot answer. Two representations of the same settings
+ * arriving by two channels is how a form ends up showing one thing while the
+ * app does another. Stripped here, at the boundary, rather than at each call
+ * site, so a third one cannot be added without it.
  */
 export function guiSettingsForRenderer(
   state: IGuiSettingsState,

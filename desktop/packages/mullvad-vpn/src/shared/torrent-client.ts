@@ -149,21 +149,18 @@ export function torrentClientUsesUsername(kind: TorrentClientKind | 'none'): boo
 }
 
 /**
- * The torrent client configuration as it sits in `gui_settings.json`.
+ * The torrent client configuration as it sits in `gui_settings.json`: which
+ * client, where its web interface is, and which port-forward rule it follows.
  *
- * The password is the only sealed value in that file, which is cleartext by
- * invariant everywhere else: it is a credential to a service on the user's own
- * machine, so it is stored the way the forum identity is, through the OS
- * keychain, and what remains readable in the file says only which client is
- * configured and where.
+ * No credential. The password lives in its own sealed blob under the
+ * user-data directory (`torrent-client.bin`), beside the renewal mandate and
+ * the forum identity, so `gui_settings.json` stays what those two stores say
+ * it is: cleartext, and free of anything that has to be protected.
  */
 export interface StoredTorrentClient {
   kind: TorrentClientKind | 'none';
   url: string;
   username: string;
-  /** The password, sealed by the platform secret store and base64-encoded.
-   * Empty when no password is stored. */
-  passwordEncrypted: string;
   rule?: TorrentClientRuleRef;
 }
 
@@ -188,10 +185,13 @@ function parseRuleRef(value: unknown): TorrentClientRuleRef | undefined {
  * write.
  *
  * `gui_settings.json` is a file on disk that a user may edit, and a settings
- * file from a future version may carry a client this build does not speak. A
- * blob that does not check out is dropped whole rather than half-used; a rule
- * that does not check out is dropped on its own, because losing the link to a
- * port is not a reason to lose the credentials with it.
+ * file from another version may carry a client this build does not speak, or
+ * a key it no longer has a use for. Only the four fields above are read, so
+ * anything else in the blob (a `passwordEncrypted` from the build that kept
+ * the password here) is dropped without a word. A blob that does not check
+ * out is dropped whole rather than half-used; a rule that does not check out
+ * is dropped on its own, because losing the link to a port is not a reason to
+ * lose the address with it.
  */
 export function parseStoredTorrentClient(value: unknown): StoredTorrentClient | undefined {
   if (typeof value !== 'object' || value === null) {
@@ -204,19 +204,13 @@ export function parseStoredTorrentClient(value: unknown): StoredTorrentClient | 
   }
   const url = raw['url'];
   const username = raw['username'];
-  const passwordEncrypted = raw['passwordEncrypted'] ?? '';
-  if (
-    typeof url !== 'string' ||
-    typeof username !== 'string' ||
-    typeof passwordEncrypted !== 'string'
-  ) {
+  if (typeof url !== 'string' || typeof username !== 'string') {
     return undefined;
   }
   return {
     kind: kind as TorrentClientKind | 'none',
     url,
     username,
-    passwordEncrypted,
     rule: parseRuleRef(raw['rule']),
   };
 }

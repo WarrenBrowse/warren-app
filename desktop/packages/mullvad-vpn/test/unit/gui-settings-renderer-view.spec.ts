@@ -12,7 +12,6 @@ const state: IGuiSettingsState = {
     kind: 'qbittorrent',
     url: 'http://127.0.0.1:8080',
     username: 'alice',
-    passwordEncrypted: 'c2VhbGVkLWJ5dGVz',
     rule: { internalPort: 58291, protocol: NatPmpProto.both },
   },
   autoConnect: false,
@@ -27,14 +26,15 @@ const state: IGuiSettingsState = {
 
 describe('the GUI settings the renderer is given', () => {
   // The whole settings object is pushed to the renderer on every change, and
-  // this key is the only one in it that carries a credential. The renderer
-  // works from `TorrentClientPublicConfig`, which says whether a password is
-  // stored and never what it is.
-  it('strips the sealed torrent client password', () => {
+  // the renderer already has this configuration in the one shape it is meant
+  // to use, `TorrentClientPublicConfig`. Two representations arriving by two
+  // channels is how a form ends up showing one thing while the app does
+  // another.
+  it('strips the torrent client settings', () => {
     const forRenderer = guiSettingsForRenderer(state) as Record<string, unknown>;
 
     expect(forRenderer.torrentClient).to.equal(undefined);
-    expect(JSON.stringify(forRenderer)).to.not.contain('c2VhbGVkLWJ5dGVz');
+    expect(JSON.stringify(forRenderer)).to.not.contain('127.0.0.1:8080');
   });
 
   it('keeps every other setting untouched', () => {
@@ -47,6 +47,6 @@ describe('the GUI settings the renderer is given', () => {
   it('leaves the state it was given alone', () => {
     guiSettingsForRenderer(state);
 
-    expect(state.torrentClient?.passwordEncrypted).to.equal('c2VhbGVkLWJ5dGVz');
+    expect(state.torrentClient?.url).to.equal('http://127.0.0.1:8080');
   });
 });
