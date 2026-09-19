@@ -37,7 +37,15 @@ thiserror = { workspace = true }
 # `warren version` states the compiled environment and its API host without
 # needing a daemon to answer.
 warren-product-env = { path = "../warren-product-env" }
-tokio = { workspace = true, features = ["fs", "macros", "rt-multi-thread"] }
+# `process` and `time`: `port-forward status --exec` spawns the user's hook
+# through the platform's shell and kills it when it outlives its budget.
+tokio = { workspace = true, features = [
+  "fs",
+  "macros",
+  "process",
+  "rt-multi-thread",
+  "time",
+] }
 
 [target.'cfg(all(unix, not(target_os = "android")))'.dependencies]
 clap_complete = { version = "4.4.8" }

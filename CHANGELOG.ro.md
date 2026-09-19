@@ -12,6 +12,14 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
 ## [Nepublicat]
+### Adăugat
+- Oferă comenzii de port forwarding o ieșire citibilă de o mașină, pentru ca un script să poată
+  conduce un client torrent precum qBittorrent fără să citească textul destinat oamenilor.
+  `warren port-forward get --json` și `warren port-forward status --json` afișează un obiect JSON
+  pe linie, `status --wait` așteaptă până când portul public este acordat și raportează rezultatul
+  prin codul său de ieșire, iar `status --watch --exec` rulează comanda aleasă de tine la fiecare
+  schimbare a portului public acordat.
+
 ### Reparat
 - Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă
   tunelul să pornească și apoi îl taie. Aplicația cerea serverului adresa sa și aștepta un răspuns

@@ -22,6 +22,14 @@ Line wrap the file at 100 chars.                                              Th
 * **Security**: in case of vulnerabilities.
 
 ## [Unreleased]
+### Added
+- Give the port forwarding command machine-readable output, so a script can drive a torrent
+  client such as qBittorrent without reading the text meant for a human.
+  `warren port-forward get --json` and `warren port-forward status --json` print one JSON object
+  per line, `status --wait` blocks until the public port is granted and reports the outcome
+  through its exit code, and `status --watch --exec` runs a command of your choice every time the
+  granted public port changes.
+
 ### Fixed
 - Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start
   and then cuts it. The app asked the server for its address and waited for an answer that never

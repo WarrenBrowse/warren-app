@@ -13,6 +13,14 @@ version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
 ## [Non publié]
+### Ajouté
+- Donner à la commande de port forwarding une sortie lisible par une machine, pour qu'un script
+  puisse piloter un client torrent comme qBittorrent sans lire le texte destiné à l'humain.
+  `warren port-forward get --json` et `warren port-forward status --json` affichent un objet JSON
+  par ligne, `status --wait` attend que le port public soit accordé et indique le résultat par son
+  code de sortie, et `status --watch --exec` lance la commande de votre choix à chaque changement
+  du port public accordé.
+
 ### Corrigé
 - Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le
   tunnel démarrer puis le coupe. L'application demandait son adresse au serveur et attendait une
