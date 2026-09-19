@@ -2415,7 +2415,7 @@ msgstr "M'avertir quand un port public change"
 
 msgctxt "port-forwarding-view"
 msgid "Port forwarding"
-msgstr "Redirection de port"
+msgstr "Port forwarding"
 
 msgctxt "port-forwarding-view"
 msgid "Public port: %(port)s"
@@ -2447,7 +2447,7 @@ msgstr "Aucun port disponible pour le moment. Réessayez dans un instant."
 
 msgctxt "port-forwarding-view"
 msgid "Port forwarding is not allowed on this server."
-msgstr "La redirection de port n'est pas autorisée sur ce serveur."
+msgstr "Le port forwarding n'est pas autorisé sur ce serveur."
 
 msgctxt "port-forwarding-view"
 msgid "Too many port changes. Wait %(countdown)s before changing the port again."
@@ -4359,7 +4359,7 @@ msgstr "Le code du bon a expiré."
 
 msgctxt "settings-view"
 msgid "Port forwarding"
-msgstr "Redirection de port"
+msgstr "Port forwarding"
 
 msgctxt "troubleshoot"
 msgid "If these steps do not work, please report the problem on our community forum."

@@ -2536,7 +2536,7 @@ msgstr "Anunță-mă când se schimbă un port public"
 
 msgctxt "port-forwarding-view"
 msgid "Port forwarding"
-msgstr "Redirecționarea porturilor"
+msgstr "Port forwarding"
 
 msgctxt "port-forwarding-view"
 msgid "Public port: %(port)s"
@@ -4257,7 +4257,7 @@ msgstr "se solicită…"
 
 msgctxt "settings-view"
 msgid "Port forwarding"
-msgstr "Redirecționare porturi"
+msgstr "Port forwarding"
 
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
