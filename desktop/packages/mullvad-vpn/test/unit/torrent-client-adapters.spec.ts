@@ -11,6 +11,7 @@ interface RecordedRequest {
   url: string;
   headers: Record<string, string>;
   body: string;
+  redirect: RequestRedirect | undefined;
 }
 
 type Responder = (request: RecordedRequest) => Response;
@@ -36,6 +37,7 @@ function scriptedFetch(responders: Responder[]) {
       url: String(input),
       headers: headersToObject(init?.headers),
       body: typeof init?.body === 'string' ? init.body : '',
+      redirect: init?.redirect,
     };
     requests.push(record);
     signals.push((init?.signal ?? undefined) as AbortSignal | undefined);
@@ -192,6 +194,29 @@ describe('the qBittorrent adapter', () => {
 
     expect(failure).to.deep.equal({ kind: 'unreachable' });
     expect(requests).to.have.length(0);
+  });
+
+  it('never follows a redirect, so the body cannot be replayed elsewhere', async () => {
+    const { fetchImpl, requests } = scriptedFetch([() => textResponse('Ok.')]);
+
+    await adapter('qbittorrent', fetchImpl)
+      .probe()
+      .catch(() => undefined);
+
+    expect(requests[0].redirect).to.equal('error');
+  });
+
+  // A hostile service squatting on the address the user typed answers a body
+  // that never ends; the 10 s abort bounds the wait, not the memory.
+  it('gives up on a body larger than it will ever need', async () => {
+    const { fetchImpl } = scriptedFetch([
+      () => textResponse('Ok.'),
+      () => textResponse('x'.repeat(400_000)),
+    ]);
+
+    const failure = await failureOf(() => adapter('qbittorrent', fetchImpl).probe());
+
+    expect(failure).to.deep.equal({ kind: 'bad-response', status: 200 });
   });
 
   it('reports unreachable when the request times out', async () => {
@@ -432,6 +457,77 @@ describe('every torrent client adapter', () => {
     const detail = (failure as { detail: string }).detail;
     expect(detail).to.not.contain('hunter2');
     expect(detail).to.not.contain('alice');
+  });
+
+  // The detail is capped at 200 characters. Cutting first would leave the
+  // first few characters of a secret that starts just before the cut, which
+  // is exactly the part worth having.
+  it('masks a credential that straddles the end of a long refusal', async () => {
+    const padding = 'a'.repeat(195);
+    const { fetchImpl } = scriptedFetch([
+      () => textResponse('Ok.'),
+      () => textResponse(`${padding}hunter2xyz`, 400),
+    ]);
+
+    const failure = await failureOf(() =>
+      adapter('qbittorrent', fetchImpl, { password: 'hunter2xyz' }).setListenPort(58291),
+    );
+
+    expect((failure as { detail: string }).detail).to.not.contain('hunt');
+  });
+
+  // The client quotes the request it refused, and the request carries the
+  // password percent-encoded, not as the user typed it.
+  it('masks a credential in the form it was actually sent', async () => {
+    const { fetchImpl } = scriptedFetch([
+      () => textResponse('Ok.'),
+      // Both spellings a client can quote back: `+` for a space in a form
+      // body, `%20` in a URL.
+      () => textResponse('rejected: password=my+p%26ss and my%20p%26ss', 400),
+    ]);
+
+    const failure = await failureOf(() =>
+      adapter('qbittorrent', fetchImpl, { password: 'my p&ss' }).setListenPort(58291),
+    );
+
+    const detail = (failure as { detail: string }).detail;
+    expect(detail).to.not.contain('my+p%26ss');
+    expect(detail).to.not.contain('my%20p%26ss');
+  });
+
+  it('masks the basic auth header Transmission is given', async () => {
+    const encoded = Buffer.from('alice:s3cr3t').toString('base64');
+    const { fetchImpl } = scriptedFetch([
+      () => jsonResponse({ result: `rejected authorization Basic ${encoded}` }),
+    ]);
+
+    const failure = await failureOf(() =>
+      adapter('transmission', fetchImpl, { url: 'http://127.0.0.1:9091' }).setListenPort(58291),
+    );
+
+    expect((failure as { detail: string }).detail).to.not.contain(encoded);
+  });
+
+  it('caps what a client can put on the settings screen', async () => {
+    const { fetchImpl } = scriptedFetch([() => jsonResponse({ result: 'z'.repeat(5_000) })]);
+
+    const failure = await failureOf(() =>
+      adapter('transmission', fetchImpl, { url: 'http://127.0.0.1:9091' }).setListenPort(58291),
+    );
+
+    expect((failure as { detail: string }).detail.length).to.be.at.most(200);
+  });
+
+  it('refuses to build an adapter for a client it does not speak', () => {
+    expect(() =>
+      createTorrentClientAdapter({
+        kind: 'rtorrent' as TorrentClientKind,
+        url: 'http://127.0.0.1:8080',
+        username: '',
+        password: '',
+        fetch: scriptedFetch([]).fetchImpl,
+      }),
+    ).to.throw();
   });
 
   it('never puts a credential in the message of the error it throws', async () => {

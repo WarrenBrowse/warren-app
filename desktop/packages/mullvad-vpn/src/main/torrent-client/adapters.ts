@@ -1,5 +1,5 @@
 import { DelugeAdapter } from './deluge';
-import { TorrentClientAdapter, TorrentClientAdapterOptions } from './http';
+import { TorrentClientAdapter, TorrentClientAdapterOptions, TorrentClientFailure } from './http';
 import { QBittorrentAdapter } from './qbittorrent';
 import { TransmissionAdapter } from './transmission';
 
@@ -24,5 +24,10 @@ export function createTorrentClientAdapter(
       return new TransmissionAdapter(options);
     case 'deluge':
       return new DelugeAdapter(options);
+    default:
+      // A settings file from a future version, or a `none` slipping past a
+      // caller's check: refuse rather than hand back `undefined` for the next
+      // line to dereference.
+      throw new TorrentClientFailure({ kind: 'unreachable' });
   }
 }

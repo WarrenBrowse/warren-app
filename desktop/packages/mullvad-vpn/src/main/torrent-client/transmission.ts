@@ -1,7 +1,8 @@
 import { ProbeResult } from '../../shared/torrent-client';
 import {
+  credentialForms,
   readJsonBody,
-  redactCredentials,
+  redactDetail,
   TorrentClientAdapter,
   TorrentClientAdapterOptions,
   torrentClientBaseUrl,
@@ -35,7 +36,7 @@ export class TransmissionAdapter implements TorrentClientAdapter {
       const credentials = Buffer.from(`${options.username}:${options.password}`).toString('base64');
       this.headers['authorization'] = `Basic ${credentials}`;
     }
-    this.secrets = [options.password, options.username];
+    this.secrets = credentialForms(options.username, options.password);
   }
 
   public async probe(): Promise<ProbeResult> {
@@ -106,7 +107,7 @@ export class TransmissionAdapter implements TorrentClientAdapter {
     }
     throw new TorrentClientFailure({
       kind: 'rejected',
-      detail: redactCredentials(typeof result === 'string' ? result : '', this.secrets),
+      detail: redactDetail(typeof result === 'string' ? result : '', this.secrets),
     });
   }
 }

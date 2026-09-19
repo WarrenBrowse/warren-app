@@ -1,17 +1,14 @@
 import { ProbeResult } from '../../shared/torrent-client';
 import {
+  credentialForms,
   readJsonBody,
-  redactCredentials,
+  redactDetail,
   TorrentClientAdapter,
   TorrentClientAdapterOptions,
   torrentClientBaseUrl,
   TorrentClientFailure,
   TorrentClientHttp,
 } from './http';
-
-/** Cap on a Deluge error message carried into the UI, same reason as the
- * cap on an HTTP body: a traceback is not a sentence. */
-const MAX_DETAIL_CHARS = 200;
 
 interface DelugeAnswer extends Record<string, unknown> {
   result?: unknown;
@@ -34,7 +31,7 @@ export class DelugeAdapter implements TorrentClientAdapter {
 
   public constructor(private readonly options: TorrentClientAdapterOptions) {
     this.http = new TorrentClientHttp(torrentClientBaseUrl(options.url), options.fetch);
-    this.secrets = [options.password, options.username];
+    this.secrets = credentialForms(options.username, options.password);
   }
 
   public async probe(): Promise<ProbeResult> {
@@ -130,7 +127,7 @@ export class DelugeAdapter implements TorrentClientAdapter {
         : String(error);
     throw new TorrentClientFailure({
       kind: 'rejected',
-      detail: redactCredentials(message.slice(0, MAX_DETAIL_CHARS), this.secrets),
+      detail: redactDetail(message, this.secrets),
     });
   }
 }

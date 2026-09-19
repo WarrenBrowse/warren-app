@@ -1,6 +1,8 @@
 import { ProbeResult } from '../../shared/torrent-client';
 import {
+  credentialForms,
   detailFrom,
+  readBoundedBody,
   readJsonBody,
   TorrentClientAdapter,
   TorrentClientAdapterOptions,
@@ -24,12 +26,12 @@ export class QBittorrentAdapter implements TorrentClientAdapter {
 
   public constructor(private readonly options: TorrentClientAdapterOptions) {
     this.http = new TorrentClientHttp(torrentClientBaseUrl(options.url), options.fetch);
-    this.secrets = [options.password, options.username];
+    this.secrets = credentialForms(options.username, options.password);
   }
 
   public async probe(): Promise<ProbeResult> {
     await this.login();
-    const version = (await (await this.get('/api/v2/app/version')).text()).trim();
+    const version = (await readBoundedBody(await this.get('/api/v2/app/version'))).trim();
     const preferences = await readJsonBody(await this.get('/api/v2/app/preferences'));
     const listenPort = preferences['listen_port'];
     return {
@@ -75,7 +77,7 @@ export class QBittorrentAdapter implements TorrentClientAdapter {
     }
     // Drains the body of the 200 that carries `Ok.` or `Fails.`; the verdict
     // is the next call's, not this one's.
-    await response.text();
+    await readBoundedBody(response);
   }
 
   private async get(path: string): Promise<Response> {
