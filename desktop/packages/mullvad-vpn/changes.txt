@@ -1,6 +1,47 @@
+### Added
+- Connect on a network that gives your device no IPv4 address. Four of the six exits now answer on
+  IPv6 as well, the app picks the address family your network can actually reach before it dials,
+  and it opens both of them in the firewall. A mobile network handing out IPv6 only used to leave
+  the app dialling an address it could never reach, with the kill switch holding your traffic.
+- Give the port forwarding command machine-readable output, so a script can drive a torrent
+  client such as qBittorrent without reading the text meant for a human.
+  `warren port-forward get --json` and `warren port-forward status --json` print one JSON object
+  per line, `status --wait` blocks until the public port is granted and reports the outcome
+  through its exit code, and `status --watch --exec` runs a command of your choice every time the
+  granted public port changes.
+- Copy the granted public port from the port forwarding screen. A copy button sits next to each
+  open port and puts the port number alone on the clipboard, ready to paste into a torrent
+  client's incoming port field.
+- Tell you when a forwarded public port opens, moves or closes, with a system notification that
+  names the new port and opens the port forwarding screen. A renewal that keeps the same port
+  says nothing. The notification can be turned off from the port forwarding screen.
+- Publish the granted public ports to a file a script can watch, one port per line, written next
+  to the app settings as `forwarded_port` (`~/.config/Warren VPN/` on Linux,
+  `~/Library/Application Support/Warren VPN/` on macOS, `%LOCALAPPDATA%\Warren VPN\` on
+  Windows). The file empties while the tunnel is down, and is rewritten in place so a watcher
+  keeps following it.
+- Enter the forwarded public port into your torrent client, and keep it there. Pick qBittorrent,
+  Transmission or Deluge on the port forwarding screen, give it the address of its web interface
+  and its credentials, and the app writes the granted port into the client over that client's own
+  API, every time the exit moves the port. It also turns the client's own port randomisation and
+  UPnP off, which would otherwise take it straight back off the granted port. "Test connection"
+  reports what the client answered and "Apply now" writes the current port without waiting. The
+  password is kept in the operating system keychain, never in the settings file.
+- Link the port forwarding screen to the website guide explaining how to set up a torrent client
+  with a forwarded port.
+
 ### Fixed
-- Stop the tunnel piling seconds of queue on a slow upload link. The send buffer already shrank
-  itself toward what the connection can actually carry, but it was never allowed below a floor
-  sized for a fast line, so on an uplink around 1 Mbit/s the floor was the buffer and held about
-  nine seconds of traffic. A connection now gets a floor sized for a home link, which removes the
-  delay without changing anything on a faster one.
+- Tell you why your traffic is blocked when your network cannot reach Warren at all. The app used
+  to wait silently for a network it could use, so a phone with working internet sat behind the kill
+  switch with nothing on screen explaining it. It now names the missing address family and says the
+  two ways out: disconnect, or move to another network.
+- Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start
+  and then cuts it. The app asked the server for its address and waited for an answer that never
+  came, spending the whole attempt on that single wait, so it never reached the point where it
+  switches to TCP. It now gives up on a silent answer after six seconds, and sends the next attempt
+  over TCP on port 443 straight away.
+- Keep one more of the previous log files on Android. Reopening the app twice after a failed
+  connection used to erase the record a bug report is read for.
+- Show the release notes of the installed version in the language the app runs in. The "What's new"
+  screen read a single file, written in English, so an app running in French or Romanian announced
+  its own changes in English. The notes offered along with an update were already translated.

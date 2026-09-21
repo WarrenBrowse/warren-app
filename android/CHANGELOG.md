@@ -21,7 +21,7 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
-## [Unreleased]
+## [1.1.31] - 2026-09-21
 ### Added
 - Add a "Get subscription" button in wallet settings that opens the checkout page.
 - Add custom location lists to the exit picker (create a list, add/remove exits, delete).

@@ -11,8 +11,12 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
-## [Nepublicat]
+## [1.1.31] - 2026-09-21
 ### Adăugat
+- Conectare într-o rețea care nu oferă nicio adresă IPv4 dispozitivului dvs. Patru dintre cele
+  șase ieșiri răspund acum și pe IPv6, aplicația alege familia de adrese pe care rețeaua dvs. o
+  poate atinge cu adevărat înainte de a apela și deschide ambele în firewall. O rețea mobilă doar
+  cu IPv6 lăsa aplicația să apeleze o adresă imposibil de atins, cu Kill Switch-ul activ.
 - Oferă comenzii de port forwarding o ieșire citibilă de o mașină, pentru ca un script să poată
   conduce un client torrent precum qBittorrent fără să citească textul destinat oamenilor.
   `warren port-forward get --json` și `warren port-forward status --json` afișează un obiect JSON
@@ -42,6 +46,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   torrent cu un port acordat.
 
 ### Reparat
+- Vă spune de ce traficul este blocat când rețeaua dvs. nu poate ajunge deloc la Warren.
+  Aplicația aștepta în tăcere o rețea utilizabilă, așa că un telefon cu internet funcțional
+  rămânea în spatele Kill Switch-ului fără nicio explicație pe ecran. Acum numește familia de
+  adrese lipsă și indică cele două ieșiri: deconectare sau schimbarea rețelei.
 - Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă
   tunelul să pornească și apoi îl taie. Aplicația cerea serverului adresa sa și aștepta un răspuns
   care nu venea niciodată, consumând toată încercarea pe această singură așteptare, fără să ajungă

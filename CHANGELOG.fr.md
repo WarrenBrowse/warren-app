@@ -12,8 +12,13 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
-## [Non publié]
+## [1.1.31] - 2026-09-21
 ### Ajouté
+- Se connecter sur un réseau qui ne donne aucune adresse IPv4 à votre appareil. Quatre des six
+  sorties répondent maintenant aussi en IPv6, l'application choisit la famille d'adresses que votre
+  réseau peut réellement joindre avant de composer, et ouvre les deux dans le pare-feu. Un réseau
+  mobile en IPv6 seul laissait l'application composer une adresse hors d'atteinte, coupe-circuit
+  actif.
 - Donner à la commande de port forwarding une sortie lisible par une machine, pour qu'un script
   puisse piloter un client torrent comme qBittorrent sans lire le texte destiné à l'humain.
   `warren port-forward get --json` et `warren port-forward status --json` affichent un objet JSON
@@ -43,6 +48,10 @@ par l'application, gardez-le tel quel.
   torrent avec un port accordé.
 
 ### Corrigé
+- Vous dire pourquoi votre trafic est bloqué quand votre réseau ne peut pas joindre Warren du
+  tout. L'application attendait en silence un réseau utilisable, donc un téléphone qui avait
+  internet restait derrière le coupe-circuit sans explication à l'écran. Elle nomme désormais la
+  famille d'adresses manquante et indique les deux sorties: se déconnecter, ou changer de réseau.
 - Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le
   tunnel démarrer puis le coupe. L'application demandait son adresse au serveur et attendait une
   réponse qui n'arrivait jamais, ce qui consommait toute la tentative sur cette seule attente, sans

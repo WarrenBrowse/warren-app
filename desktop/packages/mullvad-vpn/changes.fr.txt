@@ -1,7 +1,51 @@
+### Ajouté
+- Se connecter sur un réseau qui ne donne aucune adresse IPv4 à votre appareil. Quatre des six
+  sorties répondent maintenant aussi en IPv6, l'application choisit la famille d'adresses que votre
+  réseau peut réellement joindre avant de composer, et ouvre les deux dans le pare-feu. Un réseau
+  mobile en IPv6 seul laissait l'application composer une adresse hors d'atteinte, coupe-circuit
+  actif.
+- Donner à la commande de port forwarding une sortie lisible par une machine, pour qu'un script
+  puisse piloter un client torrent comme qBittorrent sans lire le texte destiné à l'humain.
+  `warren port-forward get --json` et `warren port-forward status --json` affichent un objet JSON
+  par ligne, `status --wait` attend que le port public soit accordé et indique le résultat par son
+  code de sortie, et `status --watch --exec` lance la commande de votre choix à chaque changement
+  du port public accordé.
+- Copier le port public accordé depuis l'écran de port forwarding. Un bouton de copie est placé à
+  côté de chaque port ouvert et met le seul numéro de port dans le presse-papiers, prêt à coller
+  dans le champ du port d'écoute d'un client torrent.
+- Vous prévenir quand un port public accordé s'ouvre, change ou se ferme, par une notification
+  système qui nomme le nouveau port et ouvre l'écran de port forwarding. Un renouvellement qui
+  garde le même port ne dit rien. La notification se désactive depuis l'écran de port forwarding.
+- Publier les ports publics accordés dans un fichier qu'un script peut surveiller, un port par
+  ligne, écrit à côté des réglages de l'application sous le nom `forwarded_port`
+  (`~/.config/Warren VPN/` sous Linux, `~/Library/Application Support/Warren VPN/` sous macOS,
+  `%LOCALAPPDATA%\Warren VPN\` sous Windows). Le fichier se vide quand le tunnel est coupé, et
+  il est réécrit sur place pour qu'une surveillance continue de le suivre.
+- Saisir le port public accordé dans votre client torrent, et l'y maintenir. Choisissez
+  qBittorrent, Transmission ou Deluge sur l'écran de port forwarding, donnez l'adresse de son
+  interface web et ses identifiants, et l'application écrit le port accordé dans le client via
+  l'API de ce client, à chaque fois que le serveur de sortie déplace le port. Elle désactive aussi
+  le tirage de port aléatoire et l'UPnP du client, qui le ramèneraient aussitôt hors du port
+  accordé. « Tester la connexion » rapporte la réponse du client et « Appliquer maintenant » écrit
+  le port courant sans attendre. Le mot de passe est conservé dans le trousseau du système
+  d'exploitation, jamais dans le fichier de réglages.
+- Relier l'écran de port forwarding au guide du site expliquant comment configurer un client
+  torrent avec un port accordé.
+
 ### Corrigé
-- Empêcher le tunnel d'accumuler plusieurs secondes de file d'attente sur un lien d'envoi lent. Le
-  tampon d'envoi se réduisait déjà vers ce que la connexion peut réellement transporter, mais il ne
-  pouvait jamais descendre sous un plancher dimensionné pour une ligne rapide : sur un envoi autour
-  de 1 Mbit/s, le plancher était donc le tampon, et il retenait environ neuf secondes de trafic.
-  Une connexion reçoit maintenant un plancher dimensionné pour un lien domestique, ce qui supprime
-  ce délai sans rien changer sur une ligne plus rapide.
+- Vous dire pourquoi votre trafic est bloqué quand votre réseau ne peut pas joindre Warren du
+  tout. L'application attendait en silence un réseau utilisable, donc un téléphone qui avait
+  internet restait derrière le coupe-circuit sans explication à l'écran. Elle nomme désormais la
+  famille d'adresses manquante et indique les deux sorties: se déconnecter, ou changer de réseau.
+- Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le
+  tunnel démarrer puis le coupe. L'application demandait son adresse au serveur et attendait une
+  réponse qui n'arrivait jamais, ce qui consommait toute la tentative sur cette seule attente, sans
+  jamais atteindre le moment où elle bascule en TCP. Elle abandonne maintenant une réponse
+  silencieuse au bout de six secondes, et envoie la tentative suivante en TCP sur le port 443
+  directement.
+- Conserver un fichier de journal de plus sur Android. Rouvrir l'application deux fois après une
+  connexion échouée effaçait jusqu'ici les traces que l'on cherche justement dans un rapport de bug.
+- Afficher les notes de version de l'application installée dans la langue de l'application. L'écran
+  « Quoi de neuf » lisait un fichier unique, écrit en anglais, donc une application en français ou
+  en roumain annonçait ses propres changements en anglais. Les notes proposées avec une mise à jour
+  étaient déjà traduites.

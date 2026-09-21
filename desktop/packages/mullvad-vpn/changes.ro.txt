@@ -1,7 +1,49 @@
+### Adăugat
+- Conectare într-o rețea care nu oferă nicio adresă IPv4 dispozitivului dvs. Patru dintre cele
+  șase ieșiri răspund acum și pe IPv6, aplicația alege familia de adrese pe care rețeaua dvs. o
+  poate atinge cu adevărat înainte de a apela și deschide ambele în firewall. O rețea mobilă doar
+  cu IPv6 lăsa aplicația să apeleze o adresă imposibil de atins, cu Kill Switch-ul activ.
+- Oferă comenzii de port forwarding o ieșire citibilă de o mașină, pentru ca un script să poată
+  conduce un client torrent precum qBittorrent fără să citească textul destinat oamenilor.
+  `warren port-forward get --json` și `warren port-forward status --json` afișează un obiect JSON
+  pe linie, `status --wait` așteaptă până când portul public este acordat și raportează rezultatul
+  prin codul său de ieșire, iar `status --watch --exec` rulează comanda aleasă de tine la fiecare
+  schimbare a portului public acordat.
+- Copiază portul public acordat din ecranul de port forwarding. Un buton de copiere stă lângă
+  fiecare port deschis și pune doar numărul portului în clipboard, gata de lipit în câmpul
+  portului de intrare al unui client torrent.
+- Te anunță când un port public acordat se deschide, se schimbă sau se închide, printr-o
+  notificare de sistem care numește noul port și deschide ecranul de port forwarding. O reînnoire
+  care păstrează același port nu spune nimic. Notificarea se poate opri din ecranul de port
+  forwarding.
+- Publică porturile publice acordate într-un fișier pe care un script îl poate urmări, un port pe
+  linie, scris lângă setările aplicației sub numele `forwarded_port` (`~/.config/Warren VPN/` pe
+  Linux, `~/Library/Application Support/Warren VPN/` pe macOS, `%LOCALAPPDATA%\Warren VPN\` pe
+  Windows). Fișierul se golește cât timp tunelul este oprit și este rescris pe loc, astfel încât o
+  urmărire continuă să îl vadă.
+- Introdu portul public acordat în clientul tău torrent și păstrează-l acolo. Alege qBittorrent,
+  Transmission sau Deluge în ecranul de port forwarding, dă adresa interfeței web și datele de
+  autentificare, iar aplicația scrie portul acordat în client prin API-ul acelui client, de
+  fiecare dată când serverul de ieșire mută portul. Dezactivează și alegerea aleatorie a portului
+  și UPnP din client, care l-ar scoate imediat de pe portul acordat. „Testează conexiunea” arată
+  ce a răspuns clientul, iar „Aplică acum” scrie portul curent fără să aștepte. Parola este
+  păstrată în seiful sistemului de operare, niciodată în fișierul de setări.
+- Leagă ecranul de port forwarding de ghidul de pe site care explică cum se configurează un client
+  torrent cu un port acordat.
+
 ### Reparat
-- Împiedică tunelul să adune câteva secunde de coadă pe un link de trimitere lent. Bufferul de
-  trimitere se micșora deja către ceea ce poate duce efectiv conexiunea, dar nu putea coborî
-  niciodată sub un prag dimensionat pentru o linie rapidă: pe un upload de aproximativ 1 Mbit/s,
-  pragul era deci bufferul și reținea circa nouă secunde de trafic. O conexiune primește acum un
-  prag dimensionat pentru un link casnic, ceea ce elimină întârzierea fără să schimbe nimic pe o
-  linie mai rapidă.
+- Vă spune de ce traficul este blocat când rețeaua dvs. nu poate ajunge deloc la Warren.
+  Aplicația aștepta în tăcere o rețea utilizabilă, așa că un telefon cu internet funcțional
+  rămânea în spatele Kill Switch-ului fără nicio explicație pe ecran. Acum numește familia de
+  adrese lipsă și indică cele două ieșiri: deconectare sau schimbarea rețelei.
+- Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă
+  tunelul să pornească și apoi îl taie. Aplicația cerea serverului adresa sa și aștepta un răspuns
+  care nu venea niciodată, consumând toată încercarea pe această singură așteptare, fără să ajungă
+  la momentul în care trece pe TCP. Acum renunță la un răspuns tăcut după șase secunde și trimite
+  următoarea încercare direct pe TCP, pe portul 443.
+- Păstrează încă un fișier de jurnal pe Android. Redeschiderea aplicației de două ori după o
+  conectare eșuată ștergea până acum tocmai urmele pentru care este citit un raport de eroare.
+- Afișează notele de versiune ale aplicației instalate în limba în care rulează aplicația. Ecranul
+  „Ce este nou” citea un singur fișier, scris în engleză, așa că o aplicație în franceză sau română
+  își anunța propriile modificări în engleză. Notele oferite odată cu o actualizare erau deja
+  traduse.

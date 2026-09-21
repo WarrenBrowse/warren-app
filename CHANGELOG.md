@@ -21,8 +21,12 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
-## [Unreleased]
+## [1.1.31] - 2026-09-21
 ### Added
+- Connect on a network that gives your device no IPv4 address. Four of the six exits now answer on
+  IPv6 as well, the app picks the address family your network can actually reach before it dials,
+  and it opens both of them in the firewall. A mobile network handing out IPv6 only used to leave
+  the app dialling an address it could never reach, with the kill switch holding your traffic.
 - Give the port forwarding command machine-readable output, so a script can drive a torrent
   client such as qBittorrent without reading the text meant for a human.
   `warren port-forward get --json` and `warren port-forward status --json` print one JSON object
@@ -51,6 +55,10 @@ Line wrap the file at 100 chars.                                              Th
   with a forwarded port.
 
 ### Fixed
+- Tell you why your traffic is blocked when your network cannot reach Warren at all. The app used
+  to wait silently for a network it could use, so a phone with working internet sat behind the kill
+  switch with nothing on screen explaining it. It now names the missing address family and says the
+  two ways out: disconnect, or move to another network.
 - Stop a connection attempt from stalling for twenty seconds on a network that lets the tunnel start
   and then cuts it. The app asked the server for its address and waited for an answer that never
   came, spending the whole attempt on that single wait, so it never reached the point where it
