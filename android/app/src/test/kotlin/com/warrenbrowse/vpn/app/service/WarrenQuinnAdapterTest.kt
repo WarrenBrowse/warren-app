@@ -294,15 +294,26 @@ class WarrenQuinnAdapterTest {
      * Await [predicate] in REAL time, or fail with what was recorded. The
      * adapter watches the native status on `Dispatchers.IO`, which
      * `runTest`'s virtual clock does not drive.
+     *
+     * The bound is wall-clock on a shared machine (the self-hosted runner can
+     * be building four platforms of a release alongside this suite), and a
+     * behaviour that is actually broken never satisfies the predicate at all,
+     * so a generous bound costs nothing but the time of a genuine failure.
+     * [detail] is read at that moment, to say what was observed instead.
      */
-    private suspend fun awaitReal(what: String, predicate: () -> Boolean) {
+    private suspend fun awaitReal(
+        what: String,
+        detail: (() -> String)? = null,
+        predicate: () -> Boolean,
+    ) {
         withContext(Dispatchers.Default) {
             try {
-                withTimeout(5_000) {
+                withTimeout(30_000) {
                     while (!predicate()) delay(20)
                 }
             } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
-                throw AssertionError(what, e)
+                val observed = detail?.invoke()?.let { ", observed $it" } ?: ""
+                throw AssertionError(what + observed, e)
             }
         }
     }
@@ -1007,9 +1018,14 @@ class WarrenQuinnAdapterTest {
 
             gate.countDown()
             dial.join()
-            awaitReal("the teardown must run once the lock frees") {
-                DISCONNECT_TUNNEL in platform.calls.toList() &&
-                    adapter.state.value is WarrenTunnelState.Disconnected
+            awaitReal("the deferred teardown must drop the native tunnel once the lock frees") {
+                DISCONNECT_TUNNEL in platform.calls.toList()
+            }
+            awaitReal(
+                "the deferred teardown must leave the adapter disconnected",
+                detail = { adapter.state.value.toString() },
+            ) {
+                adapter.state.value is WarrenTunnelState.Disconnected
             }
             assertThrows(IllegalStateException::class.java, { mnemonic.phrase }) {
                 "the recovery phrase must be wiped by the deferred teardown"

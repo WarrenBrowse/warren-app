@@ -370,24 +370,39 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
-                    // A real connection settles the network: forget prior
-                    // drops so a later isolated drop is not mistaken for the
-                    // tail of an earlier flap.
-                    if (code == STATUS_CONNECTED) {
-                        // The migration landed (or a redial did): a later
-                        // disconnect is no longer this handover's escalation.
-                        handoverNotified = false
-                        flapDetector.reset()
-                        if (autoRecovery.onConnected()) {
-                            Logger.i("WarrenQuinnAdapter: automatic recovery landed")
-                        }
-                        if (pendingFailover) {
-                            pendingFailover = false
-                            _failoverCount.value += 1
-                            Logger.i("WarrenQuinnAdapter: failover landed on an alternative exit")
+                    // A teardown that started while this wake was in flight
+                    // owns the state now, so the edge is dropped rather than
+                    // published: the card would otherwise go back to a green
+                    // Connected over a session whose native tunnel is already
+                    // gone. The two race by construction, because the bounded
+                    // system-revoke disconnect hands its teardown to the
+                    // adapter's own scope and returns.
+                    lock.withLock {
+                        if (!userInitiatedDisconnect) {
+                            // A real connection settles the network: forget
+                            // prior drops so a later isolated drop is not
+                            // mistaken for the tail of an earlier flap.
+                            if (code == STATUS_CONNECTED) {
+                                // The migration landed (or a redial did): a
+                                // later disconnect is no longer this handover's
+                                // escalation.
+                                handoverNotified = false
+                                flapDetector.reset()
+                                if (autoRecovery.onConnected()) {
+                                    Logger.i("WarrenQuinnAdapter: automatic recovery landed")
+                                }
+                                if (pendingFailover) {
+                                    pendingFailover = false
+                                    _failoverCount.value += 1
+                                    Logger.i(
+                                        "WarrenQuinnAdapter: failover landed on an " +
+                                            "alternative exit"
+                                    )
+                                }
+                            }
+                            _state.value = statusFromCode(code, sessionConfig)
                         }
                     }
-                    _state.value = statusFromCode(code, sessionConfig)
                 }
                 // Mirror the live NAT-PMP status; its transitions ride the
                 // same wake.
