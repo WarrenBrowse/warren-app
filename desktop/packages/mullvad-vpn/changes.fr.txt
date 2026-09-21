@@ -45,6 +45,10 @@
   directement.
 - Conserver un fichier de journal de plus sur Android. Rouvrir l'application deux fois après une
   connexion échouée effaçait jusqu'ici les traces que l'on cherche justement dans un rapport de bug.
+- Empêcher la carte de connexion Android de repasser au vert après que le système a repris le VPN.
+  Quand une autre application prenait la place du VPN pendant qu'une connexion était encore en
+  cours, le tunnel était bien démonté, mais une mise à jour d'état déjà en route réaffichait
+  « Connecté » sur une session qui n'existait plus.
 - Afficher les notes de version de l'application installée dans la langue de l'application. L'écran
   « Quoi de neuf » lisait un fichier unique, écrit en anglais, donc une application en français ou
   en roumain annonçait ses propres changements en anglais. Les notes proposées avec une mise à jour

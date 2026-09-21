@@ -43,6 +43,10 @@
   următoarea încercare direct pe TCP, pe portul 443.
 - Păstrează încă un fișier de jurnal pe Android. Redeschiderea aplicației de două ori după o
   conectare eșuată ștergea până acum tocmai urmele pentru care este citit un raport de eroare.
+- Oprește cardul de conectare de pe Android din a reveni la verde după ce sistemul a luat VPN-ul.
+  Când o altă aplicație ocupa locul VPN-ului în timp ce o conectare era încă în curs, tunelul era
+  demontat corect, dar o actualizare de stare deja pornită punea la loc „Conectat” peste o sesiune
+  care nu mai exista.
 - Afișează notele de versiune ale aplicației instalate în limba în care rulează aplicația. Ecranul
   „Ce este nou” citea un singur fișier, scris în engleză, așa că o aplicație în franceză sau română
   își anunța propriile modificări în engleză. Notele oferite odată cu o actualizare erau deja

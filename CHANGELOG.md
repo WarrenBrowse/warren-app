@@ -66,6 +66,10 @@ Line wrap the file at 100 chars.                                              Th
   over TCP on port 443 straight away.
 - Keep one more of the previous log files on Android. Reopening the app twice after a failed
   connection used to erase the record a bug report is read for.
+- Stop the Android connect card from going back to green after the system took the VPN away. When
+  another app claimed the VPN slot while a connection was still being dialled, the tunnel was torn
+  down correctly but a status update already on its way put "Connected" back on the screen, over a
+  session that no longer existed.
 - Show the release notes of the installed version in the language the app runs in. The "What's new"
   screen read a single file, written in English, so an app running in French or Romanian announced
   its own changes in English. The notes offered along with an update were already translated.

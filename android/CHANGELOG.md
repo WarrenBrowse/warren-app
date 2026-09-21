@@ -48,6 +48,9 @@ Line wrap the file at 100 chars.                                              Th
 
 ### Fixed
 - Show the Warren wordmark in the app header instead of the Mullvad one.
+- Fix the connect card going back to "Connected" after the system revoked the VPN mid-dial. The
+  bounded revoke teardown hands its work to the adapter scope and returns, so a native status edge
+  already in flight could publish "Connected" over the session it had just torn down.
 
 
 ## [Mullvad upstream history]
