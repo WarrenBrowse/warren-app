@@ -1940,6 +1940,7 @@ mod warren_preswap_tests {
                 relay_id: [tag; 16],
                 relay_ed25519_pubkey: [tag; 32],
                 endpoint: "198.51.100.10:443".parse().unwrap(),
+                endpoint_v6: None,
                 signature: [tag; 64],
                 cover_domain: None,
                 tcp_fallback: false,

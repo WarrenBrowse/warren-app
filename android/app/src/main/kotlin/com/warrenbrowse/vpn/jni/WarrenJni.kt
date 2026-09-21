@@ -446,6 +446,18 @@ object WarrenJni {
     external fun fetchMultihopDirectory(): String
 
     /**
+     * The address families the fleet's entry hops can be dialed on, from the verified directory:
+     * bit 0 (`1`) IPv4, bit 1 (`2`) IPv6, `0` when the blob carries nothing dialable (or does not
+     * verify).
+     *
+     * The retry loop reads it so "this network cannot reach Warren" is a comparison between the
+     * families the device holds and the families the fleet publishes, instead of the standing
+     * assumption that entry hops are IPv4 forever. A fleet that begins binding IPv6 therefore
+     * unparks an IPv6-only device with no further client change.
+     */
+    external fun directoryDialableFamilies(directoryRaw: String): Int
+
+    /**
      * Fetch the wallet's subscription status via a signed `GET /v1/subscription`. The [mnemonic]
      * derives the signing key at the JNI boundary and is not retained.
      *

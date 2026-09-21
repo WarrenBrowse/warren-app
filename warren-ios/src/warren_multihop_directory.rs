@@ -266,6 +266,7 @@ mod tests {
                 relay_id,
                 relay_ed25519_pubkey: relay_ed,
                 endpoint,
+                endpoint_v6: None,
                 signature: relay_sig,
                 cover_domain: None,
                 tcp_fallback: false,

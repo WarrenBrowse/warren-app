@@ -8,6 +8,7 @@ import android.os.SystemClock
 import java.io.IOException
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.talpid.model.Connectivity
+import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
 import com.warrenbrowse.vpn.app.connectivity.canDialRelay
 import com.warrenbrowse.vpn.app.connectivity.isOnlineWithNoDialableFamily
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
@@ -128,6 +129,13 @@ class WarrenQuinnAdapter(
     private var pendingFailover = false
 
     private var activeConfig: WarrenTunnelConfig? = null
+    // The address families the fleet's entry hops publish, read off the
+    // directory this session dials with. Held rather than recomputed because
+    // the retry loop consults it on every park, and it only changes when a new
+    // directory is dialed with. Defaults to the shape every fleet had until
+    // 2026 (IPv4 only), so a cold start gates exactly as it did.
+    @Volatile
+    private var relayFamilies: RelayFamilies = RelayFamilies.V4_ONLY
     // Held as a zeroizable [Mnemonic] (CharArray-backed), NOT a String: the
     // recovery phrase must not linger as a long-lived immutable String on the
     // JVM heap for the whole session (a heap dump would extract it verbatim).
@@ -217,6 +225,7 @@ class WarrenQuinnAdapter(
         userInitiatedDisconnect = false
         handoverNotified = false
         activeConfig = config
+        relayFamilies = platform.relayFamilies(config.multihopDirectoryRaw)
         if (mnemonic !== activeMnemonic) {
             activeMnemonic?.close()
             activeMnemonic = mnemonic
@@ -866,19 +875,21 @@ class WarrenQuinnAdapter(
 
     /**
      * Park the retry until the device has a network a relay dial can
-     * actually use (IPv4-bearing, see [canDialRelay]). Prevents the retry
-     * loop from burning dial attempts (and flap-detector budget) while the
-     * device is offline, and resumes promptly on the online edge. Mirrors
-     * the desktop `Error(IsOffline)` family-gated auto-reconnect.
+     * actually use (see [canDialRelay]). Prevents the retry loop from burning
+     * dial attempts (and flap-detector budget) while the device is offline or
+     * on a network sharing no address family with the fleet, and resumes
+     * promptly on the online edge. Mirrors the desktop `Error(IsOffline)`
+     * family-gated auto-reconnect.
      */
     private suspend fun awaitDialableNetwork() {
-        if (connectivity.value.canDialRelay()) return
+        val relays = relayFamilies
+        if (connectivity.value.canDialRelay(relays)) return
         Logger.i(
             "WarrenQuinnAdapter: no dialable network (offline or IPv6-only); " +
                 "waiting for the online edge before reconnecting"
         )
         val parkedOver = nameTheParkedNetwork()
-        connectivity.first { it.canDialRelay() }
+        connectivity.first { it.canDialRelay(relays) }
         restoreAfterPark(parkedOver)
         Logger.i("WarrenQuinnAdapter: dialable network is back; reconnecting")
     }
@@ -895,7 +906,7 @@ class WarrenQuinnAdapter(
      * never outlive the park.
      */
     private suspend fun nameTheParkedNetwork(): WarrenTunnelState? {
-        if (!connectivity.value.isOnlineWithNoDialableFamily()) return null
+        if (!connectivity.value.isOnlineWithNoDialableFamily(relayFamilies)) return null
         return lock.withLock {
             if (userInitiatedDisconnect) return@withLock null
             val previous = _state.value

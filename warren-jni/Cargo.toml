@@ -85,6 +85,10 @@ warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 [dev-dependencies]
 # Canonical product anchors for the `product` module's drift gate.
 warren-contract = { path = "../../warren-contract" }
+# The signed-directory minting helpers, so `entry_families` is exercised
+# against a REAL verified directory on the host rather than only against the
+# address tuples it reads off one.
+warren-discovery-core = { path = "../../warren-contract/warren-discovery", features = ["test-helpers"] }
 # Host tests of the tunnel bandwidth ceiling (`rate_limited_tun`): the
 # limiter and the FakeTun test device compile on any target.
 warrenguard-ratelimit = { path = "../../warrenguard/crates/warrenguard-ratelimit" }

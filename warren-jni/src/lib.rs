@@ -79,6 +79,12 @@ mod natpmp_slot;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod circuit_select;
 
+// The address families the fleet's entry hops publish, read off the verified
+// directory so the Kotlin retry loop compares them against the families the
+// device's network carries instead of assuming IPv4 forever.
+#[cfg(any(test, target_os = "android"))]
+mod entry_families;
+
 // v7 anonymous session credentials (Privacy Pass, warren-core doc 64): the per-wallet
 // token mint/refresh/stack core is host-tested with a mock transport; the
 // provider that feeds the tunnel handshake is Android-gated inside.

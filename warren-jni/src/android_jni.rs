@@ -933,6 +933,35 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDire
     }
 }
 
+/// The address families the fleet's entry hops can be dialed on, as a bitmask
+/// (`1` IPv4, `2` IPv6, `0` nothing usable), read off the VERIFIED directory
+/// Kotlin already holds. The retry loop parks only when the device's network
+/// shares no family with this answer, so a fleet that starts binding IPv6
+/// unparks an IPv6-only network with no client change beyond this number.
+///
+/// Pure: no logger, no runtime, no network, and nothing of the directory is
+/// logged. An unverifiable or empty blob answers `0`.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_directoryDialableFamilies<'local>(
+    mut env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    directory_raw: JString<'local>,
+) -> jint {
+    let Ok(raw) = env.get_string(&directory_raw) else {
+        return 0;
+    };
+    let raw: String = raw.into();
+    let server_pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
+    match warren_discovery_core::verify_multihop_directory_any(
+        &raw,
+        &server_pins,
+        &[crate::tunnel::WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
+    ) {
+        Ok(directory) => crate::entry_families::directory_families(&directory),
+        Err(_) => 0,
+    }
+}
+
 /// The exit a location pin dials, chosen over the relay list Kotlin hands
 /// back in the `listRelays` schema, with the shared
 /// `warren_discovery_core::pick_exit` rule (`crate::exit_pin`). Returns

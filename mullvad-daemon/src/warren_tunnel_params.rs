@@ -579,6 +579,9 @@ pub fn assemble_custom(
             relay_id: exit_id_bytes,
             relay_ed25519_pubkey: pubkey_bytes,
             endpoint,
+            // A hand-entered node is one address: nothing published a second
+            // family for it.
+            endpoint_v6: None,
             cover_domain: cover_domain.clone(),
             tcp_fallback: cover_domain.is_some(),
             signature: relay_signature,
@@ -1015,6 +1018,7 @@ mod tests {
                 relay_id: [0xa1; 16],
                 relay_ed25519_pubkey: [0xa2; 32],
                 endpoint: "198.51.100.10:443".parse().unwrap(),
+                endpoint_v6: None,
                 signature: [0xa3; 64],
                 cover_domain: None,
                 tcp_fallback: false,

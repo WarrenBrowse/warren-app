@@ -21,10 +21,49 @@ class ConnectivityPolicyTest {
     }
 
     @Test
-    fun `ipv6 only online edge is not dialable`() {
-        // Relays are dialed over IPv4; a v6-only edge can only produce a
-        // doomed Connecting/Error churn (desktop family gating).
+    fun `ipv6 only online edge is not dialable against a v4 only fleet`() {
+        // The fleet every deployment had until 2026: an IPv6-only edge can only
+        // produce a doomed Connecting/Error churn (desktop family gating).
         assertFalse(Connectivity.Online(IpAvailability.Ipv6).canDialRelay())
+    }
+
+    @Test
+    fun `ipv6 only online edge is dialable once the fleet publishes ipv6`() {
+        // The whole point of measuring instead of assuming: the same device on
+        // the same network stops being walled the moment an entry hop binds a
+        // v6 listener, with no further client change.
+        val dualStackFleet = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+        assertTrue(Connectivity.Online(IpAvailability.Ipv6).canDialRelay(dualStackFleet))
+        assertFalse(
+            Connectivity.Online(IpAvailability.Ipv6).isOnlineWithNoDialableFamily(dualStackFleet)
+        )
+    }
+
+    @Test
+    fun `a v4 only device is walled by a v6 only fleet`() {
+        // The mirror case, which the old hardcoded assumption could not even
+        // express: the comparison runs both ways.
+        val v6Fleet = RelayFamilies(RelayFamilies.IPV6)
+        assertFalse(Connectivity.Online(IpAvailability.Ipv4).canDialRelay(v6Fleet))
+        assertTrue(Connectivity.Online(IpAvailability.Ipv4).isOnlineWithNoDialableFamily(v6Fleet))
+    }
+
+    @Test
+    fun `a dual stack device dials whatever the fleet publishes`() {
+        for (mask in listOf(RelayFamilies.IPV4, RelayFamilies.IPV6)) {
+            assertTrue(
+                Connectivity.Online(IpAvailability.Ipv4AndIpv6).canDialRelay(RelayFamilies(mask))
+            )
+        }
+    }
+
+    @Test
+    fun `a fleet that publishes nothing never parks a device`() {
+        // An empty or unverifiable directory is a fleet-side fault. Parking on
+        // it would wait for a network event that cannot fix anything.
+        val nothing = RelayFamilies(0)
+        assertTrue(Connectivity.Online(IpAvailability.Ipv6).canDialRelay(nothing))
+        assertFalse(Connectivity.Online(IpAvailability.Ipv6).isOnlineWithNoDialableFamily(nothing))
     }
 
     @Test

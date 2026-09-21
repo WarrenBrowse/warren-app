@@ -7,6 +7,7 @@ import android.net.NetworkRequest
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 
@@ -87,6 +88,15 @@ interface WarrenTunnelPlatform {
     fun registerNetworkCallback(callback: ConnectivityManager.NetworkCallback): Boolean
 
     fun unregisterNetworkCallback(callback: ConnectivityManager.NetworkCallback)
+
+    /**
+     * The address families the fleet's entry hops publish, read off the verified directory this
+     * session dials with. The retry loop compares them against the families the device's network
+     * carries, so "no network can reach Warren" is measured rather than assumed. A null or
+     * unverifiable directory answers [RelayFamilies.V4_ONLY], the shape every fleet had until 2026,
+     * which keeps the gate behaving as it did rather than guessing.
+     */
+    fun relayFamilies(directoryRaw: String?): RelayFamilies
 }
 
 /** The production [WarrenTunnelPlatform]: real `VpnService`, real JNI. */
@@ -206,6 +216,15 @@ class AndroidTunnelPlatform(
                 "unregisterNetworkCallback failed (callback was not registered)"
             }
         }
+    }
+
+    override fun relayFamilies(directoryRaw: String?): RelayFamilies {
+        val raw = directoryRaw?.takeIf { it.isNotBlank() } ?: return RelayFamilies.V4_ONLY
+        val mask = WarrenJni.directoryDialableFamilies(raw)
+        // `0` is a directory that carries nothing dialable or did not verify.
+        // Falling back to the historical shape keeps the gate from parking a
+        // device for a fault that is not its network's.
+        return if (mask == 0) RelayFamilies.V4_ONLY else RelayFamilies(mask)
     }
 }
 

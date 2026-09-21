@@ -21,6 +21,14 @@ use talpid_warren_tunnel::WarrenTunnelParameters;
 pub(crate) struct WarrenBackendInfo {
     pub exit_candidates: Vec<SocketAddr>,
     pub relay_endpoint: Option<SocketAddr>,
+    /// The entry relay's address on the other family, when the directory
+    /// published one. The firewall must open BOTH: the engine picks the
+    /// family it can reach at dial time
+    /// (`warrenguard_multihop::dial`), so opening only the primary would let
+    /// our own kill switch block the one address a v6-only host can use
+    /// (`incidents/2026-09-20-an-ipv6-only-mobile-network-*`). One more
+    /// destination, still scoped to the daemon's own uid.
+    pub relay_endpoint_v6: Option<SocketAddr>,
     pub exit_endpoint: Option<SocketAddr>,
     pub enable_daita: bool,
     /// `true` when the multi-hop circuit collapses onto a single node (a
@@ -36,13 +44,18 @@ impl WarrenBackendInfo {
         // censorship-minimized client path: the client dials the
         // entry relay, never the exit, so the exit egress IP is redacted.
         // The display fallback in `warren_tunnel_endpoint` handles `None`.
-        let (relay_endpoint, exit_endpoint) = match &p.multi_hop {
-            Some(mh) => (Some(mh.relay.endpoint), mh.exit.endpoint),
-            None => (None, None),
+        let (relay_endpoint, relay_endpoint_v6, exit_endpoint) = match &p.multi_hop {
+            Some(mh) => (
+                Some(mh.relay.endpoint),
+                mh.relay.endpoint_v6,
+                mh.exit.endpoint,
+            ),
+            None => (None, None, None),
         };
         Self {
             exit_candidates: p.exit_addr.ip_addrs().collect(),
             relay_endpoint,
+            relay_endpoint_v6,
             exit_endpoint,
             enable_daita: p.enable_daita,
             // A 1-hop circuit (entry == exit node) must display as a single
@@ -104,7 +117,12 @@ impl BackendParams {
         };
         match self {
             Self::Warren(info) => match info.relay_endpoint {
-                Some(relay) => carriers(relay).collect(),
+                // Both of the entry's addresses, because the engine decides at
+                // dial time which family this host can reach.
+                Some(relay) => std::iter::once(relay)
+                    .chain(info.relay_endpoint_v6)
+                    .flat_map(carriers)
+                    .collect(),
                 None => info
                     .exit_candidates
                     .iter()
@@ -237,6 +255,7 @@ mod tests {
         WarrenBackendInfo {
             exit_candidates: addrs.iter().map(|s| s.parse().unwrap()).collect(),
             relay_endpoint: None,
+            relay_endpoint_v6: None,
             exit_endpoint: None,
             enable_daita: false,
             single_node: false,
@@ -385,6 +404,35 @@ mod tests {
             only.address,
             "198.51.100.10:443".parse::<SocketAddr>().unwrap(),
             "next-hop must be the relay endpoint, not the exit"
+        );
+    }
+
+    #[test]
+    fn warren_multi_hop_opens_both_addresses_of_the_entry_relay() {
+        // The engine decides at dial time which family this host can reach, so
+        // a firewall that opened only the primary would block the one address
+        // a v6-only host can use, with our own kill switch
+        // (`incidents/2026-09-20-an-ipv6-only-mobile-network-*`). Still ONE
+        // node: the exit candidates stay closed on the multi-hop path.
+        let mut params = fixture_warren_multi_hop("198.51.100.10:443", "198.51.100.20:443");
+        params.relay_endpoint_v6 = Some("[2001:db8::10]:443".parse().unwrap());
+        let backend = BackendParams::Warren(params);
+
+        let endpoints = backend.get_next_hop_endpoints();
+        let opened: std::collections::BTreeSet<SocketAddr> =
+            endpoints.iter().map(|e| e.address).collect();
+        assert_eq!(
+            opened,
+            ["198.51.100.10:443", "[2001:db8::10]:443"]
+                .iter()
+                .map(|a| a.parse::<SocketAddr>().unwrap())
+                .collect::<std::collections::BTreeSet<_>>(),
+            "both of the entry's addresses must be open, and nothing else, got {endpoints:?}"
+        );
+        assert_eq!(
+            endpoints.len(),
+            4,
+            "each address is opened on UDP and on the TCP carrier"
         );
     }
 

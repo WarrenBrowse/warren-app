@@ -7,6 +7,7 @@ import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.talpid.model.IpAvailability
+import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import io.mockk.every
@@ -222,6 +223,11 @@ class WarrenQuinnAdapterTest {
         override fun unregisterNetworkCallback(callback: ConnectivityManager.NetworkCallback) {
             this.callback = null
         }
+
+        /** What the fleet publishes; a test drives an IPv6-serving fleet by setting it. */
+        var families: RelayFamilies = RelayFamilies.V4_ONLY
+
+        override fun relayFamilies(directoryRaw: String?): RelayFamilies = families
     }
 
     private fun config() = WarrenTunnelConfig(
@@ -434,6 +440,44 @@ class WarrenQuinnAdapterTest {
             "the native side must release its fd copy before the adapter drops its own, got: $calls"
         )
         adapter.disconnect()
+    }
+
+    /**
+     * The same device, the same IPv6-only network, and a fleet that now
+     * publishes an IPv6 entry: the retry must NOT park, because the dial can
+     * succeed. This is what makes the gate a measurement rather than the
+     * standing assumption that entry hops are IPv4 (topic 210, 2026-09-20).
+     */
+    @Test
+    fun `ensure an ipv6 only network is dialed when the fleet publishes ipv6`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+            val connectivity =
+                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
+            val adapter = adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected on a v6-only network") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the retry must redial rather than park") {
+                adapter.state.value is WarrenTunnelState.Connected && platform.configs.size >= 2
+            }
+            assertFalse(
+                adapter.state.value.let {
+                    it is WarrenTunnelState.Blocking && it.noDialableNetwork
+                },
+                "a network the fleet can be dialed from must never read as undialable"
+            )
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
     }
 
     /**

@@ -654,6 +654,7 @@ mod connected_endpoint_tests {
         BackendParams::Warren(WarrenBackendInfo {
             exit_candidates: vec!["203.0.113.9:443".parse().unwrap()],
             relay_endpoint: Some("198.51.100.10:443".parse().unwrap()),
+            relay_endpoint_v6: None,
             exit_endpoint: None,
             enable_daita,
             single_node: false,
