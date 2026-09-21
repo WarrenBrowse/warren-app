@@ -909,7 +909,8 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listRelays(
     }
 }
 
-/// The raw signed multi-hop directory (`GET /v1/multihop/directory`) as its
+/// The raw signed multi-hop directory (`GET /v2/multihop/directory`, frozen
+/// `/v1` on an older backend) as its
 /// verbatim JSON, or an empty string when none is available.
 ///
 /// Served from the process cache while the copy is under an hour old and

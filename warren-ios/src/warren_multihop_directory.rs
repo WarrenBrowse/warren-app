@@ -7,7 +7,8 @@
 //! country diverse) or a 1-hop circuit collapsed onto a single trusted
 //! node (classic-VPN privacy, same wire).
 //!
-//! Transport split: Swift fetches `GET {api}/v1/multihop/directory` over
+//! Transport split: Swift fetches `GET {api}/v2/multihop/directory` (frozen
+//! `/v1` on an older backend) over
 //! URLSession (native TLS, no reqwest on the iOS Rust target) and hands
 //! the raw JSON to the FFI. This module performs the SECURITY half in
 //! Rust, mirroring `mullvad-daemon::warren_multi_hop_directory`: it

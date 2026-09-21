@@ -197,8 +197,12 @@ mod tests {
 
     impl HttpTransport for CountingTransport {
         async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+            // Either route: the SDK asks for the dual-stack one and falls
+            // back to the frozen one, and this cache is indifferent to which
+            // answered.
             assert!(
-                request.url.ends_with("/v1/multihop/directory"),
+                request.url.ends_with("/v1/multihop/directory")
+                    || request.url.ends_with("/v2/multihop/directory"),
                 "{}",
                 request.url
             );

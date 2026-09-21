@@ -76,7 +76,8 @@ pub struct WarrenTunnelParametersC {
     /// Number of entries in `bypass_cidrs`.
     pub bypass_cidrs_count: u32,
     /// Signed multi-hop directory JSON, fetched by Swift over URLSession
-    /// from `GET {api}/v1/multihop/directory`. Required: the production fleet
+    /// from `GET {api}/v2/multihop/directory` (or the frozen `/v1` route on an
+    /// older backend). Required: the production fleet
     /// is multi-hop only, so the tunnel always rides the multi-hop wire
     /// protocol, a 2-hop circuit when `multihop_two_hop` is 1, otherwise a
     /// 1-hop circuit collapsed onto one node. The JSON is verified Rust-side

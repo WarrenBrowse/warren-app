@@ -6736,6 +6736,7 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "warren-contract",
+ "warren-discovery-core",
  "warren-identity",
  "warrenguard-token",
 ]

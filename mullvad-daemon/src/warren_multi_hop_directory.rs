@@ -3,7 +3,8 @@
 //! This is the client half of the dynamic, secure multi-hop design. It
 //! mirrors [`crate::warren_relay_list_updater`] (periodic fetch of a
 //! signed artifact from warren-api, verified before use) but targets
-//! `GET {api_url}/v1/multihop/directory`, a
+//! `GET {api_url}/v2/multihop/directory` (falling back to the frozen
+//! `/v1` route on a backend that predates it), a
 //! [`warren_discovery_core::SignedMultiHopDirectory`].
 //!
 //! Trust chain enforced on every fetch (see
@@ -26,10 +27,11 @@ use std::time::Duration;
 use futures::FutureExt;
 use talpid_warren_tunnel::MultiHopConfig;
 use warren_discovery_core::{
-    Continent, DEFAULT_RTT_TTL_SECS, DirectoryError, ExitCandidate, PATH_QUALITY_VERSION,
-    PathAwareParams, PathQualityAdvisory, RttCache, VerifiedMultiHopDirectory,
-    continent_of_country, node_rtt_from, pick_exit, prefer_client_continent,
-    select_circuit_path_aware, valid_circuits, verify_multihop_directory_any,
+    Continent, DEFAULT_RTT_TTL_SECS, DirectoryError, ExitCandidate, MULTIHOP_DIRECTORY_PATH_V1,
+    MULTIHOP_DIRECTORY_PATH_V2, PATH_QUALITY_VERSION, PathAwareParams, PathQualityAdvisory,
+    RttCache, VerifiedMultiHopDirectory, continent_of_country, node_rtt_from, pick_exit,
+    prefer_client_continent, select_circuit_path_aware, valid_circuits,
+    verify_multihop_directory_any,
 };
 
 use crate::warren_artifact_refresh::{
@@ -761,10 +763,23 @@ async fn fetch_verify_with_body(
     now_unix: u64,
     etag: Option<String>,
 ) -> Result<DirectoryFetch, Error> {
-    let url = format!("{}/v1/multihop/directory", api_url.trim_end_matches('/'));
-    let (body, etag) = match conditional_get(http, &url, etag).await? {
+    // The DUAL-STACK route first: it is the only copy carrying each relay's
+    // second address family, without which a host on an IPv6-only network has
+    // nothing to dial. A backend that predates the route answers 404, and the
+    // frozen route answers everything else, so this daemon keeps working
+    // against both (`incidents/2026-09-21-a-new-directory-field-*` explains why
+    // it is a route and not a field).
+    let base = api_url.trim_end_matches('/');
+    let dual_stack = format!("{base}{MULTIHOP_DIRECTORY_PATH_V2}");
+    let frozen = format!("{base}{MULTIHOP_DIRECTORY_PATH_V1}");
+    let (body, etag) = match conditional_get(http, &dual_stack, etag.clone()).await? {
         FetchResponse::NotModified => return Ok(DirectoryFetch::NotModified),
-        FetchResponse::Status(404) => return Err(Error::NotPublished),
+        FetchResponse::Status(404) => match conditional_get(http, &frozen, etag).await? {
+            FetchResponse::NotModified => return Ok(DirectoryFetch::NotModified),
+            FetchResponse::Status(404) => return Err(Error::NotPublished),
+            FetchResponse::Status(status) => return Err(Error::Status(status)),
+            FetchResponse::Body { body, etag } => (body, etag),
+        },
         FetchResponse::Status(status) => return Err(Error::Status(status)),
         FetchResponse::Body { body, etag } => (body, etag),
     };

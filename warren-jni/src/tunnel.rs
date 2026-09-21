@@ -258,7 +258,8 @@ pub(crate) const WARREN_MULTIHOP_ROOT_PUBKEY_HEX: &str =
 /// iOS: a [`MultiHopSupervisor`] owns the session across disconnects and the
 /// two `supervised_pump` halves pump the Android TUN against whatever it
 /// publishes. Selection uses the signed multi-hop directory
-/// (`GET /v1/multihop/directory`), the only source of the signed relay
+/// (`GET /v2/multihop/directory`, frozen `/v1` on an older backend), the
+/// only source of the signed relay
 /// descriptor, the exit X25519 HPKE key, and the operational trust anchor
 /// (none of which the `/v1/exits` list carries).
 ///

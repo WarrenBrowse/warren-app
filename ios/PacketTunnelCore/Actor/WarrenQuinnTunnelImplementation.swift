@@ -372,8 +372,23 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// the FFI). Returns nil on any non-200 / transport failure so the
     /// caller falls back to the single-hop path rather than blocking the
     /// tunnel start on a dead network.
+    ///
+    /// The DUAL-STACK route (`/v2`) is asked for first: it is the only copy
+    /// carrying each relay's second address family, and a device on an
+    /// IPv6-only network has nothing to dial without it. A backend that
+    /// predates the route answers 404 and the frozen `/v1` copy is used. It is
+    /// a route rather than a field because that envelope is verified against a
+    /// re-serialization of the parsed nodes, so an unknown field breaks the
+    /// signature outright.
     private static func fetchMultihopDirectory() async -> String? {
-        guard let url = URL(string: "\(warrenApiBaseURL)/v1/multihop/directory") else {
+        if let body = await fetchDirectory(atPath: "/v2/multihop/directory") {
+            return body
+        }
+        return await fetchDirectory(atPath: "/v1/multihop/directory")
+    }
+
+    private static func fetchDirectory(atPath path: String) async -> String? {
+        guard let url = URL(string: "\(warrenApiBaseURL)\(path)") else {
             return nil
         }
         var request = URLRequest(url: url, timeoutInterval: 15)
