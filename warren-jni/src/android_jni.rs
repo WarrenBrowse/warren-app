@@ -944,14 +944,12 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDire
 /// logged. An unverifiable or empty blob answers `0`.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_directoryDialableFamilies<'local>(
-    mut env: JNIEnv<'local>,
+    env: JNIEnv<'local>,
     _class: JClass<'local>,
     directory_raw: JString<'local>,
 ) -> jint {
-    let Ok(raw) = env.get_string(&directory_raw) else {
-        return 0;
-    };
-    let raw: String = raw.into();
+    let jnix_env = JnixEnv::from(env);
+    let raw = String::from_java(&jnix_env, directory_raw);
     let server_pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
     match warren_discovery_core::verify_multihop_directory_any(
         &raw,
