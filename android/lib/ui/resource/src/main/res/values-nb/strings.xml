@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">USTABILT NETTVERK</string>
     <string name="warren_tunnel_flapping">Nettverket ditt ser ustabilt ut: tunnelen koblet til på nytt for mange ganger på rad. Koble til på nytt når forbindelsen har stabilisert seg.</string>
     <string name="warren_kill_switch_active">Avbruddsbryteren holder trafikken din blokkert mens tunnelen er nede. Tilkoblingen din er beskyttet, og den gjenopptas automatisk når tunnelen er tilbake.</string>
+    <string name="warren_no_dialable_network_title">NETTVERK UTEN IPv4</string>
+    <string name="warren_no_dialable_network">Dette nettverket gir ikke enheten din en IPv4-adresse, og Warrens inngangspunkter svarer bare på IPv4, så tunnelen kan ikke opprettes her. Kill switchen holder trafikken din blokkert: koble fra for å få internett tilbake, eller bytt til et nettverk med IPv4.</string>
     <string name="vpn_permission_denied_error">VPN-tillatelsen ble avslått, eller en annen app har «VPN alltid på» aktivert</string>
     <string name="no_matching_relay">Ingen servere passer til innstillingene dine. Prøv å endre server eller andre innstillinger.</string>
     <string name="custom_tunnel_host_resolution_error">Kunne ikke løse vert for egendefinert tunnel. Forsøk å endre innstillingene dine.</string>

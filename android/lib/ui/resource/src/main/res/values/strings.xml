@@ -59,6 +59,8 @@
     <string name="warren_tunnel_flapping_title">UNSTABLE NETWORK</string>
     <string name="warren_tunnel_flapping">Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled.</string>
     <string name="warren_kill_switch_active">The kill switch is keeping your traffic blocked while the tunnel is down. Your connection is protected; it will resume automatically once the tunnel is back.</string>
+    <string name="warren_no_dialable_network_title">NETWORK WITHOUT IPv4</string>
+    <string name="warren_no_dialable_network">This network gives your device no IPv4 address, and Warren\'s entry points answer on IPv4 only, so the tunnel cannot be dialled here. The kill switch is keeping your traffic blocked: disconnect to get your internet back, or move to a network that provides IPv4.</string>
     <string name="vpn_permission_denied_error">VPN permission was denied or another app has \"Always-on VPN\" enabled</string>
     <string name="no_matching_relay">No servers match your settings, try changing server or other settings.</string>
     <string name="custom_tunnel_host_resolution_error">Unable to resolve host of custom tunnel. Try changing your settings.</string>

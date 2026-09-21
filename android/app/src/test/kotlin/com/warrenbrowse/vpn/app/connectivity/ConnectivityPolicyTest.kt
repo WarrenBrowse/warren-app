@@ -39,6 +39,25 @@ class ConnectivityPolicyTest {
     }
 
     @Test
+    fun `an ipv6 only edge is online with no dialable family`() {
+        // The distinction the user sees: their phone has working internet and
+        // Warren still cannot connect, so "you are offline" would be a lie.
+        assertTrue(Connectivity.Online(IpAvailability.Ipv6).isOnlineWithNoDialableFamily())
+    }
+
+    @Test
+    fun `offline and dialable edges are not online with no dialable family`() {
+        assertFalse(Connectivity.Offline.isOnlineWithNoDialableFamily())
+        assertFalse(Connectivity.Online(IpAvailability.Ipv4).isOnlineWithNoDialableFamily())
+        assertFalse(
+            Connectivity.Online(IpAvailability.Ipv4AndIpv6).isOnlineWithNoDialableFamily()
+        )
+        // PresumeOnline means the platform could not resolve the state: it is
+        // dialed rather than named as a dead network.
+        assertFalse(Connectivity.PresumeOnline.isOnlineWithNoDialableFamily())
+    }
+
+    @Test
     fun `rising edge is held and falling edge applies immediately`() = runTest {
         val raw = MutableStateFlow(false)
         raw.holdRisingEdge(1200.milliseconds).test {

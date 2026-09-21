@@ -598,6 +598,8 @@ private fun ErrorState.title(): String {
             stringResource(R.string.banner_legacy_always_on_vpn_error)
         cause is ErrorStateCause.WarrenTunnelFlapping ->
             stringResource(R.string.warren_tunnel_flapping_title)
+        cause is ErrorStateCause.WarrenNoDialableNetwork ->
+            stringResource(R.string.warren_no_dialable_network_title)
         isBlocking -> stringResource(R.string.banner_blocking_internet)
         else -> stringResource(R.string.banner_critical_error)
     }
@@ -622,6 +624,8 @@ private fun ErrorStateCause.errorMessageId(): String =
         is ErrorStateCause.StartTunnelError -> stringResource(R.string.start_tunnel_error)
         is ErrorStateCause.WarrenTunnelFlapping ->
             stringResource(R.string.warren_tunnel_flapping)
+        is ErrorStateCause.WarrenNoDialableNetwork ->
+            stringResource(R.string.warren_no_dialable_network)
         is ErrorStateCause.WarrenKillSwitchActive ->
             stringResource(R.string.warren_kill_switch_active)
         is ErrorStateCause.IsOffline -> stringResource(R.string.is_offline)

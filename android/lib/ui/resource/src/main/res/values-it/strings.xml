@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">RETE INSTABILE</string>
     <string name="warren_tunnel_flapping">La tua rete sembra instabile: il tunnel si è riconnesso troppe volte di seguito. Riconnettiti quando la connessione si sarà stabilizzata.</string>
     <string name="warren_kill_switch_active">Il kill switch mantiene bloccato il tuo traffico mentre il tunnel è inattivo. La connessione è protetta e riprenderà automaticamente al ritorno del tunnel.</string>
+    <string name="warren_no_dialable_network_title">RETE SENZA IPv4</string>
+    <string name="warren_no_dialable_network">Questa rete non assegna alcun indirizzo IPv4 al suo dispositivo e i punti di ingresso Warren rispondono solo su IPv4, quindi il tunnel non può essere stabilito qui. Il kill switch mantiene il traffico bloccato: si disconnetta per recuperare internet oppure passi a una rete che fornisce IPv4.</string>
     <string name="vpn_permission_denied_error">L\'autorizzazione VPN è stata negata o un\'altra app ha abilitato \"VPN sempre attiva\"</string>
     <string name="no_matching_relay">Nessun server corrispondente alle tue impostazioni, prova a cambiare server o impostazioni.</string>
     <string name="custom_tunnel_host_resolution_error">Impossibile risolvere l\'host del tunnel personalizzato. Prova a modificare le impostazioni.</string>

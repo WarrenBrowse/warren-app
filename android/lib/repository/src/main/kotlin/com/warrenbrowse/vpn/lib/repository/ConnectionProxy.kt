@@ -263,14 +263,20 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                         // the block SUCCEEDED - this is the protective state
                         // working, not a failure. An expired account
                         // surfaces the actionable "subscription expired"
-                        // cause; a flap surfaces the unstable-network cause;
-                        // otherwise the dedicated kill-switch-active cause
+                        // cause; a network no relay can be dialed from
+                        // surfaces its own, ahead of the flap cause (a v6-only
+                        // network also drops the tunnel repeatedly, and the
+                        // family is the reason for both); a flap surfaces the
+                        // unstable-network cause; otherwise the dedicated
+                        // kill-switch-active cause
                         // (NOT FirewallPolicyError, which means the firewall
                         // could not be applied and wrongly tells the user to
                         // send a problem report).
                         cause = when {
                             info.expired ->
                                 ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
+                            info.noDialableNetwork ->
+                                ErrorStateCause.WarrenNoDialableNetwork
                             info.flapping -> ErrorStateCause.WarrenTunnelFlapping
                             else -> ErrorStateCause.WarrenKillSwitchActive
                         },

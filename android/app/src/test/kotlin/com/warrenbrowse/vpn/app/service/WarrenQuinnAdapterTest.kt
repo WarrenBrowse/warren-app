@@ -6,6 +6,7 @@ import android.net.VpnService
 import android.os.ParcelFileDescriptor
 import android.os.SystemClock
 import com.warrenbrowse.talpid.model.Connectivity
+import com.warrenbrowse.talpid.model.IpAvailability
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import io.mockk.every
@@ -235,6 +236,7 @@ class WarrenQuinnAdapterTest {
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
         failoverConfig: (WarrenTunnelConfig) -> WarrenTunnelConfig? = { null },
         dropRetryGraceMs: Long = 15_000L,
+        connectivity: MutableStateFlow<Connectivity> = MutableStateFlow(Connectivity.PresumeOnline),
     ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
         every { settings.splitTunnelingEnabled } returns MutableStateFlow(false)
@@ -243,7 +245,7 @@ class WarrenQuinnAdapterTest {
             vpnService = mockk<VpnService>(relaxed = true),
             connectivityManager = mockk<ConnectivityManager>(relaxed = true),
             settings = settings,
-            connectivity = MutableStateFlow<Connectivity>(Connectivity.PresumeOnline),
+            connectivity = connectivity,
             platform = platform,
             dispatcher = dispatcher,
             failoverConfig = failoverConfig,
@@ -264,8 +266,9 @@ class WarrenQuinnAdapterTest {
     private suspend fun connectedAdapter(
         platform: RecordingPlatform,
         baseline: Network = mockk<Network>(),
+        connectivity: MutableStateFlow<Connectivity> = MutableStateFlow(Connectivity.PresumeOnline),
     ): Pair<WarrenQuinnAdapter, ConnectivityManager.NetworkCallback> {
-        val adapter = adapterWith(platform)
+        val adapter = adapterWith(platform, connectivity = connectivity)
         adapter.connect(config(), Mnemonic(PHRASE))
         val callback = platform.callback
         checkNotNull(callback) { "connect() must register a network callback" }
@@ -432,6 +435,45 @@ class WarrenQuinnAdapterTest {
         )
         adapter.disconnect()
     }
+
+    /**
+     * The other park, and the one topic 210 actually hit first: the handover
+     * fallback blacks traffic out and resets the state to Disconnected before
+     * waiting, so a phone that walked onto an IPv6-only network sits blocked
+     * with nothing on screen to explain it. The park raises the blocked state
+     * itself here, and drops it again when a dialable network returns, since
+     * the reconnect behind it needs Disconnected to pass its guard.
+     */
+    @Test
+    fun `ensure a handover park on an ipv6 only network is named and then handed back`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val connectivity =
+                    MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv4))
+                val (adapter, callback) = connectedAdapter(platform, connectivity = connectivity)
+
+                connectivity.value = Connectivity.Online(IpAvailability.Ipv6)
+                callback.onAvailable(mockk<Network>())
+                platform.statusOnConnect = STATUS_CONNECTED
+                platform.status = STATUS_DISCONNECTED
+
+                awaitReal("the handover park must name the network") {
+                    val state = adapter.state.value
+                    state is WarrenTunnelState.Blocking && state.noDialableNetwork
+                }
+
+                connectivity.value = Connectivity.Online(IpAvailability.Ipv4)
+                awaitReal("the handover must resume once IPv4 is back") {
+                    adapter.state.value is WarrenTunnelState.Connected
+                }
+                adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
 
     @Test
     fun `ensure a wedged datapath is exposed while the session stays connected`() = runTest {
@@ -705,6 +747,54 @@ class WarrenQuinnAdapterTest {
             }
             assertTrue(platform.configs.last().contains("ab".repeat(32)))
             assertEquals(0, adapter.failoverCount.value)
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
+
+    /**
+     * Topic 210 (2026-09-20): a phone that walks off its Wi-Fi onto an
+     * IPv6-only mobile network dials nothing (every entry endpoint is an IPv4
+     * literal), the kill switch holds its traffic, and the retry parks. The
+     * blocked state must say WHICH network condition is holding it, because
+     * waiting cannot end this one, and it must hand the state back when a
+     * dialable network returns: `connectLocked`'s guard only passes on
+     * Disconnected, so a decoration that outlived the park would strand the
+     * tunnel down for good.
+     */
+    @Test
+    fun `ensure a park on an ipv6 only network is named and then handed back`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val connectivity =
+                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv4))
+            val adapter = adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+
+            // The walk: the network becomes v6-only, then the session drops.
+            connectivity.value = Connectivity.Online(IpAvailability.Ipv6)
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+
+            awaitReal("the parked block must name the network") {
+                val state = adapter.state.value
+                state is WarrenTunnelState.Blocking && state.noDialableNetwork
+            }
+            val parked = adapter.state.value as WarrenTunnelState.Blocking
+            assertEquals("tunnel disconnected", parked.reason)
+            assertFalse(parked.flapping, "a v6-only network is not a flapping tunnel")
+
+            // Back on a dialable network the retry resumes and the tunnel lands.
+            connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
+            awaitReal("the retry must redial once IPv4 is back") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
             adapter.disconnect()
         } finally {
             unmockkStatic(SystemClock::class)

@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">불안정한 네트워크</string>
     <string name="warren_tunnel_flapping">네트워크가 불안정해 보입니다. 터널이 연속으로 너무 여러 번 재연결되었습니다. 연결이 안정되면 다시 연결하세요.</string>
     <string name="warren_kill_switch_active">터널이 중단된 동안 킬 스위치가 트래픽을 계속 차단합니다. 연결은 보호되고 있으며 터널이 복구되면 자동으로 재개됩니다.</string>
+    <string name="warren_no_dialable_network_title">IPv4가 없는 네트워크</string>
+    <string name="warren_no_dialable_network">이 네트워크는 기기에 IPv4 주소를 주지 않으며 Warren 진입점은 IPv4로만 응답하므로 여기서는 터널을 연결할 수 없습니다. 킬 스위치가 트래픽을 계속 차단합니다. 인터넷을 되찾으려면 연결을 끊거나 IPv4를 제공하는 네트워크로 이동하세요.</string>
     <string name="vpn_permission_denied_error">VPN 권한이 거부되었거나 다른 앱에 \"상시 접속 VPN\"이 활성화되어 있을 수 있습니다</string>
     <string name="no_matching_relay">설정과 일치하는 서버가 없습니다. 서버 또는 기타 설정을 변경해 보세요.</string>
     <string name="custom_tunnel_host_resolution_error">사용자 지정 터널의 호스트를 확인할 수 없습니다. 설정을 변경해 보세요.</string>

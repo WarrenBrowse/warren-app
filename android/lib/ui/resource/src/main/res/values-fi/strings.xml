@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">EPÄVAKAA VERKKO</string>
     <string name="warren_tunnel_flapping">Verkkosi vaikuttaa epävakaalta: tunneli muodosti yhteyden uudelleen liian monta kertaa peräkkäin. Yhdistä uudelleen, kun yhteytesi on vakaantunut.</string>
     <string name="warren_kill_switch_active">Tappokytkin pitää liikenteesi estettynä, kun tunneli on alhaalla. Yhteytesi on suojattu ja se jatkuu automaattisesti heti, kun tunneli palaa.</string>
+    <string name="warren_no_dialable_network_title">VERKKO ILMAN IPv4:ÄÄ</string>
+    <string name="warren_no_dialable_network">Tämä verkko ei anna laitteellesi IPv4-osoitetta, ja Warrenin sisääntulopisteet vastaavat vain IPv4:llä, joten tunnelia ei voi muodostaa täällä. Kill switch pitää liikenteesi estettynä: katkaise yhteys saadaksesi internetin takaisin tai siirry verkkoon, joka tarjoaa IPv4:n.</string>
     <string name="vpn_permission_denied_error">VPN:n käyttöoikeus evättiin tai toisella sovelluksella on aina päällä oleva VPN käytössä</string>
     <string name="no_matching_relay">Mikään palvelin ei vastaa asetuksiasi. Kokeile vaihtaa palvelinta tai muuttaa muita asetuksia.</string>
     <string name="custom_tunnel_host_resolution_error">Muokatun tunnelin isännän selvittäminen ei onnistu. Kokeile muuttaa asetuksiasi.</string>

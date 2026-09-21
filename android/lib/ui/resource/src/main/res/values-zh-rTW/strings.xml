@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">網路不穩定</string>
     <string name="warren_tunnel_flapping">您的網路似乎不穩定：通道連續重新連線太多次。請待連線穩定後再重新連線。</string>
     <string name="warren_kill_switch_active">通道中斷期間，終止開關會持續封鎖您的流量。您的連線受到保護，通道恢復後會自動繼續。</string>
+    <string name="warren_no_dialable_network_title">沒有 IPv4 的網路</string>
+    <string name="warren_no_dialable_network">此網路未配發 IPv4 位址給你的裝置，而 Warren 的入口節點只在 IPv4 上回應，因此無法在此建立通道。終止開關仍在攔截你的流量：中斷連線以恢復上網，或改用提供 IPv4 的網路。</string>
     <string name="vpn_permission_denied_error">VPN 權限遭到拒絕，或者已有其他應用程式啟用「一律啟用 VPN」</string>
     <string name="no_matching_relay">沒有與您的設定相符的伺服器，請嘗試變更伺服器或其他設定。</string>
     <string name="custom_tunnel_host_resolution_error">無法解析自訂通道的主機。請嘗試變更您的設定。</string>

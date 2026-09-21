@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">INSTABILES NETZWERK</string>
     <string name="warren_tunnel_flapping">Dein Netzwerk scheint instabil zu sein: Der Tunnel hat sich zu oft hintereinander neu verbunden. Verbinde dich erneut, sobald sich deine Verbindung stabilisiert hat.</string>
     <string name="warren_kill_switch_active">Der Killswitch blockiert deinen Datenverkehr, solange der Tunnel ausgefallen ist. Deine Verbindung ist geschützt und wird automatisch fortgesetzt, sobald der Tunnel wieder steht.</string>
+    <string name="warren_no_dialable_network_title">NETZWERK OHNE IPv4</string>
+    <string name="warren_no_dialable_network">Dieses Netzwerk weist Ihrem Gerät keine IPv4-Adresse zu, und die Warren-Eingangsknoten antworten nur über IPv4. Der Tunnel kann hier also nicht aufgebaut werden. Der Kill Switch blockiert Ihren Datenverkehr weiterhin: Trennen Sie die Verbindung, um wieder ins Internet zu kommen, oder wechseln Sie in ein Netzwerk mit IPv4.</string>
     <string name="vpn_permission_denied_error">VPN-Berechtigung wurde abgelehnt oder bei einer anderen App ist „Alway-on VPN“ aktiviert</string>
     <string name="no_matching_relay">Kein Server entspricht Ihren Einstellungen. Versuchen Sie, den Server oder andere Einstellungen zu ändern.</string>
     <string name="custom_tunnel_host_resolution_error">Der Host des benutzerdefinierten Tunnels konnte nicht aufgelöst werden. Versuchen Sie, Ihre Einstellungen zu ändern.</string>

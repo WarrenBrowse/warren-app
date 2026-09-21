@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">网络不稳定</string>
     <string name="warren_tunnel_flapping">你的网络似乎不稳定：隧道连续重连次数过多。请等连接稳定后再重新连接。</string>
     <string name="warren_kill_switch_active">隧道中断期间，终止开关会持续阻止你的流量。你的连接受到保护，隧道恢复后会自动继续。</string>
+    <string name="warren_no_dialable_network_title">没有 IPv4 的网络</string>
+    <string name="warren_no_dialable_network">该网络未向你的设备分配 IPv4 地址，而 Warren 的入口节点只在 IPv4 上回应，因此无法在此建立隧道。终止开关仍在拦截你的流量：断开连接以恢复上网，或改用提供 IPv4 的网络。</string>
     <string name="vpn_permission_denied_error">VPN 权限被拒绝，或其他应用已启用“始终开启 VPN”</string>
     <string name="no_matching_relay">没有与您的设置匹配的服务器，请尝试更改服务器或其他设置。</string>
     <string name="custom_tunnel_host_resolution_error">无法解析自定义隧道的主机。请尝试更改您的设置。</string>

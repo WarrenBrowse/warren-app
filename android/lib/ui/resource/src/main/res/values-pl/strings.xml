@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">NIESTABILNA SIEĆ</string>
     <string name="warren_tunnel_flapping">Twoja sieć wygląda na niestabilną: tunel zbyt wiele razy z rzędu nawiązał połączenie ponownie. Połącz ponownie, gdy połączenie się ustabilizuje.</string>
     <string name="warren_kill_switch_active">Kill switch blokuje Twój ruch, dopóki tunel nie działa. Połączenie jest chronione i zostanie automatycznie wznowione po powrocie tunelu.</string>
+    <string name="warren_no_dialable_network_title">SIEĆ BEZ IPv4</string>
+    <string name="warren_no_dialable_network">Ta sieć nie przydziela urządzeniu adresu IPv4, a punkty wejściowe Warren odpowiadają wyłącznie po IPv4, więc tunelu nie da się tu zestawić. Kill switch nadal blokuje ruch: rozłącz się, aby odzyskać internet, albo przejdź do sieci z IPv4.</string>
     <string name="vpn_permission_denied_error">Odmówiono uprawnienia VPN lub inna aplikacja ma włączoną funkcję „Zawsze włączony VPN”</string>
     <string name="no_matching_relay">Żaden serwer nie odpowiada ustawieniom. Spróbuj zmienić serwer lub inne ustawienia.</string>
     <string name="custom_tunnel_host_resolution_error">Nie można rozpoznać hosta tunelu niestandardowego. Spróbuj zmienić ustawienia.</string>

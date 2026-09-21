@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">شبکه ناپایدار</string>
     <string name="warren_tunnel_flapping">به نظر می‌رسد شبکه شما ناپایدار است: تونل بیش از حد پشت سر هم دوباره وصل شد. پس از پایدار شدن اتصال، دوباره وصل شوید.</string>
     <string name="warren_kill_switch_active">کلید قطع تا زمانی که تونل قطع است، ترافیک شما را مسدود نگه می‌دارد. اتصال شما محافظت‌شده است و به‌محض بازگشت تونل به‌طور خودکار از سر گرفته می‌شود.</string>
+    <string name="warren_no_dialable_network_title">شبکه بدون IPv4</string>
+    <string name="warren_no_dialable_network">این شبکه هیچ نشانی IPv4 به دستگاه شما نمی‌دهد و نقاط ورود Warren تنها روی IPv4 پاسخ می‌دهند، بنابراین تونل در اینجا برقرار نمی‌شود. کلید قطع اضطراری همچنان ترافیک شما را مسدود نگه می‌دارد: برای بازگشت اینترنت قطع کنید یا به شبکه‌ای با IPv4 بروید.</string>
     <string name="vpn_permission_denied_error">اجازهٔ VPN رد شده است یا یک اپلیکیشن دیگر گزینهٔ «VPN همیشه‌فعال» را فعال کرده است</string>
     <string name="no_matching_relay">هیچ سروری با تنظیمات شما مطابقت ندارد؛ لطفاً سرور یا سایر تنظیمات را تغییر دهید.</string>
     <string name="custom_tunnel_host_resolution_error">قادر به شناسایی میزبان تونل سفارشی نیست. لطفاً تنظیمات خود را تغییر دهید و دوباره تلاش کنید.</string>

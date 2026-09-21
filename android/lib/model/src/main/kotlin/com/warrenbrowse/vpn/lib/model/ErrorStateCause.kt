@@ -30,6 +30,16 @@ sealed class ErrorStateCause {
     data object WarrenTunnelFlapping : ErrorStateCause()
 
     /**
+     * The device is online and its network carries no address family a Warren
+     * entry point can be dialed on (an IPv6-only mobile network: every entry
+     * endpoint is an IPv4 literal). The retry loop is parked and the kill
+     * switch is holding the traffic, so this is the one blocked state waiting
+     * cannot end: the user changes network or disconnects. Distinct from
+     * [IsOffline], which would be a lie here (the phone browses normally).
+     */
+    data object WarrenNoDialableNetwork : ErrorStateCause()
+
+    /**
      * The kill switch (lockdown) is intentionally blocking traffic because the
      * tunnel is down. This is the protective state working as designed, NOT a
      * failure: do not map it to [FirewallPolicyError] (which means the OS

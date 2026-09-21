@@ -30,6 +30,19 @@ fun Connectivity.canDialRelay(): Boolean =
     }
 
 /**
+ * The device has a working network and none of its address families can
+ * carry a relay dial (today: IPv6 only, because every Warren entry endpoint
+ * is an IPv4 literal). Distinct from [Connectivity.Offline] on purpose: the
+ * phone browses normally, so telling its owner they are offline would be
+ * false, and the retry loop parks with no prospect of resuming until they
+ * reach another network. [Connectivity.PresumeOnline] is excluded for the
+ * same reason [canDialRelay] accepts it: an unresolved platform state is
+ * dialed, never named as a dead network.
+ */
+fun Connectivity.isOnlineWithNoDialableFamily(): Boolean =
+    this is Connectivity.Online && !canDialRelay()
+
+/**
  * Hold a rising edge (false -> true) for [holdFor] before letting it
  * through; a falling edge applies immediately. Mirrors the desktop
  * `useHostOffline` debounce: routine network handovers synthesize an

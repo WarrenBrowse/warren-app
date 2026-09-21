@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">شبكة غير مستقرة</string>
     <string name="warren_tunnel_flapping">يبدو أن شبكتك غير مستقرة: أعاد النفق الاتصال مرات كثيرة متتالية. أعد الاتصال بعد استقرار شبكتك.</string>
     <string name="warren_kill_switch_active">يُبقي مفتاح الإيقاف التلقائي حركة بياناتك محظورة أثناء توقف النفق. اتصالك محمي، وسيُستأنف تلقائياً بمجرد عودة النفق.</string>
+    <string name="warren_no_dialable_network_title">شبكة بدون IPv4</string>
+    <string name="warren_no_dialable_network">لا تمنح هذه الشبكة جهازك أي عنوان IPv4، ونقاط دخول Warren تستجيب عبر IPv4 فقط، لذا لا يمكن إنشاء النفق هنا. لا يزال مفتاح الإيقاف يحجب حركة بياناتك: اقطع الاتصال لاستعادة الإنترنت، أو انتقل إلى شبكة توفّر IPv4.</string>
     <string name="vpn_permission_denied_error">تم رفض إذن شبكة VPN أو يوجد تطبيق آخر تم تفعيل خيار \"تشغيل VPN دائمًا\" عليه</string>
     <string name="no_matching_relay">لا توجد خوادم تتطابق مع إعداداتك، حاول تغيير الخادم أو الإعدادات الأخرى.</string>
     <string name="custom_tunnel_host_resolution_error">يتعذَّر حل مشكلة مضيف النفق المُخصَّص. جرِّب تغيير إعداداتك.</string>

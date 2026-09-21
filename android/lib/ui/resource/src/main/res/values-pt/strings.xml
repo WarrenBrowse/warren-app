@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">REDE INSTÁVEL</string>
     <string name="warren_tunnel_flapping">A sua rede parece instável: o túnel reconectou demasiadas vezes seguidas. Reconecte quando a sua ligação estabilizar.</string>
     <string name="warren_kill_switch_active">O kill switch mantém o seu tráfego bloqueado enquanto o túnel está em baixo. A sua ligação está protegida e será retomada automaticamente assim que o túnel voltar.</string>
+    <string name="warren_no_dialable_network_title">REDE SEM IPv4</string>
+    <string name="warren_no_dialable_network">Esta rede não atribui qualquer endereço IPv4 ao seu dispositivo e os pontos de entrada Warren respondem apenas em IPv4, pelo que o túnel não pode ser estabelecido aqui. O kill switch mantém o seu tráfego bloqueado: desligue para recuperar a internet ou mude para uma rede que forneça IPv4.</string>
     <string name="vpn_permission_denied_error">A permissão de VPN foi negada, ou outra aplicação tem a opção \"VPN sempre ligada\" ativada</string>
     <string name="no_matching_relay">Nenhum servidor corresponde às suas definições. Tente alterar o servidor ou outras definições.</string>
     <string name="custom_tunnel_host_resolution_error">Não foi possível resolver o anfitrião do túnel personalizado. Experimente alterar as suas definições.</string>

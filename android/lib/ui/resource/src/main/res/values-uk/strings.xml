@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">НЕСТАБІЛЬНА МЕРЕЖА</string>
     <string name="warren_tunnel_flapping">Схоже, ваша мережа нестабільна: тунель перепідключався забагато разів поспіль. Перепідключіться, коли з\'єднання стабілізується.</string>
     <string name="warren_kill_switch_active">Аварійний вимикач блокує ваш трафік, доки тунель не працює. З\'єднання захищене й відновиться автоматично, щойно тунель повернеться.</string>
+    <string name="warren_no_dialable_network_title">МЕРЕЖА БЕЗ IPv4</string>
+    <string name="warren_no_dialable_network">Ця мережа не видає пристрою адресу IPv4, а точки входу Warren відповідають лише по IPv4, тож тунель тут встановити неможливо. Аварійне вимкнення продовжує блокувати трафік: від\'єднайтеся, щоб повернути інтернет, або перейдіть до мережі з IPv4.</string>
     <string name="vpn_permission_denied_error">Дозвіл на VPN відхилено або в іншому застосунку увімкнено опцію «Завжди увімкнений VPN»</string>
     <string name="no_matching_relay">Жоден сервер не відповідає налаштуванням, спробуйте змінити сервер чи налаштування.</string>
     <string name="custom_tunnel_host_resolution_error">Не вдається перетворити адресу хоста користувацького тунелю на IP. Змініть налаштування та спробуйте знову.</string>

@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">INSTABILT NÄTVERK</string>
     <string name="warren_tunnel_flapping">Ditt nätverk verkar instabilt: tunneln återanslöt för många gånger i rad. Återanslut när din anslutning har stabiliserats.</string>
     <string name="warren_kill_switch_active">Kill Switch håller din trafik blockerad medan tunneln är nere. Din anslutning är skyddad och återupptas automatiskt när tunneln är tillbaka.</string>
+    <string name="warren_no_dialable_network_title">NÄTVERK UTAN IPv4</string>
+    <string name="warren_no_dialable_network">Det här nätverket ger inte din enhet någon IPv4-adress, och Warrens ingångspunkter svarar bara på IPv4, så tunneln kan inte upprättas här. Kill switchen håller din trafik blockerad: koppla från för att få tillbaka internet, eller byt till ett nätverk med IPv4.</string>
     <string name="vpn_permission_denied_error">VPN-behörighet avvisades eller så har en annan app aktiverat \"Alltid på-VPN\"</string>
     <string name="no_matching_relay">Inga servrar matchar dina inställningar. Försök att byta server eller ändra inställningarna.</string>
     <string name="custom_tunnel_host_resolution_error">Det går inte att lösa värd för anpassad tunnel. Försök att ändra inställningarna.</string>

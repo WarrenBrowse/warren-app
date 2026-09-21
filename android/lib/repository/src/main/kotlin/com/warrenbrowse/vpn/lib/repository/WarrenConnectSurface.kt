@@ -127,11 +127,16 @@ sealed interface WarrenConnectedInfo {
      * [expired] is set when the block is the result of the exit refusing the account (lapsed /
      * revoked subscription): the kill switch stays up but the error reads as "subscription expired"
      * rather than a flap.
+     *
+     * [noDialableNetwork] is set while the retry is parked on a network carrying no address family
+     * a relay dial can use (an IPv6-only mobile network against an IPv4-only entry fleet). The
+     * phone has working internet, so the error must not read as "offline": waiting cannot end it.
      */
     data class Blocking(
         val reason: String,
         val flapping: Boolean = false,
         val expired: Boolean = false,
+        val noDialableNetwork: Boolean = false,
     ) : WarrenConnectedInfo
 }
 

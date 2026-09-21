@@ -9,6 +9,7 @@ import java.io.IOException
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.vpn.app.connectivity.canDialRelay
+import com.warrenbrowse.vpn.app.connectivity.isOnlineWithNoDialableFamily
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -876,8 +877,57 @@ class WarrenQuinnAdapter(
             "WarrenQuinnAdapter: no dialable network (offline or IPv6-only); " +
                 "waiting for the online edge before reconnecting"
         )
+        val parkedOver = nameTheParkedNetwork()
         connectivity.first { it.canDialRelay() }
+        restoreAfterPark(parkedOver)
         Logger.i("WarrenQuinnAdapter: dialable network is back; reconnecting")
+    }
+
+    /**
+     * Tell the user why their traffic is blocked while the retry is parked on
+     * a network no relay can be dialed from. Without this the kill switch
+     * holds the phone offline under a generic message, and nothing on the
+     * screen says the wait cannot end on this network (topic 210, 2026-09-20).
+     *
+     * Returns the state it replaced, for [restoreAfterPark]: the reconnect
+     * that follows the wait runs through [connectLocked], whose guard only
+     * passes on [WarrenTunnelState.Disconnected], so this decoration must
+     * never outlive the park.
+     */
+    private suspend fun nameTheParkedNetwork(): WarrenTunnelState? {
+        if (!connectivity.value.isOnlineWithNoDialableFamily()) return null
+        return lock.withLock {
+            if (userInitiatedDisconnect) return@withLock null
+            val previous = _state.value
+            when {
+                previous is WarrenTunnelState.Blocking ->
+                    _state.value = previous.copy(noDialableNetwork = true)
+                // The handover path parks with the blackhole up and the state
+                // already reset to Disconnected, so the blocked phone has no
+                // Blocking state to decorate: state one.
+                blockingFd != null ->
+                    _state.value = WarrenTunnelState.Blocking(
+                        reason = NO_DIALABLE_NETWORK,
+                        noDialableNetwork = true,
+                    )
+                // Traffic is not blocked (no lockdown): the user is on the bare
+                // network and has nothing to be told.
+                else -> return@withLock null
+            }
+            previous
+        }
+    }
+
+    private suspend fun restoreAfterPark(previous: WarrenTunnelState?) {
+        val restore = previous ?: return
+        lock.withLock {
+            // Only ever undo our own decoration: a user disconnect or a fresh
+            // connect during the wait owns the state now.
+            val current = _state.value
+            if (current is WarrenTunnelState.Blocking && current.noDialableNetwork) {
+                _state.value = restore
+            }
+        }
     }
 
     // The dial in flight, described by the config it is dialling: the UI names
@@ -955,6 +1005,14 @@ class WarrenQuinnAdapter(
          */
         const val PEER_CLOSE_SETTLE_MS = 400L
         const val NATPMP_IDLE = "{\"state\":\"idle\"}"
+
+        /**
+         * Reason carried by the blocked state the handover park raises when
+         * the network can dial no relay. English, like every other reason
+         * here: it feeds the legacy String projection and the problem report,
+         * never a user-facing surface (the UI reads `noDialableNetwork`).
+         */
+        const val NO_DIALABLE_NETWORK = "network carries no dialable address family"
 
         /**
          * Retry delay after an unexpected drop, mirroring warren-core

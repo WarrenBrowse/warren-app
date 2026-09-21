@@ -145,7 +145,8 @@ class WarrenQuinnStateProxy :
                     assignedNatPmpPort = assignedNatPmpPort,
                 )
             is WarrenTunnelState.Failed -> WarrenConnectedInfo.Failed(reason, expired)
-            is WarrenTunnelState.Blocking -> WarrenConnectedInfo.Blocking(reason, flapping, expired)
+            is WarrenTunnelState.Blocking ->
+                WarrenConnectedInfo.Blocking(reason, flapping, expired, noDialableNetwork)
         }
 
     private fun WarrenTunnelState.describe(): String =

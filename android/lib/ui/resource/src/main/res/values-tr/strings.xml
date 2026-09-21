@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">KARARSIZ AĞ</string>
     <string name="warren_tunnel_flapping">Ağınız kararsız görünüyor: tünel art arda çok fazla kez yeniden bağlandı. Bağlantınız oturduktan sonra yeniden bağlanın.</string>
     <string name="warren_kill_switch_active">Tünel kapalıyken kill switch trafiğinizi engellemeye devam eder. Bağlantınız korunuyor; tünel geri geldiğinde otomatik olarak sürdürülür.</string>
+    <string name="warren_no_dialable_network_title">IPv4 OLMAYAN AĞ</string>
+    <string name="warren_no_dialable_network">Bu ağ cihazınıza IPv4 adresi vermiyor ve Warren giriş noktaları yalnızca IPv4 üzerinden yanıt veriyor, bu yüzden tünel burada kurulamıyor. Kill switch trafiğinizi engellemeye devam ediyor: internete dönmek için bağlantıyı kesin ya da IPv4 sunan bir ağa geçin.</string>
     <string name="vpn_permission_denied_error">VPN izni reddedildi veya başka bir uygulamada \"VPN her zaman açık\" seçeneği etkinleştirildi</string>
     <string name="no_matching_relay">Ayarlarınızla eşleşen sunucu yok. Sunucuyu veya diğer ayarları değiştirmeyi deneyin.</string>
     <string name="custom_tunnel_host_resolution_error">Özel tünel ana bilgisayarı çözülemedi. Ayarlarınızı değiştirmeyi deneyin.</string>

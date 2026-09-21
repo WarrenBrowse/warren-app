@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">ネットワークが不安定です</string>
     <string name="warren_tunnel_flapping">ネットワークが不安定なようです。トンネルが連続して何度も再接続しました。接続が安定してから再接続してください。</string>
     <string name="warren_kill_switch_active">トンネルがダウンしている間、キルスイッチが通信をブロックし続けます。接続は保護されており、トンネルが復旧すると自動的に再開します。</string>
+    <string name="warren_no_dialable_network_title">IPv4 のないネットワーク</string>
+    <string name="warren_no_dialable_network">このネットワークは端末に IPv4 アドレスを割り当てず、Warren の入口ノードは IPv4 でしか応答しないため、ここではトンネルを確立できません。キルスイッチは通信を遮断したままです。インターネットに戻るには接続を解除するか、IPv4 を提供するネットワークに移動してください。</string>
     <string name="vpn_permission_denied_error">VPNへのアクセス許可が拒否されたか、別のアプリで「Always-on VPN」が有効になっています</string>
     <string name="no_matching_relay">設定に一致するサーバーはありません。サーバーまたは他の設定を変更してみてください。</string>
     <string name="custom_tunnel_host_resolution_error">カスタムトンネルのホストを解決できません。設定を変更してみてください。</string>

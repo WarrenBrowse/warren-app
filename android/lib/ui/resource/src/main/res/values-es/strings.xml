@@ -57,6 +57,8 @@
     <string name="warren_tunnel_flapping_title">RED INESTABLE</string>
     <string name="warren_tunnel_flapping">Tu red parece inestable: el túnel se reconectó demasiadas veces seguidas. Reconéctate cuando tu conexión se haya estabilizado.</string>
     <string name="warren_kill_switch_active">La desconexión de seguridad mantiene tu tráfico bloqueado mientras el túnel está caído. Tu conexión está protegida y se reanudará automáticamente en cuanto el túnel vuelva.</string>
+    <string name="warren_no_dialable_network_title">RED SIN IPv4</string>
+    <string name="warren_no_dialable_network">Esta red no asigna ninguna dirección IPv4 a su dispositivo y los puntos de entrada de Warren solo responden por IPv4, así que el túnel no puede establecerse aquí. El interruptor de emergencia mantiene su tráfico bloqueado: desconéctese para recuperar internet o cambie a una red que ofrezca IPv4.</string>
     <string name="vpn_permission_denied_error">Se ha denegado el permiso de VPN u otra aplicación tiene habilitada la opción «VPN siempre activa»</string>
     <string name="no_matching_relay">Ningún servidor coincide con su configuración, pruebe con otro servidor u otra configuración.</string>
     <string name="custom_tunnel_host_resolution_error">No se puede resolver el host del túnel personalizado. Pruebe a cambiar la configuración.</string>
