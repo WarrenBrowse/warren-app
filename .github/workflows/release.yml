@@ -947,6 +947,15 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's default is `tools platform-tools`, and the legacy
+          # `tools` package is gone from Google's repository: sdkmanager answers
+          # "Failed to find package 'tools'" and the step fails before a single
+          # line is built. `android-checks.yml` was fixed for it on 2026-09-17
+          # and this job was not, so it took the first release tag cut after
+          # that date (beta-v1.1.31) down before build-android started.
+          # `cmdline-tools` replaced it and the action installs it by itself.
+          packages: platform-tools
 
       - uses: ./.github/actions/mullvad-build-env
         with:
