@@ -14,6 +14,7 @@ import {
   PendingForumRequest,
   planForumLoginApproval,
   resultForProviderResponse,
+  trustedForumLoginRequest,
 } from '../../src/main/forum-login';
 import { ForumIdentity } from '../../src/shared/forum-identity';
 import {
@@ -500,6 +501,24 @@ describe('the completion of a bound approval', () => {
         approval: { result: 'approved' },
       });
     }
+  });
+
+  it('takes the approach from the request main buffered, never from the renderer', () => {
+    // The renderer echoes the request back on approve; the flags that decide
+    // whether a handoff opens are main's own.
+    expect(trustedForumLoginRequest({ ...link }, qr)).toEqual(qr);
+    expect(trustedForumLoginRequest({ ...typed, typedCode: false }, typed)).toEqual(typed);
+    // A sid main holds no request for opens no handoff: the QR's reading.
+    expect(trustedForumLoginRequest(link, undefined)).toEqual({
+      ...link,
+      crossDevice: true,
+      typedCode: false,
+    });
+    expect(trustedForumLoginRequest(link, { ...link, sid: 'b'.repeat(32) })).toEqual({
+      ...link,
+      crossDevice: true,
+      typedCode: false,
+    });
   });
 
   it('hands the kept handoff over once, and not after the session died', () => {

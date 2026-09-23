@@ -121,21 +121,20 @@ export function ForumLoginPrompt() {
   }, [request, close]);
 
   // The code completes nothing once its session is dead, so the screen that
-  // shows it goes with the session.
+  // shows it goes with the session. The wall clock is read every second
+  // rather than waited on once: a timer does not count while the machine
+  // sleeps, and one that slept past the session would keep the code up.
   const expiresAt = state.completion?.expiresAt;
   useEffect(() => {
     if (expiresAt === undefined) {
       return;
     }
-    const timer = setTimeout(
-      () => {
-        setState((current) =>
-          forumLoginCodeExpired(current, Date.now()) ? initialForumLoginPromptState : current,
-        );
-      },
-      Math.max(0, expiresAt - Date.now()),
-    );
-    return () => clearTimeout(timer);
+    const timer = setInterval(() => {
+      setState((current) =>
+        forumLoginCodeExpired(current, Date.now()) ? initialForumLoginPromptState : current,
+      );
+    }, 1_000);
+    return () => clearInterval(timer);
   }, [expiresAt]);
 
   const handleCancel = useCallback(() => {

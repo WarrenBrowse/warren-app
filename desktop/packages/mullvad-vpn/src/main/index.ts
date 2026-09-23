@@ -99,6 +99,7 @@ import {
   PendingForumHandoff,
   PendingForumRequest,
   planForumLoginApproval,
+  trustedForumLoginRequest,
 } from './forum-login';
 import { fetchForumNotifications, markForumNotificationsSeen } from './forum-notifications';
 import {
@@ -1610,6 +1611,7 @@ class ApplicationMain
       Promise.resolve(this.forumIdentityStore.get()),
     );
     IpcMainEventChannel.forumLogin.handleApprove(async (request) => {
+      const trusted = trustedForumLoginRequest(request, this.pendingForumLogin.get(Date.now()));
       const { result, identity, completion } = await approveForumLogin(request, this.daemonRpc);
       // A transient failure keeps the request buffered so a window reload can
       // retry; any settled outcome must not re-prompt.
@@ -1622,7 +1624,7 @@ class ApplicationMain
       if (result !== 'approved') {
         return { result };
       }
-      const plan = planForumLoginApproval(request, completion);
+      const plan = planForumLoginApproval(trusted, completion);
       this.pendingForumHandoff.clear();
       if (plan.onButton !== undefined) {
         this.pendingForumHandoff.set(plan.onButton, Date.now());

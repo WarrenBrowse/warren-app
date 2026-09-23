@@ -226,6 +226,27 @@ function isHandoffUrl(url: string, host: string, code: string): boolean {
 }
 
 /**
+ * The request an approval is planned for: the one main buffered for that sid,
+ * whose flags main set itself from the link or the typed code. The renderer
+ * echoes the request back on approve, but whether a handoff opens must not
+ * rest on a flag that crossed that boundary. A sid main holds no request for
+ * reads as a QR approval, the one that never opens a handoff.
+ */
+export function trustedForumLoginRequest(
+  fromRenderer: IForumLoginRequest,
+  buffered: IForumLoginRequest | undefined,
+): IForumLoginRequest {
+  if (
+    buffered !== undefined &&
+    buffered.sid === fromRenderer.sid &&
+    buffered.host === fromRenderer.host
+  ) {
+    return buffered;
+  }
+  return { ...fromRenderer, crossDevice: true, typedCode: false };
+}
+
+/**
  * What main does with an approved login: the approval the renderer shows,
  * and the handoff to open now or keep for the "Finish in this device's
  * browser" action. The table is `forumCompletionPlan`'s; this is where the
