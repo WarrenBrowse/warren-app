@@ -38,6 +38,19 @@ par l'application, gardez-le tel quel.
   Homebrew confie au compte qui l'a installé sur les Mac Intel. L'installateur refuse un dossier
   qu'un autre compte peut modifier, et déplace une installation existante.
 
+### Corrigé
+- Se reconnecter seul quand l'emplacement choisi retrouve une sortie après une maintenance. Si la
+  liste des sorties que l'application avait récupérée n'en contenait plus aucune à cet endroit, la
+  connexion restait bloquée jusqu'à un clic de votre part ; l'application récupère maintenant la
+  liste à nouveau et réessaie chaque minute.
+- [Android, iOS] Faire passer la connexion par un autre serveur dès qu'un serveur qu'elle traverse
+  annonce une maintenance ou refuse les nouvelles connexions, au lieu de le réessayer jusqu'à son
+  retour.
+- [Android] Le dire quand la connexion coupait sans cesse et que l'application a cessé de réessayer
+  en laissant passer votre trafic par votre réseau habituel, hors du VPN, et indiquer le Mode
+  verrouillage comme moyen de le garder bloqué. L'application affichait un message générique sur une
+  possible fuite de trafic réseau.
+
 ### Sécurité
 - Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les rapports de
   problème lisibles par leur seul propriétaire.
@@ -67,6 +80,13 @@ par l'application, gardez-le tel quel.
 - Signer la liste des sommes de contrôle de chaque version en ligne de commande avec la clé de
   publication de Warren. Les scripts d'installation refusent un téléchargement qu'elle ne garantit
   pas, et les archives enregistrent chaque fichier comme appartenant au compte administrateur.
+- Tenir l'adresse interne du tunnel à l'écart des journaux de l'application.
+- Récupérer un abonnement acheté depuis l'application avec un secret que l'application garde pour
+  elle et n'envoie que dans la requête qui récupère le bon, pour qu'un lien d'achat vu par quelqu'un
+  d'autre ne lui donne plus le bon. Un achat commencé avec une version précédente et encore en
+  attente de paiement n'est plus récupéré automatiquement.
+- Quand le tunnel est reconstruit, ne redemander son ancienne adresse interne qu'à la sortie qui l'a
+  attribuée.
 
 ## [1.1.31] - 2026-09-21
 ### Ajouté

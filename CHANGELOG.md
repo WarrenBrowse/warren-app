@@ -45,6 +45,16 @@ Line wrap the file at 100 chars.                                              Th
   Homebrew hands to the account that installed it on Intel Macs. The installer refuses a folder
   that another account can change, and moves an existing installation.
 
+### Fixed
+- Reconnect on its own once the location you picked has an exit again after maintenance. When the
+  exit list the app last fetched had none there, the connection stayed blocked until you clicked;
+  the app now fetches the list again and retries every minute.
+- [Android, iOS] Move the connection to another server as soon as one it goes through announces
+  maintenance or refuses new connections, instead of retrying it until it comes back.
+- [Android] Say so when the connection kept dropping and the app stopped retrying and let your
+  traffic through your regular network, outside the VPN, and name Lockdown mode as the way to keep
+  it blocked instead. The app used to show a generic "network traffic might be leaking" message.
+
 ### Security
 - Keep the settings file readable by administrators only, and create problem reports readable by
   their owner only.
@@ -72,6 +82,13 @@ Line wrap the file at 100 chars.                                              Th
 - Sign the checksum list of every command-line release with the Warren release key. The install
   scripts refuse a download it does not vouch for, and the archives record every file as owned by
   the administrator account.
+- Keep the tunnel's inner address out of the app's logs.
+- Collect a plan bought from the app with a secret the app keeps to itself and sends only in the
+  request that collects the voucher, so a purchase link seen by someone else no longer gives them
+  the voucher. A purchase started from an earlier version and still waiting for payment is no longer
+  collected automatically.
+- When the tunnel is rebuilt, ask for its previous inner address back only from the exit that
+  assigned it.
 
 ## [1.1.31] - 2026-09-21
 ### Added

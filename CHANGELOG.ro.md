@@ -36,6 +36,18 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   care Homebrew îl dă, pe Mac-urile Intel, contului care l-a instalat. Programul de instalare
   refuză un dosar pe care alt cont îl poate modifica și mută o instalare existentă.
 
+### Reparat
+- Se reconectează singură când locația aleasă are din nou o ieșire după o mentenanță. Dacă lista de
+  ieșiri descărcată ultima dată de aplicație nu mai conținea niciuna acolo, conexiunea rămânea
+  blocată până la un clic din partea dvs.; aplicația descarcă acum lista din nou și reîncearcă în
+  fiecare minut.
+- [Android, iOS] Trece conexiunea prin alt server imediat ce unul dintre serverele prin care trece
+  anunță o mentenanță sau refuză conexiunile noi, în loc să-l reîncerce până revine.
+- [Android] Spune acest lucru când conexiunea cădea întruna și aplicația a încetat să reîncerce,
+  lăsând traficul dvs. să treacă prin rețeaua obișnuită, în afara VPN-ului, și indică Mod Blocare ca
+  modalitate de a-l ține blocat. Aplicația afișa un mesaj generic despre o posibilă scurgere de
+  trafic de rețea.
+
 ### Securitate
 - Fișierul de setări poate fi citit doar de administratori, iar rapoartele de problemă doar de
   proprietarul lor.
@@ -64,6 +76,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - Semnează lista sumelor de control a fiecărei versiuni pentru linia de comandă cu cheia de
   publicare Warren. Scripturile de instalare refuză o descărcare pe care ea nu o garantează, iar
   arhivele înregistrează fiecare fișier ca aparținând contului de administrator.
+- Ține adresa internă a tunelului în afara jurnalelor aplicației.
+- Preia un abonament cumpărat din aplicație cu un secret pe care aplicația îl păstrează pentru ea și
+  îl trimite doar în cererea care preia voucherul, astfel încât un link de cumpărare văzut de
+  altcineva să nu-i mai dea voucherul. O cumpărare începută cu o versiune anterioară și încă în
+  așteptarea plății nu mai este preluată automat.
+- Când tunelul este reconstruit, cere înapoi adresa sa internă anterioară doar de la ieșirea care a
+  atribuit-o.
 
 ## [1.1.31] - 2026-09-21
 ### Adăugat
