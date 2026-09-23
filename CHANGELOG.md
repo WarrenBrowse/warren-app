@@ -86,8 +86,11 @@ Line wrap the file at 100 chars.                                              Th
 - Keep the tunnel's inner address out of the app's logs.
 - Collect a plan bought from the app with a secret the app keeps to itself and sends only in the
   request that collects the voucher, so a purchase link seen by someone else no longer gives them
-  the voucher. A purchase started from an earlier version and still waiting for payment is no longer
-  collected automatically.
+  the voucher. While the purchase waits, the secret is sealed with the system keychain in a file of
+  its own, and it is erased once the voucher is collected or after a day. On Linux without a
+  keyring it stays in memory, so the purchase is collected only while the app runs. A purchase
+  started from an earlier version and still waiting for payment is no longer collected
+  automatically.
 - When the tunnel is rebuilt, ask for its previous inner address back only from the exit that
   assigned it.
 - [Windows, macOS, Linux] Answer a server that refuses the connection by moving a multihop

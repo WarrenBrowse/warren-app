@@ -564,3 +564,54 @@ describe('PurchaseFlow.resume', () => {
     flow.dispose();
   });
 });
+
+// Each entry carries the pull secret that collects a paid voucher. Past the
+// server's pending TTL the voucher is gone and the secret collects nothing,
+// so it is erased then, whether or not anything else reads the store.
+describe('PurchaseFlow expiry', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ now: T0 });
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('erases a purchase at the end of its day while the app runs', async () => {
+    const { delegate } = makeDelegate(() => Promise.resolve(notReady));
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+    await flow.start();
+
+    await vi.advanceTimersByTimeAsync(PENDING_PURCHASE_TTL_MS);
+    expect(store.entries).toHaveLength(1);
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
+  it('erases at startup what a previous run left past its day', () => {
+    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const young = `${fixtureCode('b')}:${T0 - 60_000}:acct1`;
+    const store = new FakeStore([`${fixtureCode('a')}:${T0 - PENDING_PURCHASE_TTL_MS - 1}`, young]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    flow.forgetExpired();
+
+    expect(store.entries).toEqual([young]);
+    expect(submitted).toEqual([]);
+    flow.dispose();
+  });
+
+  it('erases a purchase a previous run left at the end of its day', async () => {
+    const { delegate } = makeDelegate(alwaysInvalid);
+    const store = new FakeStore([`${fixtureCode('b')}:${T0 - 60_000}:acct1`]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    flow.forgetExpired();
+    await vi.advanceTimersByTimeAsync(PENDING_PURCHASE_TTL_MS - 60_000 + 1);
+
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+});

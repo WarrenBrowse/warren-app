@@ -100,15 +100,6 @@ export interface IGuiSettingsState {
   // wording as well as the id (see the notice provider), so a notice rewritten
   // in place comes back.
   dismissedNotices?: Array<string>;
-
-  // App-initiated purchases (doc 35) awaiting their webhook voucher,
-  // as `${claimCode}:${startedUnixMs}:${accountTag}` entries, the claim
-  // code being the wpid followed by the purchase's pull secret. Persisted
-  // so a purchase paid after the app was closed is still redeemed on the
-  // next run (the server keeps the voucher for 24h). Owned by the main
-  // process PurchaseFlow; the renderer never reads it. Optional so
-  // settings files written by older versions keep validating.
-  pendingPurchases?: Array<string>;
 }
 
 /**

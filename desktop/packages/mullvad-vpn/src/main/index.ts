@@ -130,6 +130,7 @@ import NotificationController, {
   NotificationControllerDelegate,
   NotificationSender,
 } from './notification-controller';
+import { PENDING_PURCHASES_FILE, SealedPendingPurchaseStore } from './pending-purchase-store';
 import { isMacOs13OrNewer } from './platform-version';
 import { ForwardedPortFile, renderForwardedPortFile } from './port-forward-status-file';
 import { PortForwardingWatcher } from './port-forwarding-watcher';
@@ -330,12 +331,9 @@ class ApplicationMain
         accountTag: () => this.currentAccountTag(),
         onRedeemed: (claim) => void this.renewalFlow.adopt(claim),
       },
-      {
-        get: () => this.settings.gui.pendingPurchases,
-        set: (entries) => {
-          this.settings.gui.pendingPurchases = entries;
-        },
-      },
+      new SealedPendingPurchaseStore(new SafeStorageSecretStore(), () =>
+        path.join(app.getPath('userData'), PENDING_PURCHASES_FILE),
+      ),
       urls.purchase,
     );
 
@@ -861,6 +859,9 @@ class ApplicationMain
     this.blockNavigationAndWindowOpen();
 
     this.updateCurrentLocale();
+
+    // After `ready`, the first moment the keychain can open the sealed store.
+    this.purchaseFlow.forgetExpired();
 
     // Before the daemon connects, so the first digest it pushes is already
     // matched against the right slot.

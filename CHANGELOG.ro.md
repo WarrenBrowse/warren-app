@@ -80,8 +80,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - Ține adresa internă a tunelului în afara jurnalelor aplicației.
 - Preia un abonament cumpărat din aplicație cu un secret pe care aplicația îl păstrează pentru ea și
   îl trimite doar în cererea care preia voucherul, astfel încât un link de cumpărare văzut de
-  altcineva să nu-i mai dea voucherul. O cumpărare începută cu o versiune anterioară și încă în
-  așteptarea plății nu mai este preluată automat.
+  altcineva să nu-i mai dea voucherul. Cât timp cumpărarea așteaptă, secretul este sigilat de
+  depozitul de chei al sistemului într-un fișier separat și este șters imediat ce voucherul este
+  preluat sau după o zi. Pe Linux fără depozit de chei (keyring), rămâne în memorie, iar
+  cumpărarea este preluată doar cât timp aplicația rulează. O cumpărare începută cu o versiune
+  anterioară și încă în așteptarea plății nu mai este preluată automat.
 - Când tunelul este reconstruit, cere înapoi adresa sa internă anterioară doar de la ieșirea care a
   atribuit-o.
 - [Windows, macOS, Linux] Răspunde unui server care refuză conexiunea mutând o conexiune multihop

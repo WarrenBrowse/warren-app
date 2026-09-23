@@ -83,7 +83,10 @@ par l'application, gardez-le tel quel.
 - Tenir l'adresse interne du tunnel à l'écart des journaux de l'application.
 - Récupérer un abonnement acheté depuis l'application avec un secret que l'application garde pour
   elle et n'envoie que dans la requête qui récupère le bon, pour qu'un lien d'achat vu par quelqu'un
-  d'autre ne lui donne plus le bon. Un achat commencé avec une version précédente et encore en
+  d'autre ne lui donne plus le bon. Tant que l'achat attend, le secret est scellé par le trousseau
+  du système dans un fichier à part, et il est effacé dès que le bon est récupéré ou au bout d'une
+  journée. Sous Linux sans trousseau, il reste en mémoire, et l'achat n'est alors récupéré que
+  tant que l'application tourne. Un achat commencé avec une version précédente et encore en
   attente de paiement n'est plus récupéré automatiquement.
 - Quand le tunnel est reconstruit, ne redemander son ancienne adresse interne qu'à la sortie qui l'a
   attribuée.

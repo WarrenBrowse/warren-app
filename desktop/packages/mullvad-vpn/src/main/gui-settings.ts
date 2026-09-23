@@ -22,10 +22,11 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   animateMap: 'boolean',
   onboardingPending: 'boolean',
   backupPending: 'boolean',
-  pendingPurchases: 'Array<string>',
   dismissedAnnouncements: 'Array<string>',
   dismissedNotices: 'Array<string>',
 };
+
+const LEGACY_PENDING_PURCHASES_KEY = 'pendingPurchases';
 
 const defaultSettings: IGuiSettingsState = {
   preferredLocale: SYSTEM_PREFERRED_LOCALE_KEY,
@@ -42,7 +43,6 @@ const defaultSettings: IGuiSettingsState = {
   animateMap: true,
   onboardingPending: false,
   backupPending: false,
-  pendingPurchases: [],
   dismissedAnnouncements: [],
   dismissedNotices: [],
 };
@@ -210,15 +210,6 @@ export default class GuiSettings {
     return this.stateValue.backupPending ?? false;
   }
 
-  // Pending app-initiated purchases (see gui-settings-state.ts).
-  set pendingPurchases(newValue: Array<string>) {
-    this.changeStateAndNotify({ ...this.stateValue, pendingPurchases: newValue });
-  }
-
-  get pendingPurchases(): Array<string> {
-    return this.stateValue.pendingPurchases ?? [];
-  }
-
   // Launch announcements the user has put away (see gui-settings-state.ts).
   // Append-only and de-duplicated: a card the user dismissed twice, on two
   // runs, must not grow the file forever.
@@ -257,11 +248,19 @@ export default class GuiSettings {
       const settingsFile = this.filePath();
       const contents = fs.readFileSync(settingsFile, 'utf8');
       const rawJson = JSON.parse(contents);
+      // Earlier builds kept the pending purchases here, each with the pull
+      // secret that collects its voucher. They live in their own sealed store
+      // now, and a copy found in this cleartext file is removed at load.
+      const carriedPurchases = LEGACY_PENDING_PURCHASES_KEY in rawJson;
+      delete rawJson[LEGACY_PENDING_PURCHASES_KEY];
 
       this.stateValue = {
         ...defaultSettings,
         ...this.validateSettings(rawJson),
       };
+      if (carriedPurchases) {
+        this.store();
+      }
     } catch (e) {
       const error = e as Error & { code?: string };
       // Read settings if the file exists, otherwise write the default settings to it.

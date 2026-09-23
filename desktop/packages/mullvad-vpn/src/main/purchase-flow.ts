@@ -35,7 +35,8 @@ export interface PurchaseFlowDelegate {
 // purchase in flight survives an app restart (the user may pay minutes
 // after closing the app; the webhook-minted voucher waits server-side).
 // The claim code carries the pull secret, the only thing that collects the
-// voucher, so an entry is as sensitive as the voucher it waits for.
+// voucher, so an entry is as sensitive as the voucher it waits for, and the
+// store never keeps it in the clear (see `SealedPendingPurchaseStore`).
 export interface PendingPurchaseStore {
   get(): string[];
   set(entries: string[]): void;
@@ -57,6 +58,7 @@ interface PendingPurchase {
 // poll until the app was restarted.
 export default class PurchaseFlow {
   private activeTimer?: NodeJS.Timeout;
+  private expiryTimer?: NodeJS.Timeout;
   private activeClaim?: PurchaseClaim;
   private activeTag?: string;
   private activeDeadlineMs = 0;
@@ -184,12 +186,36 @@ export default class PurchaseFlow {
     }
   }
 
+  // Startup path, whoever is logged in: drop what a previous run left past
+  // the server's TTL, and erase the rest when theirs ends.
+  public forgetExpired(): void {
+    this.armExpiry(this.prune(Date.now()));
+  }
+
   public dispose(): void {
     if (this.activeTimer) {
       clearInterval(this.activeTimer);
       this.activeTimer = undefined;
     }
+    clearTimeout(this.expiryTimer);
+    this.expiryTimer = undefined;
     this.activeClaim = undefined;
+  }
+
+  // A pull secret past the server's TTL collects nothing, and nothing else
+  // may read the store for a day (no focus, no login), so the oldest entry's
+  // end is on a timer of its own.
+  private armExpiry(entries: PendingPurchase[]) {
+    clearTimeout(this.expiryTimer);
+    this.expiryTimer = undefined;
+    if (entries.length === 0) {
+      return;
+    }
+    const oldestMs = Math.min(...entries.map((entry) => entry.startedMs));
+    this.expiryTimer = setTimeout(
+      () => this.forgetExpired(),
+      Math.max(0, oldestMs + PENDING_PURCHASE_TTL_MS - Date.now()) + 1,
+    );
   }
 
   private startActivePoll(claim: PurchaseClaim, deadlineMs: number, tag: string | undefined) {
@@ -324,6 +350,7 @@ export default class PurchaseFlow {
           : `${claimCode(entry.claim)}:${entry.startedMs}:${entry.tag}`,
       ),
     );
+    this.armExpiry(entries);
   }
 }
 
