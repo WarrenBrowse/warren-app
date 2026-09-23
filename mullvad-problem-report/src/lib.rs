@@ -225,7 +225,14 @@ pub struct WriteSource<W: Write> {
 /// Open a file to write the problem report to.
 pub fn open_output_file(path: impl AsRef<Path>) -> Result<WriteSource<BufWriter<File>>, Error> {
     fn inner(path: impl AsRef<Path>) -> io::Result<BufWriter<File>> {
-        let file = File::create(path)?;
+        let mut options = File::options();
+        options.write(true).create(true).truncate(true);
+        // The GUI writes its reports to the system temp directory, which every
+        // local account can list on Linux, and a report carries this user's
+        // logs. Created unreadable by anybody else from the start, not after.
+        #[cfg(unix)]
+        std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+        let file = options.open(path)?;
         let mut permissions = file.metadata()?.permissions();
         permissions.set_readonly(true);
         file.set_permissions(permissions)?;
@@ -769,6 +776,18 @@ fn read_file_lossy(path: &Path, max_bytes: usize) -> io::Result<String> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(unix)]
+    #[test]
+    fn a_report_file_is_readable_by_its_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let path = std::env::temp_dir().join(format!("wreport-{}.log", std::process::id()));
+
+        drop(super::open_output_file(&path).expect("report file"));
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+        let _ = std::fs::remove_file(&path);
+        assert_eq!(mode & 0o077, 0, "no access for the group or other accounts");
+    }
 
     fn every_base() -> FrontendLogDirs {
         FrontendLogDirs {
