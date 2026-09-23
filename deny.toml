@@ -40,6 +40,12 @@ ignore = [
   # startup, never attacker-controlled bytes. Security-clean, no CVE.
   "RUSTSEC-2025-0134",
 
+  # rsa (Marvin timing attack, no fixed release) is reached only through
+  # blind-rsa-signatures in warrenguard-token. The app builds with the issuer's
+  # PUBLIC key only (blind a token request, finalize, verify); the attack needs
+  # timing observations of a private-key operation, which only the issuer runs.
+  "RUSTSEC-2023-0071",
+
   # quick-xml DoS advisories are reached only through translations-converter, a
   # build-time developer tool that parses local translation files we author, never
   # attacker-controlled input, and is never shipped in the daemon or app binary.

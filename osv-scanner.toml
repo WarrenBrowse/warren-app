@@ -87,3 +87,14 @@ reason = """
 Paste unmaintained, but considered complete and trusted by the community.
 netlink-packet-core depends on it.
 """
+
+# rsa timing side channel (Marvin attack) during private-key operations.
+[[IgnoredVulns]]
+id = "RUSTSEC-2023-0071" # CVE-2023-49092, GHSA-c38w-74pg-36hr
+ignoreUntil = 2026-12-23
+reason = """
+No fixed rsa release exists. rsa is reached only through blind-rsa-signatures in
+warrenguard-token, and the app only ever holds the issuer's public key: it blinds a
+token request, finalizes the blind signature and verifies it. The attack needs timing
+observations of a private-key operation, which only the issuer (server side) performs.
+"""
