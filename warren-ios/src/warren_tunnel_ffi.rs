@@ -1062,10 +1062,12 @@ fn pins_admit(
 
 /// The supervisor's dial-refusal observer.
 ///
-/// The refusal is taken as the refusal of the node the connection terminates
-/// at, `relay_id`, whatever hop the engine reports: during the handshake or
-/// the setup only that node speaks, and letting it name another would let a
-/// hostile relay choose which exits the session avoids.
+/// The refusal is charged to the node the connection terminates at,
+/// `relay_id`, whatever hop the engine reports, and it only ever moves the
+/// session to another entry for the same exit (see `CircuitRetarget`). It
+/// runs inline, between two dials: the engine names the circuit current when
+/// it reports, so a retarget applied later could be charged to a dial the
+/// retarget itself started.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 fn refusal_hook(
     retarget: std::sync::Arc<std::sync::Mutex<crate::warren_multihop_directory::CircuitRetarget>>,
@@ -1075,28 +1077,20 @@ fn refusal_hook(
     exit_country: String,
 ) -> warrenguard_transport::supervisor::DialRefusedObserver {
     std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
-        let retarget = std::sync::Arc::clone(&retarget);
-        let migrate = std::sync::Arc::clone(&migrate);
-        let entry_rtt = std::sync::Arc::clone(&entry_rtt);
-        let pins = pin_store_path.clone();
-        let country = exit_country.clone();
-        // Off the supervisor's task: the key-pin check reads and writes a file.
-        tokio::spawn(async move {
-            let rtt = entry_rtt
-                .lock()
-                .map(|cache| cache.clone())
-                .unwrap_or_default();
-            let moved = retarget.lock().ok().and_then(|mut r| {
-                r.on_refusal(&relay_id, &rtt, now_secs(), |c| {
-                    pins_admit(pins.as_deref(), c, &country)
-                })
-            });
-            if let (Some(circuit), Some(handle)) = (moved, migrate.get()) {
-                // No-logs: the category of the reaction, never the node.
-                tracing::info!("multi-hop dial refused; moving to another circuit");
-                handle.migrate_to(circuit_target(circuit));
-            }
+        let rtt = entry_rtt
+            .lock()
+            .map(|cache| cache.clone())
+            .unwrap_or_default();
+        let moved = retarget.lock().ok().and_then(|mut r| {
+            r.on_refusal(&relay_id, &rtt, now_secs(), |c| {
+                pins_admit(pin_store_path.as_deref(), c, &exit_country)
+            })
         });
+        if let (Some(circuit), Some(handle)) = (moved, migrate.get()) {
+            // No-logs: the category of the reaction, never the node.
+            tracing::info!("multi-hop entry refused the dial; dialing the exit through another");
+            handle.migrate_to(circuit_target(circuit));
+        }
     })
 }
 
@@ -1391,7 +1385,6 @@ fn spawn_multi_hop(
         // advisory here; the drain reactor below moves the session off the
         // exit before its hard close (mirrors the desktop talpid reactor).
         let exit_draining_channel = ExitDrainingChannel::new();
-        let drain_handle = supervisor.handle();
         let tun = arc_for_task.tun.clone();
 
         // Plain pumps (no DAITA), structurally identical to the desktop
@@ -1433,16 +1426,16 @@ fn spawn_multi_hop(
                 }
             });
         }
-        // ADR 36 drain reactor: on each in-band drain advisory, after the
-        // anti-stampede delay that spreads the exit's clients before its
-        // deadline, migrate the live session (make-before-break) onto a
-        // circuit that leaves the draining exit out. With no such circuit it
-        // forces a redial instead, the session riding the supervisor's
-        // backoff until the exit is back. NOT one-shot: the session and its
-        // channel outlive a migration, so the loop keeps listening for a
-        // drain on the exit it lands on next. The exit re-emits dedup'd, so a
-        // repeat of the SAME advisory does not re-fire; teardown drops the
-        // sender, ending this task.
+        // ADR 36 drain reactor: on a drain advisory, after the anti-stampede
+        // delay that spreads the exit's clients before its deadline, migrate
+        // the live session (make-before-break) onto a circuit that leaves the
+        // draining exit out. With no such circuit the session stays until the
+        // exit's close: a redial to a draining exit is refused. The exit
+        // re-sends its advisory until the session has left, and every re-send
+        // wakes this loop, so an advisory already acted on is skipped and the
+        // move is charged to the exit that was current when it first came.
+        // NOT one-shot: the loop keeps listening for a drain on the exit the
+        // session lands on next; teardown drops the sender, ending this task.
         {
             let mut drain_sub = exit_draining_channel.subscribe();
             let _ = drain_sub.borrow_and_update();
@@ -1453,11 +1446,19 @@ fn spawn_multi_hop(
             let drain_country = exit_country.clone();
             tokio::spawn(async move {
                 use warrenguard_transport::drain_policy::{jitter_delay, stampede_fraction};
+                let mut acted_on = None;
                 loop {
                     if drain_sub.changed().await.is_err() {
                         return;
                     }
                     let Some(advisory) = *drain_sub.borrow_and_update() else {
+                        continue;
+                    };
+                    if acted_on == Some(advisory) {
+                        continue;
+                    }
+                    acted_on = Some(advisory);
+                    let Some(draining) = drain_retarget.lock().ok().map(|r| r.exit_id()) else {
                         continue;
                     };
                     tokio::time::sleep(jitter_delay(
@@ -1466,32 +1467,30 @@ fn spawn_multi_hop(
                         stampede_fraction(),
                     ))
                     .await;
-                    // Surface the maintenance migration to Swift so the UI
-                    // reflects it. Reuses `EventReconnecting` (no new C-ABI
-                    // tag): the app already renders it as a transient
-                    // reconnect, which is exactly what a drain migration is.
-                    drain_arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
                     let rtt = drain_arc
                         .entry_rtt
                         .lock()
                         .map(|cache| cache.clone())
                         .unwrap_or_default();
                     let moved = drain_retarget.lock().ok().and_then(|mut r| {
-                        r.on_drain(&rtt, now_secs(), |c| {
+                        r.on_drain(draining, &rtt, now_secs(), |c| {
                             pins_admit(drain_pins.as_deref(), c, &drain_country)
                         })
                     });
                     match (moved, drain_migrate.get()) {
                         (Some(circuit), Some(handle)) => {
                             tracing::info!("multi-hop exit draining; migrating to another exit");
+                            // Surface the maintenance migration to Swift so the
+                            // UI reflects it. Reuses `EventReconnecting` (no new
+                            // C-ABI tag): the app already renders it as a
+                            // transient reconnect, which is what a drain
+                            // migration is.
+                            drain_arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
                             handle.migrate_to(circuit_target(circuit));
                         }
-                        _ => {
-                            tracing::info!(
-                                "multi-hop exit draining and no other exit can serve; redialing"
-                            );
-                            let _ = drain_handle.force_reconnect();
-                        }
+                        _ => tracing::info!(
+                            "multi-hop exit draining and no other exit can serve; staying until its close"
+                        ),
                     }
                 }
             });

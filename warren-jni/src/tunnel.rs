@@ -360,8 +360,8 @@ async fn run_multi_hop_session(
     // exit node's own relay descriptor: we dial that node's `:443` dispatcher
     // and forward to its own exit_id, which the dispatcher terminates locally.
     let exit_node = &dir.nodes[exit_idx];
-    // Refusals and drains (ADR 36): kept across the attempts below, so a
-    // retry after a token rejection dials the entry a refusal moved to.
+    // Entry refusals (ADR 36): kept across the attempts below, so a retry
+    // after a token rejection dials the entry a refusal moved to.
     let retarget = Arc::new(parking_lot::Mutex::new(
         crate::circuit_retarget::EntryRetarget::new(
             entry_idx,
@@ -475,7 +475,7 @@ async fn run_multi_hop_session(
                 Arc::clone(&dir),
                 Arc::clone(&retarget),
                 Arc::clone(&migrate_slot),
-                leaving_tx.clone(),
+                exit_idx,
                 exit_mlkem768_pubkey.clone(),
             )),
             on_path_rtt: None,
@@ -680,50 +680,34 @@ fn node_views(
 
 /// The supervisor's dial-refusal observer for one attempt.
 ///
-/// The refusal is taken as the refusal of the node the connection terminates
-/// at, `relay_id`, whatever hop the engine reports: during the handshake or
-/// the setup only that node speaks, and letting it name another would let a
-/// hostile relay choose which exits the client avoids. A refusing entry of a
-/// two-hop circuit is replaced for the same exit, live; a refusing one-hop
-/// node is the exit, and the session leaves it for Kotlin to fail over.
+/// The refusal is charged to the node the connection terminates at,
+/// `relay_id`, whatever hop the engine reports, and it only ever moves the
+/// session to another entry for the same exit (see `crate::circuit_retarget`
+/// for why a refusal never moves the exit).
 fn refusal_hook(
     dir: std::sync::Arc<warren_discovery_core::VerifiedMultiHopDirectory>,
     retarget: std::sync::Arc<parking_lot::Mutex<crate::circuit_retarget::EntryRetarget>>,
     migrate: std::sync::Arc<std::sync::OnceLock<warrenguard_transport::supervisor::MigrateHandle>>,
-    leaving: tokio::sync::watch::Sender<bool>,
+    exit_idx: usize,
     exit_mlkem768_pubkey: Option<Vec<u8>>,
 ) -> warrenguard_transport::supervisor::DialRefusedObserver {
-    use crate::circuit_retarget::RefusalReaction;
-
-    std::sync::Arc::new(move |_hop, relay_id: [u8; 16], exit_id: [u8; 16]| {
-        let reaction = retarget
+    std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
+        let Some(entry) = retarget
             .lock()
-            .on_refusal(&node_views(&dir), &relay_id, unix_now_secs());
-        match reaction {
-            RefusalReaction::RetargetEntry(entry) => {
-                // No-logs: the category of the reaction, never the node.
-                log::info!("multi-hop entry refused the dial; dialing the exit through another");
-                let Some(exit) = dir
-                    .nodes
-                    .iter()
-                    .find(|n| *n.exit.exit_id.as_bytes() == exit_id)
-                else {
-                    return;
-                };
-                if let Some(handle) = migrate.get() {
-                    handle.migrate_to(warrenguard_transport::supervisor::CircuitTarget {
-                        relay: std::sync::Arc::new(dir.nodes[entry].relay.clone()),
-                        exit_id: exit.exit.exit_id,
-                        exit_x25519_multihop_pubkey: exit.exit.exit_x25519_multihop_pubkey,
-                        exit_mlkem768_pubkey: exit_mlkem768_pubkey.clone(),
-                    });
-                }
-            }
-            RefusalReaction::LeaveExit => {
-                log::info!("multi-hop exit refused the dial; leaving it for a failover");
-                let _ = leaving.send(true);
-            }
-            RefusalReaction::Stay => {}
+            .on_refusal(&node_views(&dir), &relay_id, unix_now_secs())
+        else {
+            return;
+        };
+        // No-logs: the category of the reaction, never the node.
+        log::info!("multi-hop entry refused the dial; dialing the exit through another");
+        let exit = &dir.nodes[exit_idx].exit;
+        if let Some(handle) = migrate.get() {
+            handle.migrate_to(warrenguard_transport::supervisor::CircuitTarget {
+                relay: std::sync::Arc::new(dir.nodes[entry].relay.clone()),
+                exit_id: exit.exit_id,
+                exit_x25519_multihop_pubkey: exit.exit_x25519_multihop_pubkey,
+                exit_mlkem768_pubkey: exit_mlkem768_pubkey.clone(),
+            });
         }
     })
 }

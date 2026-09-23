@@ -43,9 +43,9 @@ par l'application, gardez-le tel quel.
   liste des sorties que l'application avait récupérée n'en contenait plus aucune à cet endroit, la
   connexion restait bloquée jusqu'à un clic de votre part ; l'application récupère maintenant la
   liste à nouveau et réessaie chaque minute.
-- [Android, iOS] Faire passer la connexion par un autre serveur dès qu'un serveur qu'elle traverse
-  annonce une maintenance ou refuse les nouvelles connexions, au lieu de le réessayer jusqu'à son
-  retour.
+- [Android, iOS] Passer sur une autre sortie dès que la sortie utilisée annonce une maintenance, et
+  sur un autre serveur d'entrée quand l'entrée d'une connexion multihop refuse les nouvelles
+  connexions, au lieu de réessayer le même serveur jusqu'à son retour.
 - [Android] Le dire quand la connexion coupait sans cesse et que l'application a cessé de réessayer
   en laissant passer votre trafic par votre réseau habituel, hors du VPN, et indiquer le Mode
   verrouillage comme moyen de le garder bloqué. L'application affichait un message générique sur une

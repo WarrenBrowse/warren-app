@@ -16,10 +16,9 @@
 //!   death.
 //! - `Unauthorized` (4) is terminal: retrying cannot recover a lapsed
 //!   subscription, so the session is never redialed past it.
-//! - `ExitLeaving` (5) ends the session because its exit is leaving (a
-//!   maintenance drain it announced, or its refusal of a one-hop dial): the
-//!   Kotlin layer fails over to another exit at once, blackhole first, and
-//!   does not count it as a drop.
+//! - `ExitLeaving` (5) ends the session because its exit announced a
+//!   maintenance drain: the Kotlin layer fails over to another exit at once,
+//!   blackhole first, and does not count it as a drop.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum

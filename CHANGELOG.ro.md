@@ -41,8 +41,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   ieșiri descărcată ultima dată de aplicație nu mai conținea niciuna acolo, conexiunea rămânea
   blocată până la un clic din partea dvs.; aplicația descarcă acum lista din nou și reîncearcă în
   fiecare minut.
-- [Android, iOS] Trece conexiunea prin alt server imediat ce unul dintre serverele prin care trece
-  anunță o mentenanță sau refuză conexiunile noi, în loc să-l reîncerce până revine.
+- [Android, iOS] Trece pe altă ieșire imediat ce ieșirea folosită anunță o mentenanță și pe alt
+  server de intrare când intrarea unei conexiuni multihop refuză conexiunile noi, în loc să
+  reîncerce același server până revine.
 - [Android] Spune acest lucru când conexiunea cădea întruna și aplicația a încetat să reîncerce,
   lăsând traficul dvs. să treacă prin rețeaua obișnuită, în afara VPN-ului, și indică Mod Blocare ca
   modalitate de a-l ține blocat. Aplicația afișa un mesaj generic despre o posibilă scurgere de

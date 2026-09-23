@@ -1,16 +1,19 @@
 //! Moving an Android session off a node that refuses its dials or announces a
 //! maintenance drain (ADR 36).
 //!
-//! The engine names the node a connection terminates at for every refused
-//! dial: the entry relay, which on a one-hop circuit is the exit itself. It
-//! never names the exit behind a relay, so a hostile relay can make the client
-//! avoid that relay and nothing else.
+//! A refused dial is charged to the node the connection terminates at: the
+//! entry relay, which on a one-hop circuit is the exit itself. A refusal is
+//! not authenticated (a close in the handshake can be forged on path, and a
+//! peer holding only the cover certificate can refuse before the relay proves
+//! its identity), so it may only ever move the session off an entry, for the
+//! same exit: acted on for an exit, it would let whoever forges it choose the
+//! user's exit by elimination. A one-hop circuit therefore stays on its
+//! backoff when refused.
 //!
-//! Android fixes the TUN address at `establish()`, and the exit is Kotlin's
-//! choice (it applies the location pin and the key pins), so a live retarget
-//! here can only change the entry of a two-hop circuit: the exit, and the inner
-//! address it assigned, stay. A refusing or draining exit ends the session
-//! instead, for Kotlin to fail over to another exit at once.
+//! The drain advisory is sealed by the exit's session, so it can move the
+//! session off the exit. Android fixes the TUN address at `establish()` and
+//! the exit is Kotlin's choice (location pin, key pins), so a drain ends the
+//! session for Kotlin to fail over to another exit at once.
 
 use std::time::Duration;
 
@@ -20,18 +23,6 @@ use warrenguard_transport::drain_policy::{
 };
 
 use crate::circuit_select::NodeSel;
-
-/// What a refused dial asks of the session.
-#[derive(Debug, PartialEq, Eq)]
-pub(crate) enum RefusalReaction {
-    /// Dial the same exit through the entry at this directory index.
-    RetargetEntry(usize),
-    /// The refusing node is the exit: end the session so Kotlin fails over.
-    LeaveExit,
-    /// Nothing this session can act on: a refusal by a node it already left,
-    /// or no other entry to dial. The supervisor keeps its backoff.
-    Stay,
-}
 
 /// The circuit a session is dialing, and the entries it gave up on.
 pub(crate) struct EntryRetarget {
@@ -60,24 +51,25 @@ impl EntryRetarget {
         self.entry
     }
 
-    /// React to a dial the node carrying `refused_relay_id` refused.
+    /// The directory index of another entry to dial the same exit through
+    /// after the node carrying `refused_relay_id` refused a dial, or `None`
+    /// to stay on the supervisor's backoff.
     pub(crate) fn on_refusal(
         &mut self,
         nodes: &[NodeSel<'_>],
         refused_relay_id: &[u8; 16],
         now_unix: u64,
-    ) -> RefusalReaction {
-        self.avoided
-            .retain(|&(_, at)| now_unix.saturating_sub(at) < DRAINED_EXIT_AVOID_TTL.as_secs());
-        // A dial already in flight to an entry this session left can still
-        // come back refused; it says nothing about the circuit now dialed.
-        if nodes.get(self.entry).map(|n| n.relay_id) != Some(refused_relay_id) {
-            return RefusalReaction::Stay;
+    ) -> Option<usize> {
+        // Only a refusal naming the entry dialed now counts: a report naming
+        // any other node says nothing about the circuit in use.
+        if self.entry == self.exit || nodes.get(self.entry)?.relay_id != refused_relay_id {
+            return None;
         }
-        if self.entry == self.exit {
-            return RefusalReaction::LeaveExit;
-        }
-        self.avoided.push((self.entry, now_unix));
+        let refused = self.entry;
+        self.avoided.retain(|&(i, at)| {
+            i != refused && now_unix.saturating_sub(at) < DRAINED_EXIT_AVOID_TTL.as_secs()
+        });
+        self.avoided.push((refused, now_unix));
         let exit_relay_id = nodes[self.exit].relay_id;
         let usable = |i: usize| {
             nodes[i].relay_id != exit_relay_id && !self.avoided.iter().any(|&(a, _)| a == i)
@@ -87,18 +79,13 @@ impl EntryRetarget {
             .as_deref()
             .map(str::trim)
             .filter(|c| !c.is_empty());
-        let pick = country
+        let entry = country
             .and_then(|c| {
                 (0..nodes.len()).find(|&i| usable(i) && nodes[i].country.eq_ignore_ascii_case(c))
             })
-            .or_else(|| (0..nodes.len()).find(|&i| usable(i)));
-        match pick {
-            Some(entry) => {
-                self.entry = entry;
-                RefusalReaction::RetargetEntry(entry)
-            }
-            None => RefusalReaction::Stay,
-        }
+            .or_else(|| (0..nodes.len()).find(|&i| usable(i)))?;
+        self.entry = entry;
+        Some(entry)
     }
 }
 
@@ -169,24 +156,23 @@ mod tests {
 
         assert_eq!(
             retarget.on_refusal(&v, &[1; 16], NOW),
-            RefusalReaction::RetargetEntry(2),
+            Some(2),
             "the exit stays, so does the inner address it assigned"
         );
         assert_eq!(retarget.entry(), 2, "the next attempt dials the new entry");
     }
 
     #[test]
-    fn a_refusing_one_hop_node_hands_the_exit_to_kotlin() {
-        // On a one-hop circuit the node the connection terminates at is the
-        // exit, and changing the exit is Kotlin's call.
+    fn a_refused_one_hop_circuit_stays_on_its_exit() {
+        // On a one-hop circuit the refusing node is the exit. The refusal is
+        // not authenticated, so acting on it would let whoever forges it
+        // choose the exit by elimination.
         let nodes = [node(1, "DE"), node(2, "FR")];
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(1, 1, None);
 
-        assert_eq!(
-            retarget.on_refusal(&v, &[2; 16], NOW),
-            RefusalReaction::LeaveExit
-        );
+        assert_eq!(retarget.on_refusal(&v, &[2; 16], NOW), None);
+        assert_eq!(retarget.entry(), 1);
     }
 
     #[test]
@@ -196,15 +182,9 @@ mod tests {
         let nodes = [node(1, "DE"), node(2, "FR"), node(3, "SE"), node(4, "NL")];
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, None);
-        assert_eq!(
-            retarget.on_refusal(&v, &[1; 16], NOW),
-            RefusalReaction::RetargetEntry(2)
-        );
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), Some(2));
 
-        assert_eq!(
-            retarget.on_refusal(&v, &[1; 16], NOW + 1),
-            RefusalReaction::Stay
-        );
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW + 1), None);
     }
 
     #[test]
@@ -213,10 +193,7 @@ mod tests {
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, Some("de"));
 
-        assert_eq!(
-            retarget.on_refusal(&v, &[1; 16], NOW),
-            RefusalReaction::RetargetEntry(3)
-        );
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), Some(3));
     }
 
     #[test]
@@ -224,25 +201,29 @@ mod tests {
         let nodes = [node(1, "DE"), node(2, "FR"), node(3, "SE")];
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, None);
-        assert_eq!(
-            retarget.on_refusal(&v, &[1; 16], NOW),
-            RefusalReaction::RetargetEntry(2)
-        );
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), Some(2));
 
         // The replacement refuses too, while the first one is still avoided.
-        assert_eq!(
-            retarget.on_refusal(&v, &[3; 16], NOW + 30),
-            RefusalReaction::Stay
-        );
+        assert_eq!(retarget.on_refusal(&v, &[3; 16], NOW + 30), None);
 
-        // The replacement's own refusal keeps it out; the first entry is back.
+        // Once the first refusal's window is over, that entry is back.
         let later = NOW + DRAINED_EXIT_AVOID_TTL.as_secs();
-        let mut retarget = EntryRetarget::new(2, 1, None);
-        retarget.avoided.push((0, NOW));
-        assert_eq!(
-            retarget.on_refusal(&v, &[3; 16], later),
-            RefusalReaction::RetargetEntry(0)
-        );
+        assert_eq!(retarget.on_refusal(&v, &[3; 16], later), Some(0));
+    }
+
+    #[test]
+    fn an_entry_that_keeps_refusing_is_recorded_once() {
+        // With no other entry the session stays, and the same entry refuses
+        // every redial of the backoff: the avoid list must not grow with them.
+        let nodes = [node(1, "DE"), node(2, "FR")];
+        let v = views(&nodes);
+        let mut retarget = EntryRetarget::new(0, 1, None);
+
+        for second in 0..5 {
+            assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW + second), None);
+        }
+
+        assert_eq!(retarget.avoided, vec![(0, NOW + 4)]);
     }
 
     #[test]
@@ -251,10 +232,7 @@ mod tests {
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, None);
 
-        assert_eq!(
-            retarget.on_refusal(&v, &[1; 16], NOW),
-            RefusalReaction::Stay
-        );
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), None);
     }
 
     #[tokio::test(start_paused = true)]

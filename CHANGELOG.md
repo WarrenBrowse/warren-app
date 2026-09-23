@@ -49,8 +49,9 @@ Line wrap the file at 100 chars.                                              Th
 - Reconnect on its own once the location you picked has an exit again after maintenance. When the
   exit list the app last fetched had none there, the connection stayed blocked until you clicked;
   the app now fetches the list again and retries every minute.
-- [Android, iOS] Move the connection to another server as soon as one it goes through announces
-  maintenance or refuses new connections, instead of retrying it until it comes back.
+- [Android, iOS] Move the connection to another exit as soon as the exit in use announces
+  maintenance, and to another entry server when the entry of a multihop connection refuses new
+  connections, instead of retrying the same server until it comes back.
 - [Android] Say so when the connection kept dropping and the app stopped retrying and let your
   traffic through your regular network, outside the VPN, and name Lockdown mode as the way to keep
   it blocked instead. The app used to show a generic "network traffic might be leaking" message.

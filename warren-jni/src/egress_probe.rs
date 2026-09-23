@@ -197,11 +197,11 @@ impl EgressProbeIo for AndroidEgressProbeIo {
         }
     }
 
-    /// Android has no gap-free migration: the TUN address is fixed at
-    /// `establish()`, so a drain ends the session for Kotlin to fail over
-    /// (`crate::circuit_retarget::leave_on_drain`) instead of moving the live
-    /// one. The migration branch must stay unreachable: claiming a drain would
-    /// swallow the escalation and leave the user sitting on a dead exit.
+    /// Android never migrates off a draining exit: the TUN address is fixed
+    /// at `establish()`, so a drain ends the session for Kotlin to fail over
+    /// (`crate::circuit_retarget::leave_on_drain`) instead. The migration
+    /// branch must stay unreachable: claiming a drain would swallow the
+    /// escalation and leave the user sitting on a dead exit.
     fn drain_active(&mut self) -> bool {
         false
     }

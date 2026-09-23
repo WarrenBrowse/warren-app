@@ -191,8 +191,7 @@ fn circuit_from(
     }
 }
 
-/// `prefer_exit` keeps that exit when some pair can still reach it, so moving
-/// off a refusing entry does not change the user's egress.
+/// `only_exit` restricts the pairs to those ending at that exit.
 fn select_two_hop(
     dir: &VerifiedMultiHopDirectory,
     entry_country: &str,
@@ -200,7 +199,7 @@ fn select_two_hop(
     entry_rtt: &RttCache,
     now_unix: u64,
     avoid: &[[u8; 16]],
-    prefer_exit: Option<[u8; 16]>,
+    only_exit: Option<[u8; 16]>,
 ) -> Option<SelectedCircuit> {
     // The diversity rule is the shared neutral one, and the pick is the shared
     // path-aware selector fed by the client-measured entry RTTs (None on empty
@@ -208,15 +207,8 @@ fn select_two_hop(
     // `/v1/path-quality`, and an absent advisory is neutral. With an empty
     // store this is bit-identical to the legacy `pick_circuit_by_weight`.
     let mut pairs = valid_circuits(dir, entry_country, exit_country, avoid);
-    if let Some(exit) = prefer_exit {
-        let keeping: Vec<(usize, usize)> = pairs
-            .iter()
-            .copied()
-            .filter(|&(_, x)| *dir.nodes[x].exit.exit_id.as_bytes() == exit)
-            .collect();
-        if !keeping.is_empty() {
-            pairs = keeping;
-        }
+    if let Some(exit) = only_exit {
+        pairs.retain(|&(_, x)| *dir.nodes[x].exit.exit_id.as_bytes() == exit);
     }
     let (entry_idx, exit_idx) = select_circuit_path_aware(
         dir,
@@ -259,10 +251,15 @@ fn select_one_hop(
 
 /// The circuit an iOS session dials, and the nodes it moved off.
 ///
-/// A refused dial is taken as the refusal of the node the connection
-/// terminates at (the entry relay, which on a one-hop circuit is the exit), so
-/// a hostile relay can make the session avoid that relay and nothing else. A
-/// drain is announced in band by the exit itself.
+/// A refused dial is charged to the node the connection terminates at: the
+/// entry relay, which on a one-hop circuit is the exit itself. A refusal is
+/// not authenticated (a close in the handshake can be forged on path, and a
+/// peer holding only the cover certificate can refuse before the relay proves
+/// its identity), so it only ever moves the session to another entry for the
+/// same exit: acted on for an exit, it would let whoever forges it choose the
+/// user's exit by elimination. A one-hop circuit therefore stays on its
+/// backoff when refused. The drain advisory is sealed by the exit's session,
+/// so a drain may move the session to another exit.
 pub struct CircuitRetarget {
     dir: VerifiedMultiHopDirectory,
     two_hop: bool,
@@ -301,9 +298,16 @@ impl CircuitRetarget {
         }
     }
 
+    /// The exit the session dials now, by exit id.
+    #[must_use]
+    pub fn exit_id(&self) -> [u8; 16] {
+        self.exit_id
+    }
+
     /// The circuit to move to after the node carrying `refused_relay_id`
-    /// refused a dial, or `None` to stay on the supervisor's backoff.
-    /// `admits` is the key-pin check a candidate exit must pass.
+    /// refused a dial: another entry for the same exit, or `None` to stay on
+    /// the supervisor's backoff. `admits` is the key-pin check a candidate
+    /// exit must pass.
     pub fn on_refusal(
         &mut self,
         refused_relay_id: &[u8; 16],
@@ -311,8 +315,9 @@ impl CircuitRetarget {
         now_unix: u64,
         admits: impl Fn(&SelectedCircuit) -> bool,
     ) -> Option<SelectedCircuit> {
-        // A dial already in flight to a node this session left can still come
-        // back refused; it says nothing about the circuit now dialed.
+        // Only a refusal naming the entry dialed now counts. The move keeps
+        // the exit, so on a one-hop circuit, where the refusing node is the
+        // exit, nothing qualifies and the session stays on its backoff.
         if *refused_relay_id != self.relay_id {
             return None;
         }
@@ -323,19 +328,22 @@ impl CircuitRetarget {
             .find(|n| n.relay.relay_id == *refused_relay_id)
             .map(|n| *n.exit.exit_id.as_bytes())?;
         self.avoid(node, now_unix);
-        let keep_exit = (node != self.exit_id).then_some(self.exit_id);
-        self.move_to(entry_rtt, now_unix, keep_exit, admits)
+        self.move_to(entry_rtt, now_unix, Some(self.exit_id), admits)
     }
 
-    /// The circuit to move to after the exit announced a drain, or `None`
-    /// when no other exit can serve the session.
+    /// The circuit to move to after `draining_exit` announced a drain, or
+    /// `None` when the session already left it or no other exit can serve.
     pub fn on_drain(
         &mut self,
+        draining_exit: [u8; 16],
         entry_rtt: &RttCache,
         now_unix: u64,
         admits: impl Fn(&SelectedCircuit) -> bool,
     ) -> Option<SelectedCircuit> {
-        self.avoid(self.exit_id, now_unix);
+        if draining_exit != self.exit_id {
+            return None;
+        }
+        self.avoid(draining_exit, now_unix);
         self.move_to(entry_rtt, now_unix, None, admits)
     }
 
@@ -346,8 +354,10 @@ impl CircuitRetarget {
         self.avoided.push((node_exit_id, now_unix));
     }
 
-    /// Select with the avoided nodes left out, and adopt the result only when
-    /// it is a different circuit the key pins admit.
+    /// Select with the avoided nodes left out and adopt the result when it is
+    /// a different circuit the key pins admit. A candidate the pins refuse is
+    /// left out in turn, so one mismatched exit does not block the move.
+    /// `keep_exit` restricts the selection to circuits ending at that exit.
     fn move_to(
         &mut self,
         entry_rtt: &RttCache,
@@ -355,26 +365,32 @@ impl CircuitRetarget {
         keep_exit: Option<[u8; 16]>,
         admits: impl Fn(&SelectedCircuit) -> bool,
     ) -> Option<SelectedCircuit> {
-        let avoid: Vec<[u8; 16]> = self.avoided.iter().map(|&(id, _)| id).collect();
-        let candidate = if self.two_hop {
-            select_two_hop(
-                &self.dir,
-                &self.entry_country,
-                &self.exit_country,
-                entry_rtt,
-                now_unix,
-                &avoid,
-                keep_exit,
-            )
-        } else {
-            select_one_hop(&self.dir, &self.exit_country, &avoid)
-        }?;
-        let ids = (candidate.relay.relay_id, *candidate.exit.exit_id.as_bytes());
-        if ids == (self.relay_id, self.exit_id) || !admits(&candidate) {
-            return None;
+        let mut avoid: Vec<[u8; 16]> = self.avoided.iter().map(|&(id, _)| id).collect();
+        for _ in 0..self.dir.nodes.len() {
+            let candidate = if self.two_hop {
+                select_two_hop(
+                    &self.dir,
+                    &self.entry_country,
+                    &self.exit_country,
+                    entry_rtt,
+                    now_unix,
+                    &avoid,
+                    keep_exit,
+                )
+            } else {
+                select_one_hop(&self.dir, &self.exit_country, &avoid)
+            }?;
+            let ids = (candidate.relay.relay_id, *candidate.exit.exit_id.as_bytes());
+            if keep_exit.is_some_and(|exit| exit != ids.1) || ids == (self.relay_id, self.exit_id) {
+                return None;
+            }
+            if admits(&candidate) {
+                (self.relay_id, self.exit_id) = ids;
+                return Some(candidate);
+            }
+            avoid.push(ids.1);
         }
-        (self.relay_id, self.exit_id) = ids;
-        Some(candidate)
+        None
     }
 }
 
@@ -610,38 +626,60 @@ mod tests {
     }
 
     #[test]
-    fn a_refusing_one_hop_node_moves_the_session_to_another_node() {
+    fn a_refusal_never_moves_the_session_to_another_exit() {
+        let op = op_key();
+        // No entry but DE can front NL3 (FR shares its AS): a refusal the
+        // client cannot authenticate must not pick the user's exit.
+        let d = dir(vec![
+            node(&op, 1, "de", 1, 1_000),
+            node(&op, 2, "fr", 3, 500),
+            node(&op, 3, "nl", 3, 100),
+            node(&op, 5, "nl", 5, 50),
+        ]);
+        let (first, mut retarget) = two_hop_session(&d, "", "nl");
+        assert_eq!(ids(&first), ([1; 16], [3; 16]));
+
+        assert!(
+            retarget
+                .on_refusal(&[1; 16], &RttCache::new(), NOW, |_| true)
+                .is_none()
+        );
+        assert_eq!(retarget.exit_id(), [3; 16]);
+    }
+
+    #[test]
+    fn a_refused_one_hop_circuit_stays_on_its_exit() {
+        // On a one-hop circuit the refusing node is the exit itself.
         let op = op_key();
         let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 2, "fr", 2, 50)]);
         let first = select_circuit(&d, false, "", "", &RttCache::new(), NOW, &[]).expect("circuit");
-        assert_eq!(ids(&first), ([1; 16], [1; 16]));
         let mut retarget = CircuitRetarget::new(d.clone(), false, "", "", &first, TTL);
 
-        let moved = retarget
-            .on_refusal(&[1; 16], &RttCache::new(), NOW, |_| true)
-            .expect("another node can serve");
-
-        assert_eq!(ids(&moved), ([2; 16], [2; 16]));
+        assert!(
+            retarget
+                .on_refusal(&[1; 16], &RttCache::new(), NOW, |_| true)
+                .is_none()
+        );
+        assert_eq!(retarget.exit_id(), [1; 16]);
     }
 
     #[test]
     fn a_refusal_by_a_node_the_session_left_is_ignored() {
         let op = op_key();
         let d = dir(vec![
-            node(&op, 1, "de", 1, 100),
-            node(&op, 2, "fr", 2, 50),
-            node(&op, 3, "se", 3, 40),
+            node(&op, 1, "de", 1, 1_000),
+            node(&op, 2, "fr", 2, 500),
+            node(&op, 3, "nl", 3, 100),
+            node(&op, 4, "se", 4, 10),
         ]);
-        let first = select_circuit(&d, false, "", "", &RttCache::new(), NOW, &[]).expect("circuit");
-        let mut retarget = CircuitRetarget::new(d.clone(), false, "", "", &first, TTL);
-        assert!(
-            retarget
-                .on_refusal(&[1; 16], &RttCache::new(), NOW, |_| true)
-                .is_some()
-        );
+        let (_, mut retarget) = two_hop_session(&d, "", "nl");
+        let moved = retarget
+            .on_refusal(&[1; 16], &RttCache::new(), NOW, |_| true)
+            .expect("FR can front NL3");
+        assert_eq!(ids(&moved), ([2; 16], [3; 16]));
 
-        // A dial that was in flight to the node the session left comes back
-        // refused just before that node's avoid window ends.
+        // A report naming the entry the session left arrives just before that
+        // entry's avoid window ends.
         assert!(
             retarget
                 .on_refusal(&[1; 16], &RttCache::new(), NOW + TTL - 1, |_| true)
@@ -649,36 +687,12 @@ mod tests {
         );
 
         // It said nothing about the circuit dialed now, so it must not have
-        // renewed that node's avoid window: once the window of the refusal
-        // that counted is over, the node can take the session back.
+        // renewed that entry's window: once the window of the refusal that
+        // counted is over, the entry can take the session back.
         let back = retarget
             .on_refusal(&[2; 16], &RttCache::new(), NOW + TTL, |_| true)
-            .expect("the first node is available again");
-        assert_eq!(ids(&back), ([1; 16], [1; 16]));
-    }
-
-    #[test]
-    fn a_node_that_refused_is_offered_again_once_its_drain_can_be_over() {
-        let op = op_key();
-        let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 2, "fr", 2, 50)]);
-        let first = select_circuit(&d, false, "", "", &RttCache::new(), NOW, &[]).expect("circuit");
-        let mut retarget = CircuitRetarget::new(d.clone(), false, "", "", &first, TTL);
-        assert!(
-            retarget
-                .on_refusal(&[1; 16], &RttCache::new(), NOW, |_| true)
-                .is_some()
-        );
-
-        assert!(
-            retarget
-                .on_refusal(&[2; 16], &RttCache::new(), NOW + 10, |_| true)
-                .is_none(),
-            "the first node is still avoided"
-        );
-        let back = retarget
-            .on_refusal(&[2; 16], &RttCache::new(), NOW + TTL, |_| true)
-            .expect("the first node's avoid window has passed");
-        assert_eq!(ids(&back), ([1; 16], [1; 16]));
+            .expect("DE is available again");
+        assert_eq!(ids(&back), ([1; 16], [3; 16]));
     }
 
     #[test]
@@ -693,10 +707,37 @@ mod tests {
         assert_eq!(*first.exit.exit_id.as_bytes(), [3; 16]);
 
         let moved = retarget
-            .on_drain(&RttCache::new(), NOW, |_| true)
+            .on_drain([3; 16], &RttCache::new(), NOW, |_| true)
             .expect("the other NL exit can serve");
 
         assert_eq!(*moved.exit.exit_id.as_bytes(), [5; 16]);
+    }
+
+    #[test]
+    fn a_drain_of_an_exit_the_session_already_left_changes_nothing() {
+        // The exit re-sends its advisory every few seconds until the session
+        // is gone, and each re-send wakes the reactor: it must not move the
+        // session off the exit it just moved to.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 1, 100),
+            node(&op, 3, "nl", 3, 100),
+            node(&op, 5, "nl", 5, 90),
+            node(&op, 6, "nl", 6, 80),
+        ]);
+        let (_, mut retarget) = two_hop_session(&d, "", "nl");
+        assert!(
+            retarget
+                .on_drain([3; 16], &RttCache::new(), NOW, |_| true)
+                .is_some()
+        );
+
+        assert!(
+            retarget
+                .on_drain([3; 16], &RttCache::new(), NOW + 3, |_| true)
+                .is_none()
+        );
+        assert_eq!(retarget.exit_id(), [5; 16]);
     }
 
     #[test]
@@ -705,11 +746,35 @@ mod tests {
         let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 3, "nl", 3, 100)]);
         let (_, mut retarget) = two_hop_session(&d, "", "nl");
 
-        assert!(retarget.on_drain(&RttCache::new(), NOW, |_| true).is_none());
+        assert!(
+            retarget
+                .on_drain([3; 16], &RttCache::new(), NOW, |_| true)
+                .is_none()
+        );
     }
 
     #[test]
-    fn a_candidate_the_key_pins_refuse_is_never_dialed() {
+    fn a_candidate_the_key_pins_refuse_is_passed_over_for_the_next() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 1, 100),
+            node(&op, 3, "nl", 3, 100),
+            node(&op, 5, "nl", 5, 90),
+            node(&op, 6, "nl", 6, 80),
+        ]);
+        let (_, mut retarget) = two_hop_session(&d, "", "nl");
+
+        let moved = retarget
+            .on_drain([3; 16], &RttCache::new(), NOW, |c| {
+                *c.exit.exit_id.as_bytes() != [5; 16]
+            })
+            .expect("NL6 passes the pins");
+
+        assert_eq!(*moved.exit.exit_id.as_bytes(), [6; 16]);
+    }
+
+    #[test]
+    fn a_session_the_key_pins_let_go_nowhere_stays_where_it_is() {
         let op = op_key();
         let d = dir(vec![
             node(&op, 1, "de", 1, 100),
@@ -720,15 +785,10 @@ mod tests {
 
         assert!(
             retarget
-                .on_drain(&RttCache::new(), NOW, |_| false)
+                .on_drain([3; 16], &RttCache::new(), NOW, |_| false)
                 .is_none()
         );
-        // Refused by the pins, the candidate was not adopted: the session is
-        // still on its first exit, which another drain can move off.
-        let moved = retarget
-            .on_drain(&RttCache::new(), NOW + 1, |_| true)
-            .expect("the NL alternative, now admitted");
-        assert_eq!(*moved.exit.exit_id.as_bytes(), [5; 16]);
+        assert_eq!(retarget.exit_id(), [3; 16], "nothing was adopted");
     }
 
     #[test]

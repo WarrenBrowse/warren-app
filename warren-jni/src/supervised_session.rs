@@ -94,9 +94,8 @@ pub(crate) enum SessionEnd {
     /// `establish()`), so the session ends rather than pump packets the exit's
     /// anti-spoof gate would drop.
     AddressChanged,
-    /// The exit is leaving: it announced a maintenance drain, or on a one-hop
-    /// circuit it refused the dial. Changing the exit is Kotlin's call, so the
-    /// session ends for it to fail over at once.
+    /// The exit announced a maintenance drain. Changing the exit is Kotlin's
+    /// call, so the session ends for it to fail over at once.
     ExitLeaving,
 }
 
@@ -143,8 +142,8 @@ pub(crate) struct SupervisedInputs {
     /// circuit, the same recovery the desktop daemon reaches through its shared
     /// reconnect channel.
     pub egress_dead: watch::Receiver<bool>,
-    /// Latched `true` once the exit is leaving (see [`SessionEnd::ExitLeaving`]),
-    /// by the drain reactor or by the dial-refusal hook of a one-hop circuit.
+    /// Latched `true` by the drain reactor once the exit is leaving (see
+    /// [`SessionEnd::ExitLeaving`]).
     pub leaving: watch::Receiver<bool>,
 }
 
@@ -236,6 +235,9 @@ async fn await_first_assign(
         if let Some(reason) = *inputs.fatal.borrow_and_update() {
             return Err(SessionEnd::Rejected(reason));
         }
+        if *inputs.leaving.borrow_and_update() {
+            return Err(SessionEnd::ExitLeaving);
+        }
         if let Some(spec) = *inputs.assigns.borrow_and_update() {
             return Ok(spec);
         }
@@ -243,6 +245,9 @@ async fn await_first_assign(
             tokio::select! {
                 r = inputs.assigns.changed() => r.is_ok(),
                 r = inputs.fatal.changed() => r.is_ok(),
+                // Guarded like in `drive_status`: a closed channel says
+                // nothing about the exit.
+                Ok(()) = inputs.leaving.changed() => true,
             }
         };
         match tokio::time::timeout(grace, changed).await {
@@ -327,7 +332,7 @@ async fn drive_status(
                 // and the wait continues on the signals that do mean something.
                 Ok(()) = inputs.egress_dead.changed() => true,
                 // Guarded for the same reason: the drain reactor returns once
-                // it latched, and the refusal hook dies with the supervisor.
+                // it latched.
                 Ok(()) = inputs.leaving.changed() => true,
             }
         };
@@ -602,9 +607,9 @@ mod tests {
         assert_eq!(end, SessionEnd::Down);
     }
 
-    /// An exit that is leaving (a drain it announced, or its refusal on a
-    /// one-hop circuit) ends the session with its own reason: Kotlin fails
-    /// over to another exit at once instead of treating it as a drop.
+    /// An exit that announced a drain ends the session with its own reason:
+    /// Kotlin fails over to another exit at once instead of treating it as a
+    /// drop.
     #[tokio::test]
     async fn a_leaving_exit_ends_the_session_for_kotlin_to_fail_over() {
         let scripted = scripted();
@@ -624,9 +629,27 @@ mod tests {
         assert_eq!(end, SessionEnd::ExitLeaving);
     }
 
-    /// The drain reactor returns once it latched and the refusal hook dies
-    /// with the supervisor config, so a closed channel says nothing about the
-    /// exit and must never end a session on its own.
+    /// A drain latched before the exit assigned an address ends the wait for
+    /// one: the session would otherwise sit out the whole grace and reach
+    /// Kotlin as an ordinary drop instead of a failover.
+    #[tokio::test]
+    async fn an_exit_leaving_before_any_assignment_ends_the_wait_for_one() {
+        let mut scripted = scripted();
+        scripted.assigns.send(None).expect("receiver alive");
+        scripted.leaving.send(true).expect("receiver alive");
+
+        let end = tokio::time::timeout(
+            Duration::from_secs(2),
+            await_first_assign(&mut scripted.inputs, Duration::from_secs(600)),
+        )
+        .await
+        .expect("a leaving exit must end the wait on its own");
+
+        assert_eq!(end, Err(SessionEnd::ExitLeaving));
+    }
+
+    /// The drain reactor returns once it latched, so a closed channel says
+    /// nothing about the exit and must never end a session on its own.
     #[tokio::test]
     async fn a_closed_leaving_channel_never_ends_a_session() {
         let scripted = scripted();
