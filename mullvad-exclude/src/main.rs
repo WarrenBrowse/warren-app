@@ -3,6 +3,57 @@ fn main() {
     inner::main();
 }
 
+/// Whether the account `uid` may run a program outside the tunnel, given the
+/// daemon's wallet owner record (`None` when there is none).
+///
+/// Leaving the tunnel escapes the kill switch the owner chose for the whole
+/// machine, so it is the owner's or root's to do, like every other change to
+/// the machine's network. Without a record nobody but root may: the wallet's
+/// owner is recorded as soon as the app claims it.
+#[cfg_attr(not(any(target_os = "linux", test)), expect(dead_code))]
+fn may_leave_tunnel(uid: u32, owner_record: Option<&str>) -> bool {
+    uid == 0 || owner_record.and_then(recorded_owner_uid) == Some(uid)
+}
+
+/// The uid an owner record names, if it is a record of a Unix account in a
+/// version this program understands.
+fn recorded_owner_uid(record: &str) -> Option<u32> {
+    let record: serde_json::Value = serde_json::from_str(record).ok()?;
+    if record.get("version")?.as_u64()? != 1 {
+        return None;
+    }
+    u32::try_from(record.get("owner")?.get("uid")?.as_u64()?).ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const OWNED_BY_1000: &str = r#"{"version":1,"owner":{"uid":1000}}"#;
+
+    #[test]
+    fn root_and_the_owner_may_leave_the_tunnel() {
+        assert!(may_leave_tunnel(0, None));
+        assert!(may_leave_tunnel(0, Some(OWNED_BY_1000)));
+        assert!(may_leave_tunnel(1000, Some(OWNED_BY_1000)));
+    }
+
+    #[test]
+    fn nobody_else_may() {
+        assert!(!may_leave_tunnel(1001, Some(OWNED_BY_1000)));
+        assert!(!may_leave_tunnel(1000, None), "no recorded owner");
+        assert!(!may_leave_tunnel(1000, Some("{not json")));
+        assert!(!may_leave_tunnel(
+            1000,
+            Some(r#"{"version":2,"owner":{"uid":1000}}"#)
+        ));
+        assert!(!may_leave_tunnel(
+            1000,
+            Some(r#"{"version":1,"owner":{"sid":"S-1-5-21-1-2-3-1000"}}"#)
+        ));
+    }
+}
+
 #[cfg(target_os = "linux")]
 mod inner {
     use nix::unistd::{Pid, execvp, getgid, getpid, getuid, setgid, setuid};
@@ -38,6 +89,11 @@ mod inner {
 
         #[error("Failed to stat /proc/mounts")]
         NoProcMounts,
+
+        #[error(
+            "Only the account that set Warren up, or root, may run programs outside the tunnel"
+        )]
+        NotTheOwner,
     }
 
     /// Launch a program in a cgroup where traffic will be excluded from the VPN tunnel.
@@ -94,16 +150,29 @@ mod inner {
             .collect::<Result<Vec<CString>, NulError>>()
             .map_err(Error::ArgumentNul)?;
 
+        let real_uid = getuid();
+        if !super::may_leave_tunnel(real_uid.as_raw(), owner_record().as_deref()) {
+            return Err(Error::NotTheOwner);
+        }
+
         exclude(getpid())?;
 
-        // Drop root privileges
-        let real_uid = getuid();
-        setuid(real_uid).map_err(Error::DropRootUid)?;
+        // Drop root privileges, the group first: once the uid is no longer
+        // root, changing the gid is no longer permitted.
         let real_gid = getgid();
         setgid(real_gid).map_err(Error::DropRootGid)?;
+        setuid(real_uid).map_err(Error::DropRootUid)?;
 
         // Launch the process
         execvp(&program, &args).map_err(Error::Exec)
+    }
+
+    /// The daemon's wallet owner record, from the compiled settings directory:
+    /// this program runs setuid root, so nothing its caller controls, like
+    /// the environment, may choose which file it trusts.
+    fn owner_record() -> Option<String> {
+        let settings_dir = mullvad_paths::get_default_settings_dir().ok()?;
+        std::fs::read_to_string(settings_dir.join(mullvad_paths::WALLET_OWNER_FILENAME)).ok()
     }
 
     #[cfg(feature = "cgroup2")]

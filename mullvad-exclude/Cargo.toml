@@ -10,7 +10,11 @@ license.workspace = true
 name = "warren-exclude"
 path = "src/main.rs"
 
+[dependencies]
+serde_json = { workspace = true }
+
 [target.'cfg(target_os = "linux")'.dependencies]
+mullvad-paths = { path = "../mullvad-paths" }
 nix = { workspace = true, features = ["process", "user"] }
 talpid-cgroup = { path = "../talpid-cgroup" }
 thiserror = { workspace = true }

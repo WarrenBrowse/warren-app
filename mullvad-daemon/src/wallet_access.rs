@@ -70,7 +70,7 @@ use std::{
 pub use mullvad_management_interface::{PeerCredentials, Principal};
 
 /// Name of the owner record in the daemon's settings directory.
-pub const OWNER_FILENAME: &str = "wallet-owner.json";
+pub const OWNER_FILENAME: &str = mullvad_paths::WALLET_OWNER_FILENAME;
 
 /// What an RPC can do, which is what decides who may call it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

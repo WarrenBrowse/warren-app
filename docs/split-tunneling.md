@@ -89,3 +89,14 @@ unexpectedly excluded, simply because the parent is excluded.
 The limitations due to IPC are perhaps especially noticeable on macOS, since WebKit relies on other
 processes to render web pages. This means that many browsers, including Safari, cannot be excluded
 from the VPN.
+
+## Who may exclude
+
+Excluding an app takes its traffic out of the tunnel and past the kill switch the wallet's owner
+chose for the whole machine, so only the owner and administrators may do it. The daemon's
+split-tunneling RPCs follow the rule every other network setting does (see
+[the security document](security.md#who-may-use-the-management-interface)). On Linux,
+`warren-exclude` is setuid root and never talks to the daemon, so it applies the rule itself: it
+runs the program outside the tunnel only for root or for the account recorded in the daemon's
+`wallet-owner.json`, read from the compiled settings directory and never from a path the caller's
+environment could choose.

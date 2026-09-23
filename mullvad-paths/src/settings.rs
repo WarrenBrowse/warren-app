@@ -1,6 +1,10 @@
 use crate::Result;
 use std::{env, path::PathBuf};
 
+/// The daemon's record of which account owns the wallet, in its settings
+/// directory. Read by anything that must hold the owner's permission.
+pub const WALLET_OWNER_FILENAME: &str = "wallet-owner.json";
+
 /// Creates and returns the settings directory pointed to by `WARREN_SETTINGS_DIR`,
 /// `MULLVAD_SETTINGS_DIR` (back-compat upstream), or the default one if neither is set.
 pub fn settings_dir() -> Result<PathBuf> {

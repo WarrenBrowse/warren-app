@@ -3219,7 +3219,9 @@ dependencies = [
 name = "mullvad-exclude"
 version = "0.0.0"
 dependencies = [
+ "mullvad-paths",
  "nix 0.31.2",
+ "serde_json",
  "talpid-cgroup",
  "thiserror 2.0.18",
 ]

@@ -88,4 +88,4 @@ pub use crate::rpc_socket::{
 };
 
 mod settings;
-pub use crate::settings::{get_default_settings_dir, settings_dir};
+pub use crate::settings::{WALLET_OWNER_FILENAME, get_default_settings_dir, settings_dir};
