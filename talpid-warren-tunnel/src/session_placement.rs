@@ -13,14 +13,16 @@
 //! another rebuild.
 //!
 //! This memory outlives a single tunnel so the rebuilt one can name the
-//! address it already holds. Naming a stale or foreign address is safe: the
-//! exit only honours it for the identity that holds it, and otherwise falls
-//! back to placing an independent session.
+//! address it already holds. The address is remembered with the exit that
+//! assigned it and named to that exit only: an exit that has just restarted
+//! may hand a named address to whoever names it, so naming it to another
+//! exit could carry one inner address across exits.
 
 use std::net::Ipv4Addr;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicU32, Ordering};
+
+use warrenguard_multihop::ExitId;
 
 /// File under the daemon cache directory holding the address, so the memory
 /// also survives a daemon that was killed rather than stopped: that is the
@@ -32,21 +34,41 @@ pub(crate) const PLACEMENT_FILE: &str = "warren-session-placement";
 /// successive tunnels are successive lives of one session.
 pub(crate) static SESSION_PLACEMENT: SessionPlacement = SessionPlacement::new();
 
-/// Last inner IPv4 an exit assigned, or none yet.
+/// Last inner IPv4 an exit assigned, with that exit, or none yet.
 pub(crate) struct SessionPlacement {
-    address: AtomicU32,
+    last: Mutex<Option<(ExitId, Ipv4Addr)>>,
     /// Where to mirror the address. Absent until the daemon supplies its
     /// cache directory, and on platforms or tests that have none, which keeps
     /// the memory process-local rather than failing.
     file: Mutex<Option<PathBuf>>,
 }
 
+/// `<exit id as 32 lowercase hex digits> <IPv4>`, the mirror file's one line.
+fn encode(exit: ExitId, assigned: Ipv4Addr) -> String {
+    let hex: String = exit.as_bytes().iter().map(|b| format!("{b:02x}")).collect();
+    format!("{hex} {assigned}")
+}
+
+/// Parse [`encode`]'s line. A file written before the exit was recorded holds
+/// an address alone and reads as nothing: that address cannot be tied to an
+/// exit, so it must not be named to any.
+fn decode(line: &str) -> Option<(ExitId, Ipv4Addr)> {
+    let (hex, addr) = line.trim().split_once(' ')?;
+    if hex.len() != 32 {
+        return None;
+    }
+    let mut exit = [0u8; 16];
+    for (i, byte) in exit.iter_mut().enumerate() {
+        *byte = u8::from_str_radix(hex.get(2 * i..2 * i + 2)?, 16).ok()?;
+    }
+    let addr = addr.parse::<Ipv4Addr>().ok()?;
+    (!addr.is_unspecified()).then_some((ExitId::from_bytes(exit), addr))
+}
+
 impl SessionPlacement {
     pub(crate) const fn new() -> Self {
-        // 0 doubles as "nothing remembered": an exit never assigns 0.0.0.0,
-        // which is the wire sentinel for "place me on my own address".
         Self {
-            address: AtomicU32::new(0),
+            last: Mutex::new(None),
             file: Mutex::new(None),
         }
     }
@@ -57,21 +79,22 @@ impl SessionPlacement {
     /// on it.
     pub(crate) fn load_from(&self, cache_dir: &Path) {
         let path = cache_dir.join(PLACEMENT_FILE);
-        if let Ok(contents) = std::fs::read_to_string(&path)
-            && let Ok(addr) = contents.trim().parse::<Ipv4Addr>()
-            && !addr.is_unspecified()
+        if let Some(last) = std::fs::read_to_string(&path)
+            .ok()
+            .as_deref()
+            .and_then(decode)
         {
-            self.address.store(addr.to_bits(), Ordering::Relaxed);
+            *self.last.lock().unwrap_or_else(|p| p.into_inner()) = Some(last);
         }
         *self.file.lock().unwrap_or_else(|p| p.into_inner()) = Some(path);
     }
 
-    /// Record the address the exit just assigned.
-    pub(crate) fn remember(&self, assigned: Ipv4Addr) {
+    /// Record the address `exit` just assigned.
+    pub(crate) fn remember(&self, exit: ExitId, assigned: Ipv4Addr) {
         if assigned.is_unspecified() {
             return;
         }
-        self.address.store(assigned.to_bits(), Ordering::Relaxed);
+        *self.last.lock().unwrap_or_else(|p| p.into_inner()) = Some((exit, assigned));
         if let Some(path) = self
             .file
             .lock()
@@ -79,16 +102,14 @@ impl SessionPlacement {
             .as_deref()
         {
             // Best effort: a tunnel that cannot write its hint still runs.
-            let _ = std::fs::write(path, assigned.to_string());
+            let _ = std::fs::write(path, encode(exit, assigned));
         }
     }
 
-    /// The address a rebuilt tunnel should ask to be placed on.
-    pub(crate) fn recall(&self) -> Option<Ipv4Addr> {
-        match self.address.load(Ordering::Relaxed) {
-            0 => None,
-            bits => Some(Ipv4Addr::from_bits(bits)),
-        }
+    /// The address a rebuilt tunnel should ask to be placed on, with the
+    /// exit it may be named to.
+    pub(crate) fn recall(&self) -> Option<(ExitId, Ipv4Addr)> {
+        *self.last.lock().unwrap_or_else(|p| p.into_inner())
     }
 }
 
@@ -127,6 +148,8 @@ mod tests {
         assert_eq!(SessionPlacement::new().recall(), None);
     }
 
+    const EXIT: ExitId = ExitId::from_bytes([0xE1; 16]);
+
     #[test]
     fn a_restarted_daemon_recalls_the_address_of_the_process_before_it() {
         // The memory above dies with the process, and a daemon that is killed
@@ -136,12 +159,28 @@ mod tests {
         let dir = TempDir::new("restart");
         let first_run = SessionPlacement::new();
         first_run.load_from(dir.path());
-        first_run.remember(Ipv4Addr::new(10, 66, 0, 206));
+        first_run.remember(EXIT, Ipv4Addr::new(10, 66, 0, 206));
 
         let after_restart = SessionPlacement::new();
         after_restart.load_from(dir.path());
 
-        assert_eq!(after_restart.recall(), Some(Ipv4Addr::new(10, 66, 0, 206)));
+        assert_eq!(
+            after_restart.recall(),
+            Some((EXIT, Ipv4Addr::new(10, 66, 0, 206)))
+        );
+    }
+
+    #[test]
+    fn an_address_mirrored_without_its_exit_is_not_recalled() {
+        // A file from before the exit was recorded cannot say which exit the
+        // address belongs to, so it must not be named to any.
+        let dir = TempDir::new("legacy");
+        std::fs::write(dir.path().join(PLACEMENT_FILE), b"10.66.0.206").expect("write legacy file");
+
+        let placement = SessionPlacement::new();
+        placement.load_from(dir.path());
+
+        assert_eq!(placement.recall(), None);
     }
 
     #[test]
@@ -159,11 +198,15 @@ mod tests {
     }
 
     #[test]
-    fn recalls_the_address_of_the_latest_session() {
+    fn recalls_the_address_of_the_latest_session_with_its_exit() {
+        let other = ExitId::from_bytes([0xE2; 16]);
         let placement = SessionPlacement::new();
-        placement.remember(Ipv4Addr::new(10, 66, 0, 179));
-        placement.remember(Ipv4Addr::new(10, 66, 0, 206));
-        assert_eq!(placement.recall(), Some(Ipv4Addr::new(10, 66, 0, 206)));
+        placement.remember(EXIT, Ipv4Addr::new(10, 66, 0, 179));
+        placement.remember(other, Ipv4Addr::new(10, 66, 0, 206));
+        assert_eq!(
+            placement.recall(),
+            Some((other, Ipv4Addr::new(10, 66, 0, 206)))
+        );
     }
 
     /// The all-zero address is the wire sentinel for "no predecessor", so
@@ -172,8 +215,11 @@ mod tests {
     #[test]
     fn keeps_its_address_when_offered_the_unspecified_one() {
         let placement = SessionPlacement::new();
-        placement.remember(Ipv4Addr::new(10, 66, 0, 179));
-        placement.remember(Ipv4Addr::UNSPECIFIED);
-        assert_eq!(placement.recall(), Some(Ipv4Addr::new(10, 66, 0, 179)));
+        placement.remember(EXIT, Ipv4Addr::new(10, 66, 0, 179));
+        placement.remember(EXIT, Ipv4Addr::UNSPECIFIED);
+        assert_eq!(
+            placement.recall(),
+            Some((EXIT, Ipv4Addr::new(10, 66, 0, 179)))
+        );
     }
 }

@@ -1525,10 +1525,13 @@ impl WarrenTunnelMonitor {
         if let Some(cache_dir) = params.cache_dir.as_deref() {
             session_placement::SESSION_PLACEMENT.load_from(cache_dir);
         }
-        if let Some(assigned) = session_placement::SESSION_PLACEMENT.recall() {
+        if let Some((assigning_exit, assigned)) = session_placement::SESSION_PLACEMENT.recall() {
             log::debug!("{TRACE_PREFIX} resuming the session placement of the previous tunnel");
-            supervisor.resume_session_placement(assigned);
+            supervisor.resume_session_placement(assigning_exit, assigned);
         }
+        // The supervisor's own record of the placement names the exit that
+        // assigned each address, which after a migration is not `cfg.exit`.
+        let placement_rx = supervisor.placement_rx();
         // Subscribe to the supervisor's terminal-rejection signal BEFORE
         // `run()` consumes it. The exit publishes a rejection here (e.g.
         // pubkey not allowlisted) instead of letting the session masquerade
@@ -1660,7 +1663,9 @@ impl WarrenTunnelMonitor {
                     );
                 }
                 log::info!("{}", tun_address_line(&spec));
-                session_placement::SESSION_PLACEMENT.remember(spec.assigned);
+                if let Some((assigning_exit, assigned)) = *placement_rx.borrow() {
+                    session_placement::SESSION_PLACEMENT.remember(assigning_exit, assigned);
+                }
                 (
                     spec.assigned,
                     if wants_ipv6 { spec.assigned_v6 } else { None },
@@ -2271,6 +2276,7 @@ impl WarrenTunnelMonitor {
             let mut assign_rx = ip_assign_channel.subscribe();
             let pump_error_tx = pump_error_tx.clone();
             let tun_ip_v4 = tun_ip;
+            let placement_rx = placement_rx.clone();
             runtime.spawn(async move {
                 // Mark the initial publication as seen; only react to
                 // republications (reconnects).
@@ -2286,7 +2292,9 @@ impl WarrenTunnelMonitor {
                         // The rebuild this escalates must ask to be placed
                         // back here, not start yet another session that the
                         // exit would put somewhere else again.
-                        session_placement::SESSION_PLACEMENT.remember(spec.assigned);
+                        if let Some((assigning_exit, assigned)) = *placement_rx.borrow() {
+                            session_placement::SESSION_PLACEMENT.remember(assigning_exit, assigned);
+                        }
                         log::warn!("{TRACE_PREFIX} {msg}");
                         if let Some(tx) = pump_error_tx
                             .lock()
