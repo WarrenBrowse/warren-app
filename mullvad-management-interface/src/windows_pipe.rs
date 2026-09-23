@@ -11,6 +11,7 @@ use std::{
     os::windows::io::{AsRawHandle, FromRawHandle, OwnedHandle},
     path::{Path, PathBuf},
     pin::Pin,
+    sync::Arc,
     task::{Context, Poll},
     time::Duration,
 };
@@ -19,7 +20,7 @@ use futures::Stream;
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, ReadBuf},
     net::windows::named_pipe::{NamedPipeServer, ServerOptions},
-    sync::mpsc,
+    sync::{Semaphore, mpsc},
 };
 use windows_sys::Win32::{
     Foundation::{HANDLE, LocalFree},
@@ -76,6 +77,11 @@ const INSTANCE_RETRY_DELAY: Duration = Duration::from_millis(500);
 
 /// Connections that are identified and waiting for tonic to pick them up.
 const ACCEPT_QUEUE: usize = 16;
+
+/// Connections still waiting to send their first bytes. Each holds a pipe
+/// instance for up to [`FIRST_BYTES_TIMEOUT`], so past this many the server
+/// stops accepting until one is identified or dropped.
+const MAX_UNIDENTIFIED: usize = 32;
 
 /// The security descriptor built from [`PIPE_SDDL`], owned for as long as the
 /// server creates instances with it.
@@ -161,32 +167,42 @@ pub(crate) fn incoming(
 async fn accept_loop(
     path: PathBuf,
     security: PipeSecurity,
-    mut listening: NamedPipeServer,
+    first: NamedPipeServer,
     tx: mpsc::Sender<StreamBox<IdentifiedPipe>>,
 ) {
+    let identifying = Arc::new(Semaphore::new(MAX_UNIDENTIFIED));
+    let mut listening = Some(first);
     loop {
-        let connected = tokio::select! {
-            () = tx.closed() => return,
-            connected = listening.connect() => connected,
-        };
-        let next = loop {
-            match security.create_instance(&path, false) {
-                Ok(next) => break next,
+        let pipe = match listening.take() {
+            Some(pipe) => pipe,
+            None => match security.create_instance(&path, false) {
+                Ok(pipe) => pipe,
                 Err(error) => {
                     log::error!("Failed to create the next management pipe instance: {error}");
                     tokio::select! {
                         () = tx.closed() => return,
-                        () = tokio::time::sleep(INSTANCE_RETRY_DELAY) => {}
+                        () = tokio::time::sleep(INSTANCE_RETRY_DELAY) => continue,
                     }
                 }
-            }
+            },
         };
-        let pipe = std::mem::replace(&mut listening, next);
+        let slot = tokio::select! {
+            () = tx.closed() => return,
+            slot = identifying.clone().acquire_owned() => slot.expect("the semaphore is never closed"),
+        };
+        let connected = tokio::select! {
+            () = tx.closed() => return,
+            connected = pipe.connect() => connected,
+        };
         match connected {
             Ok(()) => {
+                // Handed off before the next instance is created, so a client
+                // is never held behind an instance the OS refuses to create.
                 let tx = tx.clone();
                 tokio::spawn(async move {
-                    if let Some(connection) = identify(pipe).await {
+                    let connection = identify(pipe).await;
+                    drop(slot);
+                    if let Some(connection) = connection {
                         let _ = tx.send(connection).await;
                     }
                 });
@@ -282,8 +298,9 @@ fn token_user(token: &OwnedHandle) -> Option<(String, bool)> {
     if unsafe { ConvertSidToStringSidW(sid, &raw mut string_sid) } == 0 {
         return None;
     }
-    // SAFETY: on success the OS returns a NUL-terminated UTF-16 string.
     let length = (0..)
+        // SAFETY: on success the OS returns a NUL-terminated UTF-16 string, so
+        // every index up to and including the terminator is in bounds.
         .take_while(|&i| unsafe { *string_sid.add(i) } != 0)
         .count();
     // SAFETY: `length` UTF-16 units precede the terminator.

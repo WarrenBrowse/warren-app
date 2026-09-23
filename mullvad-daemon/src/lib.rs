@@ -3928,7 +3928,7 @@ impl Daemon {
         // view (= exactly the user-visible bug we want to avoid).
         log::info!(
             "on_set_warren_mnemonic: identity changed, hot-swapping device state \
-             to new pubkey={new_pubkey}"
+             to the new pubkey"
         );
         let manager = self.account_manager.clone();
         let new_pubkey_string = new_pubkey.to_string();

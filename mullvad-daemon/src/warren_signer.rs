@@ -389,6 +389,21 @@ pub fn get_warren_mnemonic(settings_dir: &Path) -> Option<Zeroizing<String>> {
     Some(Zeroizing::new(s.trim().to_string()))
 }
 
+/// Whether a wallet may be stored for this daemon: an entry in the secret
+/// storage, a legacy file, or a storage that cannot tell.
+///
+/// Read-only. Deliberately not "a wallet loaded": a stored mnemonic that fails
+/// to load is still somebody's wallet, and deciding who may reach it must not
+/// treat it as absent.
+#[must_use]
+pub fn mnemonic_may_be_stored(settings_dir: &Path) -> bool {
+    mnemonic_may_be_stored_in(&*get_storage(settings_dir), settings_dir)
+}
+
+fn mnemonic_may_be_stored_in(storage: &dyn SecretStorage, settings_dir: &Path) -> bool {
+    settings_dir.join(MNEMONIC_FILENAME).exists() || !matches!(storage.load(MNEMONIC_KEY), Ok(None))
+}
+
 /// Decide whether `device.json` must be re-aligned to the active signer.
 ///
 /// The BIP39-derived signer is the cryptographic root of truth: it signs
@@ -413,6 +428,47 @@ pub fn reconcile_login_target<'a>(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A secret storage that answers one fixed way, standing in for the OS
+    /// store.
+    struct FixedStorage(fn() -> io::Result<Option<Zeroizing<Vec<u8>>>>);
+
+    impl SecretStorage for FixedStorage {
+        fn store(&self, _: &str, _: &[u8]) -> io::Result<()> {
+            unreachable!("never written by a presence check")
+        }
+        fn load(&self, _: &str) -> io::Result<Option<Zeroizing<Vec<u8>>>> {
+            (self.0)()
+        }
+        fn delete(&self, _: &str) -> io::Result<()> {
+            unreachable!("never deleted by a presence check")
+        }
+        fn is_plaintext(&self) -> bool {
+            false
+        }
+        fn backend_name(&self) -> &'static str {
+            "fixed"
+        }
+    }
+
+    /// Only a storage that positively holds nothing, with no legacy file,
+    /// means no wallet: an entry, a legacy file, or a failed read all count.
+    #[test]
+    fn a_wallet_is_absent_only_when_the_storage_says_so() {
+        let dir = std::env::temp_dir().join(format!("wsigner-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let empty = FixedStorage(|| Ok(None));
+        let stored = FixedStorage(|| Ok(Some(Zeroizing::new(b"abandon".to_vec()))));
+        let unreadable = FixedStorage(|| Err(io::Error::other("keychain locked")));
+
+        assert!(!mnemonic_may_be_stored_in(&empty, &dir));
+        assert!(mnemonic_may_be_stored_in(&stored, &dir));
+        assert!(mnemonic_may_be_stored_in(&unreadable, &dir));
+
+        std::fs::write(dir.join(MNEMONIC_FILENAME), b"legacy").unwrap();
+        assert!(mnemonic_may_be_stored_in(&empty, &dir));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[test]
     fn reconcile_noop_when_device_matches_signer() {

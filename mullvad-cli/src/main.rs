@@ -193,7 +193,7 @@ async fn main() -> std::process::ExitCode {
             match daemon_refusal(&error) {
                 // The daemon's reason is written for the user already, and the
                 // cause chain around it would only bury it.
-                Some(reason) => eprintln!("{reason}"),
+                Some(reason) => eprintln!("{}", printable(reason)),
                 None => eprintln!("Error: {error:?}"),
             }
             std::process::ExitCode::FAILURE
@@ -213,6 +213,14 @@ fn daemon_refusal(error: &anyhow::Error) -> Option<&str> {
         }?;
         (status.code() == Code::PermissionDenied).then(|| status.message())
     })
+}
+
+/// `text` with its control characters replaced, so whatever answers on the
+/// management endpoint cannot drive the terminal it is printed to.
+fn printable(text: &str) -> String {
+    text.chars()
+        .map(|c| if c.is_control() { '?' } else { c })
+        .collect()
 }
 
 async fn run() -> Result<()> {
@@ -295,6 +303,15 @@ mod tests {
             daemon_refusal(&error),
             Some("Warren is set up by another account on this computer")
         );
+    }
+
+    #[test]
+    fn a_refusal_cannot_carry_terminal_control_sequences() {
+        assert_eq!(
+            super::printable("set up\u{1b}]0;owned\u{7} elsewhere\r\n"),
+            "set up?]0;owned? elsewhere??"
+        );
+        assert_eq!(super::printable("Warren is set up"), "Warren is set up");
     }
 
     #[test]

@@ -325,8 +325,8 @@ local browser, nor from another machine.
 
 Every local account can connect, so that the GUI and the CLI work for the user who
 installed the app without any group membership or re-login. Connecting grants nothing by
-itself: the daemon authorizes every RPC, before reading its request, against the identity
-the operating system reports for the connection.
+itself: the daemon authorizes every RPC against the identity the operating system reports
+for the connection.
 
 - **Linux and macOS**: the socket (`0766` in a root-owned directory) carries the peer uid,
   read by the kernel (`SO_PEERCRED` / `getpeereid`). Root and the daemon's own account are
@@ -337,7 +337,9 @@ the operating system reports for the connection.
   Everyone, Anonymous or network logons; the pipe also refuses remote clients. The daemon
   reads each client's identity from the token it opened the pipe with (the user SID, whether
   it is SYSTEM or an elevated member of Administrators, and its session). A client whose
-  token cannot be read (the Anonymous impersonation level) is treated as unidentified.
+  token cannot be read (the Anonymous impersonation level) is treated as unidentified. While
+  the daemon is stopped, any process can create a pipe under its name; the GUI checks that the
+  pipe it reaches is owned by an administrator, the CLI does not.
 
 Each RPC has one of three classes, declared in one table in
 `mullvad-daemon/src/rpc_access.rs` that a test checks against the service definition:
@@ -352,15 +354,33 @@ The account that installs a wallet (create, import or login) becomes its **owner
 by the daemon in `wallet-owner.json` in its settings directory, which only root or SYSTEM can
 write, so a daemon restart never reopens a claim. Once there is an owner, classes 2 and 3 are
 for the owner and administrators only; any other account keeps class 1, and what it reads has
-the account, the device, voucher codes and proxy credentials removed. An unidentified client
-only ever gets class 1. A true sign-out, which erases the mnemonic, releases the ownership.
+the account, the device, voucher codes and secrets (proxy credentials, a custom relay's key)
+removed. An unidentified client only ever gets class 1. A true sign-out, which erases the
+mnemonic, releases the ownership.
 
 A wallet with no recorded owner (installed by an administrator, or before owners were
 recorded) is claimed by the first class 2 or 3 call of the account at the computer's own
-screen: the console user on macOS, the active console session on Windows, a uid with an
-active local logind session on Linux. Any other account is refused until then, and
-administrators never claim. With no wallet installed, any local account may set the app up
-and becomes the owner of the wallet it installs.
+screen: the console user on macOS, the active console session on Windows, the active user of a
+logind seat on Linux (an ssh, remote desktop or cron session has no seat). Any other account is
+refused until then, and administrators never claim. A mnemonic that is stored but does not
+load still counts as a wallet. With no wallet installed, any local account may set the app up
+and becomes the owner of the wallet it installs; until then class 2 is for the console account
+and administrators, because whatever is configured before the wallet exists is what its owner
+inherits.
+
+Each call is decided twice: on the request head, before its body is read, and again when the
+daemon acts on it, with the ownership held while the command is queued. A client chooses when
+it sends the body, so the first decision alone could be stale by the time the call runs.
+
+An owner record the daemon cannot read leaves the app to administrators until one of them
+removes the file and restarts the service. On a machine nobody logs in to at the screen (a
+headless server) a wallet with no recorded owner stays with root: an administrator gives it to
+an account by writing `{"version":1,"owner":{"uid":<uid>}}` to `wallet-owner.json` (on Windows
+`{"version":1,"owner":{"sid":"<SID>"}}`) and restarting the service.
+
+A refused call returns `PERMISSION_DENIED`, with the reason in words and a stable code in the
+status details (`owned_by_another_account`, `claim_needs_console_user`, `set_up_first`,
+`owner_record_unreadable`, `no_credentials`), which the GUI uses to choose its own wording.
 
 The policy itself, and the reasons behind each rule, are documented in
 `mullvad-daemon/src/wallet_access.rs`.

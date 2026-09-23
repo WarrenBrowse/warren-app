@@ -70,6 +70,12 @@ pub type ServiceResult<T> = std::result::Result<Response<T>, Status>;
 type EventsListenerReceiver = UnboundedReceiverStream<Result<types::DaemonEvent, Status>>;
 type EventsListenerSender = tokio::sync::mpsc::UnboundedSender<Result<types::DaemonEvent, Status>>;
 
+/// Who is calling, and the class the gate admitted the call as.
+struct Call {
+    peer: Option<mullvad_management_interface::PeerCredentials>,
+    class: crate::wallet_access::RpcClass,
+}
+
 /// One `EventsListen` stream, and who opened it.
 struct EventsSubscriber {
     tx: EventsListenerSender,
@@ -322,11 +328,23 @@ fn withhold_access_method_secrets(method: &mut types::AccessMethodSetting) {
     }
 }
 
-/// Empties the secrets the settings carry unless the caller may see them.
-/// The rest of the settings is what every local account may read.
+/// Empties the secrets the settings carry unless the caller may see them:
+/// proxy credentials and a custom relay's private key. The rest of the
+/// settings is what every local account may read.
 fn withhold_settings_secrets(settings: &mut types::Settings, may_see_secrets: bool) {
     if may_see_secrets {
         return;
+    }
+    if let Some(types::relay_settings::Endpoint::Custom(custom)) = settings
+        .relay_settings
+        .as_mut()
+        .and_then(|relay| relay.endpoint.as_mut())
+        && let Some(tunnel) = custom
+            .config
+            .as_mut()
+            .and_then(|config| config.tunnel.as_mut())
+    {
+        tunnel.private_key.clear();
     }
     if let Some(methods) = settings.api_access_methods.as_mut() {
         [
@@ -343,8 +361,8 @@ fn withhold_settings_secrets(settings: &mut types::Settings, may_see_secrets: bo
 }
 
 /// What of a daemon event a subscriber may receive: all of it for the owner
-/// and administrators; for anyone else, the event without the account, the
-/// device and the secrets, or nothing when nothing else is left of it.
+/// and administrators; for anyone else, the event without its secrets, or
+/// nothing when the event is about the account or the device.
 fn withhold_event_identity(
     mut event: types::DaemonEvent,
     may_see_identity: bool,
@@ -354,13 +372,8 @@ fn withhold_event_identity(
     }
     match event.event.as_mut()? {
         daemon_event::Event::Settings(settings) => withhold_settings_secrets(settings, false),
-        daemon_event::Event::Device(device) => {
-            if let Some(state) = device.new_state.as_mut() {
-                state.device = None;
-            }
-        }
         daemon_event::Event::NewAccessMethod(method) => withhold_access_method_secrets(method),
-        daemon_event::Event::RemoveDevice(_) => return None,
+        daemon_event::Event::Device(_) | daemon_event::Event::RemoveDevice(_) => return None,
         daemon_event::Event::TunnelState(_)
         | daemon_event::Event::RelayList(_)
         | daemon_event::Event::VersionInfo(_)
@@ -386,11 +399,15 @@ impl ManagementService for ManagementServiceImpl {
     // Control and get the tunnel state
     //
 
-    async fn connect_tunnel(&self, _: Request<()>) -> ServiceResult<bool> {
+    async fn connect_tunnel(&self, request: Request<()>) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
         log::debug!("connect_tunnel");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetTargetState(tx, TargetState::Secured))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SetTargetState(tx, TargetState::Secured),
+        )?;
         let connect_issued = self
             .wait_for_result(rx)
             .await?
@@ -399,11 +416,15 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn disconnect_tunnel(&self, request: Request<String>) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
         let source = request.into_inner();
         log::debug!("disconnect_tunnel (source: {source})");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetTargetState(tx, TargetState::Unsecured))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SetTargetState(tx, TargetState::Unsecured),
+        )?;
         let disconnect_issued = self
             .wait_for_result(rx)
             .await?
@@ -414,7 +435,7 @@ impl ManagementService for ManagementServiceImpl {
     /// Manual re-enable after a stand-down for a higher-priority product
     /// environment. Never reachable on Android, where no watcher runs and
     /// the yield is therefore always absent.
-    async fn clear_env_yield(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn clear_env_yield(&self, request: Request<()>) -> ServiceResult<()> {
         log::debug!("clear_env_yield");
 
         #[cfg(target_os = "android")]
@@ -424,8 +445,9 @@ impl ManagementService for ManagementServiceImpl {
 
         #[cfg(not(target_os = "android"))]
         {
+            let call = Self::call_of(&request);
             let (tx, rx) = oneshot::channel();
-            self.send_command_to_daemon(DaemonCommand::ClearEnvYield(tx))?;
+            self.send_command_to_daemon(&call, DaemonCommand::ClearEnvYield(tx))?;
             self.wait_for_result(rx)
                 .await?
                 .map(Response::new)
@@ -433,18 +455,20 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
-    async fn reconnect_tunnel(&self, _: Request<()>) -> ServiceResult<bool> {
+    async fn reconnect_tunnel(&self, request: Request<()>) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
         log::debug!("reconnect_tunnel");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::Reconnect(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::Reconnect(tx))?;
         let reconnect_issued = self.wait_for_result(rx).await?;
         Ok(Response::new(reconnect_issued))
     }
 
-    async fn get_tunnel_state(&self, _: Request<()>) -> ServiceResult<types::TunnelState> {
+    async fn get_tunnel_state(&self, request: Request<()>) -> ServiceResult<types::TunnelState> {
+        let call = Self::call_of(&request);
         log::debug!("get_tunnel_state");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetState(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetState(tx))?;
         let state = self.wait_for_result(rx).await?;
         Ok(Response::new(types::TunnelState::from(state)))
     }
@@ -464,26 +488,29 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(UnboundedReceiverStream::new(rx)))
     }
 
-    async fn prepare_restart(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn prepare_restart(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("prepare_restart");
         // Note: The old `PrepareRestart` behavior never shutdown the daemon.
         let shutdown = false;
-        self.send_command_to_daemon(DaemonCommand::PrepareRestart(shutdown))?;
+        self.send_command_to_daemon(&call, DaemonCommand::PrepareRestart(shutdown))?;
         Ok(Response::new(()))
     }
 
     async fn prepare_restart_v2(&self, shutdown: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&shutdown);
         log::debug!("prepare_restart_v2");
-        self.send_command_to_daemon(DaemonCommand::PrepareRestart(shutdown.into_inner()))?;
+        self.send_command_to_daemon(&call, DaemonCommand::PrepareRestart(shutdown.into_inner()))?;
         Ok(Response::new(()))
     }
 
-    async fn factory_reset(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn factory_reset(&self, request: Request<()>) -> ServiceResult<()> {
         #[cfg(not(target_os = "android"))]
         {
+            let call = Self::call_of(&request);
             log::debug!("factory_reset");
             let (tx, rx) = oneshot::channel();
-            self.send_command_to_daemon(DaemonCommand::FactoryReset(tx))?;
+            self.send_command_to_daemon(&call, DaemonCommand::FactoryReset(tx))?;
             self.wait_for_result(rx)
                 .await?
                 .map(Response::new)
@@ -495,19 +522,21 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
-    async fn get_current_version(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn get_current_version(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("get_current_version");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetCurrentVersion(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetCurrentVersion(tx))?;
         let version = self.wait_for_result(rx).await?.to_string();
         Ok(Response::new(version))
     }
 
-    async fn get_version_info(&self, _: Request<()>) -> ServiceResult<types::AppVersionInfo> {
+    async fn get_version_info(&self, request: Request<()>) -> ServiceResult<types::AppVersionInfo> {
+        let call = Self::call_of(&request);
         log::debug!("get_version_info");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetVersionInfo(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetVersionInfo(tx))?;
         self.wait_for_result(rx)
             .await?
             .map(types::AppVersionInfo::from)
@@ -515,19 +544,21 @@ impl ManagementService for ManagementServiceImpl {
             .map_err(map_daemon_error)
     }
 
-    async fn is_performing_post_upgrade(&self, _: Request<()>) -> ServiceResult<bool> {
+    async fn is_performing_post_upgrade(&self, request: Request<()>) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
         log::debug!("is_performing_post_upgrade");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::IsPerformingPostUpgrade(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::IsPerformingPostUpgrade(tx))?;
         Ok(Response::new(self.wait_for_result(rx).await?))
     }
 
     // Relays and tunnel constraints
     //
 
-    async fn update_relay_locations(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn update_relay_locations(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("update_relay_locations");
-        self.send_command_to_daemon(DaemonCommand::UpdateRelayLocations)?;
+        self.send_command_to_daemon(&call, DaemonCommand::UpdateRelayLocations)?;
         Ok(Response::new(()))
     }
 
@@ -535,32 +566,35 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::RelaySettings>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("set_relay_settings");
         let (tx, rx) = oneshot::channel();
         let constraints_update =
             RelaySettings::try_from(request.into_inner()).map_err(map_protobuf_type_err)?;
 
         let message = DaemonCommand::SetRelaySettings(tx, constraints_update);
-        self.send_command_to_daemon(message)?;
+        self.send_command_to_daemon(&call, message)?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
-    async fn get_relay_locations(&self, _: Request<()>) -> ServiceResult<types::RelayList> {
+    async fn get_relay_locations(&self, request: Request<()>) -> ServiceResult<types::RelayList> {
+        let call = Self::call_of(&request);
         log::debug!("get_relay_locations");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetRelayLocations(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetRelayLocations(tx))?;
         self.wait_for_result(rx)
             .await
             .map(|relays| Response::new(types::RelayList::from(relays)))
     }
 
-    async fn get_bridges(&self, _: Request<()>) -> ServiceResult<types::BridgeList> {
+    async fn get_bridges(&self, request: Request<()>) -> ServiceResult<types::BridgeList> {
+        let call = Self::call_of(&request);
         log::debug!("get_bridges");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetBridges(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetBridges(tx))?;
         self.wait_for_result(rx)
             .await
             .map(types::BridgeList::from)
@@ -571,11 +605,12 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ObfuscationSettings>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let settings =
             ObfuscationSettings::try_from(request.into_inner()).map_err(map_protobuf_type_err)?;
         log::debug!("set_obfuscation_settings({:?})", settings);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetObfuscationSettings(tx, settings))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetObfuscationSettings(tx, settings))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -584,10 +619,11 @@ impl ManagementService for ManagementServiceImpl {
     //
 
     async fn get_settings(&self, request: Request<()>) -> ServiceResult<types::Settings> {
+        let call = Self::call_of(&request);
         log::debug!("get_settings");
         let may_see_secrets = self.may_see_identity(&request);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetSettings(tx))?;
         self.wait_for_result(rx).await.map(|settings| {
             let mut settings = types::Settings::from(&settings);
             withhold_settings_secrets(&mut settings, may_see_secrets);
@@ -595,35 +631,39 @@ impl ManagementService for ManagementServiceImpl {
         })
     }
 
-    async fn reset_settings(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn reset_settings(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("reset_settings");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ResetSettings(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ResetSettings(tx))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn set_allow_lan(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let allow_lan = request.into_inner();
         log::debug!("set_allow_lan({})", allow_lan);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetAllowLan(tx, allow_lan))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetAllowLan(tx, allow_lan))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let warren_api_url = request.into_inner();
         // Warren no-log: URL may potentially contain a sensitive
         // host (= private deployment). Log only the length.
         log::debug!("set_warren_api_url(len={})", warren_api_url.len());
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenApiUrl(tx, warren_api_url))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetWarrenApiUrl(tx, warren_api_url))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn set_warren_n_connections(&self, request: Request<u32>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let raw = request.into_inner();
         log::debug!("set_warren_n_connections({raw})");
         // 0 = reset to the compiled default; anything else must sit in
@@ -644,23 +684,25 @@ impl ManagementService for ManagementServiceImpl {
             ),
         };
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenNConnections(tx, value))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetWarrenNConnections(tx, value))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn get_warren_diagnostics(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::WarrenDiagnostics> {
+        let call = Self::call_of(&request);
         log::debug!("get_warren_diagnostics");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetWarrenDiagnostics(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetWarrenDiagnostics(tx))?;
         let diagnostics = self.wait_for_result(rx).await?;
         Ok(Response::new(types::WarrenDiagnostics::from(diagnostics)))
     }
 
     async fn set_warren_max_rate_bps(&self, request: Request<u64>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let raw = request.into_inner();
         log::debug!("set_warren_max_rate_bps({raw})");
         // 0 = unset (unlimited). Any non-zero value is a valid cap; the
@@ -670,7 +712,7 @@ impl ManagementService for ManagementServiceImpl {
             bps => Some(bps),
         };
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenMaxRateBps(tx, value))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetWarrenMaxRateBps(tx, value))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -684,10 +726,11 @@ impl ManagementService for ManagementServiceImpl {
     /// copied into the gRPC outbound buffer, which is out of our
     /// control - but the daemon-side heap allocation is wiped as soon
     /// as the `Zeroizing` wrapper goes out of scope here.
-    async fn get_warren_mnemonic(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn get_warren_mnemonic(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("get_warren_mnemonic (content NEVER logged)");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetWarrenMnemonic(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetWarrenMnemonic(tx))?;
         let mnemonic = self.wait_for_result(rx).await?;
         // Unwrap `Zeroizing<String>` only to send over gRPC. The clone
         // into the response is unavoidable here (gRPC framework needs
@@ -706,6 +749,7 @@ impl ManagementService for ManagementServiceImpl {
     /// `Zeroizing<String>` immediately so the secret heap buffer is
     /// wiped after `on_set_warren_mnemonic` returns.
     async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let install = self.begin_install(&request).await?;
         let mnemonic = zeroize::Zeroizing::new(request.into_inner());
         log::info!(
@@ -713,7 +757,7 @@ impl ManagementService for ManagementServiceImpl {
             mnemonic.len()
         );
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenMnemonic(tx, mnemonic))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetWarrenMnemonic(tx, mnemonic))?;
         let result = self.wait_for_result(rx).await?;
         self.finish_install(install, result.is_ok());
         result.map(Response::new).map_err(|e| {
@@ -732,11 +776,12 @@ impl ManagementService for ManagementServiceImpl {
     /// `warren_multihop_doctrine_v1` (opt-in privacy).
     async fn get_warren_multi_hop_settings(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::WarrenMultiHopSettings> {
+        let call = Self::call_of(&request);
         log::debug!("get_warren_multi_hop_settings");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetSettings(tx))?;
         let settings = self.wait_for_result(rx).await?;
         Ok(Response::new(types::WarrenMultiHopSettings::from(
             &settings.warren_multi_hop,
@@ -750,6 +795,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::WarrenMultiHopSettings>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let proto_value = request.into_inner();
         log::debug!(
             "set_warren_multi_hop_settings(enabled={}, entry={}, exit={})",
@@ -760,7 +806,10 @@ impl ManagementService for ManagementServiceImpl {
         let new_value = mullvad_types::settings::WarrenMultiHopSettings::try_from(proto_value)
             .map_err(|e| Status::invalid_argument(e.to_string()))?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenMultiHopSettings(tx, new_value))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SetWarrenMultiHopSettings(tx, new_value),
+        )?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -774,6 +823,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::WarrenCustomExitSettings>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let proto_value = request.into_inner();
         log::debug!(
             "set_warren_custom_exit(enabled={}, endpoint={:?}, cover_domain={:?})",
@@ -783,7 +833,7 @@ impl ManagementService for ManagementServiceImpl {
         );
         let new_value = mullvad_types::settings::WarrenCustomExitSettings::from(proto_value);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWarrenCustomExit(tx, new_value))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetWarrenCustomExit(tx, new_value))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -797,11 +847,12 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumLoginRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        let call = Self::call_of(&request);
         let sid = request.into_inner().sid;
         validate_forum_sid(&sid)?;
         log::debug!("sign_forum_login (sid/pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SignForumLogin(tx, sid))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SignForumLogin(tx, sid))?;
         let signed = self.wait_for_result(rx).await?;
         match signed {
             Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
@@ -823,11 +874,12 @@ impl ManagementService for ManagementServiceImpl {
     /// **No-log policy**: never log the pubkey or the signature.
     async fn sign_forum_notifications(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        let call = Self::call_of(&request);
         log::debug!("sign_forum_notifications (pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SignForumNotifications(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SignForumNotifications(tx))?;
         let signed = self.wait_for_result(rx).await?;
         match signed {
             Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
@@ -847,11 +899,12 @@ impl ManagementService for ManagementServiceImpl {
     /// **No-log policy**: never log the pubkey or the signature.
     async fn sign_forum_notifications_seen(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        let call = Self::call_of(&request);
         log::debug!("sign_forum_notifications_seen (pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SignForumNotificationsSeen(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SignForumNotificationsSeen(tx))?;
         let signed = self.wait_for_result(rx).await?;
         match signed {
             Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
@@ -878,6 +931,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumAttachLogsRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        let call = Self::call_of(&request);
         let request = request.into_inner();
         validate_forum_sid(&request.sid)?;
         if request.log_gz.is_empty() {
@@ -898,12 +952,10 @@ impl ManagementService for ManagementServiceImpl {
         }
         log::debug!("sign_forum_attach_logs (sid/pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SignForumAttachLogs(
-            tx,
-            request.sid,
-            request.topic_id,
-            request.log_gz,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SignForumAttachLogs(tx, request.sid, request.topic_id, request.log_gz),
+        )?;
         let signed = self.wait_for_result(rx).await?;
         match signed {
             Some((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
@@ -929,17 +981,17 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumReportRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
+        let call = Self::call_of(&request);
         let request = request.into_inner();
         // No field at all for a report without logs, never an empty one: the
         // vector pins both shapes.
         let log_gz = (!request.log_gz.is_empty()).then_some(request.log_gz);
         log::debug!("sign_forum_report (pubkey/sig/report NEVER logged)");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SignForumReport(
-            tx,
-            request.report_json,
-            log_gz,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SignForumReport(tx, request.report_json, log_gz),
+        )?;
         match self.wait_for_result(rx).await? {
             Ok((headers, body)) => Ok(Response::new(types::ForumLoginSignature {
                 pubkey_ss58: headers.pubkey_ss58,
@@ -1007,10 +1059,14 @@ impl ManagementService for ManagementServiceImpl {
         ))
     }
 
-    async fn get_nat_pmp_settings(&self, _: Request<()>) -> ServiceResult<types::NatPmpSettings> {
+    async fn get_nat_pmp_settings(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<types::NatPmpSettings> {
+        let call = Self::call_of(&request);
         log::debug!("get_nat_pmp_settings");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetSettings(tx))?;
         let settings = self.wait_for_result(rx).await?;
         Ok(Response::new(types::NatPmpSettings::from(
             &settings.warren_nat_pmp,
@@ -1021,6 +1077,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::NatPmpSettings>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let proto_value = request.into_inner();
         log::debug!(
             "set_nat_pmp_settings(enabled={} lifetime_secs={} protocol={} internal_port={})",
@@ -1032,7 +1089,7 @@ impl ManagementService for ManagementServiceImpl {
         let new_value = mullvad_types::settings::WarrenNatPmpSettings::try_from(proto_value)
             .map_err(|e| Status::invalid_argument(e.to_string()))?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetNatPmpSettings(tx, new_value))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetNatPmpSettings(tx, new_value))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -1059,6 +1116,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::TrustNewExitKeyRequest>,
     ) -> ServiceResult<types::TrustNewExitKeyResponse> {
+        let call = Self::call_of(&request);
         let body = request.into_inner();
         log::debug!(
             "trust_new_exit_key(exit_id={}, new_pubkey={})",
@@ -1066,11 +1124,14 @@ impl ManagementService for ManagementServiceImpl {
             body.new_pubkey_hex
         );
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::TrustNewExitKey {
-            tx,
-            exit_id_hex: body.exit_id_hex,
-            new_pubkey_hex: body.new_pubkey_hex,
-        })?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::TrustNewExitKey {
+                tx,
+                exit_id_hex: body.exit_id_hex,
+                new_pubkey_hex: body.new_pubkey_hex,
+            },
+        )?;
         let outcome = self.wait_for_result(rx).await?;
         let response = match outcome {
             crate::tunnel::TrustNewExitKeyOutcome::Ok => types::TrustNewExitKeyResponse {
@@ -1087,21 +1148,23 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn reset_pinned_exit_keys(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::ResetPinnedExitKeysResponse> {
+        let call = Self::call_of(&request);
         log::debug!("reset_pinned_exit_keys");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ResetPinnedExitKeys(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ResetPinnedExitKeys(tx))?;
         let reset_count = self.wait_for_result(rx).await?;
         Ok(Response::new(types::ResetPinnedExitKeysResponse {
             reset_count,
         }))
     }
 
-    async fn dismiss_pubkey_mismatch(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn dismiss_pubkey_mismatch(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("dismiss_pubkey_mismatch");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::DismissPubkeyMismatch(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::DismissPubkeyMismatch(tx))?;
         self.wait_for_result(rx).await?;
         Ok(Response::new(()))
     }
@@ -1110,6 +1173,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ReportPubkeyMismatchRequest>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let body = request.into_inner();
         log::debug!(
             "report_pubkey_mismatch(exit_id={}, country={})",
@@ -1117,33 +1181,38 @@ impl ManagementService for ManagementServiceImpl {
             body.country_code
         );
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ReportPubkeyMismatch {
-            tx,
-            exit_id_hex: body.exit_id_hex,
-            old_pubkey_hex: body.old_pubkey_hex,
-            new_pubkey_hex: body.new_pubkey_hex,
-            country_code: body.country_code,
-            city: body.city,
-        })?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::ReportPubkeyMismatch {
+                tx,
+                exit_id_hex: body.exit_id_hex,
+                old_pubkey_hex: body.old_pubkey_hex,
+                new_pubkey_hex: body.new_pubkey_hex,
+                country_code: body.country_code,
+                city: body.city,
+            },
+        )?;
         self.wait_for_result(rx).await?;
         Ok(Response::new(()))
     }
 
     async fn set_show_beta_releases(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let enabled = request.into_inner();
         log::debug!("set_show_beta_releases({})", enabled);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetShowBetaReleases(tx, enabled))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetShowBetaReleases(tx, enabled))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     #[cfg(not(target_os = "android"))]
     async fn set_lockdown_mode(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let lockdown_mode = request.into_inner();
         log::debug!("set_lockdown_mode({})", lockdown_mode);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetLockdownMode(tx, lockdown_mode))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetLockdownMode(tx, lockdown_mode))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_guarded_setting_error)?;
@@ -1160,10 +1229,11 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn set_auto_connect(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let auto_connect = request.into_inner();
         log::debug!("set_auto_connect({})", auto_connect);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetAutoConnect(tx, auto_connect))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetAutoConnect(tx, auto_connect))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_guarded_setting_error)?;
@@ -1171,29 +1241,32 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn set_wireguard_mtu(&self, request: Request<u32>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let mtu = request.into_inner();
         let mtu = if mtu != 0 { Some(mtu as u16) } else { None };
         log::debug!("set_wireguard_mtu({:?})", mtu);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetWireguardMtu(tx, mtu))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetWireguardMtu(tx, mtu))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn set_enable_ipv6(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let enable_ipv6 = request.into_inner();
         log::debug!("set_enable_ipv6({})", enable_ipv6);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetEnableIpv6(tx, enable_ipv6))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetEnableIpv6(tx, enable_ipv6))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     async fn set_userspace_wireguard(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let userspace = request.into_inner();
         log::debug!("set_userspace_wireguard({})", userspace);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetUserspaceWireguard(tx, userspace))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetUserspaceWireguard(tx, userspace))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -1202,35 +1275,38 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::QuantumResistantState>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let state = mullvad_types::wireguard::QuantumResistantState::try_from(request.into_inner())
             .map_err(map_protobuf_type_err)?;
 
         log::debug!("set_quantum_resistant_tunnel({state:?})");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetQuantumResistantTunnel(tx, state))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetQuantumResistantTunnel(tx, state))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
     #[cfg(daita)]
     async fn set_enable_daita(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let daita_enabled = request.into_inner();
         log::debug!("set_enable_daita({daita_enabled})");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetEnableDaita(tx, daita_enabled))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetEnableDaita(tx, daita_enabled))?;
         self.wait_for_result(rx).await?.map(Response::new)?;
         Ok(Response::new(()))
     }
 
     #[cfg(daita)]
     async fn set_daita_direct_only(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let direct_only_enabled = request.into_inner();
         log::debug!("set_daita_direct_only({direct_only_enabled})");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetDaitaUseMultihopIfNecessary(
-            tx,
-            !direct_only_enabled,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SetDaitaUseMultihopIfNecessary(tx, !direct_only_enabled),
+        )?;
         self.wait_for_result(rx).await?.map(Response::new)?;
         Ok(Response::new(()))
     }
@@ -1240,11 +1316,12 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::DaitaSettings>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let state = mullvad_types::wireguard::DaitaSettings::from(request.into_inner());
 
         log::debug!("set_daita_settings({state:?})");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetDaitaSettings(tx, state))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetDaitaSettings(tx, state))?;
         self.wait_for_result(rx).await?.map(Response::new)?;
         Ok(Response::new(()))
     }
@@ -1265,11 +1342,12 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn set_dns_options(&self, request: Request<types::DnsOptions>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let options = DnsOptions::try_from(request.into_inner()).map_err(map_protobuf_type_err)?;
         log::debug!("set_dns_options({:?})", options);
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetDnsOptions(tx, options))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetDnsOptions(tx, options))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -1278,19 +1356,21 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::RelayOverride>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let relay_override =
             RelayOverride::try_from(request.into_inner()).map_err(map_protobuf_type_err)?;
         log::debug!("set_relay_override");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetRelayOverride(tx, relay_override))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetRelayOverride(tx, relay_override))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
-    async fn clear_all_relay_overrides(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn clear_all_relay_overrides(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("clear_all_relay_overrides");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ClearAllRelayOverrides(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ClearAllRelayOverrides(tx))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -1299,27 +1379,30 @@ impl ManagementService for ManagementServiceImpl {
     //
 
     async fn create_new_account(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("create_new_account");
         let install = self.begin_install(&request).await?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::CreateNewAccount(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::CreateNewAccount(tx))?;
         let result = self.wait_for_result(rx).await?;
         self.finish_install(install, result.is_ok());
         result.map(Response::new).map_err(map_daemon_error)
     }
 
     async fn login_account(&self, request: Request<AccountNumber>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("login_account");
         let install = self.begin_install(&request).await?;
         let account_number = request.into_inner();
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::LoginAccount(tx, account_number))?;
+        self.send_command_to_daemon(&call, DaemonCommand::LoginAccount(tx, account_number))?;
         let result = self.wait_for_result(rx).await?;
         self.finish_install(install, result.is_ok());
         result.map(Response::new).map_err(map_daemon_error)
     }
 
     async fn logout_account(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let source = request.into_inner();
         log::debug!("logout_account (source: {source})");
         // Only an explicit, backup-confirmed user sign-out from the GUI
@@ -1343,7 +1426,7 @@ impl ManagementService for ManagementServiceImpl {
             log::info!("logout_account: erasing local identity (authorized true sign-out)");
         }
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx, wipe_identity))?;
+        self.send_command_to_daemon(&call, DaemonCommand::LogoutAccount(tx, wipe_identity))?;
         let result = self.wait_for_result(rx).await?;
         if wipe_identity && result.is_ok() {
             // The wallet is gone, and whoever sets Warren up next owns the next one.
@@ -1353,17 +1436,18 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     #[cfg(target_os = "android")]
-    async fn delete_account(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn delete_account(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("delete_account");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::DeleteAccount(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::DeleteAccount(tx))?;
         let result = self
             .wait_for_result(rx)
             .await?
             .map(Response::new)
             .map_err(map_daemon_error);
         let (tx, _) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ClearAccountHistory(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ClearAccountHistory(tx))?;
         result
     }
 
@@ -1377,10 +1461,11 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<AccountNumber>,
     ) -> ServiceResult<types::AccountData> {
+        let call = Self::call_of(&request);
         log::debug!("get_account_data");
         let account_number = request.into_inner();
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetAccountData(tx, account_number))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetAccountData(tx, account_number))?;
         let result = self.wait_for_result(rx).await?;
         result
             .map(|account_data| Response::new(types::AccountData::from(account_data)))
@@ -1410,29 +1495,35 @@ impl ManagementService for ManagementServiceImpl {
             })
     }
 
-    async fn get_account_history(&self, _: Request<()>) -> ServiceResult<types::AccountHistory> {
+    async fn get_account_history(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<types::AccountHistory> {
+        let call = Self::call_of(&request);
         log::debug!("get_account_history");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetAccountHistory(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetAccountHistory(tx))?;
         self.wait_for_result(rx)
             .await
             .map(|history| Response::new(types::AccountHistory { number: history }))
     }
 
-    async fn clear_account_history(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn clear_account_history(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("clear_account_history");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ClearAccountHistory(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ClearAccountHistory(tx))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
             .map_err(map_daemon_error)
     }
 
-    async fn get_www_auth_token(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn get_www_auth_token(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("get_www_auth_token");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetWwwAuthToken(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetWwwAuthToken(tx))?;
         let result = self.wait_for_result(rx).await?;
         result.map(Response::new).map_err(|error| {
             log::error!(
@@ -1447,10 +1538,11 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<String>,
     ) -> ServiceResult<types::VoucherSubmission> {
+        let call = Self::call_of(&request);
         log::debug!("submit_voucher");
         let voucher = request.into_inner();
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SubmitVoucher(tx, voucher))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SubmitVoucher(tx, voucher))?;
         let result = self.wait_for_result(rx).await?;
         result
             .map(|submission| Response::new(types::VoucherSubmission::from(submission)))
@@ -1458,18 +1550,20 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     // Device management
-    async fn get_device(&self, _: Request<()>) -> ServiceResult<types::DeviceState> {
+    async fn get_device(&self, request: Request<()>) -> ServiceResult<types::DeviceState> {
+        let call = Self::call_of(&request);
         log::debug!("get_device");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetDevice(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetDevice(tx))?;
         let device = self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
         Ok(Response::new(types::DeviceState::from(device)))
     }
 
-    async fn update_device(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn update_device(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("update_device");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::UpdateDevice(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::UpdateDevice(tx))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
@@ -1518,6 +1612,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::AllowedIpsList>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let allowed_ips_str = request.into_inner().values;
         log::debug!("set_wireguard_allowed_ips({:?})", allowed_ips_str);
 
@@ -1529,7 +1624,10 @@ impl ManagementService for ManagementServiceImpl {
             })?
             .to_constraint();
 
-        self.send_command_to_daemon(DaemonCommand::SetWireguardAllowedIps(tx, allowed_ips))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SetWireguardAllowedIps(tx, allowed_ips),
+        )?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -1541,6 +1639,7 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::NewCustomList>,
     ) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("create_custom_list");
         let request = request.into_inner();
         let locations = request
@@ -1549,7 +1648,10 @@ impl ManagementService for ManagementServiceImpl {
             .map(GeographicLocationConstraint::try_from)
             .collect::<Result<BTreeSet<_>, FromProtobufTypeError>>()?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::CreateCustomList(tx, request.name, locations))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::CreateCustomList(tx, request.name, locations),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(|id| Response::new(id.to_string()))
@@ -1557,13 +1659,17 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn delete_custom_list(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("delete_custom_list");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::DeleteCustomList(
-            tx,
-            mullvad_types::custom_list::Id::from_str(&request.into_inner())
-                .map_err(|_| Status::invalid_argument("invalid ID"))?,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::DeleteCustomList(
+                tx,
+                mullvad_types::custom_list::Id::from_str(&request.into_inner())
+                    .map_err(|_| Status::invalid_argument("invalid ID"))?,
+            ),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1571,20 +1677,22 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn update_custom_list(&self, request: Request<types::CustomList>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("update_custom_list");
         let custom_list = mullvad_types::custom_list::CustomList::try_from(request.into_inner())?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::UpdateCustomList(tx, custom_list))?;
+        self.send_command_to_daemon(&call, DaemonCommand::UpdateCustomList(tx, custom_list))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
             .map_err(map_daemon_error)
     }
 
-    async fn clear_custom_lists(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn clear_custom_lists(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("clear_custom_lists");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ClearCustomLists(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ClearCustomLists(tx))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1597,18 +1705,22 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::NewAccessMethodSetting>,
     ) -> ServiceResult<types::Uuid> {
+        let call = Self::call_of(&request);
         log::debug!("add_api_access_method");
         let request = request.into_inner();
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::AddApiAccessMethod(
-            tx,
-            request.name,
-            request.enabled,
-            request
-                .access_method
-                .ok_or(Status::invalid_argument("Could not find access method"))
-                .map(mullvad_types::access_method::AccessMethod::try_from)??,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::AddApiAccessMethod(
+                tx,
+                request.name,
+                request.enabled,
+                request
+                    .access_method
+                    .ok_or(Status::invalid_argument("Could not find access method"))
+                    .map(mullvad_types::access_method::AccessMethod::try_from)??,
+            ),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(types::Uuid::from)
@@ -1617,10 +1729,14 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn remove_api_access_method(&self, request: Request<types::Uuid>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("remove_api_access_method");
         let api_access_method = mullvad_types::access_method::Id::try_from(request.into_inner())?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::RemoveApiAccessMethod(tx, api_access_method))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::RemoveApiAccessMethod(tx, api_access_method),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1628,10 +1744,14 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn set_api_access_method(&self, request: Request<types::Uuid>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("set_api_access_method");
         let api_access_method = mullvad_types::access_method::Id::try_from(request.into_inner())?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetApiAccessMethod(tx, api_access_method))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::SetApiAccessMethod(tx, api_access_method),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1642,24 +1762,26 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::AccessMethodSetting>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("update_api_access_method");
         let access_method_update =
             mullvad_types::access_method::AccessMethodSetting::try_from(request.into_inner())?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::UpdateApiAccessMethod(
-            tx,
-            access_method_update,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::UpdateApiAccessMethod(tx, access_method_update),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
             .map_err(map_daemon_error)
     }
 
-    async fn clear_custom_api_access_methods(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn clear_custom_api_access_methods(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("clear_custom_api_access_methods");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ClearCustomApiAccessMethods(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ClearCustomApiAccessMethods(tx))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1670,11 +1792,12 @@ impl ManagementService for ManagementServiceImpl {
     /// connect to the Mullvad API.
     async fn get_current_api_access_method(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::AccessMethodSetting> {
+        let call = Self::call_of(&request);
         log::debug!("get_current_api_access_method");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetCurrentAccessMethod(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetCurrentAccessMethod(tx))?;
         self.wait_for_result(rx)
             .await?
             .map(types::AccessMethodSetting::from)
@@ -1686,10 +1809,11 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         config: Request<types::CustomProxy>,
     ) -> ServiceResult<bool> {
+        let call = Self::call_of(&config);
         log::debug!("test_custom_api_access_method");
         let (tx, rx) = oneshot::channel();
         let proxy = talpid_types::net::proxy::CustomProxy::try_from(config.into_inner())?;
-        self.send_command_to_daemon(DaemonCommand::TestCustomApiAccessMethod(tx, proxy))?;
+        self.send_command_to_daemon(&call, DaemonCommand::TestCustomApiAccessMethod(tx, proxy))?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1700,13 +1824,14 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::Uuid>,
     ) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
         log::debug!("test_api_access_method_by_id");
         let (tx, rx) = oneshot::channel();
         let api_access_method = mullvad_types::access_method::Id::try_from(request.into_inner())?;
-        self.send_command_to_daemon(DaemonCommand::TestApiAccessMethodById(
-            tx,
-            api_access_method,
-        ))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::TestApiAccessMethodById(tx, api_access_method),
+        )?;
         self.wait_for_result(rx)
             .await?
             .map(Response::new)
@@ -1716,57 +1841,61 @@ impl ManagementService for ManagementServiceImpl {
     // Split tunneling
     //
 
-    async fn split_tunnel_is_supported(&self, _: Request<()>) -> ServiceResult<bool> {
-        #[cfg(any(target_os = "linux", target_os = "windows"))]
-        {
-            log::debug!("split_tunnel_is_supported");
-            let (tx, rx) = oneshot::channel();
-            self.send_command_to_daemon(DaemonCommand::SplitTunnelIsSupported(tx))?;
-            Ok(self.wait_for_result(rx).await.map(Response::new)?)
-        }
-        #[cfg(not(any(target_os = "linux", target_os = "windows")))]
-        {
-            log::error!("split_tunnel_is_supported is not available on this platform");
-            Ok(Response::new(false))
-        }
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    async fn split_tunnel_is_supported(&self, request: Request<()>) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
+        log::debug!("split_tunnel_is_supported");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::SplitTunnelIsSupported(tx))?;
+        Ok(self.wait_for_result(rx).await.map(Response::new)?)
     }
 
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    async fn split_tunnel_is_supported(&self, _: Request<()>) -> ServiceResult<bool> {
+        log::error!("split_tunnel_is_supported is not available on this platform");
+        Ok(Response::new(false))
+    }
+
+    #[cfg(target_os = "linux")]
+    async fn get_split_tunnel_processes(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<Self::GetSplitTunnelProcessesStream> {
+        let call = Self::call_of(&request);
+        log::debug!("get_split_tunnel_processes");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::GetSplitTunnelProcesses(tx))?;
+        let pids = self
+            .wait_for_result(rx)
+            .await?
+            .map_err(|error| Status::failed_precondition(error.to_string()))?;
+
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        tokio::spawn(async move {
+            for pid in pids {
+                let _ = tx.send(Ok(pid));
+            }
+        });
+
+        Ok(Response::new(UnboundedReceiverStream::new(rx)))
+    }
+
+    #[cfg(not(target_os = "linux"))]
     async fn get_split_tunnel_processes(
         &self,
         _: Request<()>,
     ) -> ServiceResult<Self::GetSplitTunnelProcessesStream> {
-        #[cfg(target_os = "linux")]
-        {
-            log::debug!("get_split_tunnel_processes");
-            let (tx, rx) = oneshot::channel();
-            self.send_command_to_daemon(DaemonCommand::GetSplitTunnelProcesses(tx))?;
-            let pids = self
-                .wait_for_result(rx)
-                .await?
-                .map_err(|error| Status::failed_precondition(error.to_string()))?;
-
-            let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-            tokio::spawn(async move {
-                for pid in pids {
-                    let _ = tx.send(Ok(pid));
-                }
-            });
-
-            Ok(Response::new(UnboundedReceiverStream::new(rx)))
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            let (_, rx) = tokio::sync::mpsc::unbounded_channel();
-            Ok(Response::new(UnboundedReceiverStream::new(rx)))
-        }
+        let (_, rx) = tokio::sync::mpsc::unbounded_channel();
+        Ok(Response::new(UnboundedReceiverStream::new(rx)))
     }
 
     #[cfg(target_os = "linux")]
     async fn add_split_tunnel_process(&self, request: Request<i32>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let pid = request.into_inner();
         log::debug!("add_split_tunnel_process");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::AddSplitTunnelProcess(tx, pid))?;
+        self.send_command_to_daemon(&call, DaemonCommand::AddSplitTunnelProcess(tx, pid))?;
         self.wait_for_result(rx)
             .await?
             .map_err(|error| Status::failed_precondition(error.to_string()))?;
@@ -1779,10 +1908,11 @@ impl ManagementService for ManagementServiceImpl {
 
     #[cfg(target_os = "linux")]
     async fn remove_split_tunnel_process(&self, request: Request<i32>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let pid = request.into_inner();
         log::debug!("remove_split_tunnel_process");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::RemoveSplitTunnelProcess(tx, pid))?;
+        self.send_command_to_daemon(&call, DaemonCommand::RemoveSplitTunnelProcess(tx, pid))?;
         self.wait_for_result(rx)
             .await?
             .map_err(|error| Status::failed_precondition(error.to_string()))?;
@@ -1793,30 +1923,31 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    #[cfg(target_os = "linux")]
+    async fn clear_split_tunnel_processes(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("clear_split_tunnel_processes");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::ClearSplitTunnelProcesses(tx))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(|error| Status::failed_precondition(error.to_string()))?;
+        Ok(Response::new(()))
+    }
+
+    #[cfg(not(target_os = "linux"))]
     async fn clear_split_tunnel_processes(&self, _: Request<()>) -> ServiceResult<()> {
-        #[cfg(target_os = "linux")]
-        {
-            log::debug!("clear_split_tunnel_processes");
-            let (tx, rx) = oneshot::channel();
-            self.send_command_to_daemon(DaemonCommand::ClearSplitTunnelProcesses(tx))?;
-            self.wait_for_result(rx)
-                .await?
-                .map_err(|error| Status::failed_precondition(error.to_string()))?;
-            Ok(Response::new(()))
-        }
-        #[cfg(not(target_os = "linux"))]
-        {
-            Ok(Response::new(()))
-        }
+        Ok(Response::new(()))
     }
 
     #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn add_split_tunnel_app(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         use mullvad_types::settings::SplitApp;
         log::debug!("add_split_tunnel_app");
         let path = SplitApp::from(request.into_inner());
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::AddSplitTunnelApp(tx, path))?;
+        self.send_command_to_daemon(&call, DaemonCommand::AddSplitTunnelApp(tx, path))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
@@ -1830,11 +1961,12 @@ impl ManagementService for ManagementServiceImpl {
 
     #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn remove_split_tunnel_app(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         use mullvad_types::settings::SplitApp;
         log::debug!("remove_split_tunnel_app");
         let path = SplitApp::from(request.into_inner());
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::RemoveSplitTunnelApp(tx, path))?;
+        self.send_command_to_daemon(&call, DaemonCommand::RemoveSplitTunnelApp(tx, path))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
@@ -1846,10 +1978,11 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-    async fn clear_split_tunnel_apps(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn clear_split_tunnel_apps(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("clear_split_tunnel_apps");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ClearSplitTunnelApps(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ClearSplitTunnelApps(tx))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
@@ -1862,10 +1995,11 @@ impl ManagementService for ManagementServiceImpl {
 
     #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn set_split_tunnel_state(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("set_split_tunnel_state");
         let enabled = request.into_inner();
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetSplitTunnelState(tx, enabled))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetSplitTunnelState(tx, enabled))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
@@ -1879,11 +2013,12 @@ impl ManagementService for ManagementServiceImpl {
     #[cfg(windows)]
     async fn get_excluded_processes(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::ExcludedProcessList> {
+        let call = Self::call_of(&request);
         log::debug!("get_excluded_processes");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetSplitTunnelProcesses(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetSplitTunnelProcesses(tx))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_split_tunnel_error)
@@ -1920,10 +2055,11 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     #[cfg(windows)]
-    async fn check_volumes(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn check_volumes(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("check_volumes");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::CheckVolumes(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::CheckVolumes(tx))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
@@ -1936,17 +2072,22 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn apply_json_settings(&self, blob: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&blob);
         log::debug!("apply_json_settings");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ApplyJsonSettings(tx, blob.into_inner()))?;
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::ApplyJsonSettings(tx, blob.into_inner()),
+        )?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
 
-    async fn export_json_settings(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn export_json_settings(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("export_json_settings");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::ExportJsonSettings(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::ExportJsonSettings(tx))?;
         let blob = self.wait_for_result(rx).await??;
         Ok(Response::new(blob))
     }
@@ -1954,12 +2095,13 @@ impl ManagementService for ManagementServiceImpl {
     #[cfg(target_os = "android")]
     async fn init_play_purchase(
         &self,
-        _request: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::PlayExternalObfuscatedAccountId> {
+        let call = Self::call_of(&request);
         log::debug!("init_play_purchase");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::InitPlayPurchase(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::InitPlayPurchase(tx))?;
 
         let external_obufscated_account_id = self
             .wait_for_result(rx)
@@ -1987,12 +2129,13 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::PlayPurchase>,
     ) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("verify_play_purchase");
 
         let (tx, rx) = oneshot::channel();
         let play_purchase = mullvad_types::account::PlayPurchase::try_from(request.into_inner())?;
 
-        self.send_command_to_daemon(DaemonCommand::VerifyPlayPurchase(tx, play_purchase))?;
+        self.send_command_to_daemon(&call, DaemonCommand::VerifyPlayPurchase(tx, play_purchase))?;
 
         self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
 
@@ -2007,12 +2150,13 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn get_feature_indicators(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<types::FeatureIndicators> {
+        let call = Self::call_of(&request);
         log::debug!("get_feature_indicators");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetFeatureIndicators(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetFeatureIndicators(tx))?;
 
         let feature_indicators = self
             .wait_for_result(rx)
@@ -2023,28 +2167,44 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn set_log_filter(&self, request: Request<types::LogFilter>) -> ServiceResult<()> {
-        self.log_reload_handle
-            .set_log_filter(request.into_inner().log_filter)
-            .map_err(|error| Status::invalid_argument(error.to_string()))?;
+        let call = Self::call_of(&request);
+        let log_filter = request.into_inner().log_filter;
+        let (_, applied) = self
+            .wallet_access
+            .admit_then(call.peer.as_ref(), call.class, || {
+                self.log_reload_handle.set_log_filter(log_filter)
+            })
+            .map_err(crate::rpc_access::refusal_status)?;
+        applied.map_err(|error| Status::invalid_argument(error.to_string()))?;
         Ok(Response::new(()))
     }
 
-    async fn log_listen(&self, _request: Request<()>) -> ServiceResult<Self::LogListenStream> {
+    async fn log_listen(&self, request: Request<()>) -> ServiceResult<Self::LogListenStream> {
+        let call = Self::call_of(&request);
         let mut log_stream = self.log_reload_handle.get_log_stream();
+        let wallet_access = Arc::clone(&self.wallet_access);
 
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         tokio::spawn(async move {
             loop {
-                match log_stream.recv().await {
-                    Ok(log) => {
-                        let _ = tx.send(Ok(types::LogMessage { message: log }));
-                    }
-                    Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                        let _ = tx.send(Err(Status::internal(format!("{n} lagged messages"))));
-                    }
-                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                let item = match log_stream.recv().await {
+                    // Decided per line: the log narrates the owner's use of
+                    // the VPN, and who the owner is can change under a stream
+                    // that lives as long as its client.
+                    Ok(_) if !wallet_access.may_call(call.peer.as_ref(), call.class) => {
+                        let _ = tx.send(Err(Status::permission_denied(
+                            "the daemon log is no longer this account's to read",
+                        )));
                         break;
                     }
+                    Ok(log) => Ok(types::LogMessage { message: log }),
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
+                        Err(Status::internal(format!("{n} lagged messages")))
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                };
+                if tx.send(item).is_err() {
+                    break;
                 }
             }
         });
@@ -2054,28 +2214,31 @@ impl ManagementService for ManagementServiceImpl {
     // Debug features
 
     async fn disable_relay(&self, relay: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&relay);
         log::debug!("disable_relay");
         let (tx, rx) = oneshot::channel();
         let relay = relay.into_inner();
-        self.send_command_to_daemon(DaemonCommand::DisableRelay { relay, tx })?;
+        self.send_command_to_daemon(&call, DaemonCommand::DisableRelay { relay, tx })?;
         self.wait_for_result(rx).await?;
         Ok(Response::new(()))
     }
 
     async fn enable_relay(&self, relay: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&relay);
         log::debug!("enable_relay");
         let (tx, rx) = oneshot::channel();
         let relay = relay.into_inner();
-        self.send_command_to_daemon(DaemonCommand::EnableRelay { relay, tx })?;
+        self.send_command_to_daemon(&call, DaemonCommand::EnableRelay { relay, tx })?;
         self.wait_for_result(rx).await?;
         Ok(Response::new(()))
     }
 
     #[cfg(not(target_os = "android"))]
-    async fn get_rollout_threshold(&self, _: Request<()>) -> ServiceResult<types::Rollout> {
+    async fn get_rollout_threshold(&self, request: Request<()>) -> ServiceResult<types::Rollout> {
+        let call = Self::call_of(&request);
         log::debug!("get_rollout_threshold");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetRolloutThreshold(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetRolloutThreshold(tx))?;
         let threshold = self.wait_for_result(rx).await?;
         let rollout = types::Rollout { threshold };
         Ok(Response::new(rollout))
@@ -2083,19 +2246,24 @@ impl ManagementService for ManagementServiceImpl {
 
     #[cfg(not(target_os = "android"))]
     async fn set_rollout_threshold_seed(&self, seed: Request<types::Seed>) -> ServiceResult<()> {
+        let call = Self::call_of(&seed);
         log::debug!("set_rollout_threshold_seed");
         let seed = seed.into_inner().seed;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetRolloutThresholdSeed { seed, tx })?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetRolloutThresholdSeed { seed, tx })?;
         self.wait_for_result(rx).await?;
         Ok(Response::new(()))
     }
 
     #[cfg(not(target_os = "android"))]
-    async fn regenerate_rollout_threshold(&self, _: Request<()>) -> ServiceResult<types::Rollout> {
+    async fn regenerate_rollout_threshold(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<types::Rollout> {
+        let call = Self::call_of(&request);
         log::debug!("regenerate_rollout_threshold");
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GenerateNewRolloutSeed(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GenerateNewRolloutSeed(tx))?;
         let threshold = self.wait_for_result(rx).await?;
         let rollout = types::Rollout { threshold };
         Ok(Response::new(rollout))
@@ -2118,11 +2286,12 @@ impl ManagementService for ManagementServiceImpl {
 
     // App upgrade
 
-    async fn app_upgrade(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn app_upgrade(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("app_upgrade");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::AppUpgrade(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::AppUpgrade(tx))?;
 
         self.wait_for_result(rx)
             .await?
@@ -2131,11 +2300,12 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    async fn app_upgrade_abort(&self, _: Request<()>) -> ServiceResult<()> {
+    async fn app_upgrade_abort(&self, request: Request<()>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("app_upgrade_abort");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::AppUpgradeAbort(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::AppUpgradeAbort(tx))?;
 
         self.wait_for_result(rx)
             .await?
@@ -2164,11 +2334,12 @@ impl ManagementService for ManagementServiceImpl {
         ))
     }
 
-    async fn get_app_upgrade_cache_dir(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn get_app_upgrade_cache_dir(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
         log::debug!("get_app_upgrade_cache_dir");
 
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::GetAppUpgradeCacheDir(tx))?;
+        self.send_command_to_daemon(&call, DaemonCommand::GetAppUpgradeCacheDir(tx))?;
 
         let path = self
             .wait_for_result(rx)
@@ -2182,10 +2353,11 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     async fn set_enable_recents(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         let enable_recents = request.into_inner();
         log::debug!("set_enable_recents({})", enable_recents);
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(DaemonCommand::SetEnableRecents(tx, enable_recents))?;
+        self.send_command_to_daemon(&call, DaemonCommand::SetEnableRecents(tx, enable_recents))?;
         self.wait_for_result(rx).await??;
         Ok(Response::new(()))
     }
@@ -2220,7 +2392,7 @@ impl ManagementServiceImpl {
             .await
             .map_err(|error| match error {
                 crate::wallet_access::InstallError::Refused(refusal) => {
-                    Status::permission_denied(refusal.to_string())
+                    crate::rpc_access::refusal_status(refusal)
                 }
                 crate::wallet_access::InstallError::Record(error) => {
                     log::error!("{error}");
@@ -2255,11 +2427,38 @@ impl ManagementServiceImpl {
             .flatten()
     }
 
-    /// Sends a command to the daemon and maps the error to an RPC error.
-    fn send_command_to_daemon(&self, command: DaemonCommand) -> Result<(), Status> {
-        self.daemon_tx
-            .send(command)
-            .map_err(|_| Status::internal("the daemon channel receiver has been dropped"))
+    /// The caller of `request` and the class the gate admitted it as.
+    ///
+    /// The gate attaches the class to every call it admits. A call without
+    /// one did not come through it, and is decided as the class that asks the
+    /// most of its caller.
+    fn call_of<T>(request: &Request<T>) -> Call {
+        Call {
+            peer: Self::peer_of(request),
+            class: request
+                .extensions()
+                .get::<crate::rpc_access::AdmittedClass>()
+                .map_or(crate::wallet_access::RpcClass::ControlMachine, |admitted| {
+                    admitted.0
+                }),
+        }
+    }
+
+    /// Sends a command to the daemon on behalf of `call`, deciding `call`
+    /// again first, with the ownership held until the command is queued: the
+    /// gate decided before the request body arrived, and the ownership may
+    /// have changed since.
+    fn send_command_to_daemon(&self, call: &Call, command: DaemonCommand) -> Result<(), Status> {
+        let (admission, sent) = self
+            .wallet_access
+            .admit_then(call.peer.as_ref(), call.class, || {
+                self.daemon_tx.send(command)
+            })
+            .map_err(crate::rpc_access::refusal_status)?;
+        if admission == crate::wallet_access::Admission::Claimed {
+            self.warren_status_cache.republish();
+        }
+        sent.map_err(|_| Status::internal("the daemon channel receiver has been dropped"))
     }
 
     async fn wait_for_result<T>(&self, rx: oneshot::Receiver<T>) -> Result<T, Status> {
@@ -2302,6 +2501,7 @@ impl ManagementInterfaceServer {
         let wallet_access = Arc::new(crate::wallet_access::WalletAccessControl::new(
             crate::wallet_access::OwnerStore::in_settings_dir(settings_dir),
             move || warren_identity.has_user_identity(),
+            crate::warren_signer::mnemonic_may_be_stored(settings_dir),
             crate::wallet_access::SystemConsole,
         ));
 
@@ -2756,6 +2956,20 @@ mod tests {
                 ],
                 ..Default::default()
             }),
+            relay_settings: Some(types::RelaySettings {
+                endpoint: Some(types::relay_settings::Endpoint::Custom(
+                    types::CustomRelaySettings {
+                        host: "custom.example".to_owned(),
+                        config: Some(types::WireguardConfig {
+                            tunnel: Some(types::wireguard_config::TunnelConfig {
+                                private_key: vec![7; 32],
+                                addresses: vec![],
+                            }),
+                            ..Default::default()
+                        }),
+                    },
+                )),
+            }),
             allow_lan: true,
             ..Default::default()
         }
@@ -2778,7 +2992,7 @@ mod tests {
     }
 
     /// Every local account may read the settings, and a custom proxy's
-    /// credentials are the owner's secret.
+    /// credentials and a custom relay's key are the owner's secrets.
     #[test]
     fn another_account_reads_the_settings_without_proxy_credentials() {
         use types::custom_proxy::ProxyMethod;
@@ -2797,6 +3011,16 @@ mod tests {
             ProxyMethod::Shadowsocks(shadowsocks) => assert_eq!(shadowsocks.password, ""),
             other => panic!("{other:?}"),
         }
+        let Some(types::relay_settings::Endpoint::Custom(custom)) =
+            settings.relay_settings.as_ref().unwrap().endpoint.as_ref()
+        else {
+            panic!("not a custom relay");
+        };
+        let tunnel = custom.config.as_ref().unwrap().tunnel.as_ref().unwrap();
+        assert!(
+            tunnel.private_key.is_empty(),
+            "a custom relay's private key is a secret"
+        );
         assert!(settings.allow_lan);
     }
 
@@ -2824,23 +3048,11 @@ mod tests {
         }
     }
 
-    /// The events stream is open to every local account: another account
-    /// learns that the device logged in, and not as whom.
+    /// The events stream is open to every local account: another account gets
+    /// the tunnel state, and nothing about the owner's account or device. A
+    /// device event without its account would not even decode on the client.
     #[test]
-    fn another_account_gets_device_events_without_the_account() {
-        let event = withhold_event_identity(logged_in_event(), false).expect("the event is kept");
-
-        let Some(daemon_event::Event::Device(device)) = event.event else {
-            panic!("not a device event");
-        };
-        assert_eq!(device.cause, types::device_event::Cause::LoggedIn as i32);
-        let state = device.new_state.unwrap();
-        assert_eq!(state.state, types::device_state::State::LoggedIn as i32);
-        assert_eq!(state.device, None);
-    }
-
-    #[test]
-    fn another_account_gets_no_device_removal_and_every_tunnel_state() {
+    fn another_account_gets_no_account_event_and_every_tunnel_state() {
         let removal = types::DaemonEvent {
             event: Some(daemon_event::Event::RemoveDevice(
                 types::RemoveDeviceEvent {
@@ -2849,6 +3061,7 @@ mod tests {
                 },
             )),
         };
+        assert_eq!(withhold_event_identity(logged_in_event(), false), None);
         assert_eq!(withhold_event_identity(removal, false), None);
 
         let tunnel = types::DaemonEvent {
@@ -2857,6 +3070,70 @@ mod tests {
             )),
         };
         assert_eq!(withhold_event_identity(tunnel.clone(), false), Some(tunnel));
+    }
+
+    /// Settings events are settings replies: the same secrets are withheld.
+    #[test]
+    fn another_account_gets_settings_events_without_proxy_credentials() {
+        let event = types::DaemonEvent {
+            event: Some(daemon_event::Event::Settings(settings_with_proxy_secrets())),
+        };
+
+        let Some(types::DaemonEvent {
+            event: Some(daemon_event::Event::Settings(settings)),
+        }) = withhold_event_identity(event, false)
+        else {
+            panic!("the settings event is kept");
+        };
+        let mut expected = settings_with_proxy_secrets();
+        withhold_settings_secrets(&mut expected, false);
+        assert_eq!(settings, expected);
+        assert_ne!(settings, settings_with_proxy_secrets());
+    }
+
+    /// One broadcast, two subscribers: each gets what its own caller may see,
+    /// decided against the ownership at the moment of the event.
+    #[test]
+    fn each_subscriber_gets_the_event_its_caller_may_see() {
+        let scratch = crate::wallet_access::test_support::Scratch::new("notify");
+        scratch
+            .store()
+            .save(&mullvad_management_interface::Principal::Uid(1000))
+            .unwrap();
+        let access = std::sync::Arc::new(crate::wallet_access::WalletAccessControl::new(
+            scratch.store(),
+            || true,
+            false,
+            crate::wallet_access::test_support::NoConsole,
+        ));
+        let (owner_tx, mut owner_rx) = tokio::sync::mpsc::unbounded_channel();
+        let (other_tx, mut other_rx) = tokio::sync::mpsc::unbounded_channel();
+        let broadcaster = super::ManagementInterfaceEventBroadcaster {
+            subscriptions: std::sync::Arc::new(std::sync::Mutex::new(vec![
+                super::EventsSubscriber {
+                    tx: owner_tx,
+                    peer: Some(mullvad_management_interface::PeerCredentials::unix(1000, 0)),
+                },
+                super::EventsSubscriber {
+                    tx: other_tx,
+                    peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
+                },
+            ])),
+            wallet_access: access,
+        };
+
+        broadcaster.notify(logged_in_event());
+
+        assert_eq!(owner_rx.try_recv().unwrap().unwrap(), logged_in_event());
+        assert!(
+            other_rx.try_recv().is_err(),
+            "nothing about the owner's account"
+        );
+        assert_eq!(
+            broadcaster.subscriptions.lock().unwrap().len(),
+            2,
+            "a subscriber shown nothing is still subscribed"
+        );
     }
 
     #[test]

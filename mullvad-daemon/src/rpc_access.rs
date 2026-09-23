@@ -8,11 +8,11 @@
 use std::sync::Arc;
 
 use mullvad_management_interface::{
-    PeerCredentials, RpcGate, Status,
+    Bytes, CallExtensions, Code, PeerCredentials, RpcGate, Status,
     types::{management_service_server, relay_selector_service_server},
 };
 
-use crate::wallet_access::{Admission, RpcClass, WalletAccessControl};
+use crate::wallet_access::{Admission, Refusal, RpcClass, WalletAccessControl};
 
 /// Declares the methods of one gRPC service with their classes.
 macro_rules! rpc_classes {
@@ -231,7 +231,12 @@ impl DaemonRpcGate {
 }
 
 impl RpcGate for DaemonRpcGate {
-    fn admit(&self, method: &str, peer: Option<&PeerCredentials>) -> Result<(), Status> {
+    fn admit(
+        &self,
+        method: &str,
+        peer: Option<&PeerCredentials>,
+        extensions: &mut CallExtensions,
+    ) -> Result<(), Status> {
         let Some(class) = classify(method) else {
             // A method this table does not name is one only an administrator
             // may reach, whatever it turns out to do.
@@ -242,19 +247,37 @@ impl RpcGate for DaemonRpcGate {
             return Err(Status::permission_denied("unknown method"));
         };
         match self.access.admit(peer, class) {
-            Ok(Admission::Allowed) => Ok(()),
-            Ok(Admission::Claimed) => {
-                // Until now the owner was unknown, so every status sent to this
-                // peer had its account-bound content withheld. Publish it again.
-                self.status_cache.republish();
+            Ok(admission) => {
+                if admission == Admission::Claimed {
+                    // Until now the owner was unknown, so every status sent to
+                    // this peer had its account-bound content withheld.
+                    self.status_cache.republish();
+                }
+                extensions.insert(AdmittedClass(class));
                 Ok(())
             }
             Err(refusal) => {
                 log::info!("Refused a management call ({class:?}): {refusal}");
-                Err(Status::permission_denied(refusal.to_string()))
+                Err(refusal_status(refusal))
             }
         }
     }
+}
+
+/// The class the gate admitted a call as, which the method decides on again
+/// when it acts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AdmittedClass(pub RpcClass);
+
+/// The status a refused call gets: the reason in words for people, and its
+/// [`Refusal::code`] as the details, for clients to choose their own words.
+#[must_use]
+pub fn refusal_status(refusal: Refusal) -> Status {
+    Status::with_details(
+        Code::PermissionDenied,
+        refusal.to_string(),
+        Bytes::from_static(refusal.code().as_bytes()),
+    )
 }
 
 #[cfg(test)]
@@ -355,7 +378,8 @@ mod tests {
     fn gate(owner: u32) -> (DaemonRpcGate, test_support::Scratch) {
         let scratch = test_support::Scratch::new("gate");
         scratch.store().save(&Principal::Uid(owner)).unwrap();
-        let access = WalletAccessControl::new(scratch.store(), || true, test_support::NoConsole);
+        let access =
+            WalletAccessControl::new(scratch.store(), || true, false, test_support::NoConsole);
         let gate = DaemonRpcGate::new(
             Arc::new(access),
             crate::warren_status::WarrenStatusCache::new(),
@@ -367,32 +391,58 @@ mod tests {
         format!("/{}/{method}", management_service_server::SERVICE_NAME)
     }
 
+    #[expect(
+        clippy::result_large_err,
+        reason = "the gate's own result type, returned as the gate returns it"
+    )]
+    fn admit(
+        gate: &DaemonRpcGate,
+        method: &str,
+        peer: Option<&PeerCredentials>,
+    ) -> Result<CallExtensions, Status> {
+        let mut extensions = CallExtensions::new();
+        gate.admit(&path(method), peer, &mut extensions)?;
+        Ok(extensions)
+    }
+
     /// The gate is the path from a method's name to the policy: a non-owner is
-    /// refused a control call with the message the GUI and the CLI show, and
-    /// still reads the tunnel state.
+    /// refused a control call, with words for people and a code for clients,
+    /// and still reads the tunnel state.
     #[test]
     fn the_gate_applies_the_class_of_the_method_called() {
         let (gate, _scratch) = gate(1000);
         let other = PeerCredentials::unix(1001, 0);
 
-        let refused = gate
-            .admit(&path("ConnectTunnel"), Some(&other))
-            .unwrap_err();
-        assert_eq!(
-            refused.code(),
-            mullvad_management_interface::Code::PermissionDenied
-        );
+        let refused = admit(&gate, "ConnectTunnel", Some(&other)).unwrap_err();
+        assert_eq!(refused.code(), Code::PermissionDenied);
         assert_eq!(
             refused.message(),
             "Warren is set up by another account on this computer"
         );
-        assert!(gate.admit(&path("GetTunnelState"), Some(&other)).is_ok());
+        assert_eq!(refused.details(), b"owned_by_another_account");
+        assert!(admit(&gate, "GetTunnelState", Some(&other)).is_ok());
         assert!(
-            gate.admit(
-                &path("ConnectTunnel"),
+            admit(
+                &gate,
+                "ConnectTunnel",
                 Some(&PeerCredentials::unix(1000, 0))
             )
             .is_ok()
+        );
+    }
+
+    /// What the method decides on again when it acts is the class the gate
+    /// admitted it as.
+    #[test]
+    fn an_admitted_call_carries_its_class_to_the_method() {
+        let (gate, _scratch) = gate(1000);
+        let owner = PeerCredentials::unix(1000, 0);
+
+        let extensions = admit(&gate, "GetWarrenMnemonic", Some(&owner)).unwrap();
+
+        assert_eq!(
+            extensions.get::<AdmittedClass>(),
+            Some(&AdmittedClass(RpcClass::Identity))
         );
     }
 
@@ -400,15 +450,9 @@ mod tests {
     fn a_method_without_a_class_is_for_administrators_only() {
         let (gate, _scratch) = gate(1000);
 
-        assert!(
-            gate.admit(&path("NoSuchMethod"), Some(&PeerCredentials::unix(1000, 0)))
-                .is_err()
-        );
-        assert!(gate.admit(&path("NoSuchMethod"), None).is_err());
-        assert!(
-            gate.admit(&path("NoSuchMethod"), Some(&PeerCredentials::unix(0, 0)))
-                .is_ok()
-        );
+        assert!(admit(&gate, "NoSuchMethod", Some(&PeerCredentials::unix(1000, 0))).is_err());
+        assert!(admit(&gate, "NoSuchMethod", None).is_err());
+        assert!(admit(&gate, "NoSuchMethod", Some(&PeerCredentials::unix(0, 0))).is_ok());
     }
 
     #[test]

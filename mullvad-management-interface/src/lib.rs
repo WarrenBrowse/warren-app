@@ -5,7 +5,7 @@ pub mod types;
 mod windows_pipe;
 
 use gate::Gated;
-pub use gate::RpcGate;
+pub use gate::{CallExtensions, RpcGate};
 
 #[cfg(unix)]
 use std::{env, fs, os::unix::fs::PermissionsExt};
@@ -25,7 +25,7 @@ use tonic::transport::{Server, server::Connected};
 #[cfg(not(target_os = "android"))]
 use tower::service_fn;
 
-pub use tonic::{Code, Request, Response, Status, async_trait, transport::Channel};
+pub use tonic::{Code, Request, Response, Status, async_trait, codegen::Bytes, transport::Channel};
 
 pub type ManagementServiceClient =
     types::management_service_client::ManagementServiceClient<Channel>;
@@ -869,7 +869,9 @@ mod peer_credential_tests {
             _: Request<types::relay_selector::Predicate>,
         ) -> Result<Response<types::relay_selector::RelayPartitions>, Status> {
             self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-            Ok(Response::new(types::relay_selector::RelayPartitions::default()))
+            Ok(Response::new(
+                types::relay_selector::RelayPartitions::default(),
+            ))
         }
     }
 
@@ -878,7 +880,12 @@ mod peer_credential_tests {
     struct RefuseAll(std::sync::Arc<std::sync::Mutex<Vec<Option<PeerCredentials>>>>);
 
     impl RpcGate for RefuseAll {
-        fn admit(&self, _: &str, peer: Option<&PeerCredentials>) -> Result<(), Status> {
+        fn admit(
+            &self,
+            _: &str,
+            peer: Option<&PeerCredentials>,
+            _: &mut CallExtensions,
+        ) -> Result<(), Status> {
             self.0.lock().unwrap().push(peer.cloned());
             Err(Status::permission_denied("not yours"))
         }

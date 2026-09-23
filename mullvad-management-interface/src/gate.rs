@@ -1,9 +1,11 @@
 //! Server-side admission of every management RPC.
 //!
 //! The endpoint accepts connections from every local account, so what a
-//! connection may do is decided per call, here, from the method it names and
-//! the identity the transport recorded for the connection. The decision runs
-//! on the request head, before tonic reads and decodes the body.
+//! connection may do is decided per call, from the method it names and the
+//! identity the transport recorded for the connection. This first decision
+//! runs on the request head, before tonic reads and decodes the body, so a
+//! refused caller never gets a buffer. It is not the last one: a client
+//! chooses when to send the body, so the service decides again when it acts.
 
 use std::{
     convert::Infallible,
@@ -18,6 +20,9 @@ use tonic::{
     server::NamedService,
 };
 
+/// What the gate hands on to the method with an admitted call.
+pub type CallExtensions = http::Extensions;
+
 use crate::{ManagementConnectInfo, PeerCredentials};
 
 /// Decides whether the calling peer may invoke a method.
@@ -25,12 +30,18 @@ pub trait RpcGate: Clone + Send + Sync + 'static {
     /// `method` is the full gRPC path, `/<package>.<Service>/<Method>`, and
     /// `peer` is `None` when the transport could not establish who the caller
     /// is. An `Err` is sent to the caller as the call's status, and the method
-    /// never runs.
+    /// never runs. What an admitted call puts in `extensions` reaches the
+    /// method in its `Request`.
     #[expect(
         clippy::result_large_err,
         reason = "the status is the refused call's whole response, built once per refusal"
     )]
-    fn admit(&self, method: &str, peer: Option<&PeerCredentials>) -> Result<(), Status>;
+    fn admit(
+        &self,
+        method: &str,
+        peer: Option<&PeerCredentials>,
+        extensions: &mut CallExtensions,
+    ) -> Result<(), Status>;
 }
 
 /// A tonic service whose every call is first put to an [`RpcGate`].
@@ -64,12 +75,21 @@ where
     }
 
     fn call(&mut self, request: http::Request<Body>) -> Self::Future {
-        let peer = request
-            .extensions()
+        let (mut head, body) = request.into_parts();
+        let peer = head
+            .extensions
             .get::<ManagementConnectInfo>()
-            .and_then(Option::as_ref);
-        match self.gate.admit(request.uri().path(), peer) {
-            Ok(()) => Either::Right(self.inner.call(request)),
+            .cloned()
+            .flatten();
+        let mut admitted = CallExtensions::new();
+        match self
+            .gate
+            .admit(head.uri.path(), peer.as_ref(), &mut admitted)
+        {
+            Ok(()) => {
+                head.extensions.extend(admitted);
+                Either::Right(self.inner.call(http::Request::from_parts(head, body)))
+            }
             Err(status) => Either::Left(ready(Ok(status.into_http()))),
         }
     }
@@ -91,13 +111,23 @@ mod tests {
         seen: Seen,
     }
 
+    /// What the gate attaches to a call it admits.
+    #[derive(Debug, Clone, PartialEq, Eq)]
+    struct AdmittedAs(&'static str);
+
     impl RpcGate for ListGate {
-        fn admit(&self, method: &str, peer: Option<&PeerCredentials>) -> Result<(), Status> {
+        fn admit(
+            &self,
+            method: &str,
+            peer: Option<&PeerCredentials>,
+            extensions: &mut CallExtensions,
+        ) -> Result<(), Status> {
             self.seen
                 .lock()
                 .unwrap()
                 .push((method.to_owned(), peer.cloned()));
             if self.admitted.contains(&method) {
+                extensions.insert(AdmittedAs("listed"));
                 Ok(())
             } else {
                 Err(Status::permission_denied("not yours"))
@@ -105,10 +135,12 @@ mod tests {
         }
     }
 
-    /// Stands in for a generated tonic server: counts the calls that reach it.
+    /// Stands in for a generated tonic server: counts the calls that reach it,
+    /// and keeps what the gate attached to the last one.
     #[derive(Clone, Default)]
     struct CountingMethod {
         calls: Arc<Mutex<usize>>,
+        admitted_as: Arc<Mutex<Option<AdmittedAs>>>,
     }
 
     impl Service<http::Request<Body>> for CountingMethod {
@@ -120,8 +152,9 @@ mod tests {
             Poll::Ready(Ok(()))
         }
 
-        fn call(&mut self, _: http::Request<Body>) -> Self::Future {
+        fn call(&mut self, request: http::Request<Body>) -> Self::Future {
             *self.calls.lock().unwrap() += 1;
+            *self.admitted_as.lock().unwrap() = request.extensions().get::<AdmittedAs>().cloned();
             ready(Ok(http::Response::new(Body::empty())))
         }
     }
@@ -167,8 +200,10 @@ mod tests {
         assert_eq!(status.message(), "not yours");
     }
 
+    /// The method is reached, and with it what the gate attached: that is how
+    /// the method learns the class it must decide again when it acts.
     #[tokio::test]
-    async fn an_admitted_call_reaches_the_method() {
+    async fn an_admitted_call_reaches_the_method_with_what_the_gate_attached() {
         let (mut service, _) = gated(&["/pkg.Service/Connect"]);
 
         service
@@ -177,6 +212,10 @@ mod tests {
             .unwrap();
 
         assert_eq!(*service.inner.calls.lock().unwrap(), 1);
+        assert_eq!(
+            *service.inner.admitted_as.lock().unwrap(),
+            Some(AdmittedAs("listed"))
+        );
     }
 
     /// The gate decides from the method path and from the identity the
