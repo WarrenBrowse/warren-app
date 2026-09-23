@@ -138,7 +138,7 @@ class ForumLoginPromptState {
             busy = false
             handoffToOpen = completion.handoffUrl.takeIf { plan.handoff == ForumHandoff.OPEN_AT_ONCE }
             finishUrl = completion.handoffUrl.takeIf { plan.handoff == ForumHandoff.ON_BUTTON }
-            codeRevealed = plan.screen == ForumCompletionScreen.SHOW_CODE
+            codeRevealed = plan.screen != ForumCompletionScreen.FINISHING_IN_BROWSER
             this.completion =
                 ForumCompletionView(
                     screen = plan.screen,

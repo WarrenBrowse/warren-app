@@ -4658,6 +4658,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Află când îți răspunde cineva pe forumul comunității. Dezactivarea ascunde și clopoțelul forumului."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Acest link era pentru o autentificare pe alt dispozitiv, deși nu spunea asta. Dacă cineva ți l-a trimis, încearcă să se autentifice în locul tău: nu-i da acest cod."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Această cerere de autentificare a expirat. Reia de la pagina din browser."
 

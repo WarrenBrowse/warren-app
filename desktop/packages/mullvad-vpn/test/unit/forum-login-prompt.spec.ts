@@ -139,6 +139,13 @@ describe('the completion screen of a bound approval', () => {
     expect(state.completion?.finishInBrowser).toBe(true);
   });
 
+  it('shows the code at once under the relay warning', () => {
+    const relayed: ForumLoginCodeScreen = { ...showCode, screen: 'show-code-relayed' };
+    const state = completeForumLoginAttempt(inFlight, relayed, 1_000);
+    expect(state.completion?.screen).toBe('show-code-relayed');
+    expect(state.completion?.codeRevealed).toBe(true);
+  });
+
   it('forgets the code once the session behind it is dead', () => {
     const state = completeForumLoginAttempt(inFlight, showCode, 1_000);
     expect(forumLoginCodeExpired(state, 1_000 + FORUM_LOGIN_CODE_LIFETIME_MS - 1)).toBe(false);

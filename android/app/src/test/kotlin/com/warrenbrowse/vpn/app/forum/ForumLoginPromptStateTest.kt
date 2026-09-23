@@ -128,6 +128,19 @@ class ForumLoginPromptStateTest {
     }
 
     @Test
+    fun a_same_device_approval_without_a_handoff_shows_the_code_under_the_relay_warning() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+
+        state.complete(state.begin(), first, ForumLoginCompletion(code, null), nowMillis = 1_000L)
+
+        assertEquals(ForumCompletionScreen.SHOW_CODE_RELAYED, state.completion!!.screen)
+        assertTrue(state.codeRevealed)
+        assertNull(state.takeHandoffToOpen(1_000L))
+        assertNull(state.takeFinishUrl(1_000L))
+    }
+
+    @Test
     fun a_typed_code_keeps_its_handoff_for_the_button_only() {
         val typed = forumLoginLinkFromCode(first.sid)
         val state = ForumLoginPromptState()

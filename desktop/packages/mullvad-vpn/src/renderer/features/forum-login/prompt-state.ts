@@ -80,7 +80,7 @@ export function completeForumLoginAttempt(
     notice: undefined,
     completion: {
       ...completion,
-      codeRevealed: completion.screen === 'show-code',
+      codeRevealed: completion.screen !== 'finishing-in-browser',
       expiresAt: now + FORUM_LOGIN_CODE_LIFETIME_MS,
     },
   };

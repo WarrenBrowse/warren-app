@@ -274,7 +274,7 @@ pub unsafe extern "C" fn warren_forum_login(
             use_sni: true,
         };
         let outcome = match handle.block_on(ReqwestTransport::new().execute(request)) {
-            Ok(response) => forum::outcome_for_response(response.status, &response.body),
+            Ok(response) => forum::outcome_for_response(response.status, &response.body, &sid),
             Err(_) => ForumLoginOutcome::Failed(FailReason::Transport),
         };
         envelope_cstring(outcome)

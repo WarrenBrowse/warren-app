@@ -88,6 +88,7 @@ export interface CompletionCase {
 
 export interface ForumOutcomesFixture {
   login: {
+    sid: string;
     terminal_kinds: string[];
     cases: OutcomeCase[];
     completion: {

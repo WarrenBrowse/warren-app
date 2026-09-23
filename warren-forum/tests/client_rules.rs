@@ -334,6 +334,7 @@ fn expected_completion(expect: &serde_json::Value) -> Option<(String, Option<Str
 #[test]
 fn every_login_case_classes_and_envelopes_as_the_fixture_says() {
     let outcomes = fixture("forum_outcomes.json");
+    let sid = str_of(&outcomes["login"], "sid");
     let cases = outcomes["login"]["cases"].as_array().expect("login cases");
     assert!(cases.len() >= 10);
     for case in cases {
@@ -354,7 +355,7 @@ fn every_login_case_classes_and_envelopes_as_the_fixture_says() {
             "failed" => ForumLoginOutcome::Failed(fail_reason(expect)),
             other => panic!("{name}: unknown login kind {other}"),
         };
-        let outcome = outcome_for_response(status, body.as_bytes());
+        let outcome = outcome_for_response(status, body.as_bytes(), sid);
         assert_eq!(without_completion(&outcome), expected, "{name}: outcome");
         assert_eq!(
             completion_of(&outcome),

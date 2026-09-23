@@ -5509,6 +5509,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Få besked, når nogen svarer dig på fællesskabsforummet. Slår du det fra, skjules forumklokken også."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Dette link var til et login på en anden enhed, men det stod der ikke. Hvis nogen har sendt det til dig, prøver de at logge ind som dig: Giv dem ikke denne kode."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Denne loginanmodning er udløbet. Start forfra fra browsersiden."
 

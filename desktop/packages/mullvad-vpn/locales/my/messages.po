@@ -5484,6 +5484,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "အသိုက်အဝန်း ဖိုရမ်တွင် တစ်စုံတစ်ယောက်က ပြန်စာပေးသည့်အခါ အသိပေးမည်။ ပိတ်လိုက်ပါက ဖိုရမ်ခေါင်းလောင်းကိုပါ ဖျောက်ထားမည်။"
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "ဤလင့်ခ်သည် အခြားစက်ပစ္စည်းပေါ်ရှိ ဝင်ရောက်မှုအတွက် ဖြစ်သော်လည်း ၎င်းကို ဖော်ပြထားခြင်းမရှိပါ။ တစ်စုံတစ်ယောက်က ၎င်းကို သင့်ထံ ပို့ပေးခဲ့ပါက ထိုသူသည် သင့်အဖြစ် ဝင်ရောက်ရန် ကြိုးစားနေခြင်းဖြစ်သည်။ ဤကုဒ်ကို ထိုသူအား မပေးပါနှင့်။"
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "ဤဝင်ရောက်မှုတောင်းဆိုချက် သက်တမ်းကုန်သွားပါပြီ။ ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။"
 

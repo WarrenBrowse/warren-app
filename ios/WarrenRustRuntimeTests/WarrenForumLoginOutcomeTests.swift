@@ -11,6 +11,8 @@ import XCTest
 final class WarrenForumLoginOutcomeTests: XCTestCase {
     /// The fixture's answers name the production connect host.
     private let connectHost = "connect.warrenbrowse.com"
+    /// The login the envelopes below answer.
+    private let sid = "0123456789abcdef0123456789abcdef"
 
     private func expected(_ expect: [String: Any]) throws -> WarrenForumLoginOutcome {
         switch try ClientRulesFixtures.string(expect, "kind") {
@@ -43,6 +45,7 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
     func testEveryLoginCaseDecodesItsEnvelopeAsTheFixtureSays() throws {
         let fixture = try ClientRulesFixtures.load("forum_outcomes.json")
         let login = try ClientRulesFixtures.object(fixture, "login")
+        let approvedSid = try ClientRulesFixtures.string(login, "sid")
         let cases = try ClientRulesFixtures.cases(login, "cases").filter { !ClientRulesFixtures.skippedOnIOS($0) }
         XCTAssertGreaterThanOrEqual(cases.count, 15, "only \(cases.count) login cases reached this reader")
         for testCase in cases {
@@ -50,7 +53,8 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
             let envelope = try ClientRulesFixtures.string(testCase, "envelope")
             let expect = try ClientRulesFixtures.object(testCase, "expect")
             XCTAssertEqual(
-                WarrenAccountClient.forumLoginOutcome(fromEnvelope: envelope, connectHost: connectHost),
+                WarrenAccountClient.forumLoginOutcome(
+                    fromEnvelope: envelope, sid: approvedSid, connectHost: connectHost),
                 try expected(expect), name)
         }
     }
@@ -62,7 +66,8 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
         for testCase in try ClientRulesFixtures.cases(failures, "cases") {
             let envelope = try ClientRulesFixtures.string(testCase, "envelope")
             let reason = try ClientRulesFixtures.string(testCase, "reason")
-            XCTAssertEqual(WarrenAccountClient.forumLoginOutcome(fromEnvelope: envelope), .failed(reason: reason))
+            XCTAssertEqual(
+                WarrenAccountClient.forumLoginOutcome(fromEnvelope: envelope, sid: sid), .failed(reason: reason))
         }
     }
 
@@ -86,17 +91,27 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
     func testACompletionTheCrateWouldNeverEmitIsNotTrusted() {
         // The crate validates both before they cross the FFI; the handoff is
         // opened in the browser, so the decoder refuses anything else too.
-        let sid = "0123456789abcdef0123456789abcdef"
         XCTAssertEqual(
             WarrenAccountClient.forumLoginOutcome(
-                fromEnvelope: #"{"ok":true,"completion":{"code":"42917"}}"#, connectHost: connectHost),
+                fromEnvelope: #"{"ok":true,"completion":{"code":"42917"}}"#, sid: sid, connectHost: connectHost),
             .approved(nil, nil))
         XCTAssertEqual(
             WarrenAccountClient.forumLoginOutcome(
                 fromEnvelope:
                     #"{"ok":true,"completion":{"code":"042917","handoff_url":"https://evil.example/handoff#sid=\#(sid)&code=042917"}}"#,
-                connectHost: connectHost),
+                sid: sid, connectHost: connectHost),
             .approved(nil, WarrenForumLoginCompletion(code: "042917", handoffURL: nil)))
+    }
+
+    func testAHandoffForAnotherSessionIsNotTrusted() {
+        // Opening it would finish someone else's sign-in in this phone's browser.
+        let other = "https://\(connectHost)/handoff#sid=fedcba9876543210fedcba9876543210&code=042917"
+
+        let outcome = WarrenAccountClient.forumLoginOutcome(
+            fromEnvelope: #"{"ok":true,"completion":{"code":"042917","handoff_url":"\#(other)"}}"#,
+            sid: sid, connectHost: connectHost)
+
+        XCTAssertEqual(outcome, .approved(nil, WarrenForumLoginCompletion(code: "042917", handoffURL: nil)))
     }
 
     func testACompletionPrintedToALogShowsNeitherTheCodeNorTheHandoff() {
@@ -111,10 +126,11 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
     }
 
     func testAnUnreadableEnvelopeIsAGenericFailure() {
-        XCTAssertEqual(WarrenAccountClient.forumLoginOutcome(fromEnvelope: "not json"), .failed(reason: "unknown"))
-        XCTAssertEqual(WarrenAccountClient.forumLoginOutcome(fromEnvelope: nil), .failed(reason: "unknown"))
         XCTAssertEqual(
-            WarrenAccountClient.forumLoginOutcome(fromEnvelope: #"{"ok":false,"error":"error"}"#),
+            WarrenAccountClient.forumLoginOutcome(fromEnvelope: "not json", sid: sid), .failed(reason: "unknown"))
+        XCTAssertEqual(WarrenAccountClient.forumLoginOutcome(fromEnvelope: nil, sid: sid), .failed(reason: "unknown"))
+        XCTAssertEqual(
+            WarrenAccountClient.forumLoginOutcome(fromEnvelope: #"{"ok":false,"error":"error"}"#, sid: sid),
             .failed(reason: "unknown"))
     }
 }

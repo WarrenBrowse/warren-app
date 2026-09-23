@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">Die Anmeldeseite ist in einem anderen Browser? Code anzeigen</string>
     <string name="forum_login_code_title">Dein 6-stelliger Code</string>
     <string name="forum_login_code_warning">Gib diesen Code auf der Anmeldeseite deines anderen Geräts ein. Lies ihn niemals vor und schicke ihn niemandem, auch nicht jemandem, der behauptet, von Warren zu sein.</string>
+    <string name="forum_login_code_relayed_warning">Dieser Link gehörte zu einer Anmeldung auf einem anderen Gerät, auch wenn er das nicht angab. Wenn dir jemand den Link geschickt hat, versucht diese Person, sich als du anzumelden: Gib ihr diesen Code nicht.</string>
     <string name="forum_login_finish_here">Im Browser dieses Geräts abschließen</string>
     <string name="forum_tunnel_busy">Das VPN verbindet sich gerade oder ist blockiert. Warte, bis es verbunden ist, oder trenne es, und versuche es dann erneut.</string>
 

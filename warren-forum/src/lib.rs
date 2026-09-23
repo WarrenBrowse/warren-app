@@ -506,8 +506,9 @@ impl LoginCompletion {
     }
 
     /// `https://<connect host>/handoff#sid=<sid>&code=<code>`, validated
-    /// against the allowlisted connect host and the code; `None` on a
-    /// cross-device approval or when the provider's URL failed validation.
+    /// against the allowlisted connect host, the sid of the approved login
+    /// and the code; `None` on a cross-device approval or when the provider's
+    /// URL failed validation.
     #[must_use]
     pub fn handoff_url(&self) -> Option<&str> {
         self.handoff_url.as_deref().map(String::as_str)
@@ -526,19 +527,23 @@ impl core::fmt::Debug for LoginCompletion {
     }
 }
 
-/// The completion out of an approved body, validated against the allowlisted
-/// connect host: `None` when the body carries none (a provider that predates
-/// the bound approval) or a code that is not six ASCII digits. A handoff URL
-/// that fails validation is dropped and the code kept, so the person can
-/// still type it.
+/// The completion out of the approved body of the login of `sid`, validated
+/// against the allowlisted connect host: `None` when the body carries none (a
+/// provider that predates the bound approval) or a code that is not six ASCII
+/// digits. A handoff URL that fails validation, one naming another session
+/// included, is dropped and the code kept, so the person can still type it.
 #[must_use]
-pub fn parse_login_completion(body: &[u8]) -> Option<LoginCompletion> {
-    parse_login_completion_on_host(body, connect_host())
+pub fn parse_login_completion(body: &[u8], sid: &str) -> Option<LoginCompletion> {
+    parse_login_completion_on_host(body, connect_host(), sid)
 }
 
 /// [`parse_login_completion`] against `host`, for the golden-vector replay,
 /// whose answers name a synthetic connect host.
-pub(crate) fn parse_login_completion_on_host(body: &[u8], host: &str) -> Option<LoginCompletion> {
+pub(crate) fn parse_login_completion_on_host(
+    body: &[u8],
+    host: &str,
+    sid: &str,
+) -> Option<LoginCompletion> {
     let value: serde_json::Value = serde_json::from_slice(body).ok()?;
     let completion = value.get("completion")?;
     let code = completion.get("code")?.as_str()?;
@@ -548,7 +553,7 @@ pub(crate) fn parse_login_completion_on_host(body: &[u8], host: &str) -> Option<
     let handoff_url = completion
         .get("handoff_url")
         .and_then(serde_json::Value::as_str)
-        .filter(|url| is_handoff_url(url, host, code))
+        .filter(|url| is_handoff_url(url, host, sid, code))
         .map(|url| zeroize::Zeroizing::new(url.to_owned()));
     Some(LoginCompletion {
         code: zeroize::Zeroizing::new(code.to_owned()),
@@ -560,18 +565,14 @@ fn is_completion_code(code: &str) -> bool {
     code.len() == 6 && code.bytes().all(|b| b.is_ascii_digit())
 }
 
-/// True iff `url` is exactly `https://<host>/handoff#sid=<32 lowercase hex>&code=<code>`.
-/// The sid and the code ride in the fragment, which no browser sends to a
-/// server; anything around them (a query string, a userinfo, a parameter
-/// after the code) is a URL the provider does not build.
-fn is_handoff_url(url: &str, host: &str, code: &str) -> bool {
-    let Some(fragment) = url.strip_prefix(&format!("https://{host}/handoff#sid=")) else {
-        return false;
-    };
-    let Some((sid, rest)) = fragment.split_at_checked(32) else {
-        return false;
-    };
-    is_valid_sid(sid) && rest.strip_prefix("&code=") == Some(code)
+/// True iff `url` is exactly `https://<host>/handoff#sid=<sid>&code=<code>`,
+/// `sid` being the session this login approved. The sid and the code ride in
+/// the fragment, which no browser sends to a server; anything around them (a
+/// query string, a userinfo, a parameter after the code) is a URL the provider
+/// does not build, and another session's handoff would finish somebody else's
+/// sign-in in this device's browser.
+fn is_handoff_url(url: &str, host: &str, sid: &str, code: &str) -> bool {
+    is_valid_sid(sid) && url == format!("https://{host}/handoff#sid={sid}&code={code}")
 }
 
 /// Coarse outcome of a forum-login attempt. Kotlin / Swift map
@@ -616,13 +617,13 @@ fn body_carries(body: &[u8], token: &[u8]) -> bool {
     body.windows(token.len()).any(|w| w == token)
 }
 
-/// Map an HTTP response to the outcome: 2xx approved (with the identity the
-/// body carries), 403 subscription-required, 401 carrying connect's
-/// `clock_skew` token a clock skew, 404 a dead session, anything else failed
-/// with its status.
+/// Map the HTTP response to the login of `sid` to the outcome: 2xx approved
+/// (with the identity and the completion the body carries), 403
+/// subscription-required, 401 carrying connect's `clock_skew` token a clock
+/// skew, 404 a dead session, anything else failed with its status.
 #[must_use]
-pub fn outcome_for_response(status: u16, body: &[u8]) -> ForumLoginOutcome {
-    outcome_for_response_on_host(status, body, connect_host())
+pub fn outcome_for_response(status: u16, body: &[u8], sid: &str) -> ForumLoginOutcome {
+    outcome_for_response_on_host(status, body, connect_host(), sid)
 }
 
 /// [`outcome_for_response`] with the completion validated against `host`,
@@ -631,11 +632,12 @@ pub(crate) fn outcome_for_response_on_host(
     status: u16,
     body: &[u8],
     host: &str,
+    sid: &str,
 ) -> ForumLoginOutcome {
     match status {
         200..=299 => ForumLoginOutcome::Approved {
             identity: parse_login_identity(body),
-            completion: parse_login_completion_on_host(body, host),
+            completion: parse_login_completion_on_host(body, host, sid),
         },
         403 => ForumLoginOutcome::SubscriptionRequired,
         401 if has_clock_skew_token(body) => ForumLoginOutcome::ClockSkew,
@@ -1644,12 +1646,12 @@ mod tests {
     #[test]
     fn a_bound_answer_yields_its_code_and_its_handoff() {
         let url = handoff("connect.warrenbrowse.com", SID, CODE);
-        let completion = parse_login_completion(&completion_body(CODE, Some(&url)))
+        let completion = parse_login_completion(&completion_body(CODE, Some(&url)), SID)
             .expect("a six-digit code is a completion");
         assert_eq!(completion.code(), CODE);
         assert_eq!(completion.handoff_url(), Some(url.as_str()));
 
-        let cross = parse_login_completion(&completion_body(CODE, None))
+        let cross = parse_login_completion(&completion_body(CODE, None), SID)
             .expect("the code alone is a completion");
         assert_eq!(cross.code(), CODE);
         assert_eq!(cross.handoff_url(), None);
@@ -1658,7 +1660,10 @@ mod tests {
     #[test]
     fn an_answer_without_a_usable_code_has_no_completion() {
         assert_eq!(
-            parse_login_completion(br#"{"handle":"lusab-babad-dovok","status":"approved"}"#),
+            parse_login_completion(
+                br#"{"handle":"lusab-babad-dovok","status":"approved"}"#,
+                SID
+            ),
             None
         );
         for code in [
@@ -1670,17 +1675,21 @@ mod tests {
             "\u{660}\u{664}\u{662}\u{669}\u{661}\u{667}",
         ] {
             let body = format!(r#"{{"completion":{{"code":"{code}"}},"status":"approved"}}"#);
-            assert_eq!(parse_login_completion(body.as_bytes()), None, "{code:?}");
+            assert_eq!(
+                parse_login_completion(body.as_bytes(), SID),
+                None,
+                "{code:?}"
+            );
         }
         assert_eq!(
-            parse_login_completion(br#"{"completion":{"code":42917},"status":"approved"}"#),
+            parse_login_completion(br#"{"completion":{"code":42917},"status":"approved"}"#, SID),
             None
         );
         assert_eq!(
-            parse_login_completion(br#"{"completion":"042917","status":"approved"}"#),
+            parse_login_completion(br#"{"completion":"042917","status":"approved"}"#, SID),
             None
         );
-        assert_eq!(parse_login_completion(b"not json"), None);
+        assert_eq!(parse_login_completion(b"not json", SID), None);
     }
 
     #[test]
@@ -1699,7 +1708,7 @@ mod tests {
             format!("{}&next=https://evil.example", handoff(host, SID, CODE)),
             format!("https://{host}/handoff#code={CODE}&sid={SID}"),
         ] {
-            let completion = parse_login_completion(&completion_body(CODE, Some(&url)))
+            let completion = parse_login_completion(&completion_body(CODE, Some(&url)), SID)
                 .unwrap_or_else(|| panic!("the code stands whatever the handoff: {url}"));
             assert_eq!(completion.code(), CODE, "{url}");
             assert_eq!(completion.handoff_url(), None, "{url}");
@@ -1707,9 +1716,20 @@ mod tests {
     }
 
     #[test]
+    fn a_handoff_for_another_session_is_dropped_and_the_code_kept() {
+        let url = handoff("connect.warrenbrowse.com", &"f".repeat(32), CODE);
+
+        let completion = parse_login_completion(&completion_body(CODE, Some(&url)), SID)
+            .expect("the code stands whatever the handoff");
+
+        assert_eq!(completion.code(), CODE);
+        assert_eq!(completion.handoff_url(), None);
+    }
+
+    #[test]
     fn a_2xx_login_answer_carries_the_completion() {
         let url = handoff("connect.warrenbrowse.com", SID, CODE);
-        match outcome_for_response(200, &completion_body(CODE, Some(&url))) {
+        match outcome_for_response(200, &completion_body(CODE, Some(&url)), SID) {
             ForumLoginOutcome::Approved {
                 identity: Some(identity),
                 completion: Some(completion),
@@ -1725,7 +1745,7 @@ mod tests {
     #[test]
     fn the_envelope_carries_the_completion_after_the_identity() {
         let url = handoff("connect.warrenbrowse.com", SID, CODE);
-        let bound = outcome_for_response(200, &completion_body(CODE, Some(&url)));
+        let bound = outcome_for_response(200, &completion_body(CODE, Some(&url)), SID);
         assert_eq!(
             envelope(&bound),
             format!(
@@ -1739,6 +1759,7 @@ mod tests {
                 "status": "approved",
             }))
             .expect("serialises"),
+            SID,
         );
         assert_eq!(
             envelope(&cross),
@@ -1750,7 +1771,7 @@ mod tests {
     fn a_completion_debug_print_carries_neither_the_code_nor_the_handoff() {
         let url = handoff("connect.warrenbrowse.com", SID, CODE);
         let completion =
-            parse_login_completion(&completion_body(CODE, Some(&url))).expect("completion");
+            parse_login_completion(&completion_body(CODE, Some(&url)), SID).expect("completion");
         let outcome = ForumLoginOutcome::Approved {
             identity: None,
             completion: Some(completion),
@@ -2095,19 +2116,22 @@ mod tests {
 
     #[test]
     fn status_maps_to_the_desktop_outcomes() {
-        assert_eq!(outcome_for_response(200, b""), approved(None));
-        assert_eq!(outcome_for_response(204, b""), approved(None));
+        assert_eq!(outcome_for_response(200, b"", SID), approved(None));
+        assert_eq!(outcome_for_response(204, b"", SID), approved(None));
         assert_eq!(
-            outcome_for_response(403, b""),
+            outcome_for_response(403, b"", SID),
             ForumLoginOutcome::SubscriptionRequired
         );
         assert_eq!(
-            outcome_for_response(401, b""),
+            outcome_for_response(401, b"", SID),
             ForumLoginOutcome::Failed(FailReason::Http(401))
         );
-        assert_eq!(outcome_for_response(404, b""), ForumLoginOutcome::Expired);
         assert_eq!(
-            outcome_for_response(500, b""),
+            outcome_for_response(404, b"", SID),
+            ForumLoginOutcome::Expired
+        );
+        assert_eq!(
+            outcome_for_response(500, b"", SID),
             ForumLoginOutcome::Failed(FailReason::Http(500))
         );
     }
@@ -2120,7 +2144,8 @@ mod tests {
         assert_eq!(
             outcome_for_response(
                 200,
-                br#"{"status":"approved","handle":"lusab-babad-dovok","notify_slot":42}"#
+                br#"{"status":"approved","handle":"lusab-babad-dovok","notify_slot":42}"#,
+                SID
             ),
             approved(Some(ForumIdentity {
                 handle: "lusab-babad-dovok".into(),
@@ -2130,7 +2155,8 @@ mod tests {
         assert_eq!(
             outcome_for_response(
                 200,
-                br#"{"status":"approved","handle":"lusab-babad-dovok"}"#
+                br#"{"status":"approved","handle":"lusab-babad-dovok"}"#,
+                SID
             ),
             approved(Some(ForumIdentity {
                 handle: "lusab-babad-dovok".into(),
@@ -2138,7 +2164,7 @@ mod tests {
             }))
         );
         assert_eq!(
-            outcome_for_response(200, br#"{"status":"approved","handle":"Admin Bob"}"#),
+            outcome_for_response(200, br#"{"status":"approved","handle":"Admin Bob"}"#, SID),
             approved(None)
         );
         assert!(is_forum_handle("lusab-babad-dovok"));
@@ -2153,21 +2179,21 @@ mod tests {
         // can say "fix your clock" instead of "try again in a moment", which
         // was the dead end every 2026-08-18 reporter hit.
         assert_eq!(
-            outcome_for_response(401, br#"{"error":"clock_skew"}"#),
+            outcome_for_response(401, br#"{"error":"clock_skew"}"#, SID),
             ForumLoginOutcome::ClockSkew
         );
         // The token decides, not the 401: any other body stays generic.
         assert_eq!(
-            outcome_for_response(401, b"timestamp outside accepted window"),
+            outcome_for_response(401, b"timestamp outside accepted window", SID),
             ForumLoginOutcome::Failed(FailReason::Http(401))
         );
         // And the 401 decides too: the token on another status means nothing.
         assert_eq!(
-            outcome_for_response(500, br#"{"error":"clock_skew"}"#),
+            outcome_for_response(500, br#"{"error":"clock_skew"}"#, SID),
             ForumLoginOutcome::Failed(FailReason::Http(500))
         );
         assert_eq!(
-            outcome_for_response(200, br#"{"error":"clock_skew"}"#),
+            outcome_for_response(200, br#"{"error":"clock_skew"}"#, SID),
             approved(None)
         );
     }

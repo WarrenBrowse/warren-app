@@ -557,6 +557,7 @@
     <string name="forum_login_show_code">The sign-in page is in another browser? Show the code</string>
     <string name="forum_login_code_title">Your 6-digit code</string>
     <string name="forum_login_code_warning">Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.</string>
+    <string name="forum_login_code_relayed_warning">This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code.</string>
     <string name="forum_login_finish_here">Finish in this device\'s browser</string>
     <string name="forum_tunnel_busy">The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again.</string>
 

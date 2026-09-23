@@ -5556,6 +5556,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "أعلمني عندما يرد عليك أحد في منتدى المجتمع. إيقاف هذا يخفي أيضًا جرس المنتدى."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "كان هذا الرابط لتسجيل دخول على جهاز آخر، مع أنه لم يذكر ذلك. إذا أرسله إليك أحد، فهو يحاول تسجيل الدخول باسمك: لا تعطه هذا الرمز."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "انتهت صلاحية طلب تسجيل الدخول هذا. ابدأ من جديد من صفحة المتصفح."
 

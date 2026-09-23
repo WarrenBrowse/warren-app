@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">A página de início de sessão está noutro navegador? Mostrar o código</string>
     <string name="forum_login_code_title">O seu código de 6 dígitos</string>
     <string name="forum_login_code_warning">Introduza este código na página de início de sessão do seu outro dispositivo. Nunca o leia em voz alta nem o envie a ninguém, nem mesmo a quem diga ser da Warren.</string>
+    <string name="forum_login_code_relayed_warning">Este link era para um início de sessão noutro dispositivo, embora não o indicasse. Se alguém lho enviou, está a tentar iniciar sessão como si: não lhe dê este código.</string>
     <string name="forum_login_finish_here">Concluir no navegador deste dispositivo</string>
     <string name="forum_tunnel_busy">A VPN está a ligar ou está bloqueada. Aguarda até que ligue, ou desliga-a, e tenta novamente.</string>
 

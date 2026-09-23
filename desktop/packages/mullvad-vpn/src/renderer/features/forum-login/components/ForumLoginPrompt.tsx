@@ -231,7 +231,9 @@ interface ForumLoginCompletionProps {
 // browser that opened the sign-in must present the one-time code. After a
 // same-device link main has already opened the handoff page in the default
 // browser, and the code waits behind "Show the code" for a sign-in page that
-// is in another browser. After a QR or a typed code the code is the screen.
+// is in another browser. After a QR or a typed code the code is the screen,
+// and after a same-device link the provider answered as a QR's, it comes
+// under the warning that the link was relayed.
 function ForumLoginCompletion({ completion, onReveal, onClose }: ForumLoginCompletionProps) {
   const [finishing, setFinishing] = useState(false);
   const finishInBrowser = useCallback(async () => {
@@ -284,7 +286,12 @@ function ForumLoginCompletion({ completion, onReveal, onClose }: ForumLoginCompl
               'forum-login',
               'Your browser is finishing the sign-in to the Warren community forum.',
             )
-          : undefined
+          : completion.screen === 'show-code-relayed'
+            ? messages.pgettext(
+                'forum-login',
+                'This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code.',
+              )
+            : undefined
       }
       buttons={buttons}
       close={onClose}>

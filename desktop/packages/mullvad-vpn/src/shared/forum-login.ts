@@ -47,7 +47,11 @@ export interface ForumLoginCompletion {
  */
 export const FORUM_LOGIN_CODE_LIFETIME_MS = 300_000;
 
-export type ForumCompletionScreen = 'returned-to-browser' | 'finishing-in-browser' | 'show-code';
+export type ForumCompletionScreen =
+  | 'returned-to-browser'
+  | 'finishing-in-browser'
+  | 'show-code'
+  | 'show-code-relayed';
 export type ForumHandoff = 'open-at-once' | 'on-button' | 'never';
 
 /**
@@ -55,7 +59,10 @@ export type ForumHandoff = 'open-at-once' | 'on-button' | 'never';
  * and the completion the answer carried. Pinned by the `login.completion`
  * table of `fixtures/client-rules/forum_outcomes.json`. A QR approval never
  * opens a handoff: the browser signing in is on another device, and one a
- * provider sent anyway would carry the code to this machine's browser.
+ * provider sent anyway would carry the code to this machine's browser. A
+ * same-device link answered without a handoff got the answer to a QR's id:
+ * the link lost its `xd=1` on the way, which is how a relayed approval
+ * reaches someone's own device, so the code comes with that warning.
  */
 export function forumCompletionPlan(
   approach: ForumLoginApproach,
@@ -69,7 +76,7 @@ export function forumCompletionPlan(
     case 'same-device-link':
       return hasHandoff
         ? { screen: 'finishing-in-browser', handoff: 'open-at-once' }
-        : { screen: 'show-code', handoff: 'never' };
+        : { screen: 'show-code-relayed', handoff: 'never' };
     case 'typed-code':
       return { screen: 'show-code', handoff: hasHandoff ? 'on-button' : 'never' };
     case 'cross-device-link':
@@ -83,7 +90,7 @@ export function forumCompletionPlan(
  * handoff URL itself stays in main.
  */
 export interface ForumLoginCodeScreen {
-  screen: 'finishing-in-browser' | 'show-code';
+  screen: 'finishing-in-browser' | 'show-code' | 'show-code-relayed';
   code: string;
   finishInBrowser: boolean;
 }

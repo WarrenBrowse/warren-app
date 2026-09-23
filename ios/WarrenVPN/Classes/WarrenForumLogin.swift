@@ -55,6 +55,11 @@ enum ForumCompletionScreen: String {
     case finishingInBrowser = "finishing-in-browser"
     /// The code, with the warning never to share it.
     case showCode = "show-code"
+    /// The code under the warning that the link was for a sign-in on another
+    /// device: a same-device link answered without a handoff got the answer to
+    /// a QR's id, so it lost its `xd=1` on the way, which is how a relayed
+    /// approval reaches someone's own phone.
+    case showCodeRelayed = "show-code-relayed"
 }
 
 enum ForumHandoff: String {
@@ -90,6 +95,9 @@ final class WarrenForumCompletionSession: CustomStringConvertible {
 
     /// Whether "Finish in this device's browser" has a handoff behind it.
     var offersFinishInBrowser: Bool { finishURL != nil }
+
+    /// Only the handoff screen keeps the code behind "Show the code".
+    var revealsCodeAtOnce: Bool { screen != .finishingInBrowser }
 
     func takeHandoffToOpen(at now: Date) -> String? {
         defer { handoffToOpen = nil }
@@ -199,7 +207,7 @@ enum WarrenForumLinks {
         case .sameDeviceLink:
             return hasHandoff
                 ? ForumCompletionPlan(screen: .finishingInBrowser, handoff: .openAtOnce)
-                : ForumCompletionPlan(screen: .showCode, handoff: .never)
+                : ForumCompletionPlan(screen: .showCodeRelayed, handoff: .never)
         case .typedCode:
             return ForumCompletionPlan(screen: .showCode, handoff: hasHandoff ? .onButton : .never)
         case .crossDeviceLink:
@@ -432,7 +440,9 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
     /// the browser that opened the sign-in must present the one-time code.
     /// After a same-device link the handoff page opens in the default browser
     /// at once and the code waits behind "Show the code"; after a QR or a typed
-    /// code the code is the screen. It closes with the session behind it.
+    /// code the code is the screen, and after a same-device link answered as a
+    /// QR's it comes under the warning that the link was relayed. It closes
+    /// with the session behind it.
     @MainActor
     private func presentCompletion(_ session: WarrenForumCompletionSession, on presenter: UIViewController) {
         if let url = session.takeHandoffToOpen(at: Date()).flatMap(URL.init(string:)) {
@@ -445,7 +455,7 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
         let view = WarrenForumLoginCompletionView(
             screen: session.screen,
             code: session.code,
-            codeRevealed: session.screen == .showCode,
+            codeRevealed: session.revealsCodeAtOnce,
             finishInBrowser: session.offersFinishInBrowser
                 ? {
                     if let url = session.takeFinishURL(at: Date()).flatMap(URL.init(string:)) {
@@ -499,6 +509,15 @@ struct WarrenForumLoginCompletionView: View {
                         "Your browser is finishing the sign-in to the Warren community forum.",
                         comment: "Forum login, the handoff page opened in the browser")
                 )
+                .multilineTextAlignment(.center)
+            }
+            if screen == .showCodeRelayed {
+                Text(
+                    NSLocalizedString(
+                        "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code.",
+                        comment: "Forum login, the warning over a code whose link lost its cross-device mark")
+                )
+                .foregroundColor(.red)
                 .multilineTextAlignment(.center)
             }
             if codeRevealed {

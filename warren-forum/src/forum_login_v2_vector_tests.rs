@@ -153,7 +153,7 @@ fn every_pinned_login_answer_classes_as_its_outcome() {
             continue;
         }
         let (status, body) = answer(group, name);
-        let outcome = outcome_for_response_on_host(status, body.as_bytes(), host);
+        let outcome = outcome_for_response_on_host(status, body.as_bytes(), host, sid);
         match name.as_str() {
             "approved_same_device" | "approved_cross_device" => {
                 let ForumLoginOutcome::Approved {
@@ -203,30 +203,40 @@ fn the_same_device_answer_hands_off_only_on_the_allowlisted_host() {
     let host = vector_host(&vector);
     let (status, body) = answer(&vector["responses"]["login"], "approved_same_device");
     let code = str_of(&vector["provider"], "completion_code");
+    let sid = str_of(&vector["requests"][0], "sid");
 
-    let foreign = completion_of(outcome_for_response(status, body.as_bytes()), "foreign");
+    let foreign = completion_of(
+        outcome_for_response(status, body.as_bytes(), sid),
+        "foreign",
+    );
     assert_eq!(foreign.code(), code);
     assert_eq!(foreign.handoff_url(), None);
 
     let live = body.replace(host, connect_host());
-    let completion = completion_of(outcome_for_response(status, live.as_bytes()), "live");
+    let completion = completion_of(outcome_for_response(status, live.as_bytes(), sid), "live");
     let example = str_of(&vector["handoff"], "example").replace(host, connect_host());
     assert_eq!(completion.handoff_url(), Some(example.as_str()));
 }
 
 #[test]
-fn a_handoff_in_a_query_string_or_naming_another_code_is_dropped() {
+fn a_handoff_in_a_query_string_or_naming_another_code_or_session_is_dropped() {
     let vector = load();
     let host = vector_host(&vector);
     let (_, body) = answer(&vector["responses"]["login"], "approved_same_device");
     let code = str_of(&vector["provider"], "completion_code");
+    let sid = str_of(&vector["requests"][0], "sid");
     let example = str_of(&vector["handoff"], "example");
 
     let query = body.replace(example, &example.replacen('#', "?", 1));
     let other_code = body.replace(example, &example.replace(code, "999999"));
-    for (what, tampered) in [("query string", query), ("another code", other_code)] {
+    let other_session = body.replace(example, &example.replace(sid, &"f".repeat(32)));
+    for (what, tampered) in [
+        ("query string", query),
+        ("another code", other_code),
+        ("another session", other_session),
+    ] {
         assert_ne!(tampered, body, "{what}: the substitution applied");
-        let completion = parse_login_completion_on_host(tampered.as_bytes(), host)
+        let completion = parse_login_completion_on_host(tampered.as_bytes(), host, sid)
             .unwrap_or_else(|| panic!("{what}: the code stands"));
         assert_eq!(completion.code(), code, "{what}");
         assert_eq!(completion.handoff_url(), None, "{what}");
@@ -236,9 +246,10 @@ fn a_handoff_in_a_query_string_or_naming_another_code_is_dropped() {
 #[test]
 fn the_answer_of_a_provider_that_predates_the_bound_approval_has_no_completion() {
     let v1 = read(V1_VECTOR_PATH);
+    let sid = str_of(&v1["requests"][0], "sid");
     let (status, body) = answer(&v1["responses"]["login"], "approved");
-    assert_eq!(parse_login_completion(body.as_bytes()), None);
-    match outcome_for_response(status, body.as_bytes()) {
+    assert_eq!(parse_login_completion(body.as_bytes(), sid), None);
+    match outcome_for_response(status, body.as_bytes(), sid) {
         ForumLoginOutcome::Approved {
             identity: Some(_),
             completion: None,

@@ -5509,6 +5509,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Topluluk forumunda biri size yanıt verdiğinde haberdar olun. Kapatmak forum zilini de gizler."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Bu bağlantı başka bir cihazdaki bir oturum açma içindi, ancak bunu belirtmiyordu. Bunu size biri gönderdiyse, sizin adınıza oturum açmaya çalışıyor: bu kodu ona vermeyin."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Bu oturum açma isteğinin süresi doldu. Tarayıcı sayfasından yeniden başlayın."
 

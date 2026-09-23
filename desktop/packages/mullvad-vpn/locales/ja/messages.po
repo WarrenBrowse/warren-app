@@ -5481,6 +5481,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "コミュニティフォーラムで誰かが返信したときに知らせます。オフにするとフォーラムのベルも非表示になります。"
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "このリンクは別のデバイスでのサインイン用でしたが、そのことが示されていませんでした。誰かから送られてきた場合、その人はあなたとしてサインインしようとしています。このコードを渡さないでください。"
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "このサインイン要求は期限切れです。ブラウザのページからやり直してください。"
 

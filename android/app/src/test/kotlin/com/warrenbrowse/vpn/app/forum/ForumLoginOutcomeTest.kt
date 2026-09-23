@@ -16,11 +16,14 @@ import org.junit.jupiter.api.Test
 
 class ForumLoginOutcomeTest {
 
+    /** The login every envelope below answers. */
+    private val approvedSid = "0123456789abcdef0123456789abcdef"
+
     @Test
     fun ok_maps_to_approved() {
         assertEquals(
             WarrenForumLoginOutcome.Approved(identity = null),
-            parseForumLoginOutcome("""{"ok":true}"""),
+            parseForumLoginOutcome("""{"ok":true}""", approvedSid),
         )
     }
 
@@ -28,7 +31,7 @@ class ForumLoginOutcomeTest {
     fun subscription_required_error_is_recognised() {
         assertEquals(
             WarrenForumLoginOutcome.SubscriptionRequired,
-            parseForumLoginOutcome("""{"ok":false,"error":"subscription-required"}"""),
+            parseForumLoginOutcome("""{"ok":false,"error":"subscription-required"}""", approvedSid),
         )
     }
 
@@ -40,21 +43,21 @@ class ForumLoginOutcomeTest {
         // which is what every 2026-08-18 reporter was left with.
         assertEquals(
             WarrenForumLoginOutcome.ClockSkew,
-            parseForumLoginOutcome("""{"ok":false,"error":"clock-skew"}"""),
+            parseForumLoginOutcome("""{"ok":false,"error":"clock-skew"}""", approvedSid),
         )
     }
 
     @Test
     fun any_other_error_is_a_generic_failure() {
         assertTrue(
-            parseForumLoginOutcome("""{"ok":false,"error":"error"}""")
+            parseForumLoginOutcome("""{"ok":false,"error":"error"}""", approvedSid)
                 is WarrenForumLoginOutcome.Failure,
         )
     }
 
     @Test
     fun malformed_json_is_a_failure_not_a_crash() {
-        assertTrue(parseForumLoginOutcome("not json") is WarrenForumLoginOutcome.Failure)
+        assertTrue(parseForumLoginOutcome("not json", approvedSid) is WarrenForumLoginOutcome.Failure)
     }
 
     @Test
@@ -104,13 +107,13 @@ class ForumLoginOutcomeTest {
             WarrenForumLoginOutcome.Approved(
                 com.warrenbrowse.vpn.lib.model.forum.ForumIdentity("lusab-babad-dovok", 42)
             ),
-            parseForumLoginOutcome("""{"ok":true,"handle":"lusab-babad-dovok","notify_slot":42}"""),
+            parseForumLoginOutcome("""{"ok":true,"handle":"lusab-babad-dovok","notify_slot":42}""", approvedSid),
         )
         assertEquals(
             WarrenForumLoginOutcome.Approved(
                 com.warrenbrowse.vpn.lib.model.forum.ForumIdentity("lusab-babad-dovok", null)
             ),
-            parseForumLoginOutcome("""{"ok":true,"handle":"lusab-babad-dovok"}"""),
+            parseForumLoginOutcome("""{"ok":true,"handle":"lusab-babad-dovok"}""", approvedSid),
         )
     }
 
@@ -123,11 +126,11 @@ class ForumLoginOutcomeTest {
                 identity = null,
                 completion = ForumLoginCompletion("042917", handoff),
             ),
-            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"042917","handoff_url":"$handoff"}}"""),
+            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"042917","handoff_url":"$handoff"}}""", approvedSid),
         )
         assertEquals(
             WarrenForumLoginOutcome.Approved(identity = null, completion = ForumLoginCompletion("042917", null)),
-            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"042917"}}"""),
+            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"042917"}}""", approvedSid),
         )
     }
 
@@ -137,13 +140,32 @@ class ForumLoginOutcomeTest {
         // opened in the browser, so the decoder refuses anything else too.
         assertEquals(
             WarrenForumLoginOutcome.Approved(identity = null, completion = null),
-            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"42917"}}"""),
+            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"42917"}}""", approvedSid),
         )
         assertEquals(
             WarrenForumLoginOutcome.Approved(identity = null, completion = ForumLoginCompletion("042917", null)),
             parseForumLoginOutcome(
-                """{"ok":true,"completion":{"code":"042917","handoff_url":"https://evil.example/handoff#sid=0123456789abcdef0123456789abcdef&code=042917"}}"""
+                """{"ok":true,"completion":{"code":"042917","handoff_url":"https://evil.example/handoff#sid=0123456789abcdef0123456789abcdef&code=042917"}}""",
+                approvedSid,
             ),
+        )
+    }
+
+    @Test
+    fun a_handoff_for_another_session_is_not_trusted() {
+        // Opening it would finish someone else's sign-in in this device's browser.
+        val otherSession =
+            "https://connect.warrenbrowse.com/handoff#sid=fedcba9876543210fedcba9876543210&code=042917"
+
+        val outcome =
+            parseForumLoginOutcome(
+                """{"ok":true,"completion":{"code":"042917","handoff_url":"$otherSession"}}""",
+                approvedSid,
+            )
+
+        assertEquals(
+            WarrenForumLoginOutcome.Approved(identity = null, completion = ForumLoginCompletion("042917", null)),
+            outcome,
         )
     }
 
@@ -164,7 +186,7 @@ class ForumLoginOutcomeTest {
     fun an_expired_session_is_named_and_ends_the_pending_link() {
         assertEquals(
             WarrenForumLoginOutcome.Expired,
-            parseForumLoginOutcome("""{"ok":false,"error":"expired"}"""),
+            parseForumLoginOutcome("""{"ok":false,"error":"expired"}""", approvedSid),
         )
         assertTrue(isTerminalOutcome(WarrenForumLoginOutcome.Expired))
         assertEquals(
@@ -175,7 +197,7 @@ class ForumLoginOutcomeTest {
 
     @Test
     fun a_failure_keeps_its_reason_class_for_the_log_and_stays_generic_for_the_user() {
-        val outcome = parseForumLoginOutcome("""{"ok":false,"error":"error","reason":"transport"}""")
+        val outcome = parseForumLoginOutcome("""{"ok":false,"error":"error","reason":"transport"}""", approvedSid)
         assertEquals(WarrenForumLoginOutcome.Failure("transport"), outcome)
         assertEquals("transport", outcomeClass(outcome))
         assertEquals(
@@ -184,7 +206,7 @@ class ForumLoginOutcomeTest {
         )
         assertEquals(
             WarrenForumLoginOutcome.Failure("unknown"),
-            parseForumLoginOutcome("""{"ok":false,"error":"error"}"""),
+            parseForumLoginOutcome("""{"ok":false,"error":"error"}""", approvedSid),
         )
     }
 
@@ -220,7 +242,7 @@ class ForumLoginOutcomeTest {
                     "failed" -> WarrenForumLoginOutcome.Failure(expect.string("reason"))
                     else -> error("$name: unknown login kind $kind")
                 }
-            val outcome = parseForumLoginOutcome(case.string("envelope"))
+            val outcome = parseForumLoginOutcome(case.string("envelope"), login.string("sid"))
             assertEquals(expected, outcome, name)
             assertEquals(kind in terminalKinds, isTerminalOutcome(outcome), "$name: terminal")
         }
@@ -229,7 +251,7 @@ class ForumLoginOutcomeTest {
         for (case in clientSide) {
             assertEquals(
                 WarrenForumLoginOutcome.Failure(case.string("reason")),
-                parseForumLoginOutcome(case.string("envelope")),
+                parseForumLoginOutcome(case.string("envelope"), login.string("sid")),
                 case.string("name"),
             )
         }

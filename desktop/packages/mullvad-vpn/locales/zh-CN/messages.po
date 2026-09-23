@@ -5481,6 +5481,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "有人在社区论坛回复你时提醒你。关闭后也会隐藏论坛铃铛。"
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "此链接用于另一台设备上的登录，但它没有注明这一点。如果有人把它发给您，对方正试图以您的身份登录：请勿把此代码告诉对方。"
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "此登录请求已过期。请从浏览器页面重新开始。"
 

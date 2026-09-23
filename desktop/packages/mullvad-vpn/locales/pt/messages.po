@@ -5509,6 +5509,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Seja avisado quando alguém lhe responder no fórum da comunidade. Desativar também oculta o sino do fórum."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Este link era para um início de sessão noutro dispositivo, embora não o indicasse. Se alguém lho enviou, está a tentar iniciar sessão como si: não lhe dê este código."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Este pedido de início de sessão expirou. Recomece a partir da página do navegador."
 

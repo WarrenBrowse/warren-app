@@ -519,6 +519,7 @@
     <string name="forum_login_show_code">登入頁面在另一個瀏覽器中？顯示代碼</string>
     <string name="forum_login_code_title">您的 6 位數代碼</string>
     <string name="forum_login_code_warning">請在您另一台裝置的登入頁面上輸入此代碼。切勿唸出或傳送給任何人，包括自稱來自 Warren 的人。</string>
+    <string name="forum_login_code_relayed_warning">此連結用於另一台裝置上的登入，但它沒有註明這一點。如果有人把它傳給您，對方正試圖以您的身分登入：請勿把此代碼告訴對方。</string>
     <string name="forum_login_finish_here">在此裝置的瀏覽器中完成</string>
     <string name="forum_tunnel_busy">VPN 正在連線或已被封鎖。請等待其連線，或中斷連線，然後再試一次。</string>
 

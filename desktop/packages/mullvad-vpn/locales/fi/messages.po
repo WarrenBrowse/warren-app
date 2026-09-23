@@ -5509,6 +5509,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Saat tiedon, kun joku vastaa sinulle yhteisöfoorumilla. Pois päältä myös piilottaa foorumin kellon."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Tämä linkki kuului kirjautumiseen toisella laitteella, vaikka se ei kertonut sitä. Jos joku lähetti sen sinulle, hän yrittää kirjautua sinuna: älä anna hänelle tätä koodia."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Tämä kirjautumispyyntö on vanhentunut. Aloita alusta selaimen sivulta."
 

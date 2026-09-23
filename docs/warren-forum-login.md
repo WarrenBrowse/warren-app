@@ -76,14 +76,16 @@ for every platform (`login.completion` in
 | how the sid arrived | screen | handoff |
 |---|---|---|
 | deep link without `xd` | "Finishing the sign-in in your browser", the code behind "The sign-in page is in another browser? Show the code" | `handoff_url` opened in the default browser at once, once |
+| deep link without `xd`, answer without a usable handoff | the code, under the warning that the link was for a sign-in on another device and that whoever sent it is signing in as the person (the provider answers a QR's id with the code alone, so the link lost its `xd=1` on the way) | never |
 | deep link with `xd=1` (the QR) | the code, large, with the warning never to read it out or send it | never, even one the provider sent |
 | sign-in code typed under Settings | the code with the same warning, and "Finish in this device's browser" | on that button only |
 | any of them, answer without `completion` | the approval as before: the browser completes on its own (a provider that predates the code, warren-connect v0.15.8 and older) | none |
 
 The completion is validated before anything uses it: six ASCII digits, and a
 handoff URL of exactly
-`https://<connect host>/handoff#sid=<32 lowercase hex>&code=<the code>` (the
-sid and the code ride in the fragment, which reaches no server log). A code of
+`https://<connect host>/handoff#sid=<the approved sid>&code=<the code>` (the
+sid and the code ride in the fragment, which reaches no server log; another
+session's handoff would finish someone else's sign-in in this browser). A code of
 another shape drops the whole completion; a handoff of another shape is
 dropped on its own and the code kept. The Rust crate validates it for the
 mobile envelope (`parse_login_completion`), the desktop main process validates
@@ -113,6 +115,11 @@ only (`approved-bound`). Where they live per platform:
   `WarrenForumLoginCompletion`, `WarrenForumCompletionSession` holds the
   handoffs, and `WarrenForumLoginCompletionView` is the sheet; the handoff
   opens with `UIApplication.open`.
+
+The window or sheet showing the code is kept out of screenshots on every
+platform: `setContentProtection` on the desktop window from the approval until
+the screen closes or the code dies, `FLAG_SECURE` on the Android dialog, and
+the code masked on iOS whenever the app is not active.
 
 Every other answer maps as before: `400 app_update_required` (the provider
 refused an approval without `login_version`, which these clients never sign),

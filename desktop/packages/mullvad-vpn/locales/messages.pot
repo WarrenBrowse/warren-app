@@ -1667,6 +1667,10 @@ msgid "The sign-in page is in another browser? Show the code"
 msgstr ""
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr ""
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr ""
 

@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">Staat de aanmeldpagina in een andere browser? Toon de code</string>
     <string name="forum_login_code_title">Je code van 6 cijfers</string>
     <string name="forum_login_code_warning">Typ deze code op de aanmeldpagina van je andere apparaat. Lees hem nooit voor en stuur hem naar niemand, ook niet naar iemand die zegt van Warren te zijn.</string>
+    <string name="forum_login_code_relayed_warning">Deze link was voor een aanmelding op een ander apparaat, maar dat stond er niet bij. Als iemand hem je heeft gestuurd, probeert die persoon zich als jou aan te melden: geef deze code niet aan hem.</string>
     <string name="forum_login_finish_here">Afronden in de browser van dit apparaat</string>
     <string name="forum_tunnel_busy">De VPN maakt verbinding of is geblokkeerd. Wacht tot de verbinding er is, of verbreek de verbinding, en probeer het dan opnieuw.</string>
 

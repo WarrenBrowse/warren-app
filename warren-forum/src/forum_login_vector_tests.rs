@@ -240,6 +240,7 @@ fn identity(vector: &serde_json::Value) -> ForumIdentity {
 #[test]
 fn every_pinned_login_answer_classes_as_its_outcome() {
     let vector = load();
+    let sid = str_of(&vector["requests"][0], "sid");
     let group = &vector["responses"]["login"];
     let mut seen = 0;
     for name in group.as_object().expect("login answers").keys() {
@@ -260,7 +261,7 @@ fn every_pinned_login_answer_classes_as_its_outcome() {
             }
         };
         assert_eq!(
-            outcome_for_response(status, body.as_bytes()),
+            outcome_for_response(status, body.as_bytes(), sid),
             expected,
             "login answer {name}"
         );

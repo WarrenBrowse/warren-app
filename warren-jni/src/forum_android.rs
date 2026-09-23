@@ -275,7 +275,7 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> ForumLoginOutcome {
     let started = std::time::Instant::now();
     match runtime.block_on(transport.execute(request)) {
         Ok(response) => {
-            let outcome = forum::outcome_for_response(response.status, &response.body);
+            let outcome = forum::outcome_for_response(response.status, &response.body, sid);
             log::info!(
                 "forumLogin: provider answered {} in {} ms ({})",
                 response.status,

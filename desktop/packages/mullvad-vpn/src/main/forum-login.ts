@@ -186,14 +186,16 @@ export function parseForumIdentityResponse(body: unknown): ForumIdentity | undef
  * bound approval returns, and the handoff URL of a same-device one. The code
  * must be six ASCII digits or the whole completion is ignored, which leaves
  * the login on the answer of a provider that predates it. The handoff must be
- * exactly `https://<connect host>/handoff#sid=<32 lowercase hex>&code=<code>`
- * or it is dropped on its own and the code kept, so the person can still type
- * it: the URL is opened in the default browser, and anything else there (a
- * foreign host, a query string an access log would keep, a second code) is
- * not a URL the provider builds. The rules of `warren_forum::parse_login_completion`.
+ * exactly `https://<connect host>/handoff#sid=<sid>&code=<code>`, `sid` being
+ * the session this login approved, or it is dropped on its own and the code
+ * kept, so the person can still type it: the URL is opened in the default
+ * browser, and anything else there (a foreign host, a query string an access
+ * log would keep, a second code, another session) is not a URL the provider
+ * builds for this approval. The rules of `warren_forum::parse_login_completion`.
  */
 export function parseForumLoginCompletion(
   body: unknown,
+  sid: string,
   host: string = ALLOWED_CONNECT_HOSTS[0],
 ): ForumLoginCompletion | undefined {
   if (typeof body !== 'object' || body === null) {
@@ -211,18 +213,13 @@ export function parseForumLoginCompletion(
   if (typeof code !== 'string' || !/^[0-9]{6}$/.test(code)) {
     return undefined;
   }
-  return typeof handoffUrl === 'string' && isHandoffUrl(handoffUrl, host, code)
+  return typeof handoffUrl === 'string' && isHandoffUrl(handoffUrl, host, sid, code)
     ? { code, handoffUrl }
     : { code };
 }
 
-function isHandoffUrl(url: string, host: string, code: string): boolean {
-  const prefix = `https://${host}/handoff#sid=`;
-  if (!url.startsWith(prefix)) {
-    return false;
-  }
-  const rest = url.slice(prefix.length);
-  return /^[0-9a-f]{32}$/.test(rest.slice(0, 32)) && rest.slice(32) === `&code=${code}`;
+function isHandoffUrl(url: string, host: string, sid: string, code: string): boolean {
+  return /^[0-9a-f]{32}$/.test(sid) && url === `https://${host}/handoff#sid=${sid}&code=${code}`;
 }
 
 /**
@@ -481,7 +478,7 @@ export async function approveForumLogin(
     } catch {
       body = undefined;
     }
-    const completion = parseForumLoginCompletion(body);
+    const completion = parseForumLoginCompletion(body, request.sid);
     // The class only: the code and the handoff URL are live credentials.
     log.info(
       `Forum login: signed challenge accepted by the provider (${

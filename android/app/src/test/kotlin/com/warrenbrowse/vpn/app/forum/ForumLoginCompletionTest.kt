@@ -32,7 +32,7 @@ class ForumLoginCompletionTest {
             val name = case.string("name")
             val answer = answers[case.string("answer")] ?: error("$name: no login case ${case.string("answer")}")
             val approach = ForumLoginApproach.entries.single { it.token == case.string("approach") }
-            val outcome = parseForumLoginOutcome(answer.string("envelope"))
+            val outcome = parseForumLoginOutcome(answer.string("envelope"), login.string("sid"))
             check(outcome is WarrenForumLoginOutcome.Approved) { "$name: the answer is an approval" }
             val plan = forumCompletionPlan(approach, outcome.completion)
             val expect = case["expect"]!!.jsonObject

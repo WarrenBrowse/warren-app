@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">Är inloggningssidan i en annan webbläsare? Visa koden</string>
     <string name="forum_login_code_title">Din 6-siffriga kod</string>
     <string name="forum_login_code_warning">Skriv in koden på inloggningssidan på din andra enhet. Läs aldrig upp den och skicka den aldrig till någon, inte ens till någon som säger att de är från Warren.</string>
+    <string name="forum_login_code_relayed_warning">Den här länken gällde en inloggning på en annan enhet, men det stod inte. Om någon skickade den till dig försöker de logga in som du: ge dem inte den här koden.</string>
     <string name="forum_login_finish_here">Slutför i den här enhetens webbläsare</string>
     <string name="forum_tunnel_busy">VPN-anslutningen håller på att upprättas eller är blockerad. Vänta tills den är ansluten, eller koppla från den, och försök sedan igen.</string>
 

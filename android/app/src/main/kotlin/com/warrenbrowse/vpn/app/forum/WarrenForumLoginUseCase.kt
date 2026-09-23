@@ -137,7 +137,7 @@ class WarrenForumLoginUseCase(
                     journal.record(ForumEvent.LOGIN_RESULT, JournalField.Class("jni"))
                     return@use WarrenForumLoginOutcome.Failure("jni")
                 }
-                val outcome = parseForumLoginOutcome(rawJson)
+                val outcome = parseForumLoginOutcome(rawJson, link.sid)
                 journal.record(
                     ForumEvent.LOGIN_RESULT,
                     JournalField.Class(outcomeClass(outcome)),
@@ -194,11 +194,12 @@ internal fun outcomeClass(outcome: WarrenForumLoginOutcome): String =
     }
 
 /**
- * Map the `{"ok":..}` JNI envelope to an outcome. Pure (no JNI, no I/O) so it is
- * unit-testable off-device. Never surfaces the raw error string to the user:
- * the `reason` of a failure is a fixed class token, kept for the log only.
+ * Map the `{"ok":..}` JNI envelope of the login of [sid] to an outcome. Pure (no
+ * JNI, no I/O) so it is unit-testable off-device. Never surfaces the raw error
+ * string to the user: the `reason` of a failure is a fixed class token, kept
+ * for the log only.
  */
-internal fun parseForumLoginOutcome(rawJson: String): WarrenForumLoginOutcome =
+internal fun parseForumLoginOutcome(rawJson: String, sid: String): WarrenForumLoginOutcome =
     try {
         val root = Json.parseToJsonElement(rawJson).jsonObject
         if (root["ok"]?.jsonPrimitive?.boolean == true) {
@@ -212,6 +213,7 @@ internal fun parseForumLoginOutcome(rawJson: String): WarrenForumLoginOutcome =
                         forumLoginCompletionOf(
                             code = it["code"]?.jsonPrimitive?.content,
                             handoffUrl = it["handoff_url"]?.jsonPrimitive?.content,
+                            sid = sid,
                         )
                     },
             )

@@ -1,7 +1,9 @@
 {
   "_comment": "How every client classes the connect broker's answer to a forum login and to an in-app report, and the FFI envelope the shared Rust crate hands the mobile decoders for each outcome. status and body are the broker's HTTP answer (the bodies are the ones warren-vectors/forum_login_v1.json pins, with the production forum origin where a topic URL is involved); expect is the outcome; envelope is the exact JSON the warren-forum crate emits for it, decoded by Kotlin and Swift. Written against the behaviour at HEAD; readers and skip lists in README.md.",
-  "version": 1,
+  "version": 2,
   "login": {
+    "_sid_comment": "The sid of the login every case below answers. A reader of a body or an envelope validates it against this sid: a handoff URL naming any other is dropped and the code kept.",
+    "sid": "0123456789abcdef0123456789abcdef",
     "_kinds": ["approved", "subscription-required", "clock-skew", "expired", "failed"],
     "terminal_kinds": ["subscription-required", "clock-skew", "expired"],
     "cases": [
@@ -163,6 +165,14 @@
         "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
       },
       {
+        "name": "handoff_naming_another_sid_is_dropped",
+        "_comment": "A well-formed handoff for another session: opening it would finish someone else's sign-in in this device's browser.",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=fedcba9876543210fedcba9876543210&code=042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
         "name": "handoff_with_trailing_bytes_is_dropped",
         "status": 200,
         "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917&next=https://evil.example\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
@@ -264,9 +274,9 @@
       ]
     },
     "completion": {
-      "_comment": "Which screen an approved login leads to, from how its sid reached the app and the completion the answer carried (warren-connect docs/FORUM-LOGIN-V2.md). approach: same-device-link (a deep link without xd), cross-device-link (the QR, xd=1), typed-code (a sign-in code typed under Settings). answer names a login case above: its body for a reader of the HTTP answer, its envelope for a reader of the FFI envelope. screen: returned-to-browser (no completion: the browser completes on its own), finishing-in-browser (the handoff opens in the default browser, the code stays behind a Show the code action), show-code (the code with the warning never to share it). handoff: when the app opens the handoff URL, open-at-once, on-button (the Finish in this device's browser action) or never. A QR approval never opens a handoff, even one a provider sent.",
+      "_comment": "Which screen an approved login leads to, from how its sid reached the app and the completion the answer carried (warren-connect docs/FORUM-LOGIN-V2.md). approach: same-device-link (a deep link without xd), cross-device-link (the QR, xd=1), typed-code (a sign-in code typed under Settings). answer names a login case above: its body for a reader of the HTTP answer, its envelope for a reader of the FFI envelope. screen: returned-to-browser (no completion: the browser completes on its own), finishing-in-browser (the handoff opens in the default browser, the code stays behind a Show the code action), show-code (the code with the warning never to share it), show-code-relayed (the same, under a warning that the link belonged to a sign-in on another device: the answer to a same-device link that carries no handoff is the answer to a QR's id, so the link lost its xd=1 on the way, which is what a relayed approval looks like). handoff: when the app opens the handoff URL, open-at-once, on-button (the Finish in this device's browser action) or never. A QR approval never opens a handoff, even one a provider sent.",
       "approaches": ["same-device-link", "cross-device-link", "typed-code"],
-      "screens": ["returned-to-browser", "finishing-in-browser", "show-code"],
+      "screens": ["returned-to-browser", "finishing-in-browser", "show-code", "show-code-relayed"],
       "handoffs": ["open-at-once", "on-button", "never"],
       "code_lifetime_secs": 300,
       "cases": [
@@ -277,16 +287,22 @@
           "expect": { "screen": "finishing-in-browser", "handoff": "open-at-once" }
         },
         {
-          "name": "same_device_link_without_a_handoff_shows_the_code",
+          "name": "same_device_link_without_a_handoff_warns_of_a_relay",
           "approach": "same-device-link",
           "answer": "approved_cross_device",
-          "expect": { "screen": "show-code", "handoff": "never" }
+          "expect": { "screen": "show-code-relayed", "handoff": "never" }
         },
         {
-          "name": "same_device_link_with_a_dropped_handoff_shows_the_code",
+          "name": "same_device_link_with_a_dropped_handoff_warns_of_a_relay",
           "approach": "same-device-link",
           "answer": "handoff_on_a_foreign_host_is_dropped",
-          "expect": { "screen": "show-code", "handoff": "never" }
+          "expect": { "screen": "show-code-relayed", "handoff": "never" }
+        },
+        {
+          "name": "same_device_link_with_another_sessions_handoff_warns_of_a_relay",
+          "approach": "same-device-link",
+          "answer": "handoff_naming_another_sid_is_dropped",
+          "expect": { "screen": "show-code-relayed", "handoff": "never" }
         },
         {
           "name": "same_device_link_legacy_answer",

@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">Onko kirjautumissivu toisessa selaimessa? Näytä koodi</string>
     <string name="forum_login_code_title">6-numeroinen koodisi</string>
     <string name="forum_login_code_warning">Kirjoita tämä koodi toisen laitteesi kirjautumissivulle. Älä koskaan lue sitä ääneen tai lähetä sitä kenellekään, ei edes henkilölle, joka sanoo olevansa Warrenilta.</string>
+    <string name="forum_login_code_relayed_warning">Tämä linkki kuului kirjautumiseen toisella laitteella, vaikka se ei kertonut sitä. Jos joku lähetti sen sinulle, hän yrittää kirjautua sinuna: älä anna hänelle tätä koodia.</string>
     <string name="forum_login_finish_here">Viimeistele tämän laitteen selaimessa</string>
     <string name="forum_tunnel_busy">VPN muodostaa yhteyttä tai on estetty. Odota, kunnes yhteys on muodostettu, tai katkaise yhteys, ja yritä sitten uudelleen.</string>
 

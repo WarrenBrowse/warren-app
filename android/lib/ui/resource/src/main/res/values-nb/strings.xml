@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">Er innloggingssiden i en annen nettleser? Vis koden</string>
     <string name="forum_login_code_title">Den 6-sifrede koden din</string>
     <string name="forum_login_code_warning">Skriv inn denne koden på innloggingssiden på den andre enheten din. Les den aldri høyt, og send den aldri til noen, heller ikke til noen som sier at de er fra Warren.</string>
+    <string name="forum_login_code_relayed_warning">Denne lenken var for en innlogging på en annen enhet, men det sto ikke. Hvis noen sendte den til deg, prøver de å logge inn som deg: Ikke gi dem denne koden.</string>
     <string name="forum_login_finish_here">Fullfør i denne enhetens nettleser</string>
     <string name="forum_tunnel_busy">VPN-et kobler til eller er blokkert. Vent til det er tilkoblet, eller koble det fra, og prøv igjen.</string>
 

@@ -102186,6 +102186,154 @@
         }
       }
     },
+    "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كان هذا الرابط لتسجيل دخول على جهاز آخر، مع أنه لم يذكر ذلك. إذا أرسله إليك أحد، فهو يحاول تسجيل الدخول باسمك: لا تعطه هذا الرمز."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dette link var til et login på en anden enhed, men det stod der ikke. Hvis nogen har sendt det til dig, prøver de at logge ind som dig: Giv dem ikke denne kode."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieser Link gehörte zu einer Anmeldung auf einem anderen Gerät, auch wenn er das nicht angab. Wenn dir jemand den Link geschickt hat, versucht diese Person, sich als du anzumelden: Gib ihr diesen Code nicht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este enlace era para un inicio de sesión en otro dispositivo, aunque no lo indicaba. Si alguien te lo envió, está intentando iniciar sesión como tú: no le des este código."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این پیوند برای ورود در دستگاه دیگری بود، هرچند این را نمی‌گفت. اگر کسی آن را برایتان فرستاده، در حال تلاش برای ورود به جای شماست: این کد را به او ندهید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämä linkki kuului kirjautumiseen toisella laitteella, vaikka se ei kertonut sitä. Jos joku lähetti sen sinulle, hän yrittää kirjautua sinuna: älä anna hänelle tätä koodia."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ce lien concernait une connexion sur un autre appareil, sans l'indiquer. Si quelqu'un vous l'a envoyé, cette personne essaie de se connecter à votre place : ne lui donnez pas ce code."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo link era per un accesso su un altro dispositivo, anche se non lo diceva. Se qualcuno te l'ha inviato, sta cercando di accedere al posto tuo: non dargli questo codice."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このリンクは別のデバイスでのサインイン用でしたが、そのことが示されていませんでした。誰かから送られてきた場合、その人はあなたとしてサインインしようとしています。このコードを渡さないでください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 링크는 다른 기기의 로그인용이었지만 그렇게 표시되지 않았습니다. 누군가 이 링크를 보냈다면 그 사람이 당신으로 로그인하려는 것입니다. 이 코드를 알려 주지 마세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤလင့်ခ်သည် အခြားစက်ပစ္စည်းပေါ်ရှိ ဝင်ရောက်မှုအတွက် ဖြစ်သော်လည်း ၎င်းကို ဖော်ပြထားခြင်းမရှိပါ။ တစ်စုံတစ်ယောက်က ၎င်းကို သင့်ထံ ပို့ပေးခဲ့ပါက ထိုသူသည် သင့်အဖြစ် ဝင်ရောက်ရန် ကြိုးစားနေခြင်းဖြစ်သည်။ ဤကုဒ်ကို ထိုသူအား မပေးပါနှင့်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne lenken var for en innlogging på en annen enhet, men det sto ikke. Hvis noen sendte den til deg, prøver de å logge inn som deg: Ikke gi dem denne koden."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deze link was voor een aanmelding op een ander apparaat, maar dat stond er niet bij. Als iemand hem je heeft gestuurd, probeert die persoon zich als jou aan te melden: geef deze code niet aan hem."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ten link dotyczył logowania na innym urządzeniu, choć tego nie podawał. Jeśli ktoś ci go wysłał, próbuje zalogować się jako ty: nie podawaj mu tego kodu."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este link era para um início de sessão noutro dispositivo, embora não o indicasse. Se alguém lho enviou, está a tentar iniciar sessão como si: não lhe dê este código."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest link era pentru o autentificare pe alt dispozitiv, deși nu spunea asta. Dacă cineva ți l-a trimis, încearcă să se autentifice în locul tău: nu-i da acest cod."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Эта ссылка была для входа на другом устройстве, хотя в ней это не было указано. Если её вам кто-то прислал, этот человек пытается войти под вашим именем: не сообщайте ему этот код."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den här länken gällde en inloggning på en annan enhet, men det stod inte. Om någon skickade den till dig försöker de logga in som du: ge dem inte den här koden."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลิงก์นี้มีไว้สำหรับการลงชื่อเข้าใช้บนอุปกรณ์อื่น แต่ไม่ได้ระบุไว้ หากมีใครส่งลิงก์นี้ให้คุณ แสดงว่าผู้นั้นกำลังพยายามลงชื่อเข้าใช้ในนามของคุณ อย่าให้โค้ดนี้แก่เขา"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bağlantı başka bir cihazdaki bir oturum açma içindi, ancak bunu belirtmiyordu. Bunu size biri gönderdiyse, sizin adınıza oturum açmaya çalışıyor: bu kodu ona vermeyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Це посилання було для входу на іншому пристрої, хоча в ньому цього не зазначено. Якщо його вам хтось надіслав, ця людина намагається увійти від вашого імені: не повідомляйте їй цей код."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此链接用于另一台设备上的登录，但它没有注明这一点。如果有人把它发给您，对方正试图以您的身份登录：请勿把此代码告诉对方。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此連結用於另一台裝置上的登入，但它沒有註明這一點。如果有人把它傳給您，對方正試圖以您的身分登入：請勿把此代碼告訴對方。"
+          }
+        }
+      }
+    },
     "Finish in this device's browser": {
       "localizations": {
         "en": {

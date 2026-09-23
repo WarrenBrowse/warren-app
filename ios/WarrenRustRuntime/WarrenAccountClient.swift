@@ -106,23 +106,22 @@ public struct WarrenForumLoginCompletion: Equatable, Sendable, CustomStringConve
 
     public var debugDescription: String { description }
 
-    /// The completion of an envelope's `completion` object. The Rust crate
-    /// validated both before they crossed the FFI; the handoff is opened in the
-    /// browser, so the decoder takes nothing else either: six ASCII digits, and
-    /// exactly `https://<connect host>/handoff#sid=<32 lowercase hex>&code=<code>`.
-    static func validated(code: String?, handoffURL: String?, connectHost: String) -> Self? {
+    /// The completion of an envelope's `completion` object, for the login of
+    /// `sid`. The Rust crate validated both before they crossed the FFI; the
+    /// handoff is opened in the browser, so the decoder takes nothing else
+    /// either: six ASCII digits, and exactly
+    /// `https://<connect host>/handoff#sid=<sid>&code=<code>`. Another
+    /// session's handoff would finish someone else's sign-in in this phone's
+    /// browser, so it is dropped and the code kept.
+    static func validated(code: String?, handoffURL: String?, sid: String, connectHost: String) -> Self? {
         guard let code, code.utf8.count == 6, code.utf8.allSatisfy({ (48...57).contains($0) }) else {
             return nil
         }
-        let prefix = "https://\(connectHost)/handoff#sid="
+        let isSid =
+            sid.utf8.count == 32
+            && sid.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
         let handoff = handoffURL.flatMap { url -> String? in
-            guard url.hasPrefix(prefix) else { return nil }
-            let rest = url.dropFirst(prefix.count)
-            let sid = rest.prefix(32)
-            let isSid =
-                sid.utf8.count == 32
-                && sid.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
-            return isSid && rest.dropFirst(32) == "&code=\(code)" ? url : nil
+            isSid && url == "https://\(connectHost)/handoff#sid=\(sid)&code=\(code)" ? url : nil
         }
         return Self(code: code, handoffURL: handoff)
     }
@@ -403,10 +402,11 @@ public enum WarrenAccountClient {
         }
         guard let raw else { return .failed(reason: "runtime") }
         defer { warren_wallet_free_mnemonic(raw) }
-        return forumLoginOutcome(fromEnvelope: String(cString: raw))
+        return forumLoginOutcome(fromEnvelope: String(cString: raw), sid: sid)
     }
 
-    /// Maps the `warren_forum_login` JSON envelope to an outcome. The shapes
+    /// Maps the `warren_forum_login` JSON envelope of the login of `sid` to an
+    /// outcome. The shapes
     /// are single-sourced in the Rust `warren-forum` crate and pinned by the
     /// `envelope` column of `fixtures/client-rules/forum_outcomes.json`:
     /// `{"ok":true}` with the additive `handle`, `notify_slot` and `completion`, or
@@ -416,6 +416,7 @@ public enum WarrenAccountClient {
     /// mapping is unit-tested off-device.
     public static func forumLoginOutcome(
         fromEnvelope envelope: String?,
+        sid: String,
         connectHost: String = WarrenProductAnchors.current.connectHost
     ) -> WarrenForumLoginOutcome {
         guard let envelope,
@@ -434,6 +435,7 @@ public enum WarrenAccountClient {
                 WarrenForumLoginCompletion.validated(
                     code: completion["code"] as? String,
                     handoffURL: completion["handoff_url"] as? String,
+                    sid: sid,
                     connectHost: connectHost)
             }
             return .approved(identity, completion)

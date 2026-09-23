@@ -102,6 +102,9 @@ which readers ignore. A case may carry `"skip": ["desktop", "android", "ios",
 
 ### `forum_outcomes.json`
 
+- `login.sid`: the session every login case answers. A reader passes it to its
+  parser, which drops a handoff URL naming any other session and keeps the
+  code (version 2).
 - `login.cases[]`: `{name, status, body, expect, envelope, skip?}`. `status`
   and `body` are the broker's answer to `POST /v1/forum/login`; `expect` is
   `{kind, handle?, notify_slot?, completion?, reason?}` with `kind` in
@@ -109,8 +112,8 @@ which readers ignore. A case may carry `"skip": ["desktop", "android", "ios",
   failure); `completion` is `{code, handoff_url?}`, what a bound approval
   hands back once validated (warren-connect `docs/FORUM-LOGIN-V2.md`: six
   ASCII digits, and a handoff URL of exactly
-  `https://<connect host>/handoff#sid=<32 lowercase hex>&code=<the code>`,
-  dropped on its own when it is anything else); `envelope` is the exact JSON
+  `https://<connect host>/handoff#sid=<login.sid>&code=<the code>`, dropped on
+  its own when it is anything else); `envelope` is the exact JSON
   the shared crate hands the mobile decoders.
 - `login.terminal_kinds`: the outcomes after which the pending link is spent
   and the prompt must not offer a retry.
@@ -124,8 +127,10 @@ which readers ignore. A case may carry `"skip": ["desktop", "android", "ios",
   a reader of the HTTP answer, its `envelope` for a reader of the FFI
   envelope), `expect` `{screen, handoff}` with `screen` in `screens`
   (`returned-to-browser` without a completion, `finishing-in-browser`,
-  `show-code`) and `handoff` in `handoffs` (`open-at-once`, `on-button`,
-  `never`). `code_lifetime_secs` is how long after the answer a client may
+  `show-code`, and `show-code-relayed` for a same-device link answered
+  without a handoff, which is the answer to a QR's id reaching the app with
+  its `xd=1` stripped) and `handoff` in `handoffs` (`open-at-once`,
+  `on-button`, `never`). `code_lifetime_secs` is how long after the answer a client may
   still show the code (the session's own lifetime).
 - `report.cases[]`: same shape for `POST /v1/forum/report`; `expect` is
   `{kind, topic_id?, topic_url?, logs?, handle?, notify_slot?, reason?}` with

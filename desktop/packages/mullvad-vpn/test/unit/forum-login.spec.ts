@@ -448,7 +448,7 @@ describe('the completion of a bound approval', () => {
         expected.completion === undefined
           ? undefined
           : { code: expected.completion.code, handoffUrl: expected.completion.handoff_url };
-      expect(parseForumLoginCompletion(parsedBody(body)), name).toEqual(wanted);
+      expect(parseForumLoginCompletion(parsedBody(body), outcomes.login.sid), name).toEqual(wanted);
     }
   });
 
@@ -462,7 +462,7 @@ describe('the completion of a bound approval', () => {
       expect(completion.approaches).toContain(fixtureCase.approach);
       const plan = forumCompletionPlan(
         fixtureCase.approach as ForumLoginApproach,
-        parseForumLoginCompletion(parsedBody(answer!.body)),
+        parseForumLoginCompletion(parsedBody(answer!.body), outcomes.login.sid),
       );
       expect(plan, fixtureCase.name).toEqual(fixtureCase.expect);
     }
@@ -494,6 +494,17 @@ describe('the completion of a bound approval', () => {
     expect(plan.openAtOnce).toBeUndefined();
     expect(plan.onButton).toBeUndefined();
     expect(plan.approval.completion).toEqual({ screen: 'show-code', code, finishInBrowser: false });
+  });
+
+  it('shows the code under the relay warning when a same-device link gets no handoff', () => {
+    const plan = planForumLoginApproval(link, { code });
+    expect(plan.openAtOnce).toBeUndefined();
+    expect(plan.onButton).toBeUndefined();
+    expect(plan.approval.completion).toEqual({
+      screen: 'show-code-relayed',
+      code,
+      finishInBrowser: false,
+    });
   });
 
   it('returns the legacy approval when the provider predates the code', () => {

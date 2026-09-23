@@ -22,6 +22,13 @@ enum class ForumCompletionScreen(val token: String) {
     FINISHING_IN_BROWSER("finishing-in-browser"),
     /** The code, with the warning never to share it. */
     SHOW_CODE("show-code"),
+    /**
+     * The code under the warning that the link was for a sign-in on another
+     * device: a same-device link answered without a handoff got the answer to
+     * a QR's id, so it lost its `xd=1` on the way, which is how a relayed
+     * approval reaches someone's own phone.
+     */
+    SHOW_CODE_RELAYED("show-code-relayed"),
 }
 
 enum class ForumHandoff(val token: String) {
@@ -50,7 +57,7 @@ fun forumCompletionPlan(
             if (hasHandoff) {
                 ForumCompletionPlan(ForumCompletionScreen.FINISHING_IN_BROWSER, ForumHandoff.OPEN_AT_ONCE)
             } else {
-                ForumCompletionPlan(ForumCompletionScreen.SHOW_CODE, ForumHandoff.NEVER)
+                ForumCompletionPlan(ForumCompletionScreen.SHOW_CODE_RELAYED, ForumHandoff.NEVER)
             }
         ForumLoginApproach.TYPED_CODE ->
             ForumCompletionPlan(
@@ -67,18 +74,23 @@ fun forumCompletionPlan(
 // The crate validated both before they crossed the FFI; the handoff is opened
 // in the default browser, so the decoder takes nothing else either.
 private val COMPLETION_CODE = Regex("^[0-9]{6}$")
-private const val HANDOFF_PREFIX = "https://$ALLOWED_CONNECT_HOST/handoff#sid="
-private const val SID_LENGTH = 32
 
-/** The completion of the envelope's `completion` object, or null when it is absent or malformed. */
-internal fun forumLoginCompletionOf(code: String?, handoffUrl: String?): ForumLoginCompletion? {
+/**
+ * The completion of the envelope's `completion` object for the login of [sid],
+ * or null when it is absent or malformed. A handoff that is not exactly this
+ * session's is dropped and the code kept: another session's would finish
+ * someone else's sign-in in this device's browser.
+ */
+internal fun forumLoginCompletionOf(
+    code: String?,
+    handoffUrl: String?,
+    sid: String,
+): ForumLoginCompletion? {
     if (code == null || !COMPLETION_CODE.matches(code)) return null
     val handoff =
         handoffUrl?.takeIf { url ->
-            url.startsWith(HANDOFF_PREFIX) &&
-                url.removePrefix(HANDOFF_PREFIX).let { rest ->
-                    FORUM_SID_REGEX.matches(rest.take(SID_LENGTH)) && rest.drop(SID_LENGTH) == "&code=$code"
-                }
+            FORUM_SID_REGEX.matches(sid) &&
+                url == "https://$ALLOWED_CONNECT_HOST/handoff#sid=$sid&code=$code"
         }
     return ForumLoginCompletion(code, handoff)
 }

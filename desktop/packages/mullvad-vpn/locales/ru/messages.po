@@ -5539,6 +5539,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Получайте уведомление, когда вам отвечают на форуме сообщества. Выключение также скрывает колокольчик форума."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Эта ссылка была для входа на другом устройстве, хотя в ней это не было указано. Если её вам кто-то прислал, этот человек пытается войти под вашим именем: не сообщайте ему этот код."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Этот запрос на вход истёк. Начните заново со страницы браузера."
 

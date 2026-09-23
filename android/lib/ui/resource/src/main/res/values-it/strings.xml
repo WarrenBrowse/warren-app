@@ -522,6 +522,7 @@
     <string name="forum_login_show_code">La pagina di accesso è in un altro browser? Mostra il codice</string>
     <string name="forum_login_code_title">Il tuo codice di 6 cifre</string>
     <string name="forum_login_code_warning">Digita questo codice nella pagina di accesso dell\'altro dispositivo. Non leggerlo mai ad alta voce e non inviarlo a nessuno, nemmeno a chi dice di essere di Warren.</string>
+    <string name="forum_login_code_relayed_warning">Questo link era per un accesso su un altro dispositivo, anche se non lo diceva. Se qualcuno te l\'ha inviato, sta cercando di accedere al posto tuo: non dargli questo codice.</string>
     <string name="forum_login_finish_here">Completa nel browser di questo dispositivo</string>
     <string name="forum_tunnel_busy">La VPN si sta connettendo o è bloccata. Attendi che si connetta, oppure disconnettila, poi riprova.</string>
 

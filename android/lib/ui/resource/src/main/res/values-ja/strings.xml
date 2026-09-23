@@ -519,6 +519,7 @@
     <string name="forum_login_show_code">サインインページが別のブラウザにありますか？コードを表示</string>
     <string name="forum_login_code_title">6 桁のコード</string>
     <string name="forum_login_code_warning">このコードをもう一方のデバイスのサインインページに入力してください。読み上げたり、誰かに送ったりしないでください。Warren を名乗る人に対しても同様です。</string>
+    <string name="forum_login_code_relayed_warning">このリンクは別のデバイスでのサインイン用でしたが、そのことが示されていませんでした。誰かから送られてきた場合、その人はあなたとしてサインインしようとしています。このコードを渡さないでください。</string>
     <string name="forum_login_finish_here">このデバイスのブラウザで完了</string>
     <string name="forum_tunnel_busy">VPNは接続中またはブロック中です。接続されるまで待つか、切断してから、もう一度お試しください。</string>
 

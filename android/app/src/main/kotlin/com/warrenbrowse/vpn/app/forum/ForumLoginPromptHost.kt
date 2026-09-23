@@ -204,8 +204,9 @@ private const val EXPIRY_CHECK_MILLIS = 1_000L
  * the browser that opened the sign-in must present the one-time code. After a
  * same-device link the handoff page is already open in the browser and the
  * code waits behind "Show the code"; after a QR or a typed code the code is
- * the screen. The code is never copied for the person: one on the clipboard
- * is one paste away from a chat window.
+ * the screen, and after a same-device link answered as a QR's it comes under
+ * the warning that the link was relayed. The code is never copied for the
+ * person: one on the clipboard is one paste away from a chat window.
  */
 @Composable
 private fun CompletionDialog(
@@ -232,6 +233,12 @@ private fun CompletionDialog(
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
                 if (finishing) Text(stringResource(R.string.forum_login_handoff_body))
+                if (view.screen == ForumCompletionScreen.SHOW_CODE_RELAYED) {
+                    Text(
+                        text = stringResource(R.string.forum_login_code_relayed_warning),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 if (codeRevealed) {
                     Text(
                         text = view.code,

@@ -5509,6 +5509,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Krijg bericht wanneer iemand je antwoordt op het communityforum. Uitschakelen verbergt ook de forumbel."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Deze link was voor een aanmelding op een ander apparaat, maar dat stond er niet bij. Als iemand hem je heeft gestuurd, probeert die persoon zich als jou aan te melden: geef deze code niet aan hem."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Dit aanmeldverzoek is verlopen. Begin opnieuw vanaf de browserpagina."
 

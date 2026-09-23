@@ -161,6 +161,7 @@ final class WarrenForumLinkTests: XCTestCase {
             uniqueKeysWithValues: ClientRulesFixtures.cases(login, "cases").map {
                 (try ClientRulesFixtures.string($0, "name"), $0)
             })
+        let approvedSid = try ClientRulesFixtures.string(login, "sid")
         XCTAssertEqual(
             Set(try XCTUnwrap(completion["approaches"] as? [String])),
             Set(ForumLoginApproach.allCases.map(\.rawValue)))
@@ -173,7 +174,8 @@ final class WarrenForumLinkTests: XCTestCase {
                 ForumLoginApproach(rawValue: try ClientRulesFixtures.string(testCase, "approach")), name)
             guard
                 case .approved(_, let decoded) = WarrenAccountClient.forumLoginOutcome(
-                    fromEnvelope: try ClientRulesFixtures.string(answer, "envelope"), connectHost: allowedHost)
+                    fromEnvelope: try ClientRulesFixtures.string(answer, "envelope"), sid: approvedSid,
+                    connectHost: allowedHost)
             else { return XCTFail("\(name): the answer is an approval") }
             let plan = WarrenForumLinks.completionPlan(approach: approach, completion: decoded)
             let expect = try ClientRulesFixtures.object(testCase, "expect")
@@ -213,6 +215,19 @@ final class WarrenForumLinkTests: XCTestCase {
         XCTAssertNil(qr.takeHandoffToOpen(at: received))
         XCTAssertEqual(qr.offersFinishInBrowser, false)
         XCTAssertFalse(String(describing: qr).contains("042917"))
+    }
+
+    func testASameDeviceLinkWithoutAHandoffShowsTheCodeUnderTheRelayWarning() {
+        let sid = "0123456789abcdef0123456789abcdef"
+        let link = ForumLoginLink(sid: sid, host: allowedHost, crossDevice: false)
+
+        let session = WarrenForumCompletionSession(
+            link: link, completion: WarrenForumLoginCompletion(code: "042917", handoffURL: nil),
+            receivedAt: Date(timeIntervalSince1970: 1_000))
+
+        XCTAssertEqual(session.screen, .showCodeRelayed)
+        XCTAssertTrue(session.revealsCodeAtOnce)
+        XCTAssertNil(session.takeHandoffToOpen(at: Date(timeIntervalSince1970: 1_000)))
     }
 
     func testTheSceneHandsTheFlowAURLAsItsAbsoluteString() throws {

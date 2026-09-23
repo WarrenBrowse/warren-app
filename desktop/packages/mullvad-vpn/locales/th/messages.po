@@ -5481,6 +5481,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "รับการแจ้งเตือนเมื่อมีคนตอบกลับคุณในฟอรัมชุมชน การปิดจะซ่อนกระดิ่งฟอรัมด้วย"
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "ลิงก์นี้มีไว้สำหรับการลงชื่อเข้าใช้บนอุปกรณ์อื่น แต่ไม่ได้ระบุไว้ หากมีใครส่งลิงก์นี้ให้คุณ แสดงว่าผู้นั้นกำลังพยายามลงชื่อเข้าใช้ในนามของคุณ อย่าให้โค้ดนี้แก่เขา"
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "คำขอลงชื่อเข้าใช้นี้หมดอายุแล้ว เริ่มใหม่จากหน้าเบราว์เซอร์"
 

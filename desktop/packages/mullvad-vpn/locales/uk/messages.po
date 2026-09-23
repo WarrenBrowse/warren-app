@@ -5539,6 +5539,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Отримуйте сповіщення, коли вам відповідають на форумі спільноти. Вимкнення також ховає дзвіночок форуму."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Це посилання було для входу на іншому пристрої, хоча в ньому цього не зазначено. Якщо його вам хтось надіслав, ця людина намагається увійти від вашого імені: не повідомляйте їй цей код."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Цей запит на вхід прострочено. Почніть знову зі сторінки браузера."
 

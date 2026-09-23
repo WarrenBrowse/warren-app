@@ -534,6 +534,7 @@
     <string name="forum_login_show_code">صفحة تسجيل الدخول في متصفح آخر؟ اعرض الرمز</string>
     <string name="forum_login_code_title">رمزك المكوّن من 6 أرقام</string>
     <string name="forum_login_code_warning">اكتب هذا الرمز في صفحة تسجيل الدخول على جهازك الآخر. لا تقرأه بصوت عالٍ ولا ترسله إلى أي أحد، ولا حتى إلى من يدّعي أنه من Warren.</string>
+    <string name="forum_login_code_relayed_warning">كان هذا الرابط لتسجيل دخول على جهاز آخر، مع أنه لم يذكر ذلك. إذا أرسله إليك أحد، فهو يحاول تسجيل الدخول باسمك: لا تعطه هذا الرمز.</string>
     <string name="forum_login_finish_here">أكمل في متصفح هذا الجهاز</string>
     <string name="forum_tunnel_busy">الشبكة الافتراضية الخاصة قيد الاتصال أو محظورة. انتظر حتى تتصل، أو افصلها، ثم حاول مرة أخرى.</string>
 

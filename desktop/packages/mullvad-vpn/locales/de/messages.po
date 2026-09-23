@@ -5510,6 +5510,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Erfahre, wenn dir jemand im Community-Forum antwortet. Ausgeschaltet wird auch die Forumsglocke ausgeblendet."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Dieser Link gehörte zu einer Anmeldung auf einem anderen Gerät, auch wenn er das nicht angab. Wenn dir jemand den Link geschickt hat, versucht diese Person, sich als du anzumelden: Gib ihr diesen Code nicht."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Diese Anmeldeanfrage ist abgelaufen. Beginnen Sie erneut auf der Browserseite."
 

@@ -5481,6 +5481,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "커뮤니티 포럼에서 누군가 답글을 남기면 알려줍니다. 끄면 포럼 종 아이콘도 숨겨집니다."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "이 링크는 다른 기기의 로그인용이었지만 그렇게 표시되지 않았습니다. 누군가 이 링크를 보냈다면 그 사람이 당신으로 로그인하려는 것입니다. 이 코드를 알려 주지 마세요."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "이 로그인 요청이 만료되었습니다. 브라우저 페이지에서 다시 시작하세요."
 

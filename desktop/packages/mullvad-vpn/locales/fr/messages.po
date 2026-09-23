@@ -4662,6 +4662,10 @@ msgid "Be told when someone replies to you on the community forum. Turning this 
 msgstr "Soyez prévenu quand quelqu'un vous répond sur le forum communautaire. Désactiver masque aussi la cloche du forum."
 
 msgctxt "forum-login"
+msgid "This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code."
+msgstr "Ce lien concernait une connexion sur un autre appareil, sans l'indiquer. Si quelqu'un vous l'a envoyé, cette personne essaie de se connecter à votre place : ne lui donnez pas ce code."
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr "Cette demande de connexion a expiré. Recommencez depuis la page du navigateur."
 

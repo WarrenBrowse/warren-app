@@ -519,6 +519,7 @@
     <string name="forum_login_show_code">로그인 페이지가 다른 브라우저에 있나요? 코드 보기</string>
     <string name="forum_login_code_title">6자리 코드</string>
     <string name="forum_login_code_warning">이 코드를 다른 기기의 로그인 페이지에 입력하세요. Warren 직원이라고 말하는 사람을 포함해 누구에게도 이 코드를 읽어 주거나 보내지 마세요.</string>
+    <string name="forum_login_code_relayed_warning">이 링크는 다른 기기의 로그인용이었지만 그렇게 표시되지 않았습니다. 누군가 이 링크를 보냈다면 그 사람이 당신으로 로그인하려는 것입니다. 이 코드를 알려 주지 마세요.</string>
     <string name="forum_login_finish_here">이 기기의 브라우저에서 완료</string>
     <string name="forum_tunnel_busy">VPN이 연결 중이거나 차단된 상태입니다. 연결될 때까지 기다리거나 연결을 해제한 다음 다시 시도하세요.</string>
 
