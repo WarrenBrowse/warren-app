@@ -1094,6 +1094,26 @@ fn refusal_hook(
     })
 }
 
+/// The exit to move the session off for a drain `notice` sealed by
+/// `sealed_by`, or `None` when there is nothing to do: the notice repeats the
+/// one last acted on (the exit re-sends its advisory until the session has
+/// left), or it comes from an exit other than `exit_in_use`, one the session
+/// already moved off. Two exits announcing the same advisory send two
+/// notices, told apart by the exit that sealed each.
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+fn exit_to_leave<N: Copy + PartialEq>(
+    notice: N,
+    sealed_by: [u8; 16],
+    acted_on: &mut Option<N>,
+    exit_in_use: [u8; 16],
+) -> Option<[u8; 16]> {
+    if sealed_by != exit_in_use || *acted_on == Some(notice) {
+        return None;
+    }
+    *acted_on = Some(notice);
+    Some(sealed_by)
+}
+
 /// Drives a multi-hop circuit on the handle's runtime: verify + select a
 /// circuit from the signed directory, bring up a `MultiHopSupervisor`,
 /// and pump `IosTun` against the live session. Surfaces Connecting /
@@ -1430,12 +1450,11 @@ fn spawn_multi_hop(
         // delay that spreads the exit's clients before its deadline, migrate
         // the live session (make-before-break) onto a circuit that leaves the
         // draining exit out. With no such circuit the session stays until the
-        // exit's close: a redial to a draining exit is refused. The exit
-        // re-sends its advisory until the session has left, and every re-send
-        // wakes this loop, so an advisory already acted on is skipped and the
-        // move is charged to the exit that was current when it first came.
-        // NOT one-shot: the loop keeps listening for a drain on the exit the
-        // session lands on next; teardown drops the sender, ending this task.
+        // exit's close: a redial to a draining exit is refused. Each notice
+        // is charged to the exit that sealed it and acted on once (see
+        // `exit_to_leave`). NOT one-shot: the loop keeps listening for a drain
+        // on the exit the session lands on next; teardown drops the sender,
+        // ending this task.
         {
             let mut drain_sub = exit_draining_channel.subscribe();
             let _ = drain_sub.borrow_and_update();
@@ -1451,19 +1470,22 @@ fn spawn_multi_hop(
                     if drain_sub.changed().await.is_err() {
                         return;
                     }
-                    let Some(advisory) = drain_sub.borrow_and_update().map(|notice| notice.advisory)
-                    else {
+                    let Some(notice) = *drain_sub.borrow_and_update() else {
                         continue;
                     };
-                    if acted_on == Some(advisory) {
+                    let Some(in_use) = drain_retarget.lock().ok().map(|r| r.exit_id()) else {
                         continue;
-                    }
-                    acted_on = Some(advisory);
-                    let Some(draining) = drain_retarget.lock().ok().map(|r| r.exit_id()) else {
+                    };
+                    let Some(draining) = exit_to_leave(
+                        notice,
+                        *notice.exit_id.as_bytes(),
+                        &mut acted_on,
+                        in_use,
+                    ) else {
                         continue;
                     };
                     tokio::time::sleep(jitter_delay(
-                        advisory.deadline_unix_secs,
+                        notice.advisory.deadline_unix_secs,
                         now_secs(),
                         stampede_fraction(),
                     ))
@@ -2608,6 +2630,56 @@ fn now_secs() -> u64 {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+
+    // ---- Drain notices: which exit a drain moves the session off ----
+
+    /// A notice as the engine publishes it: the exit that sealed it and the
+    /// advisory's deadline.
+    type Notice = ([u8; 16], u64);
+
+    const FIRST_EXIT: [u8; 16] = [1; 16];
+    const SECOND_EXIT: [u8; 16] = [2; 16];
+
+    fn leave(notice: Notice, acted_on: &mut Option<Notice>, in_use: [u8; 16]) -> Option<[u8; 16]> {
+        super::exit_to_leave(notice, notice.0, acted_on, in_use)
+    }
+
+    #[test]
+    fn a_drain_moves_the_session_off_the_exit_that_sealed_it_once() {
+        let mut acted_on = None;
+        let drain = (FIRST_EXIT, 1_000);
+
+        assert_eq!(leave(drain, &mut acted_on, FIRST_EXIT), Some(FIRST_EXIT));
+        assert_eq!(
+            leave(drain, &mut acted_on, FIRST_EXIT),
+            None,
+            "the exit re-sends its advisory until the session has left"
+        );
+    }
+
+    #[test]
+    fn the_exit_moved_to_announcing_the_same_drain_is_left_too() {
+        // A soft drain has no deadline of its own, so two exits drained that
+        // way announce identical advisories.
+        let mut acted_on = None;
+        assert_eq!(
+            leave((FIRST_EXIT, u64::MAX), &mut acted_on, FIRST_EXIT),
+            Some(FIRST_EXIT)
+        );
+
+        assert_eq!(
+            leave((SECOND_EXIT, u64::MAX), &mut acted_on, SECOND_EXIT),
+            Some(SECOND_EXIT)
+        );
+    }
+
+    #[test]
+    fn a_drain_from_an_exit_the_session_already_left_changes_nothing() {
+        let mut acted_on = None;
+
+        assert_eq!(leave((FIRST_EXIT, 1_000), &mut acted_on, SECOND_EXIT), None);
+        assert_eq!(acted_on, None, "nothing was acted on");
+    }
 
     // ---- Path health: what the goodput prober's verdict crosses as ----
 
