@@ -199,12 +199,14 @@ async fn preflight(
 /// surfaces to Kotlin because the request is signed AND sent here (like every
 /// other signed JNI call). `host` is checked against a hard allowlist so a
 /// hostile deep link cannot redirect the signed request. Returns the envelope
-/// of [`crate::forum::envelope`]: `{"ok":true,...}` with the handle and slot
-/// on acceptance, `{"ok":false,"error":"subscription-required"}` when the
-/// wallet has never subscribed (HTTP 403), `clock-skew` when the provider
-/// refused the signature for a device clock outside its window, `expired`
-/// when the session is gone, or `error` with a `reason` class. The mnemonic,
-/// sid, signature and nonce are never logged.
+/// of [`crate::forum::envelope`]: `{"ok":true,...}` with the handle, the slot
+/// and the `completion` of a bound approval (the one-time code, and the
+/// handoff URL of a same-device one) on acceptance,
+/// `{"ok":false,"error":"subscription-required"}` when the wallet has never
+/// subscribed (HTTP 403), `clock-skew` when the provider refused the
+/// signature for a device clock outside its window, `expired` when the
+/// session is gone, or `error` with a `reason` class. The mnemonic, sid,
+/// signature, nonce, completion code and handoff URL are never logged.
 #[unsafe(no_mangle)]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forumLogin<'local>(
     env: JNIEnv<'local>,

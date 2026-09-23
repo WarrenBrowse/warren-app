@@ -187,7 +187,8 @@ The shared golden-vector corpus is the `vectors/` submodule
 (`WarrenBrowse/warren-vectors`, pinned by gitlink like in warren-connect and
 warren-sdk-rs). `warren-forum/src/forum_login_vector_tests.rs` and
 `forum_login_v2_vector_tests.rs` read `vectors/forum_login_v1.json` and
-`forum_login_v2.json`, so run `git submodule update --init vectors`
+`forum_login_v2.json`, and `mullvad-daemon` signs the bound login of v2 in
+its own suite, so run `git submodule update --init vectors`
 once per clone; `warren-tests.yml` does the same and inits only that
 submodule. The app-level client rules (deep-link classes, outcome envelopes,
 product anchors) are not vectors: they live in `fixtures/client-rules/`

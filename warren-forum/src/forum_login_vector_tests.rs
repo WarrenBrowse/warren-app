@@ -1,8 +1,8 @@
 //! Replays the shared golden vector `vectors/forum_login_v1.json` (the
 //! warren-vectors submodule): the exact signed request bytes a client sends
 //! to the connect broker for an in-app report and an attach-logs upload, the
-//! login form that predates the completion code (the app now signs the bound
-//! form of `forum_login_v2.json`), and the outcome each of the broker's pinned
+//! login form that predates the completion code (the app signs the bound form
+//! of `forum_login_v2.json`), and the outcome each of the broker's pinned
 //! answers must class as. The same file
 //! is replayed by warren-connect on the other side of the wire, so a
 //! mismatch here is a real wire regression, never a reason to touch the
@@ -107,9 +107,9 @@ fn every_pinned_request_is_rebuilt_byte_for_byte() {
         let built = match name {
             "login" => {
                 // The approval form that predates the completion code. The
-                // app signs the bound form of forum_login_v2.json instead, so
-                // its own builder must no longer produce these bytes; the raw
-                // signer still pins the signing rule and the URL over them.
+                // app signs the bound form of forum_login_v2.json, so its own
+                // builder must not produce these bytes; the raw signer pins
+                // the signing rule and the URL over them.
                 let sid = str_of(request, "sid");
                 let bound =
                     build_signed_request_with_nonce(&key, sid, connect_host(), timestamp, nonce)

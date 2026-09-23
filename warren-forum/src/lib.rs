@@ -490,8 +490,8 @@ impl FailReason {
 /// What a bound approval hands back for the browser to finish the sign-in:
 /// the one-time code, and on a same-device approval the handoff URL that
 /// carries it to this device's default browser. Both are live credentials
-/// for the rest of the session (five minutes at most): they are held zeroized,
-/// never logged, and `Debug` prints neither.
+/// for the rest of the session (five minutes at most): the crate's own copy
+/// is zeroized on drop, nothing logs them, and `Debug` prints neither.
 #[derive(Clone, PartialEq, Eq)]
 pub struct LoginCompletion {
     code: zeroize::Zeroizing<String>,
@@ -533,12 +533,12 @@ impl core::fmt::Debug for LoginCompletion {
 /// still type it.
 #[must_use]
 pub fn parse_login_completion(body: &[u8]) -> Option<LoginCompletion> {
-    parse_login_completion_for(body, connect_host())
+    parse_login_completion_on_host(body, connect_host())
 }
 
 /// [`parse_login_completion`] against `host`, for the golden-vector replay,
 /// whose answers name a synthetic connect host.
-pub(crate) fn parse_login_completion_for(body: &[u8], host: &str) -> Option<LoginCompletion> {
+pub(crate) fn parse_login_completion_on_host(body: &[u8], host: &str) -> Option<LoginCompletion> {
     let value: serde_json::Value = serde_json::from_slice(body).ok()?;
     let completion = value.get("completion")?;
     let code = completion.get("code")?.as_str()?;
@@ -622,16 +622,20 @@ fn body_carries(body: &[u8], token: &[u8]) -> bool {
 /// with its status.
 #[must_use]
 pub fn outcome_for_response(status: u16, body: &[u8]) -> ForumLoginOutcome {
-    outcome_for_response_for(status, body, connect_host())
+    outcome_for_response_on_host(status, body, connect_host())
 }
 
 /// [`outcome_for_response`] with the completion validated against `host`,
 /// for the golden-vector replay.
-pub(crate) fn outcome_for_response_for(status: u16, body: &[u8], host: &str) -> ForumLoginOutcome {
+pub(crate) fn outcome_for_response_on_host(
+    status: u16,
+    body: &[u8],
+    host: &str,
+) -> ForumLoginOutcome {
     match status {
         200..=299 => ForumLoginOutcome::Approved {
             identity: parse_login_identity(body),
-            completion: parse_login_completion_for(body, host),
+            completion: parse_login_completion_on_host(body, host),
         },
         403 => ForumLoginOutcome::SubscriptionRequired,
         401 if has_clock_skew_token(body) => ForumLoginOutcome::ClockSkew,

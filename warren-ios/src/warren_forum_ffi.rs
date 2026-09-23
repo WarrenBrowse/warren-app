@@ -186,9 +186,9 @@ unsafe fn bytes_to_vec(bytes: *const u8, len: usize) -> Option<Vec<u8>> {
 }
 
 /// Allocates the JSON envelope `CString` for `json`. Every envelope this
-/// module hands out is built from fixed tokens, a number and a proquint
-/// handle, so it never carries an interior NUL and this never fails in
-/// practice.
+/// module hands out is built from fixed tokens, numbers, a proquint handle
+/// and a completion validated to digits and a handoff URL on the allowlisted
+/// host, so it never carries an interior NUL and this never fails in practice.
 fn json_cstring(json: String) -> *mut c_char {
     match CString::new(json) {
         Ok(c) => c.into_raw(),
@@ -211,11 +211,12 @@ fn attach_envelope_cstring(outcome: ForumAttachOutcome) -> *mut c_char {
 /// spent; the answer's `Date` corrects the device clock), builds the signed
 /// `POST /v1/forum/login` request at the corrected time (host allowlist + sid
 /// shape checked in `crate::forum`), sends it, and returns the outcome
-/// envelope: `{"ok":true,...}` with the forum identity the broker handed back,
-/// `subscription-required` on 403, `clock-skew` on connect's 401 token,
-/// `expired` on 404, `error` with a `reason` class for anything else (input,
-/// build, runtime, transport, an unnamed status). Nothing about the request
-/// (seed, sid, signature, nonce) is ever logged.
+/// envelope: `{"ok":true,...}` with the forum identity the broker handed back
+/// and the `completion` of a bound approval, `subscription-required` on 403,
+/// `clock-skew` on connect's 401 token, `expired` on 404, `error` with a
+/// `reason` class for anything else (input, build, runtime, transport, an
+/// unnamed status). Nothing about the request (seed, sid, signature, nonce)
+/// or the completion (code, handoff URL) is ever logged.
 ///
 /// # Safety
 /// `seed`, when non-null, must point to at least 32 readable bytes; `sid` and

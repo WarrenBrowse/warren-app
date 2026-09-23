@@ -13,7 +13,7 @@
 use super::{
     FailReason, ForumIdentity, ForumLoginOutcome, LoginCompletion, SessionPreflight,
     build_signed_request_with_nonce, classify_status_preflight, connect_host, outcome_for_response,
-    outcome_for_response_for, parse_login_completion, parse_login_completion_for,
+    outcome_for_response_on_host, parse_login_completion, parse_login_completion_on_host,
     signed_post_with_nonce,
 };
 use warren_identity::ed25519_dalek::SigningKey;
@@ -153,7 +153,7 @@ fn every_pinned_login_answer_classes_as_its_outcome() {
             continue;
         }
         let (status, body) = answer(group, name);
-        let outcome = outcome_for_response_for(status, body.as_bytes(), host);
+        let outcome = outcome_for_response_on_host(status, body.as_bytes(), host);
         match name.as_str() {
             "approved_same_device" | "approved_cross_device" => {
                 let ForumLoginOutcome::Approved {
@@ -226,7 +226,7 @@ fn a_handoff_in_a_query_string_or_naming_another_code_is_dropped() {
     let other_code = body.replace(example, &example.replace(code, "999999"));
     for (what, tampered) in [("query string", query), ("another code", other_code)] {
         assert_ne!(tampered, body, "{what}: the substitution applied");
-        let completion = parse_login_completion_for(tampered.as_bytes(), host)
+        let completion = parse_login_completion_on_host(tampered.as_bytes(), host)
             .unwrap_or_else(|| panic!("{what}: the code stands"));
         assert_eq!(completion.code(), code, "{what}");
         assert_eq!(completion.handoff_url(), None, "{what}");
