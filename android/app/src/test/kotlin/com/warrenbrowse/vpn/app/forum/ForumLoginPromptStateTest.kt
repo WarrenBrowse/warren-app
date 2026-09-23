@@ -120,9 +120,9 @@ class ForumLoginPromptStateTest {
         val view = state.completion!!
         assertEquals(ForumCompletionScreen.FINISHING_IN_BROWSER, view.screen)
         assertFalse(state.codeRevealed)
-        assertEquals(handoff, state.takeHandoffToOpen())
-        assertNull(state.takeHandoffToOpen())
-        assertNull(state.takeFinishUrl())
+        assertEquals(handoff, state.takeHandoffToOpen(1_000L))
+        assertNull(state.takeHandoffToOpen(1_000L))
+        assertNull(state.takeFinishUrl(1_000L))
         state.revealCode()
         assertTrue(state.codeRevealed)
     }
@@ -138,9 +138,9 @@ class ForumLoginPromptStateTest {
         assertEquals(ForumCompletionScreen.SHOW_CODE, state.completion!!.screen)
         assertTrue(state.codeRevealed)
         assertTrue(state.completion!!.finishInBrowser)
-        assertNull(state.takeHandoffToOpen())
-        assertEquals(handoff, state.takeFinishUrl())
-        assertNull(state.takeFinishUrl())
+        assertNull(state.takeHandoffToOpen(1_000L))
+        assertEquals(handoff, state.takeFinishUrl(1_000L))
+        assertNull(state.takeFinishUrl(1_000L))
     }
 
     @Test
@@ -153,8 +153,8 @@ class ForumLoginPromptStateTest {
 
         assertEquals(ForumCompletionScreen.SHOW_CODE, state.completion!!.screen)
         assertFalse(state.completion!!.finishInBrowser)
-        assertNull(state.takeHandoffToOpen())
-        assertNull(state.takeFinishUrl())
+        assertNull(state.takeHandoffToOpen(1_000L))
+        assertNull(state.takeFinishUrl(1_000L))
     }
 
     @Test
@@ -183,6 +183,23 @@ class ForumLoginPromptStateTest {
     }
 
     @Test
+    fun a_completion_outliving_its_session_hands_no_handoff_over() {
+        // A result that lands while no host is on screen stays on the
+        // controller; the next host must not open a handoff of a dead session.
+        val late = 1_000L + FORUM_LOGIN_CODE_LIFETIME_MILLIS
+        val link = first
+        val state = ForumLoginPromptState()
+        state.bind(link, token = 1L)
+        state.complete(state.begin(), link, ForumLoginCompletion(code, handoff), nowMillis = 1_000L)
+        assertNull(state.takeHandoffToOpen(late))
+
+        val typed = forumLoginLinkFromCode(first.sid)
+        state.bind(typed, token = 2L)
+        state.complete(state.begin(), typed, ForumLoginCompletion(code, handoff), nowMillis = 1_000L)
+        assertNull(state.takeFinishUrl(late))
+    }
+
+    @Test
     fun a_superseded_attempt_shows_no_code() {
         val state = ForumLoginPromptState()
         state.bind(first, token = 1L)
@@ -191,6 +208,6 @@ class ForumLoginPromptStateTest {
 
         assertFalse(state.complete(stale, first, ForumLoginCompletion(code, handoff), nowMillis = 1_000L))
         assertNull(state.completion)
-        assertNull(state.takeHandoffToOpen())
+        assertNull(state.takeHandoffToOpen(1_000L))
     }
 }

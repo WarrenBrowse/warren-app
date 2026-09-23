@@ -28,6 +28,8 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorSmall
@@ -173,22 +175,29 @@ private fun BoundCompletion(
 ) {
     val context = LocalContext.current
     LaunchedEffect(state.hasHandoffToOpen) {
-        state.takeHandoffToOpen()?.let { url ->
+        state.takeHandoffToOpen(System.currentTimeMillis())?.let { url ->
             if (!openInBrowser(context, url)) state.revealCode()
         }
     }
+    // The wall clock is read every second rather than waited on once: a delay
+    // does not count while the device sleeps, and one that slept past the
+    // session would keep a dead code on screen.
     LaunchedEffect(completion) {
-        delay((completion.expiresAtMillis - System.currentTimeMillis()).coerceAtLeast(0L))
-        if (state.codeExpired(System.currentTimeMillis())) controller.clear()
+        while (!state.codeExpired(System.currentTimeMillis())) delay(EXPIRY_CHECK_MILLIS)
+        controller.clear()
     }
     CompletionDialog(
         view = completion,
         codeRevealed = state.codeRevealed,
         onReveal = state::revealCode,
-        onFinishInBrowser = { state.takeFinishUrl()?.let { openInBrowser(context, it) } },
+        onFinishInBrowser = {
+            state.takeFinishUrl(System.currentTimeMillis())?.let { openInBrowser(context, it) }
+        },
         onClose = controller::clear,
     )
 }
+
+private const val EXPIRY_CHECK_MILLIS = 1_000L
 
 /**
  * The screen of a bound approval (warren-connect `docs/FORUM-LOGIN-V2.md`):
@@ -209,6 +218,10 @@ private fun CompletionDialog(
     val finishing = view.screen == ForumCompletionScreen.FINISHING_IN_BROWSER
     AlertDialog(
         onDismissRequest = onClose,
+        // No screenshot, no screen recording and no app-switcher snapshot of
+        // the code: the person leaves the app to type it in the browser, which
+        // is exactly when the system writes that snapshot.
+        properties = DialogProperties(securePolicy = SecureFlagPolicy.SecureOn),
         title = {
             Text(
                 stringResource(

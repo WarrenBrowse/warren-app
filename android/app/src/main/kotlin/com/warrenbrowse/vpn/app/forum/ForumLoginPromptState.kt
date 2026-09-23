@@ -150,15 +150,23 @@ class ForumLoginPromptState {
         return current
     }
 
-    /** The handoff to open in the default browser now; null after the first call. */
-    fun takeHandoffToOpen(): String? = handoffToOpen.also { handoffToOpen = null }
+    /**
+     * The handoff to open in the default browser at [nowMillis]; null after the
+     * first call, and once the session behind it has died.
+     */
+    fun takeHandoffToOpen(nowMillis: Long): String? =
+        handoffToOpen.also { handoffToOpen = null }?.takeUnless { codeExpired(nowMillis) }
 
     /** True while a handoff waits for [takeHandoffToOpen]; the host reacts to it. */
     val hasHandoffToOpen: Boolean
         get() = handoffToOpen != null
 
-    /** The handoff behind "Finish in this device's browser"; null after the first call. */
-    fun takeFinishUrl(): String? = finishUrl.also { finishUrl = null }
+    /**
+     * The handoff behind "Finish in this device's browser" at [nowMillis]; null
+     * after the first call, and once the session behind it has died.
+     */
+    fun takeFinishUrl(nowMillis: Long): String? =
+        finishUrl.also { finishUrl = null }?.takeUnless { codeExpired(nowMillis) }
 
     /** "Show the code": the sign-in page is in another browser than the one opened. */
     fun revealCode() {
