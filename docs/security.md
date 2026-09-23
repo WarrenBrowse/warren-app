@@ -424,6 +424,14 @@ The GUI only communicates with the system service (`warren-daemon`), it makes no
 network connections. Except when the user sends a problem report, then it spawn the
 `warren-problem-report` tool, which in turn communicate over TLS with our API.
 
+The packaged Electron binary carries fuses (`electronFuses` in
+`tasks/distribution.cjs`) that no environment variable or command line can undo: it never
+runs as a plain Node interpreter (`ELECTRON_RUN_AS_NODE`), ignores `NODE_OPTIONS` and the
+`--inspect` family, and loads the app from its own `app.asar` only. On macOS and Windows that
+archive's header is also checked against the hash recorded at packaging time (in
+`Info.plist`, in an executable resource), so a modified `app.asar` stops the app at launch.
+Electron implements no such check on Linux.
+
 ## Warren VPN loader
 
 See the threat model [document](../mullvad-update/threat-model.md) for the Warren VPN loader.

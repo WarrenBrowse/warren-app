@@ -14,3 +14,12 @@ export declare const WINDOWS_ASAR_UNPACK: string[];
 export declare function packWin(...args: unknown[]): unknown;
 export declare function packMac(...args: unknown[]): unknown;
 export declare function packLinux(...args: unknown[]): unknown;
+export declare function linuxAfterPack(
+  baseAfterPack: ((context: unknown) => void) | undefined,
+): (context: {
+  appOutDir: string;
+  packager: {
+    generateFuseConfig(fuses: unknown): unknown;
+    addElectronFuses(context: { appOutDir: string }, fuses: unknown): Promise<unknown>;
+  };
+}) => Promise<void>;

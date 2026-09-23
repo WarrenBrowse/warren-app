@@ -268,6 +268,30 @@ function envBuildResources() {
   return buildAssets(`env-assets-${productEnvName}`);
 }
 
+// Burnt into the Electron binary, so no environment and no command line can
+// undo them: the app cannot be run as a plain Node interpreter, handed
+// NODE_OPTIONS or an inspector, or made to load anything but its own app.asar,
+// whose header is checked against the hash packaging recorded (in Info.plist on
+// macOS, in an executable resource on Windows). Flipping a fuse breaks the
+// ad-hoc signature, which is redone on macOS so an unsigned arm64 build still
+// launches; a release build is signed after the flip anyway.
+const ELECTRON_FUSES = {
+  runAsNode: false,
+  enableNodeOptionsEnvironmentVariable: false,
+  enableNodeCliInspectArguments: false,
+  onlyLoadAppFromAsar: true,
+  enableEmbeddedAsarIntegrityValidation: true,
+  resetAdHocDarwinSignature: true,
+};
+
+// Electron checks the asar hash on macOS and Windows only.
+const LINUX_ELECTRON_FUSES = {
+  runAsNode: ELECTRON_FUSES.runAsNode,
+  enableNodeOptionsEnvironmentVariable: ELECTRON_FUSES.enableNodeOptionsEnvironmentVariable,
+  enableNodeCliInspectArguments: ELECTRON_FUSES.enableNodeCliInspectArguments,
+  onlyLoadAppFromAsar: ELECTRON_FUSES.onlyLoadAppFromAsar,
+};
+
 function newConfig() {
   return {
     appId: productEnv.appId,
@@ -286,6 +310,7 @@ function newConfig() {
       },
     ],
     asar: true,
+    electronFuses: ELECTRON_FUSES,
     compression: noCompression ? 'store' : 'normal',
     extraResources: [
       { from: distAssets('ca.crt'), to: '.' },
@@ -812,20 +837,32 @@ function packLinux() {
 
         return true;
       },
-      afterPack: async (context) => {
-        config.afterPack?.(context);
-
-        const sourceExecutable = path.join(context.appOutDir, productEnv.packageName);
-        const targetExecutable = path.join(context.appOutDir, `warren-gui${envSuffix}`);
-        const launcherScript = path.join(context.appOutDir, 'warren-gui-launcher.sh');
-
-        // rename the packaged executable to warren-gui
-        await fs.promises.rename(sourceExecutable, targetExecutable);
-        // the launcher script takes the executable's name
-        await fs.promises.rename(launcherScript, sourceExecutable);
-      },
+      // electron-builder flips the fuses after afterPack, on the executable's
+      // packaged name, which the launcher script has taken by then: the
+      // afterPack below fuses the Linux binary itself, before the rename.
+      electronFuses: null,
+      afterPack: linuxAfterPack(config.afterPack),
     },
   });
+}
+
+function linuxAfterPack(baseAfterPack) {
+  return async (context) => {
+    baseAfterPack?.(context);
+
+    const sourceExecutable = path.join(context.appOutDir, productEnv.packageName);
+    const targetExecutable = path.join(context.appOutDir, `warren-gui${envSuffix}`);
+    const launcherScript = path.join(context.appOutDir, 'warren-gui-launcher.sh');
+
+    await context.packager.addElectronFuses(
+      context,
+      context.packager.generateFuseConfig(LINUX_ELECTRON_FUSES),
+    );
+    // rename the packaged executable to warren-gui
+    await fs.promises.rename(sourceExecutable, targetExecutable);
+    // the launcher script takes the executable's name
+    await fs.promises.rename(launcherScript, sourceExecutable);
+  };
 }
 
 function buildAssets(relativePath) {
@@ -925,3 +962,4 @@ exports.envProblemReportLink = envProblemReportLink;
 exports.packWin = packWin;
 exports.packMac = packMac;
 exports.packLinux = packLinux;
+exports.linuxAfterPack = linuxAfterPack;
