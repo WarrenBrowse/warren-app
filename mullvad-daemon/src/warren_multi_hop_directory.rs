@@ -522,27 +522,40 @@ fn pick_two_hop_circuit_with_rtt(
         )
     };
     let pick = sticky_or_fresh_pair(dir, &pairs, current, locality, advisory, now_unix, &rank)?;
-    let (entry_idx, exit_idx) = off_refused_entry(dir, &pairs, pick, refused_entries, &rank);
+    let in_use = current.and_then(|cur| {
+        let (relay, exit) = circuit_identity(cur);
+        Some((relay_index(dir, &relay)?, exit_index(dir, &exit)?))
+    });
+    let (entry_idx, exit_idx) =
+        off_refused_entry(dir, &pairs, pick, in_use, refused_entries, &rank);
     assemble(dir, entry_idx, exit_idx, enable_gso, use_warren_obfuscation)
 }
 
 /// Ranks candidate `(entry, exit)` index pairs, best first; `None` on none.
 type PairRanker<'a> = dyn Fn(&[(usize, usize)]) -> Option<(usize, usize)> + 'a;
 
-/// `pick`, unless its entry refused a dial: then the best entry that did not
-/// refuse, in front of the same exit, or `pick` itself when there is none, for
-/// the supervisor's backoff to redial. The exit never changes here (see
-/// [`RefusedEntries`]).
+/// `pick`, unless its entry refused a dial: then the circuit `in_use` when it
+/// fronts the same exit through an entry that did not refuse, else the best
+/// such entry, else `pick` itself for the supervisor's backoff to redial. The
+/// exit never changes here (see [`RefusedEntries`]). Keeping the entry in use
+/// matters because re-ranking the others could trade it for one that merely
+/// has no measured RTT yet, a reconnect for nothing.
 fn off_refused_entry(
     dir: &VerifiedMultiHopDirectory,
     pairs: &[(usize, usize)],
     pick: (usize, usize),
+    in_use: Option<(usize, usize)>,
     refused_entries: &[[u8; 16]],
     rank: &PairRanker<'_>,
 ) -> (usize, usize) {
     let refused = |entry: usize| refused_entries.contains(&dir.nodes[entry].relay.relay_id);
     if !refused(pick.0) {
         return pick;
+    }
+    if let Some(in_use) = in_use.filter(|&(entry, exit)| {
+        exit == pick.1 && !refused(entry) && pairs.contains(&(entry, exit))
+    }) {
+        return in_use;
     }
     let same_exit: Vec<(usize, usize)> = pairs
         .iter()
@@ -1157,8 +1170,9 @@ fn circuit_change(
     if drained.contains(&prev_exit) || entry_node_drained {
         return CircuitChange::Drained;
     }
-    if refused_entries.contains(&prev_entry)
-        && next.is_some_and(|next| circuit_identity(next).1 == prev_exit)
+    if !prev.single_node
+        && refused_entries.contains(&prev_entry)
+        && next.is_some_and(|next| !next.single_node && circuit_identity(next).1 == prev_exit)
     {
         return CircuitChange::RefusedEntry;
     }
@@ -1243,11 +1257,11 @@ pub(crate) struct UpdaterConfig {
     /// Requests a tunnel reconnect when the active circuit changes. The
     /// daemon wires this to send `DaemonCommand::Reconnect`.
     pub request_reconnect: std::sync::Arc<dyn Fn() + Send + Sync>,
-    /// Invoked when a circuit change was CAUSED by the previous exit
-    /// entering the drain avoid-set (ADR 36 maintenance). The daemon
-    /// wires this to the status cache so the UI can surface a
-    /// self-expiring "server maintenance" banner. `None` disables the
-    /// hook (tests).
+    /// Invoked when a circuit change was CAUSED by a node of the previous
+    /// circuit leaving (ADR 36 maintenance): a drained node, or an entry
+    /// that refused a dial. The daemon wires this to the status cache so
+    /// the UI can surface a self-expiring "server maintenance" banner.
+    /// `None` disables the hook (tests).
     pub on_maintenance_migration: Option<std::sync::Arc<dyn Fn() + Send + Sync>>,
     /// Settings dir holding the optional `warren-multihop.json` dev
     /// override, used as a fallback when the directory API is
@@ -1427,11 +1441,22 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
             // failure): such cases must NEVER clear a good circuit nor
             // fall back to an unsigned local file.
             let mut skip_apply = false;
+            // Dial refusals queued since the last pass, recorded before the
+            // selection below so this very pass already moves off a refusing
+            // entry.
+            for relay_id in pending_refused_entries.drain(..) {
+                if !refused_entries.record(last_circuit.as_ref(), relay_id, now_unix()) {
+                    log::info!(
+                        "Warren multi-hop: a dial refusal that does not name the entry of the \
+                         two-hop circuit in use; staying on the supervisor's backoff"
+                    );
+                }
+            }
             // The drained exits and refused entries used for this selection,
             // hoisted so the apply step below can tell why the circuit changed
             // (see `circuit_change`).
             let mut excluded: Vec<[u8; 16]> = Vec::new();
-            let mut refused: Vec<[u8; 16]> = Vec::new();
+            let refused = refused_entries.active(now_unix());
             let desired: Option<MultiHopConfig> = if unconfigured {
                 None
             } else {
@@ -1537,20 +1562,6 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 // the daemon blocks all traffic.
                 match cached_dir.as_ref() {
                     Some(dir) => {
-                        // Dial refusals queued since the last pass, recorded
-                        // before the selection below so this very pass already
-                        // moves off a refusing entry.
-                        for relay_id in pending_refused_entries.drain(..) {
-                            if !refused_entries.record(last_circuit.as_ref(), relay_id, now_unix())
-                            {
-                                log::info!(
-                                    "Warren multi-hop: a dial refusal that does not name the \
-                                     entry of the two-hop circuit in use; staying on the \
-                                     supervisor's backoff"
-                                );
-                            }
-                        }
-                        refused = refused_entries.active(now_unix());
                         // ADR 36: exits that signalled a maintenance drain (via
                         // the in-band advisory, recorded by the drain reactor)
                         // are excluded from this selection so a drain-triggered
@@ -1662,34 +1673,28 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         notify();
                     }
                     let migrated = match (change, desired.as_ref()) {
-                        (CircuitChange::Drained, Some(new_cfg)) => {
+                        (CircuitChange::Drained | CircuitChange::RefusedEntry, Some(new_cfg)) => {
                             // docs/59 D2: arm the candidate ladder BEFORE
                             // dispatching the migration, so a pre-swap
                             // rejection of this primary candidate can
                             // retry the other same-country exits (no-op
                             // today: one country = one exit). Inert while
                             // the pre-swap guard is off (nothing rejects).
-                            let alternates = cached_dir
-                                .as_ref()
-                                .map(|dir| {
+                            // A refused entry arms none: every rung is
+                            // another exit.
+                            let alternates = match (change, cached_dir.as_ref()) {
+                                (CircuitChange::Drained, Some(dir)) => {
                                     same_country_migration_alternates(
                                         dir,
                                         new_cfg,
                                         &settings.entry_country,
                                         &excluded,
                                     )
-                                })
-                                .unwrap_or_default();
+                                }
+                                _ => Vec::new(),
+                            };
                             cfg.parameters_generator
                                 .set_warren_migration_candidates(alternates)
-                                .await;
-                            cfg.parameters_generator
-                                .try_warren_migrate(talpid_warren_tunnel::migration_target(new_cfg))
-                                .await
-                        }
-                        (CircuitChange::RefusedEntry, Some(new_cfg)) => {
-                            cfg.parameters_generator
-                                .set_warren_migration_candidates(Vec::new())
                                 .await;
                             cfg.parameters_generator
                                 .try_warren_migrate(talpid_warren_tunnel::migration_target(new_cfg))
@@ -1715,7 +1720,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 "the drained node"
                             }
                         );
-                        // Doc 59 Lot 1: the tunnel survived the exit swap, so
+                        // Doc 59 Lot 1: the tunnel survived the swap, so
                         // the NAT-PMP refresh loops were NOT restarted and
                         // would only re-create the mappings on the new exit
                         // at the next lifetime/2 renewal. Re-map now.
@@ -2555,11 +2560,6 @@ mod tests {
             "two-hop, refused by its entry: another entry for the same exit"
         );
         assert_eq!(
-            after_refusal(&d, true, &two_hop, relay(2)),
-            Moved::Nothing,
-            "two-hop, refused by a node the circuit does not use"
-        );
-        assert_eq!(
             after_refusal(&d, false, &one_hop, relay(1)),
             Moved::Nothing,
             "one-hop, refused by its node: the exit stays, on its backoff"
@@ -2611,6 +2611,45 @@ mod tests {
             after_refusal(&d, true, &current, d.nodes[0].relay.relay_id),
             Moved::Nothing
         );
+    }
+
+    #[test]
+    fn the_entry_that_replaced_a_refused_one_keeps_its_place() {
+        // The European client's only local entry for the NL exit refused, and
+        // the circuit moved to the SG entry. Each later pass still upgrades
+        // toward the refused local entry, and must then settle on the entry
+        // in use rather than re-rank the others: the SG entry has a measured
+        // RTT, the US one does not, and trading one for the other is a
+        // reconnect for nothing.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "nl", 0, 100),
+            node(&op, 3, "sg", 0, 100),
+            node(&op, 4, "us", 0, 100),
+        ]);
+        let current = assemble(&d, 2, 1, true, true).expect("sg -> nl");
+        let mut rtt = RttCache::new();
+        rtt.record(d.nodes[2].relay.relay_ed25519_pubkey, 150, NOW);
+        let settings = mullvad_types::settings::WarrenMultiHopSettings {
+            exit_country: "nl".to_owned(),
+            ..multi_hop_settings(true)
+        };
+
+        let next = select_next_circuit(
+            &d,
+            &settings,
+            Some(&current),
+            &[],
+            &[d.nodes[0].relay.relay_id],
+            eu_locality(),
+            None,
+            &rtt,
+            NOW,
+        )
+        .expect("a circuit");
+
+        assert_eq!(moved(&current, &next), Moved::Nothing);
     }
 
     #[test]
@@ -2667,7 +2706,7 @@ mod tests {
         );
         assert!(
             !refused.record(Some(&two_hop), [2; 16], NOW),
-            "the exit of a two-hop circuit never refuses a dial"
+            "a refusal names the entry, never the exit behind it"
         );
         assert!(
             !refused.record(Some(&one_hop), [2; 16], NOW),
@@ -2750,10 +2789,93 @@ mod tests {
             "a directory refresh or a settings edit"
         );
         assert_eq!(
+            change(&circuit(1, 1), &[], &[de_relay]),
+            CircuitChange::Other,
+            "multi-hop turned off, landing on the same exit node"
+        );
+        assert_eq!(
             circuit_change(Some(&d), None, Some(&de_fr), &[], &[de_relay]),
             CircuitChange::Other,
             "no circuit before"
         );
+    }
+
+    fn generator_on(circuit: &MultiHopConfig) -> crate::tunnel::ParametersGenerator {
+        let settings = mullvad_types::settings::Settings::default();
+        crate::tunnel::ParametersGenerator::new_with_optional_warren(
+            mullvad_relay_selector::RelaySelector::from_settings(
+                &settings,
+                mullvad_types::relay_list::RelayList::empty(),
+                mullvad_types::relay_list::BridgeList::default(),
+            ),
+            settings.relay_settings.clone(),
+            settings.tunnel_options.clone(),
+            None,
+            None,
+            None,
+            Some(circuit.clone()),
+            crate::warren_status::WarrenStatusCache::new(),
+            None,
+        )
+    }
+
+    #[tokio::test]
+    async fn the_updater_answers_a_refusal_without_touching_the_exit_or_the_drain_set() {
+        // The real updater loop, seeded like a daemon boot, from a queued
+        // refusal to the circuit it hands the tunnel. The countries are ones
+        // no timezone maps to a home country, so the host's own timezone
+        // cannot shape the pick. The empty API base forms no URL, so every
+        // refresh fails at once without reaching the network, and every pass
+        // selects from the seeded directory.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "is", 0, 100),
+            node(&op, 2, "ee", 0, 100),
+            node(&op, 3, "lv", 0, 50),
+            node(&op, 4, "lt", 0, 40),
+        ]);
+        let two_hop = assemble(&d, 0, 1, true, true).expect("is -> ee");
+        let one_hop = assemble(&d, 1, 1, true, true).expect("ee");
+
+        for (enabled, current, expected) in [
+            (true, &two_hop, Moved::Entry),
+            (false, &one_hop, Moved::Nothing),
+        ] {
+            let generator = generator_on(current);
+            let (settings_tx, settings_rx) =
+                tokio::sync::watch::channel(multi_hop_settings(enabled));
+            let (drain_tx, drain_rx) = tokio::sync::mpsc::unbounded_channel();
+            spawn(UpdaterConfig {
+                api_url: String::new(),
+                server_pins: Vec::new(),
+                root_mode: RootPinMode::InsecureTofu,
+                settings_rx,
+                parameters_generator: generator.clone(),
+                request_reconnect: std::sync::Arc::new(|| {}),
+                on_maintenance_migration: None,
+                settings_dir: std::path::PathBuf::from("/nonexistent/warren-updater-test"),
+                online_edge_rx: None,
+                drain_migration_rx: Some(drain_rx),
+                boot_seed: Some(BootSeed {
+                    directory: d.clone(),
+                    circuit: Some(current.clone()),
+                    stale: false,
+                }),
+            });
+
+            request_drain_migration(Some(&drain_tx), Some(current.relay.relay_id)).await;
+
+            assert!(
+                generator.warren_drained_exits_snapshot().await.is_empty(),
+                "multi-hop {enabled}: a refusal must never reach the drained-exit set"
+            );
+            let handed = generator
+                .warren_multi_hop()
+                .await
+                .expect("the circuit handed to the tunnel");
+            assert_eq!(moved(current, &handed), expected, "multi-hop {enabled}");
+            drop(settings_tx);
+        }
     }
 
     #[test]

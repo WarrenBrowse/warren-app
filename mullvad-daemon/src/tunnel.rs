@@ -867,6 +867,12 @@ impl ParametersGenerator {
         self.0.lock().await.warren_multi_hop = cfg;
     }
 
+    /// The circuit the next tunnel start would use.
+    #[cfg(test)]
+    pub(crate) async fn warren_multi_hop(&self) -> Option<MultiHopConfig> {
+        self.0.lock().await.warren_multi_hop.clone()
+    }
+
     /// Returns the current NAT-PMP preference, primarily for the
     /// gRPC `GetNatPmpSettings` handler. `None` means port-forwarding
     /// is disabled (the daemon never spawns a refresh loop).
