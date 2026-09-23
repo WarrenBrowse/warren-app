@@ -50,6 +50,14 @@ par l'application, gardez-le tel quel.
   en laissant passer votre trafic par votre réseau habituel, hors du VPN, et indiquer le Mode
   verrouillage comme moyen de le garder bloqué. L'application affichait un message générique sur une
   possible fuite de trafic réseau.
+- [Windows, macOS, Linux] Quitter chaque sortie qui annonce une maintenance pendant que vous y êtes
+  connecté. Après un premier passage sur une autre sortie, une maintenance de celle-ci laissait la
+  connexion en place jusqu'à ce que la sortie la ferme.
+- [iOS] Quitter une sortie qui annonce une maintenance même quand la sortie que la connexion vient
+  de quitter annonçait la même.
+- Appliquer un changement d'emplacement ou du réglage multihop fait pendant qu'un serveur d'entrée
+  refusait les nouvelles connexions. La connexion pouvait rester sur ses serveurs précédents jusqu'à
+  sa prochaine reconnexion.
 
 ### Sécurité
 - Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les rapports de

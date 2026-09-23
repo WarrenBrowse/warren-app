@@ -48,6 +48,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   lăsând traficul dvs. să treacă prin rețeaua obișnuită, în afara VPN-ului, și indică Mod Blocare ca
   modalitate de a-l ține blocat. Aplicația afișa un mesaj generic despre o posibilă scurgere de
   trafic de rețea.
+- [Windows, macOS, Linux] Părăsește fiecare ieșire care anunță o mentenanță cât timp sunteți
+  conectat la ea. După o primă trecere pe altă ieșire, o mentenanță a acesteia lăsa conexiunea pe
+  loc până când ieșirea o închidea.
+- [iOS] Părăsește o ieșire care anunță o mentenanță chiar și când ieșirea pe care conexiunea tocmai
+  a părăsit-o anunța aceeași mentenanță.
+- Aplică o schimbare de locație sau a setării multihop făcută în timp ce un server de intrare refuza
+  conexiunile noi. Conexiunea putea rămâne pe serverele anterioare până la următoarea reconectare.
 
 ### Securitate
 - Fișierul de setări poate fi citit doar de administratori, iar rapoartele de problemă doar de

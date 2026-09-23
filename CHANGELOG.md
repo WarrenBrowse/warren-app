@@ -55,6 +55,13 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Say so when the connection kept dropping and the app stopped retrying and let your
   traffic through your regular network, outside the VPN, and name Lockdown mode as the way to keep
   it blocked instead. The app used to show a generic "network traffic might be leaking" message.
+- [Windows, macOS, Linux] Move the connection off every exit that announces maintenance while you
+  are on it. After a first move to another exit, maintenance on that exit left the connection in
+  place until the exit closed it.
+- [iOS] Leave an exit that announces maintenance even when the exit the connection just left
+  announced the same maintenance.
+- Apply a location or multihop change made while an entry server was refusing new connections. The
+  connection could stay on its previous servers until it next reconnected.
 
 ### Security
 - Keep the settings file readable by administrators only, and create problem reports readable by
