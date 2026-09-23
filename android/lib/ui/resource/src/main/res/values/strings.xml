@@ -552,6 +552,12 @@
     <string name="forum_login_result_clock_skew">Sign-in refused: this device\'s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.</string>
     <string name="forum_login_result_expired">This sign-in request has expired. Start again from the browser page.</string>
     <string name="forum_login_result_failure">Sign-in failed. Please try again in a moment.</string>
+    <string name="forum_login_handoff_title">Finishing the sign-in in your browser</string>
+    <string name="forum_login_handoff_body">Your browser is finishing the sign-in to the Warren community forum.</string>
+    <string name="forum_login_show_code">The sign-in page is in another browser? Show the code</string>
+    <string name="forum_login_code_title">Your 6-digit code</string>
+    <string name="forum_login_code_warning">Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.</string>
+    <string name="forum_login_finish_here">Finish in this device\'s browser</string>
     <string name="forum_tunnel_busy">The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

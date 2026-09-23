@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Connexion refusée : l\'horloge de cet appareil est décalée de plus d\'une minute. Activez la date et l\'heure automatiques, puis recommencez depuis la page du navigateur.</string>
     <string name="forum_login_result_expired">Cette demande de connexion a expiré. Recommencez depuis la page du navigateur.</string>
     <string name="forum_login_result_failure">Échec de la connexion. Veuillez réessayer dans un instant.</string>
+    <string name="forum_login_handoff_title">Connexion en cours de finalisation dans votre navigateur</string>
+    <string name="forum_login_handoff_body">Votre navigateur termine la connexion au forum communautaire Warren.</string>
+    <string name="forum_login_show_code">La page de connexion est dans un autre navigateur ? Afficher le code</string>
+    <string name="forum_login_code_title">Votre code à 6 chiffres</string>
+    <string name="forum_login_code_warning">Saisissez ce code sur la page de connexion de votre autre appareil. Ne le lisez jamais à voix haute et ne l\'envoyez à personne, même à quelqu\'un qui prétend travailler pour Warren.</string>
+    <string name="forum_login_finish_here">Terminer dans le navigateur de cet appareil</string>
     <string name="forum_tunnel_busy">Le VPN est en cours de connexion ou bloqué. Attendez qu\'il soit connecté, ou déconnectez-le, puis réessayez.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

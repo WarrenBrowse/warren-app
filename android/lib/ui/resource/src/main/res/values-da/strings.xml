@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Login afvist: enhedens ur er mere end et minut forkert. Slå automatisk dato og tid til, og start forfra fra browsersiden.</string>
     <string name="forum_login_result_expired">Denne loginanmodning er udløbet. Start forfra fra browsersiden.</string>
     <string name="forum_login_result_failure">Login mislykkedes. Prøv igen om et øjeblik.</string>
+    <string name="forum_login_handoff_title">Afslutter login i din browser</string>
+    <string name="forum_login_handoff_body">Din browser afslutter login på Warren-fællesskabsforummet.</string>
+    <string name="forum_login_show_code">Er loginsiden i en anden browser? Vis koden</string>
+    <string name="forum_login_code_title">Din 6-cifrede kode</string>
+    <string name="forum_login_code_warning">Indtast denne kode på loginsiden på din anden enhed. Læs den aldrig op, og send den aldrig til nogen, heller ikke til nogen, der siger, at de er fra Warren.</string>
+    <string name="forum_login_finish_here">Afslut i denne enheds browser</string>
     <string name="forum_tunnel_busy">VPN\'en er ved at oprette forbindelse eller er blokeret. Vent, til den er forbundet, eller afbryd den, og prøv igen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

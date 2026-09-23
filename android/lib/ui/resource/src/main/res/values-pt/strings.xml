@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Início de sessão recusado: o relógio deste dispositivo está desacertado em mais de um minuto. Ative a data e hora automáticas e recomece a partir da página do navegador.</string>
     <string name="forum_login_result_expired">Este pedido de início de sessão expirou. Recomece a partir da página do navegador.</string>
     <string name="forum_login_result_failure">Falha no início de sessão. Tente novamente dentro de momentos.</string>
+    <string name="forum_login_handoff_title">A concluir o início de sessão no seu navegador</string>
+    <string name="forum_login_handoff_body">O seu navegador está a concluir o início de sessão no fórum da comunidade Warren.</string>
+    <string name="forum_login_show_code">A página de início de sessão está noutro navegador? Mostrar o código</string>
+    <string name="forum_login_code_title">O seu código de 6 dígitos</string>
+    <string name="forum_login_code_warning">Introduza este código na página de início de sessão do seu outro dispositivo. Nunca o leia em voz alta nem o envie a ninguém, nem mesmo a quem diga ser da Warren.</string>
+    <string name="forum_login_finish_here">Concluir no navegador deste dispositivo</string>
     <string name="forum_tunnel_busy">A VPN está a ligar ou está bloqueada. Aguarda até que ligue, ou desliga-a, e tenta novamente.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

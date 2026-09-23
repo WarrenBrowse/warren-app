@@ -123,10 +123,28 @@ class ForumLoginLinkTest {
         // prompt says that approving signs in whoever sent it.
         val sid = "0123456789abcdef0123456789abcdef"
         assertEquals(
-            ForumLoginLink(sid, "connect.warrenbrowse.com", crossDevice = true),
+            ForumLoginLink(sid, "connect.warrenbrowse.com", crossDevice = true, typedCode = true),
             forumLoginLinkFromCode(sid),
         )
         assertTrue(fixture["sign_in_code_cross_device"]!!.jsonPrimitive.boolean)
+    }
+
+    @Test
+    fun each_way_in_is_its_own_approach() {
+        // The completion screen differs by approach: a typed code shows the
+        // code and keeps the handoff behind a button, a same-device link opens
+        // it, a QR never does.
+        val sid = "0123456789abcdef0123456789abcdef"
+        val good = "warren://forum-login?sid=$sid&host=connect.warrenbrowse.com"
+        assertEquals(
+            ForumLoginApproach.SAME_DEVICE_LINK,
+            ForumLoginApproach.of(parseForumLoginLink(good, "warren")!!),
+        )
+        assertEquals(
+            ForumLoginApproach.CROSS_DEVICE_LINK,
+            ForumLoginApproach.of(parseForumLoginLink("$good&xd=1", "warren")!!),
+        )
+        assertEquals(ForumLoginApproach.TYPED_CODE, ForumLoginApproach.of(forumLoginLinkFromCode(sid)))
     }
 
     // The cross-platform fixture (fixtures/client-rules/README.md), replayed

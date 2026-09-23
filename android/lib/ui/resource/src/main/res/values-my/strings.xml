@@ -514,6 +514,12 @@
     <string name="forum_login_result_clock_skew">လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။</string>
     <string name="forum_login_result_expired">ဤဝင်ရောက်မှုတောင်းဆိုချက် သက်တမ်းကုန်သွားပါပြီ။ ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။</string>
     <string name="forum_login_result_failure">ဝင်ရောက်ခြင်း မအောင်မြင်ပါ။ ခဏအကြာတွင် ထပ်မံကြိုးစားပါ။</string>
+    <string name="forum_login_handoff_title">သင့်ဘရောက်ဆာတွင် ဝင်ရောက်မှုကို အပြီးသတ်နေသည်</string>
+    <string name="forum_login_handoff_body">သင့်ဘရောက်ဆာသည် Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်မှုကို အပြီးသတ်နေပါသည်။</string>
+    <string name="forum_login_show_code">ဝင်ရောက်မှုစာမျက်နှာသည် အခြားဘရောက်ဆာတွင် ရှိနေပါသလား? ကုဒ်ကို ပြပါ</string>
+    <string name="forum_login_code_title">သင့်ဂဏန်း ၆ လုံးကုဒ်</string>
+    <string name="forum_login_code_warning">ဤကုဒ်ကို သင့်အခြားစက်ပစ္စည်း၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ရိုက်ထည့်ပါ။ Warren မှဖြစ်သည်ဟု ပြောသူ အပါအဝင် မည်သူ့ကိုမျှ ဖတ်ပြခြင်း သို့မဟုတ် ပို့ပေးခြင်း လုံးဝမပြုပါနှင့်။</string>
+    <string name="forum_login_finish_here">ဤစက်ပစ္စည်း၏ ဘရောက်ဆာတွင် အပြီးသတ်ပါ</string>
     <string name="forum_tunnel_busy">VPN သည် ချိတ်ဆက်နေဆဲ သို့မဟုတ် ပိတ်ဆို့ထားသည်။ ချိတ်ဆက်ပြီးသည်အထိ စောင့်ပါ၊ သို့မဟုတ် ချိတ်ဆက်မှုကို ဖြုတ်ပြီး ထပ်မံကြိုးစားပါ။</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

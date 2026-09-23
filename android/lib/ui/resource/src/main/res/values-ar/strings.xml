@@ -529,6 +529,12 @@
     <string name="forum_login_result_clock_skew">تعذّر تسجيل الدخول: ساعة هذا الجهاز منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين ثم ابدأ من جديد من صفحة المتصفح.</string>
     <string name="forum_login_result_expired">انتهت صلاحية طلب تسجيل الدخول هذا. ابدأ من جديد من صفحة المتصفح.</string>
     <string name="forum_login_result_failure">فشل تسجيل الدخول. يُرجى المحاولة مرة أخرى بعد قليل.</string>
+    <string name="forum_login_handoff_title">جارٍ إكمال تسجيل الدخول في متصفحك</string>
+    <string name="forum_login_handoff_body">يُكمل متصفحك تسجيل الدخول إلى منتدى مجتمع Warren.</string>
+    <string name="forum_login_show_code">صفحة تسجيل الدخول في متصفح آخر؟ اعرض الرمز</string>
+    <string name="forum_login_code_title">رمزك المكوّن من 6 أرقام</string>
+    <string name="forum_login_code_warning">اكتب هذا الرمز في صفحة تسجيل الدخول على جهازك الآخر. لا تقرأه بصوت عالٍ ولا ترسله إلى أي أحد، ولا حتى إلى من يدّعي أنه من Warren.</string>
+    <string name="forum_login_finish_here">أكمل في متصفح هذا الجهاز</string>
     <string name="forum_tunnel_busy">الشبكة الافتراضية الخاصة قيد الاتصال أو محظورة. انتظر حتى تتصل، أو افصلها، ثم حاول مرة أخرى.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

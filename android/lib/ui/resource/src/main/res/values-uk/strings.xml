@@ -523,6 +523,12 @@
     <string name="forum_login_result_clock_skew">Вхід відхилено: годинник цього пристрою відхиляється більш ніж на хвилину. Увімкніть автоматичні дату й час, потім почніть знову зі сторінки браузера.</string>
     <string name="forum_login_result_expired">Цей запит на вхід прострочено. Почніть знову зі сторінки браузера.</string>
     <string name="forum_login_result_failure">Не вдалося увійти. Повторіть спробу за мить.</string>
+    <string name="forum_login_handoff_title">Вхід завершується у вашому браузері</string>
+    <string name="forum_login_handoff_body">Ваш браузер завершує вхід на форум спільноти Warren.</string>
+    <string name="forum_login_show_code">Сторінка входу відкрита в іншому браузері? Показати код</string>
+    <string name="forum_login_code_title">Ваш 6-значний код</string>
+    <string name="forum_login_code_warning">Введіть цей код на сторінці входу на іншому пристрої. Ніколи не зачитуйте його вголос і нікому не надсилайте, навіть тому, хто називає себе представником Warren.</string>
+    <string name="forum_login_finish_here">Завершити в браузері цього пристрою</string>
     <string name="forum_tunnel_busy">VPN підключається або заблокований. Зачекайте на підключення або відключіть його, потім спробуйте ще раз.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

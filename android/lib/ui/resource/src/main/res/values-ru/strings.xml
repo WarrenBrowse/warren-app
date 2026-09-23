@@ -523,6 +523,12 @@
     <string name="forum_login_result_clock_skew">Вход отклонён: часы этого устройства расходятся более чем на минуту. Включите автоматическую дату и время, затем начните заново со страницы браузера.</string>
     <string name="forum_login_result_expired">Этот запрос на вход истёк. Начните заново со страницы браузера.</string>
     <string name="forum_login_result_failure">Не удалось войти. Повторите попытку через мгновение.</string>
+    <string name="forum_login_handoff_title">Вход завершается в вашем браузере</string>
+    <string name="forum_login_handoff_body">Ваш браузер завершает вход на форум сообщества Warren.</string>
+    <string name="forum_login_show_code">Страница входа открыта в другом браузере? Показать код</string>
+    <string name="forum_login_code_title">Ваш 6-значный код</string>
+    <string name="forum_login_code_warning">Введите этот код на странице входа на другом устройстве. Никогда не зачитывайте его и никому не отправляйте, даже тому, кто называет себя сотрудником Warren.</string>
+    <string name="forum_login_finish_here">Завершить в браузере этого устройства</string>
     <string name="forum_tunnel_busy">VPN подключается или заблокирован. Дождитесь подключения или отключите его, затем повторите попытку.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

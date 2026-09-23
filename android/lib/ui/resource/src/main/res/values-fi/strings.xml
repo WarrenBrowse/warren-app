@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Kirjautuminen hylättiin: laitteen kello on yli minuutin väärässä. Ota automaattinen päivämäärä ja aika käyttöön ja aloita alusta selaimen sivulta.</string>
     <string name="forum_login_result_expired">Tämä kirjautumispyyntö on vanhentunut. Aloita alusta selaimen sivulta.</string>
     <string name="forum_login_result_failure">Kirjautuminen epäonnistui. Yritä hetken kuluttua uudelleen.</string>
+    <string name="forum_login_handoff_title">Kirjautuminen viimeistellään selaimessasi</string>
+    <string name="forum_login_handoff_body">Selaimesi viimeistelee kirjautumisen Warrenin yhteisöfoorumille.</string>
+    <string name="forum_login_show_code">Onko kirjautumissivu toisessa selaimessa? Näytä koodi</string>
+    <string name="forum_login_code_title">6-numeroinen koodisi</string>
+    <string name="forum_login_code_warning">Kirjoita tämä koodi toisen laitteesi kirjautumissivulle. Älä koskaan lue sitä ääneen tai lähetä sitä kenellekään, ei edes henkilölle, joka sanoo olevansa Warrenilta.</string>
+    <string name="forum_login_finish_here">Viimeistele tämän laitteen selaimessa</string>
     <string name="forum_tunnel_busy">VPN muodostaa yhteyttä tai on estetty. Odota, kunnes yhteys on muodostettu, tai katkaise yhteys, ja yritä sitten uudelleen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

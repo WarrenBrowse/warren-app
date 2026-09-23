@@ -74,4 +74,40 @@ class WarrenForumLoginUseCaseTest {
             // temp directory's deletion.
             assertEquals("approved-with-identity", journal.lastClassOf(ForumEvent.LOGIN_RESULT))
         }
+
+    @Test
+    fun a_bound_approval_hands_the_completion_to_the_prompt_and_only_its_class_to_the_journal(
+        @TempDir dir: File
+    ) = runTest {
+        val handoff =
+            "https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917"
+        val jni =
+            FakeJniBridge(
+                loginAnswer = {
+                    """{"ok":true,"handle":"lusab-babad-dovok","completion":{"code":"042917","handoff_url":"$handoff"}}"""
+                }
+            )
+        val journal = ForumEventsJournal(dir, CoroutineScope(SupervisorJob()))
+        val useCase =
+            WarrenForumLoginUseCase(
+                walletRepository = FakeWalletRepository(),
+                forumIdentityRepository = FakeForumIdentityRepository(),
+                journal = journal,
+                jni = jni,
+                tunnelState = FakeTunnelStateProvider(WarrenConnectedInfo.Disconnected),
+            )
+
+        val outcome = useCase.signIn(link)
+
+        assertEquals(
+            WarrenForumLoginOutcome.Approved(
+                ForumIdentity("lusab-babad-dovok", null),
+                ForumLoginCompletion("042917", handoff),
+            ),
+            outcome,
+        )
+        assertEquals("approved-bound-identity", journal.lastClassOf(ForumEvent.LOGIN_RESULT))
+        val written = dir.walkTopDown().filter { it.isFile }.joinToString("\n") { it.readText() }
+        assertFalse(written.contains("042917"), "the journal holds the code")
+    }
 }

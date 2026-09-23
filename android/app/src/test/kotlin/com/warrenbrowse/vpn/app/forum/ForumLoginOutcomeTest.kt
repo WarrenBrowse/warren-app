@@ -115,6 +115,52 @@ class ForumLoginOutcomeTest {
     }
 
     @Test
+    fun a_bound_approval_carries_its_code_and_handoff() {
+        val handoff =
+            "https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917"
+        assertEquals(
+            WarrenForumLoginOutcome.Approved(
+                identity = null,
+                completion = ForumLoginCompletion("042917", handoff),
+            ),
+            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"042917","handoff_url":"$handoff"}}"""),
+        )
+        assertEquals(
+            WarrenForumLoginOutcome.Approved(identity = null, completion = ForumLoginCompletion("042917", null)),
+            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"042917"}}"""),
+        )
+    }
+
+    @Test
+    fun a_completion_the_crate_would_never_emit_is_not_trusted() {
+        // Rust validates both before they cross the FFI; the handoff is
+        // opened in the browser, so the decoder refuses anything else too.
+        assertEquals(
+            WarrenForumLoginOutcome.Approved(identity = null, completion = null),
+            parseForumLoginOutcome("""{"ok":true,"completion":{"code":"42917"}}"""),
+        )
+        assertEquals(
+            WarrenForumLoginOutcome.Approved(identity = null, completion = ForumLoginCompletion("042917", null)),
+            parseForumLoginOutcome(
+                """{"ok":true,"completion":{"code":"042917","handoff_url":"https://evil.example/handoff#sid=0123456789abcdef0123456789abcdef&code=042917"}}"""
+            ),
+        )
+    }
+
+    @Test
+    fun a_completion_printed_to_a_log_shows_neither_the_code_nor_the_handoff() {
+        val completion =
+            ForumLoginCompletion(
+                "042917",
+                "https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917",
+            )
+        val printed = WarrenForumLoginOutcome.Approved(identity = null, completion = completion).toString()
+        assertFalse(printed.contains("042917"), printed)
+        assertFalse(printed.contains("0123456789abcdef"), printed)
+        assertEquals("approved-bound", outcomeClass(WarrenForumLoginOutcome.Approved(null, completion)))
+    }
+
+    @Test
     fun an_expired_session_is_named_and_ends_the_pending_link() {
         assertEquals(
             WarrenForumLoginOutcome.Expired,
@@ -159,9 +205,14 @@ class ForumLoginOutcomeTest {
                 when (kind) {
                     "approved" ->
                         WarrenForumLoginOutcome.Approved(
-                            expect.stringOrNull("handle")?.let {
-                                ForumIdentity(it, expect["notify_slot"]?.jsonPrimitive?.intOrNull)
-                            }
+                            identity =
+                                expect.stringOrNull("handle")?.let {
+                                    ForumIdentity(it, expect["notify_slot"]?.jsonPrimitive?.intOrNull)
+                                },
+                            completion =
+                                expect["completion"]?.jsonObject?.let {
+                                    ForumLoginCompletion(it.string("code"), it.stringOrNull("handoff_url"))
+                                },
                         )
                     "subscription-required" -> WarrenForumLoginOutcome.SubscriptionRequired
                     "clock-skew" -> WarrenForumLoginOutcome.ClockSkew

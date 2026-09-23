@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Inloggning nekad: enhetens klocka går mer än en minut fel. Aktivera automatiskt datum och tid och börja om från webbläsarsidan.</string>
     <string name="forum_login_result_expired">Denna inloggningsbegäran har gått ut. Börja om från webbläsarsidan.</string>
     <string name="forum_login_result_failure">Inloggningen misslyckades. Försök igen om en stund.</string>
+    <string name="forum_login_handoff_title">Inloggningen slutförs i din webbläsare</string>
+    <string name="forum_login_handoff_body">Din webbläsare slutför inloggningen på Warren-gemenskapsforumet.</string>
+    <string name="forum_login_show_code">Är inloggningssidan i en annan webbläsare? Visa koden</string>
+    <string name="forum_login_code_title">Din 6-siffriga kod</string>
+    <string name="forum_login_code_warning">Skriv in koden på inloggningssidan på din andra enhet. Läs aldrig upp den och skicka den aldrig till någon, inte ens till någon som säger att de är från Warren.</string>
+    <string name="forum_login_finish_here">Slutför i den här enhetens webbläsare</string>
     <string name="forum_tunnel_busy">VPN-anslutningen håller på att upprättas eller är blockerad. Vänta tills den är ansluten, eller koppla från den, och försök sedan igen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

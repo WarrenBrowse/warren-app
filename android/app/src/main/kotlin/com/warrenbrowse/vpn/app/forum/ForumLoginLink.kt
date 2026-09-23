@@ -10,8 +10,35 @@ import java.net.URISyntaxException
  * browser signing in is on another device. That is also exactly what a relayed
  * (phished) approval looks like, and nothing on the wire tells the two apart,
  * so the consent prompt says which one it is and lets the person decide.
+ *
+ * [typedCode] means the sid was typed under Settings rather than delivered by
+ * a link: the same-device id, read off a page that may be on another device.
  */
-data class ForumLoginLink(val sid: String, val host: String, val crossDevice: Boolean = false)
+data class ForumLoginLink(
+    val sid: String,
+    val host: String,
+    val crossDevice: Boolean = false,
+    val typedCode: Boolean = false,
+)
+
+/**
+ * How the sid reached the app, which decides what a bound approval shows
+ * ([forumCompletionPlan]). [token] is the spelling of the shared fixture.
+ */
+enum class ForumLoginApproach(val token: String) {
+    SAME_DEVICE_LINK("same-device-link"),
+    CROSS_DEVICE_LINK("cross-device-link"),
+    TYPED_CODE("typed-code");
+
+    companion object {
+        fun of(link: ForumLoginLink): ForumLoginApproach =
+            when {
+                link.typedCode -> TYPED_CODE
+                link.crossDevice -> CROSS_DEVICE_LINK
+                else -> SAME_DEVICE_LINK
+            }
+    }
+}
 
 // The single connect host accepted from a forum deep link. A hard allowlist:
 // a hostile link must not be able to point the wallet-signed request at an
@@ -112,7 +139,7 @@ private fun classifyQuery(params: Map<String, String>): ForumLinkVerdict {
  * identity to whoever sent the code, and that is exactly this case.
  */
 fun forumLoginLinkFromCode(sid: String): ForumLoginLink =
-    ForumLoginLink(sid, ALLOWED_CONNECT_HOST, crossDevice = true)
+    ForumLoginLink(sid, ALLOWED_CONNECT_HOST, crossDevice = true, typedCode = true)
 
 internal fun parseForumQuery(rawQuery: String?): Map<String, String> {
     if (rawQuery.isNullOrEmpty()) return emptyMap()

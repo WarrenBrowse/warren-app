@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Pålogging avvist: klokken på denne enheten er mer enn ett minutt feil. Slå på automatisk dato og klokkeslett, og start på nytt fra nettlesersiden.</string>
     <string name="forum_login_result_expired">Denne påloggingsforespørselen er utløpt. Start på nytt fra nettlesersiden.</string>
     <string name="forum_login_result_failure">Innloggingen mislyktes. Prøv igjen om et øyeblikk.</string>
+    <string name="forum_login_handoff_title">Fullfører innloggingen i nettleseren din</string>
+    <string name="forum_login_handoff_body">Nettleseren din fullfører innloggingen på Warren-fellesskapsforumet.</string>
+    <string name="forum_login_show_code">Er innloggingssiden i en annen nettleser? Vis koden</string>
+    <string name="forum_login_code_title">Den 6-sifrede koden din</string>
+    <string name="forum_login_code_warning">Skriv inn denne koden på innloggingssiden på den andre enheten din. Les den aldri høyt, og send den aldri til noen, heller ikke til noen som sier at de er fra Warren.</string>
+    <string name="forum_login_finish_here">Fullfør i denne enhetens nettleser</string>
     <string name="forum_tunnel_busy">VPN-et kobler til eller er blokkert. Vent til det er tilkoblet, eller koble det fra, og prøv igjen.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

@@ -524,6 +524,12 @@
     <string name="forum_login_result_clock_skew">Autentificare refuzată: ceasul acestui dispozitiv este decalat cu mai mult de un minut. Activează data și ora automate, apoi reia de la pagina din browser.</string>
     <string name="forum_login_result_expired">Această cerere de autentificare a expirat. Reia de la pagina din browser.</string>
     <string name="forum_login_result_failure">Autentificarea a eșuat. Te rugăm să încerci din nou peste un moment.</string>
+    <string name="forum_login_handoff_title">Se finalizează autentificarea în browser</string>
+    <string name="forum_login_handoff_body">Browserul tău finalizează autentificarea pe forumul comunității Warren.</string>
+    <string name="forum_login_show_code">Pagina de autentificare este în alt browser? Arată codul</string>
+    <string name="forum_login_code_title">Codul tău de 6 cifre</string>
+    <string name="forum_login_code_warning">Introdu acest cod pe pagina de autentificare a celuilalt dispozitiv. Nu-l citi niciodată cu voce tare și nu-l trimite nimănui, nici măcar cuiva care spune că este de la Warren.</string>
+    <string name="forum_login_finish_here">Finalizează în browserul acestui dispozitiv</string>
     <string name="forum_tunnel_busy">VPN-ul se conectează sau este blocat. Așteaptă să se conecteze, sau deconectează-l, apoi încearcă din nou.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

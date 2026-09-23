@@ -102,4 +102,95 @@ class ForumLoginPromptStateTest {
         assertNull(state.failure)
         assertFalse(state.terminal)
     }
+
+    private val code = "042917"
+    private val handoff =
+        "https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917"
+
+    @Test
+    fun a_same_device_approval_opens_the_handoff_once_and_keeps_the_code_behind_a_reveal() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+        val attempt = state.begin()
+
+        assertTrue(state.complete(attempt, first, ForumLoginCompletion(code, handoff), nowMillis = 1_000L))
+
+        assertFalse(state.approved)
+        assertFalse(state.busy)
+        val view = state.completion!!
+        assertEquals(ForumCompletionScreen.FINISHING_IN_BROWSER, view.screen)
+        assertFalse(state.codeRevealed)
+        assertEquals(handoff, state.takeHandoffToOpen())
+        assertNull(state.takeHandoffToOpen())
+        assertNull(state.takeFinishUrl())
+        state.revealCode()
+        assertTrue(state.codeRevealed)
+    }
+
+    @Test
+    fun a_typed_code_keeps_its_handoff_for_the_button_only() {
+        val typed = forumLoginLinkFromCode(first.sid)
+        val state = ForumLoginPromptState()
+        state.bind(typed, token = 1L)
+
+        state.complete(state.begin(), typed, ForumLoginCompletion(code, handoff), nowMillis = 1_000L)
+
+        assertEquals(ForumCompletionScreen.SHOW_CODE, state.completion!!.screen)
+        assertTrue(state.codeRevealed)
+        assertTrue(state.completion!!.finishInBrowser)
+        assertNull(state.takeHandoffToOpen())
+        assertEquals(handoff, state.takeFinishUrl())
+        assertNull(state.takeFinishUrl())
+    }
+
+    @Test
+    fun a_qr_approval_never_hands_a_handoff_over() {
+        val qr = first.copy(crossDevice = true)
+        val state = ForumLoginPromptState()
+        state.bind(qr, token = 1L)
+
+        state.complete(state.begin(), qr, ForumLoginCompletion(code, handoff), nowMillis = 1_000L)
+
+        assertEquals(ForumCompletionScreen.SHOW_CODE, state.completion!!.screen)
+        assertFalse(state.completion!!.finishInBrowser)
+        assertNull(state.takeHandoffToOpen())
+        assertNull(state.takeFinishUrl())
+    }
+
+    @Test
+    fun an_answer_without_a_completion_is_the_approval_the_browser_finishes() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+
+        state.complete(state.begin(), first, completion = null, nowMillis = 1_000L)
+
+        assertTrue(state.approved)
+        assertNull(state.completion)
+    }
+
+    @Test
+    fun the_code_goes_with_its_session_and_with_the_next_link() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+        state.complete(state.begin(), first, ForumLoginCompletion(code, null), nowMillis = 1_000L)
+
+        assertFalse(state.codeExpired(1_000L + FORUM_LOGIN_CODE_LIFETIME_MILLIS - 1))
+        assertTrue(state.codeExpired(1_000L + FORUM_LOGIN_CODE_LIFETIME_MILLIS))
+
+        state.bind(second, token = 2L)
+        assertNull(state.completion)
+        assertFalse(state.codeExpired(Long.MAX_VALUE))
+    }
+
+    @Test
+    fun a_superseded_attempt_shows_no_code() {
+        val state = ForumLoginPromptState()
+        state.bind(first, token = 1L)
+        val stale = state.begin()
+        state.bind(second, token = 2L)
+
+        assertFalse(state.complete(stale, first, ForumLoginCompletion(code, handoff), nowMillis = 1_000L))
+        assertNull(state.completion)
+        assertNull(state.takeHandoffToOpen())
+    }
 }

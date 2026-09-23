@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Oturum açma reddedildi: bu cihazın saati bir dakikadan fazla sapmış. Otomatik tarih ve saati açın, sonra tarayıcı sayfasından yeniden başlayın.</string>
     <string name="forum_login_result_expired">Bu oturum açma isteğinin süresi doldu. Tarayıcı sayfasından yeniden başlayın.</string>
     <string name="forum_login_result_failure">Giriş başarısız oldu. Lütfen birazdan tekrar deneyin.</string>
+    <string name="forum_login_handoff_title">Oturum açma tarayıcınızda tamamlanıyor</string>
+    <string name="forum_login_handoff_body">Tarayıcınız Warren topluluk forumuna oturum açmayı tamamlıyor.</string>
+    <string name="forum_login_show_code">Oturum açma sayfası başka bir tarayıcıda mı? Kodu göster</string>
+    <string name="forum_login_code_title">6 haneli kodunuz</string>
+    <string name="forum_login_code_warning">Bu kodu diğer cihazınızdaki oturum açma sayfasına yazın. Kodu asla sesli okumayın ve Warren\'dan olduğunu söyleyen biri dahil hiç kimseye göndermeyin.</string>
+    <string name="forum_login_finish_here">Bu cihazın tarayıcısında tamamla</string>
     <string name="forum_tunnel_busy">VPN bağlanıyor veya engellenmiş durumda. Bağlanmasını bekleyin veya bağlantıyı kesin, sonra tekrar deneyin.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->

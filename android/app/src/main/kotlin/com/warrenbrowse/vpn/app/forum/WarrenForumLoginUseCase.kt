@@ -23,10 +23,15 @@ import kotlinx.serialization.json.jsonPrimitive
 /** The result of a forum-login attempt, mirroring the desktop's outcomes. */
 sealed interface WarrenForumLoginOutcome {
     /**
-     * The provider accepted the signature; the browser completes the login.
-     * Carries the forum identity when the provider handed one back.
+     * The provider accepted the signature. Carries the forum identity when the
+     * provider handed one back, and the completion of a bound approval (the
+     * code the browser must present); without one the browser completes the
+     * login on its own.
      */
-    data class Approved(val identity: ForumIdentity?) : WarrenForumLoginOutcome
+    data class Approved(
+        val identity: ForumIdentity?,
+        val completion: ForumLoginCompletion? = null,
+    ) : WarrenForumLoginOutcome
 
     /** The wallet has never subscribed to Warren; forum access is refused. */
     data object SubscriptionRequired : WarrenForumLoginOutcome
@@ -171,8 +176,15 @@ class WarrenForumLoginUseCase(
 /** The coarse class of an outcome, for the log and the journal. */
 internal fun outcomeClass(outcome: WarrenForumLoginOutcome): String =
     when (outcome) {
+        // A bound approval names itself, never its code: the journal rides
+        // into every problem report.
         is WarrenForumLoginOutcome.Approved ->
-            if (outcome.identity != null) "approved-with-identity" else "approved"
+            when {
+                outcome.completion != null && outcome.identity != null -> "approved-bound-identity"
+                outcome.completion != null -> "approved-bound"
+                outcome.identity != null -> "approved-with-identity"
+                else -> "approved"
+            }
         WarrenForumLoginOutcome.SubscriptionRequired -> "subscription-required"
         WarrenForumLoginOutcome.ClockSkew -> "clock-skew"
         WarrenForumLoginOutcome.Expired -> "expired"
@@ -192,8 +204,16 @@ internal fun parseForumLoginOutcome(rawJson: String): WarrenForumLoginOutcome =
         if (root["ok"]?.jsonPrimitive?.boolean == true) {
             val handle = root["handle"]?.jsonPrimitive?.content
             val slot = root["notify_slot"]?.jsonPrimitive?.int
+            val completion = root["completion"]?.jsonObject
             WarrenForumLoginOutcome.Approved(
-                identity = handle?.let { ForumIdentity(handle = it, notifySlot = slot) }
+                identity = handle?.let { ForumIdentity(handle = it, notifySlot = slot) },
+                completion =
+                    completion?.let {
+                        forumLoginCompletionOf(
+                            code = it["code"]?.jsonPrimitive?.content,
+                            handoffUrl = it["handoff_url"]?.jsonPrimitive?.content,
+                        )
+                    },
             )
         } else {
             when (root["error"]?.jsonPrimitive?.content) {

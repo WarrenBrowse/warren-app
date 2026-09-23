@@ -517,6 +517,12 @@
     <string name="forum_login_result_clock_skew">Accesso rifiutato: l\'orologio di questo dispositivo è sfasato di oltre un minuto. Attiva data e ora automatiche e ricomincia dalla pagina del browser.</string>
     <string name="forum_login_result_expired">Questa richiesta di accesso è scaduta. Ricomincia dalla pagina del browser.</string>
     <string name="forum_login_result_failure">Accesso non riuscito. Riprova tra un momento.</string>
+    <string name="forum_login_handoff_title">Completamento dell\'accesso nel browser</string>
+    <string name="forum_login_handoff_body">Il browser sta completando l\'accesso al forum della community Warren.</string>
+    <string name="forum_login_show_code">La pagina di accesso è in un altro browser? Mostra il codice</string>
+    <string name="forum_login_code_title">Il tuo codice di 6 cifre</string>
+    <string name="forum_login_code_warning">Digita questo codice nella pagina di accesso dell\'altro dispositivo. Non leggerlo mai ad alta voce e non inviarlo a nessuno, nemmeno a chi dice di essere di Warren.</string>
+    <string name="forum_login_finish_here">Completa nel browser di questo dispositivo</string>
     <string name="forum_tunnel_busy">La VPN si sta connettendo o è bloccata. Attendi che si connetta, oppure disconnettila, poi riprova.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
