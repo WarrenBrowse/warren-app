@@ -79,6 +79,11 @@ mod natpmp_slot;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod circuit_select;
 
+// The purchase claim `redeemVoucher` recognizes (host-tested); the redeem that
+// consumes it is Android-gated in `android_jni`.
+#[cfg(any(test, target_os = "android"))]
+mod purchase_claim;
+
 // Moving a session off a node that refuses its dials or announces a drain:
 // the pure reaction, host-tested; the supervisor hook and the drain channel
 // that feed it are Android-gated in `tunnel`.

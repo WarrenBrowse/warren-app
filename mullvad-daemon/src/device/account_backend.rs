@@ -373,7 +373,8 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
 /// the voucher out against (the checkout only ever saw the secret's hash).
 struct PurchaseClaim {
     wpid: String,
-    pull_secret: String,
+    /// Bearer material for a paid voucher: wiped on drop.
+    pull_secret: zeroize::Zeroizing<String>,
 }
 
 /// Detect the purchase claim shape: exactly 96 ASCII hex chars (after
@@ -386,11 +387,11 @@ fn as_purchase_claim(input: &str) -> Option<PurchaseClaim> {
     if trimmed.len() != 96 || !trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
         return None;
     }
-    let lower = trimmed.to_ascii_lowercase();
+    let lower = zeroize::Zeroizing::new(trimmed.to_ascii_lowercase());
     let (wpid, pull_secret) = lower.split_at(32);
     Some(PurchaseClaim {
         wpid: wpid.to_owned(),
-        pull_secret: pull_secret.to_owned(),
+        pull_secret: zeroize::Zeroizing::new(pull_secret.to_owned()),
     })
 }
 
@@ -673,7 +674,7 @@ mod tests {
         ))
         .expect("96 hex chars (any case, trimmed) are a claim");
         assert_eq!(claim.wpid, "0123456789abcdef0123456789abcdef");
-        assert_eq!(claim.pull_secret, PULL_SECRET, "lowercased");
+        assert_eq!(claim.pull_secret.as_str(), PULL_SECRET, "lowercased");
         // A bare wpid carries no pull secret, so it collects nothing: it is
         // not a claim.
         assert!(super::as_purchase_claim("0123456789abcdef0123456789abcdef").is_none());
