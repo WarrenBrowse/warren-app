@@ -6,8 +6,8 @@ use std::{
 
 use ed25519_dalek::SigningKey;
 use talpid_warren_tunnel::{
-    CircuitTarget, MigrateHandle, MultiHopConfig, NatPmpConfig, NatPmpEvent, NatPmpMappingObserver,
-    NatPmpRuleId, WarrenTunnelParameters,
+    CircuitTarget, MultiHopConfig, NatPmpConfig, NatPmpEvent, NatPmpMappingObserver, NatPmpRuleId,
+    WarrenMigrateHandle, WarrenTunnelParameters,
 };
 use tokio::sync::Mutex;
 
@@ -238,10 +238,10 @@ struct InnerParametersGenerator {
     /// callback. The directory updater calls [`ParametersGenerator::try_warren_migrate`]
     /// on a drain-driven re-selection to swap the live supervisor onto a
     /// non-drained exit GAP-FREE, instead of a break-before-make reconnect.
+    /// Each migration names its target relay to the firewall before it dials.
     /// `None` until a multi-hop tunnel registers one; a stale handle (after
-    /// teardown) is a harmless no-op and holds no watch receiver, so it never
-    /// pins a dead supervisor alive.
-    warren_migrate_handle: Option<MigrateHandle>,
+    /// teardown) is a harmless no-op and holds nothing of the tunnel alive.
+    warren_migrate_handle: Option<WarrenMigrateHandle>,
     /// ADR 36 gap-free drain path: request channel into the directory
     /// updater. [`ParametersGenerator::migrate_off_drained_exit`] posts an
     /// on-demand drain pass here and awaits the migration outcome. `None`
@@ -698,7 +698,7 @@ impl ParametersGenerator {
     /// from the `warren_register_migrate_handle` params callback, invoked once
     /// at multi-hop tunnel start. A later tunnel overwrites it; the dropped
     /// handle holds no watch receiver, so nothing leaks.
-    pub async fn set_warren_migrate_handle(&self, handle: MigrateHandle) {
+    pub async fn set_warren_migrate_handle(&self, handle: WarrenMigrateHandle) {
         self.0.lock().await.warren_migrate_handle = Some(handle);
     }
 
@@ -1399,12 +1399,13 @@ impl ParametersGenerator {
         // runtime to store the handle (the tunnel start path runs in a tokio
         // task, so a runtime is live). Harmless on single-hop (no supervisor).
         let migrate_gen = self.clone();
-        params.warren_register_migrate_handle = Some(Arc::new(move |handle: MigrateHandle| {
-            let g = migrate_gen.clone();
-            tokio::spawn(async move {
-                g.set_warren_migrate_handle(handle).await;
-            });
-        }));
+        params.warren_register_migrate_handle =
+            Some(Arc::new(move |handle: WarrenMigrateHandle| {
+                let g = migrate_gen.clone();
+                tokio::spawn(async move {
+                    g.set_warren_migrate_handle(handle).await;
+                });
+            }));
         // ADR 36 gap-free drain path: the drain reactor invokes this hook
         // with the draining exit id (after its jitter) instead of rebuilding
         // outright. The avoid-set record + directory-updater drain pass +

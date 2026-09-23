@@ -301,6 +301,8 @@ mod exit_in_use;
 /// kept sending. An indicator sampled post-connect, never a guard.
 mod leg_stall;
 mod migration_watchdog;
+mod peer_fence;
+pub use peer_fence::WarrenMigrateHandle;
 /// The single-shot channel every in-tunnel guard ends a session through.
 mod reconnect_signal;
 mod session_liveness;
@@ -478,13 +480,14 @@ pub struct WarrenTunnelParameters {
     pub on_exit_draining: Option<std::sync::Arc<dyn Fn([u8; 16]) + Send + Sync>>,
 
     /// ADR 36 (Option A): invoked once at tunnel start with this tunnel's
-    /// [`MigrateHandle`], so the daemon can store it and later trigger a
-    /// GAP-FREE cross-exit migration (`migrate_to`) off a draining exit
+    /// [`WarrenMigrateHandle`], so the daemon can store it and later trigger
+    /// a GAP-FREE cross-exit migration (`migrate_to`) off a draining exit
     /// instead of a break-before-make reconnect. The handle holds NO watch
     /// receiver, so storing it does not pin the supervisor alive across
     /// teardown. `None` disables gap-free migration (the drain then falls
     /// back to the proactive reconnect). Multi-hop only.
-    pub warren_register_migrate_handle: Option<std::sync::Arc<dyn Fn(MigrateHandle) + Send + Sync>>,
+    pub warren_register_migrate_handle:
+        Option<std::sync::Arc<dyn Fn(WarrenMigrateHandle) + Send + Sync>>,
 
     /// ADR 36 gap-free drain path: async daemon hook the drain reactor
     /// invokes with the DRAINING exit id after the anti-stampede jitter.
@@ -1429,6 +1432,19 @@ impl WarrenTunnelMonitor {
             warrenguard_config::knobs::idle_cover_enabled(),
             params.enable_daita,
         );
+        // Every migration of this tunnel names its target relay to the
+        // firewall before dialling it, and the relay it lands on alone once
+        // swapped (see `peer_fence`).
+        let fence = {
+            let hook = event_hook.clone();
+            Arc::new(peer_fence::PeerFence::new(
+                &cfg.relay,
+                Arc::new(move |peers| {
+                    let mut hook = hook.clone();
+                    Box::pin(async move { hook.on_event(TunnelEvent::PeerEndpoints(peers)).await })
+                }),
+            ))
+        };
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(cfg.relay.clone()),
             exit_id: cfg.exit.exit_id,
@@ -1482,7 +1498,11 @@ impl WarrenTunnelMonitor {
             // live port-forward config (next step); the transport carries
             // the hooks, `None` keeps the pre-hook behavior.
             pre_swap_check: params.warren_pre_swap_check.clone(),
-            on_overlap_swapped: params.warren_on_overlap_swapped.clone(),
+            on_overlap_swapped: Some(peer_fence::swap_observer(
+                Arc::clone(&fence),
+                runtime.clone(),
+                params.warren_on_overlap_swapped.clone(),
+            )),
             socket_bypass,
             // ADR 36 dial-refusal path: a drained node answers every dial
             // with a deliberate refusal; without this hook the supervisor
@@ -1564,7 +1584,12 @@ impl WarrenTunnelMonitor {
         // supervisor; the handle holds no watch receiver, so it never pins
         // this supervisor alive after teardown.
         if let Some(register) = params.warren_register_migrate_handle.as_ref() {
-            register(supervisor.migrate_handle());
+            let engine = supervisor.migrate_handle();
+            register(WarrenMigrateHandle::new(
+                &fence,
+                Arc::new(move |target| engine.migrate_to(target)),
+                runtime.clone(),
+            ));
         }
         let supervisor_handle = runtime.spawn(async move {
             if let Err(e) = supervisor.run().await {

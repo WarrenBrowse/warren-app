@@ -17,7 +17,7 @@ use futures::{
     },
 };
 use talpid_routing::RouteManagerHandle;
-use talpid_types::net::AllowedTunnelTraffic;
+use talpid_types::net::{AllowedTunnelTraffic, Endpoint};
 use tun_provider::TunProvider;
 
 /// Size of IPv4 header in bytes
@@ -123,4 +123,9 @@ pub enum TunnelEvent {
     Up(TunnelMetadata),
     /// Sent when the tunnel goes down, but before destroying the tunnel device.
     Down,
+    /// Sent while connected, when the tunnel is about to dial other relays
+    /// than the one it was started with, or has moved to one: the relay
+    /// endpoints it may reach outside the tunnel from now on, replacing the
+    /// ones its parameters named.
+    PeerEndpoints(Vec<Endpoint>),
 }

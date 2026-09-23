@@ -3,7 +3,7 @@ use futures::channel::{mpsc, oneshot};
 use futures::stream::Fuse;
 
 use talpid_tunnel::{TunnelEvent, TunnelMetadata};
-use talpid_types::net::{AllowedClients, AllowedEndpoint};
+use talpid_types::net::{AllowedClients, AllowedEndpoint, Endpoint};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_types::{BoxedError, ErrorExt};
 
@@ -98,6 +98,10 @@ pub struct ConnectedState {
     /// expires with the host still offline, the state finally blocks
     /// with `IsOffline` (exactly the pre-grace consequence, delayed).
     offline_grace_deadline: Option<tokio::time::Instant>,
+    /// The relay endpoints the tunnel may reach outside the tunnel: the next
+    /// hop of its parameters, until the tunnel names others to migrate a live
+    /// session onto (`TunnelEvent::PeerEndpoints`).
+    peer_endpoints: Vec<Endpoint>,
 }
 
 impl ConnectedState {
@@ -112,6 +116,7 @@ impl ConnectedState {
         let mut connected_state = ConnectedState {
             metadata,
             tunnel_events,
+            peer_endpoints: tunnel_parameters.get_next_hop_endpoints(),
             tunnel_parameters,
             tunnel_close_event,
             tunnel_close_tx,
@@ -191,28 +196,32 @@ impl ConnectedState {
             })
     }
 
-    fn get_firewall_policy(&self, shared_values: &SharedTunnelStateValues) -> FirewallPolicy {
-        let endpoints = self.tunnel_parameters.get_next_hop_endpoints();
-
+    /// The peer allowances of the connected policy: the tunnel's own sockets
+    /// to each relay endpoint it named.
+    fn allowed_peers(&self) -> Vec<AllowedEndpoint> {
         #[cfg(target_os = "windows")]
         let clients = AllowedClients::from(vec![std::env::current_exe().unwrap()]);
 
         #[cfg(not(target_os = "windows"))]
         let clients = AllowedClients::Root;
 
+        self.peer_endpoints
+            .iter()
+            .map(|&endpoint| AllowedEndpoint {
+                endpoint,
+                clients: clients.clone(),
+            })
+            .collect()
+    }
+
+    fn get_firewall_policy(&self, shared_values: &SharedTunnelStateValues) -> FirewallPolicy {
         #[cfg(target_os = "windows")]
         let exit_endpoint_ip = self
             .tunnel_parameters
             .get_exit_hop_endpoint()
             .map(|ep| ep.address.ip());
 
-        let peer_endpoints = endpoints
-            .into_iter()
-            .map(|endpoint| AllowedEndpoint {
-                endpoint,
-                clients: clients.clone(),
-            })
-            .collect();
+        let peer_endpoints = self.allowed_peers();
 
         #[cfg(target_os = "macos")]
         let redirect_interface = shared_values
@@ -513,7 +522,7 @@ impl ConnectedState {
     }
 
     fn handle_tunnel_events(
-        self: Box<Self>,
+        mut self: Box<Self>,
         event: Option<(TunnelEvent, oneshot::Sender<()>)>,
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
@@ -522,6 +531,18 @@ impl ConnectedState {
         match event {
             Some((TunnelEvent::Down, _)) | None => {
                 self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
+            }
+            Some((TunnelEvent::PeerEndpoints(peers), _applied)) => {
+                // The tunnel waits for this event to be handled before it
+                // dials the relays it names, so the policy is in place first.
+                self.peer_endpoints = peers;
+                match self.set_firewall_policy(shared_values) {
+                    Ok(()) => SameState(self),
+                    Err(error) => self.disconnect(
+                        shared_values,
+                        AfterDisconnect::Block(ErrorStateCause::SetFirewallPolicyError(error)),
+                    ),
+                }
             }
             Some((TunnelEvent::Up(new_metadata), _)) => {
                 // Mid-session metadata refresh from the tunnel monitor
@@ -777,5 +798,78 @@ mod offline_grace_tests {
     fn multi_hop_offline_arms_then_holds() {
         assert_eq!(grace_action(true, false, true), GraceAction::Arm);
         assert_eq!(grace_action(true, true, true), GraceAction::Hold);
+    }
+}
+
+#[cfg(test)]
+mod peer_endpoint_tests {
+    use futures::StreamExt;
+    use futures::channel::{mpsc, oneshot};
+    use talpid_tunnel::TunnelMetadata;
+    use talpid_types::net::{Endpoint, TransportProtocol};
+
+    use super::ConnectedState;
+    use crate::tunnel_state_machine::backend_params::{BackendParams, WarrenBackendInfo};
+
+    fn connected_to_relay(relay: &str) -> ConnectedState {
+        let tunnel_parameters = BackendParams::Warren(WarrenBackendInfo {
+            exit_candidates: vec!["203.0.113.9:443".parse().unwrap()],
+            relay_endpoint: Some(relay.parse().unwrap()),
+            relay_endpoint_v6: None,
+            exit_endpoint: None,
+            enable_daita: false,
+            single_node: false,
+        });
+        let (_events_tx, events) = mpsc::unbounded();
+        let (_close_tx, close_event) = oneshot::channel();
+        let (tunnel_close_tx, _close_rx) = oneshot::channel();
+        ConnectedState {
+            metadata: TunnelMetadata {
+                interface: "utun7".to_owned(),
+                ips: vec!["10.66.1.2".parse().unwrap()],
+                ipv4_gateway: "10.66.0.1".parse().unwrap(),
+                ipv6_gateway: None,
+                daita_active: false,
+                effective_mtu: None,
+                legs_bonded: 0,
+                legs_downlink_stalled: 0,
+            },
+            tunnel_events: events.fuse(),
+            peer_endpoints: tunnel_parameters.get_next_hop_endpoints(),
+            tunnel_parameters,
+            tunnel_close_event: futures::FutureExt::fuse(close_event),
+            tunnel_close_tx,
+            offline_grace_deadline: None,
+        }
+    }
+
+    fn udp_and_tcp(addr: &str) -> Vec<Endpoint> {
+        let addr = addr.parse().unwrap();
+        vec![
+            Endpoint::from_socket_address(addr, TransportProtocol::Udp),
+            Endpoint::from_socket_address(addr, TransportProtocol::Tcp),
+        ]
+    }
+
+    fn allowed(state: &ConnectedState) -> Vec<Endpoint> {
+        state
+            .allowed_peers()
+            .into_iter()
+            .map(|peer| peer.endpoint)
+            .collect()
+    }
+
+    /// A migration's overlap dial goes to another relay than the one the
+    /// tunnel was started with; a policy built from the parameters alone
+    /// drops it, and the session leaves a draining exit only when it closes.
+    #[test]
+    fn the_connected_policy_lets_the_tunnel_reach_the_relays_it_named() {
+        let mut state = connected_to_relay("198.51.100.10:443");
+
+        let mut both = udp_and_tcp("198.51.100.10:443");
+        both.extend(udp_and_tcp("198.51.100.20:443"));
+        state.peer_endpoints = both.clone();
+
+        assert_eq!(allowed(&state), both);
     }
 }

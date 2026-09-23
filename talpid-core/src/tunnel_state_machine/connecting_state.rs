@@ -702,6 +702,9 @@ impl ConnectingState {
                 self.tunnel_close_event,
                 self.tunnel_close_tx,
             )),
+            // Only a connected tunnel migrates its session; while connecting,
+            // the policy names the relay being dialled.
+            Some((TunnelEvent::PeerEndpoints(_), _)) => SameState(self),
             Some((TunnelEvent::Down, _)) => {
                 // It is important to reset this before the tunnel device is down,
                 // or else commands that reapply the firewall rules will fail since
