@@ -5715,3 +5715,31 @@ msgstr "Raporunuz forumda. Günlükler yalnızca kısmen iletilebildi; destek ek
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Warren hesabınız henüz hazır değil, bu yüzden rapor imzalanamıyor. Uygulama kurulumunu tamamlayın, ardından yeniden gönderin."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "Oturum açma tarayıcınızda tamamlanıyor"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "Tarayıcınız Warren topluluk forumuna oturum açmayı tamamlıyor."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "Oturum açma sayfası başka bir tarayıcıda mı? Kodu göster"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "6 haneli kodunuz"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "Bu kodu diğer cihazınızdaki oturum açma sayfasına yazın. Kodu asla sesli okumayın ve Warren'dan olduğunu söyleyen biri dahil hiç kimseye göndermeyin."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "Bu cihazın tarayıcısında tamamla"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "Kapat"

@@ -8,9 +8,13 @@ import { colors } from '../../../lib/foundations';
 import {
   beginForumLoginAttempt,
   bindForumLoginRequest,
+  completeForumLoginAttempt,
+  forumLoginCodeExpired,
+  ForumLoginCompletionState,
   ForumLoginPromptState,
   initialForumLoginPromptState,
   noticeForForumLoginResult,
+  revealForumLoginCode,
   settleForumLoginAttempt,
 } from '../prompt-state';
 
@@ -28,6 +32,29 @@ const NoticeText = styled.span({
 // element inherits the browser default (black) and is invisible on the dark
 // modal. The transient "Signing" status must set its own readable color.
 const StatusText = styled.div({
+  display: 'block',
+  marginTop: '12px',
+  color: colors.whiteAlpha60,
+  fontSize: '13px',
+  lineHeight: 1.4,
+});
+
+// The one-time code, large and selectable so it can be read and typed on the
+// sign-in page. Never copied for the person: a code on the clipboard is one
+// paste away from a chat window.
+const CodeText = styled.div({
+  display: 'block',
+  marginTop: '16px',
+  color: colors.white,
+  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  fontSize: '32px',
+  fontWeight: 600,
+  letterSpacing: '0.3em',
+  textAlign: 'center',
+  userSelect: 'text',
+});
+
+const WarningText = styled.span({
   display: 'block',
   marginTop: '12px',
   color: colors.whiteAlpha60,
@@ -69,18 +96,47 @@ export function ForumLoginPrompt() {
     setState(initialForumLoginPromptState);
   }, []);
 
+  const closeCompletion = useCallback(() => {
+    void window.ipc.forumLogin.forgetCompletion();
+    close();
+  }, [close]);
+
+  const revealCode = useCallback(() => {
+    setState((current) => revealForumLoginCode(current));
+  }, []);
+
   const handleApprove = useCallback(async () => {
     if (!request) {
       return;
     }
     setState((current) => beginForumLoginAttempt(current));
-    const result = await window.ipc.forumLogin.approve(request);
-    if (result === 'approved') {
-      close();
-    } else {
+    const { result, completion } = await window.ipc.forumLogin.approve(request);
+    if (result !== 'approved') {
       setState((current) => settleForumLoginAttempt(current, result));
+    } else if (completion) {
+      setState((current) => completeForumLoginAttempt(current, completion, Date.now()));
+    } else {
+      close();
     }
   }, [request, close]);
+
+  // The code completes nothing once its session is dead, so the screen that
+  // shows it goes with the session.
+  const expiresAt = state.completion?.expiresAt;
+  useEffect(() => {
+    if (expiresAt === undefined) {
+      return;
+    }
+    const timer = setTimeout(
+      () => {
+        setState((current) =>
+          forumLoginCodeExpired(current, Date.now()) ? initialForumLoginPromptState : current,
+        );
+      },
+      Math.max(0, expiresAt - Date.now()),
+    );
+    return () => clearTimeout(timer);
+  }, [expiresAt]);
 
   const handleCancel = useCallback(() => {
     if (request) {
@@ -88,6 +144,16 @@ export function ForumLoginPrompt() {
     }
     close();
   }, [request, close]);
+
+  if (state.completion) {
+    return (
+      <ForumLoginCompletion
+        completion={state.completion}
+        onReveal={revealCode}
+        onClose={closeCompletion}
+      />
+    );
+  }
 
   // Raised for a QR link and for a code typed under Settings alike, and both
   // are exactly what a relayed sign-in looks like: the browser being signed in
@@ -152,6 +218,88 @@ export function ForumLoginPrompt() {
       <StatusText role="status" aria-live="polite">
         {busy ? messages.pgettext('forum-login', 'Signing, please wait.') : ''}
       </StatusText>
+    </ModalAlert>
+  );
+}
+
+interface ForumLoginCompletionProps {
+  completion: ForumLoginCompletionState;
+  onReveal: () => void;
+  onClose: () => void;
+}
+
+// The screen of a bound approval (warren-connect docs/FORUM-LOGIN-V2.md): the
+// browser that opened the sign-in must present the one-time code. After a
+// same-device link main has already opened the handoff page in the default
+// browser, and the code waits behind "Show the code" for a sign-in page that
+// is in another browser. After a QR or a typed code the code is the screen.
+function ForumLoginCompletion({ completion, onReveal, onClose }: ForumLoginCompletionProps) {
+  const [finishing, setFinishing] = useState(false);
+  const finishInBrowser = useCallback(async () => {
+    setFinishing(true);
+    await window.ipc.forumLogin.finishInBrowser();
+    setFinishing(false);
+  }, []);
+
+  const finishingInBrowser = completion.screen === 'finishing-in-browser';
+  const buttons = [];
+  if (!completion.codeRevealed) {
+    buttons.push(
+      <Button key="reveal" onClick={onReveal}>
+        <Button.Text>
+          {messages.pgettext(
+            'forum-login',
+            'The sign-in page is in another browser? Show the code',
+          )}
+        </Button.Text>
+      </Button>,
+    );
+  }
+  if (completion.finishInBrowser) {
+    buttons.push(
+      <Button key="finish" variant="success" disabled={finishing} onClick={finishInBrowser}>
+        <Button.Text>
+          {messages.pgettext('forum-login', "Finish in this device's browser")}
+        </Button.Text>
+      </Button>,
+    );
+  }
+  buttons.push(
+    <Button key="close" onClick={onClose}>
+      <Button.Text>{messages.pgettext('forum-login', 'Close')}</Button.Text>
+    </Button>,
+  );
+
+  return (
+    <ModalAlert
+      isOpen
+      type={ModalAlertType.info}
+      title={
+        finishingInBrowser
+          ? messages.pgettext('forum-login', 'Finishing the sign-in in your browser')
+          : messages.pgettext('forum-login', 'Your 6-digit code')
+      }
+      message={
+        finishingInBrowser
+          ? messages.pgettext(
+              'forum-login',
+              'Your browser is finishing the sign-in to the Warren community forum.',
+            )
+          : undefined
+      }
+      buttons={buttons}
+      close={onClose}>
+      {completion.codeRevealed && (
+        <>
+          <CodeText aria-label={completion.code.split('').join(' ')}>{completion.code}</CodeText>
+          <WarningText>
+            {messages.pgettext(
+              'forum-login',
+              'Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.',
+            )}
+          </WarningText>
+        </>
+      )}
     </ModalAlert>
   );
 }

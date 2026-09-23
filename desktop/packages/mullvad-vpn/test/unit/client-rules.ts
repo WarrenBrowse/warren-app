@@ -67,6 +67,8 @@ export interface OutcomeCase {
     handle?: string;
     notify_slot?: number | null;
     reason?: string;
+    // A bound approval: the code and, on a same-device approval, the handoff.
+    completion?: { code: string; handoff_url?: string };
     // The report cases: the created topic and what the broker did with the logs.
     topic_id?: number;
     topic_url?: string | null;
@@ -76,8 +78,26 @@ export interface OutcomeCase {
   skip?: string[];
 }
 
+export interface CompletionCase {
+  name: string;
+  approach: string;
+  answer: string;
+  expect: { screen: string; handoff: string };
+  skip?: string[];
+}
+
 export interface ForumOutcomesFixture {
-  login: { terminal_kinds: string[]; cases: OutcomeCase[] };
+  login: {
+    terminal_kinds: string[];
+    cases: OutcomeCase[];
+    completion: {
+      approaches: string[];
+      screens: string[];
+      handoffs: string[];
+      code_lifetime_secs: number;
+      cases: CompletionCase[];
+    };
+  };
   report: { cases: OutcomeCase[] };
 }
 

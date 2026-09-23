@@ -5687,3 +5687,31 @@ msgstr "보고서가 포럼에 올라갔습니다. 로그는 일부만 전달되
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Warren 계정이 아직 준비되지 않아 신고에 서명할 수 없습니다. 앱 설정을 마친 뒤 다시 보내세요."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "브라우저에서 로그인을 완료하는 중"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "브라우저가 Warren 커뮤니티 포럼 로그인을 완료하고 있습니다."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "로그인 페이지가 다른 브라우저에 있나요? 코드 보기"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "6자리 코드"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "이 코드를 다른 기기의 로그인 페이지에 입력하세요. Warren 직원이라고 말하는 사람을 포함해 누구에게도 이 코드를 읽어 주거나 보내지 마세요."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "이 기기의 브라우저에서 완료"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "닫기"

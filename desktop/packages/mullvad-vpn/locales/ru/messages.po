@@ -5745,3 +5745,31 @@ msgstr "Ваш отчёт на форуме. Журналы доставлены
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Ваша учётная запись Warren ещё не готова, поэтому отчёт нельзя подписать. Завершите настройку приложения, затем отправьте снова."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "Вход завершается в вашем браузере"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "Ваш браузер завершает вход на форум сообщества Warren."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "Страница входа открыта в другом браузере? Показать код"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "Ваш 6-значный код"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "Введите этот код на странице входа на другом устройстве. Никогда не зачитывайте его и никому не отправляйте, даже тому, кто называет себя сотрудником Warren."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "Завершить в браузере этого устройства"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "Закрыть"

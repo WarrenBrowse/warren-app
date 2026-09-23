@@ -1,4 +1,6 @@
 import {
+  FORUM_LOGIN_CODE_LIFETIME_MS,
+  ForumLoginCodeScreen,
   ForumLoginResult,
   IForumLoginRequest,
   isTerminalForumLoginResult,
@@ -22,6 +24,16 @@ export interface ForumLoginPromptState {
   // The provider has closed the door on this sid, so Approve is disarmed: a
   // retry could only answer "unknown session" and land on the generic line.
   terminal: boolean;
+  // A bound approval: the screen that finishes the sign-in. Held here and
+  // nowhere else, so the code leaves memory with the prompt.
+  completion?: ForumLoginCompletionState;
+}
+
+export interface ForumLoginCompletionState extends ForumLoginCodeScreen {
+  // The finishing screen keeps the code behind "Show the code".
+  codeRevealed: boolean;
+  // When the session behind the code dies, and the screen with it.
+  expiresAt: number;
 }
 
 export const initialForumLoginPromptState: ForumLoginPromptState = {
@@ -29,6 +41,7 @@ export const initialForumLoginPromptState: ForumLoginPromptState = {
   busy: false,
   notice: undefined,
   terminal: false,
+  completion: undefined,
 };
 
 /** Adopt `request`; a different sid than the current one resets everything. */
@@ -53,6 +66,36 @@ export function settleForumLoginAttempt(
   result: ForumLoginResult,
 ): ForumLoginPromptState {
   return { ...state, busy: false, notice: result, terminal: isTerminalForumLoginResult(result) };
+}
+
+/** A bound approval came back at `now`: the prompt becomes its completion screen. */
+export function completeForumLoginAttempt(
+  state: ForumLoginPromptState,
+  completion: ForumLoginCodeScreen,
+  now: number,
+): ForumLoginPromptState {
+  return {
+    ...state,
+    busy: false,
+    notice: undefined,
+    completion: {
+      ...completion,
+      codeRevealed: completion.screen === 'show-code',
+      expiresAt: now + FORUM_LOGIN_CODE_LIFETIME_MS,
+    },
+  };
+}
+
+/** "Show the code": the sign-in page is in another browser than the one opened. */
+export function revealForumLoginCode(state: ForumLoginPromptState): ForumLoginPromptState {
+  return state.completion
+    ? { ...state, completion: { ...state.completion, codeRevealed: true } }
+    : state;
+}
+
+/** True once the session behind the code shown is dead, and the screen must close. */
+export function forumLoginCodeExpired(state: ForumLoginPromptState, now: number): boolean {
+  return state.completion !== undefined && now >= state.completion.expiresAt;
 }
 
 /**

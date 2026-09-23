@@ -36,7 +36,7 @@ import {
 } from './daemon-rpc-types';
 import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumIdentity } from './forum-identity';
-import { ForumLoginResult, IForumLoginRequest } from './forum-login';
+import { ForumLoginApproval, IForumLoginRequest } from './forum-login';
 import { ForumNotificationsResult } from './forum-notifications';
 import { ForumReportResult, ForumReportSaveOutcome, IForumReportForm } from './forum-report';
 import { IGuiSettingsState } from './gui-settings-state';
@@ -215,8 +215,15 @@ export const ipcSchema = {
     // A deep link that cold-starts the app fires before the renderer exists;
     // the prompt fetches the buffered request on mount instead.
     getPending: invoke<void, IForumLoginRequest | undefined>(),
-    approve: invoke<IForumLoginRequest, ForumLoginResult>(),
+    // A bound approval answers with the completion screen: the code, never
+    // the handoff URL, which main keeps for `finishInBrowser`.
+    approve: invoke<IForumLoginRequest, ForumLoginApproval>(),
     cancel: invoke<IForumLoginRequest, void>(),
+    // "Finish in this device's browser" after a typed code: main opens the
+    // handoff it kept, once. Answers whether there was one to open.
+    finishInBrowser: invoke<void, boolean>(),
+    // The completion screen closed: main drops the handoff it kept.
+    forgetCompletion: invoke<void, void>(),
     // A sign-in code typed under Settings, the browser-independent way in:
     // main normalises it and, when it is a session id, raises the same
     // `request` push a deep link would. Answers whether it was one.

@@ -4864,3 +4864,31 @@ msgstr "Raportul tău este pe forum. Jurnalele au fost livrate doar parțial; ec
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Contul tău Warren nu este încă pregătit, deci raportul nu poate fi semnat. Termină configurarea aplicației, apoi trimite din nou."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "Se finalizează autentificarea în browser"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "Browserul tău finalizează autentificarea pe forumul comunității Warren."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "Pagina de autentificare este în alt browser? Arată codul"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "Codul tău de 6 cifre"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "Introdu acest cod pe pagina de autentificare a celuilalt dispozitiv. Nu-l citi niciodată cu voce tare și nu-l trimite nimănui, nici măcar cuiva care spune că este de la Warren."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "Finalizează în browserul acestui dispozitiv"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "Închide"

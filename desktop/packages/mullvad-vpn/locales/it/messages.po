@@ -5715,3 +5715,31 @@ msgstr "Il tuo rapporto è sul forum. I log sono stati consegnati solo in parte;
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Il tuo account Warren non è ancora pronto, quindi la segnalazione non può essere firmata. Completa la configurazione dell'app, poi invia di nuovo."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "Completamento dell'accesso nel browser"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "Il browser sta completando l'accesso al forum della community Warren."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "La pagina di accesso è in un altro browser? Mostra il codice"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "Il tuo codice di 6 cifre"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "Digita questo codice nella pagina di accesso dell'altro dispositivo. Non leggerlo mai ad alta voce e non inviarlo a nessuno, nemmeno a chi dice di essere di Warren."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "Completa nel browser di questo dispositivo"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "Chiudi"

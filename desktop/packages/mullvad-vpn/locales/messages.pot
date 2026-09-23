@@ -1623,6 +1623,18 @@ msgid "Cancel"
 msgstr ""
 
 msgctxt "forum-login"
+msgid "Close"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr ""
+
+msgctxt "forum-login"
 msgid "Forum access requires a Warren subscription. This wallet has never subscribed."
 msgstr ""
 
@@ -1651,11 +1663,27 @@ msgid "Signing, please wait."
 msgstr ""
 
 msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr ""
+
+msgctxt "forum-login"
 msgid "This sign-in request has expired. Start again from the browser page."
 msgstr ""
 
 msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr ""
+
+msgctxt "forum-login"
 msgid "Warren cannot tell which browser is being signed in, or whether it is in front of you right now. Your app will sign a one-time challenge with your wallet key to prove it is you."
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr ""
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
 msgstr ""
 
 #. Shown when the typed code is not a

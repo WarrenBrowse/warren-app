@@ -5687,3 +5687,31 @@ msgstr "レポートはフォーラムに投稿されました。ログは一部
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Warren アカウントの準備がまだできていないため、レポートに署名できません。アプリの初期設定を完了してから、もう一度送信してください。"
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "ブラウザでサインインを完了しています"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "ブラウザが Warren コミュニティフォーラムへのサインインを完了しています。"
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "サインインページが別のブラウザにありますか？コードを表示"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "6 桁のコード"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "このコードをもう一方のデバイスのサインインページに入力してください。読み上げたり、誰かに送ったりしないでください。Warren を名乗る人に対しても同様です。"
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "このデバイスのブラウザで完了"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "閉じる"

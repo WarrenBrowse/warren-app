@@ -5690,3 +5690,31 @@ msgstr "သင့်အစီရင်ခံစာ ဖိုရမ်ပေါ�
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "သင့် Warren အကောင့် အဆင်သင့် မဖြစ်သေးသဖြင့် အစီရင်ခံစာကို လက်မှတ်ထိုး၍ မရပါ။ အက်ပ်ကို စတင်သတ်မှတ်ခြင်း ပြီးအောင်လုပ်ပြီးမှ ထပ်ပို့ပါ။"
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "သင့်ဘရောက်ဆာတွင် ဝင်ရောက်မှုကို အပြီးသတ်နေသည်"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "သင့်ဘရောက်ဆာသည် Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်မှုကို အပြီးသတ်နေပါသည်။"
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "ဝင်ရောက်မှုစာမျက်နှာသည် အခြားဘရောက်ဆာတွင် ရှိနေပါသလား? ကုဒ်ကို ပြပါ"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "သင့်ဂဏန်း ၆ လုံးကုဒ်"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "ဤကုဒ်ကို သင့်အခြားစက်ပစ္စည်း၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ရိုက်ထည့်ပါ။ Warren မှဖြစ်သည်ဟု ပြောသူ အပါအဝင် မည်သူ့ကိုမျှ ဖတ်ပြခြင်း သို့မဟုတ် ပို့ပေးခြင်း လုံးဝမပြုပါနှင့်။"
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "ဤစက်ပစ္စည်း၏ ဘရောက်ဆာတွင် အပြီးသတ်ပါ"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "ပိတ်ရန်"

@@ -13,6 +13,85 @@ export interface IForumLoginRequest {
   // approval, and the user is the only one who can tell the two apart, so the
   // prompt says it plainly instead of asking the same question either way.
   crossDevice: boolean;
+  // The sid was typed under Settings rather than delivered by a link. It is
+  // the same-device id, but the page it was read off may be on another
+  // device, so the completion code is shown and the handoff waits for the
+  // person to ask for it.
+  typedCode?: boolean;
+}
+
+/** How the sid reached the app, which decides what a bound approval shows. */
+export type ForumLoginApproach = 'same-device-link' | 'cross-device-link' | 'typed-code';
+
+export function forumLoginApproach(request: IForumLoginRequest): ForumLoginApproach {
+  if (request.typedCode === true) {
+    return 'typed-code';
+  }
+  return request.crossDevice ? 'cross-device-link' : 'same-device-link';
+}
+
+/**
+ * What a bound approval hands back, validated by main: the one-time code the
+ * browser that opened the sign-in must present, and on a same-device approval
+ * the handoff URL that carries it to this machine's default browser. Both are
+ * live credentials until the session ends: never logged, never persisted.
+ */
+export interface ForumLoginCompletion {
+  code: string;
+  handoffUrl?: string;
+}
+
+/**
+ * How long after the provider's answer the code may still be shown: the
+ * session's own lifetime, after which the code completes nothing.
+ */
+export const FORUM_LOGIN_CODE_LIFETIME_MS = 300_000;
+
+export type ForumCompletionScreen = 'returned-to-browser' | 'finishing-in-browser' | 'show-code';
+export type ForumHandoff = 'open-at-once' | 'on-button' | 'never';
+
+/**
+ * The screen and the handoff of an approved login, from how its sid arrived
+ * and the completion the answer carried. Pinned by the `login.completion`
+ * table of `fixtures/client-rules/forum_outcomes.json`. A QR approval never
+ * opens a handoff: the browser signing in is on another device, and one a
+ * provider sent anyway would carry the code to this machine's browser.
+ */
+export function forumCompletionPlan(
+  approach: ForumLoginApproach,
+  completion: ForumLoginCompletion | undefined,
+): { screen: ForumCompletionScreen; handoff: ForumHandoff } {
+  if (completion === undefined) {
+    return { screen: 'returned-to-browser', handoff: 'never' };
+  }
+  const hasHandoff = completion.handoffUrl !== undefined;
+  switch (approach) {
+    case 'same-device-link':
+      return hasHandoff
+        ? { screen: 'finishing-in-browser', handoff: 'open-at-once' }
+        : { screen: 'show-code', handoff: 'never' };
+    case 'typed-code':
+      return { screen: 'show-code', handoff: hasHandoff ? 'on-button' : 'never' };
+    case 'cross-device-link':
+      return { screen: 'show-code', handoff: 'never' };
+  }
+}
+
+/**
+ * The completion screen main hands the renderer: the code, and whether the
+ * "Finish in this device's browser" action has a handoff behind it. The
+ * handoff URL itself stays in main.
+ */
+export interface ForumLoginCodeScreen {
+  screen: 'finishing-in-browser' | 'show-code';
+  code: string;
+  finishInBrowser: boolean;
+}
+
+/** The answer to an approval: the result, and the completion screen of a bound one. */
+export interface ForumLoginApproval {
+  result: ForumLoginResult;
+  completion?: ForumLoginCodeScreen;
 }
 
 export type ForumLoginResult =

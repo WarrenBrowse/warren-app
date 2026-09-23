@@ -96,7 +96,9 @@ import {
   parseForumLoginUrl,
   PENDING_ATTACH_MAX_AGE_MS,
   PENDING_LOGIN_MAX_AGE_MS,
+  PendingForumHandoff,
   PendingForumRequest,
+  planForumLoginApproval,
 } from './forum-login';
 import { fetchForumNotifications, markForumNotificationsSeen } from './forum-notifications';
 import {
@@ -279,6 +281,7 @@ class ApplicationMain
   private navigationHistory?: IHistoryObject;
 
   private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
+  private pendingForumHandoff = new PendingForumHandoff();
   private forumIdentityStore = new SafeStorageForumIdentityStore();
   private forumActivityMonitor = new ForumActivityMonitor(this);
   // Last count the monitor published, replayed in the initial state: the
@@ -1607,7 +1610,7 @@ class ApplicationMain
       Promise.resolve(this.forumIdentityStore.get()),
     );
     IpcMainEventChannel.forumLogin.handleApprove(async (request) => {
-      const { result, identity } = await approveForumLogin(request, this.daemonRpc);
+      const { result, identity, completion } = await approveForumLogin(request, this.daemonRpc);
       // A transient failure keeps the request buffered so a window reload can
       // retry; any settled outcome must not re-prompt.
       if (result !== 'error') {
@@ -1616,12 +1619,44 @@ class ApplicationMain
       if (identity !== undefined) {
         this.adoptForumIdentity(identity);
       }
-      if (result === 'approved') {
+      if (result !== 'approved') {
+        return { result };
+      }
+      const plan = planForumLoginApproval(request, completion);
+      this.pendingForumHandoff.clear();
+      if (plan.onButton !== undefined) {
+        this.pendingForumHandoff.set(plan.onButton, Date.now());
+      }
+      if (plan.openAtOnce !== undefined) {
+        void shell.openExternal(plan.openAtOnce).catch(() => {
+          // "Show the code" stays on screen. The error is left out: the URL
+          // it may quote carries the code and the sid.
+          log.warn('Forum login: the browser could not be opened for the handoff');
+        });
+      }
+      if (plan.approval.completion === undefined) {
         // Same reason as the attach flow: the browser is finishing the login,
         // not us.
         this.userInterface?.hideWindow();
       }
-      return result;
+      return plan.approval;
+    });
+    IpcMainEventChannel.forumLogin.handleFinishInBrowser(async () => {
+      const url = this.pendingForumHandoff.take(Date.now());
+      if (url === undefined) {
+        return false;
+      }
+      try {
+        await shell.openExternal(url);
+        return true;
+      } catch {
+        log.warn('Forum login: the browser could not be opened for the handoff');
+        return false;
+      }
+    });
+    IpcMainEventChannel.forumLogin.handleForgetCompletion(() => {
+      this.pendingForumHandoff.clear();
+      return Promise.resolve();
     });
     IpcMainEventChannel.forumLogin.handleCancel((request) => {
       this.pendingForumLogin.clear();

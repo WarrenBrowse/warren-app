@@ -5715,3 +5715,31 @@ msgstr "Raporttisi on foorumilla. Lokit toimitettiin vain osittain; tukitiimi vo
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "Warren-tilisi ei ole vielä valmis, joten raporttia ei voi allekirjoittaa. Viimeistele sovelluksen käyttöönotto ja lähetä sitten uudelleen."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "Kirjautuminen viimeistellään selaimessasi"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "Selaimesi viimeistelee kirjautumisen Warrenin yhteisöfoorumille."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "Onko kirjautumissivu toisessa selaimessa? Näytä koodi"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "6-numeroinen koodisi"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "Kirjoita tämä koodi toisen laitteesi kirjautumissivulle. Älä koskaan lue sitä ääneen tai lähetä sitä kenellekään, ei edes henkilölle, joka sanoo olevansa Warrenilta."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "Viimeistele tämän laitteen selaimessa"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "Sulje"

@@ -3,11 +3,18 @@ import { describe, expect, it } from 'vitest';
 import {
   beginForumLoginAttempt,
   bindForumLoginRequest,
+  completeForumLoginAttempt,
+  forumLoginCodeExpired,
   initialForumLoginPromptState,
   noticeForForumLoginResult,
+  revealForumLoginCode,
   settleForumLoginAttempt,
 } from '../../src/renderer/features/forum-login/prompt-state';
-import { IForumLoginRequest } from '../../src/shared/forum-login';
+import {
+  FORUM_LOGIN_CODE_LIFETIME_MS,
+  ForumLoginCodeScreen,
+  IForumLoginRequest,
+} from '../../src/shared/forum-login';
 
 const request: IForumLoginRequest = {
   sid: 'a'.repeat(32),
@@ -99,5 +106,52 @@ describe('the inline notice of a non-approved outcome', () => {
 
   it('shows nothing for an approval, which closes the prompt instead', () => {
     expect(noticeForForumLoginResult('approved')).toBeUndefined();
+  });
+});
+
+describe('the completion screen of a bound approval', () => {
+  const handoff: ForumLoginCodeScreen = {
+    screen: 'finishing-in-browser',
+    code: '042917',
+    finishInBrowser: false,
+  };
+  const showCode: ForumLoginCodeScreen = {
+    screen: 'show-code',
+    code: '042917',
+    finishInBrowser: true,
+  };
+  const inFlight = beginForumLoginAttempt(
+    bindForumLoginRequest(initialForumLoginPromptState, request),
+  );
+
+  it('keeps the code behind "Show the code" while the browser finishes the sign-in', () => {
+    const state = completeForumLoginAttempt(inFlight, handoff, 1_000);
+    expect(state.busy).toBe(false);
+    expect(state.completion?.screen).toBe('finishing-in-browser');
+    expect(state.completion?.codeRevealed).toBe(false);
+    expect(revealForumLoginCode(state).completion?.codeRevealed).toBe(true);
+  });
+
+  it('shows the code at once on the code screen, with the finish action it was given', () => {
+    const state = completeForumLoginAttempt(inFlight, showCode, 1_000);
+    expect(state.completion?.codeRevealed).toBe(true);
+    expect(state.completion?.code).toBe('042917');
+    expect(state.completion?.finishInBrowser).toBe(true);
+  });
+
+  it('forgets the code once the session behind it is dead', () => {
+    const state = completeForumLoginAttempt(inFlight, showCode, 1_000);
+    expect(forumLoginCodeExpired(state, 1_000 + FORUM_LOGIN_CODE_LIFETIME_MS - 1)).toBe(false);
+    expect(forumLoginCodeExpired(state, 1_000 + FORUM_LOGIN_CODE_LIFETIME_MS)).toBe(true);
+    expect(forumLoginCodeExpired(initialForumLoginPromptState, 0)).toBe(false);
+  });
+
+  it('gives a new link a clean prompt instead of the last code', () => {
+    const state = bindForumLoginRequest(
+      completeForumLoginAttempt(inFlight, showCode, 1_000),
+      another,
+    );
+    expect(state.completion).toBeUndefined();
+    expect(state.request).toEqual(another);
   });
 });

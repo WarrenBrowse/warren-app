@@ -6,14 +6,21 @@ import {
   forumLoginRequestFromCode,
   parseForumHandle,
   parseForumIdentityResponse,
+  parseForumLoginCompletion,
   parseForumLoginUrl,
   PENDING_ATTACH_MAX_AGE_MS,
   PENDING_LOGIN_MAX_AGE_MS,
+  PendingForumHandoff,
   PendingForumRequest,
+  planForumLoginApproval,
   resultForProviderResponse,
 } from '../../src/main/forum-login';
 import { ForumIdentity } from '../../src/shared/forum-identity';
 import {
+  FORUM_LOGIN_CODE_LIFETIME_MS,
+  forumCompletionPlan,
+  ForumLoginApproach,
+  forumLoginApproach,
   ForumLoginResult,
   IForumLoginRequest,
   isTerminalForumLoginResult,
@@ -106,7 +113,24 @@ describe('a sign-in code typed under Settings', () => {
       sid: '0123456789abcdef0123456789abcdef',
       host: 'connect.warrenbrowse.com',
       crossDevice: link.sign_in_code_cross_device,
+      typedCode: true,
     });
+  });
+
+  it('is the typed-code approach, which a link never is', () => {
+    // The completion screen differs by approach: a typed code shows the code
+    // and keeps the handoff behind a button, a same-device link opens it.
+    const typed = forumLoginRequestFromCode('0123456789abcdef0123456789abcdef');
+    expect(typed && forumLoginApproach(typed)).toBe('typed-code');
+    const sid = 'a'.repeat(32);
+    const button = parseForumLoginUrl(
+      `warren://forum-login?sid=${sid}&host=connect.warrenbrowse.com`,
+    );
+    expect(button && forumLoginApproach(button)).toBe('same-device-link');
+    const qr = parseForumLoginUrl(
+      `warren://forum-login?sid=${sid}&host=connect.warrenbrowse.com&xd=1`,
+    );
+    expect(qr && forumLoginApproach(qr)).toBe('cross-device-link');
   });
 
   it('raises the cross-device warning for a typed code, which no signal places', () => {
@@ -392,5 +416,103 @@ describe('forum_outcomes.json, the desktop reader', () => {
         outcomes.login.terminal_kinds.includes(expected.kind),
       );
     }
+  });
+});
+
+describe('the completion of a bound approval', () => {
+  const outcomes = loadClientRules<ForumOutcomesFixture>('forum_outcomes.json');
+  const sid = '0123456789abcdef0123456789abcdef';
+  const code = '042917';
+  const handoffUrl = `https://connect.warrenbrowse.com/handoff#sid=${sid}&code=${code}`;
+  const link: IForumLoginRequest = { sid, host: 'connect.warrenbrowse.com', crossDevice: false };
+  const qr: IForumLoginRequest = { ...link, crossDevice: true };
+  const typed: IForumLoginRequest = { ...link, crossDevice: true, typedCode: true };
+
+  function parsedBody(body: string): unknown {
+    try {
+      return JSON.parse(body);
+    } catch {
+      return undefined;
+    }
+  }
+
+  it('reads the code and the handoff of every login case as the fixture says', () => {
+    for (const fixtureCase of outcomes.login.cases.filter((c) => !skippedOnDesktop(c))) {
+      const { name, status, body, expect: expected } = fixtureCase;
+      if (status < 200 || status > 299) {
+        continue;
+      }
+      const wanted =
+        expected.completion === undefined
+          ? undefined
+          : { code: expected.completion.code, handoffUrl: expected.completion.handoff_url };
+      expect(parseForumLoginCompletion(parsedBody(body)), name).toEqual(wanted);
+    }
+  });
+
+  it('leads every approach to the screen and the handoff the fixture names', () => {
+    const completion = outcomes.login.completion;
+    const cases = completion.cases.filter((c) => !skippedOnDesktop(c));
+    expect(cases.length).toBeGreaterThanOrEqual(9);
+    for (const fixtureCase of cases) {
+      const answer = outcomes.login.cases.find((c) => c.name === fixtureCase.answer);
+      expect(answer, `${fixtureCase.name}: answer ${fixtureCase.answer}`).toBeDefined();
+      expect(completion.approaches).toContain(fixtureCase.approach);
+      const plan = forumCompletionPlan(
+        fixtureCase.approach as ForumLoginApproach,
+        parseForumLoginCompletion(parsedBody(answer!.body)),
+      );
+      expect(plan, fixtureCase.name).toEqual(fixtureCase.expect);
+    }
+  });
+
+  it('holds the code no longer than the session lives', () => {
+    expect(FORUM_LOGIN_CODE_LIFETIME_MS).toBe(outcomes.login.completion.code_lifetime_secs * 1000);
+  });
+
+  it('opens the handoff at once after a same-device link and hands the renderer the code', () => {
+    const plan = planForumLoginApproval(link, { code, handoffUrl });
+    expect(plan.openAtOnce).toBe(handoffUrl);
+    expect(plan.onButton).toBeUndefined();
+    expect(plan.approval).toEqual({
+      result: 'approved',
+      completion: { screen: 'finishing-in-browser', code, finishInBrowser: false },
+    });
+  });
+
+  it('keeps the handoff of a typed code for the button, never opening it on its own', () => {
+    const plan = planForumLoginApproval(typed, { code, handoffUrl });
+    expect(plan.openAtOnce).toBeUndefined();
+    expect(plan.onButton).toBe(handoffUrl);
+    expect(plan.approval.completion).toEqual({ screen: 'show-code', code, finishInBrowser: true });
+  });
+
+  it('never opens or keeps a handoff after a QR approval, even one the provider sent', () => {
+    const plan = planForumLoginApproval(qr, { code, handoffUrl });
+    expect(plan.openAtOnce).toBeUndefined();
+    expect(plan.onButton).toBeUndefined();
+    expect(plan.approval.completion).toEqual({ screen: 'show-code', code, finishInBrowser: false });
+  });
+
+  it('returns the legacy approval when the provider predates the code', () => {
+    for (const request of [link, qr, typed]) {
+      expect(planForumLoginApproval(request, undefined)).toEqual({
+        approval: { result: 'approved' },
+      });
+    }
+  });
+
+  it('hands the kept handoff over once, and not after the session died', () => {
+    const pending = new PendingForumHandoff();
+    pending.set(handoffUrl, 1_000);
+    expect(pending.take(1_000 + FORUM_LOGIN_CODE_LIFETIME_MS - 1)).toBe(handoffUrl);
+    expect(pending.take(1_000 + FORUM_LOGIN_CODE_LIFETIME_MS - 1)).toBeUndefined();
+
+    pending.set(handoffUrl, 1_000);
+    expect(pending.take(1_000 + FORUM_LOGIN_CODE_LIFETIME_MS)).toBeUndefined();
+
+    pending.set(handoffUrl, 1_000);
+    pending.clear();
+    expect(pending.take(1_001)).toBeUndefined();
   });
 });

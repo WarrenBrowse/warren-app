@@ -3,6 +3,11 @@ import { Session, session } from 'electron';
 import { productAnchors } from '../shared/constants/product-env';
 import { ForumIdentity, isSlot } from '../shared/forum-identity';
 import {
+  FORUM_LOGIN_CODE_LIFETIME_MS,
+  forumCompletionPlan,
+  forumLoginApproach,
+  ForumLoginApproval,
+  ForumLoginCompletion,
   ForumLoginResult,
   IForumLoginRequest,
   normalizeForumSignInCode,
@@ -18,8 +23,10 @@ import { DaemonRpc } from './daemon-rpc';
  * signs in on the forum, the provider shows an approval page carrying a
  * `warren://forum-login?sid=..&host=..` deep link. The OS hands that link to
  * this app; we ask the daemon to sign the fixed `POST /v1/forum/login`
- * challenge with the Warren identity key, then POST it to the connect host.
- * The browser's approval page (polling) then completes the login.
+ * approval with the Warren identity key, then POST it to the connect host.
+ * The answer carries a one-time code that the browser which opened the
+ * sign-in must present (warren-connect `docs/FORUM-LOGIN-V2.md`): the app
+ * opens the handoff page with it, or shows it to be typed.
  *
  * The signing key never leaves the daemon; the renderer/main only ferry the
  * opaque `sid` and the resulting signature headers (which are not long-lived
@@ -109,7 +116,7 @@ export function forumLoginRequestFromCode(typed: string): IForumLoginRequest | u
   if (sid === undefined) {
     return undefined;
   }
-  return { sid, host: ALLOWED_CONNECT_HOSTS[0], crossDevice: true };
+  return { sid, host: ALLOWED_CONNECT_HOSTS[0], crossDevice: true, typedCode: true };
 }
 
 /**
@@ -172,6 +179,110 @@ export function parseForumIdentityResponse(body: unknown): ForumIdentity | undef
     return undefined;
   }
   return { handle, notifySlot: parseForumNotifySlot(body) ?? null };
+}
+
+/**
+ * The completion out of an approved-login response: the one-time code a
+ * bound approval returns, and the handoff URL of a same-device one. The code
+ * must be six ASCII digits or the whole completion is ignored, which leaves
+ * the login on the answer of a provider that predates it. The handoff must be
+ * exactly `https://<connect host>/handoff#sid=<32 lowercase hex>&code=<code>`
+ * or it is dropped on its own and the code kept, so the person can still type
+ * it: the URL is opened in the default browser, and anything else there (a
+ * foreign host, a query string an access log would keep, a second code) is
+ * not a URL the provider builds. The rules of `warren_forum::parse_login_completion`.
+ */
+export function parseForumLoginCompletion(
+  body: unknown,
+  host: string = ALLOWED_CONNECT_HOSTS[0],
+): ForumLoginCompletion | undefined {
+  if (typeof body !== 'object' || body === null) {
+    return undefined;
+  }
+  const completion = (body as { completion?: unknown }).completion;
+  if (typeof completion !== 'object' || completion === null) {
+    return undefined;
+  }
+  const { code, handoff_url: handoffUrl } = completion as {
+    code?: unknown;
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    handoff_url?: unknown;
+  };
+  if (typeof code !== 'string' || !/^[0-9]{6}$/.test(code)) {
+    return undefined;
+  }
+  return typeof handoffUrl === 'string' && isHandoffUrl(handoffUrl, host, code)
+    ? { code, handoffUrl }
+    : { code };
+}
+
+function isHandoffUrl(url: string, host: string, code: string): boolean {
+  const prefix = `https://${host}/handoff#sid=`;
+  if (!url.startsWith(prefix)) {
+    return false;
+  }
+  const rest = url.slice(prefix.length);
+  return /^[0-9a-f]{32}$/.test(rest.slice(0, 32)) && rest.slice(32) === `&code=${code}`;
+}
+
+/**
+ * What main does with an approved login: the approval the renderer shows,
+ * and the handoff to open now or keep for the "Finish in this device's
+ * browser" action. The table is `forumCompletionPlan`'s; this is where the
+ * handoff URL is split off, so it never reaches the renderer.
+ */
+export interface ForumLoginApprovalPlan {
+  approval: ForumLoginApproval;
+  openAtOnce?: string;
+  onButton?: string;
+}
+
+export function planForumLoginApproval(
+  request: IForumLoginRequest,
+  completion: ForumLoginCompletion | undefined,
+): ForumLoginApprovalPlan {
+  const plan = forumCompletionPlan(forumLoginApproach(request), completion);
+  if (completion === undefined || plan.screen === 'returned-to-browser') {
+    return { approval: { result: 'approved' } };
+  }
+  return {
+    approval: {
+      result: 'approved',
+      completion: {
+        screen: plan.screen,
+        code: completion.code,
+        finishInBrowser: plan.handoff === 'on-button',
+      },
+    },
+    openAtOnce: plan.handoff === 'open-at-once' ? completion.handoffUrl : undefined,
+    onButton: plan.handoff === 'on-button' ? completion.handoffUrl : undefined,
+  };
+}
+
+/**
+ * The handoff of a typed-code approval, held in main for the "Finish in this
+ * device's browser" action: handed over once, and not after the session it
+ * belongs to has died.
+ */
+export class PendingForumHandoff {
+  private url?: string;
+  private expiresAt = 0;
+
+  public set(url: string, now: number): void {
+    this.url = url;
+    this.expiresAt = now + FORUM_LOGIN_CODE_LIFETIME_MS;
+  }
+
+  public take(now: number): string | undefined {
+    const url = now < this.expiresAt ? this.url : undefined;
+    this.clear();
+    return url;
+  }
+
+  public clear(): void {
+    this.url = undefined;
+    this.expiresAt = 0;
+  }
 }
 
 // A request buffered past the life of the session it names could only produce
@@ -238,10 +349,14 @@ export function resultForProviderResponse(status: number, bodyText: string): For
   return 'error';
 }
 
-/** Outcome of an approved login, plus the identity the provider echoed back. */
+/**
+ * Outcome of an approved login, plus the identity the provider echoed back
+ * and the completion of a bound approval.
+ */
 export interface ApprovedForumLogin {
   result: ForumLoginResult;
   identity?: ForumIdentity;
+  completion?: ForumLoginCompletion;
 }
 
 /**
@@ -299,17 +414,23 @@ export async function approveForumLogin(
       log.error(`Forum login: provider returned HTTP ${response.status}`);
       return { result };
     }
-    log.info('Forum login: signed challenge accepted by the provider');
     // A malformed body must not fail a login the provider already accepted:
-    // the handle is a display convenience and the slot only drives a badge,
-    // while the login itself is done.
-    let identity: ForumIdentity | undefined;
+    // the handle is a display convenience and the slot only drives a badge.
+    // Without a completion the browser completes on its own.
+    let body: unknown;
     try {
-      identity = parseForumIdentityResponse(JSON.parse(bodyText));
+      body = JSON.parse(bodyText);
     } catch {
-      identity = undefined;
+      body = undefined;
     }
-    return { result: 'approved', identity };
+    const completion = parseForumLoginCompletion(body);
+    // The class only: the code and the handoff URL are live credentials.
+    log.info(
+      `Forum login: signed challenge accepted by the provider (${
+        completion === undefined ? 'no completion' : 'completion code received'
+      })`,
+    );
+    return { result: 'approved', identity: parseForumIdentityResponse(body), completion };
   } catch (error) {
     // Never log the sid/pubkey/signature (no-log policy).
     log.error(`Forum login: POST to connect host failed: ${String(error)}`);

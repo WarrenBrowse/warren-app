@@ -5702,3 +5702,31 @@ msgstr "گزارش شما در انجمن است. گزارش‌های فنی ف�
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "حساب Warren شما هنوز آماده نیست، بنابراین گزارش قابل امضا نیست. راه‌اندازی برنامه را کامل کنید، سپس دوباره ارسال کنید."
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "در حال تکمیل ورود در مرورگر شما"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "مرورگر شما در حال تکمیل ورود به انجمن جامعه Warren است."
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "صفحه ورود در مرورگر دیگری است؟ نمایش کد"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "کد ۶ رقمی شما"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "این کد را در صفحه ورود دستگاه دیگرتان وارد کنید. هرگز آن را بلند نخوانید و برای هیچ‌کس نفرستید، حتی برای کسی که می‌گوید از طرف Warren است."
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "تکمیل در مرورگر همین دستگاه"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "بستن"

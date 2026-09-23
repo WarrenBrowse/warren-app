@@ -5687,3 +5687,31 @@ msgstr "您的報告已發布到論壇。記錄檔只送達了一部分，支援
 msgctxt "report-problem"
 msgid "Your Warren account is not ready yet, so the report cannot be signed. Finish setting up the app, then send again."
 msgstr "你的 Warren 帳號尚未就緒，因此無法簽署回報。請先完成應用程式的設定，再重新傳送。"
+
+msgctxt "forum-login"
+msgid "Finishing the sign-in in your browser"
+msgstr "正在瀏覽器中完成登入"
+
+msgctxt "forum-login"
+msgid "Your browser is finishing the sign-in to the Warren community forum."
+msgstr "您的瀏覽器正在完成 Warren 社群論壇的登入。"
+
+msgctxt "forum-login"
+msgid "The sign-in page is in another browser? Show the code"
+msgstr "登入頁面在另一個瀏覽器中？顯示代碼"
+
+msgctxt "forum-login"
+msgid "Your 6-digit code"
+msgstr "您的 6 位數代碼"
+
+msgctxt "forum-login"
+msgid "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+msgstr "請在您另一台裝置的登入頁面上輸入此代碼。切勿唸出或傳送給任何人，包括自稱來自 Warren 的人。"
+
+msgctxt "forum-login"
+msgid "Finish in this device's browser"
+msgstr "在此裝置的瀏覽器中完成"
+
+msgctxt "forum-login"
+msgid "Close"
+msgstr "關閉"
