@@ -132,7 +132,7 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 #[derive(Clone)]
 pub struct WarrenRemoteAccountBackend {
     client: Arc<SharedWarrenApiClient>,
-    /// Secrets pulled from `GET /v1/checkout/{wpid}/voucher` whose
+    /// Secrets pulled from `POST /v1/checkout/{wpid}/voucher` whose
     /// `POST /v1/register` has not succeeded yet, keyed by wpid. The
     /// pull consumes the server-side single-use mapping, so a register
     /// failure (API briefly down) would otherwise burn a PAID voucher:
@@ -218,14 +218,14 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             // wrong wallet with no recovery.
             check_account_matches_identity(&account, &pubkey_ss58)?;
             // App-initiated purchase (doc 35): the GUI polls this same
-            // entry point with the 32-hex wpid it generated before
-            // opening the checkout site. A wpid can never collide with
-            // a voucher (16 Crockford-32 chars after normalization),
-            // so the shape fully determines the path: pull the queued
-            // secret from the API first, then redeem it as usual.
-            let wpid = as_wpid(&voucher);
-            let voucher = match &wpid {
-                Some(wpid) => {
+            // entry point with the claim code of the purchase it opened
+            // (wpid + pull secret). The shape fully determines the path:
+            // pull the queued secret from the API with the pull secret
+            // first, then redeem it as usual.
+            let claim = as_purchase_claim(&voucher);
+            let wpid = claim.as_ref().map(|c| c.wpid.clone());
+            let voucher = match &claim {
+                Some(PurchaseClaim { wpid, pull_secret }) => {
                     // A previous poll may have pulled the secret and
                     // then failed the register: the server-side
                     // mapping is consumed, the cache is the only copy.
@@ -237,7 +237,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                     match cached {
                         Some(secret) => secret,
                         None => match client
-                            .pull_pending_voucher(wpid)
+                            .pull_pending_voucher(wpid, pull_secret)
                             .await
                             .map_err(map_client_error)?
                         {
@@ -368,17 +368,30 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
     }
 }
 
-/// Detect the warren purchase id shape: exactly 32 ASCII hex chars
-/// (after trimming), normalized to lowercase. Mirrors
-/// `warren_api::providers::normalize_wpid`. Anything else is treated
+/// An app-initiated purchase the GUI asks the daemon to collect: the
+/// wpid it opened the checkout with, and the pull secret warren-api hands
+/// the voucher out against (the checkout only ever saw the secret's hash).
+struct PurchaseClaim {
+    wpid: String,
+    pull_secret: String,
+}
+
+/// Detect the purchase claim shape: exactly 96 ASCII hex chars (after
+/// trimming), the 32-hex wpid followed by the 64-hex pull secret,
+/// normalized to lowercase. A voucher (16 Crockford-32 chars after
+/// normalization) can never take that shape, so anything else is treated
 /// as a regular voucher secret.
-fn as_wpid(input: &str) -> Option<String> {
+fn as_purchase_claim(input: &str) -> Option<PurchaseClaim> {
     let trimmed = input.trim();
-    if trimmed.len() == 32 && trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
-        Some(trimmed.to_ascii_lowercase())
-    } else {
-        None
+    if trimmed.len() != 96 || !trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
     }
+    let lower = trimmed.to_ascii_lowercase();
+    let (wpid, pull_secret) = lower.split_at(32);
+    Some(PurchaseClaim {
+        wpid: wpid.to_owned(),
+        pull_secret: pull_secret.to_owned(),
+    })
 }
 
 /// Maps a warren-api error specifically for the voucher
@@ -634,27 +647,43 @@ mod tests {
     }
 
     // ===================================================================
-    // App-initiated purchase path (doc 35): submit_voucher with a wpid
-    // pulls the queued secret from GET /v1/checkout/{wpid}/voucher
-    // before redeeming it through POST /v1/register.
+    // App-initiated purchase path (doc 35): submit_voucher with a claim
+    // code (wpid + pull secret) pulls the queued secret from
+    // POST /v1/checkout/{wpid}/voucher, presenting the pull secret, before
+    // redeeming it through POST /v1/register.
     // ===================================================================
 
+    /// The pull secret of every claim in these tests.
+    const PULL_SECRET: &str = "abababababababababababababababababababababababababababababababab";
+
+    fn claim_code(wpid: &str) -> String {
+        format!("{wpid}{PULL_SECRET}")
+    }
+
+    /// The pull request the daemon must send: the secret in the body.
+    fn pull_body() -> mockito::Matcher {
+        mockito::Matcher::Json(serde_json::json!({ "pull_secret": PULL_SECRET }))
+    }
+
     #[test]
-    fn as_wpid_accepts_only_32_hex_chars() {
-        assert_eq!(
-            super::as_wpid("0123456789ABCDEF0123456789abcdef").as_deref(),
-            Some("0123456789abcdef0123456789abcdef"),
-            "32 hex chars (any case, trimmed) are a wpid, lowercased"
+    fn as_purchase_claim_accepts_only_96_hex_chars() {
+        let claim = super::as_purchase_claim(&format!(
+            "  0123456789ABCDEF0123456789abcdef{}\n",
+            PULL_SECRET.to_uppercase()
+        ))
+        .expect("96 hex chars (any case, trimmed) are a claim");
+        assert_eq!(claim.wpid, "0123456789abcdef0123456789abcdef");
+        assert_eq!(claim.pull_secret, PULL_SECRET, "lowercased");
+        // A bare wpid carries no pull secret, so it collects nothing: it is
+        // not a claim.
+        assert!(super::as_purchase_claim("0123456789abcdef0123456789abcdef").is_none());
+        // Voucher display and raw forms must NOT be mistaken for claims.
+        assert!(super::as_purchase_claim("ABCD-EFGH-JKMN-PQRS").is_none());
+        assert!(super::as_purchase_claim("ABCDEFGHJKMNPQRS").is_none());
+        assert!(super::as_purchase_claim("").is_none());
+        assert!(
+            super::as_purchase_claim(&format!("{}g", &claim_code(&"0".repeat(32))[1..])).is_none()
         );
-        assert_eq!(
-            super::as_wpid("  0123456789abcdef0123456789abcdef\n").as_deref(),
-            Some("0123456789abcdef0123456789abcdef")
-        );
-        // Voucher display and raw forms must NOT be mistaken for wpids.
-        assert!(super::as_wpid("ABCD-EFGH-JKMN-PQRS").is_none());
-        assert!(super::as_wpid("ABCDEFGHJKMNPQRS").is_none());
-        assert!(super::as_wpid("").is_none());
-        assert!(super::as_wpid("0123456789abcdef0123456789abcdeg").is_none());
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
@@ -690,7 +719,7 @@ mod tests {
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
-    async fn warren_remote_submit_voucher_with_wpid_pulls_and_redeems() {
+    async fn warren_remote_submit_voucher_with_claim_pulls_and_redeems() {
         // The pull mapping is single-use: `expect(1)` on the 200 mock
         // hands the second poll over to the 404 mock, reproducing the
         // server-side consumption without a real server.
@@ -703,14 +732,15 @@ mod tests {
         let voucher_added = 30 * 86_400;
         let expires_at = now_secs() + 365 * 86_400;
         let pull_ok = server
-            .mock("GET", checkout.as_str())
+            .mock("POST", checkout.as_str())
+            .match_body(pull_body())
             .with_status(200)
             .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
             .expect(1)
             .create_async()
             .await;
         let pull_gone = server
-            .mock("GET", checkout.as_str())
+            .mock("POST", checkout.as_str())
             .with_status(404)
             .create_async()
             .await;
@@ -727,9 +757,9 @@ mod tests {
         let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let submission = backend
-            .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
+            .submit_voucher(pubkey_ss58.clone(), claim_code(wpid))
             .await
-            .expect("wpid pull + redeem must succeed");
+            .expect("claim pull + redeem must succeed");
         assert_eq!(
             submission.time_added, voucher_added,
             "time_added must be the voucher's granted duration, NOT the \
@@ -738,10 +768,10 @@ mod tests {
         pull_ok.assert_async().await;
         register.assert_async().await;
 
-        // The mapping is single-use: a replay poll on the same wpid
+        // The mapping is single-use: a replay poll on the same claim
         // reports not-ready (the GUI stops polling on success).
         let err = backend
-            .submit_voucher(pubkey_ss58, wpid.to_owned())
+            .submit_voucher(pubkey_ss58, claim_code(wpid))
             .await
             .expect_err("second pull must fail");
         match err {
@@ -765,14 +795,15 @@ mod tests {
         let checkout = format!("/v1/checkout/{wpid}/voucher");
         // Pull succeeds (secret cached), then register 400s (final).
         let _pull_ok = server
-            .mock("GET", checkout.as_str())
+            .mock("POST", checkout.as_str())
+            .match_body(pull_body())
             .with_status(200)
             .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
             .expect(1)
             .create_async()
             .await;
         let _pull_gone = server
-            .mock("GET", checkout.as_str())
+            .mock("POST", checkout.as_str())
             .with_status(404)
             .create_async()
             .await;
@@ -787,7 +818,7 @@ mod tests {
         let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let err = backend
-            .submit_voucher(pubkey_ss58.clone(), wpid.to_owned())
+            .submit_voucher(pubkey_ss58.clone(), claim_code(wpid))
             .await
             .expect_err("register of an unknown voucher must fail");
         match err {
@@ -808,7 +839,7 @@ mod tests {
 
         // Next poll: pull path again, mapping already consumed -> 404.
         let err = backend
-            .submit_voucher(pubkey_ss58, wpid.to_owned())
+            .submit_voucher(pubkey_ss58, claim_code(wpid))
             .await
             .expect_err("consumed mapping must 404");
         match err {
@@ -825,7 +856,7 @@ mod tests {
         let mut server = mockito::Server::new_async().await;
         let wpid = "ffeeddccbbaa99887766554433221100";
         let _pull = server
-            .mock("GET", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
             .with_status(404)
             .create_async()
             .await;
@@ -833,7 +864,7 @@ mod tests {
         let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
 
         let err = backend
-            .submit_voucher(address_for_seed(seed), wpid.to_owned())
+            .submit_voucher(address_for_seed(seed), claim_code(wpid))
             .await
             .expect_err("unready wpid must fail");
         match err {

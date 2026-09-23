@@ -57,9 +57,10 @@ import com.warrenbrowse.vpn.feature.login.api.WarrenKeysNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
-import com.warrenbrowse.vpn.lib.repository.MnemonicCache
-import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.MnemonicCache
+import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
+import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
@@ -128,19 +129,20 @@ fun WarrenWalletSettings(navigator: Navigator) {
     // explicit "I backed up my phrase" acknowledgement, matching the desktop
     // logout checkbox gate (AccountView).
     var eraseBackupAck by remember { mutableStateOf(false) }
-    // wpid awaiting its redeem poll: set when the user opens the checkout, then
-    // consumed on the next return to the app (see LifecycleResumeEffect below).
-    var pendingPurchaseWpid by remember { mutableStateOf<String?>(null) }
+    // Purchase awaiting its redeem poll: set when the user opens the checkout,
+    // then consumed on the next return to the app (see LifecycleResumeEffect
+    // below).
+    var pendingPurchase by remember { mutableStateOf<PurchaseClaim?>(null) }
 
     // Defer the signed redeem poll until the user comes back from the browser
-    // after paying: resuming with a pending wpid keeps the flow aligned with
+    // after paying: resuming with a pending purchase keeps the flow aligned with
     // the desktop buyCredit poll. The same resume hook refreshes the cached
     // expiry silently (desktop updateAccountData-on-mount parity) so the
     // paid-until row is live data, not a stale cache.
     LifecycleResumeEffect(Unit) {
-        pendingPurchaseWpid?.let { wpid ->
-            pendingPurchaseWpid = null
-            subscriptionInvoker.startPurchasePoll(activity, wpid)
+        pendingPurchase?.let { claim ->
+            pendingPurchase = null
+            subscriptionInvoker.startPurchasePoll(activity, claim)
         }
         if (walletRepository.state.value !is WalletState.Absent) {
             scope.launch { runCatching { subscriptionInvoker.fetch(activity) } }
@@ -243,19 +245,21 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     VariantButton(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
-                            // App-initiated purchase (doc 35): mint a random wpid and
-                            // open the checkout bound to it (short pubkey rides in the
-                            // fragment for the landing page only, never sent to the
-                            // server). The signed redeem poll is armed here but only
-                            // fires when the user returns to the app (see the
-                            // LifecycleResumeEffect), so the unlock prompt appears
-                            // after payment, not before.
-                            val wpid = newPurchaseId()
+                            // App-initiated purchase (doc 35): mint a purchase claim
+                            // and open the checkout bound to its wpid and pull-secret
+                            // hash (short pubkey rides in the fragment for the landing
+                            // page only, never sent to the server). The signed redeem
+                            // poll is armed here but only fires when the user returns
+                            // to the app (see the LifecycleResumeEffect), so the unlock
+                            // prompt appears after payment, not before.
+                            val claim = PurchaseClaim.mint()
                             val acct = java.net.URLEncoder.encode(
                                 pubkey.shortWarrenAddress(), "UTF-8",
                             )
-                            pendingPurchaseWpid = wpid
-                            uriHandler.safeOpenUri("$CHECKOUT_URL?pid=$wpid#acct=$acct")
+                            pendingPurchase = claim
+                            uriHandler.safeOpenUri(
+                                "${claim.checkoutUrl(CHECKOUT_URL)}#acct=$acct",
+                            )
                         },
                         text = stringResource(R.string.account_buy_more_credit),
                         icon = {
@@ -574,10 +578,3 @@ private const val COPIED_ICON_DURATION_MS = 2_000L
 
 // Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
 private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
-
-/** Random 128-bit purchase id (wpid) as 32 lowercase hex chars (doc 35). */
-private fun newPurchaseId(): String {
-    val bytes = ByteArray(16)
-    java.security.SecureRandom().nextBytes(bytes)
-    return bytes.joinToString("") { "%02x".format(it) }
-}

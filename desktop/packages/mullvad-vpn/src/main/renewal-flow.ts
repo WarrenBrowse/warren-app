@@ -1,15 +1,14 @@
-import { randomBytes } from 'crypto';
-
 import log from '../shared/logging';
 import { RenewalUiState } from '../shared/renewal';
+import { mintPurchaseClaim, pullSecretHash, PurchaseClaim } from './purchase-claim';
 
 // Client-side auto-renewal (warren-core doc 65). The recurring state
 // lives HERE, on the device: a Stripe customer handle plus a bearer
 // token whose hash sits in the Customer metadata at Stripe. Warren's
 // servers keep nothing between cycles, so this flow is the only thing
 // in the system that knows the account renews. Each cycle replays the
-// regular purchase flow with a fresh wpid; the daemon redeems the
-// voucher without ever learning about the renewal.
+// regular purchase flow with a fresh purchase claim (wpid + pull secret);
+// the daemon redeems the voucher without ever learning about the renewal.
 
 export const RENEWAL_PERIOD_SECS = 30 * 86_400;
 // Fire window: from 3 days before expiry until expiry.
@@ -86,14 +85,15 @@ export interface RenewalFlowDelegate {
   // POST {checkout}/v1/checkout/renew; DELETE for cancel.
   requestRenew(body: Record<string, unknown>): Promise<RenewOutcome>;
   requestCancel(customerId: string, renewalToken: string): Promise<void>;
-  // GET {api}/v1/checkout/{wpid}/renewal, undefined on 404/error.
-  fetchHandoff(wpid: string): Promise<Partial<RenewalState> | undefined>;
-  // Hand the freshly-minted wpid to the purchase flow so the regular
+  // POST {api}/v1/checkout/{wpid}/renewal with the claim's pull secret,
+  // undefined on 404/error.
+  fetchHandoff(claim: PurchaseClaim): Promise<Partial<RenewalState> | undefined>;
+  // Hand the freshly-minted claim to the purchase flow so the regular
   // poll/redeem machinery picks the voucher up. The mandate's account
   // tag rides along: the voucher must only ever credit the account
   // that opted in, even if the login changed while the charge request
   // was in flight.
-  trackRenewalPurchase(wpid: string, accountTag: string): void;
+  trackRenewalPurchase(claim: PurchaseClaim, accountTag: string): void;
   notifyReminder(): void;
   // The 30-day pre-renewal notice: "renews on <date>".
   notifyUpcoming(renewsAtMs: number): void;
@@ -122,6 +122,51 @@ export function renewOutcomeOfHttpStatus(status: number): RenewOutcome | undefin
     return 'declined';
   }
   return status >= 300 ? 'unreachable' : undefined;
+}
+
+// The handoff carries the token that lets the checkout charge the saved
+// card: warren-api hands it out only against the purchase's pull secret, in
+// the body. `undefined` on any refusal (one 404 for an unknown purchase, a
+// wrong secret or a consumed handoff), a transport error or a malformed
+// answer, so the caller never adopts half a mandate.
+export async function fetchRenewalHandoff(
+  apiUrl: string,
+  claim: PurchaseClaim,
+  fetchFn: (url: string, init?: RequestInit) => Promise<Response> = fetch,
+): Promise<Partial<RenewalState> | undefined> {
+  try {
+    const res = await fetchFn(`${apiUrl}v1/checkout/${claim.wpid}/renewal`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ pull_secret: claim.secret }),
+    });
+    if (!res.ok) {
+      return undefined;
+    }
+    const body = (await res.json()) as Record<string, unknown>;
+    const customerId = body['customer_id'];
+    const renewalToken = body['renewal_token'];
+    const months = body['months'];
+    if (
+      typeof customerId !== 'string' ||
+      typeof renewalToken !== 'string' ||
+      typeof months !== 'number'
+    ) {
+      return undefined;
+    }
+    const optString = (v: unknown) => (typeof v === 'string' ? v : undefined);
+    return {
+      customerId,
+      renewalToken,
+      months,
+      priceCents: typeof body['price_cents'] === 'number' ? body['price_cents'] : undefined,
+      currency: optString(body['currency']),
+      cardBrand: optString(body['card_brand']),
+      cardLast4: optString(body['card_last4']),
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 export default class RenewalFlow {
@@ -158,7 +203,7 @@ export default class RenewalFlow {
 
   // Adopt the handoff of a just-redeemed opt-in purchase. 404 (no
   // opt-in) is the common case and stays silent.
-  public async adopt(wpid: string): Promise<void> {
+  public async adopt(claim: PurchaseClaim): Promise<void> {
     if (!this.store.available()) {
       return;
     }
@@ -166,7 +211,7 @@ export default class RenewalFlow {
     if (tag === undefined) {
       return;
     }
-    const handoff = await this.delegate.fetchHandoff(wpid);
+    const handoff = await this.delegate.fetchHandoff(claim);
     if (!handoff?.customerId || !handoff.renewalToken || !handoff.months) {
       return;
     }
@@ -351,14 +396,17 @@ export default class RenewalFlow {
       return;
     }
 
-    const wpid = randomBytes(16).toString('hex');
+    // The checkout binds the cycle's purchase to the pull secret's hash
+    // before it charges; the secret itself stays here for the pull.
+    const claim = mintPurchaseClaim();
     this.inFlight = true;
     let outcome: RenewOutcome;
     try {
       outcome = await this.delegate.requestRenew({
         customer_id: state.customerId,
         renewal_token: state.renewalToken,
-        wpid,
+        wpid: claim.wpid,
+        app_pull_secret_hash: pullSecretHash(claim.secret),
         // Decision 12.8: renewal cycles are always monthly, whatever
         // the initial plan bought.
         months: 1,
@@ -397,7 +445,7 @@ export default class RenewalFlow {
         // daemon announce the added time. The mandate's tag pins the
         // voucher to the opted-in account even if the login changed
         // while the request was in flight.
-        this.delegate.trackRenewalPurchase(wpid, state.accountTag);
+        this.delegate.trackRenewalPurchase(claim, state.accountTag);
         break;
       case 'already_renewed':
         // Another device holding the same restored state won the race.

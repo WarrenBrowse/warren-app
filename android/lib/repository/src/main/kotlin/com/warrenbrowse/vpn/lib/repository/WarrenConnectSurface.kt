@@ -343,15 +343,15 @@ interface WarrenSubscriptionInvoker {
 
     /**
      * Auto-credit an app-initiated purchase (warren-core doc 35): unlock once, then poll the signed
-     * redeem of the 32-hex purchase id [wpid] until the payment is credited or [deadlineMs]
-     * elapses. Fire-and-forget: it runs in an app-scoped coroutine that survives the browser
+     * redeem of the purchase [claim] (its wpid and pull secret) until the payment is credited or
+     * [deadlineMs] elapses. Fire-and-forget: it runs in an app-scoped coroutine that survives the browser
      * round-trip and screen navigation, and on success writes the credited expiry to
      * [WarrenLocalSettingsRepository.cachedSubscriptionExpiry] so the whole app refreshes
      * reactively.
      */
     fun startPurchasePoll(
         activity: FragmentActivity,
-        wpid: String,
+        claim: PurchaseClaim,
         intervalMs: Long = 5_000,
         deadlineMs: Long = 10 * 60 * 1000,
     )

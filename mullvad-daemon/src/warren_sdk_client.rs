@@ -120,12 +120,16 @@ impl SharedWarrenApiClient {
         self.client().delete_account().await
     }
 
-    /// Unsigned `GET /v1/checkout/{pending_id}/voucher`.
+    /// Unsigned `POST /v1/checkout/{wpid}/voucher`, presenting the
+    /// purchase's pull secret.
     pub async fn pull_pending_voucher(
         &self,
-        pending_id: &str,
+        wpid: &str,
+        pull_secret_hex: &str,
     ) -> Result<Option<String>, ClientError> {
-        self.client().pull_pending_voucher(pending_id).await
+        self.client()
+            .pull_pending_voucher(wpid, pull_secret_hex)
+            .await
     }
 
     /// Unsigned `POST /v1/register`.

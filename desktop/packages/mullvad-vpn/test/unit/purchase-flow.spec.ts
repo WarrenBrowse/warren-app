@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { claimCode, pullSecretHash } from '../../src/main/purchase-claim';
 import PurchaseFlow, {
   ACTIVE_POLL_DURATION_MS,
   ACTIVE_POLL_INTERVAL_MS,
@@ -59,6 +60,17 @@ function makeDelegate(responses: () => Promise<VoucherResponse>, initialTag = 'a
 
 const alwaysInvalid = () => Promise.resolve(invalid);
 
+// The claim code the flow persisted for its newest purchase: the wpid the
+// URL shows followed by the pull secret it never shows.
+function persistedCode(store: FakeStore): string {
+  return store.entries[0].split(':')[0];
+}
+
+// A persisted claim code for a fixture purchase.
+function fixtureCode(hexChar: string): string {
+  return claimCode({ wpid: hexChar.repeat(32), secret: hexChar.repeat(64) });
+}
+
 describe('PurchaseFlow.start', () => {
   beforeEach(() => {
     vi.useFakeTimers({ now: T0 });
@@ -67,14 +79,22 @@ describe('PurchaseFlow.start', () => {
     vi.useRealTimers();
   });
 
-  it('opens the checkout bound to a fresh 32-hex wpid', async () => {
+  it('opens the checkout bound to a fresh wpid and the hash of a fresh pull secret', async () => {
     const { delegate, opened } = makeDelegate(alwaysInvalid);
-    const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
 
     expect(opened).toHaveLength(1);
-    expect(opened[0]).toMatch(/^https:\/\/checkout\.warrenbrowse\.com\/\?pid=[0-9a-f]{32}$/);
+    expect(opened[0]).toMatch(
+      /^https:\/\/checkout\.warrenbrowse\.com\/\?pid=[0-9a-f]{32}&ph=[0-9a-f]{64}$/,
+    );
+    const code = persistedCode(store);
+    const url = new URL(opened[0]);
+    expect(code.slice(0, 32)).toBe(url.searchParams.get('pid'));
+    expect(url.searchParams.get('ph')).toBe(pullSecretHash(code.slice(32)));
+    expect(opened[0]).not.toContain(code.slice(32));
     flow.dispose();
   });
 
@@ -108,7 +128,9 @@ describe('PurchaseFlow.start', () => {
     await flow.start();
 
     const wpid = new URL(opened[0]).searchParams.get('pid');
-    expect(store.entries).toEqual([`${wpid}:${T0}:acct1`]);
+    const code = persistedCode(store);
+    expect(code).toMatch(new RegExp(`^${wpid}[0-9a-f]{64}$`));
+    expect(store.entries).toEqual([`${code}:${T0}:acct1`]);
     flow.dispose();
   });
 
@@ -128,7 +150,7 @@ describe('PurchaseFlow.start', () => {
   it('caps the persisted pending purchases, dropping the oldest', async () => {
     const preloaded = Array.from(
       { length: MAX_PENDING_PURCHASES },
-      (_, i) => `${String(i).repeat(32).slice(0, 32)}:${T0 - (i + 1) * 60_000}`,
+      (_, i) => `${fixtureCode(String(i))}:${T0 - (i + 1) * 60_000}`,
     );
     const { delegate } = makeDelegate(alwaysInvalid);
     const store = new FakeStore(preloaded);
@@ -153,19 +175,19 @@ describe('PurchaseFlow active poll', () => {
     vi.useRealTimers();
   });
 
-  it('polls submitVoucher with the wpid every interval until success, then stops and clears the entry', async () => {
+  it('polls submitVoucher with the claim code every interval until success, then stops and clears the entry', async () => {
     const responses = [invalid, invalid, success];
-    const { delegate, submitted, opened, pollingStates } = makeDelegate(() =>
+    const { delegate, submitted, pollingStates } = makeDelegate(() =>
       Promise.resolve(responses.shift() ?? invalid),
     );
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
-    const wpid = new URL(opened[0]).searchParams.get('pid');
+    const code = persistedCode(store);
 
     await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toEqual([wpid, wpid, wpid]);
+    expect(submitted).toEqual([code, code, code]);
     expect(store.entries).toEqual([]);
     expect(flow.polling).toBe(false);
 
@@ -283,16 +305,20 @@ describe('PurchaseFlow active poll', () => {
     flow.dispose();
   });
 
-  it('restarts the poll on the new wpid when the user opens checkout again', async () => {
+  it('restarts the poll on the new purchase when the user opens checkout again', async () => {
     const { delegate, submitted, opened } = makeDelegate(alwaysInvalid);
-    const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
     await flow.start();
-    const secondWpid = new URL(opened[1]).searchParams.get('pid');
+    const secondWpid = new URL(opened[1]).searchParams.get('pid') ?? '';
+    const secondCode = store.entries
+      .map((entry) => entry.split(':')[0])
+      .find((code) => code.startsWith(secondWpid));
 
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toEqual([secondWpid]);
+    expect(submitted).toEqual([secondCode]);
     flow.dispose();
   });
 
@@ -318,10 +344,22 @@ describe('PurchaseFlow.checkPendingNow', () => {
     vi.useRealTimers();
   });
 
-  const wpidA = 'a'.repeat(32);
-  const wpidB = 'b'.repeat(32);
+  const wpidA = fixtureCode('a');
+  const wpidB = fixtureCode('b');
 
-  it('submits every persisted wpid and clears only the redeemed ones', async () => {
+  it('drops a persisted entry that holds no pull secret, which could never be collected', async () => {
+    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const store = new FakeStore([`${'d'.repeat(32)}:${T0 - 60_000}`]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.checkPendingNow(true);
+
+    expect(submitted).toEqual([]);
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
+  it('submits every persisted claim and clears only the redeemed ones', async () => {
     const { delegate, submitted } = makeDelegate(() =>
       Promise.resolve(submitted[submitted.length - 1] === wpidA ? success : invalid),
     );
@@ -428,7 +466,7 @@ describe('PurchaseFlow.resume', () => {
     vi.useRealTimers();
   });
 
-  const wpid = 'c'.repeat(32);
+  const wpid = fixtureCode('c');
 
   it('restarts the active poll for a purchase younger than the active window (app restarted mid-payment)', async () => {
     const startedMs = T0 - 2 * 60_000;

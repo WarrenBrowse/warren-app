@@ -137,7 +137,11 @@ import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
 import PurchaseFlow from './purchase-flow';
 import ReconnectionBackoff from './reconnection-backoff';
-import RenewalFlow, { RenewOutcome, renewOutcomeOfHttpStatus } from './renewal-flow';
+import RenewalFlow, {
+  fetchRenewalHandoff,
+  RenewOutcome,
+  renewOutcomeOfHttpStatus,
+} from './renewal-flow';
 import SafeStorageRenewalStore from './renewal-store';
 import Settings, { SettingsDelegate } from './settings';
 import { createTorrentClientAdapter } from './torrent-client/adapters';
@@ -324,7 +328,7 @@ class ApplicationMain
         // stamped with a non-reversible account tag (never the raw
         // pubkey: gui_settings.json must stay identity-free).
         accountTag: () => this.currentAccountTag(),
-        onRedeemed: (wpid) => void this.renewalFlow.adopt(wpid),
+        onRedeemed: (claim) => void this.renewalFlow.adopt(claim),
       },
       {
         get: () => this.settings.gui.pendingPurchases,
@@ -347,9 +351,9 @@ class ApplicationMain
             body: JSON.stringify({ customer_id: customerId, renewal_token: renewalToken }),
           });
         },
-        fetchHandoff: (wpid) => this.fetchRenewalHandoff(wpid),
-        trackRenewalPurchase: (wpid, accountTag) =>
-          this.purchaseFlow.trackExternal(wpid, accountTag),
+        fetchHandoff: (claim) => fetchRenewalHandoff(urls.api, claim),
+        trackRenewalPurchase: (claim, accountTag) =>
+          this.purchaseFlow.trackExternal(claim, accountTag),
         notifyReminder: () =>
           this.notify(new RenewalReminderNotificationProvider().getSystemNotification()),
         notifyUpcoming: (renewsAtMs) =>
@@ -2050,38 +2054,6 @@ class ApplicationMain
         return parsed.status;
       default:
         return 'unreachable';
-    }
-  }
-
-  private async fetchRenewalHandoff(wpid: string) {
-    try {
-      const res = await fetch(`${urls.api}v1/checkout/${wpid}/renewal`);
-      if (!res.ok) {
-        return undefined;
-      }
-      const body = (await res.json()) as Record<string, unknown>;
-      const customerId = body['customer_id'];
-      const renewalToken = body['renewal_token'];
-      const months = body['months'];
-      if (
-        typeof customerId !== 'string' ||
-        typeof renewalToken !== 'string' ||
-        typeof months !== 'number'
-      ) {
-        return undefined;
-      }
-      const optString = (v: unknown) => (typeof v === 'string' ? v : undefined);
-      return {
-        customerId,
-        renewalToken,
-        months,
-        priceCents: typeof body['price_cents'] === 'number' ? body['price_cents'] : undefined,
-        currency: optString(body['currency']),
-        cardBrand: optString(body['card_brand']),
-        cardLast4: optString(body['card_last4']),
-      };
-    } catch {
-      return undefined;
     }
   }
 

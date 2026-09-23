@@ -43,13 +43,14 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.impl.RedeemVoucherDialog
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
+import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
 import com.warrenbrowse.vpn.lib.ui.designsystem.NegativeButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
@@ -97,7 +98,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
     var refreshFailed by remember { mutableStateOf(false) }
     var showVoucherDialog by remember { mutableStateOf(false) }
     var showDisconnectAndBuy by remember { mutableStateOf(false) }
-    var pendingPurchaseWpid by remember { mutableStateOf<String?>(null) }
+    var pendingPurchase by remember { mutableStateOf<PurchaseClaim?>(null) }
 
     val pubkey = when (val s = walletRepository.state.value) {
         is WalletState.Ready -> s.pubkey.value
@@ -107,20 +108,21 @@ fun OutOfTimeScreen(navigator: Navigator) {
 
     val openCheckout = {
         // App-initiated purchase (doc 35), same plumbing as the account screen:
-        // mint a wpid, open the checkout bound to it, and arm the signed redeem
-        // poll for the return to the app.
-        val wpid = newPurchaseId()
+        // mint a purchase claim, open the checkout bound to its wpid and
+        // pull-secret hash, and arm the signed redeem poll for the return to
+        // the app.
+        val claim = PurchaseClaim.mint()
         val acct = pubkey?.let {
             java.net.URLEncoder.encode(it.shortWarrenAddress(), "UTF-8")
         }.orEmpty()
-        pendingPurchaseWpid = wpid
-        uriHandler.safeOpenUri("$CHECKOUT_URL?pid=$wpid#acct=$acct")
+        pendingPurchase = claim
+        uriHandler.safeOpenUri("${claim.checkoutUrl(CHECKOUT_URL)}#acct=$acct")
     }
 
     LifecycleResumeEffect(Unit) {
-        pendingPurchaseWpid?.let { wpid ->
-            pendingPurchaseWpid = null
-            subscriptionInvoker.startPurchasePoll(activity, wpid)
+        pendingPurchase?.let { claim ->
+            pendingPurchase = null
+            subscriptionInvoker.startPurchasePoll(activity, claim)
         }
         onPauseOrDispose {}
     }
@@ -316,10 +318,3 @@ private const val DISCONNECT_SETTLE_MS = 1_000L
 
 // Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
 private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
-
-/** Random 128-bit purchase id (wpid) as 32 lowercase hex chars (doc 35). */
-private fun newPurchaseId(): String {
-    val bytes = ByteArray(16)
-    java.security.SecureRandom().nextBytes(bytes)
-    return bytes.joinToString("") { "%02x".format(it) }
-}

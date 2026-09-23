@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { pullSecretHash, PurchaseClaim } from '../../src/main/purchase-claim';
 import RenewalFlow, {
+  fetchRenewalHandoff,
   periodOfExpiry,
   RENEWAL_MAX_ATTEMPTS,
   RENEWAL_NOTICE_LEAD_MS,
@@ -12,6 +14,9 @@ import RenewalFlow, {
   RenewOutcome,
   renewOutcomeOfHttpStatus,
 } from '../../src/main/renewal-flow';
+
+// The purchase whose voucher the app just redeemed.
+const REDEEMED: PurchaseClaim = { wpid: 'f'.repeat(32), secret: 'e'.repeat(64) };
 
 class FakeStore implements RenewalStore {
   public state?: RenewalState;
@@ -31,7 +36,8 @@ class FakeDelegate implements RenewalFlowDelegate {
   public cancelCalls: string[] = [];
   public cancelShouldFail = false;
   public handoff: Partial<RenewalState> | undefined;
-  public tracked: { wpid: string; tag: string }[] = [];
+  public tracked: { claim: PurchaseClaim; tag: string }[] = [];
+  public handoffClaims: PurchaseClaim[] = [];
   public reminders = 0;
   public notices = 0;
   public receipts = 0;
@@ -51,9 +57,12 @@ class FakeDelegate implements RenewalFlowDelegate {
     this.cancelCalls.push(customerId);
     return this.cancelShouldFail ? Promise.reject(new Error('offline')) : Promise.resolve();
   };
-  fetchHandoff = () => Promise.resolve(this.handoff);
-  trackRenewalPurchase = (wpid: string, tag: string) => {
-    this.tracked.push({ wpid, tag });
+  fetchHandoff = (claim: PurchaseClaim) => {
+    this.handoffClaims.push(claim);
+    return Promise.resolve(this.handoff);
+  };
+  trackRenewalPurchase = (claim: PurchaseClaim, tag: string) => {
+    this.tracked.push({ claim, tag });
   };
   notifyReminder = () => void this.reminders++;
   notifyUpcoming = () => void this.notices++;
@@ -118,8 +127,9 @@ describe('RenewalFlow', () => {
     // would only ever charge after a manual top-up).
     delegate.expiry = new Date(Date.now() + 30 * DAY_MS).toISOString();
     delegate.handoff = { customerId: 'cus_1', renewalToken: 'ab'.repeat(32), months: 1 };
-    await flow.adopt('f'.repeat(32));
+    await flow.adopt(REDEEMED);
 
+    expect(delegate.handoffClaims).toEqual([REDEEMED]);
     expect(store.state?.customerId).toBe('cus_1');
     expect(store.state?.lastRenewedPeriod).toBeUndefined();
     expect(delegate.renewCalls).toHaveLength(0);
@@ -147,7 +157,7 @@ describe('RenewalFlow', () => {
     delegate.expiry = new Date(Date.now() + 30 * DAY_MS - 5_000).toISOString();
     const expiryMs = Date.parse(delegate.expiry);
     delegate.handoff = { customerId: 'cus_1', renewalToken: 'ab'.repeat(32), months: 1 };
-    await flow.adopt('f'.repeat(32));
+    await flow.adopt(REDEEMED);
 
     expect(delegate.notices).toBe(1);
     expect(store.state?.noticedPeriod).toBe(periodOfExpiry(delegate.expiry));
@@ -164,11 +174,11 @@ describe('RenewalFlow', () => {
   it('refuses to adopt without OS encryption (fail closed)', async () => {
     store.availableValue = false;
     delegate.handoff = { customerId: 'cus_1', renewalToken: 'ab'.repeat(32), months: 1 };
-    await flow.adopt('f'.repeat(32));
+    await flow.adopt(REDEEMED);
     expect(store.state).toBeUndefined();
   });
 
-  it('reminds before charging and charges inside the window with a fresh wpid', async () => {
+  it('reminds before charging and charges inside the window with a fresh purchase claim', async () => {
     delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
     store.state = noticedState(delegate.expiry);
     const noticeShownAtMs = store.state.noticeShownAtMs as number;
@@ -183,8 +193,14 @@ describe('RenewalFlow', () => {
     expect(String(body.wpid)).toMatch(/^[0-9a-f]{32}$/);
     expect(body.months).toBe(1);
     expect(body.notice_shown_at).toBe(Math.floor(noticeShownAtMs / 1000));
-    // Success hands the wpid to the purchase machinery and stamps the period.
-    expect(delegate.tracked).toEqual([{ wpid: body.wpid, tag: 'tag-a' }]);
+    // Success hands the claim to the purchase machinery and stamps the
+    // period. The checkout only ever sees the pull secret's hash.
+    expect(delegate.tracked).toHaveLength(1);
+    const { claim, tag } = delegate.tracked[0];
+    expect(tag).toBe('tag-a');
+    expect(claim.wpid).toBe(body.wpid);
+    expect(body.app_pull_secret_hash).toBe(pullSecretHash(claim.secret));
+    expect(JSON.stringify(body)).not.toContain(claim.secret);
     expect(store.state?.lastRenewedPeriod).toBe(body.period);
   });
 
@@ -445,5 +461,53 @@ describe('renewOutcomeOfHttpStatus', () => {
     expect(renewOutcomeOfHttpStatus(429)).toBe('unreachable');
     expect(renewOutcomeOfHttpStatus(502)).toBe('unreachable');
     expect(renewOutcomeOfHttpStatus(200)).toBeUndefined();
+  });
+});
+
+describe('fetchRenewalHandoff', () => {
+  const API = 'https://api.example/';
+
+  it('posts the pull secret in the body, never in the URL, and reads the handoff', async () => {
+    const calls: { url: string; init?: RequestInit }[] = [];
+    const fakeFetch = (url: string, init?: RequestInit) => {
+      calls.push({ url, init });
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            customer_id: 'cus_1',
+            renewal_token: 'ab'.repeat(32),
+            months: 1,
+            price_cents: 499,
+            currency: 'eur',
+          }),
+          { status: 200 },
+        ),
+      );
+    };
+
+    const handoff = await fetchRenewalHandoff(API, REDEEMED, fakeFetch);
+
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(`${API}v1/checkout/${REDEEMED.wpid}/renewal`);
+    expect(calls[0].url).not.toContain(REDEEMED.secret);
+    expect(calls[0].init?.method).toBe('POST');
+    expect(JSON.parse(String(calls[0].init?.body))).toEqual({ pull_secret: REDEEMED.secret });
+    expect(handoff).toEqual({
+      customerId: 'cus_1',
+      renewalToken: 'ab'.repeat(32),
+      months: 1,
+      priceCents: 499,
+      currency: 'eur',
+      cardBrand: undefined,
+      cardLast4: undefined,
+    });
+  });
+
+  it('reads a refused pull as no handoff', async () => {
+    // warren-api answers one 404 for an unknown purchase, a wrong secret and
+    // a consumed handoff alike.
+    const refused = () => Promise.resolve(new Response('{"error":"refused"}', { status: 404 }));
+
+    expect(await fetchRenewalHandoff(API, REDEEMED, refused)).toBeUndefined();
   });
 });

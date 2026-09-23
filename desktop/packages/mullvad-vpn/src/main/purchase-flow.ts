@@ -1,7 +1,12 @@
-import { randomBytes } from 'crypto';
-
 import { VoucherResponse } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
+import {
+  claimCode,
+  mintPurchaseClaim,
+  parseClaimCode,
+  pullSecretHash,
+  PurchaseClaim,
+} from './purchase-claim';
 
 export const ACTIVE_POLL_INTERVAL_MS = 5_000;
 export const ACTIVE_POLL_DURATION_MS = 10 * 60_000;
@@ -20,37 +25,39 @@ export interface PurchaseFlowDelegate {
   // purchase may only ever be submitted under the account that
   // initiated it.
   accountTag(): string | undefined;
-  // Fired once per wpid when its voucher lands on this account; the
-  // renewal flow uses it to fetch the opt-in handoff (warren-core doc 65).
-  onRedeemed?(wpid: string): void;
+  // Fired once per purchase when its voucher lands on this account; the
+  // renewal flow uses the claim to fetch the opt-in handoff (warren-core
+  // doc 65).
+  onRedeemed?(claim: PurchaseClaim): void;
 }
 
-// Persisted as `${wpid}:${startedUnixMs}:${accountTag}` strings so a
+// Persisted as `${claimCode}:${startedUnixMs}:${accountTag}` strings so a
 // purchase in flight survives an app restart (the user may pay minutes
 // after closing the app; the webhook-minted voucher waits server-side).
+// The claim code carries the pull secret, the only thing that collects the
+// voucher, so an entry is as sensitive as the voucher it waits for.
 export interface PendingPurchaseStore {
   get(): string[];
   set(entries: string[]): void;
 }
 
 interface PendingPurchase {
-  wpid: string;
+  claim: PurchaseClaim;
   startedMs: number;
   tag?: string;
 }
 
-const WPID_RE = /^[0-9a-f]{32}$/;
-
 // App-initiated purchase flow (warren-core doc 35): mint a random
-// 128-bit purchase id (wpid), open the checkout bound to it, and poll
-// submitVoucher with the wpid until the payment webhook's voucher is
-// pulled and redeemed. Lives in the MAIN process on purpose: the
+// 128-bit purchase id (wpid) and a pull secret, open the checkout bound
+// to the wpid and the secret's hash, and poll submitVoucher with the
+// claim code until the payment webhook's voucher is pulled and redeemed.
+// Lives in the MAIN process on purpose: the
 // renderer of the menubar window is hidden and background-throttled
 // exactly while the user pays in the browser, which used to stall the
 // poll until the app was restarted.
 export default class PurchaseFlow {
   private activeTimer?: NodeJS.Timeout;
-  private activeWpid?: string;
+  private activeClaim?: PurchaseClaim;
   private activeTag?: string;
   private activeDeadlineMs = 0;
   private submitInFlight = false;
@@ -69,28 +76,31 @@ export default class PurchaseFlow {
   }
 
   public async start(acctShort?: string): Promise<void> {
-    const wpid = randomBytes(16).toString('hex');
+    const claim = mintPurchaseClaim();
     const startedMs = Date.now();
     const tag = this.delegate.accountTag();
 
     const entries = this.prune(startedMs);
-    entries.push({ wpid, startedMs, tag });
+    entries.push({ claim, startedMs, tag });
     entries.sort((a, b) => b.startedMs - a.startedMs);
     this.persist(entries.slice(0, MAX_PENDING_PURCHASES));
 
-    // The account chip rides in the URL FRAGMENT, which the browser
-    // never sends to the server; only the shortened, non-reversible
-    // form is passed (doc 35).
+    // Only the secret's hash rides in the URL: the checkout binds the
+    // purchase to it, and the secret itself never leaves this process
+    // except in the pull's body. The account chip rides in the URL
+    // FRAGMENT, which the browser never sends to the server; only the
+    // shortened, non-reversible form is passed (doc 35).
     const fragment = acctShort ? `#acct=${encodeURIComponent(acctShort)}` : '';
+    const query = `?pid=${claim.wpid}&ph=${pullSecretHash(claim.secret)}`;
     try {
-      await this.delegate.openUrl(`${this.purchaseUrl}?pid=${wpid}${fragment}`);
+      await this.delegate.openUrl(`${this.purchaseUrl}${query}${fragment}`);
     } catch (e) {
       // Nothing to redeem for a checkout the user never saw.
-      this.removeEntry(wpid);
+      this.removeEntry(claim);
       throw e;
     }
 
-    this.startActivePoll(wpid, startedMs + ACTIVE_POLL_DURATION_MS, tag);
+    this.startActivePoll(claim, startedMs + ACTIVE_POLL_DURATION_MS, tag);
   }
 
   // Track a purchase whose checkout happened WITHOUT a browser: the
@@ -99,17 +109,17 @@ export default class PurchaseFlow {
   // account tag (the mandate's, captured before the charge): stamping
   // the CURRENT login here would credit whoever is logged in when the
   // charge completes, the wrong-wallet class of doc 35.
-  public trackExternal(wpid: string, accountTag?: string): void {
-    if (!WPID_RE.test(wpid)) {
+  public trackExternal(claim: PurchaseClaim, accountTag?: string): void {
+    if (parseClaimCode(claimCode(claim)) === undefined) {
       return;
     }
     const startedMs = Date.now();
     const tag = accountTag ?? this.delegate.accountTag();
     const entries = this.prune(startedMs);
-    entries.push({ wpid, startedMs, tag });
+    entries.push({ claim, startedMs, tag });
     entries.sort((a, b) => b.startedMs - a.startedMs);
     this.persist(entries.slice(0, MAX_PENDING_PURCHASES));
-    this.startActivePoll(wpid, startedMs + ACTIVE_POLL_DURATION_MS, tag);
+    this.startActivePoll(claim, startedMs + ACTIVE_POLL_DURATION_MS, tag);
   }
 
   // One-shot pass over every persisted purchase of the CURRENT
@@ -159,11 +169,11 @@ export default class PurchaseFlow {
     let others = entries;
     if (now - newest.startedMs < ACTIVE_POLL_DURATION_MS) {
       this.startActivePoll(
-        newest.wpid,
+        newest.claim,
         newest.startedMs + ACTIVE_POLL_DURATION_MS,
         newest.tag ?? this.delegate.accountTag(),
       );
-      others = entries.filter((entry) => entry.wpid !== newest.wpid);
+      others = entries.filter((entry) => entry.claim.wpid !== newest.claim.wpid);
     }
     if (others.length > 0) {
       this.checkInFlight = true;
@@ -179,14 +189,14 @@ export default class PurchaseFlow {
       clearInterval(this.activeTimer);
       this.activeTimer = undefined;
     }
-    this.activeWpid = undefined;
+    this.activeClaim = undefined;
   }
 
-  private startActivePoll(wpid: string, deadlineMs: number, tag: string | undefined) {
+  private startActivePoll(claim: PurchaseClaim, deadlineMs: number, tag: string | undefined) {
     if (this.activeTimer) {
       clearInterval(this.activeTimer);
     }
-    this.activeWpid = wpid;
+    this.activeClaim = claim;
     this.activeTag = tag;
     this.activeDeadlineMs = deadlineMs;
     this.activeTimer = setInterval(() => {
@@ -200,12 +210,12 @@ export default class PurchaseFlow {
       clearInterval(this.activeTimer);
       this.activeTimer = undefined;
     }
-    this.activeWpid = undefined;
+    this.activeClaim = undefined;
     this.setPolling(false);
   }
 
   private async tick(): Promise<void> {
-    if (this.submitInFlight || this.activeWpid === undefined) {
+    if (this.submitInFlight || this.activeClaim === undefined) {
       return;
     }
     if (this.delegate.accountTag() !== this.activeTag) {
@@ -222,18 +232,18 @@ export default class PurchaseFlow {
       return;
     }
 
-    const wpid = this.activeWpid;
+    const claim = this.activeClaim;
     this.submitInFlight = true;
     try {
-      const response = await this.delegate.submitVoucher(wpid);
+      const response = await this.delegate.submitVoucher(claimCode(claim));
       // 'not_ready' (webhook not landed) and 'error' keep polling.
       // 'success' credits the account; 'already_used' means the
       // mapping was already consumed.
       if (response.type === 'success' || response.type === 'already_used') {
-        this.removeEntry(wpid);
+        this.removeEntry(claim);
         this.stopActivePoll();
         if (response.type === 'success') {
-          this.delegate.onRedeemed?.(wpid);
+          this.delegate.onRedeemed?.(claim);
         }
       }
     } catch (e) {
@@ -246,17 +256,17 @@ export default class PurchaseFlow {
 
   private async checkEntries(entries: PendingPurchase[]): Promise<void> {
     for (const entry of entries) {
-      // The active poll owns its wpid; submitting it here too would
+      // The active poll owns its purchase; submitting it here too would
       // race two RPCs for the same code.
-      if (entry.wpid === this.activeWpid) {
+      if (entry.claim.wpid === this.activeClaim?.wpid) {
         continue;
       }
       try {
-        const response = await this.delegate.submitVoucher(entry.wpid);
+        const response = await this.delegate.submitVoucher(claimCode(entry.claim));
         if (response.type === 'success' || response.type === 'already_used') {
-          this.removeEntry(entry.wpid);
+          this.removeEntry(entry.claim);
           if (response.type === 'success') {
-            this.delegate.onRedeemed?.(entry.wpid);
+            this.delegate.onRedeemed?.(entry.claim);
           }
         }
       } catch (e) {
@@ -296,11 +306,13 @@ export default class PurchaseFlow {
     return entries;
   }
 
-  private removeEntry(wpid: string) {
+  private removeEntry(claim: PurchaseClaim) {
     const entries = this.store
       .get()
       .map(parseEntry)
-      .filter((entry): entry is PendingPurchase => entry !== undefined && entry.wpid !== wpid);
+      .filter(
+        (entry): entry is PendingPurchase => entry !== undefined && entry.claim.wpid !== claim.wpid,
+      );
     this.persist(entries);
   }
 
@@ -308,18 +320,21 @@ export default class PurchaseFlow {
     this.store.set(
       entries.map((entry) =>
         entry.tag === undefined
-          ? `${entry.wpid}:${entry.startedMs}`
-          : `${entry.wpid}:${entry.startedMs}:${entry.tag}`,
+          ? `${claimCode(entry.claim)}:${entry.startedMs}`
+          : `${claimCode(entry.claim)}:${entry.startedMs}:${entry.tag}`,
       ),
     );
   }
 }
 
+// An entry without a pull secret (a bare wpid) can never be collected:
+// warren-api hands a voucher out only against the secret. It is dropped.
 function parseEntry(raw: string): PendingPurchase | undefined {
-  const [wpid, startedRaw, tag] = raw.split(':');
+  const [code, startedRaw, tag] = raw.split(':');
+  const claim = parseClaimCode(code ?? '');
   const startedMs = Number(startedRaw);
-  if (!WPID_RE.test(wpid ?? '') || !Number.isFinite(startedMs)) {
+  if (claim === undefined || !Number.isFinite(startedMs)) {
     return undefined;
   }
-  return { wpid, startedMs, tag };
+  return { claim, startedMs, tag };
 }

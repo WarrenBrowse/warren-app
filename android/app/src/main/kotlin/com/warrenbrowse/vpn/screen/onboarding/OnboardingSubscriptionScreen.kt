@@ -27,6 +27,7 @@ import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.settings.impl.RedeemVoucherDialog
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
+import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
@@ -47,7 +48,7 @@ import org.koin.compose.koinInject
  * the moment the account is funded, whatever credited it.
  *
  * Reuses the same purchase plumbing as the account screen ([WarrenSubscriptionInvoker]
- * + the wpid checkout poll) so there is no new backend.
+ * + the purchase-claim checkout poll) so there is no new backend.
  */
 @Composable
 @Suppress("LongMethod")
@@ -69,7 +70,7 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
     }
     val isSubscribed = cachedExpiry > System.currentTimeMillis() / 1000
 
-    var pendingPurchaseWpid by remember { mutableStateOf<String?>(null) }
+    var pendingPurchase by remember { mutableStateOf<PurchaseClaim?>(null) }
     var checking by remember { mutableStateOf(false) }
     var errorText by remember { mutableStateOf<String?>(null) }
     var showVoucherDialog by remember { mutableStateOf(false) }
@@ -77,9 +78,9 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
     // Arm the signed redeem poll only when the user returns from the browser,
     // matching the account-screen flow (the unlock prompt lands after payment).
     LifecycleResumeEffect(Unit) {
-        pendingPurchaseWpid?.let { wpid ->
-            pendingPurchaseWpid = null
-            subscriptionInvoker.startPurchasePoll(activity, wpid)
+        pendingPurchase?.let { claim ->
+            pendingPurchase = null
+            subscriptionInvoker.startPurchasePoll(activity, claim)
         }
         // Refresh the cached expiry on (re)entry so an already-subscribed wallet
         // is recognised without the user tapping "I already have a subscription".
@@ -172,14 +173,15 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
         VariantButton(
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
             onClick = {
-                // App-initiated purchase (doc 35): mint a wpid, open the
-                // checkout bound to it, arm the redeem poll for the return.
-                val wpid = newOnboardingPurchaseId()
-                pendingPurchaseWpid = wpid
+                // App-initiated purchase (doc 35): mint a purchase claim, open
+                // the checkout bound to its wpid and pull-secret hash, arm the
+                // redeem poll for the return.
+                val claim = PurchaseClaim.mint()
+                pendingPurchase = claim
                 val acct = pubkey?.let {
                     java.net.URLEncoder.encode(it.shortWarrenAddress(), "UTF-8")
                 }.orEmpty()
-                uriHandler.safeOpenUri("$ONBOARDING_CHECKOUT_URL?pid=$wpid#acct=$acct")
+                uriHandler.safeOpenUri("${claim.checkoutUrl(ONBOARDING_CHECKOUT_URL)}#acct=$acct")
             },
             text = stringResource(R.string.onboarding_subscription_view_plans),
         )
@@ -216,10 +218,3 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
 }
 
 private const val ONBOARDING_CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
-
-/** Random 128-bit purchase id (wpid) as 32 lowercase hex chars (doc 35). */
-private fun newOnboardingPurchaseId(): String {
-    val bytes = ByteArray(16)
-    java.security.SecureRandom().nextBytes(bytes)
-    return bytes.joinToString("") { "%02x".format(it) }
-}

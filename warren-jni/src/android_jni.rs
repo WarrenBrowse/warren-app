@@ -1941,21 +1941,23 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
     }
 }
 
-/// Detect the Warren purchase id shape: exactly 32 ASCII hex chars (after
-/// trimming), lowercased. Mirrors the desktop daemon's `as_wpid` and
-/// `warren_api::providers::normalize_wpid`. Anything else is a regular voucher
-/// secret, so the shape alone fully determines the redeem path.
+/// Detect the purchase claim shape: exactly 96 ASCII hex chars (after
+/// trimming), the 32-hex wpid followed by the 64-hex pull secret the app
+/// minted with it, lowercased. Mirrors the desktop daemon's
+/// `as_purchase_claim`. Anything else is a regular voucher secret, so the
+/// shape alone fully determines the redeem path. Returns `(wpid, pull_secret)`.
 #[cfg(target_os = "android")]
-fn as_wpid(input: &str) -> Option<String> {
+fn as_purchase_claim(input: &str) -> Option<(String, String)> {
     let trimmed = input.trim();
-    if trimmed.len() == 32 && trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
-        Some(trimmed.to_ascii_lowercase())
-    } else {
-        None
+    if trimmed.len() != 96 || !trimmed.bytes().all(|b| b.is_ascii_hexdigit()) {
+        return None;
     }
+    let lower = trimmed.to_ascii_lowercase();
+    let (wpid, pull_secret) = lower.split_at(32);
+    Some((wpid.to_owned(), pull_secret.to_owned()))
 }
 
-/// Voucher secrets pulled from `GET /v1/checkout/{wpid}/voucher` whose
+/// Voucher secrets pulled from `POST /v1/checkout/{wpid}/voucher` whose
 /// `POST /v1/register` has not landed yet, keyed by wpid. The pull consumes
 /// the server-side single-use mapping, so without this a transient register
 /// failure would burn a PAID voucher: every subsequent poll would re-pull and
@@ -1968,14 +1970,16 @@ static PULLED_UNREGISTERED: Mutex<std::collections::BTreeMap<String, String>> =
 
 /// Redeem a voucher OR claim an app-initiated purchase (doc 35).
 ///
-/// Mirrors the desktop daemon's `submit_voucher`: a 32-hex purchase id (wpid)
-/// is NOT a voucher, so we first pull the secret the payment webhook queued
-/// under it (`GET /v1/checkout/{wpid}/voucher`), then redeem that secret via
-/// `POST /v1/register`. A regular voucher (any other shape) is redeemed
-/// directly. A wpid whose webhook has not landed yet surfaces `purchase
-/// pending` so the Kotlin poll keeps trying within its own deadline.
+/// Mirrors the desktop daemon's `submit_voucher`: a purchase claim (the wpid
+/// followed by the app's pull secret) is NOT a voucher, so we first pull the
+/// secret the payment webhook queued under the wpid
+/// (`POST /v1/checkout/{wpid}/voucher`, presenting the pull secret), then
+/// redeem that secret via `POST /v1/register`. A regular voucher (any other
+/// shape) is redeemed directly. A purchase whose webhook has not landed yet
+/// surfaces `purchase pending` so the Kotlin poll keeps trying within its own
+/// deadline.
 #[cfg(target_os = "android")]
-fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, String> {
+fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, String> {
     let runtime = RUNTIME
         .get()
         .ok_or_else(|| "initLogger must be called before redeemVoucher".to_owned())?;
@@ -1984,11 +1988,12 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, St
     let pubkey = warren_api::PubkeySs58::try_from(pubkey_ss58.as_str())
         .map_err(|e| format!("invalid pubkey: {e}"))?;
     let client = unsigned_warren_client();
-    let wpid = as_wpid(voucher_or_wpid);
+    let claim = as_purchase_claim(voucher_or_claim);
+    let wpid = claim.as_ref().map(|(wpid, _)| wpid.clone());
 
     runtime.block_on(async move {
-        let voucher_secret = match &wpid {
-            Some(wpid) => {
+        let voucher_secret = match &claim {
+            Some((wpid, pull_secret)) => {
                 // A previous poll may have pulled the secret then failed the
                 // register: the server mapping is single-use, so this cache is
                 // the only remaining copy of a paid voucher. Reuse before pull.
@@ -1996,7 +2001,7 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, St
                 match cached {
                     Some(secret) => secret,
                     None => match client
-                        .pull_pending_voucher(wpid)
+                        .pull_pending_voucher(wpid, pull_secret)
                         .await
                         .map_err(|e| format!("pull pending voucher failed: {e}"))?
                     {
@@ -2011,7 +2016,7 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_wpid: &str) -> Result<u64, St
                     },
                 }
             }
-            None => voucher_or_wpid.to_owned(),
+            None => voucher_or_claim.to_owned(),
         };
 
         // An EMPTY voucher asks the server to redeem its configured

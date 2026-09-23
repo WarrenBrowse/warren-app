@@ -5,6 +5,7 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
@@ -118,10 +119,10 @@ class WarrenSubscriptionUseCase(
     /**
      * App-initiated purchase auto-credit (warren-core doc 35), the Android
      * counterpart of the desktop `buyCredit` poll. The caller opens the
-     * checkout bound to a random 32-hex purchase id (wpid); here we read the
-     * mnemonic silently (no prompt) and poll the signed `redeemVoucher(wpid)`
-     * every [intervalMs] until the payment webhook has queued the voucher under
-     * that id (Success) or [deadlineMs] elapses. The signed call is what binds
+     * checkout bound to the [claim]'s wpid and pull-secret hash; here we read
+     * the mnemonic silently (no prompt) and poll the signed
+     * `redeemVoucher(claim.code)` every [intervalMs] until the payment webhook
+     * has queued the voucher under the wpid (Success) or [deadlineMs] elapses. The signed call is what binds
      * the payment to this wallet; the daemon never learns the pubkey from the
      * checkout URL.
      *
@@ -130,7 +131,7 @@ class WarrenSubscriptionUseCase(
      */
     override fun startPurchasePoll(
         activity: FragmentActivity,
-        wpid: String,
+        claim: PurchaseClaim,
         intervalMs: Long,
         deadlineMs: Long,
     ) {
@@ -152,7 +153,7 @@ class WarrenSubscriptionUseCase(
                     val outcome = withContext(Dispatchers.IO) {
                         WarrenNativeRuntime.awaitReadyBlocking()
                         try {
-                            parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, wpid))
+                            parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, claim.code))
                         } catch (e: Exception) {
                             WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
                         }
