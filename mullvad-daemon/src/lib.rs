@@ -221,7 +221,7 @@ use talpid_types::split_tunnel::ExcludedProcess;
 use talpid_types::{
     ErrorExt,
     net::IpVersion,
-    tunnel::{ErrorStateCause, TunnelStateTransition},
+    tunnel::{ErrorStateCause, ParameterGenerationError, TunnelStateTransition},
 };
 use tokio::io;
 
@@ -1067,6 +1067,10 @@ pub struct Daemon {
     /// (Warren is the only mode); the inner `Option` is `None` only before
     /// the first bootstrap view is computed.
     warren_relay_list_view: Arc<Mutex<Option<RelayList>>>,
+    /// Asks the exit-list updater for an immediate refresh, so a blocked
+    /// state whose selection found no exit retries against a fresh roster
+    /// rather than the hourly cached one.
+    warren_roster_updater: warren_relay_list_updater::WarrenRelayListUpdaterHandle,
     shutdown_tasks: Vec<Pin<Box<dyn Future<Output = ()> + Send + Sync>>>,
     tunnel_state_machine_handle: TunnelStateMachineHandle,
     #[cfg(target_os = "windows")]
@@ -1891,7 +1895,7 @@ impl Daemon {
         // pubkey before caching, writes the cache atomically, and
         // hot-swaps the live selector + rebroadcasts the GUI view with no
         // daemon restart. Mirrors the upstream `RelayListUpdater` above.
-        {
+        let warren_roster_updater = {
             let warren_pg = parameters_generator.clone();
             let warren_notifier = management_interface.notifier().clone();
             // Shared live view so the updater's hot-swap is visible to the
@@ -1937,15 +1941,16 @@ impl Daemon {
             // Force an exit-list refresh on every connectivity online edge so
             // a post-wake reconnect selects from a fresh list rather than the
             // stale pre-sleep one (single-hop `no relay matches` wedge).
-            let mut warren_updater = warren_updater;
+            let mut online_edge_updater = warren_updater.clone();
             let mut online_edge_rx = warren_online_edge_rx.clone();
             tokio::spawn(async move {
                 while online_edge_rx.changed().await.is_ok() {
                     log::info!("Warren exit list: connectivity restored; refreshing now");
-                    warren_updater.update().await;
+                    online_edge_updater.update().await;
                 }
             });
-        }
+            warren_updater
+        };
 
         // Broadcast notices: a background updater fetches the
         // server-signed notice envelope, verifies it against the same
@@ -2204,6 +2209,7 @@ impl Daemon {
             relay_list_updater,
             parameters_generator,
             warren_relay_list_view,
+            warren_roster_updater,
             shutdown_tasks: vec![],
             tunnel_state_machine_handle,
             #[cfg(target_os = "windows")]
@@ -2808,6 +2814,9 @@ impl Daemon {
                     );
                 }
 
+                if refreshes_roster_before_retry(error_state.cause()) {
+                    self.warren_roster_updater.request_refresh();
+                }
                 if reschedules_reconnect(error_state.cause()) {
                     self.schedule_reconnect(Duration::from_secs(60))
                 }
@@ -6109,6 +6118,10 @@ const fn reschedules_reconnect(cause: &ErrorStateCause) -> bool {
         // else re-triggers it: the updater requests a reconnect only on a
         // circuit CHANGE, so a circuit that was merely late never produces one.
         ErrorStateCause::StartTunnelError => true,
+        // Selection found no exit. The usual cause clears on its own: the
+        // pinned exit left the roster while it was drained for maintenance
+        // and is back minutes later, with nothing to tell this client.
+        ErrorStateCause::TunnelParameterError(ParameterGenerationError::NoMatchingRelay) => true,
         // Parked deliberately: flapping stopped an uncancelable retry loop, and
         // a pubkey mismatch waits on the user trusting the new key. Retrying
         // either defeats the state.
@@ -6120,6 +6133,21 @@ const fn reschedules_reconnect(cause: &ErrorStateCause) -> bool {
         // operator or user action a dial cannot supply.
         _ => false,
     }
+}
+
+/// Whether a blocking error state should refresh the exit roster before its
+/// timed retry.
+///
+/// The retry selects from the cached roster, which the updater refreshes only
+/// hourly. A selection that came up empty against that list would keep coming
+/// up empty for up to an hour after the exit is back; the refresh (a
+/// conditional GET, `304` while nothing changed) lets the retry see it.
+#[must_use]
+const fn refreshes_roster_before_retry(cause: &ErrorStateCause) -> bool {
+    matches!(
+        cause,
+        ErrorStateCause::TunnelParameterError(ParameterGenerationError::NoMatchingRelay)
+    )
 }
 
 /// Canonical `POST /v1/forum/login` JSON body (doc 55): the bound approval
@@ -6708,8 +6736,8 @@ mod macos_split_tunnel_gate_tests {
 
 #[cfg(test)]
 mod blocking_error_retry_tests {
-    use super::reschedules_reconnect;
-    use talpid_types::tunnel::ErrorStateCause;
+    use super::{refreshes_roster_before_retry, reschedules_reconnect};
+    use talpid_types::tunnel::{ErrorStateCause, ParameterGenerationError};
 
     #[test]
     fn a_failed_tunnel_start_is_retried_on_a_timer() {
@@ -6751,6 +6779,50 @@ mod blocking_error_retry_tests {
         // `ErrorState` already reconnects this one on the online edge, which
         // is immediate. A timer on top would only add a redundant dial.
         assert!(!reschedules_reconnect(&ErrorStateCause::IsOffline));
+    }
+
+    #[test]
+    fn a_selection_that_found_no_exit_is_retried_on_a_timer() {
+        // A drained exit leaves the roster for the few minutes of its
+        // maintenance. A pinned client whose roster refresh lands in that
+        // window selects nothing on its next connect lap, and the exit is
+        // back minutes later with nothing to tell the client: without the
+        // timer it stayed blocked until the user clicked.
+        assert!(reschedules_reconnect(
+            &ErrorStateCause::TunnelParameterError(ParameterGenerationError::NoMatchingRelay)
+        ));
+    }
+
+    #[test]
+    fn a_selection_that_found_no_exit_refreshes_the_roster_first() {
+        // The retry selects from the cached roster, which the updater
+        // refreshes hourly: retrying against the list that just came up
+        // empty would keep failing for up to an hour.
+        assert!(refreshes_roster_before_retry(
+            &ErrorStateCause::TunnelParameterError(ParameterGenerationError::NoMatchingRelay)
+        ));
+        // A cause the roster has no say in costs no fetch.
+        assert!(!refreshes_roster_before_retry(
+            &ErrorStateCause::StartTunnelError
+        ));
+        assert!(!refreshes_roster_before_retry(
+            &ErrorStateCause::AuthFailed(None)
+        ));
+    }
+
+    #[test]
+    fn a_pubkey_mismatch_found_at_selection_is_never_retried() {
+        // Same wait as the mismatch the state machine raises itself: the
+        // user has to trust the new key, and a timer would only redial the
+        // same refusal every minute.
+        let mismatch =
+            ErrorStateCause::TunnelParameterError(ParameterGenerationError::WarrenPubkeyMismatch {
+                exit_id_hex: String::new(),
+                pinned: String::new(),
+                observed: String::new(),
+            });
+        assert!(!reschedules_reconnect(&mismatch));
+        assert!(!refreshes_roster_before_retry(&mismatch));
     }
 }
 

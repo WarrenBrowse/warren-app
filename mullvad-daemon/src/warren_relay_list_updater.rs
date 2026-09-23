@@ -365,6 +365,17 @@ impl WarrenRelayListUpdaterHandle {
             log::error!("Warren relay list updater is not running");
         }
     }
+
+    /// Request a refresh without waiting, for a caller that must not stall
+    /// (the daemon's event loop). A full queue means a refresh is already
+    /// pending, which serves this request too.
+    pub fn request_refresh(&mut self) {
+        if let Err(e) = self.tx.try_send(())
+            && e.is_disconnected()
+        {
+            log::error!("Warren relay list updater is not running");
+        }
+    }
 }
 
 /// The periodic updater task. Owns the HTTP client, the ETag, the cache
@@ -733,6 +744,21 @@ mod tests {
 
     /// Far-future expiry so default fixtures are never "expired".
     const FAR_FUTURE: u64 = 4_000_000_000;
+
+    #[test]
+    fn a_refresh_request_reaches_the_updater_without_waiting_on_one_pending() {
+        // The daemon asks from its event loop, which must not stall behind an
+        // updater that has not taken the previous request yet: the requests
+        // beyond the queue's room are absorbed by the one already pending.
+        let (tx, mut rx) = mpsc::channel(1);
+        let mut handle = WarrenRelayListUpdaterHandle { tx };
+
+        for _ in 0..4 {
+            handle.request_refresh();
+        }
+
+        assert!(matches!(rx.try_recv(), Ok(())));
+    }
 
     #[test]
     fn pin_target_only_pins_default_host_when_ip_set() {
