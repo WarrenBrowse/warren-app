@@ -23,8 +23,8 @@
 //! session the probe is skipped entirely (the RX-silence machinery owns
 //! that case) and the failure count resets.
 //!
-//! When the verdict fires while a drain advisory is active, the probe
-//! prefers the drain reactor's gap-free migration hook
+//! When the verdict fires while the exit the session is on has announced a
+//! drain, the probe prefers the drain reactor's gap-free migration hook
 //! (`warren_drain_migrate`). Otherwise it escalates a full reconnect
 //! through the shared pump-error channel (the same one `session_liveness`
 //! uses): a live QUIC session over an exit that forwards nothing is a dead
@@ -52,6 +52,7 @@ type ClientWatch = tokio::sync::watch::Receiver<
 type DrainWatch =
     tokio::sync::watch::Receiver<Option<warrenguard_transport::supervised_pump::ExitDrainNotice>>;
 
+use crate::exit_in_use::ExitInUse;
 use crate::reconnect_signal::PumpErrorTx;
 
 /// Production bindings for [`EgressProbeIo`].
@@ -69,13 +70,15 @@ pub(crate) struct RealEgressProbeIo {
     /// Exit-drain advisory watch. `Some` in production; `None` only in
     /// tests, where `drain_active` is false.
     pub drain_rx: Option<DrainWatch>,
-    /// Gap-free migration hook + the exit it would migrate off.
+    /// Gap-free migration hook.
     pub drain_migrate: Option<crate::WarrenDrainMigrate>,
     /// Shared reconnect channel. `None` only disables the escalation
     /// (verdict banner still fires), used by tests and any caller that
     /// opts out.
     pub pump_error_tx: Option<PumpErrorTx>,
-    pub current_exit_id: [u8; 16],
+    /// The exit a migration would move off: the one the tunnel is on, which
+    /// an earlier gap-free migration may have changed.
+    pub exit_in_use: ExitInUse,
     /// ACK-counter read. `None` reads the live session off `client_rx`; a test
     /// scripts it, because a real `MultiHopBundle` needs a network.
     pub acks: Option<std::sync::Arc<dyn Fn() -> Option<u64> + Send + Sync>>,
@@ -186,16 +189,23 @@ impl EgressProbeIo for RealEgressProbeIo {
         exit_evidence_from(self.real_rx_at_streak_start, self.read_real_rx())
     }
 
+    /// The exit the session is on announced a drain. An advisory from an exit
+    /// the session already left says nothing about the one it is on.
     fn drain_active(&mut self) -> bool {
-        self.drain_rx
+        let Some(notice) = self
+            .drain_rx
             .as_mut()
-            .is_some_and(|rx| rx.borrow_and_update().is_some())
+            .and_then(|rx| *rx.borrow_and_update())
+        else {
+            return false;
+        };
+        (self.exit_in_use)() == Some(*notice.exit_id.as_bytes())
     }
 
     async fn try_migrate(&mut self) -> bool {
-        match self.drain_migrate.as_ref() {
-            Some(migrate) => migrate(self.current_exit_id).await,
-            None => false,
+        match (self.drain_migrate.as_ref(), (self.exit_in_use)()) {
+            (Some(migrate), Some(exit)) => migrate(exit).await,
+            _ => false,
         }
     }
 
@@ -219,6 +229,11 @@ impl EgressProbeIo for RealEgressProbeIo {
 mod tests {
     use super::*;
 
+    /// The exit in use of a tunnel whose supervisor has published nothing.
+    fn no_session_yet() -> ExitInUse {
+        std::sync::Arc::new(|| None)
+    }
+
     /// A path that carries nothing must never be blamed on the exit. This probe
     /// convicts an exit that ACKs keep-alives and forwards nothing, so while the
     /// peer ACKs nothing at all the premise does not hold and the redial the
@@ -241,7 +256,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: Some(std::sync::Arc::new(std::sync::Mutex::new(Some(tx)))),
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             // The peer acknowledges nothing for the whole run: a path stall.
             acks: Some(std::sync::Arc::new(|| Some(42))),
             acks_at_streak_start: None,
@@ -271,7 +286,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: None,
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             acks: Some(std::sync::Arc::new(move || {
                 Some(reader.load(std::sync::atomic::Ordering::Relaxed))
             })),
@@ -301,7 +316,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: None,
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             acks: None,
             acks_at_streak_start: None,
             real_rx: Some(std::sync::Arc::new(move || {
@@ -338,7 +353,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: None,
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             acks: None,
             acks_at_streak_start: None,
             real_rx: Some(std::sync::Arc::new(|| None)),
@@ -362,7 +377,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: None,
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,
@@ -373,6 +388,75 @@ mod tests {
         assert!(!io.try_migrate().await, "no hook => no migration");
         io.publish(true); // must not panic without a callback
         io.escalate_reconnect("no channel".to_owned()); // must not panic
+    }
+
+    /// Probe IO on a tunnel whose session is on `exit_in_use`, whose drain
+    /// channel last carried `latest`, and whose migration hook records the
+    /// exit it is asked to leave into `left`.
+    fn draining_io(
+        exit_in_use: [u8; 16],
+        latest: warrenguard_transport::supervised_pump::ExitDrainNotice,
+        left: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>>,
+    ) -> RealEgressProbeIo {
+        RealEgressProbeIo {
+            interval: Duration::from_secs(25),
+            startup_interval: Duration::from_secs(3),
+            client_rx: None,
+            verdict: None,
+            drain_rx: Some(tokio::sync::watch::channel(Some(latest)).1),
+            drain_migrate: Some(std::sync::Arc::new(move |exit| {
+                let left = left.clone();
+                Box::pin(async move {
+                    left.lock().unwrap().push(exit);
+                    true
+                })
+            })),
+            pump_error_tx: None,
+            exit_in_use: std::sync::Arc::new(move || Some(exit_in_use)),
+            acks: None,
+            acks_at_streak_start: None,
+            real_rx: None,
+            real_rx_at_streak_start: None,
+        }
+    }
+
+    fn soft_drain_of(exit: [u8; 16]) -> warrenguard_transport::supervised_pump::ExitDrainNotice {
+        warrenguard_transport::supervised_pump::ExitDrainNotice {
+            exit_id: warrenguard_multihop::ExitId::from_bytes(exit),
+            advisory: warrenguard_transport::supervised_pump::ExitDrainAdvisory {
+                deadline_unix_secs: u64::MAX,
+                reason_code: 0,
+            },
+        }
+    }
+
+    const BUILT_FOR: [u8; 16] = [0xA0; 16];
+    const MIGRATED_TO: [u8; 16] = [0xB0; 16];
+
+    #[tokio::test]
+    async fn a_drain_after_a_migration_moves_off_the_exit_the_session_is_on() {
+        // A gap-free migration swapped the session onto another exit after the
+        // tunnel was built, and that exit drains in turn. The exit the probe
+        // hands the daemon is recorded in the avoid-set and left: it must be
+        // the one now forwarding nothing.
+        let left: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
+        let mut io = draining_io(MIGRATED_TO, soft_drain_of(MIGRATED_TO), left.clone());
+
+        assert!(io.drain_active(), "the exit in use is draining");
+        assert!(io.try_migrate().await);
+        assert_eq!(*left.lock().unwrap(), vec![MIGRATED_TO]);
+    }
+
+    #[tokio::test]
+    async fn the_drain_of_an_exit_already_left_does_not_make_the_one_in_use_draining() {
+        // The drain that moved the session off its first exit stays the last
+        // notice on the channel; a dead probe on the exit it moved to is then
+        // no drain, and must reconnect rather than add that exit to the
+        // drained avoid-set.
+        let left: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
+        let mut io = draining_io(MIGRATED_TO, soft_drain_of(BUILT_FOR), left);
+
+        assert!(!io.drain_active());
     }
 
     #[tokio::test]
@@ -389,7 +473,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: None,
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,
@@ -412,7 +496,7 @@ mod tests {
             drain_rx: None,
             drain_migrate: None,
             pump_error_tx: Some(shared.clone()),
-            current_exit_id: [0; 16],
+            exit_in_use: no_session_yet(),
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,

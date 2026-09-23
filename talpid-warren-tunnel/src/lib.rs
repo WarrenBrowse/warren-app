@@ -280,6 +280,7 @@ mod drain_reactor;
 /// downlink loss. An indicator: it logs and takes no action.
 pub mod dual_homing;
 mod egress_probe;
+mod exit_in_use;
 /// Classification of a bonded leg whose downlink went silent while its uplink
 /// kept sending. An indicator sampled post-connect, never a guard.
 mod leg_stall;
@@ -2320,16 +2321,14 @@ impl WarrenTunnelMonitor {
             // real advisory publish.
             let _ = drain_sub.borrow_and_update();
             let pump_error_tx = pump_error_tx.clone();
-            // The advisory carries no identity; capture the exit this tunnel
-            // dialed so the reactor can name it to the avoid-set.
-            let current_exit_id = *cfg.exit.exit_id.as_bytes();
+            let exit_in_use = exit_in_use::following(client_rx.clone());
             let on_exit_draining = params.on_exit_draining.clone();
             let drain_migrate = params.warren_drain_migrate.clone();
             runtime.spawn(async move {
                 let mut io = drain_reactor::RealDrainReactorIo {
                     drain_sub,
                     pump_error_tx,
-                    current_exit_id,
+                    exit_in_use,
                     on_exit_draining,
                     drain_migrate,
                 };
@@ -2371,7 +2370,7 @@ impl WarrenTunnelMonitor {
                 // egress-dead verdict with no gap-free migration leaves
                 // Connected and redials onto a fresh circuit.
                 pump_error_tx: Some(pump_error_tx.clone()),
-                current_exit_id: *cfg.exit.exit_id.as_bytes(),
+                exit_in_use: exit_in_use::following(client_rx.clone()),
                 // Production reads both counters off `client_rx` above.
                 acks: None,
                 acks_at_streak_start: None,
@@ -2746,10 +2745,8 @@ impl WarrenTunnelMonitor {
                     let _ = egress_probe.await;
                     assign_guard.abort();
                     let _ = assign_guard.await;
-                    // Drain reactor holds only an ExitDrainingChannel
-                    // receiver + a pump-error sender clone, neither of
-                    // which gates the supervisor shutdown; abort it
-                    // alongside the other guards.
+                    // The drain reactor holds a supervisor watch receiver
+                    // too, to follow the exit in use; same ordering rule.
                     drain_reactor.abort();
                     let _ = drain_reactor.await;
                     uplink.abort();
