@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   ALLOWED_CONNECT_HOSTS,
   findForumDeepLinkArg,
+  ForumCodeProtection,
   forumLoginRequestFromCode,
   parseForumHandle,
   parseForumIdentityResponse,
@@ -533,5 +534,48 @@ describe('the completion of a bound approval', () => {
     pending.set(handoffUrl, 1_000);
     pending.clear();
     expect(pending.take(1_001)).toBeUndefined();
+  });
+});
+
+describe('the window while a sign-in code is on it', () => {
+  let applied: boolean[];
+  let protection: ForumCodeProtection;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    applied = [];
+    protection = new ForumCodeProtection((protect) => applied.push(protect));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('stays out of screen captures from the approval until the code dies', () => {
+    protection.show();
+    expect(applied).toEqual([true]);
+
+    vi.advanceTimersByTime(FORUM_LOGIN_CODE_LIFETIME_MS - 1);
+    expect(applied).toEqual([true]);
+
+    vi.advanceTimersByTime(1);
+    expect(applied).toEqual([true, false]);
+  });
+
+  it('is released at once when the code screen is closed', () => {
+    protection.show();
+    protection.hide();
+    vi.advanceTimersByTime(FORUM_LOGIN_CODE_LIFETIME_MS);
+
+    expect(applied).toEqual([true, false]);
+  });
+
+  it('carries the protection over to a window created while the code is up', () => {
+    protection.show();
+    protection.reapply();
+    protection.hide();
+    protection.reapply();
+
+    expect(applied).toEqual([true, true, false]);
   });
 });

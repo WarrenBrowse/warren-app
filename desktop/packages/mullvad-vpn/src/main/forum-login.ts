@@ -306,6 +306,43 @@ export class PendingForumHandoff {
   }
 }
 
+/**
+ * Keeps the window out of screenshots and screen sharing while a sign-in code
+ * is on it: whoever reads the code can finish the sign-in with it. The code
+ * dies with its session, so the protection lifts on its own then, and at once
+ * when the code screen is closed.
+ */
+export class ForumCodeProtection {
+  private timer?: ReturnType<typeof setTimeout>;
+
+  public constructor(private readonly apply: (protect: boolean) => void) {}
+
+  public show(): void {
+    this.clearTimer();
+    this.apply(true);
+    this.timer = setTimeout(() => this.hide(), FORUM_LOGIN_CODE_LIFETIME_MS);
+  }
+
+  public hide(): void {
+    this.clearTimer();
+    this.apply(false);
+  }
+
+  /** A window created while the code is up starts unprotected. */
+  public reapply(): void {
+    if (this.timer !== undefined) {
+      this.apply(true);
+    }
+  }
+
+  private clearTimer(): void {
+    if (this.timer !== undefined) {
+      clearTimeout(this.timer);
+      this.timer = undefined;
+    }
+  }
+}
+
 // A request buffered past the life of the session it names could only produce
 // a doomed signature, and connect gives its two session kinds different lives:
 // 5 minutes for a login, 30 for an attach (the attach one covers a human

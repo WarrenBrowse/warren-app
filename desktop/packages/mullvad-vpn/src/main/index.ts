@@ -92,6 +92,7 @@ import {
   cancelForumLogin,
   findForumDeepLinkArg,
   FORUM_DEEP_LINK_SCHEME,
+  ForumCodeProtection,
   forumLoginRequestFromCode,
   parseForumLoginUrl,
   PENDING_ATTACH_MAX_AGE_MS,
@@ -283,6 +284,9 @@ class ApplicationMain
 
   private pendingForumLogin = new PendingForumRequest<IForumLoginRequest>(PENDING_LOGIN_MAX_AGE_MS);
   private pendingForumHandoff = new PendingForumHandoff();
+  private forumCodeProtection = new ForumCodeProtection((protect) =>
+    this.userInterface?.setContentProtection(protect),
+  );
   private forumIdentityStore = new SafeStorageForumIdentityStore();
   private forumActivityMonitor = new ForumActivityMonitor(this);
   // Last count the monitor published, replayed in the initial state: the
@@ -1640,6 +1644,8 @@ class ApplicationMain
         // Same reason as the attach flow: the browser is finishing the login,
         // not us.
         this.userInterface?.hideWindow();
+      } else {
+        this.forumCodeProtection.show();
       }
       return plan.approval;
     });
@@ -1658,6 +1664,7 @@ class ApplicationMain
     });
     IpcMainEventChannel.forumLogin.handleForgetCompletion(() => {
       this.pendingForumHandoff.clear();
+      this.forumCodeProtection.hide();
       return Promise.resolve();
     });
     IpcMainEventChannel.forumLogin.handleCancel((request) => {
@@ -2006,10 +2013,9 @@ class ApplicationMain
   public handleMonochromaticIconChange = (value: boolean) =>
     this.userInterface?.setMonochromaticIcon(value) ?? Promise.resolve();
   public handleUnpinnedWindowChange = () =>
-    void this.userInterface?.recreateWindow(
-      this.account.isLoggedIn(),
-      this.tunnelState.tunnelState,
-    );
+    void this.userInterface
+      ?.recreateWindow(this.account.isLoggedIn(), this.tunnelState.tunnelState)
+      .then(() => this.forumCodeProtection.reapply());
 
   // AccountDelegate
   public getLocale = () => this.locale;

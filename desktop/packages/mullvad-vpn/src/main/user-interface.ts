@@ -292,6 +292,8 @@ export default class UserInterface implements WindowControllerDelegate {
   public showNotificationIcon = (value: boolean, reason?: string) =>
     this.trayIconController?.showNotificationIcon(value, reason);
   public setWindowIcon = (icon: string) => this.windowController.window?.setIcon(icon);
+  public setContentProtection = (protect: boolean) =>
+    this.windowController.window?.setContentProtection(protect);
 
   public updateTrayIcon(tunnelState: TunnelState) {
     const type = this.trayIconType(tunnelState);
