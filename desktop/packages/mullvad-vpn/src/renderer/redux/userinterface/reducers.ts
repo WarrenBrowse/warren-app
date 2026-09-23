@@ -12,6 +12,8 @@ export interface IUserInterfaceReduxState {
   connectedToDaemon: boolean;
   daemonStatus?: DaemonStatus;
   daemonAllowed?: boolean;
+  // The daemon refuses this account: Warren is set up by another one here.
+  daemonAccessDenied: boolean;
   changelog: IChangelog;
   isPerformingPostUpgrade: boolean;
   selectLocationView: LocationType;
@@ -25,6 +27,7 @@ const initialState: IUserInterfaceReduxState = {
   macOsScrollbarVisibility: undefined,
   connectedToDaemon: false,
   daemonAllowed: undefined,
+  daemonAccessDenied: false,
   changelog: [],
   isPerformingPostUpgrade: false,
   selectLocationView: LocationType.exit,
@@ -62,6 +65,9 @@ export default function (
 
     case 'SET_DAEMON_ALLOWED':
       return { ...state, daemonAllowed: action.daemonAllowed };
+
+    case 'SET_DAEMON_ACCESS_DENIED':
+      return { ...state, daemonAccessDenied: action.daemonAccessDenied };
 
     case 'SET_CHANGELOG':
       return {

@@ -1899,6 +1899,16 @@ msgctxt "launch-view"
 msgid "If these steps do not work please send a problem report."
 msgstr "إذا لم تنجح هذه الخطوات، يُرجى إرسال بلاغ بالمشكلة."
 
+#. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
+msgctxt "launch-view"
+msgid "Only the account that set Warren up, or an administrator, can use it here. If you set it up yourself, open Warren from that account at the computer’s own screen."
+msgstr "لا يمكن استخدام Warren هنا إلا من الحساب الذي أعدّه أو من مسؤول. إذا أعددته بنفسك، فافتح Warren من ذلك الحساب على شاشة الكمبيوتر نفسه."
+
+#. Status text when another account on this computer set up Warren, so the daemon refuses this one.
+msgctxt "launch-view"
+msgid "Warren is set up by another account on this computer"
+msgstr "تم إعداد Warren بواسطة حساب آخر على هذا الكمبيوتر"
+
 #. Message in launch view when the background process permissions have been revoked.
 msgctxt "launch-view"
 msgid "Permission for the Warren VPN service has been revoked. Please go to System Settings and allow Warren VPN under the “Allow in the Background” setting."

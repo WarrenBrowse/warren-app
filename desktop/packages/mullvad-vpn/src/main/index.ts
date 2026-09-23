@@ -75,6 +75,7 @@ import {
   printCommandLineOptions,
   printElectronOptions,
 } from './command-line-options';
+import { isDaemonAccessRefusal } from './daemon-access';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
 import ForumActivityMonitor, { ForumActivityMonitorDelegate } from './forum-activity-monitor';
@@ -251,6 +252,7 @@ class ApplicationMain
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
   private daemonAllowed?: boolean;
+  private daemonAccessDenied = false;
   private quitInitiated = false;
 
   private linuxSplitTunneling?: typeof import('./linux-split-tunneling');
@@ -1133,6 +1135,7 @@ class ApplicationMain
 
     // reset the reconnect backoff when connection established.
     this.reconnectBackoff.reset();
+    this.setDaemonAccessDenied(false);
 
     // notify renderer, this.daemonRpc.isConnected could have changed if the daemon disconnected
     // again before this if-statement is reached.
@@ -1217,7 +1220,12 @@ class ApplicationMain
       .catch((error) => log.error(`Unable to connect to daemon: ${error.message}`));
   }
 
-  private handleBootstrapError(_error?: Error) {
+  private handleBootstrapError(error?: Error) {
+    if (isDaemonAccessRefusal(error)) {
+      log.info('The daemon refuses this account: Warren is set up by another account here');
+      this.setDaemonAccessDenied(true);
+    }
+
     // Unsubscribe from daemon, app upgrade, and Warren status events
     // when encountering errors during initial data retrieval.
     if (this.daemonEventListener) {
@@ -1236,6 +1244,13 @@ class ApplicationMain
       this.daemonRpc.unsubscribeNatPmpStatusListener(this.natPmpStatusListener);
       this.portForwardingWatcher.reset();
       this.torrentClientSync.reset();
+    }
+  }
+
+  private setDaemonAccessDenied(denied: boolean) {
+    if (this.daemonAccessDenied !== denied) {
+      this.daemonAccessDenied = denied;
+      IpcMainEventChannel.daemon.notifyAccessDenied?.(denied);
     }
   }
 
@@ -1392,6 +1407,7 @@ class ApplicationMain
       settings: this.settings.all,
       isPerformingPostUpgrade: this.isPerformingPostUpgrade,
       daemonAllowed: this.daemonAllowed,
+      daemonAccessDenied: this.daemonAccessDenied,
       deviceState: this.account.deviceState,
       relayList: this.relayList,
       currentVersion: this.version.currentVersion,

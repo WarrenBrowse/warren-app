@@ -41,6 +41,11 @@ export interface ISetDaemonAllowed {
   daemonAllowed: boolean;
 }
 
+export interface ISetDaemonAccessDenied {
+  type: 'SET_DAEMON_ACCESS_DENIED';
+  daemonAccessDenied: boolean;
+}
+
 export interface ISetChangelog {
   type: 'SET_CHANGELOG';
   changelog: IChangelog;
@@ -70,6 +75,7 @@ export type UserInterfaceAction =
   | ISetConnectedToDaemon
   | ISetDaemonStatus
   | ISetDaemonAllowed
+  | ISetDaemonAccessDenied
   | ISetChangelog
   | ISetIsPerformingPostUpgrade
   | ISetSelectLocationView
@@ -132,6 +138,13 @@ function setDaemonAllowed(daemonAllowed: boolean): ISetDaemonAllowed {
   };
 }
 
+function setDaemonAccessDenied(daemonAccessDenied: boolean): ISetDaemonAccessDenied {
+  return {
+    type: 'SET_DAEMON_ACCESS_DENIED',
+    daemonAccessDenied,
+  };
+}
+
 function setChangelog(changelog: IChangelog): ISetChangelog {
   return {
     type: 'SET_CHANGELOG',
@@ -169,6 +182,7 @@ export default {
   setConnectedToDaemon,
   setDaemonStatus,
   setDaemonAllowed,
+  setDaemonAccessDenied,
   setChangelog,
   setIsPerformingPostUpgrade,
   setSelectLocationView,

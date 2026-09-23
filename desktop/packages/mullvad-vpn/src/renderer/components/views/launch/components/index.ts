@@ -1,4 +1,5 @@
 export * from './footer';
+export * from './footer/components/access-denied-footer';
 export * from './footer/components/default-footer';
 export * from './footer/components/macos-permission-footer';
 export * from './footer/components/restart-daemon-footer';

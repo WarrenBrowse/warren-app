@@ -2,9 +2,24 @@ import { messages } from '../../../../../../../shared/gettext';
 import { BodySmall, Flex, Spinner } from '../../../../../../lib/components';
 import { FlexColumn } from '../../../../../../lib/components/flex-column';
 import { useUserInterfaceDaemonStatus } from '../../../../../../redux/hooks';
+import { useSelector } from '../../../../../../redux/store';
 
 export const useStatusText = () => {
   const { daemonStatus } = useUserInterfaceDaemonStatus();
+  const daemonAccessDenied = useSelector((state) => state.userInterface.daemonAccessDenied);
+
+  if (daemonAccessDenied) {
+    return (
+      <Flex justifyContent="center">
+        <BodySmall color="whiteAlpha40" textAlign="center" role="alert">
+          {
+            // TRANSLATORS: Status text when another account on this computer set up Warren, so the daemon refuses this one.
+            messages.pgettext('launch-view', 'Warren is set up by another account on this computer')
+          }
+        </BodySmall>
+      </Flex>
+    );
+  }
 
   let statusMessage = (
     <BodySmall color="whiteAlpha40" textAlign="center" role="alert">

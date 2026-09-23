@@ -100,6 +100,7 @@ export interface IAppStateSnapshot {
   settings: ISettings;
   isPerformingPostUpgrade: boolean;
   daemonAllowed?: boolean;
+  daemonAccessDenied: boolean;
   deviceState?: DeviceState;
   relayList?: IRelayListWithEndpointData;
   currentVersion: ICurrentAppVersionInfo;
@@ -270,6 +271,7 @@ export const ipcSchema = {
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),
     daemonAllowed: notifyRenderer<boolean>(),
+    accessDenied: notifyRenderer<boolean>(),
     connected: notifyRenderer<void>(),
     disconnected: notifyRenderer<void>(),
     prepareRestart: send<boolean>(),

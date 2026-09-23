@@ -159,6 +159,10 @@ export default class AppRenderer {
       this.reduxActions.userInterface.setDaemonAllowed(daemonAllowed);
     });
 
+    IpcRendererEventChannel.daemon.listenAccessDenied((denied) => {
+      this.reduxActions.userInterface.setDaemonAccessDenied(denied);
+    });
+
     IpcRendererEventChannel.account.listen((newAccountData?: IAccountData) => {
       this.setAccountExpiry(newAccountData?.expiry);
     });
@@ -376,6 +380,7 @@ export default class AppRenderer {
     if (initialState.daemonAllowed !== undefined) {
       this.reduxActions.userInterface.setDaemonAllowed(initialState.daemonAllowed);
     }
+    this.reduxActions.userInterface.setDaemonAccessDenied(initialState.daemonAccessDenied);
 
     // GUI settings must land in redux before the device-state replay so
     // `handleDeviceEvent` can consult the persisted `backupPending` gate.
