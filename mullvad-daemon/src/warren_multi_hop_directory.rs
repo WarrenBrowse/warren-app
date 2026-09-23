@@ -25,7 +25,7 @@
 use std::time::Duration;
 
 use futures::FutureExt;
-use talpid_warren_tunnel::MultiHopConfig;
+use talpid_warren_tunnel::{MultiHopConfig, WarrenDrainPass};
 use warren_discovery_core::{
     Continent, DEFAULT_RTT_TTL_SECS, DirectoryError, ExitCandidate, MULTIHOP_DIRECTORY_PATH_V1,
     MULTIHOP_DIRECTORY_PATH_V2, PATH_QUALITY_VERSION, PathAwareParams, PathQualityAdvisory,
@@ -1036,28 +1036,28 @@ fn root_pins_of(mode: &RootPinMode) -> (Vec<String>, bool) {
     }
 }
 
-/// ADR 36 gap-free drain path: a request the drain reactor (or the
-/// dial-refusal hook) posts to the updater. The updater runs an
-/// immediate cache-only selection pass and answers whether a
-/// make-before-break migration was dispatched.
-pub(crate) struct DrainMigrationRequest {
-    /// Entry relay (by its directory `relay_id`) that deliberately
-    /// refused a dial. The updater records it only when it names the entry
-    /// of the two-hop circuit in use, then moves that circuit to another
-    /// entry for the same exit (see [`RefusedEntries`]). `None` for the
-    /// drained-exit paths, where the caller already recorded the exit.
-    pub avoid_entry_relay: Option<[u8; 16]>,
-    /// Answered with the pass outcome.
-    pub reply: tokio::sync::oneshot::Sender<bool>,
+/// Why a caller asks the updater for an immediate pass.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum DrainPassCause {
+    /// An exit announced a drain: the drain reactor or the egress probe,
+    /// which recorded the exit in the drained set first. It rebuilds the
+    /// tunnel itself when the pass answers [`WarrenDrainPass::Rebuild`].
+    ExitDrained,
+    /// The entry relay with this directory `relay_id` deliberately refused a
+    /// dial: the dial-refusal hook, which stays on the supervisor's backoff
+    /// whatever the answer. The updater records it only when it names the
+    /// entry of the two-hop circuit in use, then moves that circuit to
+    /// another entry for the same exit (see [`RefusedEntries`]).
+    EntryRefused([u8; 16]),
 }
 
-impl DrainMigrationRequest {
-    /// Whether the caller rebuilds the tunnel itself when the pass migrates
-    /// nothing. The drain reactor and the egress probe do; the dial-refusal
-    /// hook stays on the supervisor's backoff.
-    fn rebuilds_without_migration(&self) -> bool {
-        self.avoid_entry_relay.is_none()
-    }
+/// ADR 36 gap-free drain path: a request the drain reactor, the egress probe
+/// or the dial-refusal hook posts to the updater. The updater runs an
+/// immediate cache-only selection pass and answers with what it did.
+pub(crate) struct DrainMigrationRequest {
+    pub cause: DrainPassCause,
+    /// Answered with the pass outcome.
+    pub reply: tokio::sync::oneshot::Sender<WarrenDrainPass>,
 }
 
 /// Sender half handed to [`crate::tunnel::ParametersGenerator`] so the
@@ -1066,35 +1066,35 @@ pub(crate) type DrainMigrationTx = tokio::sync::mpsc::UnboundedSender<DrainMigra
 
 /// Ceiling on waiting for the updater's drain-pass answer. Slightly above
 /// [`FETCH_TIMEOUT`] so a request queued behind an in-flight periodic fetch
-/// still gets its real answer; past it the reactor falls back to the
-/// rebuild instead of staying wedged on a dead updater.
+/// still gets its real answer; past it the caller stops waiting instead of
+/// staying wedged on a dead updater.
 const DRAIN_MIGRATION_REPLY_TIMEOUT: Duration = Duration::from_secs(20);
 
-/// Ask the updater for an immediate drain-migration pass and report whether
-/// a gap-free migration was dispatched. `false` on every degraded path (no
-/// updater wired, updater gone, reply timeout): the caller then falls back
-/// to the break-before-make rebuild, which always recovers.
+/// Ask the updater for an immediate drain pass and report what it did.
+/// [`WarrenDrainPass::Stay`] on every degraded path (no updater wired,
+/// updater gone, reply timeout): without a pass no other circuit is known, and
+/// a rebuild would redial the circuit in use, the draining exit.
 pub(crate) async fn request_drain_migration(
     tx: Option<&DrainMigrationTx>,
-    avoid_entry_relay: Option<[u8; 16]>,
-) -> bool {
+    cause: DrainPassCause,
+) -> WarrenDrainPass {
     let Some(tx) = tx else {
-        return false;
+        return WarrenDrainPass::Stay;
     };
     let (reply_tx, reply_rx) = tokio::sync::oneshot::channel();
     if tx
         .send(DrainMigrationRequest {
-            avoid_entry_relay,
+            cause,
             reply: reply_tx,
         })
         .is_err()
     {
-        return false;
+        return WarrenDrainPass::Stay;
     }
-    matches!(
-        tokio::time::timeout(DRAIN_MIGRATION_REPLY_TIMEOUT, reply_rx).await,
-        Ok(Ok(true))
-    )
+    match tokio::time::timeout(DRAIN_MIGRATION_REPLY_TIMEOUT, reply_rx).await {
+        Ok(Ok(outcome)) => outcome,
+        _ => WarrenDrainPass::Stay,
+    }
 }
 
 /// Resolve the directory node whose entry relay carries `relay_id` to
@@ -1232,21 +1232,38 @@ fn select_next_circuit(
     }
 }
 
-/// Answer every drain reactor waiting on this updater pass with the
-/// migration outcome. A dropped reactor (tunnel torn down mid-pass) is
+/// Answer every caller waiting on this updater pass with its outcome. A
+/// caller that stopped waiting (tunnel torn down mid-pass, reply timeout) is
 /// skipped harmlessly.
-fn settle_drain_replies(pending: &mut Vec<tokio::sync::oneshot::Sender<bool>>, migrated: bool) {
-    for reply in pending.drain(..) {
-        let _ = reply.send(migrated);
+fn settle_drain_replies(pending: &mut Vec<PassWaiter>, outcome: WarrenDrainPass) {
+    for waiter in pending.drain(..) {
+        let _ = waiter.reply.send(outcome);
     }
+}
+
+/// Whether a caller that rebuilds the tunnel itself still waits on this pass.
+/// One that stopped waiting (reply timeout) rebuilds nothing, so the pass must
+/// then reconnect itself.
+fn rebuilder_waiting(pending: &[PassWaiter]) -> bool {
+    pending
+        .iter()
+        .any(|waiter| waiter.rebuilds && !waiter.reply.is_closed())
+}
+
+/// A caller waiting on the next updater pass.
+struct PassWaiter {
+    reply: tokio::sync::oneshot::Sender<WarrenDrainPass>,
+    /// It rebuilds the tunnel itself on [`WarrenDrainPass::Rebuild`] (see
+    /// [`DrainPassCause::ExitDrained`]).
+    rebuilds: bool,
 }
 
 /// Break-before-make fallback for a circuit change that was not applied
 /// gap-free. When a caller that rebuilds the tunnel itself is waiting on this
-/// pass (see [`DrainMigrationRequest::rebuilds_without_migration`]), the
-/// reconnect is NOT requested here: it escalates the rebuild on the `false`
-/// reply, and firing both triggers would rebuild the tunnel twice. A pass
-/// only dial refusals wait on still reconnects, or the change is lost.
+/// pass (see [`DrainPassCause::ExitDrained`]), the reconnect is NOT requested
+/// here: it escalates the rebuild on the [`WarrenDrainPass::Rebuild`] reply,
+/// and firing both triggers would rebuild the tunnel twice. A pass only dial
+/// refusals wait on still reconnects, or the change is lost.
 fn dispatch_reconnect_fallback(rebuilder_waiting: bool, request_reconnect: &dyn Fn()) {
     if rebuilder_waiting {
         log::info!(
@@ -1404,8 +1421,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         // with the pass outcome by `settle_drain_replies` after apply.
         let mut drain_migration_rx = cfg.drain_migration_rx.take();
         let mut drain_watch_active = drain_migration_rx.is_some();
-        let mut pending_drain_replies: Vec<tokio::sync::oneshot::Sender<bool>> = Vec::new();
-        let mut rebuilder_waiting = false;
+        let mut pending_drain_replies: Vec<PassWaiter> = Vec::new();
         // Refused entry relays queued for the next pass, which checks each
         // against the circuit in use before recording it.
         let mut pending_refused_entries: Vec<[u8; 16]> = Vec::new();
@@ -1654,9 +1670,10 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 }
             };
 
-            // Whether THIS pass dispatched a gap-free migration; the answer
-            // sent to every drain reactor waiting on the pass.
-            let mut pass_migrated = false;
+            // What THIS pass did, the answer sent to every caller waiting on
+            // it. It stays `Stay` unless the circuit changes: a drain with no
+            // other circuit to go to keeps the session on the draining exit.
+            let mut pass_outcome = WarrenDrainPass::Stay;
             // Apply only when allowed and when the active circuit actually
             // changed, so a periodic refresh or an unrelated settings
             // change does not churn the tunnel.
@@ -1730,7 +1747,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         }
                     };
                     if migrated {
-                        pass_migrated = true;
+                        pass_outcome = WarrenDrainPass::Migrating;
                         log::info!(
                             "Warren multi-hop: gap-free migration off {} (make-before-break, \
                              no reconnect)",
@@ -1754,16 +1771,19 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 "Warren multi-hop circuit cleared; reconnecting single-hop"
                             ),
                         }
-                        dispatch_reconnect_fallback(rebuilder_waiting, &*cfg.request_reconnect);
+                        pass_outcome = WarrenDrainPass::Rebuild;
+                        dispatch_reconnect_fallback(
+                            rebuilder_waiting(&pending_drain_replies),
+                            &*cfg.request_reconnect,
+                        );
                     }
                 }
             }
-            // Answer the drain reactors waiting on this pass. A pass that
-            // could not migrate (no directory, no alternative exit, circuit
-            // unchanged, no live handle) replies `false` and the reactor
-            // escalates the rebuild.
-            settle_drain_replies(&mut pending_drain_replies, pass_migrated);
-            rebuilder_waiting = false;
+            // Answer the callers waiting on this pass: a drain reactor
+            // rebuilds on `Rebuild` (another circuit, no live handle) and keeps
+            // the session on `Stay` (no directory, no other exit, circuit
+            // unchanged).
+            settle_drain_replies(&mut pending_drain_replies, pass_outcome);
 
             // Optional short backoff after a transport fetch failure: re-probe
             // the network soon instead of waiting the full periodic interval.
@@ -1844,11 +1864,17 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                             // deadline budget) and answer after apply. A
                             // refused entry relay rides along, checked at the
                             // top of the pass.
-                            if let Some(relay_id) = request.avoid_entry_relay {
-                                pending_refused_entries.push(relay_id);
-                            }
-                            rebuilder_waiting |= request.rebuilds_without_migration();
-                            pending_drain_replies.push(request.reply);
+                            let rebuilds = match request.cause {
+                                DrainPassCause::ExitDrained => true,
+                                DrainPassCause::EntryRefused(relay_id) => {
+                                    pending_refused_entries.push(relay_id);
+                                    false
+                                }
+                            };
+                            pending_drain_replies.push(PassWaiter {
+                                reply: request.reply,
+                                rebuilds,
+                            });
                             refresh_due = false;
                         }
                         None => {
@@ -2924,7 +2950,11 @@ mod tests {
                 }),
             });
 
-            request_drain_migration(Some(&drain_tx), Some(current.relay.relay_id)).await;
+            request_drain_migration(
+                Some(&drain_tx),
+                DrainPassCause::EntryRefused(current.relay.relay_id),
+            )
+            .await;
 
             assert!(
                 generator.warren_drained_exits_snapshot().await.is_empty(),
@@ -2956,9 +2986,13 @@ mod tests {
         ]);
         let two_hop = assemble(&d, 0, 1, true, true).expect("is -> ee");
 
-        for (waiting, refused_entry, expected_reconnects) in [
-            ("the refusal hook", Some(two_hop.relay.relay_id), 1),
-            ("a drain reactor", None, 0),
+        for (waiting, cause, expected_reconnects) in [
+            (
+                "the refusal hook",
+                DrainPassCause::EntryRefused(two_hop.relay.relay_id),
+                1,
+            ),
+            ("a drain reactor", DrainPassCause::ExitDrained, 0),
         ] {
             let reconnects = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
             let counted = reconnects.clone();
@@ -2989,7 +3023,7 @@ mod tests {
             // single-threaded runtime: each yield lets it run until it parks.
             // A drain reactor waited on the earlier pass, which must not
             // outlive it.
-            request_drain_migration(Some(&drain_tx), None).await;
+            request_drain_migration(Some(&drain_tx), DrainPassCause::ExitDrained).await;
             for _ in 0..32 {
                 tokio::task::yield_now().await;
             }
@@ -3000,13 +3034,77 @@ mod tests {
                 settings.exit_country = "lv".to_owned();
                 false
             });
-            request_drain_migration(Some(&drain_tx), refused_entry).await;
+            request_drain_migration(Some(&drain_tx), cause).await;
 
             assert_eq!(
                 reconnects.load(std::sync::atomic::Ordering::SeqCst),
                 expected_reconnects,
                 "{waiting} waiting on the pass"
             );
+        }
+    }
+
+    #[tokio::test]
+    async fn a_drain_pass_keeps_the_session_when_no_other_exit_can_serve() {
+        // The cause matrix of a drain on a one-hop circuit: a location pinned
+        // to a country with one node has nowhere to go, and dropping the
+        // tunnel would only redial the draining node, which refuses until it
+        // restarts. An automatic location has another exit, which a rebuild
+        // reaches when no live tunnel can move gap-free (no migrate handle is
+        // registered here). The updater itself never reconnects: the reactor
+        // waiting on the pass owns that.
+        let op = op_key();
+        let d = dir(vec![node(&op, 1, "is", 0, 100), node(&op, 2, "ee", 0, 100)]);
+        let on_is = assemble(&d, 0, 0, true, true).expect("is");
+
+        for (exit_country, expected) in [
+            ("is", WarrenDrainPass::Stay),
+            ("", WarrenDrainPass::Rebuild),
+        ] {
+            let reconnects = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
+            let counted = reconnects.clone();
+            let generator = generator_on(&on_is);
+            let settings = mullvad_types::settings::WarrenMultiHopSettings {
+                exit_country: exit_country.to_owned(),
+                ..multi_hop_settings(false)
+            };
+            let (settings_tx, settings_rx) = tokio::sync::watch::channel(settings);
+            let (drain_tx, drain_rx) = tokio::sync::mpsc::unbounded_channel();
+            spawn(UpdaterConfig {
+                api_url: String::new(),
+                server_pins: Vec::new(),
+                root_mode: RootPinMode::InsecureTofu,
+                settings_rx,
+                parameters_generator: generator.clone(),
+                request_reconnect: std::sync::Arc::new(move || {
+                    counted.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }),
+                on_maintenance_migration: None,
+                settings_dir: std::path::PathBuf::from("/nonexistent/warren-updater-test"),
+                online_edge_rx: None,
+                drain_migration_rx: Some(drain_rx),
+                boot_seed: Some(BootSeed {
+                    directory: d.clone(),
+                    circuit: Some(on_is.clone()),
+                    stale: false,
+                }),
+            });
+            // Let the boot pass and the first timer tick settle before the
+            // drain, as in `a_pass_a_refusal_woke_still_reconnects_...`.
+            request_drain_migration(Some(&drain_tx), DrainPassCause::ExitDrained).await;
+            for _ in 0..32 {
+                tokio::task::yield_now().await;
+            }
+            generator
+                .record_warren_drained_exit(*on_is.exit.exit_id.as_bytes())
+                .await;
+
+            let outcome =
+                request_drain_migration(Some(&drain_tx), DrainPassCause::ExitDrained).await;
+
+            assert_eq!(outcome, expected, "exit country {exit_country:?}");
+            assert_eq!(reconnects.load(std::sync::atomic::Ordering::SeqCst), 0);
+            drop(settings_tx);
         }
     }
 
@@ -3317,29 +3415,34 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn drain_request_without_updater_falls_back_to_rebuild() {
-        // No updater wired (multi-hop unconfigured): the reactor must get an
-        // immediate `false` so its escalate rebuild still fires.
-        assert!(!request_drain_migration(None, None).await);
+    async fn drain_request_without_updater_keeps_the_session() {
+        assert_eq!(
+            request_drain_migration(None, DrainPassCause::ExitDrained).await,
+            WarrenDrainPass::Stay
+        );
     }
 
     #[tokio::test]
     async fn drain_request_propagates_the_updaters_answer() {
+        let outcomes = [
+            WarrenDrainPass::Migrating,
+            WarrenDrainPass::Rebuild,
+            WarrenDrainPass::Stay,
+        ];
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let updater = tokio::spawn(async move {
-            for outcome in [true, false] {
+            for outcome in outcomes {
                 let request: DrainMigrationRequest = rx.recv().await.expect("request");
                 request.reply.send(outcome).expect("reactor is waiting");
             }
         });
-        assert!(
-            request_drain_migration(Some(&tx), None).await,
-            "a dispatched gap-free migration must reach the reactor as `true`"
-        );
-        assert!(
-            !request_drain_migration(Some(&tx), None).await,
-            "a failed pass must reach the reactor as `false` (escalate rebuild)"
-        );
+        for outcome in outcomes {
+            assert_eq!(
+                request_drain_migration(Some(&tx), DrainPassCause::ExitDrained).await,
+                outcome,
+                "the pass outcome must reach the caller unchanged"
+            );
+        }
         updater.await.expect("fake updater");
     }
 
@@ -3351,32 +3454,44 @@ mod tests {
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let updater = tokio::spawn(async move {
             let request: DrainMigrationRequest = rx.recv().await.expect("request");
-            assert_eq!(request.avoid_entry_relay, Some([0xAB; 16]));
-            request.reply.send(true).expect("caller is waiting");
+            assert_eq!(request.cause, DrainPassCause::EntryRefused([0xAB; 16]));
+            request
+                .reply
+                .send(WarrenDrainPass::Migrating)
+                .expect("caller is waiting");
         });
-        assert!(request_drain_migration(Some(&tx), Some([0xAB; 16])).await);
+        assert_eq!(
+            request_drain_migration(Some(&tx), DrainPassCause::EntryRefused([0xAB; 16])).await,
+            WarrenDrainPass::Migrating
+        );
         updater.await.expect("fake updater");
     }
 
     #[tokio::test]
-    async fn drain_request_to_a_dead_updater_falls_back_to_rebuild() {
+    async fn drain_request_to_a_dead_updater_keeps_the_session() {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel::<DrainMigrationRequest>();
         drop(rx);
-        assert!(!request_drain_migration(Some(&tx), None).await);
+        assert_eq!(
+            request_drain_migration(Some(&tx), DrainPassCause::ExitDrained).await,
+            WarrenDrainPass::Stay
+        );
     }
 
     #[tokio::test(start_paused = true)]
     async fn drain_request_times_out_instead_of_wedging_the_reactor() {
         // A wedged updater (never answers, never drops the reply sender)
-        // must not pin the reactor past the reply ceiling: timeout => false
-        // => the escalate rebuild recovers. Paused time auto-advances.
+        // must not pin the reactor past the reply ceiling. Paused time
+        // auto-advances.
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
         let wedged = tokio::spawn(async move {
             let request: DrainMigrationRequest = rx.recv().await.expect("request");
             tokio::time::sleep(Duration::from_secs(3600)).await;
             drop(request);
         });
-        assert!(!request_drain_migration(Some(&tx), None).await);
+        assert_eq!(
+            request_drain_migration(Some(&tx), DrainPassCause::ExitDrained).await,
+            WarrenDrainPass::Stay
+        );
         wedged.abort();
     }
 
@@ -3400,18 +3515,46 @@ mod tests {
     async fn drain_pass_outcome_reaches_every_waiting_reactor() {
         let (tx_a, rx_a) = tokio::sync::oneshot::channel();
         let (tx_b, rx_b) = tokio::sync::oneshot::channel();
-        let mut pending = vec![tx_a, tx_b];
-        settle_drain_replies(&mut pending, true);
+        let mut pending = vec![
+            PassWaiter {
+                reply: tx_a,
+                rebuilds: true,
+            },
+            PassWaiter {
+                reply: tx_b,
+                rebuilds: false,
+            },
+        ];
+        settle_drain_replies(&mut pending, WarrenDrainPass::Migrating);
         assert!(pending.is_empty(), "the pass must consume every waiter");
-        assert_eq!(rx_a.await, Ok(true));
-        assert_eq!(rx_b.await, Ok(true));
+        assert_eq!(rx_a.await, Ok(WarrenDrainPass::Migrating));
+        assert_eq!(rx_b.await, Ok(WarrenDrainPass::Migrating));
+    }
+
+    #[test]
+    fn a_rebuilder_that_stopped_waiting_leaves_the_reconnect_to_the_pass() {
+        let waiter = |rebuilds: bool| {
+            let (reply, answer) = tokio::sync::oneshot::channel();
+            (PassWaiter { reply, rebuilds }, answer)
+        };
+        let (reactor, reactor_answer) = waiter(true);
+        let (refusal, _refusal_answer) = waiter(false);
+        let pending = vec![reactor, refusal];
+        assert!(rebuilder_waiting(&pending));
+
+        drop(reactor_answer);
+
+        assert!(
+            !rebuilder_waiting(&pending),
+            "a reactor past its reply timeout rebuilds nothing"
+        );
     }
 
     #[test]
     fn reconnect_fallback_defers_to_a_waiting_drain_reactor() {
         // A reactor-initiated pass that could not migrate must NOT also fire
         // the updater's own reconnect: the reactor escalates the rebuild on
-        // its `false` reply, and two triggers would rebuild the tunnel twice.
+        // its `Rebuild` reply, and two triggers would rebuild the tunnel twice.
         let fired = std::cell::Cell::new(0u32);
         let request_reconnect = || fired.set(fired.get() + 1);
         dispatch_reconnect_fallback(true, &request_reconnect);

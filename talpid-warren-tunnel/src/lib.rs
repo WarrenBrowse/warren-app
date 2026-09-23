@@ -77,12 +77,28 @@ pub fn migration_target(cfg: &MultiHopConfig) -> CircuitTarget {
         exit_mlkem768_pubkey: cfg.exit.exit_mlkem768_pubkey.clone(),
     }
 }
+/// What the daemon's drain pass did about a draining exit, which is what the
+/// drain reactor has left to do.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum WarrenDrainPass {
+    /// A make-before-break migration onto another exit was dispatched: the
+    /// tunnel stays up.
+    Migrating,
+    /// Another circuit was chosen that only a rebuild of the tunnel reaches.
+    Rebuild,
+    /// No other circuit can serve (the pinned location has no other exit, or
+    /// every candidate is drained), or no pass could run. The session stays
+    /// on the draining exit until its deadline close: a rebuild would only
+    /// redial the exit that refuses it, and drop a tunnel that still carries
+    /// traffic.
+    Stay,
+}
+
 /// ADR 36 gap-free drain path: daemon-side migration hook consumed by the
-/// drain reactor. Input: the 16-byte id of the DRAINING exit. Output:
-/// whether a make-before-break migration off it was dispatched (the tunnel
-/// stays up); `false` sends the reactor to the break-before-make rebuild.
+/// drain reactor and the egress probe. Input: the 16-byte id of the DRAINING
+/// exit. Output: what the pass did about it.
 pub type WarrenDrainMigrate = std::sync::Arc<
-    dyn Fn([u8; 16]) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>
+    dyn Fn([u8; 16]) -> std::pin::Pin<Box<dyn std::future::Future<Output = WarrenDrainPass> + Send>>
         + Send
         + Sync,
 >;
@@ -2371,6 +2387,7 @@ impl WarrenTunnelMonitor {
                 // Connected and redials onto a fresh circuit.
                 pump_error_tx: Some(pump_error_tx.clone()),
                 exit_in_use: exit_in_use::following(client_rx.clone()),
+                draining_exit: None,
                 // Production reads both counters off `client_rx` above.
                 acks: None,
                 acks_at_streak_start: None,

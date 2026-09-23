@@ -39,8 +39,12 @@
 //! the exit that sealed it, which the engine names on the notice, skips one
 //! from an exit the session already left ([`crate::exit_in_use`]), and acts
 //! on each notice once: the exit re-sends its advisory every few seconds
-//! until the session has left. It returns only after escalating a rebuild,
-//! whose fresh tunnel brings its own reactor.
+//! until the session has left. When no other exit can serve (a pinned
+//! location with one node, every candidate drained), the session stays until
+//! the exit's deadline close: a rebuild would drop a tunnel that still
+//! carries traffic, only to redial the exit that refuses it. The reactor
+//! returns only after escalating a rebuild, whose fresh tunnel brings its own
+//! reactor.
 
 use std::collections::VecDeque;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -53,6 +57,7 @@ use warrenguard_transport::drain_policy::{
 };
 use warrenguard_transport::supervised_pump::ExitDrainNotice;
 
+use crate::WarrenDrainPass;
 use crate::exit_in_use::ExitInUse;
 // Pump-error escalation channel, shared with the pumps and the migration
 // watchdog: the first task to take the `oneshot` reports the fatal/transient
@@ -106,8 +111,8 @@ pub(crate) trait DrainReactorIo {
     /// the reactor escalates. The avoid-set recorded by
     /// [`Self::report_drained_exit`] is what the migration's circuit selection
     /// excludes, so the swap lands on a different exit.
-    async fn try_migrate(&mut self, _exit: [u8; 16]) -> bool {
-        false
+    async fn try_migrate(&mut self, _exit: [u8; 16]) -> WarrenDrainPass {
+        WarrenDrainPass::Rebuild
     }
 }
 
@@ -131,54 +136,68 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
         }
         acted_on.push_back(notice);
         let advisory = notice.advisory;
-        // Record the drained exit in the avoid-set UNCONDITIONALLY, before the
-        // cooldown gate: even when the cooldown suppresses a second reconnect,
-        // the directory selection must still exclude this exit (a different
-        // exit that also drains within the cooldown window must not be
-        // re-picked).
+        // Record the drained exit in the avoid-set UNCONDITIONALLY: whatever
+        // this reactor does next, the directory selection must exclude it (a
+        // different exit that also drains soon must not be re-picked).
         io.report_drained_exit(draining);
-        let now = io.now_unix();
-        if within_cooldown(now, io.last_drain_escalation_unix()) {
-            log::info!(
-                "Warren drain reactor: a drain reconnect fired <{}s ago; recorded the \
-                 exit in the avoid-set but deferring the reconnect to the exit hard-close \
-                 backstop (avoids a storm against a still-draining exit)",
-                DRAIN_RECONNECT_COOLDOWN.as_secs()
-            );
-            continue;
-        }
-        // Record at decision time (before the jitter sleep) so a rapidly rebuilt
-        // tunnel's reactor sees this drain reconnect and backs off.
-        io.record_drain_escalation(now);
-        let delay = jitter_delay(advisory.deadline_unix_secs, now, io.jitter_fraction());
+        let delay = jitter_delay(
+            advisory.deadline_unix_secs,
+            io.now_unix(),
+            io.jitter_fraction(),
+        );
         log::info!(
             "Warren drain reactor: exit draining (reason={}, deadline={}); \
-             reconnecting in {:?} (proactive, exclusion via ambient drain)",
+             moving off it in {:?} (proactive, exclusion via ambient drain)",
             advisory.reason_code,
             advisory.deadline_unix_secs,
             delay
         );
         io.sleep(delay).await;
-        // Prefer a GAP-FREE cross-exit migration (ADR 36): the supervisor
-        // make-before-breaks onto a non-drained circuit (the avoid-set recorded
-        // above excludes the draining exit), so the tunnel never drops. Only if
-        // that is not possible (no migration wired, or no non-drained exit
-        // available) do we fall back to the break-before-make rebuild.
-        if io.try_migrate(draining).await {
-            log::info!(
-                "Warren drain reactor: gap-free cross-exit migration initiated \
-                 (make-before-break); tunnel stays up, no rebuild"
-            );
+        // The egress probe or a refusal retarget may have moved the session
+        // during the spread; asking again would find nothing to move.
+        if io.exit_in_use().is_some_and(|in_use| in_use != draining) {
+            log::debug!("Warren drain reactor: the session already left the draining exit");
             continue;
         }
-        // The drained exit was already recorded in the avoid-set above, so the
-        // reconnect this escalation triggers re-selects a circuit that excludes it.
-        io.escalate(format!(
-            "exit draining (reason={}); proactively reconnecting to a different exit \
-             before the maintenance deadline",
-            advisory.reason_code
-        ));
-        return;
+        // Prefer a GAP-FREE cross-exit migration (ADR 36): the supervisor
+        // make-before-breaks onto a non-drained circuit (the avoid-set recorded
+        // above excludes the draining exit), so the tunnel never drops.
+        match io.try_migrate(draining).await {
+            WarrenDrainPass::Migrating => log::info!(
+                "Warren drain reactor: gap-free cross-exit migration initiated \
+                 (make-before-break); tunnel stays up, no rebuild"
+            ),
+            WarrenDrainPass::Stay => log::info!(
+                "Warren drain reactor: no other exit can serve; keeping the session \
+                 until the draining exit closes it"
+            ),
+            WarrenDrainPass::Rebuild => {
+                // The cooldown bounds rebuilds only: a rebuilt tunnel that
+                // re-landed on a still-draining exit must not rebuild again at
+                // once, while a gap-free move leaves the drained exit out and
+                // cannot storm.
+                let now = io.now_unix();
+                if within_cooldown(now, io.last_drain_escalation_unix()) {
+                    log::info!(
+                        "Warren drain reactor: a drain reconnect fired <{}s ago; deferring \
+                         the reconnect to the exit hard-close backstop (avoids a storm \
+                         against a still-draining exit)",
+                        DRAIN_RECONNECT_COOLDOWN.as_secs()
+                    );
+                    continue;
+                }
+                io.record_drain_escalation(now);
+                // The drained exit was already recorded in the avoid-set above,
+                // so the reconnect this escalation triggers re-selects a
+                // circuit that excludes it.
+                io.escalate(format!(
+                    "exit draining (reason={}); proactively reconnecting to a different \
+                     exit before the maintenance deadline",
+                    advisory.reason_code
+                ));
+                return;
+            }
+        }
     }
 }
 
@@ -247,10 +266,10 @@ impl DrainReactorIo for RealDrainReactorIo {
         }
     }
 
-    async fn try_migrate(&mut self, exit: [u8; 16]) -> bool {
+    async fn try_migrate(&mut self, exit: [u8; 16]) -> WarrenDrainPass {
         match self.drain_migrate.as_ref() {
             Some(migrate) => migrate(exit).await,
-            None => false,
+            None => WarrenDrainPass::Rebuild,
         }
     }
 }
@@ -289,10 +308,12 @@ mod tests {
         exit: Option<[u8; 16]>,
         /// Where each successful migration lands, in order.
         landings: VecDeque<[u8; 16]>,
-        /// What `try_migrate` returns (default false = no gap-free migration).
-        migrate_succeeds: bool,
+        /// What `try_migrate` answers (default: a rebuild is needed).
+        outcome: WarrenDrainPass,
         /// The exit each `try_migrate` was asked to leave.
         migrated_off: Vec<[u8; 16]>,
+        /// Where another path moves the session during the jitter sleep.
+        moved_during_sleep: Option<[u8; 16]>,
     }
 
     impl DrainReactorIo for FakeIo {
@@ -319,6 +340,9 @@ mod tests {
         }
         async fn sleep(&mut self, dur: Duration) {
             self.slept.push(dur);
+            if let Some(exit) = self.moved_during_sleep.take() {
+                self.exit = Some(exit);
+            }
         }
         fn escalate(&mut self, msg: String) {
             self.escalations.push(msg);
@@ -326,14 +350,14 @@ mod tests {
         fn report_drained_exit(&mut self, exit: [u8; 16]) {
             self.reported.push(exit);
         }
-        async fn try_migrate(&mut self, exit: [u8; 16]) -> bool {
+        async fn try_migrate(&mut self, exit: [u8; 16]) -> WarrenDrainPass {
             self.migrated_off.push(exit);
-            if self.migrate_succeeds
+            if self.outcome == WarrenDrainPass::Migrating
                 && let Some(landing) = self.landings.pop_front()
             {
                 self.exit = Some(landing);
             }
-            self.migrate_succeeds
+            self.outcome
         }
     }
 
@@ -350,8 +374,9 @@ mod tests {
             reported: Vec::new(),
             exit: Some(FAKE_EXIT_ID),
             landings: VecDeque::from([NEXT_EXIT_ID]),
-            migrate_succeeds: false,
+            outcome: WarrenDrainPass::Rebuild,
             migrated_off: Vec::new(),
+            moved_during_sleep: None,
         }
     }
 
@@ -372,7 +397,7 @@ mod tests {
         io.notices
             .push_back(Some(notice(NEXT_EXIT_ID, SECOND_DRAIN)));
         io.arrivals = VecDeque::from([940, 1_540]);
-        io.migrate_succeeds = true;
+        io.outcome = WarrenDrainPass::Migrating;
 
         run_drain_reactor(&mut io).await;
 
@@ -400,7 +425,7 @@ mod tests {
         let mut io = fake_with(Some(soft), 940, 0);
         io.notices.push_back(Some(notice(NEXT_EXIT_ID, soft)));
         io.arrivals = VecDeque::from([940, 1_540]);
-        io.migrate_succeeds = true;
+        io.outcome = WarrenDrainPass::Migrating;
 
         run_drain_reactor(&mut io).await;
 
@@ -414,7 +439,7 @@ mod tests {
         let mut io = fake_with(None, 940, 0);
         io.notices = VecDeque::from([Some(notice(FAKE_EXIT_ID, FIRST_DRAIN))]);
         io.exit = Some(NEXT_EXIT_ID);
-        io.migrate_succeeds = true;
+        io.outcome = WarrenDrainPass::Migrating;
 
         run_drain_reactor(&mut io).await;
 
@@ -423,23 +448,51 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn a_drain_deferred_by_the_cooldown_is_followed_by_the_next_one() {
-        // The first advisory lands inside the cooldown of an earlier drain
-        // reconnect; the tunnel keeps listening, so the next drain still
-        // moves it before that exit's deadline.
-        let mut io = fake_with(Some(FIRST_DRAIN), 940, 900);
+    async fn a_drain_with_nowhere_else_to_go_keeps_the_session() {
+        // The pinned location has no other exit: dropping the tunnel would
+        // only redial the draining exit, which refuses until it restarts.
+        let mut io = fake_with(Some(FIRST_DRAIN), 940, 0);
         io.notices
             .push_back(Some(notice(FAKE_EXIT_ID, SECOND_DRAIN)));
-        io.arrivals = VecDeque::from([940, 1_540]);
-        io.migrate_succeeds = true;
+        io.outcome = WarrenDrainPass::Stay;
 
         run_drain_reactor(&mut io).await;
 
+        assert!(
+            io.escalations.is_empty(),
+            "the session stays until the exit closes it"
+        );
         assert_eq!(
             io.migrated_off,
-            vec![FAKE_EXIT_ID],
-            "the drain after the cooldown moves"
+            vec![FAKE_EXIT_ID, FAKE_EXIT_ID],
+            "the reactor keeps listening, and asks again on the next advisory"
         );
+    }
+
+    #[tokio::test]
+    async fn the_drain_cooldown_never_holds_back_a_gap_free_move() {
+        // The exit a migration just landed on drains too: a gap-free move
+        // cannot storm, it leaves the drained exit out.
+        let mut io = fake_with(Some(FIRST_DRAIN), 940, 900);
+        io.outcome = WarrenDrainPass::Migrating;
+
+        run_drain_reactor(&mut io).await;
+
+        assert_eq!(io.migrated_off, vec![FAKE_EXIT_ID]);
+    }
+
+    #[tokio::test]
+    async fn a_session_another_path_moved_during_the_spread_is_left_alone() {
+        // The egress probe or a refusal retarget may move the session while
+        // the reactor waits out its anti-stampede delay; asking again would
+        // find nothing to move and rebuild a healthy tunnel.
+        let mut io = fake_with(Some(FIRST_DRAIN), 940, 0);
+        io.moved_during_sleep = Some(NEXT_EXIT_ID);
+
+        run_drain_reactor(&mut io).await;
+
+        assert!(io.migrated_off.is_empty());
+        assert!(io.escalations.is_empty());
     }
 
     #[tokio::test]
@@ -452,7 +505,7 @@ mod tests {
         io.notices
             .push_back(Some(notice(FAKE_EXIT_ID, FIRST_DRAIN)));
         io.arrivals = VecDeque::from([940, 943]);
-        io.migrate_succeeds = true;
+        io.outcome = WarrenDrainPass::Migrating;
         io.landings.clear();
 
         run_drain_reactor(&mut io).await;
@@ -526,7 +579,7 @@ mod tests {
             940,
             0,
         );
-        io.migrate_succeeds = true;
+        io.outcome = WarrenDrainPass::Migrating;
 
         run_drain_reactor(&mut io).await;
 
@@ -555,9 +608,10 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn cooldown_suppresses_a_second_drain_reconnect() {
-        // A drain reconnect fired 30s ago (< 120s cooldown): the fresh reactor
-        // on the rebuilt tunnel must NOT escalate again (storm guard).
+    async fn the_drain_cooldown_holds_back_only_a_rebuild() {
+        // A drain reconnect fired 30s ago (< 120s cooldown): a fresh reactor on
+        // a rebuilt tunnel must not rebuild it again (storm guard), and still
+        // tries the gap-free move first.
         let mut io = fake_with(
             Some(ExitDrainAdvisory {
                 deadline_unix_secs: 2_000,
@@ -573,10 +627,7 @@ mod tests {
             io.escalations.is_empty(),
             "within the cooldown the reactor must defer instead of re-escalating"
         );
-        assert!(
-            io.slept.is_empty(),
-            "suppressed reactor must not even jitter"
-        );
+        assert_eq!(io.migrated_off, vec![FAKE_EXIT_ID]);
         assert_eq!(
             io.reported,
             vec![FAKE_EXIT_ID],
@@ -602,8 +653,9 @@ mod tests {
         // No daemon hook wired (a daemon predating the gap-free path):
         // try_migrate must report failure so the reactor
         // escalates the break-before-make rebuild, exactly as before.
-        assert!(
-            !real_io(None).try_migrate(FAKE_EXIT_ID).await,
+        assert_eq!(
+            real_io(None).try_migrate(FAKE_EXIT_ID).await,
+            WarrenDrainPass::Rebuild,
             "with no daemon hook the real IO must fall back to the rebuild path"
         );
     }
@@ -614,7 +666,11 @@ mod tests {
         // daemon records it in the avoid-set before selecting the migration
         // target, which is what guarantees the target is never that exit.
         let seen: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
-        for outcome in [true, false] {
+        for outcome in [
+            WarrenDrainPass::Migrating,
+            WarrenDrainPass::Rebuild,
+            WarrenDrainPass::Stay,
+        ] {
             let seen_in_hook = seen.clone();
             let hook: crate::WarrenDrainMigrate = std::sync::Arc::new(move |exit_id| {
                 let seen = seen_in_hook.clone();
@@ -631,7 +687,7 @@ mod tests {
         }
         assert_eq!(
             *seen.lock().unwrap(),
-            vec![NEXT_EXIT_ID; 2],
+            vec![NEXT_EXIT_ID; 3],
             "the hook must always receive the draining exit id"
         );
     }
@@ -641,14 +697,13 @@ mod tests {
         // The session that decoded the advisory closed before the reactor
         // handled it, so no session names the exit in use: the notice does.
         let (notices, drain_sub) = tokio::sync::watch::channel(None);
-        let (escalation, _escalated) = tokio::sync::oneshot::channel();
         let reported: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
         let migrated_off: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
         let report = reported.clone();
         let migrate = migrated_off.clone();
         let mut io = RealDrainReactorIo {
             drain_sub,
-            pump_error_tx: std::sync::Arc::new(std::sync::Mutex::new(Some(escalation))),
+            pump_error_tx: std::sync::Arc::new(std::sync::Mutex::new(None)),
             exit_in_use: std::sync::Arc::new(|| None),
             on_exit_draining: Some(std::sync::Arc::new(move |exit| {
                 report.lock().unwrap().push(exit);
@@ -657,7 +712,7 @@ mod tests {
                 let migrate = migrate.clone();
                 Box::pin(async move {
                     migrate.lock().unwrap().push(exit);
-                    false
+                    WarrenDrainPass::Stay
                 })
             })),
         };

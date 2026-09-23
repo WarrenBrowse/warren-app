@@ -76,9 +76,14 @@ pub(crate) struct RealEgressProbeIo {
     /// (verdict banner still fires), used by tests and any caller that
     /// opts out.
     pub pump_error_tx: Option<PumpErrorTx>,
-    /// The exit a migration would move off: the one the tunnel is on, which
-    /// an earlier gap-free migration may have changed.
+    /// The exit the tunnel is on, which an earlier gap-free migration may have
+    /// changed.
     pub exit_in_use: ExitInUse,
+    /// The exit whose drain [`EgressProbeIo::drain_active`] last matched, the
+    /// one a migration moves off. Taken from the sealed notice, so a session
+    /// swapped between that check and the move never gets a healthy exit
+    /// charged with a drain it did not announce.
+    pub draining_exit: Option<[u8; 16]>,
     /// ACK-counter read. `None` reads the live session off `client_rx`; a test
     /// scripts it, because a real `MultiHopBundle` needs a network.
     pub acks: Option<std::sync::Arc<dyn Fn() -> Option<u64> + Send + Sync>>,
@@ -192,19 +197,20 @@ impl EgressProbeIo for RealEgressProbeIo {
     /// The exit the session is on announced a drain. An advisory from an exit
     /// the session already left says nothing about the one it is on.
     fn drain_active(&mut self) -> bool {
-        let Some(notice) = self
+        let latest = self
             .drain_rx
             .as_mut()
-            .and_then(|rx| *rx.borrow_and_update())
-        else {
-            return false;
-        };
-        (self.exit_in_use)() == Some(*notice.exit_id.as_bytes())
+            .and_then(|rx| *rx.borrow_and_update());
+        let in_use = (self.exit_in_use)();
+        self.draining_exit = latest
+            .map(|notice| *notice.exit_id.as_bytes())
+            .filter(|sealed_by| in_use == Some(*sealed_by));
+        self.draining_exit.is_some()
     }
 
     async fn try_migrate(&mut self) -> bool {
-        match (self.drain_migrate.as_ref(), (self.exit_in_use)()) {
-            (Some(migrate), Some(exit)) => migrate(exit).await,
+        match (self.drain_migrate.as_ref(), self.draining_exit) {
+            (Some(migrate), Some(exit)) => migrate(exit).await == crate::WarrenDrainPass::Migrating,
             _ => false,
         }
     }
@@ -257,6 +263,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: Some(std::sync::Arc::new(std::sync::Mutex::new(Some(tx)))),
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             // The peer acknowledges nothing for the whole run: a path stall.
             acks: Some(std::sync::Arc::new(|| Some(42))),
             acks_at_streak_start: None,
@@ -287,6 +294,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             acks: Some(std::sync::Arc::new(move || {
                 Some(reader.load(std::sync::atomic::Ordering::Relaxed))
             })),
@@ -317,6 +325,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             acks: None,
             acks_at_streak_start: None,
             real_rx: Some(std::sync::Arc::new(move || {
@@ -354,6 +363,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             acks: None,
             acks_at_streak_start: None,
             real_rx: Some(std::sync::Arc::new(|| None)),
@@ -378,6 +388,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,
@@ -408,11 +419,12 @@ mod tests {
                 let left = left.clone();
                 Box::pin(async move {
                     left.lock().unwrap().push(exit);
-                    true
+                    crate::WarrenDrainPass::Migrating
                 })
             })),
             pump_error_tx: None,
             exit_in_use: std::sync::Arc::new(move || Some(exit_in_use)),
+            draining_exit: None,
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,
@@ -448,6 +460,20 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn the_move_charges_the_exit_that_announced_the_drain_even_after_a_swap() {
+        // The supervisor may publish a swapped session between the drain check
+        // and the move: the exit that sealed no advisory must not be charged.
+        let left: std::sync::Arc<std::sync::Mutex<Vec<[u8; 16]>>> = Default::default();
+        let mut io = draining_io(BUILT_FOR, soft_drain_of(BUILT_FOR), left.clone());
+        assert!(io.drain_active());
+
+        io.exit_in_use = std::sync::Arc::new(|| Some(MIGRATED_TO));
+        assert!(io.try_migrate().await);
+
+        assert_eq!(*left.lock().unwrap(), vec![BUILT_FOR]);
+    }
+
+    #[tokio::test]
     async fn the_drain_of_an_exit_already_left_does_not_make_the_one_in_use_draining() {
         // The drain that moved the session off its first exit stays the last
         // notice on the channel; a dead probe on the exit it moved to is then
@@ -474,6 +500,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: None,
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,
@@ -497,6 +524,7 @@ mod tests {
             drain_migrate: None,
             pump_error_tx: Some(shared.clone()),
             exit_in_use: no_session_yet(),
+            draining_exit: None,
             acks: None,
             acks_at_streak_start: None,
             real_rx: None,

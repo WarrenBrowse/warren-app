@@ -663,12 +663,18 @@ impl ParametersGenerator {
     /// (synchronously here, so the updater's re-selection is guaranteed to
     /// exclude it: the fire-and-forget `on_exit_draining` spawn offers no
     /// such ordering), then asks the directory updater for an immediate
-    /// drain pass. `true` = a make-before-break migration was dispatched
-    /// and the tunnel stays up; `false` sends the reactor to the rebuild.
-    pub async fn migrate_off_drained_exit(&self, exit_id: [u8; 16]) -> bool {
+    /// drain pass, and answers with what that pass did.
+    pub async fn migrate_off_drained_exit(
+        &self,
+        exit_id: [u8; 16],
+    ) -> talpid_warren_tunnel::WarrenDrainPass {
         self.record_warren_drained_exit(exit_id).await;
         let tx = self.0.lock().await.warren_drain_migration_tx.clone();
-        crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref(), None).await
+        crate::warren_multi_hop_directory::request_drain_migration(
+            tx.as_ref(),
+            crate::warren_multi_hop_directory::DrainPassCause::ExitDrained,
+        )
+        .await
     }
 
     /// ADR 36 dial-refusal path, invoked when the node a dial terminates at
@@ -680,8 +686,12 @@ impl ParametersGenerator {
     /// onto another entry was dispatched.
     pub async fn migrate_off_refused_entry(&self, relay_id: [u8; 16]) -> bool {
         let tx = self.0.lock().await.warren_drain_migration_tx.clone();
-        crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref(), Some(relay_id))
-            .await
+        crate::warren_multi_hop_directory::request_drain_migration(
+            tx.as_ref(),
+            crate::warren_multi_hop_directory::DrainPassCause::EntryRefused(relay_id),
+        )
+        .await
+            == talpid_warren_tunnel::WarrenDrainPass::Migrating
     }
 
     /// ADR 36 (Option A): store the current tunnel's migrate handle. Wired
