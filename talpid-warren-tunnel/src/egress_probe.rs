@@ -50,7 +50,7 @@ type ClientWatch = tokio::sync::watch::Receiver<
     Option<std::sync::Arc<warrenguard_transport::bundle::MultiHopBundle>>,
 >;
 type DrainWatch =
-    tokio::sync::watch::Receiver<Option<warrenguard_transport::supervised_pump::ExitDrainAdvisory>>;
+    tokio::sync::watch::Receiver<Option<warrenguard_transport::supervised_pump::ExitDrainNotice>>;
 
 use crate::reconnect_signal::PumpErrorTx;
 

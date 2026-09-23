@@ -1451,7 +1451,8 @@ fn spawn_multi_hop(
                     if drain_sub.changed().await.is_err() {
                         return;
                     }
-                    let Some(advisory) = *drain_sub.borrow_and_update() else {
+                    let Some(advisory) = drain_sub.borrow_and_update().map(|notice| notice.advisory)
+                    else {
                         continue;
                     };
                     if acted_on == Some(advisory) {

@@ -40,7 +40,7 @@ use std::time::Duration;
 use warrenguard_transport::drain_policy::{
     DRAIN_RECONNECT_COOLDOWN, jitter_delay, within_cooldown,
 };
-use warrenguard_transport::supervised_pump::ExitDrainAdvisory;
+use warrenguard_transport::supervised_pump::{ExitDrainAdvisory, ExitDrainNotice};
 
 // Pump-error escalation channel, shared with the pumps and the migration
 // watchdog: the first task to take the `oneshot` reports the fatal/transient
@@ -152,7 +152,7 @@ pub(crate) async fn run_drain_reactor<I: DrainReactorIo>(io: &mut I) {
 /// Production [`DrainReactorIo`]: a subscriber on the supervisor's
 /// `ExitDrainingChannel` plus the shared pump-error escalation handle.
 pub(crate) struct RealDrainReactorIo {
-    pub drain_sub: tokio::sync::watch::Receiver<Option<ExitDrainAdvisory>>,
+    pub drain_sub: tokio::sync::watch::Receiver<Option<ExitDrainNotice>>,
     pub pump_error_tx: PumpErrorTx,
     /// The exit id this tunnel is currently connected to (the one that drains).
     /// The advisory itself carries no identity, so the reactor captures the
@@ -172,8 +172,8 @@ impl DrainReactorIo for RealDrainReactorIo {
             if self.drain_sub.changed().await.is_err() {
                 return None;
             }
-            if let Some(adv) = *self.drain_sub.borrow_and_update() {
-                return Some(adv);
+            if let Some(notice) = *self.drain_sub.borrow_and_update() {
+                return Some(notice.advisory);
             }
         }
     }

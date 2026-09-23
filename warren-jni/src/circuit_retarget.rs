@@ -18,9 +18,7 @@
 use std::time::Duration;
 
 use tokio::sync::watch;
-use warrenguard_transport::drain_policy::{
-    DRAINED_EXIT_AVOID_TTL, ExitDrainAdvisory, jitter_delay,
-};
+use warrenguard_transport::drain_policy::{DRAINED_EXIT_AVOID_TTL, ExitDrainNotice, jitter_delay};
 
 use crate::circuit_select::NodeSel;
 
@@ -94,7 +92,7 @@ impl EntryRetarget {
 /// client's uniform draw in `[0, 1)` (production passes
 /// `drain_policy::stampede_fraction()`).
 pub(crate) async fn leave_on_drain(
-    mut drain: watch::Receiver<Option<ExitDrainAdvisory>>,
+    mut drain: watch::Receiver<Option<ExitDrainNotice>>,
     leaving: watch::Sender<bool>,
     now_unix: impl Fn() -> u64,
     fraction: f64,
@@ -102,8 +100,8 @@ pub(crate) async fn leave_on_drain(
     // An advisory published before this task first ran is still the
     // session's drain, so the current value is read before any wait.
     let advisory = loop {
-        if let Some(advisory) = *drain.borrow_and_update() {
-            break advisory;
+        if let Some(notice) = *drain.borrow_and_update() {
+            break notice.advisory;
         }
         if drain.changed().await.is_err() {
             return;
@@ -147,6 +145,17 @@ mod tests {
     }
 
     const NOW: u64 = 1_000_000;
+
+    /// The session's exit announcing a maintenance drain until `deadline`.
+    fn drain_notice(deadline_unix_secs: u64) -> ExitDrainNotice {
+        ExitDrainNotice {
+            exit_id: warrenguard_multihop::ExitId::from_bytes([2; 16]),
+            advisory: warrenguard_transport::drain_policy::ExitDrainAdvisory {
+                deadline_unix_secs,
+                reason_code: 0,
+            },
+        }
+    }
 
     #[test]
     fn a_refusing_entry_is_replaced_for_the_same_exit() {
@@ -242,10 +251,7 @@ mod tests {
         let reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.5));
 
         drain_tx
-            .send(Some(ExitDrainAdvisory {
-                deadline_unix_secs: NOW + 45,
-                reason_code: 0,
-            }))
+            .send(Some(drain_notice(NOW + 45)))
             .expect("reactor alive");
         let start = tokio::time::Instant::now();
         tokio::time::timeout(Duration::from_secs(60), leaving.changed())
@@ -265,10 +271,7 @@ mod tests {
         let (drain_tx, drain) = watch::channel(None);
         let (leaving_tx, mut leaving) = watch::channel(false);
         drain_tx
-            .send(Some(ExitDrainAdvisory {
-                deadline_unix_secs: NOW + 2,
-                reason_code: 0,
-            }))
+            .send(Some(drain_notice(NOW + 2)))
             .expect("receiver alive");
 
         let _reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.0));
@@ -287,10 +290,7 @@ mod tests {
         let _reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.9));
 
         drain_tx
-            .send(Some(ExitDrainAdvisory {
-                deadline_unix_secs: NOW + 2,
-                reason_code: 0,
-            }))
+            .send(Some(drain_notice(NOW + 2)))
             .expect("reactor alive");
         let start = tokio::time::Instant::now();
         tokio::time::timeout(Duration::from_secs(60), leaving.changed())
