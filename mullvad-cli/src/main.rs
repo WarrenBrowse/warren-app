@@ -186,7 +186,36 @@ enum Cli {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> std::process::ExitCode {
+    match run().await {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(error) => {
+            match daemon_refusal(&error) {
+                // The daemon's reason is written for the user already, and the
+                // cause chain around it would only bury it.
+                Some(reason) => eprintln!("{reason}"),
+                None => eprintln!("Error: {error:?}"),
+            }
+            std::process::ExitCode::FAILURE
+        }
+    }
+}
+
+/// The daemon's explanation when it refused a call to this account, which it
+/// does to every account but the wallet owner and administrators.
+fn daemon_refusal(error: &anyhow::Error) -> Option<&str> {
+    use mullvad_management_interface::{Code, Error, Status};
+
+    error.chain().find_map(|cause| {
+        let status = match cause.downcast_ref::<Error>() {
+            Some(Error::Rpc(status)) => Some(status.as_ref()),
+            _ => cause.downcast_ref::<Status>(),
+        }?;
+        (status.code() == Code::PermissionDenied).then(|| status.message())
+    })
+}
+
+async fn run() -> Result<()> {
     // Handle SIGPIPE
     // https://stackoverflow.com/questions/65755853/simple-word-count-rust-program-outputs-valid-stdout-but-panicks-when-piped-to-he/65760807
     // https://github.com/typst/typst/pull/5444
@@ -246,4 +275,32 @@ fn handle_sigpipe() -> Result<(), nix::errno::Errno> {
     // https://pubs.opengroup.org/onlinepubs/9699919799/functions/signal.html
     unsafe { signal(Signal::SIGPIPE, SigHandler::SigDfl) }?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::daemon_refusal;
+    use anyhow::Context;
+    use mullvad_management_interface::{Error, Status};
+
+    #[test]
+    fn a_refusal_is_reported_with_the_daemons_own_words() {
+        let error = Err::<(), _>(Error::from(Status::permission_denied(
+            "Warren is set up by another account on this computer",
+        )))
+        .context("Failed to connect")
+        .unwrap_err();
+
+        assert_eq!(
+            daemon_refusal(&error),
+            Some("Warren is set up by another account on this computer")
+        );
+    }
+
+    #[test]
+    fn any_other_failure_is_not_a_refusal() {
+        let error = anyhow::Error::from(Error::from(Status::unavailable("daemon is down")));
+
+        assert_eq!(daemon_refusal(&error), None);
+    }
 }

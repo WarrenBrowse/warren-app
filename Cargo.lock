@@ -3279,6 +3279,7 @@ dependencies = [
  "tonic-build",
  "tower",
  "vec1",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

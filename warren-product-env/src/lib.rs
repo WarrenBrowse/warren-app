@@ -297,9 +297,8 @@ pub const ALL: [ProductEnv; 3] = [ProductEnv::Prod, ProductEnv::Staging, Product
 /// Two environments installed side by side both want the machine's single
 /// tunnel, and the arbitration is one-directional by design: the WEAKER one
 /// observes the stronger and stands down by itself. The stronger one is never
-/// modified, and never issues a command, because the management socket is
-/// world-accessible and a push design would hand any local process a
-/// documented way to disarm a kill switch.
+/// modified, and never issues a command: a push design would give every
+/// environment's daemon a way to disarm another environment's kill switch.
 ///
 /// The order is declared once, here, so no call site invents its own
 /// comparison. Any new environment takes a place in this list.

@@ -22,9 +22,9 @@ pub fn get_rpc_socket_path() -> PathBuf {
 /// The only spelling of the socket-path format, so the compiled default and
 /// a foreign environment's path can never drift apart. Cross-environment
 /// arbitration needs a path for an environment this binary was not compiled
-/// for, and the path alone proves nothing: the management socket is
-/// world-accessible, so a caller dialing a foreign path must first have the
-/// OS vouch for its ownership
+/// for, and the path alone proves nothing: anything could be listening there,
+/// so a caller dialing a foreign path must first have the OS vouch for its
+/// ownership
 /// (`mullvad_management_interface::PrivilegedSocketPath::vouched_for`).
 // Renamed for the Warren fork - anti-collision with Mullvad upstream
 // (see `unix.rs::PRODUCT_NAME`). The override env var keeps its name

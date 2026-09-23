@@ -317,11 +317,53 @@ during app install and is then always running in the background, even when the u
 quits the GUI and when no tunnels are running.
 
 This system service can be controlled via a management interface, exposed locally
-via Unix domain sockets (UDS) on Linux and macOS and via named pipes on Windows.
-This management interface can be reached by any process running on the device.
-Any local process or user can therefore control the VPN state or extract account credentials.
-Protecting against this is outside of the app's threat model. However, the management
-interface must not be reachable by code running on websites open in a local browser.
+via a Unix domain socket (UDS) on Linux and macOS and via a named pipe on Windows.
+The management interface must never be reachable by code running on websites open in a
+local browser, nor from another machine.
+
+### Who may use the management interface
+
+Every local account can connect, so that the GUI and the CLI work for the user who
+installed the app without any group membership or re-login. Connecting grants nothing by
+itself: the daemon authorizes every RPC, before reading its request, against the identity
+the operating system reports for the connection.
+
+- **Linux and macOS**: the socket (`0766` in a root-owned directory) carries the peer uid,
+  read by the kernel (`SO_PEERCRED` / `getpeereid`). Root and the daemon's own account are
+  administrators.
+- **Windows**: the pipe's DACL gives SYSTEM and Administrators full control, gives
+  authenticated users the client rights only (without `FILE_CREATE_PIPE_INSTANCE`, so no
+  other account can serve an instance of the daemon's pipe name), and has no entry for
+  Everyone, Anonymous or network logons; the pipe also refuses remote clients. The daemon
+  reads each client's identity from the token it opened the pipe with (the user SID, whether
+  it is SYSTEM or an elevated member of Administrators, and its session). A client whose
+  token cannot be read (the Anonymous impersonation level) is treated as unidentified.
+
+Each RPC has one of three classes, declared in one table in
+`mullvad-daemon/src/rpc_access.rs` that a test checks against the service definition:
+
+1. state that carries no identity (tunnel state, versions, relays, settings);
+2. anything that changes the tunnel, the firewall, DNS, the settings, the relays, split
+   tunneling, updates or the daemon itself;
+3. the wallet, the account and device identity, secrets, and the forum signatures made with
+   the wallet key.
+
+The account that installs a wallet (create, import or login) becomes its **owner**, recorded
+by the daemon in `wallet-owner.json` in its settings directory, which only root or SYSTEM can
+write, so a daemon restart never reopens a claim. Once there is an owner, classes 2 and 3 are
+for the owner and administrators only; any other account keeps class 1, and what it reads has
+the account, the device, voucher codes and proxy credentials removed. An unidentified client
+only ever gets class 1. A true sign-out, which erases the mnemonic, releases the ownership.
+
+A wallet with no recorded owner (installed by an administrator, or before owners were
+recorded) is claimed by the first class 2 or 3 call of the account at the computer's own
+screen: the console user on macOS, the active console session on Windows, a uid with an
+active local logind session on Linux. Any other account is refused until then, and
+administrators never claim. With no wallet installed, any local account may set the app up
+and becomes the owner of the wallet it installs.
+
+The policy itself, and the reasons behind each rule, are documented in
+`mullvad-daemon/src/wallet_access.rs`.
 
 The `warren-daemon` transition to the [disconnected] state before exiting. To
 limit leaks during computer shutdown, it will maintain the blocking firewall

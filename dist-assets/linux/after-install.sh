@@ -3,12 +3,13 @@ set -eu
 
 chmod u+s "/usr/bin/warren-exclude"
 
-# No management-socket group is provisioned: the daemon exposes the socket to
-# local users and gates wallet/secret RPCs per-uid (matching upstream Mullvad's
-# threat model). Group membership only applies at the next login, so a
-# group-based install would leave the GUI unable to reach the daemon until the
-# user logs out and back in. Operators wanting kernel-enforced restriction can
-# create a group and set WARREN_MANAGEMENT_SOCKET_GROUP on the service.
+# No management-socket group is provisioned: every local account can connect,
+# and the daemon authorizes each RPC against the caller's uid (only the wallet's
+# owner and root may drive the tunnel or reach the wallet). Group membership
+# only applies at the next login, so a group-based install would leave the GUI
+# unable to reach the daemon until the user logs out and back in. Operators who
+# also want connections refused by the kernel can create a group and set
+# WARREN_MANAGEMENT_SOCKET_GROUP on the service.
 
 systemctl enable "/usr/lib/systemd/system/warren-daemon.service"
 systemctl start warren-daemon.service || echo "Failed to start warren-daemon.service"

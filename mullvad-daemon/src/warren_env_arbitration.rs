@@ -5,10 +5,9 @@
 //! and they both want the machine's single tunnel. The arbitration is
 //! one-directional: the WEAKER environment observes the stronger one and
 //! stands down on its own. The stronger one is never modified and never
-//! issues a command, because the management socket is world-accessible and
-//! `DisconnectTunnel`, `SetLockdownMode` and `SetAutoConnect` are
-//! unauthenticated, so a push design would ship a documented way for any
-//! local process to disarm a kill switch.
+//! issues a command: a push design would give every environment's daemon a
+//! way to disarm another environment's kill switch, while pulling needs
+//! nothing but the stronger daemon's public state.
 //!
 //! This module holds the decision, as pure functions over what the foreign
 //! daemons were observed saying. The socket work that produces those
@@ -1021,10 +1020,10 @@ pub(crate) mod watch {
         report: &mut impl FnMut(ProductEnv, Option<ForeignDaemonState>) -> bool,
     ) -> Result<(), String> {
         let path = mullvad_paths::rpc_socket_path_for(env);
-        // The admission gate. The management socket is world-accessible, so
-        // an unprivileged process can bind a path that looks like prod's and
-        // answer "connected" forever, which would disarm this build's kill
-        // switch on demand. Nothing below is believed without this.
+        // The admission gate. An unprivileged process that binds a path that
+        // looks like prod's could answer "connected" forever, which would
+        // disarm this build's kill switch on demand. Nothing below is believed
+        // without this.
         let vouched = PrivilegedSocketPath::vouched_for(path)
             .ok_or_else(|| "no endpoint the OS vouches for".to_owned())?;
 

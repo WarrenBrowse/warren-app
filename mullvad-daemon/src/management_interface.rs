@@ -52,7 +52,7 @@ pub type AppUpgradeBroadcast = tokio::sync::broadcast::Sender<version::AppUpgrad
 
 struct ManagementServiceImpl {
     daemon_tx: DaemonCommandSender,
-    subscriptions: Arc<Mutex<Vec<EventsListenerSender>>>,
+    subscriptions: Arc<Mutex<Vec<EventsSubscriber>>>,
     pub app_upgrade_broadcast: AppUpgradeBroadcast,
     log_reload_handle: crate::logging::LogHandle,
     /// Direct handle on the live Warren status cache. Read by
@@ -60,14 +60,21 @@ struct ManagementServiceImpl {
     /// without round-tripping through the daemon command channel
     /// (the cache is `Arc`-backed and the values are pure RAM).
     warren_status_cache: crate::warren_status::WarrenStatusCache,
-    /// Authorizes wallet/secret RPCs (mnemonic read/write, destructive
-    /// sign-out) against the calling process' Unix credentials.
+    /// Who owns the wallet: every call was already admitted against it by
+    /// the gate, and this decides what each caller may be shown and who a
+    /// wallet install makes the owner.
     wallet_access: Arc<crate::wallet_access::WalletAccessControl>,
 }
 
 pub type ServiceResult<T> = std::result::Result<Response<T>, Status>;
 type EventsListenerReceiver = UnboundedReceiverStream<Result<types::DaemonEvent, Status>>;
 type EventsListenerSender = tokio::sync::mpsc::UnboundedSender<Result<types::DaemonEvent, Status>>;
+
+/// One `EventsListen` stream, and who opened it.
+struct EventsSubscriber {
+    tx: EventsListenerSender,
+    peer: Option<mullvad_management_interface::PeerCredentials>,
+}
 
 type AppUpgradeEventListenerReceiver =
     Box<dyn futures::Stream<Item = Result<types::AppUpgradeEvent, Status>> + Send + Unpin>;
@@ -281,16 +288,13 @@ fn warren_status_snapshot_to_proto(
 }
 
 /// Empties every account-bound secret the status carries unless the caller
-/// may see wallet secrets.
+/// may see the owner's identity.
 ///
 /// Today that is the announcement voucher code, a bearer token worth a month
-/// of service. The status stream is not gated (every local process may read
-/// the tunnel state, and should be able to), and the management socket is
-/// world-accessible unless the operator restricted it to a group, so a code
-/// riding this snapshot is one local user's voucher handed to every other
-/// local user, next to a mnemonic the same socket keeps behind
-/// `authorize_wallet_access`. The operator's own text is not withheld: the
-/// card still reads exactly as published, without the code.
+/// of service. Every local account may read the status, and should be able
+/// to, so a code riding this snapshot would be the owner's voucher handed to
+/// every other account on the machine. The operator's own text is not
+/// withheld: the card still reads exactly as published, without the code.
 fn withhold_account_secrets(status: &mut types::WarrenStatus, may_see_secrets: bool) {
     if may_see_secrets {
         return;
@@ -298,6 +302,71 @@ fn withhold_account_secrets(status: &mut types::WarrenStatus, may_see_secrets: b
     for announcement in &mut status.announcements {
         announcement.voucher_code = None;
     }
+}
+
+/// Empties the credentials of a custom API access method: a proxy's
+/// username and password, a Shadowsocks password.
+fn withhold_access_method_secrets(method: &mut types::AccessMethodSetting) {
+    use types::{access_method::AccessMethod, custom_proxy::ProxyMethod};
+
+    let Some(types::AccessMethod {
+        access_method: Some(AccessMethod::Custom(proxy)),
+    }) = method.access_method.as_mut()
+    else {
+        return;
+    };
+    match proxy.proxy_method.as_mut() {
+        Some(ProxyMethod::Socks5remote(socks)) => socks.auth = None,
+        Some(ProxyMethod::Shadowsocks(shadowsocks)) => shadowsocks.password.clear(),
+        Some(ProxyMethod::Socks5local(_)) | None => {}
+    }
+}
+
+/// Empties the secrets the settings carry unless the caller may see them.
+/// The rest of the settings is what every local account may read.
+fn withhold_settings_secrets(settings: &mut types::Settings, may_see_secrets: bool) {
+    if may_see_secrets {
+        return;
+    }
+    if let Some(methods) = settings.api_access_methods.as_mut() {
+        [
+            methods.direct.as_mut(),
+            methods.mullvad_bridges.as_mut(),
+            methods.encrypted_dns_proxy.as_mut(),
+            methods.domain_fronting.as_mut(),
+        ]
+        .into_iter()
+        .flatten()
+        .chain(methods.custom.iter_mut())
+        .for_each(withhold_access_method_secrets);
+    }
+}
+
+/// What of a daemon event a subscriber may receive: all of it for the owner
+/// and administrators; for anyone else, the event without the account, the
+/// device and the secrets, or nothing when nothing else is left of it.
+fn withhold_event_identity(
+    mut event: types::DaemonEvent,
+    may_see_identity: bool,
+) -> Option<types::DaemonEvent> {
+    if may_see_identity {
+        return Some(event);
+    }
+    match event.event.as_mut()? {
+        daemon_event::Event::Settings(settings) => withhold_settings_secrets(settings, false),
+        daemon_event::Event::Device(device) => {
+            if let Some(state) = device.new_state.as_mut() {
+                state.device = None;
+            }
+        }
+        daemon_event::Event::NewAccessMethod(method) => withhold_access_method_secrets(method),
+        daemon_event::Event::RemoveDevice(_) => return None,
+        daemon_event::Event::TunnelState(_)
+        | daemon_event::Event::RelayList(_)
+        | daemon_event::Event::VersionInfo(_)
+        | daemon_event::Event::LeakInfo(_) => {}
+    }
+    Some(event)
 }
 
 const INVALID_VOUCHER_MESSAGE: &str = "This voucher code is invalid";
@@ -383,11 +452,14 @@ impl ManagementService for ManagementServiceImpl {
     // Control the daemon and receive events
     //
 
-    async fn events_listen(&self, _: Request<()>) -> ServiceResult<Self::EventsListenStream> {
+    async fn events_listen(&self, request: Request<()>) -> ServiceResult<Self::EventsListenStream> {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
 
         let mut subscriptions = self.subscriptions.lock().unwrap();
-        subscriptions.push(tx);
+        subscriptions.push(EventsSubscriber {
+            tx,
+            peer: Self::peer_of(&request),
+        });
 
         Ok(Response::new(UnboundedReceiverStream::new(rx)))
     }
@@ -511,13 +583,16 @@ impl ManagementService for ManagementServiceImpl {
     // Settings
     //
 
-    async fn get_settings(&self, _: Request<()>) -> ServiceResult<types::Settings> {
+    async fn get_settings(&self, request: Request<()>) -> ServiceResult<types::Settings> {
         log::debug!("get_settings");
+        let may_see_secrets = self.may_see_identity(&request);
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::GetSettings(tx))?;
-        self.wait_for_result(rx)
-            .await
-            .map(|settings| Response::new(types::Settings::from(&settings)))
+        self.wait_for_result(rx).await.map(|settings| {
+            let mut settings = types::Settings::from(&settings);
+            withhold_settings_secrets(&mut settings, may_see_secrets);
+            Response::new(settings)
+        })
     }
 
     async fn reset_settings(&self, _: Request<()>) -> ServiceResult<()> {
@@ -609,8 +684,7 @@ impl ManagementService for ManagementServiceImpl {
     /// copied into the gRPC outbound buffer, which is out of our
     /// control - but the daemon-side heap allocation is wiped as soon
     /// as the `Zeroizing` wrapper goes out of scope here.
-    async fn get_warren_mnemonic(&self, request: Request<()>) -> ServiceResult<String> {
-        self.authorize_wallet_access(&request)?;
+    async fn get_warren_mnemonic(&self, _: Request<()>) -> ServiceResult<String> {
         log::debug!("get_warren_mnemonic (content NEVER logged)");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::GetWarrenMnemonic(tx))?;
@@ -632,7 +706,7 @@ impl ManagementService for ManagementServiceImpl {
     /// `Zeroizing<String>` immediately so the secret heap buffer is
     /// wiped after `on_set_warren_mnemonic` returns.
     async fn set_warren_mnemonic(&self, request: Request<String>) -> ServiceResult<()> {
-        self.authorize_wallet_access(&request)?;
+        let install = self.begin_install(&request).await?;
         let mnemonic = zeroize::Zeroizing::new(request.into_inner());
         log::info!(
             "set_warren_mnemonic request received (len={}, content NEVER logged)",
@@ -641,6 +715,7 @@ impl ManagementService for ManagementServiceImpl {
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SetWarrenMnemonic(tx, mnemonic))?;
         let result = self.wait_for_result(rx).await?;
+        self.finish_install(install, result.is_ok());
         result.map(Response::new).map_err(|e| {
             // Map io::ErrorKind::InvalidData → InvalidArgument (= BIP39 invalid).
             // Other errors → Internal.
@@ -722,11 +797,6 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumLoginRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
-        // Signs with the wallet identity key, so it is gated per-uid exactly
-        // like the mnemonic RPCs: the management socket is world-accessible,
-        // and without this a co-tenant local user could obtain a forum login
-        // signed under this account's wallet identity.
-        self.authorize_wallet_access(&request)?;
         let sid = request.into_inner().sid;
         validate_forum_sid(&sid)?;
         log::debug!("sign_forum_login (sid/pubkey/sig NEVER logged)");
@@ -753,13 +823,8 @@ impl ManagementService for ManagementServiceImpl {
     /// **No-log policy**: never log the pubkey or the signature.
     async fn sign_forum_notifications(
         &self,
-        request: Request<()>,
+        _: Request<()>,
     ) -> ServiceResult<types::ForumLoginSignature> {
-        // Signs with the wallet identity key, so it is gated per-uid exactly
-        // like the login RPC: the management socket is world-accessible, and
-        // without this a co-tenant local user could read this account's forum
-        // notifications.
-        self.authorize_wallet_access(&request)?;
         log::debug!("sign_forum_notifications (pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SignForumNotifications(tx))?;
@@ -779,13 +844,11 @@ impl ManagementService for ManagementServiceImpl {
     }
 
     /// Signs marking the caller's own forum notification list seen (doc 55).
-    /// Gated per-uid exactly like the read: this one writes.
     /// **No-log policy**: never log the pubkey or the signature.
     async fn sign_forum_notifications_seen(
         &self,
-        request: Request<()>,
+        _: Request<()>,
     ) -> ServiceResult<types::ForumLoginSignature> {
-        self.authorize_wallet_access(&request)?;
         log::debug!("sign_forum_notifications_seen (pubkey/sig NEVER logged)");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::SignForumNotificationsSeen(tx))?;
@@ -815,9 +878,6 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumAttachLogsRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
-        // Same wallet-key gate as sign_forum_login: without it the
-        // world-accessible socket is a signing oracle for any local user.
-        self.authorize_wallet_access(&request)?;
         let request = request.into_inner();
         validate_forum_sid(&request.sid)?;
         if request.log_gz.is_empty() {
@@ -869,9 +929,6 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<types::ForumReportRequest>,
     ) -> ServiceResult<types::ForumLoginSignature> {
-        // Same wallet-key gate as the other forum signatures: without it the
-        // world-accessible socket is a signing oracle for any local user.
-        self.authorize_wallet_access(&request)?;
         let request = request.into_inner();
         // No field at all for a report without logs, never an empty one: the
         // vector pins both shapes.
@@ -912,7 +969,7 @@ impl ManagementService for ManagementServiceImpl {
         log::debug!("get_warren_status");
         let snapshot = self.warren_status_cache.snapshot();
         let mut status = warren_status_snapshot_to_proto(snapshot);
-        withhold_account_secrets(&mut status, self.claim_wallet_access_for_status(&request));
+        withhold_account_secrets(&mut status, self.may_see_identity(&request));
         Ok(Response::new(status))
     }
 
@@ -927,10 +984,8 @@ impl ManagementService for ManagementServiceImpl {
     ) -> ServiceResult<Self::WarrenStatusUpdatesStream> {
         log::debug!("warren_status_updates subscribe");
         let rx = self.warren_status_cache.subscribe();
-        // Claimed once at subscribe, then read per item: this subscription
-        // outlives the whole session, and what may be shown on it changes the
-        // moment the ownership is settled.
-        let _ = self.claim_wallet_access_for_status(&request);
+        // Decided per item: this subscription outlives the whole session, and
+        // what may be shown on it changes the moment an owner is known.
         let wallet_access = Arc::clone(&self.wallet_access);
         let peer = Self::peer_of(&request);
         // The closure intentionally returns `Result<_, Status>` so the
@@ -944,7 +999,7 @@ impl ManagementService for ManagementServiceImpl {
         )]
         let stream = tokio_stream::wrappers::WatchStream::new(rx).map(move |snap| {
             let mut status = warren_status_snapshot_to_proto(snap);
-            withhold_account_secrets(&mut status, wallet_access.may_see_secrets(peer));
+            withhold_account_secrets(&mut status, wallet_access.may_see_identity(peer.as_ref()));
             Ok(status)
         });
         Ok(Response::new(
@@ -1243,32 +1298,28 @@ impl ManagementService for ManagementServiceImpl {
     // Account management
     //
 
-    async fn create_new_account(&self, _: Request<()>) -> ServiceResult<String> {
+    async fn create_new_account(&self, request: Request<()>) -> ServiceResult<String> {
         log::debug!("create_new_account");
+        let install = self.begin_install(&request).await?;
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::CreateNewAccount(tx))?;
-        self.wait_for_result(rx)
-            .await?
-            .map(Response::new)
-            .map_err(map_daemon_error)
+        let result = self.wait_for_result(rx).await?;
+        self.finish_install(install, result.is_ok());
+        result.map(Response::new).map_err(map_daemon_error)
     }
 
     async fn login_account(&self, request: Request<AccountNumber>) -> ServiceResult<()> {
         log::debug!("login_account");
+        let install = self.begin_install(&request).await?;
         let account_number = request.into_inner();
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::LoginAccount(tx, account_number))?;
-        self.wait_for_result(rx)
-            .await?
-            .map(Response::new)
-            .map_err(map_daemon_error)
+        let result = self.wait_for_result(rx).await?;
+        self.finish_install(install, result.is_ok());
+        result.map(Response::new).map_err(map_daemon_error)
     }
 
     async fn logout_account(&self, request: Request<String>) -> ServiceResult<()> {
-        // The wipe branch irreversibly erases the on-disk BIP39 identity,
-        // so it is a wallet/secret operation: authorize the caller before
-        // honoring it, otherwise any local process could destroy the seed.
-        self.authorize_wallet_access(&request)?;
         let source = request.into_inner();
         log::debug!("logout_account (source: {source})");
         // Only an explicit, backup-confirmed user sign-out from the GUI
@@ -1293,10 +1344,12 @@ impl ManagementService for ManagementServiceImpl {
         }
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(DaemonCommand::LogoutAccount(tx, wipe_identity))?;
-        self.wait_for_result(rx)
-            .await?
-            .map(Response::new)
-            .map_err(map_daemon_error)
+        let result = self.wait_for_result(rx).await?;
+        if wipe_identity && result.is_ok() {
+            // The wallet is gone, and whoever sets Warren up next owns the next one.
+            self.wallet_access.release().await;
+        }
+        result.map(Response::new).map_err(map_daemon_error)
     }
 
     #[cfg(target_os = "android")]
@@ -2155,54 +2208,50 @@ impl ManagementService for ManagementServiceImpl {
 
 #[expect(clippy::result_large_err)]
 impl ManagementServiceImpl {
-    /// Authorize a wallet/secret operation against the calling process'
-    /// Unix credentials, captured by the management interface from the
-    /// socket's `SO_PEERCRED`. Returns `PermissionDenied` if another local
-    /// user is trying to reach this account's secrets. `extensions` is the
-    /// incoming request's extension map.
-    fn authorize_wallet_access<T>(&self, request: &Request<T>) -> Result<(), Status> {
-        let claim = self
-            .wallet_access
-            .authorize(Self::peer_of(request))
-            .map_err(|e| {
-                log::warn!("Refused wallet/secret RPC: {e}");
-                Status::permission_denied(e.to_string())
-            })?;
-        if claim == crate::wallet_access::Access::JustClaimed {
-            // Until this call the owner was unknown, so every status this
-            // peer received had its account-bound secrets withheld. Push the
-            // same state again now that they may be shown, instead of leaving
-            // the card without its code until something else moves.
+    /// Start a wallet install for the caller, which claims the wallet for it
+    /// when it has no owner. Held until [`Self::finish_install`].
+    async fn begin_install<T>(
+        &self,
+        request: &Request<T>,
+    ) -> Result<crate::wallet_access::InstallGuard<'_>, Status> {
+        let peer = Self::peer_of(request);
+        self.wallet_access
+            .begin_install(peer.as_ref())
+            .await
+            .map_err(|error| match error {
+                crate::wallet_access::InstallError::Refused(refusal) => {
+                    Status::permission_denied(refusal.to_string())
+                }
+                crate::wallet_access::InstallError::Record(error) => {
+                    log::error!("{error}");
+                    Status::internal(error.to_string())
+                }
+            })
+    }
+
+    fn finish_install(&self, install: crate::wallet_access::InstallGuard<'_>, installed: bool) {
+        let claimed = install.claimed();
+        install.finish(installed);
+        if installed && claimed {
+            // Until now the owner was unknown, so every status this peer
+            // received had its account-bound content withheld.
             self.warren_status_cache.republish();
         }
-        Ok(())
     }
 
-    /// Whether the caller may be shown the account-bound secrets an ordinary
-    /// status carries, taking the wallet ownership for it if nobody holds it.
-    ///
-    /// A status read is never REFUSED: every local process may see the tunnel
-    /// state, and the CLI depends on it. What a caller that is not the wallet
-    /// owner does not get is the announcement voucher code that rides the
-    /// snapshot (see [`withhold_account_secrets`]).
-    ///
-    /// The read claims the ownership like any other wallet call. That costs an
-    /// attacker nothing it did not already have, since the mnemonic RPC on the
-    /// same socket claims too and hands over the seed with it, and it buys the
-    /// desktop GUI the ownership in every ordinary session: it subscribes to
-    /// this stream seconds after the daemon comes up, while it may never call
-    /// a wallet RPC at all (the forum panel is user-initiated, never polled).
-    fn claim_wallet_access_for_status<T>(&self, request: &Request<T>) -> bool {
-        self.wallet_access.authorize(Self::peer_of(request)).is_ok()
+    /// Whether what the caller reads may carry the owner's identity material.
+    fn may_see_identity<T>(&self, request: &Request<T>) -> bool {
+        self.wallet_access
+            .may_see_identity(Self::peer_of(request).as_ref())
     }
 
-    /// The peer credentials the management interface captured, `None` where
-    /// the platform cannot supply them (the Windows named pipe).
+    /// The identity the transport recorded for the caller's connection,
+    /// `None` when it could not establish one.
     fn peer_of<T>(request: &Request<T>) -> Option<mullvad_management_interface::PeerCredentials> {
         request
             .extensions()
             .get::<mullvad_management_interface::ManagementConnectInfo>()
-            .copied()
+            .cloned()
             .flatten()
     }
 
@@ -2232,6 +2281,7 @@ pub struct ManagementInterfaceServer {
 }
 
 impl ManagementInterfaceServer {
+    #[expect(clippy::too_many_arguments)]
     pub fn start(
         daemon_tx: DaemonCommandSender,
         rpc_socket_path: PathBuf,
@@ -2239,31 +2289,40 @@ impl ManagementInterfaceServer {
         log_reload_handle: crate::logging::LogHandle,
         relay_selector: mullvad_relay_selector::RelaySelector,
         warren_status_cache: crate::warren_status::WarrenStatusCache,
+        settings_dir: &std::path::Path,
+        warren_identity: Arc<crate::warren_identity_manager::WarrenIdentityManager>,
     ) -> Result<ManagementInterfaceServer, Error> {
-        let subscriptions = Arc::<Mutex<Vec<EventsListenerSender>>>::default();
+        let subscriptions = Arc::<Mutex<Vec<EventsSubscriber>>>::default();
 
         // NOTE: It is important that the channel buffer size is kept at 0. When sending a signal
         // to abort the gRPC server, the sender can be awaited to know when the gRPC server has
         // received and started processing the shutdown signal.
         let (server_abort_tx, server_abort_rx) = mpsc::channel(0);
 
-        let wallet_access = Arc::new(crate::wallet_access::WalletAccessControl::new());
+        let wallet_access = Arc::new(crate::wallet_access::WalletAccessControl::new(
+            crate::wallet_access::OwnerStore::in_settings_dir(settings_dir),
+            move || warren_identity.has_user_identity(),
+            crate::wallet_access::SystemConsole,
+        ));
 
         let management_service = ManagementServiceImpl {
             daemon_tx,
             subscriptions: subscriptions.clone(),
             app_upgrade_broadcast,
             log_reload_handle,
-            warren_status_cache,
+            warren_status_cache: warren_status_cache.clone(),
             wallet_access: wallet_access.clone(),
         };
 
         let relay_selector_service = RelaySelectorServiceImpl::new(relay_selector);
+        let gate =
+            crate::rpc_access::DaemonRpcGate::new(wallet_access.clone(), warren_status_cache);
 
         let (rpc_server_join_handle, socket_security) =
             mullvad_management_interface::spawn_rpc_server(
                 management_service,
                 relay_selector_service,
+                gate,
                 async move {
                     StreamExt::into_future(server_abort_rx).await;
                 },
@@ -2271,17 +2330,15 @@ impl ManagementInterfaceServer {
             )
             .map_err(Error::SetupError)?;
 
-        // Tell the wallet guard which access-control mode the socket landed in
-        // so it can decide whether to rely on the kernel's group gate or fall
-        // back to per-uid trust-on-first-use.
-        wallet_access.set_socket_security(socket_security);
-
         log::info!(
-            "Management interface listening on {} (access control: {socket_security:?})",
+            "Management interface listening on {} (connections: {socket_security:?})",
             rpc_socket_path.display()
         );
 
-        let broadcast = ManagementInterfaceEventBroadcaster { subscriptions };
+        let broadcast = ManagementInterfaceEventBroadcaster {
+            subscriptions,
+            wallet_access,
+        };
 
         Ok(ManagementInterfaceServer {
             rpc_server_join_handle,
@@ -2319,13 +2376,22 @@ impl ManagementInterfaceServer {
 /// A handle that allows broadcasting messages to all subscribers of the management interface.
 #[derive(Clone)]
 pub struct ManagementInterfaceEventBroadcaster {
-    subscriptions: Arc<Mutex<Vec<EventsListenerSender>>>,
+    subscriptions: Arc<Mutex<Vec<EventsSubscriber>>>,
+    wallet_access: Arc<crate::wallet_access::WalletAccessControl>,
 }
 
 impl ManagementInterfaceEventBroadcaster {
     fn notify(&self, value: types::DaemonEvent) {
         let mut subscriptions = self.subscriptions.lock().unwrap();
-        subscriptions.retain(|tx| tx.send(Ok(value.clone())).is_ok());
+        subscriptions.retain(|subscriber| {
+            let may_see = self
+                .wallet_access
+                .may_see_identity(subscriber.peer.as_ref());
+            match withhold_event_identity(value.clone(), may_see) {
+                Some(event) => subscriber.tx.send(Ok(event)).is_ok(),
+                None => !subscriber.tx.is_closed(),
+            }
+        });
     }
 
     /// Notify that the tunnel state changed.
@@ -2606,7 +2672,10 @@ fn map_protobuf_type_err(err: types::FromProtobufTypeError) -> Status {
 
 #[cfg(test)]
 mod tests {
-    use super::{types, withhold_account_secrets};
+    use super::{
+        daemon_event, types, withhold_account_secrets, withhold_event_identity,
+        withhold_settings_secrets,
+    };
 
     fn status_with_a_code() -> types::WarrenStatus {
         types::WarrenStatus {
@@ -2622,10 +2691,9 @@ mod tests {
         }
     }
 
-    /// The management socket is world-accessible unless the operator
-    /// restricted it to a group, and this stream is open to every local
-    /// process: a code riding it is one local user's voucher, worth a month
-    /// of service, handed to every other local user.
+    /// This stream is open to every local account: a code riding it would be
+    /// the owner's voucher, worth a month of service, handed to every other
+    /// account on the machine.
     #[test]
     fn a_caller_that_does_not_own_the_wallet_reads_the_card_without_its_code() {
         let mut status = status_with_a_code();
@@ -2648,6 +2716,154 @@ mod tests {
         assert_eq!(
             status.announcements[0].voucher_code.as_deref(),
             Some("ABCDEFGHJKMNPQRS")
+        );
+    }
+
+    fn custom_method(proxy: types::custom_proxy::ProxyMethod) -> types::AccessMethodSetting {
+        types::AccessMethodSetting {
+            name: "mine".to_owned(),
+            enabled: true,
+            access_method: Some(types::AccessMethod {
+                access_method: Some(types::access_method::AccessMethod::Custom(
+                    types::CustomProxy {
+                        proxy_method: Some(proxy),
+                    },
+                )),
+            }),
+            ..Default::default()
+        }
+    }
+
+    fn settings_with_proxy_secrets() -> types::Settings {
+        use types::custom_proxy::ProxyMethod;
+        types::Settings {
+            api_access_methods: Some(types::ApiAccessMethodSettings {
+                custom: vec![
+                    custom_method(ProxyMethod::Socks5remote(types::Socks5Remote {
+                        ip: "192.0.2.1".to_owned(),
+                        port: 1080,
+                        auth: Some(types::SocksAuth {
+                            username: "user".to_owned(),
+                            password: "hunter2".to_owned(),
+                        }),
+                    })),
+                    custom_method(ProxyMethod::Shadowsocks(types::Shadowsocks {
+                        ip: "192.0.2.2".to_owned(),
+                        port: 443,
+                        password: "s3cret".to_owned(),
+                        cipher: "aes-256-gcm".to_owned(),
+                    })),
+                ],
+                ..Default::default()
+            }),
+            allow_lan: true,
+            ..Default::default()
+        }
+    }
+
+    fn proxy_of(settings: &types::Settings, index: usize) -> types::custom_proxy::ProxyMethod {
+        let method = &settings.api_access_methods.as_ref().unwrap().custom[index];
+        match method
+            .access_method
+            .as_ref()
+            .unwrap()
+            .access_method
+            .as_ref()
+        {
+            Some(types::access_method::AccessMethod::Custom(proxy)) => {
+                proxy.proxy_method.clone().unwrap()
+            }
+            other => panic!("not a custom proxy: {other:?}"),
+        }
+    }
+
+    /// Every local account may read the settings, and a custom proxy's
+    /// credentials are the owner's secret.
+    #[test]
+    fn another_account_reads_the_settings_without_proxy_credentials() {
+        use types::custom_proxy::ProxyMethod;
+        let mut settings = settings_with_proxy_secrets();
+
+        withhold_settings_secrets(&mut settings, false);
+
+        match proxy_of(&settings, 0) {
+            ProxyMethod::Socks5remote(socks) => {
+                assert_eq!(socks.auth, None);
+                assert_eq!(socks.ip, "192.0.2.1", "the endpoint is not a secret");
+            }
+            other => panic!("{other:?}"),
+        }
+        match proxy_of(&settings, 1) {
+            ProxyMethod::Shadowsocks(shadowsocks) => assert_eq!(shadowsocks.password, ""),
+            other => panic!("{other:?}"),
+        }
+        assert!(settings.allow_lan);
+    }
+
+    #[test]
+    fn the_owner_reads_the_settings_whole() {
+        let mut settings = settings_with_proxy_secrets();
+
+        withhold_settings_secrets(&mut settings, true);
+
+        assert_eq!(settings, settings_with_proxy_secrets());
+    }
+
+    fn logged_in_event() -> types::DaemonEvent {
+        types::DaemonEvent {
+            event: Some(daemon_event::Event::Device(types::DeviceEvent {
+                cause: types::device_event::Cause::LoggedIn as i32,
+                new_state: Some(types::DeviceState {
+                    state: types::device_state::State::LoggedIn as i32,
+                    device: Some(types::AccountAndDevice {
+                        account_number: "5Grw...owner".to_owned(),
+                        device: None,
+                    }),
+                }),
+            })),
+        }
+    }
+
+    /// The events stream is open to every local account: another account
+    /// learns that the device logged in, and not as whom.
+    #[test]
+    fn another_account_gets_device_events_without_the_account() {
+        let event = withhold_event_identity(logged_in_event(), false).expect("the event is kept");
+
+        let Some(daemon_event::Event::Device(device)) = event.event else {
+            panic!("not a device event");
+        };
+        assert_eq!(device.cause, types::device_event::Cause::LoggedIn as i32);
+        let state = device.new_state.unwrap();
+        assert_eq!(state.state, types::device_state::State::LoggedIn as i32);
+        assert_eq!(state.device, None);
+    }
+
+    #[test]
+    fn another_account_gets_no_device_removal_and_every_tunnel_state() {
+        let removal = types::DaemonEvent {
+            event: Some(daemon_event::Event::RemoveDevice(
+                types::RemoveDeviceEvent {
+                    account_number: "5Grw...owner".to_owned(),
+                    new_device_list: vec![],
+                },
+            )),
+        };
+        assert_eq!(withhold_event_identity(removal, false), None);
+
+        let tunnel = types::DaemonEvent {
+            event: Some(daemon_event::Event::TunnelState(
+                types::TunnelState::default(),
+            )),
+        };
+        assert_eq!(withhold_event_identity(tunnel.clone(), false), Some(tunnel));
+    }
+
+    #[test]
+    fn the_owner_gets_every_event_whole() {
+        assert_eq!(
+            withhold_event_identity(logged_in_event(), true),
+            Some(logged_in_event())
         );
     }
 }

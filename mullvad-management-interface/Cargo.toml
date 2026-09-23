@@ -18,10 +18,13 @@ prost-types = { workspace = true }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
 tipsy = { workspace = true }
-tokio = { workspace = true, features = ["rt", "net"] }
+tokio = { workspace = true, features = ["io-util", "macros", "net", "rt", "sync", "time"] }
 tonic = { workspace = true }
 tower = { workspace = true }
 vec1 = { workspace = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["macros", "rt"] }
 
 [build-dependencies]
 tonic-build = { workspace = true, default-features = false, features = [
@@ -37,6 +40,18 @@ nix = { workspace = true, features = ["fs", "user"] }
 # the desktop main process.
 [target.'cfg(windows)'.dependencies]
 talpid-windows = { path = "../talpid-windows" }
+
+# The server side of the management pipe: its security descriptor, and the
+# client token each connection is authorized against.
+[target.'cfg(windows)'.dependencies.windows-sys]
+workspace = true
+features = [
+  "Win32_Foundation",
+  "Win32_Security",
+  "Win32_Security_Authorization",
+  "Win32_System_Pipes",
+  "Win32_System_Threading",
+]
 
 [lints]
 workspace = true

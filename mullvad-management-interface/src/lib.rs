@@ -1,7 +1,13 @@
 pub mod client;
+mod gate;
 pub mod types;
+#[cfg(windows)]
+mod windows_pipe;
 
-#[cfg(all(unix, not(target_os = "android")))]
+use gate::Gated;
+pub use gate::RpcGate;
+
+#[cfg(unix)]
 use std::{env, fs, os::unix::fs::PermissionsExt};
 use std::{
     future::Future,
@@ -10,6 +16,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
+#[cfg(not(target_os = "android"))]
 use tipsy::Endpoint as IpcEndpoint;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 #[cfg(not(target_os = "android"))]
@@ -45,15 +52,15 @@ pub enum Error {
     #[error("Unable to set permissions for IPC endpoint")]
     PermissionsError(#[source] io::Error),
 
-    #[cfg(all(unix, not(target_os = "android")))]
+    #[cfg(unix)]
     #[error("Group not found")]
     NoGidError,
 
-    #[cfg(all(unix, not(target_os = "android")))]
+    #[cfg(unix)]
     #[error("Failed to obtain group ID")]
     ObtainGidError(#[source] nix::Error),
 
-    #[cfg(all(unix, not(target_os = "android")))]
+    #[cfg(unix)]
     #[error("Failed to set group ID")]
     SetGidError(#[source] nix::Error),
 
@@ -283,11 +290,10 @@ fn unix_endpoint_owner_is_privileged(path: &std::path::Path) -> Option<bool> {
 ///
 /// This is the admission gate for every cross-environment dial, and it is the
 /// same check the desktop GUI runs on its own daemon in `verifyOwnership()`.
-/// Without it a foreign environment's state is worthless as evidence: the
-/// management socket is world-accessible and `DisconnectTunnel`,
-/// `SetLockdownMode` and `SetAutoConnect` are unauthenticated, so an
-/// unprivileged process that binds prod's path could hold a kill switch open
-/// forever and any environment that believed it would stand down on command.
+/// Without it a foreign environment's state is worthless as evidence: an
+/// unprivileged process that served a look-alike endpoint at prod's path could
+/// claim to hold the machine forever, and any environment that believed it
+/// would stand down on command.
 #[cfg(all(unix, not(target_os = "android")))]
 #[must_use]
 fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
@@ -315,11 +321,9 @@ fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
 /// cross-environment dial is allowed to attempt.
 ///
 /// The rule exists as a type rather than as a line in a doc comment because
-/// it is load-bearing and the wrong call would otherwise compile: the
-/// management socket is world-accessible and its disconnect, lockdown and
-/// auto-connect RPCs are unauthenticated, so believing an unvouched endpoint
-/// is a documented way for any local process to talk an environment into
-/// standing down.
+/// it is load-bearing and the wrong call would otherwise compile: the dialing
+/// daemon believes what the endpoint answers, so an unvouched endpoint is a
+/// way for any local process to talk an environment into standing down.
 ///
 /// WHERE the ownership question is settled differs by platform, and the
 /// difference is not cosmetic:
@@ -328,15 +332,15 @@ fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
 ///   directory an unprivileged user cannot create an entry in, so a
 ///   root-owned socket at the derived path can only be that environment's
 ///   daemon, and [`Self::vouched_for`] settles it once at construction.
-/// - Windows: the path carries no evidence at all. The daemon's pipe is
-///   created with `allow_everyone_create`, whose Everyone ACE grants
-///   `FILE_GENERIC_WRITE` and therefore `FILE_CREATE_PIPE_INSTANCE`, so any
-///   local process may keep its own instance of `\\.\pipe\Warren VPN`
-///   listening and serve a connection. Asking a handle and then dropping it
-///   settles nothing, because the next connect can land on a different
-///   instance. So [`Self::vouched_for`] is only a cheap early rejection
-///   there, and the binding check is made on the pipe instance the channel
-///   actually holds, inside [`grpc_transport_channel_to`].
+/// - Windows: the path carries no evidence at all. Any local process may
+///   create a pipe under a name no daemon serves, and a daemon older than
+///   this one created its pipe with an Everyone ACE that grants
+///   `FILE_CREATE_PIPE_INSTANCE`, so any local process may keep its own
+///   instance of that name listening and serve a connection. Asking a handle
+///   and then dropping it settles nothing, because the next connect can land
+///   on a different instance. So [`Self::vouched_for`] is only a cheap early
+///   rejection there, and the binding check is made on the pipe instance the
+///   channel actually holds, inside [`grpc_transport_channel_to`].
 #[cfg(not(target_os = "android"))]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PrivilegedSocketPath(PathBuf);
@@ -369,38 +373,71 @@ pub type ServerJoinHandle = tokio::task::JoinHandle<()>;
 
 /// How the freshly bound management socket will be exposed, decided from
 /// explicit operator configuration only (see `plan_socket_access`).
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 #[derive(Debug)]
 enum SocketAccessPlan {
     RestrictToGroup(nix::unistd::Gid),
     WorldAccessible,
 }
 
-/// Peer credentials of a connected management client, captured from the
-/// Unix domain socket via `SO_PEERCRED`. Used to authorize wallet/secret
-/// RPCs against the calling process. A `None` connect-info means the
-/// platform could not supply credentials (Windows named pipe), where
-/// access is gated by the pipe DACL + admin-ownership check instead.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct PeerCredentials {
-    pub uid: u32,
-    pub gid: u32,
-    pub pid: Option<i32>,
+/// The account a management client runs under.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Principal {
+    /// A Unix user id.
+    Uid(u32),
+    /// A Windows security identifier in its string form (`S-1-5-21-...`).
+    Sid(String),
 }
 
-/// Connect-info attached by tonic to every request's extensions. Handlers
-/// read it via `request.extensions().get::<ManagementConnectInfo>()`.
+/// Who a connected management client is, as the OS reported it for this
+/// connection: the socket's peer credentials on Unix, the client token of the
+/// pipe connection on Windows. The daemon authorizes every RPC against it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PeerCredentials {
+    pub principal: Principal,
+    /// Whether the client already has administrative control of this machine:
+    /// root or the daemon's own account on Unix, SYSTEM or an elevated member
+    /// of Administrators on Windows.
+    pub privileged: bool,
+    /// The Windows session of the client token, which is what "the user at
+    /// this computer's screen" is decided against. `None` on Unix.
+    pub session_id: Option<u32>,
+}
+
+impl PeerCredentials {
+    /// The identity of a Unix peer running as `uid`, seen by a daemon running
+    /// as `daemon_uid`.
+    ///
+    /// A peer on the daemon's own account counts as privileged: it can already
+    /// read and signal everything the daemon owns, so refusing it an RPC would
+    /// protect nothing. That is root in a normal install, and the developer's
+    /// own account for a daemon started by hand.
+    #[must_use]
+    pub fn unix(uid: u32, daemon_uid: u32) -> Self {
+        Self {
+            principal: Principal::Uid(uid),
+            privileged: uid == 0 || uid == daemon_uid,
+            session_id: None,
+        }
+    }
+}
+
+/// Connect-info attached by tonic to every request's extensions. `None` when
+/// the transport could not establish who the client is, which the daemon
+/// treats as a client that may only read state carrying no identity.
 pub type ManagementConnectInfo = Option<PeerCredentials>;
 
-/// Outcome of applying access control to the management socket.
+/// Who can connect to the management endpoint. Connecting authorizes nothing
+/// by itself: every RPC is admitted by the [`RpcGate`] the server is started
+/// with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SocketSecurity {
-    /// Socket is restricted to root + a Unix group; the kernel enforces
-    /// that only authorized users can connect at all.
+    /// Socket is restricted to root + a Unix group; the kernel refuses
+    /// everyone else at connect time.
     GroupRestricted,
-    /// Socket is reachable by any local user (no group configured, or a
-    /// platform without Unix socket permissions). Wallet RPCs must be
-    /// gated per-uid by the caller.
+    /// Any local account can connect: the Unix socket with no group
+    /// configured, or the Windows pipe, which authenticated local users may
+    /// open.
     WorldAccessible,
 }
 
@@ -421,27 +458,33 @@ pub const MAX_RPC_MESSAGE_OVERHEAD_BYTES: usize = 1024 * 1024;
 /// here before the daemon ever saw it.
 ///
 /// Derived from that log rather than rounded up to a power of two: this is the
-/// buffer EVERY method of the service gets, tonic fills it while decoding and
-/// therefore before a handler can run `authorize_wallet_access`, and the
-/// socket is world-accessible by default on Linux and macOS. So a round number
-/// picked by hand is a round amount of memory any local process can make the
-/// daemon hold, and the daemon owns the kill switch.
+/// buffer every admitted method of the service gets, tonic fills it while
+/// decoding, and the read-only methods are admitted for any local account. So
+/// a round number picked by hand is a round amount of memory any local process
+/// can make the daemon hold, and the daemon owns the kill switch.
 pub const MAX_RPC_MESSAGE_BYTES: usize = MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAGE_OVERHEAD_BYTES;
 
+/// Serve both management services on `rpc_socket_path`, every RPC admitted by
+/// `gate` before its request body is read.
 pub fn spawn_rpc_server(
     management_service: impl ManagementService,
     relay_selector_service: impl RelaySelectorService,
+    gate: impl RpcGate,
     abort_rx: impl Future<Output = ()> + Send + 'static,
     rpc_socket_path: PathBuf,
 ) -> std::result::Result<(ServerJoinHandle, SocketSecurity), Error> {
     let (incoming, security) = build_incoming(rpc_socket_path)?;
 
     let grpc_server = Server::builder()
-        .add_service(
+        .add_service(Gated::new(
             ManagementServiceServer::new(management_service)
                 .max_decoding_message_size(MAX_RPC_MESSAGE_BYTES),
-        )
-        .add_service(RelaySelectorServiceServer::new(relay_selector_service))
+            gate.clone(),
+        ))
+        .add_service(Gated::new(
+            RelaySelectorServiceServer::new(relay_selector_service),
+            gate,
+        ))
         .serve_with_incoming_shutdown(incoming, abort_rx);
 
     let server_task = tokio::spawn(async move {
@@ -454,9 +497,9 @@ pub fn spawn_rpc_server(
     Ok((server_task, security))
 }
 
-/// Build the stream of incoming connections, capturing `SO_PEERCRED` per
-/// connection on Unix so wallet RPCs can authorize the calling process.
-#[cfg(all(unix, not(target_os = "android")))]
+/// Build the stream of incoming connections, capturing the peer credentials
+/// of every connection so each RPC is authorized against the calling account.
+#[cfg(unix)]
 fn build_incoming(
     rpc_socket_path: PathBuf,
 ) -> Result<
@@ -486,14 +529,14 @@ fn build_incoming(
     let listener =
         tokio::net::UnixListener::from_std(std_listener).map_err(Error::StartServerError)?;
 
-    let incoming = futures::stream::unfold(listener, |listener| async move {
+    let daemon_uid = nix::unistd::geteuid().as_raw();
+    let incoming = futures::stream::unfold(listener, move |listener| async move {
         let item = match listener.accept().await {
             Ok((stream, _addr)) => {
-                let creds = stream.peer_cred().ok().map(|c| PeerCredentials {
-                    uid: c.uid(),
-                    gid: c.gid(),
-                    pid: c.pid(),
-                });
+                let creds = stream
+                    .peer_cred()
+                    .ok()
+                    .map(|c| PeerCredentials::unix(c.uid(), daemon_uid));
                 Ok(StreamBox {
                     inner: stream,
                     creds,
@@ -507,41 +550,31 @@ fn build_incoming(
     Ok((incoming, security))
 }
 
-/// Windows (named pipe) and Android keep the original `tipsy` transport.
-/// Peer credentials are not captured here; the named-pipe DACL plus the
-/// desktop's admin-ownership check are the access boundary on Windows.
-#[cfg(any(windows, target_os = "android"))]
+/// The Windows named pipe: see [`windows_pipe`] for who may open it and how
+/// each client's identity is read.
+#[cfg(windows)]
 fn build_incoming(
     rpc_socket_path: PathBuf,
 ) -> Result<
     (
-        impl futures::Stream<Item = io::Result<StreamBox<tipsy::Connection>>>,
+        impl futures::Stream<Item = io::Result<StreamBox<windows_pipe::IdentifiedPipe>>>,
         SocketSecurity,
     ),
     Error,
 > {
-    use futures::TryStreamExt;
-
-    let endpoint = create_endpoint(rpc_socket_path)?;
-    let incoming = endpoint
-        .incoming()
-        .map_err(Error::StartServerError)?
-        .map_ok(|conn| StreamBox {
-            inner: conn,
-            creds: None,
-        });
+    let incoming = windows_pipe::incoming(rpc_socket_path)?;
     Ok((incoming, SocketSecurity::WorldAccessible))
 }
 
-/// Decide how to expose the management socket. Only an explicitly
-/// configured group (env override) restricts it; the default is
-/// world-accessible with wallet/secret RPCs gated per-uid, matching
-/// upstream Mullvad's threat model (local users are trusted) and the
-/// wider industry practice. A group is deliberately never auto-detected:
-/// group membership only takes effect at the next login, so flipping on a
-/// pre-existing group would lock the freshly-installed GUI out of the
-/// socket until the user logs out and back in.
-#[cfg(all(unix, not(target_os = "android")))]
+/// Decide who can connect to the management socket. Only an explicitly
+/// configured group (env override) restricts it; by default every local
+/// account can connect, and the daemon's [`RpcGate`] decides per RPC what the
+/// caller may do, so an account that is not the wallet's owner reads state and
+/// gets a clear refusal for the rest. A group is deliberately never
+/// auto-detected: group membership only takes effect at the next login, so
+/// flipping on a pre-existing group would lock the freshly-installed GUI out
+/// of the socket until the user logs out and back in.
+#[cfg(unix)]
 fn plan_socket_access(
     configured_group: Option<&str>,
     resolve_group: impl FnOnce(&str) -> Result<Option<nix::unistd::Gid>, Error>,
@@ -564,7 +597,7 @@ fn plan_socket_access(
 
 /// Apply access control to the freshly-bound Unix socket per
 /// `plan_socket_access`.
-#[cfg(all(unix, not(target_os = "android")))]
+#[cfg(unix)]
 fn apply_socket_permissions(path: &std::path::Path) -> Result<SocketSecurity, Error> {
     let env_group = env::var("WARREN_MANAGEMENT_SOCKET_GROUP")
         .or_else(|_| env::var("MULLVAD_MANAGEMENT_SOCKET_GROUP"))
@@ -587,9 +620,9 @@ fn apply_socket_permissions(path: &std::path::Path) -> Result<SocketSecurity, Er
             fs::set_permissions(path, PermissionsExt::from_mode(0o766))
                 .map_err(Error::PermissionsError)?;
             log::info!(
-                "Management socket at {} is reachable by all local users; wallet/secret RPCs are \
-                 gated to the owning uid. Set WARREN_MANAGEMENT_SOCKET_GROUP to restrict the \
-                 socket to a dedicated Unix group instead.",
+                "Management socket at {} accepts connections from all local accounts; each RPC \
+                 is authorized against the caller's uid. Set WARREN_MANAGEMENT_SOCKET_GROUP to \
+                 also refuse connections outside a dedicated Unix group.",
                 path.display()
             );
             Ok(SocketSecurity::WorldAccessible)
@@ -597,29 +630,16 @@ fn apply_socket_permissions(path: &std::path::Path) -> Result<SocketSecurity, Er
     }
 }
 
-#[cfg(any(windows, target_os = "android"))]
-fn create_endpoint(rpc_socket_path: PathBuf) -> Result<IpcEndpoint, Error> {
-    let endpoint = IpcEndpoint::new(rpc_socket_path, tipsy::OnConflict::Error)
-        .map_err(Error::StartServerError)?;
-    let endpoint = endpoint.security_attributes(
-        tipsy::SecurityAttributes::allow_everyone_create()
-            .map_err(Error::SecurityAttributes)?
-            .mode(0o766)
-            .map_err(Error::SecurityAttributes)?,
-    );
-    Ok(endpoint)
-}
-
 #[derive(Debug)]
-struct StreamBox<T: AsyncRead + AsyncWrite> {
-    inner: T,
-    creds: Option<PeerCredentials>,
+pub(crate) struct StreamBox<T: AsyncRead + AsyncWrite> {
+    pub(crate) inner: T,
+    pub(crate) creds: Option<PeerCredentials>,
 }
 impl<T: AsyncRead + AsyncWrite> Connected for StreamBox<T> {
     type ConnectInfo = ManagementConnectInfo;
 
     fn connect_info(&self) -> Self::ConnectInfo {
-        self.creds
+        self.creds.clone()
     }
 }
 impl<T: AsyncRead + AsyncWrite + Unpin> AsyncRead for StreamBox<T> {
@@ -711,10 +731,9 @@ mod foreign_socket_tests {
     #[cfg(unix)]
     #[test]
     fn a_socket_owned_by_an_unprivileged_user_is_not_privileged() {
-        // The whole point of the gate. The management socket is
-        // world-accessible and its RPCs are unauthenticated, so any local
-        // process can bind a lookalike path and answer "connected" forever.
-        // Believing it would disarm this build's kill switch on demand.
+        // The whole point of the gate: any local process can bind a lookalike
+        // path and answer "connected" forever. Believing it would disarm this
+        // build's kill switch on demand.
         let scratch = Scratch::new("u");
         let path = scratch.join("s");
         let _listener = std::os::unix::net::UnixListener::bind(&path).expect("bind test socket");
@@ -794,6 +813,117 @@ mod socket_access_tests {
     }
 }
 
+#[cfg(all(test, unix, not(target_os = "android")))]
+mod peer_credential_tests {
+    use super::*;
+    use futures::StreamExt;
+
+    #[test]
+    fn root_and_the_daemon_account_are_privileged_and_nobody_else_is() {
+        assert!(PeerCredentials::unix(0, 0).privileged);
+        assert!(
+            PeerCredentials::unix(501, 501).privileged,
+            "a daemon started by hand under the developer's own account"
+        );
+        assert!(PeerCredentials::unix(0, 501).privileged);
+        let other = PeerCredentials::unix(1001, 0);
+        assert!(!other.privileged);
+        assert_eq!(other.principal, Principal::Uid(1001));
+    }
+
+    /// A real socket, bound by the server code, connected by a real client:
+    /// the identity every RPC is authorized against is the one the kernel
+    /// reports for the peer, and it rides every connection.
+    #[tokio::test]
+    async fn a_connection_carries_the_uid_the_kernel_reports_for_its_peer() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .subsec_nanos();
+        // Short on purpose: `sun_path` is 104 bytes on macOS.
+        let dir = std::env::temp_dir().join(format!("wpc-{}-{unique}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("m.sock");
+
+        let (incoming, _) = build_incoming(path.clone()).unwrap();
+        let mut incoming = std::pin::pin!(incoming);
+        let _client = tokio::net::UnixStream::connect(&path).await.unwrap();
+        let connection = incoming.next().await.unwrap().unwrap();
+
+        let expected = PeerCredentials::unix(
+            nix::unistd::getuid().as_raw(),
+            nix::unistd::geteuid().as_raw(),
+        );
+        assert_eq!(connection.connect_info(), Some(expected));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    /// Counts the calls that reach it.
+    #[derive(Default)]
+    struct CountingSelector(std::sync::Arc<std::sync::atomic::AtomicUsize>);
+
+    #[async_trait]
+    impl RelaySelectorService for CountingSelector {
+        async fn partition_relays(
+            &self,
+            _: Request<types::relay_selector::Predicate>,
+        ) -> Result<Response<types::relay_selector::RelayPartitions>, Status> {
+            self.0.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            Ok(Response::new(types::relay_selector::RelayPartitions::default()))
+        }
+    }
+
+    /// Refuses everyone, and records who asked.
+    #[derive(Clone, Default)]
+    struct RefuseAll(std::sync::Arc<std::sync::Mutex<Vec<Option<PeerCredentials>>>>);
+
+    impl RpcGate for RefuseAll {
+        fn admit(&self, _: &str, peer: Option<&PeerCredentials>) -> Result<(), Status> {
+            self.0.lock().unwrap().push(peer.cloned());
+            Err(Status::permission_denied("not yours"))
+        }
+    }
+
+    /// The server as the daemon runs it, over a real socket: a call the gate
+    /// refuses comes back to the client as that refusal, the method never
+    /// runs, and the gate decided with the uid the kernel reported.
+    #[tokio::test]
+    async fn a_refused_call_over_the_socket_never_reaches_the_method() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .subsec_nanos();
+        let dir = std::env::temp_dir().join(format!("wgs-{}-{unique}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("m.sock");
+        let (incoming, _) = build_incoming(path.clone()).unwrap();
+        let selector = CountingSelector::default();
+        let calls = selector.0.clone();
+        let gate = RefuseAll::default();
+        let seen = gate.0.clone();
+        tokio::spawn(
+            Server::builder()
+                .add_service(Gated::new(RelaySelectorServiceServer::new(selector), gate))
+                .serve_with_incoming(incoming),
+        );
+
+        let channel = grpc_transport_channel_at(path).await.unwrap();
+        let refused = RelaySelectorServiceClient::new(channel)
+            .partition_relays(types::relay_selector::Predicate::default())
+            .await
+            .unwrap_err();
+
+        assert_eq!(refused.code(), Code::PermissionDenied);
+        assert_eq!(calls.load(std::sync::atomic::Ordering::SeqCst), 0);
+        let expected = PeerCredentials::unix(
+            nix::unistd::getuid().as_raw(),
+            nix::unistd::geteuid().as_raw(),
+        );
+        assert_eq!(*seen.lock().unwrap(), vec![Some(expected)]);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}
+
 /// The decoding cap against the forum request contract. That one number is at
 /// once a floor (the largest legal signed report has to fit, or the daemon
 /// refuses an at-cap report before it ever sees it) and a ceiling (it is the
@@ -852,8 +982,8 @@ mod rpc_size_tests {
 
     #[test]
     fn the_cap_is_the_forum_contract_plus_the_declared_headroom() {
-        // Widening it widens the buffer every method of a socket that is
-        // world-accessible by default hands to any local process.
+        // Widening it widens the buffer every read-only method hands to any
+        // local process, since every local account may call those.
         assert_eq!(
             MAX_RPC_MESSAGE_BYTES,
             MAX_FORUM_LOG_GZ_BYTES + MAX_RPC_MESSAGE_OVERHEAD_BYTES
@@ -884,10 +1014,8 @@ mod foreign_endpoint_tests {
 
     #[test]
     fn an_endpoint_anybody_else_owns_is_refused() {
-        // The socket is world-accessible and its disconnect, lockdown and
-        // auto-connect RPCs are unauthenticated, so an unprivileged process
-        // holding a look-alike endpoint could otherwise talk this build into
-        // standing down on demand.
+        // An unprivileged process holding a look-alike endpoint could
+        // otherwise talk this build into standing down on demand.
         assert!(!endpoint_admits(Some(false)));
     }
 

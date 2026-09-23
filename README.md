@@ -261,13 +261,11 @@ yet**; the repo stays private during the POC phase.
   legacy split tunneling).
 
 * `WARREN_MANAGEMENT_SOCKET_GROUP` (inherited alias: `MULLVAD_MANAGEMENT_SOCKET_GROUP`), Linux/macOS:
-  restricts access to the management UDS socket to a given Unix group (= only root and that group can
-  drive the CLI/GUI and read the wallet mnemonic phrase). If the variable is set but the group does
-  not exist, the daemon refuses to start the socket (fail-closed). If it is not set, the daemon uses
-  the `warren` group (created by the installer). If that group is absent, the socket falls back to
-  global access (`0o766`) with a warning: in that mode, the wallet/secrets RPCs are restricted to the
-  first local uid that connects (trust-on-first-use). For multi-user safety, create the `warren`
-  group and add your desktop user to it.
+  restricts who can connect to the management UDS socket to root and the given Unix group (`0o760`).
+  If the variable is set but the group does not exist, the daemon refuses to start the socket
+  (fail-closed). Unset, every local account can connect (`0o766`). Either way the daemon authorizes
+  every RPC against the caller's uid: only the wallet's owner and administrators may drive the tunnel
+  or reach the wallet (see [the security document](docs/security.md#who-may-use-the-management-interface)).
 
 * `MULLVAD_BACKTRACE_ON_FAULT`: On SIGSEGV etc., logs a backtrace to `daemon.log`. Enabled by default
   in debug builds, disabled in release builds. Allocating from the signal handler is technically UB;

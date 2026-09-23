@@ -31,6 +31,8 @@ mod nm_vpn_indicator;
 pub mod os_secret_storage;
 mod relay_list;
 mod relay_selector;
+/// The class of every management RPC, and the gate that admits each call.
+pub mod rpc_access;
 #[cfg(not(target_os = "android"))]
 pub mod rpc_uniqueness_check;
 pub mod runtime;
@@ -39,8 +41,8 @@ pub mod shutdown;
 mod target_state;
 mod tunnel;
 pub mod version;
-/// Authorization for wallet/secret management RPCs against the calling
-/// process' Unix credentials (`SO_PEERCRED`).
+/// Who may drive this machine's VPN and reach its wallet: the ownership policy
+/// every management RPC is admitted against.
 pub mod wallet_access;
 /// Periodic refresher for the server-signed launch announcements, plus the
 /// second, wallet-signed call that draws this account's campaign voucher.
@@ -1180,6 +1182,25 @@ impl Daemon {
             )
         };
 
+        // Warren fork: the identity manager is the single owner of both
+        // identity views (signer + SDK seed). It loads the persisted
+        // mnemonic if the user has onboarded, and otherwise runs on the
+        // placeholder sentinel: no identity is ever minted outside the
+        // explicit create/import onboarding actions. It stays in the
+        // `Daemon` struct so create/restore/logout hot-swap the identity
+        // without requiring a daemon restart. Loaded before the management
+        // interface starts, because whether a wallet is installed is part of
+        // deciding who may call it.
+        let warren_identity = Arc::new(warren_identity_manager::WarrenIdentityManager::load(
+            &config.settings_dir,
+        ));
+        if !warren_identity.is_coherent() {
+            // Unreachable by construction (the manager swaps both views
+            // from one seed); kept as a loud tripwire because a signer /
+            // SDK-seed divergence silently strands paid subscriptions on
+            // a wallet the user does not own.
+            log::error!("Warren identity views diverged at boot; identity handling is broken");
+        }
         let command_sender = daemon_command_channel.sender();
         let app_upgrade_broadcast = tokio::sync::broadcast::channel(32).0;
         let warren_status_cache = warren_status::WarrenStatusCache::new();
@@ -1190,6 +1211,8 @@ impl Daemon {
             config.log_handle,
             relay_selector.clone(),
             warren_status_cache.clone(),
+            &config.settings_dir,
+            warren_identity.clone(),
         )
         .map_err(Error::ManagementInterfaceError)?;
 
@@ -1253,23 +1276,6 @@ impl Daemon {
             .await
             .map_err(Error::ApiConnectionModeError)?;
 
-        // Warren fork: the identity manager is the single owner of both
-        // identity views (signer + SDK seed). It loads the persisted
-        // mnemonic if the user has onboarded, and otherwise runs on the
-        // placeholder sentinel: no identity is ever minted outside the
-        // explicit create/import onboarding actions. It stays in the
-        // `Daemon` struct so create/restore/logout hot-swap the identity
-        // without requiring a daemon restart.
-        let warren_identity = Arc::new(warren_identity_manager::WarrenIdentityManager::load(
-            &config.settings_dir,
-        ));
-        if !warren_identity.is_coherent() {
-            // Unreachable by construction (the manager swaps both views
-            // from one seed); kept as a loud tripwire because a signer /
-            // SDK-seed divergence silently strands paid subscriptions on
-            // a wallet the user does not own.
-            log::error!("Warren identity views diverged at boot; identity handling is broken");
-        }
         let warren_signer = warren_identity.signer();
         // Single source of truth for the raw-`SigningKey` consumers: the
         // SAME `Arc<RwLock<SigningKey>>` that `WarrenAuthSigner` wraps is
