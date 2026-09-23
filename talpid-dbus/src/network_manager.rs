@@ -823,10 +823,6 @@ impl WireguardTunnel {
     }
 }
 
-/// The per-family IP settings carrying [`VpnIpPolicy`]. `auto` is the
-/// method a VPN connection must use: the plugin is what supplies the
-/// addresses, and every other knob here tells NetworkManager to keep its
-/// hands off what the plugin reports.
 /// The VPN connection that stands for a tunnel the engine already built.
 fn vpn_indicator_settings(
     policy: &VpnIpPolicy,
@@ -865,6 +861,10 @@ fn vpn_indicator_settings(
     settings
 }
 
+/// The per-family IP settings carrying [`VpnIpPolicy`]. `auto` is the
+/// method a VPN connection must use: the plugin is what supplies the
+/// addresses, and every other knob here tells NetworkManager to keep its
+/// hands off what the plugin reports.
 fn ip_settings(policy: &VpnIpPolicy) -> VariantMap {
     let mut settings = VariantMap::new();
     settings.insert("method".to_string(), Variant(Box::new("auto".to_string())));

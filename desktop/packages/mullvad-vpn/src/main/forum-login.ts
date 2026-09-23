@@ -307,7 +307,8 @@ export class PendingForumHandoff {
  * Keeps the window out of screenshots and screen sharing while a sign-in code
  * is on it: whoever reads the code can finish the sign-in with it. The code
  * dies with its session, so the protection lifts on its own then, and at once
- * when the code screen is closed.
+ * when the code screen is closed. Electron implements the protection on macOS
+ * and Windows only; on Linux the call does nothing.
  */
 export class ForumCodeProtection {
   private timer?: ReturnType<typeof setTimeout>;

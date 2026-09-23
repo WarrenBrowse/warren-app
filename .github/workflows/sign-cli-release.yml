@@ -14,6 +14,11 @@
 # keeps logs 90 days; an older release is rebuilt instead), every asset must
 # match it, and the release must carry no file it does not name.
 #
+# A run that published before release-daemon.yml checked the draft against
+# the checksums its build jobs computed logged a list made from the draft
+# itself. Signing such a release vouches for what its draft held when that run
+# published it, which is a weaker statement than a new release carries.
+#
 # Needs WARREN_UPDATE_SIGNING_KEY and WARREN_CLI_RELEASE_TOKEN, as
 # release-daemon.yml.
 
