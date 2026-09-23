@@ -195,9 +195,14 @@ pub(crate) fn assemble(
 /// exit weight (descending, index tiebreak) so the ladder is
 /// deterministic. The primary's exit and every `exclude_exit_ids` entry
 /// are skipped; a pinned exit country never leaves its country (the
-/// exit filter is structural via [`valid_circuits`]). The primary's
-/// entry relay is preserved whenever it still forms a valid pair with
-/// the alternate exit, otherwise the heaviest valid entry is used.
+/// exit filter is structural via [`valid_circuits`]). Each alternate
+/// exit is fronted by the primary's entry relay whenever it still forms a
+/// valid pair, otherwise by the heaviest valid entry, choosing among the
+/// entries that did not refuse a dial (`refused_entries`) first, since a
+/// dial through a refusing one meets the same refusal. When every valid
+/// entry refused, the exit keeps its rung all the same: a refusal is
+/// unauthenticated and moves only an entry, never an exit (see
+/// [`RefusedEntries`]). A one-hop circuit has no entry to replace.
 /// Empty today (one country = one exit) and for the manual-config path
 /// (no attested exit country).
 #[must_use]
@@ -206,6 +211,7 @@ pub fn same_country_migration_alternates(
     primary: &MultiHopConfig,
     entry_country: &str,
     exclude_exit_ids: &[[u8; 16]],
+    refused_entries: &[[u8; 16]],
 ) -> Vec<MultiHopConfig> {
     let country = primary.exit_country.as_str();
     if country.is_empty() {
@@ -257,15 +263,16 @@ pub fn same_country_migration_alternates(
                 .filter(|&&(_, x)| x == j)
                 .map(|&(e, _)| e)
                 .collect();
-            let entry = entries
-                .iter()
-                .copied()
-                .find(|&e| dir.nodes[e].relay.relay_id == primary.relay.relay_id)
-                .or_else(|| {
-                    entries
-                        .into_iter()
-                        .max_by_key(|&e| (dir.nodes[e].weight, std::cmp::Reverse(e)))
-                })?;
+            let front = |usable: &dyn Fn(usize) -> bool| {
+                let candidates = || entries.iter().copied().filter(|&e| usable(e));
+                candidates()
+                    .find(|&e| dir.nodes[e].relay.relay_id == primary.relay.relay_id)
+                    .or_else(|| {
+                        candidates().max_by_key(|&e| (dir.nodes[e].weight, std::cmp::Reverse(e)))
+                    })
+            };
+            let refused = |e: usize| refused_entries.contains(&dir.nodes[e].relay.relay_id);
+            let entry = front(&|e| !refused(e)).or_else(|| front(&|_| true))?;
             assemble(
                 dir,
                 entry,
@@ -1701,6 +1708,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                         new_cfg,
                                         &settings.entry_country,
                                         &excluded,
+                                        &refused,
                                     )
                                 }
                                 _ => Vec::new(),
@@ -2099,7 +2107,7 @@ mod tests {
         let op = op_key();
         let d = dir(vec![node(&op, 1, "de", 0, 100), node(&op, 2, "nl", 0, 50)]);
         let primary = assemble(&d, 0, 1, true, true).expect("primary circuit");
-        assert!(same_country_migration_alternates(&d, &primary, "", &[]).is_empty());
+        assert!(same_country_migration_alternates(&d, &primary, "", &[], &[]).is_empty());
     }
 
     #[test]
@@ -2115,7 +2123,7 @@ mod tests {
             node(&op, 5, "sg", 0, 90),
         ]);
         let primary = assemble(&d, 0, 1, true, true).expect("primary circuit");
-        let alternates = same_country_migration_alternates(&d, &primary, "", &[]);
+        let alternates = same_country_migration_alternates(&d, &primary, "", &[], &[]);
         let exits: Vec<[u8; 16]> = alternates
             .iter()
             .map(|c| *c.exit.exit_id.as_bytes())
@@ -2148,7 +2156,7 @@ mod tests {
         let primary = assemble(&d, 0, 1, true, true).expect("primary circuit");
         let drained = [[3u8; 16]];
         assert!(
-            same_country_migration_alternates(&d, &primary, "", &drained).is_empty(),
+            same_country_migration_alternates(&d, &primary, "", &drained, &[]).is_empty(),
             "a drained alternate must not be offered as a migration candidate"
         );
     }
@@ -2168,10 +2176,52 @@ mod tests {
         let primary = assemble(&d, 2, 0, true, true).expect("primary circuit");
         // Alternate exit: node 2 (nl). Entry candidates: node 3 (de) only
         // (node 1 is same-country as the exit).
-        let alternates = same_country_migration_alternates(&d, &primary, "", &[]);
+        let alternates = same_country_migration_alternates(&d, &primary, "", &[], &[]);
         assert_eq!(alternates.len(), 1);
         assert_eq!(alternates[0].exit.exit_id.as_bytes(), &[2; 16]);
         assert_eq!(alternates[0].relay.relay_id, [3; 16]);
+    }
+
+    #[test]
+    fn migration_alternates_front_their_exit_with_an_entry_that_did_not_refuse() {
+        // The primary's entry refused a dial: fronting an alternate exit
+        // with it would dial the node that is refusing.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "nl", 0, 50),
+            node(&op, 3, "nl", 0, 10),
+            node(&op, 4, "fr", 0, 30),
+        ]);
+        let primary = assemble(&d, 0, 1, true, true).expect("de -> nl");
+
+        let alternates = same_country_migration_alternates(&d, &primary, "", &[], &[[1; 16]]);
+
+        assert_eq!(alternates.len(), 1);
+        assert_eq!(alternates[0].exit.exit_id.as_bytes(), &[3; 16]);
+        assert_eq!(alternates[0].relay.relay_id, [4; 16]);
+    }
+
+    #[test]
+    fn a_refusal_never_takes_an_exit_off_the_migration_alternates() {
+        // A refusal is unauthenticated: were it to drop the exits its entries
+        // front, whoever forges refusals would pick the exit by elimination.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "nl", 0, 50),
+            node(&op, 3, "nl", 0, 10),
+        ]);
+        let primary = assemble(&d, 0, 1, true, true).expect("de -> nl");
+
+        let alternates = same_country_migration_alternates(&d, &primary, "", &[], &[[1; 16]]);
+
+        assert_eq!(alternates.len(), 1, "the other nl exit keeps its rung");
+        assert_eq!(alternates[0].exit.exit_id.as_bytes(), &[3; 16]);
+        assert_eq!(
+            alternates[0].relay.relay_id, [1; 16],
+            "the only entry that can front it, refusing or not"
+        );
     }
 
     #[test]
