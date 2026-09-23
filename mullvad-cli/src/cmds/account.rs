@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use clap::Subcommand;
 use mullvad_management_interface::MullvadProxyClient;
 use mullvad_types::device::DeviceState;
-use std::io::{self, Write};
+use std::io::{self, BufRead, IsTerminal, Write};
 
 const NOT_LOGGED_IN_MESSAGE: &str = "No Warren identity on this device";
 const REVOKED_MESSAGE: &str = "The current device has been revoked";
@@ -38,10 +38,14 @@ pub enum Account {
         verbose: bool,
     },
 
-    /// Redeem a voucher to add subscription time
+    /// Redeem a voucher to add subscription time.
+    ///
+    /// Without VOUCHER you are prompted for the code, or it is read from the
+    /// first line of standard input. A code given as an argument is visible to
+    /// every account on this machine for as long as the command runs.
     Redeem {
-        /// Voucher code to submit
-        voucher: String,
+        /// Voucher code to submit (prefer the prompt or standard input)
+        voucher: Option<String>,
     },
 }
 
@@ -77,7 +81,8 @@ impl Account {
             println!("    {phrase}\n");
         }
         println!("No subscription yet. Buy credit on the Warren website, then run:");
-        println!("    {BIN_NAME} account redeem <VOUCHER>");
+        println!("    {BIN_NAME} account redeem");
+        println!("and type the voucher code when asked.");
         Ok(())
     }
 
@@ -145,8 +150,21 @@ impl Account {
         Ok(())
     }
 
-    async fn redeem_voucher(rpc: &mut MullvadProxyClient, mut voucher: String) -> Result<()> {
-        voucher.retain(|c| c.is_alphanumeric());
+    async fn redeem_voucher(rpc: &mut MullvadProxyClient, argument: Option<String>) -> Result<()> {
+        if argument.is_none() && io::stdin().is_terminal() {
+            eprint!("Voucher code: ");
+            let _ = io::stderr().flush();
+        }
+        let (voucher, source) =
+            tokio::task::spawn_blocking(move || read_voucher(argument, &mut io::stdin().lock()))
+                .await??;
+        if source == VoucherSource::Argument {
+            eprintln!(
+                "warning: a voucher code on the command line is visible to every account on this \
+                 machine while the command runs. Run `{BIN_NAME} account redeem` without it to \
+                 type it at a prompt, or pipe it on standard input."
+            );
+        }
 
         let submission = rpc.submit_voucher(voucher).await?;
         println!(
@@ -159,6 +177,36 @@ impl Account {
         );
         Ok(())
     }
+}
+
+/// Where a voucher code came from.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VoucherSource {
+    Argument,
+    Input,
+}
+
+/// The voucher code to redeem: the argument when there is one, otherwise the
+/// first line of `input`, keeping only its letters and digits.
+fn read_voucher(
+    argument: Option<String>,
+    input: &mut impl BufRead,
+) -> Result<(String, VoucherSource)> {
+    let (mut voucher, source) = match argument {
+        Some(voucher) => (voucher, VoucherSource::Argument),
+        None => {
+            let mut line = String::new();
+            input
+                .read_line(&mut line)
+                .context("failed to read the voucher code")?;
+            (line, VoucherSource::Input)
+        }
+    };
+    voucher.retain(|c| c.is_alphanumeric());
+    if voucher.is_empty() {
+        anyhow::bail!("no voucher code provided");
+    }
+    Ok((voucher, source))
 }
 
 /// Prompts for and reads a recovery phrase as a single line (words stay
@@ -190,5 +238,49 @@ fn format_duration(seconds: u64) -> String {
         format!("{} minutes", dur.num_minutes())
     } else {
         format!("{} seconds", dur.num_seconds())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::Parser;
+
+    #[test]
+    fn redeem_takes_no_voucher_argument_to_read_it_from_input() {
+        let parsed = crate::Cli::try_parse_from([BIN_NAME, "account", "redeem"]);
+
+        assert!(parsed.is_ok());
+    }
+
+    #[test]
+    fn a_voucher_typed_on_input_is_read_and_normalised() {
+        let mut input = io::Cursor::new(b"abcd-1234 efgh\nignored\n".to_vec());
+
+        let voucher = read_voucher(None, &mut input).unwrap();
+
+        assert_eq!(
+            voucher,
+            (String::from("abcd1234efgh"), VoucherSource::Input)
+        );
+    }
+
+    #[test]
+    fn a_voucher_argument_is_used_without_reading_input() {
+        let mut input = io::Cursor::new(b"other\n".to_vec());
+
+        let voucher = read_voucher(Some("wxyz-9876".to_owned()), &mut input).unwrap();
+
+        assert_eq!(voucher, (String::from("wxyz9876"), VoucherSource::Argument));
+        assert_eq!(input.position(), 0);
+    }
+
+    #[test]
+    fn an_empty_input_is_refused() {
+        let mut input = io::Cursor::new(b" - \n".to_vec());
+
+        let error = read_voucher(None, &mut input).unwrap_err();
+
+        assert_eq!(error.to_string(), "no voucher code provided");
     }
 }
