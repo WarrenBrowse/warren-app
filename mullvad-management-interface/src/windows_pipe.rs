@@ -64,8 +64,9 @@ const PIPE_SDDL: &str = "D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;0x12019b;;;AU)";
 
 /// How long a client has, once connected, to send its first bytes. The
 /// identity is read then, and a connection that never speaks holds a pipe
-/// instance for nothing.
-const FIRST_BYTES_TIMEOUT: Duration = Duration::from_secs(10);
+/// instance for nothing. Generous on purpose: a client on a machine under
+/// heavy load can take over ten seconds to write its HTTP/2 preface.
+const FIRST_BYTES_TIMEOUT: Duration = Duration::from_secs(30);
 
 /// Buffer for the first read. Any size works: the bytes are replayed in front
 /// of the stream. An HTTP/2 client preface is 24 bytes.
