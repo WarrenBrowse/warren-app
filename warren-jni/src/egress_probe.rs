@@ -197,12 +197,11 @@ impl EgressProbeIo for AndroidEgressProbeIo {
         }
     }
 
-    /// Android subscribes no [`ExitDrainChannel`]: the supervised pumps here are
-    /// built without one, so no advisory ever arrives and the gap-free
-    /// migration branch must stay unreachable. Claiming a drain would swallow
-    /// the escalation and leave the user sitting on a dead exit.
-    ///
-    /// [`ExitDrainChannel`]: warrenguard_transport::supervised_pump::ExitDrainChannel
+    /// Android has no gap-free migration: the TUN address is fixed at
+    /// `establish()`, so a drain ends the session for Kotlin to fail over
+    /// (`crate::circuit_retarget::leave_on_drain`) instead of moving the live
+    /// one. The migration branch must stay unreachable: claiming a drain would
+    /// swallow the escalation and leave the user sitting on a dead exit.
     fn drain_active(&mut self) -> bool {
         false
     }
@@ -485,10 +484,9 @@ mod tests {
         assert_eq!(sink.seen(), vec![true, false]);
     }
 
-    /// Android subscribes no exit-drain advisory (the supervised pumps are
-    /// built without a drain channel), so the gap-free migration branch must
-    /// never be taken: claiming a drain would swallow the escalation and leave
-    /// the user on a dead exit.
+    /// Android answers a drain by ending the session rather than migrating it,
+    /// so the gap-free migration branch must never be taken: claiming a drain
+    /// would swallow the escalation and leave the user on a dead exit.
     #[tokio::test]
     async fn android_never_claims_a_gap_free_migration() {
         let (escalate, _escalated) = watch::channel(false);

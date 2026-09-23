@@ -166,6 +166,13 @@ class WarrenQuinnAdapter(
     @Volatile
     private var handoverNotified = false
 
+    // Set when an exit left the session and was failed over at once, cleared
+    // once a connection lands. A second exit leaving before that is handled
+    // as an ordinary drop, so a fleet refusing everywhere reaches the flap
+    // guard instead of a failover loop.
+    @Volatile
+    private var exitLeftSinceConnected = false
+
     // Kill-switch (lockdown) state. When the tunnel drops while lockdown is
     // enabled we keep `blockingFd` established as a blackhole interface so
     // traffic stays captured instead of leaking to the physical network.
@@ -356,6 +363,26 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
+                    if (code == STATUS_EXIT_LEAVING) {
+                        // The exit is leaving (a maintenance drain it
+                        // announced, or its refusal of a one-hop dial): fail
+                        // over to another exit at once, without the drop grace
+                        // and without counting a drop.
+                        var failOverNow = false
+                        lock.withLock {
+                            if (userInitiatedDisconnect) {
+                                _state.value = WarrenTunnelState.Disconnected
+                            } else if (exitLeftSinceConnected) {
+                                onSessionDown(sessionConfig, "exit leaving again")
+                            } else {
+                                exitLeftSinceConnected = true
+                                failOverNow = true
+                                _state.value = reconnectingFrom(sessionConfig)
+                            }
+                        }
+                        if (failOverNow) scheduleExitFailover()
+                        break
+                    }
                     if (code == STATUS_UNAUTHORIZED) {
                         // Terminal: the exit refused the account (lapsed /
                         // revoked subscription). Retrying cannot recover it,
@@ -387,6 +414,7 @@ class WarrenQuinnAdapter(
                                 // later disconnect is no longer this handover's
                                 // escalation.
                                 handoverNotified = false
+                                exitLeftSinceConnected = false
                                 flapDetector.reset()
                                 if (autoRecovery.onConnected()) {
                                     Logger.i("WarrenQuinnAdapter: automatic recovery landed")
@@ -551,6 +579,7 @@ class WarrenQuinnAdapter(
         // kill switch.
         userInitiatedDisconnect = true
         handoverNotified = false
+        exitLeftSinceConnected = false
         flapDetector.reset()
         // A user action clears any pending recovery attribution: whatever
         // connects next is not an automatic recovery, nor a failover.
@@ -891,6 +920,57 @@ class WarrenQuinnAdapter(
     }
 
     /**
+     * Leave an exit that is leaving for another one, at once: the same
+     * blackhole-first sequence as [scheduleHandoverReconnect], then a dial to
+     * the failover exit with no grace. The exit is not reported down: it was
+     * drained by the operator, or refused a dial while draining.
+     */
+    private fun scheduleExitFailover() {
+        val config = activeConfig
+        val mnemonic = activeMnemonic
+        if (config == null || mnemonic == null) {
+            Logger.w("scheduleExitFailover: no active session to fail over")
+            return
+        }
+        pendingHandover?.cancel()
+        pendingHandover = scope.launch {
+            autoRecovery.armAutomation()
+            val proceed =
+                lock.withLock {
+                    if (userInitiatedDisconnect) return@withLock false
+                    // Blackhole first: establish() atomically replaces the
+                    // live interface, so traffic stays captured until the
+                    // failover exit is up (connect() drops the blackhole).
+                    if (blockingFd == null) {
+                        val fd = platform.establish(planTunInterface(config, blocking = true))
+                        if (fd != null) {
+                            blockingFd = fd
+                        } else {
+                            Logger.w(
+                                "scheduleExitFailover: blackhole establish failed; brief leak possible"
+                            )
+                        }
+                    }
+                    statusWatchJob?.cancel()
+                    statusWatchJob = null
+                    platform.disconnectTunnel()
+                    activeFd?.close()
+                    activeFd = null
+                    _state.value = WarrenTunnelState.Disconnected
+                    true
+                }
+            if (!proceed) return@launch
+            val next = failoverConfig(config) ?: config
+            awaitDialableNetwork()
+            lock.withLock {
+                if (userInitiatedDisconnect) return@withLock
+                pendingFailover = next.exitPubkeyHex != config.exitPubkeyHex
+            }
+            if (!userInitiatedDisconnect) connectLocked(next, mnemonic)
+        }
+    }
+
+    /**
      * Park the retry until the device has a network a relay dial can
      * actually use (see [canDialRelay]). Prevents the retry loop from burning
      * dial attempts (and flap-detector budget) while the device is offline or
@@ -1008,6 +1088,10 @@ class WarrenQuinnAdapter(
         // The exit refused the setup (not authorized: lapsed / revoked
         // subscription). Mirrors `warren_jni::tunnel::SessionStatus::Unauthorized`.
         const val STATUS_UNAUTHORIZED = 4
+
+        // The exit is leaving: fail over at once. Mirrors
+        // `warren_jni::redial::SessionStatus::ExitLeaving`.
+        const val STATUS_EXIT_LEAVING = 5
 
         /**
          * Ceiling on one wait for a native status wake. The engine wakes the

@@ -62,6 +62,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_CONNECTED = 2
         const val STATUS_DISCONNECTED = 0
         const val STATUS_RECONNECTING = 3
+        const val STATUS_EXIT_LEAVING = 5
 
         const val PHRASE =
             "abandon abandon abandon abandon abandon abandon " +
@@ -776,6 +777,97 @@ class WarrenQuinnAdapterTest {
                 val landed = adapter.state.value as WarrenTunnelState.Connected
                 assertEquals("exit2.example:443", landed.exitEndpointHost)
                 adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
+
+    /**
+     * An exit that is leaving (a maintenance drain it announced, or a one-hop
+     * node refusing the dial) is left at once for another exit: no drop
+     * grace, no exit-down report (the operator drained it), and the blocking
+     * TUN is up before the live one goes.
+     */
+    @Test
+    fun `ensure a leaving exit is left at once for an alternative exit`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val alternative =
+                config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+            // A drop retry would wait out this grace: only the leaving path can
+            // dial the alternative within the test's bound.
+            val adapter =
+                adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 600_000L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            platform.calls.clear()
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_EXIT_LEAVING
+            awaitReal("the leaving exit must be left for the alternative") {
+                platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
+            }
+            awaitReal("the failover must land") { adapter.failoverCount.value == 1 }
+
+            val calls = platform.calls.toList()
+            assertTrue(
+                calls.indexOf(ESTABLISH_BLACKHOLE) in 0 until calls.indexOf(CLOSE_ACTIVE),
+                "the blocking TUN must be up before the live one is closed, got: $calls",
+            )
+            assertTrue(platform.exitDownReports.isEmpty(), "a drained exit is not down")
+            val landed = adapter.state.value as WarrenTunnelState.Connected
+            assertEquals("exit2.example:443", landed.exitEndpointHost)
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
+
+    /**
+     * Leaving is a failover, never a drop: the flap guard would release the
+     * traffic to the bare network with lockdown off. An exit leaving again
+     * before any connection landed is an ordinary drop, though, so a fleet
+     * that refuses everywhere still reaches the flap guard instead of looping.
+     */
+    @Test
+    fun `ensure a leaving exit is not counted as a drop until it repeats without a connection`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
+                adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+                awaitReal("the session must reach Connected") {
+                    adapter.state.value is WarrenTunnelState.Connected
+                }
+
+                // Three leavings, each followed by a connection: none is a drop.
+                repeat(3) { round ->
+                    platform.statusOnConnect = STATUS_CONNECTED
+                    platform.status = STATUS_EXIT_LEAVING
+                    awaitReal("leaving ${round + 1} must redial and land") {
+                        platform.configs.size == round + 2 &&
+                            adapter.state.value is WarrenTunnelState.Connected
+                    }
+                }
+                assertTrue(adapter.state.value is WarrenTunnelState.Connected)
+                assertTrue(
+                    platform.exitDownReports.isEmpty(),
+                    "a leaving exit took the drop path: ${platform.exitDownReports}",
+                )
+
+                // Every dial now leaves at once: the flap guard takes over.
+                platform.statusOnConnect = STATUS_EXIT_LEAVING
+                platform.status = STATUS_EXIT_LEAVING
+                awaitReal("an exit leaving without a connection must reach the flap guard") {
+                    val state = adapter.state.value
+                    state is WarrenTunnelState.Failed && state.flapping
+                }
             } finally {
                 unmockkStatic(SystemClock::class)
             }

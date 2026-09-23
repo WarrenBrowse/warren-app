@@ -33,7 +33,7 @@ use tokio::sync::watch;
 use warrenguard_multihop::RejectionReason;
 use warrenguard_transport::IpAssignSpec;
 use warrenguard_transport::supervised_pump::{
-    DaitaShared, run_downlink_with_daita, run_uplink_with_daita,
+    DaitaShared, ExitDrainingChannel, run_downlink_with_daita, run_uplink_with_daita,
 };
 use warrenguard_transport::supervisor::ClientWatch;
 #[cfg(test)]
@@ -94,6 +94,10 @@ pub(crate) enum SessionEnd {
     /// `establish()`), so the session ends rather than pump packets the exit's
     /// anti-spoof gate would drop.
     AddressChanged,
+    /// The exit is leaving: it announced a maintenance drain, or on a one-hop
+    /// circuit it refused the dial. Changing the exit is Kotlin's call, so the
+    /// session ends for it to fail over at once.
+    ExitLeaving,
 }
 
 /// Bind the supervisor's per-redial observer to a counter standing in for the
@@ -139,6 +143,9 @@ pub(crate) struct SupervisedInputs {
     /// circuit, the same recovery the desktop daemon reaches through its shared
     /// reconnect channel.
     pub egress_dead: watch::Receiver<bool>,
+    /// Latched `true` once the exit is leaving (see [`SessionEnd::ExitLeaving`]),
+    /// by the drain reactor or by the dial-refusal hook of a one-hop circuit.
+    pub leaving: watch::Receiver<bool>,
 }
 
 /// Abort a spawned task when its owner returns, so a session that ends never
@@ -170,10 +177,14 @@ impl Drop for AbortOnDrop {
 /// the pumps drive (on Android, the 1:1 NAT remap onto the exit-assigned
 /// source). It is called at most once: no assignment means no datapath, which
 /// fails closed rather than pumping packets the exit would drop.
+///
+/// `drain` receives the exit's in-band maintenance-drain advisory from the
+/// downlink, for the reactor that ends the session before the exit's deadline.
 pub(crate) async fn run_supervised<T, F>(
     mut inputs: SupervisedInputs,
     wrap_tun: F,
     daita: DaitaShared,
+    drain: Option<ExitDrainingChannel>,
     status: &StatusCell,
     grace: Duration,
 ) -> SessionEnd
@@ -205,7 +216,7 @@ where
         let rx = inputs.sessions.clone();
         let notify = state_changed.clone();
         async move {
-            if let Err(e) = run_downlink_with_daita(rx, tun, daita, notify, None, None).await {
+            if let Err(e) = run_downlink_with_daita(rx, tun, daita, notify, None, drain).await {
                 log::warn!("multi-hop downlink terminated: {e}");
             }
         }
@@ -279,6 +290,10 @@ async fn drive_status(
             );
             return SessionEnd::Down;
         }
+        if *inputs.leaving.borrow_and_update() {
+            log::info!("multi-hop exit is leaving; ending the session for a failover");
+            return SessionEnd::ExitLeaving;
+        }
         if let Some(spec) = *inputs.assigns.borrow_and_update()
             && remap_moved(spec, pinned)
         {
@@ -311,6 +326,9 @@ async fn drive_status(
                 // closing says nothing about the exit; the branch is dropped
                 // and the wait continues on the signals that do mean something.
                 Ok(()) = inputs.egress_dead.changed() => true,
+                // Guarded for the same reason: the drain reactor returns once
+                // it latched, and the refusal hook dies with the supervisor.
+                Ok(()) = inputs.leaving.changed() => true,
             }
         };
         // Without a live session the wait is bounded: past the grace a redial
@@ -400,6 +418,7 @@ mod tests {
         let fatal = supervisor.fatal_rx();
         let (_escalated_tx, escalated) = watch::channel(false);
         let (_egress_tx, egress_dead) = watch::channel(false);
+        let (_leaving_tx, leaving) = watch::channel(false);
         let inputs = SupervisedInputs {
             sessions,
             fatal,
@@ -407,6 +426,7 @@ mod tests {
             assigns: assigns.subscribe(),
             escalated,
             egress_dead,
+            leaving,
         };
         drop(assigns);
         let supervisor_task = tokio::spawn(supervisor.run());
@@ -427,6 +447,7 @@ mod tests {
                     FakeTun::new()
                 },
                 daita,
+                None,
                 &STATUS,
                 SESSION_GRACE,
             )
@@ -497,6 +518,7 @@ mod tests {
         assigns: watch::Sender<Option<IpAssignSpec>>,
         escalated: watch::Sender<bool>,
         egress_dead: watch::Sender<bool>,
+        leaving: watch::Sender<bool>,
     }
 
     fn scripted() -> Scripted {
@@ -506,6 +528,7 @@ mod tests {
         let (assigns_tx, assigns) = watch::channel(Some(spec([10, 77, 0, 2])));
         let (escalated_tx, escalated) = watch::channel(false);
         let (egress_tx, egress_dead) = watch::channel(false);
+        let (leaving_tx, leaving) = watch::channel(false);
         Scripted {
             inputs: SupervisedInputs {
                 sessions,
@@ -514,6 +537,7 @@ mod tests {
                 assigns,
                 escalated,
                 egress_dead,
+                leaving,
             },
             _sessions: sessions_tx,
             fatal: fatal_tx,
@@ -521,6 +545,7 @@ mod tests {
             assigns: assigns_tx,
             escalated: escalated_tx,
             egress_dead: egress_tx,
+            leaving: leaving_tx,
         }
     }
 
@@ -575,6 +600,52 @@ mod tests {
         .await
         .expect("the egress-dead verdict must end the session on its own");
         assert_eq!(end, SessionEnd::Down);
+    }
+
+    /// An exit that is leaving (a drain it announced, or its refusal on a
+    /// one-hop circuit) ends the session with its own reason: Kotlin fails
+    /// over to another exit at once instead of treating it as a drop.
+    #[tokio::test]
+    async fn a_leaving_exit_ends_the_session_for_kotlin_to_fail_over() {
+        let scripted = scripted();
+        scripted.leaving.send(true).expect("receiver alive");
+        let status = StatusCell::new(SessionStatus::Connected as i32);
+        let end = tokio::time::timeout(
+            Duration::from_secs(2),
+            drive_status(
+                scripted.inputs,
+                spec([10, 77, 0, 2]),
+                &status,
+                Duration::from_secs(600),
+            ),
+        )
+        .await
+        .expect("a leaving exit must end the session on its own");
+        assert_eq!(end, SessionEnd::ExitLeaving);
+    }
+
+    /// The drain reactor returns once it latched and the refusal hook dies
+    /// with the supervisor config, so a closed channel says nothing about the
+    /// exit and must never end a session on its own.
+    #[tokio::test]
+    async fn a_closed_leaving_channel_never_ends_a_session() {
+        let scripted = scripted();
+        drop(scripted.leaving);
+        let status = StatusCell::new(SessionStatus::Connected as i32);
+        let outcome = tokio::time::timeout(
+            Duration::from_millis(500),
+            drive_status(
+                scripted.inputs,
+                spec([10, 77, 0, 2]),
+                &status,
+                Duration::from_secs(600),
+            ),
+        )
+        .await;
+        assert!(
+            outcome.is_err(),
+            "a closed leaving channel must not end the session, got {outcome:?}"
+        );
     }
 
     /// A tunnel that keeps establishing while carrying zero downlink must not

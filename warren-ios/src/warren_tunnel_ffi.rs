@@ -1014,6 +1014,92 @@ impl warrenguard_transport::migration_watchdog::MigrationIo for IosMigrationIo {
     }
 }
 
+/// The engine target for a selected circuit.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn circuit_target(
+    circuit: crate::warren_multihop_directory::SelectedCircuit,
+) -> warrenguard_transport::supervisor::CircuitTarget {
+    warrenguard_transport::supervisor::CircuitTarget {
+        relay: std::sync::Arc::new(circuit.relay),
+        exit_id: circuit.exit.exit_id,
+        exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
+        exit_mlkem768_pubkey: circuit.exit.exit_mlkem768_pubkey,
+    }
+}
+
+/// The exit-key TOFU check a connect runs, for a circuit the session would
+/// move to: a first sighting is pinned, a known key must match, and a
+/// mismatch refuses the move (the connect path raises the alert; a move
+/// just stays where it is).
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn pins_admit(
+    pin_store_path: Option<&str>,
+    candidate: &crate::warren_multihop_directory::SelectedCircuit,
+    exit_country: &str,
+) -> bool {
+    let Some(path) = pin_store_path else {
+        return true;
+    };
+    let path = std::path::Path::new(path);
+    let mut table = crate::warren_pin_store::load(path);
+    match crate::warren_pin_store::pin_verify(
+        &mut table,
+        &hex::encode(candidate.exit.exit_id.as_bytes()),
+        &hex::encode(candidate.exit.exit_ed25519_pubkey),
+        exit_country,
+        now_secs(),
+    ) {
+        crate::warren_pin_store::PinOutcome::Mismatch { .. } => {
+            tracing::warn!("Warren exit pubkey TOFU mismatch on a migration candidate; staying");
+            false
+        }
+        _ => {
+            crate::warren_pin_store::store(path, &table);
+            true
+        }
+    }
+}
+
+/// The supervisor's dial-refusal observer.
+///
+/// The refusal is taken as the refusal of the node the connection terminates
+/// at, `relay_id`, whatever hop the engine reports: during the handshake or
+/// the setup only that node speaks, and letting it name another would let a
+/// hostile relay choose which exits the session avoids.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+fn refusal_hook(
+    retarget: std::sync::Arc<std::sync::Mutex<crate::warren_multihop_directory::CircuitRetarget>>,
+    migrate: std::sync::Arc<std::sync::OnceLock<warrenguard_transport::supervisor::MigrateHandle>>,
+    entry_rtt: std::sync::Arc<std::sync::Mutex<warren_discovery_core::RttCache>>,
+    pin_store_path: Option<String>,
+    exit_country: String,
+) -> warrenguard_transport::supervisor::DialRefusedObserver {
+    std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
+        let retarget = std::sync::Arc::clone(&retarget);
+        let migrate = std::sync::Arc::clone(&migrate);
+        let entry_rtt = std::sync::Arc::clone(&entry_rtt);
+        let pins = pin_store_path.clone();
+        let country = exit_country.clone();
+        // Off the supervisor's task: the key-pin check reads and writes a file.
+        tokio::spawn(async move {
+            let rtt = entry_rtt
+                .lock()
+                .map(|cache| cache.clone())
+                .unwrap_or_default();
+            let moved = retarget.lock().ok().and_then(|mut r| {
+                r.on_refusal(&relay_id, &rtt, now_secs(), |c| {
+                    pins_admit(pins.as_deref(), c, &country)
+                })
+            });
+            if let (Some(circuit), Some(handle)) = (moved, migrate.get()) {
+                // No-logs: the category of the reaction, never the node.
+                tracing::info!("multi-hop dial refused; moving to another circuit");
+                handle.migrate_to(circuit_target(circuit));
+            }
+        });
+    })
+}
+
 /// Drives a multi-hop circuit on the handle's runtime: verify + select a
 /// circuit from the signed directory, bring up a `MultiHopSupervisor`,
 /// and pump `IosTun` against the live session. Surfaces Connecting /
@@ -1083,28 +1169,32 @@ fn spawn_multi_hop(
             .lock()
             .map(|cache| cache.clone())
             .unwrap_or_default();
-        let circuit = match crate::warren_multihop_directory::verify_and_select(
+        let dir = match crate::warren_multihop_directory::verify_directory(
             &directory_json,
-            two_hop,
-            &entry_country,
-            &exit_country,
-            &entry_rtt,
             now_secs(),
             min_generation,
         ) {
-            Ok(Some(circuit)) => circuit,
-            Ok(None) => {
-                tracing::warn!("Warren multi-hop: no valid circuit in the directory");
-                arc_for_task.set_state(WarrenTunnelStateC::Failed);
-                arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
-                return;
-            }
+            Ok(dir) => dir,
             Err(e) => {
                 tracing::error!(error = %e, "Warren multi-hop directory verification failed");
                 arc_for_task.set_state(WarrenTunnelStateC::Failed);
                 arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
                 return;
             }
+        };
+        let Some(circuit) = crate::warren_multihop_directory::select_circuit(
+            &dir,
+            two_hop,
+            &entry_country,
+            &exit_country,
+            &entry_rtt,
+            now_secs(),
+            &[],
+        ) else {
+            tracing::warn!("Warren multi-hop: no valid circuit in the directory");
+            arc_for_task.set_state(WarrenTunnelStateC::Failed);
+            arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
+            return;
         };
 
         // Exit-pubkey TOFU pin check. The exit's `exit_ed25519_pubkey` (its
@@ -1156,6 +1246,22 @@ fn spawn_multi_hop(
         // generation (whose nodes never connect) poison the monotonic mark
         // and permanently reject later legitimate directories.
         let accepted_generation = circuit.generation;
+
+        // Refusals and drains (ADR 36): the session moves off a node that
+        // refuses its dials or announces a drain, live, onto a circuit the
+        // key pins admit. The supervisor's migrate handle exists only once
+        // the supervisor does, so the hook reads it from this slot.
+        let retarget = std::sync::Arc::new(std::sync::Mutex::new(
+            crate::warren_multihop_directory::CircuitRetarget::new(
+                dir,
+                two_hop,
+                &entry_country,
+                &exit_country,
+                &circuit,
+                warrenguard_transport::drain_policy::DRAINED_EXIT_AVOID_TTL.as_secs(),
+            ),
+        ));
+        let migrate_slot = std::sync::Arc::new(std::sync::OnceLock::new());
 
         let Ok(bind_addr) = "0.0.0.0:0".parse::<std::net::SocketAddr>() else {
             arc_for_task.set_state(WarrenTunnelStateC::Failed);
@@ -1238,10 +1344,13 @@ fn spawn_multi_hop(
             // watch edge), matching the desktop daemon's defaults.
             pre_swap_check: None,
             on_overlap_swapped: None,
-            // No dial-refusal hook yet on iOS: the engine RX-silence watch
-            // plus the directory refresh recover from a drained node; the
-            // desktop-style avoid-set retarget is a follow-up.
-            on_dial_refused: None,
+            on_dial_refused: Some(refusal_hook(
+                std::sync::Arc::clone(&retarget),
+                std::sync::Arc::clone(&migrate_slot),
+                std::sync::Arc::clone(&arc_for_task.entry_rtt),
+                pin_store_path.clone(),
+                exit_country.clone(),
+            )),
             session_token_provider,
             ip_assign_channel: Some(ip_assign_channel.clone()),
             wants_ipv6: false,
@@ -1251,6 +1360,7 @@ fn spawn_multi_hop(
             n_connections: 1,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
+        let _ = migrate_slot.set(supervisor.migrate_handle());
         arc_for_task.set_supervisor(supervisor.handle());
         // Publish what the exit actually GRANTED, not what the client asked
         // for. The chip used to be drawn from the settings flag, which says
@@ -1278,10 +1388,8 @@ fn spawn_multi_hop(
             arc_for_task.set_watchdog(watchdog);
         }
         // ADR 36: the downlink pump publishes a mid-session `ExitDraining`
-        // advisory here; the drain reactor below forces a supervisor redial so
-        // we migrate before the exit's hard close. iOS has no daemon avoid-set,
-        // so exit-exclusion is the ambient relay-list refresh's job; this is
-        // the proactive-reconnect half (mirrors the desktop talpid reactor).
+        // advisory here; the drain reactor below moves the session off the
+        // exit before its hard close (mirrors the desktop talpid reactor).
         let exit_draining_channel = ExitDrainingChannel::new();
         let drain_handle = supervisor.handle();
         let tun = arc_for_task.tun.clone();
@@ -1325,34 +1433,65 @@ fn spawn_multi_hop(
                 }
             });
         }
-        // ADR 36 drain reactor: on each in-band drain advisory, force the
-        // supervisor to redial (it reconnects through its own backoff, which
-        // also spreads the herd, so no extra jitter here). NOT one-shot:
-        // `force_reconnect` keeps the same session/channel alive (it redials
-        // internally rather than rebuilding the pumps), so the loop must keep
-        // listening to catch a drain on the exit it lands on next. The exit
-        // re-emits dedup'd, so a repeat of the SAME advisory does not re-fire;
-        // teardown drops the sender, ending this task.
+        // ADR 36 drain reactor: on each in-band drain advisory, after the
+        // anti-stampede delay that spreads the exit's clients before its
+        // deadline, migrate the live session (make-before-break) onto a
+        // circuit that leaves the draining exit out. With no such circuit it
+        // forces a redial instead, the session riding the supervisor's
+        // backoff until the exit is back. NOT one-shot: the session and its
+        // channel outlive a migration, so the loop keeps listening for a
+        // drain on the exit it lands on next. The exit re-emits dedup'd, so a
+        // repeat of the SAME advisory does not re-fire; teardown drops the
+        // sender, ending this task.
         {
             let mut drain_sub = exit_draining_channel.subscribe();
             let _ = drain_sub.borrow_and_update();
             let drain_arc = std::sync::Arc::clone(&arc_for_task);
+            let drain_retarget = std::sync::Arc::clone(&retarget);
+            let drain_migrate = std::sync::Arc::clone(&migrate_slot);
+            let drain_pins = pin_store_path.clone();
+            let drain_country = exit_country.clone();
             tokio::spawn(async move {
+                use warrenguard_transport::drain_policy::{jitter_delay, stampede_fraction};
                 loop {
                     if drain_sub.changed().await.is_err() {
                         return;
                     }
-                    if drain_sub.borrow_and_update().is_some() {
-                        tracing::info!(
-                            "multi-hop exit draining; forcing reconnect (ADR 36 proactive \
-                             migration; exit-exclusion via the ambient relay-list refresh)"
-                        );
-                        // Surface the maintenance migration to Swift so the UI
-                        // reflects it. Reuses `EventReconnecting` (no new C-ABI
-                        // tag): the app already renders it as a transient
-                        // reconnect, which is exactly what a drain migration is.
-                        drain_arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
-                        let _ = drain_handle.force_reconnect();
+                    let Some(advisory) = *drain_sub.borrow_and_update() else {
+                        continue;
+                    };
+                    tokio::time::sleep(jitter_delay(
+                        advisory.deadline_unix_secs,
+                        now_secs(),
+                        stampede_fraction(),
+                    ))
+                    .await;
+                    // Surface the maintenance migration to Swift so the UI
+                    // reflects it. Reuses `EventReconnecting` (no new C-ABI
+                    // tag): the app already renders it as a transient
+                    // reconnect, which is exactly what a drain migration is.
+                    drain_arc.fire_event(WarrenTunnelEventTagC::EventReconnecting);
+                    let rtt = drain_arc
+                        .entry_rtt
+                        .lock()
+                        .map(|cache| cache.clone())
+                        .unwrap_or_default();
+                    let moved = drain_retarget.lock().ok().and_then(|mut r| {
+                        r.on_drain(&rtt, now_secs(), |c| {
+                            pins_admit(drain_pins.as_deref(), c, &drain_country)
+                        })
+                    });
+                    match (moved, drain_migrate.get()) {
+                        (Some(circuit), Some(handle)) => {
+                            tracing::info!("multi-hop exit draining; migrating to another exit");
+                            handle.migrate_to(circuit_target(circuit));
+                        }
+                        _ => {
+                            tracing::info!(
+                                "multi-hop exit draining and no other exit can serve; redialing"
+                            );
+                            let _ = drain_handle.force_reconnect();
+                        }
                     }
                 }
             });

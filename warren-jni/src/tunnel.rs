@@ -277,6 +277,7 @@ async fn run_multi_hop_session(
 
     use warrenguard_multihop::RejectionReason;
     use warrenguard_transport::IpAssignChannel;
+    use warrenguard_transport::supervised_pump::ExitDrainingChannel;
     use warrenguard_transport::supervisor::{MultiHopSupervisor, SupervisorConfig};
 
     use crate::supervised_session::{AbortOnDrop, SessionEnd, SupervisedInputs};
@@ -318,7 +319,7 @@ async fn run_multi_hop_session(
         &server_pins,
         &[WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
     ) {
-        Ok(d) => d,
+        Ok(d) => Arc::new(d),
         Err(e) => {
             log::error!("multi-hop: directory verify failed: {e}");
             status.store(SessionStatus::Disconnected as i32);
@@ -334,16 +335,7 @@ async fn run_multi_hop_session(
     // 2-hop, preserving the shipping Android behavior. Selection logic + its
     // fail-closed contract live in the host-tested `crate::circuit_select`.
     let two_hop = config.multihop_two_hop.unwrap_or(true);
-    let views: Vec<crate::circuit_select::NodeSel<'_>> = dir
-        .nodes
-        .iter()
-        .map(|n| crate::circuit_select::NodeSel {
-            exit_ed25519: &n.exit.exit_ed25519_pubkey,
-            relay_id: &n.relay.relay_id,
-            relay_ed25519: &n.relay.relay_ed25519_pubkey,
-            country: &n.country,
-        })
-        .collect();
+    let views = node_views(&dir);
     let (entry_idx, exit_idx) = match crate::circuit_select::select_circuit_indices(
         &views,
         want_exit.as_bytes(),
@@ -364,11 +356,19 @@ async fn run_multi_hop_session(
             return;
         }
     };
-    // For a 1-hop circuit entry_idx == exit_idx, so `entry_node.relay` is the
+    // For a 1-hop circuit entry_idx == exit_idx, so the entry's relay is the
     // exit node's own relay descriptor: we dial that node's `:443` dispatcher
     // and forward to its own exit_id, which the dispatcher terminates locally.
-    let entry_node = &dir.nodes[entry_idx];
     let exit_node = &dir.nodes[exit_idx];
+    // Refusals and drains (ADR 36): kept across the attempts below, so a
+    // retry after a token rejection dials the entry a refusal moved to.
+    let retarget = Arc::new(parking_lot::Mutex::new(
+        crate::circuit_retarget::EntryRetarget::new(
+            entry_idx,
+            exit_idx,
+            config.entry_country.as_deref(),
+        ),
+    ));
 
     let bind_addr: SocketAddr = "0.0.0.0:0".parse().expect("static bind addr");
     // No-logs: never record the entry-relay address or the exit identity pubkey -
@@ -431,6 +431,10 @@ async fn run_multi_hop_session(
     let mut token_provider = Some(counting_tokens);
     loop {
         let ip_assign_channel = IpAssignChannel::new();
+        let (leaving_tx, leaving) = tokio::sync::watch::channel(false);
+        let exit_draining_channel = ExitDrainingChannel::new();
+        let migrate_slot = Arc::new(std::sync::OnceLock::new());
+        let entry_node = &dir.nodes[retarget.lock().entry()];
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(entry_node.relay.clone()),
             exit_id: exit_node.exit.exit_id,
@@ -467,12 +471,28 @@ async fn run_multi_hop_session(
             n_connections: 1,
             pre_swap_check: None,
             on_overlap_swapped: None,
-            on_dial_refused: None,
+            on_dial_refused: Some(refusal_hook(
+                Arc::clone(&dir),
+                Arc::clone(&retarget),
+                Arc::clone(&migrate_slot),
+                leaving_tx.clone(),
+                exit_mlkem768_pubkey.clone(),
+            )),
             on_path_rtt: None,
             session_token_provider: token_provider.clone(),
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);
+        let _ = migrate_slot.set(supervisor.migrate_handle());
+        // The exit's own maintenance drain arrives in band on the downlink;
+        // the session leaves before the exit's deadline close, spread across
+        // the anti-stampede window with every other client of that exit.
+        let _drain_reactor = AbortOnDrop::spawn(crate::circuit_retarget::leave_on_drain(
+            exit_draining_channel.subscribe(),
+            leaving_tx,
+            unix_now_secs,
+            warrenguard_transport::drain_policy::stampede_fraction(),
+        ));
         // Publish the goodput prober's verdict for Kotlin to poll. The
         // supervisor's dead-path watches cannot see the degradation class
         // where the transport stays up while nothing crosses the datapath, so
@@ -535,6 +555,7 @@ async fn run_multi_hop_session(
             assigns: ip_assign_channel.subscribe(),
             escalated,
             egress_dead,
+            leaving,
         };
         // The supervisor holds the only remaining sender once this is dropped,
         // so the driver's watch closes with it at teardown.
@@ -582,6 +603,7 @@ async fn run_multi_hop_session(
                     inputs,
                     |spec| crate::rate_limited_tun::RateLimitedTun::new(remap(spec), bps),
                     daita,
+                    Some(exit_draining_channel.clone()),
                     status,
                     crate::supervised_session::SESSION_GRACE,
                 ) => Some(end),
@@ -592,6 +614,7 @@ async fn run_multi_hop_session(
                     inputs,
                     remap,
                     daita,
+                    Some(exit_draining_channel.clone()),
                     status,
                     crate::supervised_session::SESSION_GRACE,
                 ) => Some(end),
@@ -623,6 +646,10 @@ async fn run_multi_hop_session(
                 status.store(SessionStatus::Unauthorized as i32);
                 return;
             }
+            Some(SessionEnd::ExitLeaving) => {
+                status.store(SessionStatus::ExitLeaving as i32);
+                return;
+            }
             Some(end) => {
                 // No-logs: `SessionEnd` carries only a failure category (and,
                 // for a ban, the exit's opaque product code), never identity.
@@ -633,6 +660,80 @@ async fn run_multi_hop_session(
     }
 
     status.store(SessionStatus::Disconnected as i32);
+}
+
+/// The per-node fields circuit selection reads, borrowed from the verified
+/// directory.
+fn node_views(
+    dir: &warren_discovery_core::VerifiedMultiHopDirectory,
+) -> Vec<crate::circuit_select::NodeSel<'_>> {
+    dir.nodes
+        .iter()
+        .map(|n| crate::circuit_select::NodeSel {
+            exit_ed25519: &n.exit.exit_ed25519_pubkey,
+            relay_id: &n.relay.relay_id,
+            relay_ed25519: &n.relay.relay_ed25519_pubkey,
+            country: &n.country,
+        })
+        .collect()
+}
+
+/// The supervisor's dial-refusal observer for one attempt.
+///
+/// The refusal is taken as the refusal of the node the connection terminates
+/// at, `relay_id`, whatever hop the engine reports: during the handshake or
+/// the setup only that node speaks, and letting it name another would let a
+/// hostile relay choose which exits the client avoids. A refusing entry of a
+/// two-hop circuit is replaced for the same exit, live; a refusing one-hop
+/// node is the exit, and the session leaves it for Kotlin to fail over.
+fn refusal_hook(
+    dir: std::sync::Arc<warren_discovery_core::VerifiedMultiHopDirectory>,
+    retarget: std::sync::Arc<parking_lot::Mutex<crate::circuit_retarget::EntryRetarget>>,
+    migrate: std::sync::Arc<std::sync::OnceLock<warrenguard_transport::supervisor::MigrateHandle>>,
+    leaving: tokio::sync::watch::Sender<bool>,
+    exit_mlkem768_pubkey: Option<Vec<u8>>,
+) -> warrenguard_transport::supervisor::DialRefusedObserver {
+    use crate::circuit_retarget::RefusalReaction;
+
+    std::sync::Arc::new(move |_hop, relay_id: [u8; 16], exit_id: [u8; 16]| {
+        let reaction = retarget
+            .lock()
+            .on_refusal(&node_views(&dir), &relay_id, unix_now_secs());
+        match reaction {
+            RefusalReaction::RetargetEntry(entry) => {
+                // No-logs: the category of the reaction, never the node.
+                log::info!("multi-hop entry refused the dial; dialing the exit through another");
+                let Some(exit) = dir
+                    .nodes
+                    .iter()
+                    .find(|n| *n.exit.exit_id.as_bytes() == exit_id)
+                else {
+                    return;
+                };
+                if let Some(handle) = migrate.get() {
+                    handle.migrate_to(warrenguard_transport::supervisor::CircuitTarget {
+                        relay: std::sync::Arc::new(dir.nodes[entry].relay.clone()),
+                        exit_id: exit.exit.exit_id,
+                        exit_x25519_multihop_pubkey: exit.exit.exit_x25519_multihop_pubkey,
+                        exit_mlkem768_pubkey: exit_mlkem768_pubkey.clone(),
+                    });
+                }
+            }
+            RefusalReaction::LeaveExit => {
+                log::info!("multi-hop exit refused the dial; leaving it for a failover");
+                let _ = leaving.send(true);
+            }
+            RefusalReaction::Stay => {}
+        }
+    })
+}
+
+/// Seconds since the Unix epoch, 0 on a clock before it.
+fn unix_now_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
 }
 
 /// Spawn the in-tunnel egress probe for one connect attempt.

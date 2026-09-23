@@ -79,6 +79,12 @@ mod natpmp_slot;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod circuit_select;
 
+// Moving a session off a node that refuses its dials or announces a drain:
+// the pure reaction, host-tested; the supervisor hook and the drain channel
+// that feed it are Android-gated in `tunnel`.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod circuit_retarget;
+
 // The address families the fleet's entry hops publish, read off the verified
 // directory so the Kotlin retry loop compares them against the families the
 // device's network carries instead of assuming IPv4 forever.
