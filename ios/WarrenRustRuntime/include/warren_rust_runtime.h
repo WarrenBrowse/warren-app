@@ -971,11 +971,12 @@ char *warren_account_delete(const uint8_t *seed);
  * spent; the answer's `Date` corrects the device clock), builds the signed
  * `POST /v1/forum/login` request at the corrected time (host allowlist + sid
  * shape checked in `crate::forum`), sends it, and returns the outcome
- * envelope: `{"ok":true,...}` with the forum identity the broker handed back,
- * `subscription-required` on 403, `clock-skew` on connect's 401 token,
- * `expired` on 404, `error` with a `reason` class for anything else (input,
- * build, runtime, transport, an unnamed status). Nothing about the request
- * (seed, sid, signature, nonce) is ever logged.
+ * envelope: `{"ok":true,...}` with the forum identity the broker handed back
+ * and the `completion` of a bound approval, `subscription-required` on 403,
+ * `clock-skew` on connect's 401 token, `expired` on 404, `error` with a
+ * `reason` class for anything else (input, build, runtime, transport, an
+ * unnamed status). Nothing about the request (seed, sid, signature, nonce)
+ * or the completion (code, handoff URL) is ever logged.
  *
  * # Safety
  * `seed`, when non-null, must point to at least 32 readable bytes; `sid` and
