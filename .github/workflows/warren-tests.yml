@@ -143,6 +143,9 @@ jobs:
         # socket, or that renamed a dead-man job, passed every gate. Their deps
         # are already built here (mullvad-daemon pulls both), so they cost a
         # compile of two small crates.
+        #
+        # mullvad-update's `sign` feature builds the update-manifest signer,
+        # whose own tests keep the release key off its command line.
         timeout-minutes: 30
         run: |
           cargo nextest run --locked --profile warren-ci \
@@ -151,7 +154,8 @@ jobs:
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p warren-jni \
             -p warren-forum -p warren-product-env -p warren-ios \
-            -p mullvad-update -p mullvad-release
+            -p mullvad-update -p mullvad-release \
+            --features mullvad-update/sign,mullvad-update/client
 
       - name: cargo clippy Warren scope
         # --no-deps: lint only these Warren crates, not their entire upstream
@@ -167,6 +171,7 @@ jobs:
           for crate in $crates; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
+          cargo clippy --no-deps --locked -p mullvad-update --features sign,client --bins -- -D warnings
 
   talpid-dns-macos:
     name: talpid-dns on macOS (cargo test)

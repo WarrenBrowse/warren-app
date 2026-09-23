@@ -1424,10 +1424,10 @@ jobs:
           fi
           for platform in $platforms; do
             [ -f "unsigned/${platform}.json" ] || continue
-            # The key is passed on argv: the runner is ephemeral and single-tenant
-            # and GitHub masks the value in logs.
-            "$signer" sign --file "unsigned/${platform}.json" --secret "$WARREN_UPDATE_SIGNING_KEY" \
-              > "signed/${platform}.json"
+            # The signer reads WARREN_UPDATE_SIGNING_KEY from the job's
+            # environment: a command line is readable by every account on the
+            # runner host, and several runners share that host.
+            "$signer" sign --file "unsigned/${platform}.json" > "signed/${platform}.json"
           done
           # Website manifest: not part of the signed app-update contract
           # (integrity comes from TLS on the update host), shipped alongside.

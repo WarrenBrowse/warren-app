@@ -204,7 +204,8 @@ publishes it non-draft once they are all green). It:
    older releases listed, and injects `minimum_supported_version` from the repo
    variable. Mapping: macOS `.pkg` is universal (listed for both arches),
    Windows `.exe` is per-arch, Linux is installer-less.
-4. Signs each `{platform}.json` with `WARREN_UPDATE_SIGNING_KEY`.
+4. Signs each `{platform}.json` with `WARREN_UPDATE_SIGNING_KEY`, which the
+   signer reads from its environment and refuses on its command line.
 5. `scp`s the signed JSON to the host (and always uploads them as a run
    artifact for audit / manual fallback).
 
