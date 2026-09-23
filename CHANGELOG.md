@@ -90,6 +90,11 @@ Line wrap the file at 100 chars.                                              Th
   collected automatically.
 - When the tunnel is rebuilt, ask for its previous inner address back only from the exit that
   assigned it.
+- [Windows, macOS, Linux] Answer a server that refuses the connection by moving a multihop
+  connection to another entry server for the same exit, and by retrying a single-server connection
+  on its own server. Anyone on the network path can forge such a refusal, and acting on it for the
+  exit let them walk the connection, one refusal at a time, onto an exit of their choosing. The
+  exit still changes as soon as it announces maintenance itself, inside the encrypted connection.
 
 ## [1.1.31] - 2026-09-21
 ### Added

@@ -472,6 +472,7 @@ fn pick_two_hop_circuit(
         use_warren_obfuscation,
         current,
         exclude_exit_ids,
+        &[],
         locality,
         advisory,
         &RttCache::new(),
@@ -491,6 +492,7 @@ fn pick_two_hop_circuit_with_rtt(
     use_warren_obfuscation: bool,
     current: Option<&MultiHopConfig>,
     exclude_exit_ids: &[[u8; 16]],
+    refused_entries: &[[u8; 16]],
     locality: ClientLocality,
     advisory: Option<&PathQualityAdvisory>,
     entry_rtt: &RttCache,
@@ -509,9 +511,61 @@ fn pick_two_hop_circuit_with_rtt(
     } else {
         pairs
     };
+    let rank = |pairs: &[(usize, usize)]| {
+        pick_pair_path_aware(
+            dir,
+            pairs,
+            locality.continent,
+            advisory,
+            entry_rtt,
+            now_unix,
+        )
+    };
+    let pick = sticky_or_fresh_pair(dir, &pairs, current, locality, advisory, now_unix, &rank)?;
+    let (entry_idx, exit_idx) = off_refused_entry(dir, &pairs, pick, refused_entries, &rank);
+    assemble(dir, entry_idx, exit_idx, enable_gso, use_warren_obfuscation)
+}
+
+/// Ranks candidate `(entry, exit)` index pairs, best first; `None` on none.
+type PairRanker<'a> = dyn Fn(&[(usize, usize)]) -> Option<(usize, usize)> + 'a;
+
+/// `pick`, unless its entry refused a dial: then the best entry that did not
+/// refuse, in front of the same exit, or `pick` itself when there is none, for
+/// the supervisor's backoff to redial. The exit never changes here (see
+/// [`RefusedEntries`]).
+fn off_refused_entry(
+    dir: &VerifiedMultiHopDirectory,
+    pairs: &[(usize, usize)],
+    pick: (usize, usize),
+    refused_entries: &[[u8; 16]],
+    rank: &PairRanker<'_>,
+) -> (usize, usize) {
+    let refused = |entry: usize| refused_entries.contains(&dir.nodes[entry].relay.relay_id);
+    if !refused(pick.0) {
+        return pick;
+    }
+    let same_exit: Vec<(usize, usize)> = pairs
+        .iter()
+        .copied()
+        .filter(|&(entry, exit)| exit == pick.1 && !refused(entry))
+        .collect();
+    rank(&same_exit).unwrap_or(pick)
+}
+
+/// The `(entry, exit)` indices of `current` when it is still a valid, healthy
+/// circuit under `pairs`, else a fresh ranked pick (see
+/// [`pick_two_hop_circuit`]). `None` on empty `pairs`.
+fn sticky_or_fresh_pair(
+    dir: &VerifiedMultiHopDirectory,
+    pairs: &[(usize, usize)],
+    current: Option<&MultiHopConfig>,
+    locality: ClientLocality,
+    advisory: Option<&PathQualityAdvisory>,
+    now_unix: u64,
+    rank: &PairRanker<'_>,
+) -> Option<(usize, usize)> {
     let client_continent = locality.continent;
-    let (entry_idx, exit_idx) =
-        pick_pair_path_aware(dir, &pairs, client_continent, advisory, entry_rtt, now_unix)?;
+    let (entry_idx, exit_idx) = rank(pairs)?;
     if let Some(cur) = current {
         let (cur_relay, cur_exit) = circuit_identity(cur);
         if let (Some(ei), Some(xi)) = (relay_index(dir, &cur_relay), exit_index(dir, &cur_exit))
@@ -536,7 +590,7 @@ fn pick_two_hop_circuit_with_rtt(
             let best_local = client_continent.is_some()
                 && continent_of_country(&dir.nodes[entry_idx].country) == client_continent;
             if cur_local || !best_local {
-                return assemble(dir, ei, xi, enable_gso, use_warren_obfuscation);
+                return Some((ei, xi));
             }
             // Only the ENTRY hop has a latency justification: keep the
             // still-valid exit when a local entry can front it, so the
@@ -548,19 +602,12 @@ fn pick_two_hop_circuit_with_rtt(
                     x == xi && continent_of_country(&dir.nodes[e].country) == client_continent
                 })
                 .collect();
-            if let Some((e2, x2)) = pick_pair_path_aware(
-                dir,
-                &keep_exit,
-                client_continent,
-                advisory,
-                entry_rtt,
-                now_unix,
-            ) {
-                return assemble(dir, e2, x2, enable_gso, use_warren_obfuscation);
+            if let Some(upgraded) = rank(&keep_exit) {
+                return Some(upgraded);
             }
         }
     }
-    assemble(dir, entry_idx, exit_idx, enable_gso, use_warren_obfuscation)
+    Some((entry_idx, exit_idx))
 }
 
 /// Whether the advisory carries a FRESH degraded sample for the
@@ -945,23 +992,17 @@ fn select_boot_circuit(
     settings: &mullvad_types::settings::WarrenMultiHopSettings,
     now_unix: u64,
 ) -> Option<MultiHopConfig> {
-    if settings.enabled {
-        pick_two_hop_circuit_with_rtt(
-            dir,
-            &settings.entry_country,
-            &settings.exit_country,
-            true,
-            true,
-            None,
-            &[],
-            detect_client_locality(),
-            None,
-            &RttCache::new(),
-            now_unix,
-        )
-    } else {
-        pick_one_hop_circuit(dir, &settings.exit_country, true, true, None, &[])
-    }
+    select_next_circuit(
+        dir,
+        settings,
+        None,
+        &[],
+        &[],
+        detect_client_locality(),
+        None,
+        &RttCache::new(),
+        now_unix,
+    )
 }
 
 /// Resolves a [`RootPinMode`] to its pin set plus whether multi-hop is
@@ -981,12 +1022,10 @@ fn root_pins_of(mode: &RootPinMode) -> (Vec<String>, bool) {
 /// make-before-break migration was dispatched.
 pub(crate) struct DrainMigrationRequest {
     /// Entry relay (by its directory `relay_id`) that deliberately
-    /// refused a dial. The updater resolves it against the cached
-    /// directory and records the NODE in the avoid-set before the
-    /// selection (the caller cannot: only the updater holds the
-    /// directory that maps a relay id back to a node identity). `None`
-    /// for the drained-exit paths, where the caller already recorded
-    /// the exit.
+    /// refused a dial. The updater records it only when it names the entry
+    /// of the two-hop circuit in use, then moves that circuit to another
+    /// entry for the same exit (see [`RefusedEntries`]). `None` for the
+    /// drained-exit paths, where the caller already recorded the exit.
     pub avoid_entry_relay: Option<[u8; 16]>,
     /// Answered with the pass outcome.
     pub reply: tokio::sync::oneshot::Sender<bool>,
@@ -1030,14 +1069,137 @@ pub(crate) async fn request_drain_migration(
 }
 
 /// Resolve the directory node whose entry relay carries `relay_id` to
-/// its exit identity (the avoid-set key). `None` when the relay is not
-/// in the directory (stale circuit against a refreshed directory): the
-/// pass then simply re-selects without a new exclusion.
+/// its exit identity (the drain avoid-set key). `None` when the relay is
+/// not in the directory (stale circuit against a refreshed directory).
 fn entry_node_exit_id(dir: &VerifiedMultiHopDirectory, relay_id: [u8; 16]) -> Option<[u8; 16]> {
     dir.nodes
         .iter()
         .find(|n| n.relay.relay_id == relay_id)
         .map(|n| *n.exit.exit_id.as_bytes())
+}
+
+/// Entry relays that refused a dial, by directory `relay_id`, each with the
+/// unix second of its last refusal; forgotten after the drain avoid window.
+///
+/// A refusal is not authenticated: a close in the handshake can be forged on
+/// path, and a peer holding only the cover certificate can refuse before the
+/// relay proves its identity. So it only ever moves a two-hop circuit to
+/// another entry for the same exit ([`off_refused_entry`]). Acted on for an
+/// exit, it would let whoever forges it choose the user's exit by
+/// elimination, and a hostile entry, which sees the client's address and
+/// reads the exit id in the setup frame, could then hold both ends of the
+/// circuit. Only the exit's sealed drain advisory moves the exit.
+#[derive(Debug, Default)]
+struct RefusedEntries(Vec<([u8; 16], u64)>);
+
+impl RefusedEntries {
+    /// Record a refusal by `relay_id` when it names the entry of `current`, a
+    /// two-hop circuit, and say whether it was recorded. A refusal naming any
+    /// other node says nothing about the circuit in use (a dial still in
+    /// flight to an entry it already left), and on a one-hop circuit the
+    /// refusing node is the exit: that circuit stays on the supervisor's
+    /// backoff.
+    fn record(
+        &mut self,
+        current: Option<&MultiHopConfig>,
+        relay_id: [u8; 16],
+        now_unix: u64,
+    ) -> bool {
+        if !current.is_some_and(|c| !c.single_node && c.relay.relay_id == relay_id) {
+            return false;
+        }
+        self.0
+            .retain(|&(id, at)| id != relay_id && Self::live(at, now_unix));
+        self.0.push((relay_id, now_unix));
+        true
+    }
+
+    /// The entries refused within the avoid window.
+    fn active(&mut self, now_unix: u64) -> Vec<[u8; 16]> {
+        self.0.retain(|&(_, at)| Self::live(at, now_unix));
+        self.0.iter().map(|&(id, _)| id).collect()
+    }
+
+    fn live(at: u64, now_unix: u64) -> bool {
+        now_unix.saturating_sub(at) < crate::tunnel::WARREN_DRAINED_EXIT_TTL_SECS
+    }
+}
+
+/// Why an updater pass changed the circuit, which decides how the change is
+/// applied.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CircuitChange {
+    /// A node of the previous circuit announced a drain: move gap-free, with
+    /// the same-country exit ladder for a pinned-port conflict.
+    Drained,
+    /// The previous entry refused a dial and the new circuit keeps its exit:
+    /// move gap-free onto the new entry, with no ladder, since every rung of
+    /// it is another exit.
+    RefusedEntry,
+    /// A directory refresh or a settings edit: reconnect.
+    Other,
+}
+
+fn circuit_change(
+    dir: Option<&VerifiedMultiHopDirectory>,
+    prev: Option<&MultiHopConfig>,
+    next: Option<&MultiHopConfig>,
+    drained: &[[u8; 16]],
+    refused_entries: &[[u8; 16]],
+) -> CircuitChange {
+    let Some(prev) = prev else {
+        return CircuitChange::Other;
+    };
+    let (prev_entry, prev_exit) = circuit_identity(prev);
+    let entry_node_drained = dir
+        .and_then(|dir| entry_node_exit_id(dir, prev_entry))
+        .is_some_and(|node| drained.contains(&node));
+    if drained.contains(&prev_exit) || entry_node_drained {
+        return CircuitChange::Drained;
+    }
+    if refused_entries.contains(&prev_entry)
+        && next.is_some_and(|next| circuit_identity(next).1 == prev_exit)
+    {
+        return CircuitChange::RefusedEntry;
+    }
+    CircuitChange::Other
+}
+
+/// The circuit an updater pass selects from the cached directory: two-hop
+/// when multi-hop is on, one-hop otherwise. `drained` holds the exits whose
+/// sealed drain advisory arrived, left out in both roles; `refused_entries`
+/// only ever replaces the entry of a two-hop circuit.
+// The updater's selection surface, flat like the pickers it dispatches to.
+#[expect(clippy::too_many_arguments)]
+fn select_next_circuit(
+    dir: &VerifiedMultiHopDirectory,
+    settings: &mullvad_types::settings::WarrenMultiHopSettings,
+    current: Option<&MultiHopConfig>,
+    drained: &[[u8; 16]],
+    refused_entries: &[[u8; 16]],
+    locality: ClientLocality,
+    advisory: Option<&PathQualityAdvisory>,
+    entry_rtt: &RttCache,
+    now_unix: u64,
+) -> Option<MultiHopConfig> {
+    if settings.enabled {
+        pick_two_hop_circuit_with_rtt(
+            dir,
+            &settings.entry_country,
+            &settings.exit_country,
+            true,
+            true,
+            current,
+            drained,
+            refused_entries,
+            locality,
+            advisory,
+            entry_rtt,
+            now_unix,
+        )
+    } else {
+        pick_one_hop_circuit(dir, &settings.exit_country, true, true, current, drained)
+    }
 }
 
 /// Answer every drain reactor waiting on this updater pass with the
@@ -1211,10 +1373,10 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         let mut drain_migration_rx = cfg.drain_migration_rx.take();
         let mut drain_watch_active = drain_migration_rx.is_some();
         let mut pending_drain_replies: Vec<tokio::sync::oneshot::Sender<bool>> = Vec::new();
-        // Refused entry relays queued for resolution against the cached
-        // directory at the next pass (only the updater can map a relay id
-        // back to a node identity for the avoid-set).
-        let mut pending_avoid_entries: Vec<[u8; 16]> = Vec::new();
+        // Refused entry relays queued for the next pass, which checks each
+        // against the circuit in use before recording it.
+        let mut pending_refused_entries: Vec<[u8; 16]> = Vec::new();
+        let mut refused_entries = RefusedEntries::default();
 
         let mut ticker = tokio::time::interval(REFRESH_INTERVAL);
         ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
@@ -1265,10 +1427,11 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
             // failure): such cases must NEVER clear a good circuit nor
             // fall back to an unsigned local file.
             let mut skip_apply = false;
-            // The drained-exit avoid-set used for this selection, hoisted so the
-            // apply step below can tell a DRAIN-driven circuit change (old exit
-            // now excluded → gap-free migrate) from an ordinary one (reconnect).
+            // The drained exits and refused entries used for this selection,
+            // hoisted so the apply step below can tell why the circuit changed
+            // (see `circuit_change`).
             let mut excluded: Vec<[u8; 16]> = Vec::new();
+            let mut refused: Vec<[u8; 16]> = Vec::new();
             let desired: Option<MultiHopConfig> = if unconfigured {
                 None
             } else {
@@ -1374,19 +1537,20 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                 // the daemon blocks all traffic.
                 match cached_dir.as_ref() {
                     Some(dir) => {
-                        // Dial-refusal exclusions: resolve each refused entry
-                        // relay to its node and record it in the avoid-set
-                        // BEFORE the snapshot below, so this very pass already
-                        // excludes it. An unresolvable relay (stale circuit vs
-                        // a refreshed directory) is dropped: re-selection alone
-                        // then moves off it.
-                        for relay_id in pending_avoid_entries.drain(..) {
-                            if let Some(exit_id) = entry_node_exit_id(dir, relay_id) {
-                                cfg.parameters_generator
-                                    .record_warren_drained_exit(exit_id)
-                                    .await;
+                        // Dial refusals queued since the last pass, recorded
+                        // before the selection below so this very pass already
+                        // moves off a refusing entry.
+                        for relay_id in pending_refused_entries.drain(..) {
+                            if !refused_entries.record(last_circuit.as_ref(), relay_id, now_unix())
+                            {
+                                log::info!(
+                                    "Warren multi-hop: a dial refusal that does not name the \
+                                     entry of the two-hop circuit in use; staying on the \
+                                     supervisor's backoff"
+                                );
                             }
                         }
+                        refused = refused_entries.active(now_unix());
                         // ADR 36: exits that signalled a maintenance drain (via
                         // the in-band advisory, recorded by the drain reactor)
                         // are excluded from this selection so a drain-triggered
@@ -1402,30 +1566,17 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         // tunnel measured something, which keeps this pick
                         // bit-identical to the no-store selection.
                         let entry_rtt = cfg.parameters_generator.warren_entry_rtt_snapshot().await;
-                        let c = if settings.enabled {
-                            pick_two_hop_circuit_with_rtt(
-                                dir,
-                                &settings.entry_country,
-                                &settings.exit_country,
-                                true,
-                                true,
-                                last_circuit.as_ref(),
-                                &excluded,
-                                detect_client_locality(),
-                                cached_advisory.as_ref(),
-                                &entry_rtt,
-                                now_unix(),
-                            )
-                        } else {
-                            pick_one_hop_circuit(
-                                dir,
-                                &settings.exit_country,
-                                true,
-                                true,
-                                last_circuit.as_ref(),
-                                &excluded,
-                            )
-                        };
+                        let c = select_next_circuit(
+                            dir,
+                            &settings,
+                            last_circuit.as_ref(),
+                            &excluded,
+                            &refused,
+                            detect_client_locality(),
+                            cached_advisory.as_ref(),
+                            &entry_rtt,
+                            now_unix(),
+                        );
                         if c.is_none() {
                             log::warn!(
                                 "Warren multi-hop ({}) but no valid circuit in directory \
@@ -1491,30 +1642,27 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     let prev_circuit = last_circuit.clone();
                     last_circuit = desired.clone();
 
-                    // ADR 36 (Option A) GAP-FREE cross-exit migration: if the
-                    // circuit changed BECAUSE the previously-active exit is now
-                    // in the avoid-set (a maintenance drain), and a new circuit
-                    // is available, swap the LIVE supervisor onto it
-                    // (make-before-break) instead of a reconnect, so the tunnel
-                    // never drops. Any other change (directory refresh, settings
-                    // edit, no live supervisor) keeps the break-before-make
-                    // reconnect.
-                    // Either hop of the previous circuit landing in the
-                    // avoid-set makes the change drain-driven: a refused
-                    // ENTRY (dial refusal) deserves the same gap-free
-                    // migrate as a draining exit, not a full rebuild.
-                    let drain_driven = prev_circuit.as_ref().is_some_and(|c| {
-                        excluded.contains(c.exit.exit_id.as_bytes())
-                            || cached_dir
-                                .as_ref()
-                                .and_then(|dir| entry_node_exit_id(dir, c.relay.relay_id))
-                                .is_some_and(|entry| excluded.contains(&entry))
-                    });
-                    if drain_driven && let Some(notify) = cfg.on_maintenance_migration.as_ref() {
+                    // ADR 36 (Option A) GAP-FREE migration: when the circuit
+                    // changed because a node of the previous one is leaving
+                    // (a drain, or a refusing entry), swap the LIVE supervisor
+                    // onto the new circuit (make-before-break) instead of a
+                    // reconnect, so the tunnel never drops. Any other change
+                    // (directory refresh, settings edit, no live supervisor)
+                    // keeps the break-before-make reconnect.
+                    let change = circuit_change(
+                        cached_dir.as_ref(),
+                        prev_circuit.as_ref(),
+                        desired.as_ref(),
+                        &excluded,
+                        &refused,
+                    );
+                    if change != CircuitChange::Other
+                        && let Some(notify) = cfg.on_maintenance_migration.as_ref()
+                    {
                         notify();
                     }
-                    let migrated = match (drain_driven, desired.as_ref()) {
-                        (true, Some(new_cfg)) => {
+                    let migrated = match (change, desired.as_ref()) {
+                        (CircuitChange::Drained, Some(new_cfg)) => {
                             // docs/59 D2: arm the candidate ladder BEFORE
                             // dispatching the migration, so a pre-swap
                             // rejection of this primary candidate can
@@ -1539,6 +1687,14 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 .try_warren_migrate(talpid_warren_tunnel::migration_target(new_cfg))
                                 .await
                         }
+                        (CircuitChange::RefusedEntry, Some(new_cfg)) => {
+                            cfg.parameters_generator
+                                .set_warren_migration_candidates(Vec::new())
+                                .await;
+                            cfg.parameters_generator
+                                .try_warren_migrate(talpid_warren_tunnel::migration_target(new_cfg))
+                                .await
+                        }
                         _ => {
                             // Any non-drain circuit change invalidates a
                             // previously-armed ladder.
@@ -1551,8 +1707,13 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     if migrated {
                         pass_migrated = true;
                         log::info!(
-                            "Warren multi-hop: gap-free cross-exit migration off the drained \
-                             exit (make-before-break, no reconnect)"
+                            "Warren multi-hop: gap-free migration off {} (make-before-break, \
+                             no reconnect)",
+                            if change == CircuitChange::RefusedEntry {
+                                "the refusing entry, same exit"
+                            } else {
+                                "the drained node"
+                            }
                         );
                         // Doc 59 Lot 1: the tunnel survived the exit swap, so
                         // the NAT-PMP refresh loops were NOT restarted and
@@ -1658,10 +1819,10 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                             // instantly (the avoid-set already holds the
                             // draining exit; a fetch would burn the reactor's
                             // deadline budget) and answer after apply. A
-                            // refused entry relay rides along for resolution
-                            // at the top of the pass.
+                            // refused entry relay rides along, checked at the
+                            // top of the pass.
                             if let Some(relay_id) = request.avoid_entry_relay {
-                                pending_avoid_entries.push(relay_id);
+                                pending_refused_entries.push(relay_id);
                             }
                             pending_drain_replies.push(request.reply);
                             refresh_due = false;
@@ -2297,6 +2458,301 @@ mod tests {
             repicked.exit.exit_id.as_bytes(),
             &de_exit,
             "a drained current exit must not be kept sticky"
+        );
+    }
+
+    fn multi_hop_settings(enabled: bool) -> mullvad_types::settings::WarrenMultiHopSettings {
+        mullvad_types::settings::WarrenMultiHopSettings {
+            enabled,
+            entry_country: String::new(),
+            exit_country: String::new(),
+            ..Default::default()
+        }
+    }
+
+    /// Which hop of the circuit in use an updater pass replaced.
+    #[derive(Debug, PartialEq, Eq)]
+    enum Moved {
+        Nothing,
+        Entry,
+        Exit,
+    }
+
+    fn moved(from: &MultiHopConfig, to: &MultiHopConfig) -> Moved {
+        let (from_entry, from_exit) = circuit_identity(from);
+        let (to_entry, to_exit) = circuit_identity(to);
+        if to_exit != from_exit {
+            Moved::Exit
+        } else if to_entry != from_entry {
+            Moved::Entry
+        } else {
+            Moved::Nothing
+        }
+    }
+
+    /// A refusal, then the pass the updater runs on it, from the circuit
+    /// `current` under the multi-hop toggle `enabled`.
+    fn after_refusal(
+        d: &VerifiedMultiHopDirectory,
+        enabled: bool,
+        current: &MultiHopConfig,
+        refused_relay: [u8; 16],
+    ) -> Moved {
+        let mut refused = RefusedEntries::default();
+        refused.record(Some(current), refused_relay, NOW);
+        let next = select_next_circuit(
+            d,
+            &multi_hop_settings(enabled),
+            Some(current),
+            &[],
+            &refused.active(NOW),
+            ClientLocality::default(),
+            None,
+            &RttCache::new(),
+            NOW,
+        )
+        .expect("a circuit");
+        moved(current, &next)
+    }
+
+    #[test]
+    fn only_the_sealed_drain_advisory_moves_the_exit() {
+        // A refusal is not authenticated (a close in the handshake can be
+        // forged on path, a cover-certificate peer can refuse before the
+        // relay proves itself), while the drain advisory is sealed by the
+        // exit's session. The weights make every fresh pick land on another
+        // exit than FR, so a refusal that re-selected freely would show here.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "fr", 0, 1),
+            node(&op, 3, "se", 0, 50),
+            node(&op, 4, "nl", 0, 40),
+        ]);
+        let two_hop = assemble(&d, 0, 1, true, true).expect("de -> fr");
+        let one_hop = assemble(&d, 1, 1, true, true).expect("fr");
+        let relay = |i: usize| d.nodes[i].relay.relay_id;
+        let exit = |i: usize| *d.nodes[i].exit.exit_id.as_bytes();
+        let after_drain = |enabled: bool, current: &MultiHopConfig, draining: [u8; 16]| {
+            let next = select_next_circuit(
+                &d,
+                &multi_hop_settings(enabled),
+                Some(current),
+                &[draining],
+                &[],
+                ClientLocality::default(),
+                None,
+                &RttCache::new(),
+                NOW,
+            )
+            .expect("a circuit");
+            moved(current, &next)
+        };
+
+        assert_eq!(
+            after_refusal(&d, true, &two_hop, relay(0)),
+            Moved::Entry,
+            "two-hop, refused by its entry: another entry for the same exit"
+        );
+        assert_eq!(
+            after_refusal(&d, true, &two_hop, relay(2)),
+            Moved::Nothing,
+            "two-hop, refused by a node the circuit does not use"
+        );
+        assert_eq!(
+            after_refusal(&d, false, &one_hop, relay(1)),
+            Moved::Nothing,
+            "one-hop, refused by its node: the exit stays, on its backoff"
+        );
+        let after_toggle = select_next_circuit(
+            &d,
+            &multi_hop_settings(false),
+            Some(&one_hop),
+            &[],
+            &[relay(1)],
+            ClientLocality::default(),
+            None,
+            &RttCache::new(),
+            NOW,
+        )
+        .expect("a circuit");
+        assert_eq!(
+            moved(&one_hop, &after_toggle),
+            Moved::Nothing,
+            "one-hop, its node refused as an entry before multi-hop was turned off"
+        );
+        assert_eq!(
+            after_drain(true, &two_hop, exit(1)),
+            Moved::Exit,
+            "two-hop, the exit announces a drain"
+        );
+        assert_eq!(
+            after_drain(false, &one_hop, exit(1)),
+            Moved::Exit,
+            "one-hop, the node announces a drain"
+        );
+    }
+
+    #[test]
+    fn a_refused_entry_with_no_other_entry_for_its_exit_keeps_the_circuit() {
+        // Only DE can front the FR exit: SE shares its AS, the second FR node
+        // its country. Other circuits exist (SE -> FR2), so leaving the exit
+        // is possible, and a refusal must not do it.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 100, 100),
+            node(&op, 2, "fr", 200, 100),
+            node(&op, 3, "se", 200, 100),
+            node(&op, 4, "fr", 300, 100),
+        ]);
+        let current = assemble(&d, 0, 1, true, true).expect("de -> fr");
+
+        assert_eq!(
+            after_refusal(&d, true, &current, d.nodes[0].relay.relay_id),
+            Moved::Nothing
+        );
+    }
+
+    #[test]
+    fn a_refused_entry_never_changes_the_exit_of_a_fresh_pick() {
+        // A fresh pick happens when something else invalidated the circuit
+        // (here, none yet). The refused node is the entry of the best pair;
+        // whatever replaces it, the exit is the one the pick made without the
+        // refusal.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "fr", 0, 90),
+            node(&op, 3, "se", 0, 1),
+            node(&op, 4, "nl", 0, 2),
+        ]);
+        let pick = |refused: &[[u8; 16]]| {
+            select_next_circuit(
+                &d,
+                &multi_hop_settings(true),
+                None,
+                &[],
+                refused,
+                ClientLocality::default(),
+                None,
+                &RttCache::new(),
+                NOW,
+            )
+            .expect("a circuit")
+        };
+        let unrefused = pick(&[]);
+
+        let refused = pick(&[unrefused.relay.relay_id]);
+
+        assert_eq!(refused.exit.exit_id, unrefused.exit.exit_id);
+        assert_ne!(refused.relay.relay_id, unrefused.relay.relay_id);
+    }
+
+    #[test]
+    fn a_refusal_is_recorded_only_for_the_entry_of_the_two_hop_circuit_in_use() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "fr", 0, 100),
+            node(&op, 3, "se", 0, 100),
+        ]);
+        let two_hop = assemble(&d, 0, 1, true, true).expect("de -> fr");
+        let one_hop = assemble(&d, 1, 1, true, true).expect("fr");
+        let mut refused = RefusedEntries::default();
+
+        assert!(!refused.record(None, [1; 16], NOW), "no circuit in use");
+        assert!(
+            !refused.record(Some(&two_hop), [3; 16], NOW),
+            "a node the circuit does not use"
+        );
+        assert!(
+            !refused.record(Some(&two_hop), [2; 16], NOW),
+            "the exit of a two-hop circuit never refuses a dial"
+        );
+        assert!(
+            !refused.record(Some(&one_hop), [2; 16], NOW),
+            "the node of a one-hop circuit is its exit"
+        );
+        assert!(refused.active(NOW).is_empty());
+
+        assert!(refused.record(Some(&two_hop), [1; 16], NOW));
+        assert_eq!(refused.active(NOW), vec![[1; 16]]);
+    }
+
+    #[test]
+    fn a_refused_entry_is_held_once_for_the_drain_avoid_window() {
+        let op = op_key();
+        let d = dir(vec![node(&op, 1, "de", 0, 100), node(&op, 2, "fr", 0, 100)]);
+        let current = assemble(&d, 0, 1, true, true).expect("de -> fr");
+        let ttl = crate::tunnel::WARREN_DRAINED_EXIT_TTL_SECS;
+        let mut refused = RefusedEntries::default();
+
+        // The supervisor redials a refusing entry on its backoff; each
+        // refusal renews the window instead of adding a copy.
+        for second in 0..3 {
+            refused.record(Some(&current), [1; 16], NOW + second);
+        }
+
+        assert_eq!(
+            refused.active(NOW + 2),
+            vec![[1; 16]],
+            "one entry per relay"
+        );
+        assert_eq!(
+            refused.active(NOW + 2 + ttl - 1),
+            vec![[1; 16]],
+            "the window runs from the last refusal"
+        );
+        assert!(refused.active(NOW + 2 + ttl).is_empty());
+    }
+
+    #[test]
+    fn a_circuit_change_is_applied_by_its_cause() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "de", 0, 100),
+            node(&op, 2, "fr", 0, 100),
+            node(&op, 3, "se", 0, 100),
+            node(&op, 4, "nl", 0, 100),
+        ]);
+        let circuit = |e: usize, x: usize| assemble(&d, e, x, true, true).expect("circuit");
+        let de_fr = circuit(0, 1);
+        let de_exit = *d.nodes[0].exit.exit_id.as_bytes();
+        let fr_exit = *d.nodes[1].exit.exit_id.as_bytes();
+        let de_relay = d.nodes[0].relay.relay_id;
+        let change = |next: &MultiHopConfig, drained: &[[u8; 16]], refused: &[[u8; 16]]| {
+            circuit_change(Some(&d), Some(&de_fr), Some(next), drained, refused)
+        };
+
+        assert_eq!(
+            change(&circuit(2, 1), &[], &[de_relay]),
+            CircuitChange::RefusedEntry,
+            "the refused entry replaced in front of the same exit"
+        );
+        assert_eq!(
+            change(&circuit(2, 3), &[], &[de_relay]),
+            CircuitChange::Other,
+            "a new exit is never a refusal's doing"
+        );
+        assert_eq!(
+            change(&circuit(0, 2), &[fr_exit], &[]),
+            CircuitChange::Drained,
+            "the exit announced a drain"
+        );
+        assert_eq!(
+            change(&circuit(2, 1), &[de_exit], &[]),
+            CircuitChange::Drained,
+            "the entry node announced a drain as an exit"
+        );
+        assert_eq!(
+            change(&circuit(2, 3), &[], &[]),
+            CircuitChange::Other,
+            "a directory refresh or a settings edit"
+        );
+        assert_eq!(
+            circuit_change(Some(&d), None, Some(&de_fr), &[], &[de_relay]),
+            CircuitChange::Other,
+            "no circuit before"
         );
     }
 
@@ -3080,6 +3536,7 @@ mod tests {
             false,
             None,
             &[],
+            &[],
             eu_locality(),
             None,
             &store,
@@ -3121,6 +3578,7 @@ mod tests {
                 true,
                 false,
                 None,
+                &[],
                 &[],
                 eu_locality(),
                 None,

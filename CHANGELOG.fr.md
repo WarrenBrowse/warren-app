@@ -87,6 +87,12 @@ par l'application, gardez-le tel quel.
   attente de paiement n'est plus récupéré automatiquement.
 - Quand le tunnel est reconstruit, ne redemander son ancienne adresse interne qu'à la sortie qui l'a
   attribuée.
+- [Windows, macOS, Linux] Répondre à un serveur qui refuse la connexion en passant une connexion
+  multihop sur un autre serveur d'entrée pour la même sortie, et en réessayant une connexion à un
+  seul serveur sur ce même serveur. N'importe qui sur le chemin réseau peut forger un tel refus, et
+  s'en servir pour changer de sortie lui permettait d'amener la connexion, refus après refus, sur
+  la sortie de son choix. La sortie change toujours dès qu'elle annonce elle-même une maintenance,
+  à l'intérieur de la connexion chiffrée.
 
 ## [1.1.31] - 2026-09-21
 ### Ajouté

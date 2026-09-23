@@ -84,6 +84,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   așteptarea plății nu mai este preluată automat.
 - Când tunelul este reconstruit, cere înapoi adresa sa internă anterioară doar de la ieșirea care a
   atribuit-o.
+- [Windows, macOS, Linux] Răspunde unui server care refuză conexiunea mutând o conexiune multihop
+  pe alt server de intrare pentru aceeași ieșire și reîncercând o conexiune printr-un singur server
+  pe același server. Oricine se află pe calea de rețea poate falsifica un astfel de refuz, iar
+  folosirea lui pentru a schimba ieșirea îi permitea să ducă conexiunea, refuz după refuz, pe
+  ieșirea aleasă de el. Ieșirea se schimbă în continuare de îndată ce anunță ea însăși o
+  mentenanță, în interiorul conexiunii criptate.
 
 ## [1.1.31] - 2026-09-21
 ### Adăugat

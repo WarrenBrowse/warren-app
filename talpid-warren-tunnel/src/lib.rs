@@ -98,10 +98,10 @@ pub struct WarrenRefusedEntry(pub [u8; 16]);
 
 /// ADR 36 dial-refusal path: async daemon hook invoked (rate limited by
 /// [`WARREN_DIAL_REFUSAL_COOLDOWN`]) when the supervisor's dial is
-/// deliberately refused by a drained node. The daemon records the
-/// refusing node in its avoid-set and re-selects a circuit that excludes
-/// it (same country when one is pinned, any otherwise), retargeting the
-/// live supervisor. Output: whether a retarget was dispatched.
+/// deliberately refused by a drained node. The refusal is not
+/// authenticated, so the daemon only ever retargets the live supervisor
+/// onto another entry for the same exit, and leaves a one-hop circuit on
+/// the supervisor's backoff. Output: whether a retarget was dispatched.
 pub type WarrenDialRefused = std::sync::Arc<
     dyn Fn(WarrenRefusedEntry) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>
         + Send
@@ -176,11 +176,13 @@ fn dead_carrier_blames_the_circuit(
     routes.is_some_and(|r| r.bound == CarrierRoute::OffTunnel || r.plain == CarrierRoute::OffTunnel)
 }
 
-/// Act on [`dead_carrier_blames_the_circuit`]: ask the daemon to exclude this
-/// entry relay and retarget onto another circuit, through the same hook and
-/// the same process-wide cooldown a drained node's refusal uses (the two
-/// dispatch the same re-selection, and neither wants a second pass while the
-/// first is in flight).
+/// Act on [`dead_carrier_blames_the_circuit`]: ask the daemon to move off this
+/// entry relay, through the same hook and the same process-wide cooldown a
+/// drained node's refusal uses (the two dispatch the same re-selection, and
+/// neither wants a second pass while the first is in flight). The verdict is
+/// no more authenticated than a refusal (anyone on the path can drop the
+/// replies), so it gets the same answer: another entry for the same exit, and
+/// on a one-hop circuit, where the entry is the exit, no move.
 #[cfg(target_os = "macos")]
 async fn warren_react_to_dead_carrier(
     outcome: carrier_egress_guard::GuardOutcome,
@@ -208,7 +210,7 @@ async fn warren_react_to_dead_carrier(
         if retargeted {
             "dispatched (the next attempt avoids this entry relay)"
         } else {
-            "unavailable (no alternative circuit); staying on this one"
+            "unavailable (one-hop circuit, or no other entry for this exit); staying on this one"
         }
     );
 }
@@ -487,11 +489,12 @@ pub struct WarrenTunnelParameters {
     /// status surface.
     pub on_egress_verdict: Option<std::sync::Arc<dyn Fn(bool) + Send + Sync>>,
 
-    /// ADR 36 dial-refusal path: async daemon hook invoked when a dial is
-    /// deliberately refused by a drained node (entry `CONNECTION_REFUSED`
-    /// or exit drain close), so the daemon excludes the refusing node and
-    /// retargets the supervisor instead of letting it hammer the same
-    /// node until the drain lifts. Rate limited process-wide by
+    /// ADR 36 dial-refusal path: async daemon hook invoked when the node a
+    /// dial terminates at deliberately refuses it (`CONNECTION_REFUSED` or a
+    /// drain close), so the daemon moves a two-hop circuit to another entry
+    /// for the same exit instead of redialing the refusing entry until the
+    /// drain lifts. A one-hop circuit, whose refusing node is the exit, stays
+    /// on the backoff. Rate limited process-wide by
     /// [`WARREN_DIAL_REFUSAL_COOLDOWN`]. `None` disables the reaction
     /// (refusals then retry on backoff until the ambient relay-list
     /// refresh removes the node). Multi-hop only.
@@ -1469,9 +1472,9 @@ impl WarrenTunnelMonitor {
             // backoff (0.3-2 s ceiling) hammers it until the drain lifts
             // (observed: 5160 refusals in 19 minutes during a fleet
             // rollout) and the user's connect stalls behind the retry
-            // loop. The daemon hook excludes the refusing node and
-            // retargets the live supervisor; the cooldown keeps one
-            // reaction per rollout wave instead of one per redial.
+            // loop. The daemon hook moves a two-hop circuit off a refusing
+            // entry, for the same exit; the cooldown keeps one reaction per
+            // rollout wave instead of one per redial.
             on_dial_refused: params.warren_dial_refused.clone().map(|hook| {
                 Arc::new(
                     move |_hop: warrenguard_transport::multihop::DialRefusedHop,
@@ -1493,7 +1496,8 @@ impl WarrenTunnelMonitor {
                                 if retargeted {
                                     "dispatched (supervisor migrates on its next attempt)"
                                 } else {
-                                    "unavailable (no alternative circuit); staying on backoff"
+                                    "unavailable (one-hop circuit, or no other entry for \
+                                     this exit); staying on backoff"
                                 }
                             );
                         });

@@ -671,12 +671,13 @@ impl ParametersGenerator {
         crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref(), None).await
     }
 
-    /// ADR 36 dial-refusal path, invoked when the ENTRY relay of the
-    /// current circuit deliberately refuses a dial (drained node). The
-    /// caller only knows the relay id; the updater resolves it against
-    /// the cached directory, records the node in the avoid-set and runs
-    /// an immediate re-selection pass. `true` = a retarget was
-    /// dispatched onto a circuit that avoids the refusing node.
+    /// ADR 36 dial-refusal path, invoked when the node a dial terminates at
+    /// deliberately refuses it (a drained node). The updater records it only
+    /// when it names the entry of the two-hop circuit in use and runs an
+    /// immediate pass that fronts the SAME exit with another entry: the
+    /// refusal is not authenticated, so it never moves the exit, and a
+    /// one-hop circuit stays on the supervisor's backoff. `true` = a retarget
+    /// onto another entry was dispatched.
     pub async fn migrate_off_refused_entry(&self, relay_id: [u8; 16]) -> bool {
         let tx = self.0.lock().await.warren_drain_migration_tx.clone();
         crate::warren_multi_hop_directory::request_drain_migration(tx.as_ref(), Some(relay_id))
@@ -1411,10 +1412,9 @@ impl ParametersGenerator {
         // ADR 36 dial-refusal path: a drained node deliberately refuses
         // the dial itself (CONNECTION_REFUSED or a drain close from the node
         // the connection terminates at), which the in-band drain reactor
-        // never sees (no session exists yet). React like a drain: exclude
-        // the refusing node and re-select, honoring the pinned exit country
-        // (the exclusion narrows the candidate set; the country filter stays
-        // structural in the directory selection).
+        // never sees (no session exists yet). The refusal is unauthenticated,
+        // so it may only move a two-hop circuit to another entry for the same
+        // exit; the sealed drain advisory above is what moves an exit.
         let dial_refused_gen = self.clone();
         params.warren_dial_refused = Some(Arc::new(
             move |refused: talpid_warren_tunnel::WarrenRefusedEntry| {
