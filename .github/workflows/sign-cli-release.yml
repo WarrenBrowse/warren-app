@@ -1,0 +1,112 @@
+---
+# Signs the SHA256SUMS of a warren-cli release that is ALREADY published.
+#
+# The installers refuse any release whose checksum list carries no signature
+# by the Warren update key. release-daemon.yml signs every new release before
+# it publishes it; this is for a release that went out before that, so the
+# installers can resolve it without cutting a new one.
+#
+# What gets signed is the list the release run itself logged when it
+# published the release, never merely what GitHub holds today: anyone able to
+# write warren-cli releases could have rewritten an asset and the list
+# together since, and a check of one against the other would pass. So the
+# published SHA256SUMS must equal the list in the publishing run's log (Actions
+# keeps logs 90 days; an older release is rebuilt instead), every asset must
+# match it, and the release must carry no file it does not name.
+#
+# Needs WARREN_UPDATE_SIGNING_KEY and WARREN_CLI_RELEASE_TOKEN, as
+# release-daemon.yml.
+
+name: sign-cli-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "warren-cli release tag to sign (daemon-v1.2.3 or daemon-beta-v1.2.3)"
+        type: string
+        required: true
+      run-id:
+        description: "id of the warren-app run that published it (release.yml or release-daemon.yml)"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  sign:
+    name: Sign ${{ inputs.tag }}
+    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+      CLI_REPO: WarrenBrowse/warren-cli
+      CLI_TAG: ${{ inputs.tag }}
+      RUN_ID: ${{ inputs.run-id }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: The tag names a published headless release
+        run: |
+          set -euo pipefail
+          [[ "$CLI_TAG" =~ ^daemon-(beta-)?v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+            || { echo "::error::$CLI_TAG is not a daemon-v* or daemon-beta-v* release tag"; exit 1; }
+          draft="$(gh release view "$CLI_TAG" --repo "$CLI_REPO" --json isDraft --jq .isDraft)"
+          [ "$draft" = false ] || { echo "::error::$CLI_TAG is a draft; release-daemon.yml signs those itself"; exit 1; }
+
+      - name: The checksum list the publishing run logged
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::run-id must be a run number"; exit 1; }
+          ref="$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json headBranch --jq .headBranch)"
+          case "$ref" in
+            daemon-*) built="$ref" ;;
+            beta-v* | v*) built="daemon-$ref" ;;
+            *) built="" ;;
+          esac
+          [ "$built" = "$CLI_TAG" ] || { echo "::error::run $RUN_ID published ${built:-no headless release}, not $CLI_TAG"; exit 1; }
+          job="$(gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --json jobs --jq \
+            '.jobs[] | select((.name | endswith("Publish the warren-cli release")) and .conclusion == "success") | .databaseId' \
+            | head -n1)"
+          [ -n "$job" ] || { echo "::error::run $RUN_ID has no successful warren-cli publish job"; exit 1; }
+          gh run view "$RUN_ID" --repo "$GITHUB_REPOSITORY" --job "$job" --log \
+            | sed -nE 's/^.*[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9:.]+Z ([0-9a-f]{64}  [^ /]+)$/\1/p' \
+            | sort -u -k2 > logged-sums
+          [ -s logged-sums ] || { echo "::error::the log of run $RUN_ID holds no checksum list (older than 90 days?)"; exit 1; }
+          cat logged-sums
+
+      - name: Download the release
+        run: |
+          mkdir -p release-files
+          gh release download "$CLI_TAG" --repo "$CLI_REPO" --dir release-files --pattern '*'
+          ls -lh release-files
+
+      - name: The release is what its run published, and nothing else
+        working-directory: release-files
+        run: |
+          set -euo pipefail
+          [ -s SHA256SUMS ] || { echo "::error::$CLI_TAG carries no SHA256SUMS"; exit 1; }
+          if ! diff <(sort -k2 SHA256SUMS) ../logged-sums; then
+            echo "::error::the published SHA256SUMS is not the list run $RUN_ID logged"
+            exit 1
+          fi
+          sha256sum --strict -c SHA256SUMS
+          listed="$(awk '{ sub(/^\*/, "", $2); print $2 }' SHA256SUMS | sort)"
+          carried="$(find . -maxdepth 1 -type f ! -name 'SHA256SUMS' ! -name 'SHA256SUMS.sshsig' -printf '%f\n' | sort)"
+          if [ "$listed" != "$carried" ]; then
+            echo "::error::the release and its SHA256SUMS disagree on what the release contains"
+            diff <(printf '%s\n' "$listed") <(printf '%s\n' "$carried") || true
+            exit 1
+          fi
+
+      - name: Sign the checksum list
+        env:
+          WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+        run: bash ci/sign-headless-sums.sh release-files/SHA256SUMS
+
+      - name: Attach the signature
+        run: gh release upload "$CLI_TAG" release-files/SHA256SUMS.sshsig --repo "$CLI_REPO" --clobber

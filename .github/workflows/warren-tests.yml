@@ -96,6 +96,12 @@ jobs:
       - name: Release-notes reader (shell tests)
         run: bash ci/test-extract-changelog-section.sh
 
+      # Every warren-cli installer refuses a release this signer did not sign,
+      # and the release pipeline fails rather than publish unsigned, so a
+      # regression here stops the CLI from shipping at all.
+      - name: CLI checksum-list signer (shell tests)
+        run: bash ci/test-sign-headless-sums.sh
+
       - name: install cargo-nextest
         uses: taiki-e/install-action@v2
         with:

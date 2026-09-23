@@ -5,9 +5,11 @@
 # stripped per `parse_keys` in `src/defaults.rs`.
 #
 # This key can ship an installer to every user, so it is the highest-
-# privilege key in the system. It is dedicated to app updates and was
-# generated/kept OFFLINE. Do NOT reuse the relay/admin signing key
-# (online, and its lineage was burned once:
+# privilege key in the system. It signs the software we ship and nothing
+# else (these app update manifests, and the SHA256SUMS of every warren-cli
+# release through ci/sign-headless-sums.sh), and was generated/kept
+# OFFLINE. Do NOT reuse the relay/admin signing key (online, and its
+# lineage was burned once:
 # `admin/admin-signing.key.BURNED-committed-do-not-use`).
 #
 # The matching Ed25519 secret is stored OFFLINE by poka and as the CI
@@ -17,5 +19,7 @@
 # others (fail-closed).
 #
 # Key rotation: add the new pubkey on its own line (both are then trusted
-# during the overlap), ship a release, then drop the retired line.
+# during the overlap), ship a release, then drop the retired line. The
+# warren-cli installers pin this key too; move their pins before the first
+# CLI release signed by a new key.
 0f684bb245acd5a684c467ccc9b92bb5daa2252ef12e89a68583b806ea2560a0

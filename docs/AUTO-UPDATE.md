@@ -101,7 +101,11 @@ scripts/release/set-update-min-version.sh --beta 1.0.0   # the beta channel's fl
 
 The update key can ship a privileged installer to every user, so it is the
 **highest-privilege key in the system**. It is a **dedicated, offline-generated
-ed25519 key** used for nothing else. Do NOT reuse the relay/admin signing key
+ed25519 key** that signs software we ship and nothing else: these update
+manifests, and the `SHA256SUMS` of every headless (warren-cli) release, which
+the warren-cli installers refuse to install without (`ci/sign-headless-sums.sh`,
+an SSH signature in the namespace `warren-cli-sha256sums/1`, so neither kind of
+signature can pass for the other). Do NOT reuse the relay/admin signing key
 (it is online and its lineage was burned once:
 `admin/admin-signing.key.BURNED-committed-do-not-use`).
 
@@ -113,7 +117,9 @@ ed25519 key** used for nothing else. Do NOT reuse the relay/admin signing key
   `WARREN_UPDATE_SIGNING_KEY`.
 - **Rotation:** add the new pubkey on its own line (both trusted during the
   overlap), ship a release so clients pick up the new trust file, then drop the
-  retired line.
+  retired line. The warren-cli installers pin the key as well
+  (`scripts/install.sh`, `windows/install-windows.ps1`): move their pins before
+  the first CLI release signed by the new key, or every CLI install refuses it.
 
 ## Hosting
 

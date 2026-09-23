@@ -9,7 +9,12 @@
 #   Linux generic  warren-headless[-<env>]-<ver>-linux-{x86_64,aarch64}.tar.gz
 #   macOS          warren-headless[-<env>]-<ver>-macos-universal.tar.gz
 #   Windows        warren-headless[-<env>]-<ver>-windows-x64.zip
-#   SHA256SUMS
+#   SHA256SUMS, SHA256SUMS.sshsig
+#
+# The installers refuse a release whose SHA256SUMS does not carry a signature
+# by the Warren update key (ci/sign-headless-sums.sh), so the finalise job
+# signs it before the release is published, and fails rather than publish it
+# unsigned. sign-cli-release.yml signs a release that is already out.
 #
 # The generic Linux tarball is what makes "any Linux" true: the .deb and .rpm
 # reach Debian/Ubuntu and Fedora/RHEL/SUSE families, and the tarball covers
@@ -32,6 +37,7 @@
 # Required secrets:
 #   WARREN_CORE_RO_TOKEN       read access to the sibling repos, as release.yml
 #   WARREN_CLI_RELEASE_TOKEN   contents:write on WarrenBrowse/warren-cli
+#   WARREN_UPDATE_SIGNING_KEY  the Warren update key, signs SHA256SUMS
 
 name: release-daemon
 
@@ -142,6 +148,8 @@ jobs:
   linux:
     name: Linux x86_64 (.deb / .rpm / tarball)
     needs: [resolve]
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
     timeout-minutes: 90
     # clang avoids the intermittent gcc cc1 SIGSEGV under x86_64-Rosetta (same as release.yml).
@@ -202,6 +210,17 @@ jobs:
           cp dist/warren-vpn-daemon* release-assets/
           bash ci/build-headless-bundle.sh linux "${WARREN_VERSION:-0.0.0}" warren-cli
           ls -lh release-assets
+      # The checksums the signed list is made from, computed here where the
+      # files were built rather than read back from the draft, which anyone
+      # able to write warren-cli releases could change before finalise signs.
+      - name: Checksums of what this job built
+        id: sums
+        run: |
+          {
+            echo 'sums<<SUMS_EOF'
+            (cd release-assets && sha256sum -- *)
+            echo 'SUMS_EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         # Published to the public-facing distribution repo (warren-cli), not
         # this one, so the public install one-liner only needs warren-cli to be
@@ -225,6 +244,8 @@ jobs:
   linux-arm64:
     name: Linux arm64 (.deb / .rpm / tarball)
     needs: [resolve]
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     # Native aarch64 pool on the same Mac, so no Rosetta: no CC=clang against
     # the emulated gcc cc1 crash and no whole-build retry on a crash signature.
     # This job is what makes the one-line installer work on an ARM server
@@ -284,6 +305,17 @@ jobs:
           ls release-assets/warren-vpn-daemon*_aarch64.rpm >/dev/null
           ls release-assets/warren-headless*-linux-aarch64.tar.gz >/dev/null
           readelf -h "${CARGO_TARGET_DIR:-target}/release/warren-daemon" | grep -q AArch64
+      # The checksums the signed list is made from, computed here where the
+      # files were built rather than read back from the draft, which anyone
+      # able to write warren-cli releases could change before finalise signs.
+      - name: Checksums of what this job built
+        id: sums
+        run: |
+          {
+            echo 'sums<<SUMS_EOF'
+            (cd release-assets && sha256sum -- *)
+            echo 'SUMS_EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
@@ -304,6 +336,8 @@ jobs:
   macos:
     name: macOS universal bundle
     needs: [resolve]
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     runs-on: [self-hosted, macOS, ARM64]
     # Two slices, so two compiles of the workspace. The x86_64 one has no warm
     # cache on a runner that has only ever built the native arm64 half.
@@ -342,6 +376,17 @@ jobs:
           done
       - name: Assemble the universal bundle
         run: bash ci/build-headless-bundle.sh macos "${WARREN_VERSION:-0.0.0}" warren-cli
+      # The checksums the signed list is made from, computed here where the
+      # files were built rather than read back from the draft, which anyone
+      # able to write warren-cli releases could change before finalise signs.
+      - name: Checksums of what this job built
+        id: sums
+        run: |
+          {
+            echo 'sums<<SUMS_EOF'
+            (cd release-assets && shasum -a 256 -- *)
+            echo 'SUMS_EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
@@ -362,6 +407,8 @@ jobs:
   windows:
     name: Windows x64 bundle
     needs: [resolve]
+    outputs:
+      sums: ${{ steps.sums.outputs.sums }}
     runs-on: [self-hosted, Windows, macstudio-win]
     timeout-minutes: 140
     # Blocking, like every other platform, since daemon-beta-v1.1.15 (the first
@@ -438,6 +485,18 @@ jobs:
       - name: Assemble the bundle
         shell: bash
         run: bash ci/build-headless-bundle.sh windows "${WARREN_VERSION:-0.0.0}" warren-cli
+      # The checksums the signed list is made from, computed here where the
+      # files were built rather than read back from the draft, which anyone
+      # able to write warren-cli releases could change before finalise signs.
+      - name: Checksums of what this job built
+        id: sums
+        shell: bash
+        run: |
+          {
+            echo 'sums<<SUMS_EOF'
+            (cd release-assets && sha256sum -- *)
+            echo 'SUMS_EOF'
+          } >> "$GITHUB_OUTPUT"
       - name: Publish artifacts to the warren-cli release (draft)
         if: needs.resolve.outputs.publish == 'true'
         uses: softprops/action-gh-release@v3
@@ -528,21 +587,51 @@ jobs:
           fi
           echo "every expected artifact is present (windows job: $WINDOWS_RESULT)"
 
-      - name: Compute SHA-256 checksums
-        # The installers verify against this, which is what catches a download
-        # truncated by a flaky link before it is unpacked as a corrupt package.
+      # The list the installers verify, and the one about to be signed, is
+      # what the build jobs computed where they built, never what the draft
+      # holds now: anyone able to write warren-cli releases can swap or add a
+      # draft asset before this runs. The draft must hold exactly those files,
+      # byte for byte, or nothing is signed. A re-run finds the previous run's
+      # list and signature on the draft; they describe the release, they are
+      # not part of it.
+      - name: The draft holds exactly what the builds produced
+        env:
+          SUMS_LINUX: ${{ needs.linux.outputs.sums }}
+          SUMS_LINUX_ARM64: ${{ needs.linux-arm64.outputs.sums }}
+          SUMS_MACOS: ${{ needs.macos.outputs.sums }}
+          SUMS_WINDOWS: ${{ needs.windows.outputs.sums }}
         run: |
+          set -euo pipefail
+          # Git Bash's sha256sum marks every file binary ("hash *name").
+          printf '%s\n' "$SUMS_LINUX" "$SUMS_LINUX_ARM64" "$SUMS_MACOS" "$SUMS_WINDOWS" \
+            | sed -E 's/^([0-9a-f]{64}) \*/\1  /' \
+            | grep -E '^[0-9a-f]{64}  [^/ ]+$' | sort -k2 > expected-sums
           cd release-files
-          rm -f SHA256SUMS
-          shopt -s nullglob
-          files=(*)
-          sha256sum "${files[@]}" > SHA256SUMS
+          rm -f SHA256SUMS SHA256SUMS.sshsig
+          built="$(awk '{ print $2 }' ../expected-sums | sort)"
+          carried="$(find . -maxdepth 1 -type f -printf '%f\n' | sort)"
+          if [ "$built" != "$carried" ]; then
+            echo "::error::the draft does not hold exactly the files the build jobs produced"
+            diff <(printf '%s\n' "$built") <(printf '%s\n' "$carried") || true
+            exit 1
+          fi
+          sha256sum --strict -c ../expected-sums
+          cp ../expected-sums SHA256SUMS
           cat SHA256SUMS
+
+      # Without this signature every installer refuses the release, so a
+      # missing key fails the job here instead of publishing a release nobody
+      # can install.
+      - name: Sign the checksum list
+        env:
+          WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
+        run: bash ci/sign-headless-sums.sh release-files/SHA256SUMS
 
       - name: Publish it
         run: |
           set -euo pipefail
-          gh release upload "$CLI_TAG" release-files/SHA256SUMS --repo "$CLI_REPO" --clobber
+          gh release upload "$CLI_TAG" release-files/SHA256SUMS release-files/SHA256SUMS.sshsig \
+            --repo "$CLI_REPO" --clobber
           notes="$RUNNER_TEMP/notes.md"
           awk -v ver="$WARREN_VERSION" '
             /^## /{ if (cap) exit; cap = index($0, "[" ver "]") > 0 }
