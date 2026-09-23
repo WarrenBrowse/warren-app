@@ -102,6 +102,11 @@ jobs:
       - name: CLI checksum-list signer (shell tests)
         run: bash ci/test-sign-headless-sums.sh
 
+      # The installers extract the headless bundles as root, which restores
+      # the owner each entry records.
+      - name: Headless bundle archive (shell tests)
+        run: bash ci/test-build-headless-bundle.sh
+
       - name: install cargo-nextest
         uses: taiki-e/install-action@v2
         with:

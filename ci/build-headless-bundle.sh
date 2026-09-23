@@ -25,6 +25,23 @@
 # neither side can ship half a bundle.
 set -euo pipefail
 
+# Every entry is recorded as root's, by number and under no name. The
+# installers extract as root, GNU tar run as root restores the owner an archive
+# records, and the build runner's uid (1000, 501) belongs to some unrelated
+# account on the machine that installs the bundle.
+pack_tarball() { # pack_tarball <parent dir> <bundle dir name>
+    local owner=(--owner=0 --group=0 --numeric-owner)
+    if ! tar --version 2> /dev/null | grep -q 'GNU tar'; then
+        owner=(--uid 0 --gid 0 --numeric-owner)
+    fi
+    tar -C "$1" "${owner[@]}" -czf "$1/$2.tar.gz" "$2"
+}
+
+# Sourced by ci/test-build-headless-bundle.sh, which wants the functions only.
+if [ "${WARREN_BUNDLE_LIB:-0}" = "1" ]; then
+    return 0 2> /dev/null || exit 0
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
@@ -152,7 +169,7 @@ case "$platform" in
         install -m 0755 "$cli_dir/linux/install-linux.sh" "$stage/install.sh"
 
         write_bundle_info "$stage"
-        tar -C "$OUT" -czf "$OUT/${name}.tar.gz" "$name"
+        pack_tarball "$OUT" "$name"
         rm -rf "$stage"
         ;;
 
@@ -208,7 +225,7 @@ case "$platform" in
         install -m 0755 "$cli_dir/macos/install-macos.sh" "$stage/install.sh"
 
         write_bundle_info "$stage"
-        tar -C "$OUT" -czf "$OUT/${name}.tar.gz" "$name"
+        pack_tarball "$OUT" "$name"
         rm -rf "$stage"
         ;;
 
