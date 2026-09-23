@@ -157,7 +157,12 @@ mod tests {
         let staged = stage_into(&state, &binary).unwrap();
 
         assert_eq!(std::fs::read(&victim).unwrap(), b"untouched");
-        assert!(!std::fs::symlink_metadata(&staged).unwrap().file_type().is_symlink());
+        assert!(
+            !std::fs::symlink_metadata(&staged)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
         assert_eq!(std::fs::read(&staged).unwrap(), b"guard");
         let _ = std::fs::remove_dir_all(&root);
     }
