@@ -139,6 +139,29 @@ mod tests {
         }
     }
 
+    /// Staging replaces whatever already sits at the guard's path: a link
+    /// planted there must never make the privileged copy write into the file
+    /// it points at.
+    #[cfg(unix)]
+    #[test]
+    fn staging_replaces_what_sits_at_the_target_rather_than_writing_through_it() {
+        let root = std::env::temp_dir().join(format!("wguard-{}", std::process::id()));
+        let state = root.join("state");
+        std::fs::create_dir_all(deadman_staging_dir(&state)).unwrap();
+        let victim = root.join("victim");
+        std::fs::write(&victim, b"untouched").unwrap();
+        std::os::unix::fs::symlink(&victim, deadman_binary(&state)).unwrap();
+        let binary = root.join("binary");
+        std::fs::write(&binary, b"guard").unwrap();
+
+        let staged = stage_into(&state, &binary).unwrap();
+
+        assert_eq!(std::fs::read(&victim).unwrap(), b"untouched");
+        assert!(!std::fs::symlink_metadata(&staged).unwrap().file_type().is_symlink());
+        assert_eq!(std::fs::read(&staged).unwrap(), b"guard");
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
     /// The suffix this binary bakes in is its own environment's, read from
     /// the compile-time selector like every other product anchor.
     #[test]
@@ -158,6 +181,9 @@ pub enum Error {
     StateDir(#[source] mullvad_paths::Error),
     #[error("Failed to stage the update guard binary")]
     Stage(#[source] std::io::Error),
+    #[cfg(windows)]
+    #[error("Failed to secure the update guard's directory")]
+    StageDir(#[source] mullvad_paths::Error),
     #[error("Failed to register the update guard timer")]
     Schedule(#[source] std::io::Error),
     #[error("The update guard scheduler refused the job")]
@@ -171,13 +197,34 @@ fn state_dir() -> Result<PathBuf, Error> {
 
 /// Copies this binary next to nothing else and makes it executable.
 fn stage_self() -> Result<PathBuf, Error> {
-    let dir = deadman_staging_dir(&state_dir()?);
-    std::fs::create_dir_all(&dir).map_err(Error::Stage)?;
-    let target = deadman_binary(&state_dir()?);
     let current = std::env::current_exe().map_err(Error::Stage)?;
+    stage_into(&state_dir()?, &current)
+}
+
+/// Stages `binary` as the guard under `state_dir`.
+///
+/// The guard later runs with full privileges, so nothing another account put
+/// in its place may survive staging: on Windows, a staging directory created
+/// in advance by a standard user under ProgramData keeps that user's ACL
+/// unless it is reset here, and anywhere, a file already at the target is
+/// removed rather than written through. Either one failing aborts the
+/// staging, which leaves the update with the in-daemon dead-man only.
+fn stage_into(state_dir: &Path, binary: &Path) -> Result<PathBuf, Error> {
+    let dir = deadman_staging_dir(state_dir);
+    #[cfg(windows)]
+    mullvad_paths::windows::create_privileged_directory(&dir).map_err(Error::StageDir)?;
+    #[cfg(not(windows))]
+    std::fs::create_dir_all(&dir).map_err(Error::Stage)?;
+    let target = deadman_binary(state_dir);
+    match std::fs::remove_file(&target) {
+        Err(error) if error.kind() != std::io::ErrorKind::NotFound => {
+            return Err(Error::Stage(error));
+        }
+        _ => {}
+    }
     // Copy rather than symlink: the point is to outlive an `rm -rf` of the
     // bundle the running binary lives in.
-    std::fs::copy(&current, &target).map_err(Error::Stage)?;
+    std::fs::copy(binary, &target).map_err(Error::Stage)?;
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
