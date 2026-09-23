@@ -338,8 +338,8 @@ for the connection.
   reads each client's identity from the token it opened the pipe with (the user SID, whether
   it is SYSTEM or an elevated member of Administrators, and its session). A client whose
   token cannot be read (the Anonymous impersonation level) is treated as unidentified. While
-  the daemon is stopped, any process can create a pipe under its name; the GUI checks that the
-  pipe it reaches is owned by an administrator, the CLI does not.
+  the daemon is stopped, any process can create a pipe under its name, so the GUI and the CLI
+  only talk to a pipe instance an administrator owns.
 
 Each RPC has one of three classes, declared in one table in
 `mullvad-daemon/src/rpc_access.rs` that a test checks against the service definition:

@@ -16,7 +16,7 @@ use std::{
     pin::Pin,
     task::{Context, Poll},
 };
-#[cfg(not(target_os = "android"))]
+#[cfg(all(unix, not(target_os = "android")))]
 use tipsy::Endpoint as IpcEndpoint;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 #[cfg(not(target_os = "android"))]
@@ -154,7 +154,35 @@ pub(crate) async fn grpc_transport_channel() -> Result<Channel, Error> {
 /// Crate-private on purpose: the only paths outside this crate that make sense
 /// belong to ANOTHER product environment, and those go through
 /// [`grpc_transport_channel_to`], which cannot be handed an unvouched one.
-#[cfg(not(target_os = "android"))]
+///
+/// On Windows every connection is checked to be served by a privileged
+/// account, like a foreign environment's: while the daemon is stopped any
+/// process may create a pipe under its name, and a client that believed it
+/// would hand it what it sends, a recovery phrase included.
+#[cfg(windows)]
+pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
+    Endpoint::from_static("lttp://[::]:50051")
+        .connect_with_connector(service_fn(move |_: Uri| {
+            let ipc_path = ipc_path.clone();
+            async move {
+                connect_admin_owned_pipe(&ipc_path)
+                    .await
+                    .map(hyper_util::rt::tokio::TokioIo::new)
+            }
+        }))
+        .await
+        .map_err(Error::GrpcTransportError)
+}
+
+/// Create a [Channel] to this environment's own management interface at
+/// `ipc_path`.
+///
+/// Crate-private on purpose: the only paths outside this crate that make sense
+/// belong to ANOTHER product environment, and those go through
+/// [`grpc_transport_channel_to`], which cannot be handed an unvouched one. The
+/// socket lives in a directory only root can create entries in, so the path
+/// itself vouches for the daemon.
+#[cfg(all(unix, not(target_os = "android")))]
 pub(crate) async fn grpc_transport_channel_at(ipc_path: PathBuf) -> Result<Channel, Error> {
     use futures::TryFutureExt;
 
@@ -180,25 +208,14 @@ pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Ch
 
 /// Create a [Channel] to another product environment's management interface.
 ///
-/// Deliberately NOT [`grpc_transport_channel_at`]: on Windows the ownership
-/// question has to be asked of the pipe instance this channel carries its
-/// bytes over, and it is asked again for every connection the channel opens,
-/// reconnects included. See [`PrivilegedSocketPath`] for why a check made on
-/// a handle that is then dropped gates nothing here.
+/// On Windows the ownership question has to be asked of the pipe instance
+/// this channel carries its bytes over, and [`grpc_transport_channel_at`] asks
+/// it again for every connection the channel opens, reconnects included. See
+/// [`PrivilegedSocketPath`] for why a check made on a handle that is then
+/// dropped gates nothing here.
 #[cfg(windows)]
 pub async fn grpc_transport_channel_to(path: &PrivilegedSocketPath) -> Result<Channel, Error> {
-    let ipc_path = path.as_path().to_path_buf();
-    Endpoint::from_static("lttp://[::]:50051")
-        .connect_with_connector(service_fn(move |_: Uri| {
-            let ipc_path = ipc_path.clone();
-            async move {
-                connect_admin_owned_pipe(&ipc_path)
-                    .await
-                    .map(hyper_util::rt::tokio::TokioIo::new)
-            }
-        }))
-        .await
-        .map_err(Error::GrpcTransportError)
+    grpc_transport_channel_at(path.as_path().to_path_buf()).await
 }
 
 /// Open the named pipe at `path` and hand it back only if the OS says a
