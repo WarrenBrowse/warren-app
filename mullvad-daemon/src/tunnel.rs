@@ -1409,26 +1409,17 @@ impl ParametersGenerator {
             egress_cache.set_exit_egress_dead(dead);
         }));
         // ADR 36 dial-refusal path: a drained node deliberately refuses
-        // the dial itself (entry CONNECTION_REFUSED / exit drain close),
-        // which the in-band drain reactor never sees (no session exists
-        // yet). React exactly like a drain: exclude the refusing node and
-        // re-select, honoring the pinned exit country (the exclusion
-        // narrows the candidate set; the country filter stays structural
-        // in the directory selection).
+        // the dial itself (CONNECTION_REFUSED or a drain close from the node
+        // the connection terminates at), which the in-band drain reactor
+        // never sees (no session exists yet). React like a drain: exclude
+        // the refusing node and re-select, honoring the pinned exit country
+        // (the exclusion narrows the candidate set; the country filter stays
+        // structural in the directory selection).
         let dial_refused_gen = self.clone();
         params.warren_dial_refused = Some(Arc::new(
-            move |refused: talpid_warren_tunnel::WarrenRefusedHop| {
+            move |refused: talpid_warren_tunnel::WarrenRefusedEntry| {
                 let g = dial_refused_gen.clone();
-                Box::pin(async move {
-                    match refused {
-                        talpid_warren_tunnel::WarrenRefusedHop::Exit(exit_id) => {
-                            g.migrate_off_drained_exit(exit_id).await
-                        }
-                        talpid_warren_tunnel::WarrenRefusedHop::Entry(relay_id) => {
-                            g.migrate_off_refused_entry(relay_id).await
-                        }
-                    }
-                })
+                Box::pin(async move { g.migrate_off_refused_entry(refused.0).await })
             },
         ));
         // docs/59 Lot 3: pre-swap NAT-PMP reservation gate + post-swap

@@ -87,19 +87,14 @@ pub type WarrenDrainMigrate = std::sync::Arc<
         + Sync,
 >;
 
-/// Identity of the hop that deliberately refused a dial attempt, as
-/// published in the multi-hop directory: the entry's `relay_id` or the
-/// exit's exit id. The two are distinguished because the daemon must
-/// exclude the REFUSING node, not blindly the circuit's exit (a drained
-/// entry in front of a healthy exit must not burn the exit's slot in
-/// the avoid-set).
+/// The entry relay, by its directory `relay_id`, that deliberately refused
+/// a dial attempt: the node the connection terminates at, which on a one-hop
+/// circuit is the exit. A refusal is never charged to the exit behind a
+/// relay: during the handshake and the setup only the relay speaks, so a
+/// refusal naming the exit would let a hostile relay choose which exits the
+/// client avoids.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum WarrenRefusedHop {
-    /// The entry relay refused the QUIC connection (drained node).
-    Entry([u8; 16]),
-    /// The exit refused the session with its drain close code.
-    Exit([u8; 16]),
-}
+pub struct WarrenRefusedEntry(pub [u8; 16]);
 
 /// ADR 36 dial-refusal path: async daemon hook invoked (rate limited by
 /// [`WARREN_DIAL_REFUSAL_COOLDOWN`]) when the supervisor's dial is
@@ -108,7 +103,7 @@ pub enum WarrenRefusedHop {
 /// it (same country when one is pinned, any otherwise), retargeting the
 /// live supervisor. Output: whether a retarget was dispatched.
 pub type WarrenDialRefused = std::sync::Arc<
-    dyn Fn(WarrenRefusedHop) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>
+    dyn Fn(WarrenRefusedEntry) -> std::pin::Pin<Box<dyn std::future::Future<Output = bool> + Send>>
         + Send
         + Sync,
 >;
@@ -205,7 +200,7 @@ async fn warren_react_to_dead_carrier(
         return;
     }
     LAST_DIAL_REFUSAL_UNIX.store(now, std::sync::atomic::Ordering::Relaxed);
-    let retargeted = hook(WarrenRefusedHop::Entry(relay_id)).await;
+    let retargeted = hook(WarrenRefusedEntry(relay_id)).await;
     log::warn!(
         "Warren carrier egress guard: both escapes are dead while the route probe puts the \
          carrier off-tunnel, so the packets leave this host and the circuit is the remaining \
@@ -1479,9 +1474,9 @@ impl WarrenTunnelMonitor {
             // reaction per rollout wave instead of one per redial.
             on_dial_refused: params.warren_dial_refused.clone().map(|hook| {
                 Arc::new(
-                    move |hop: warrenguard_transport::multihop::DialRefusedHop,
+                    move |_hop: warrenguard_transport::multihop::DialRefusedHop,
                           relay_id: [u8; 16],
-                          exit_id: [u8; 16]| {
+                          _exit_id: [u8; 16]| {
                         let now = warren_now_unix_secs();
                         let last =
                             LAST_DIAL_REFUSAL_UNIX.load(std::sync::atomic::Ordering::Relaxed);
@@ -1489,14 +1484,7 @@ impl WarrenTunnelMonitor {
                             return;
                         }
                         LAST_DIAL_REFUSAL_UNIX.store(now, std::sync::atomic::Ordering::Relaxed);
-                        let refused = match hop {
-                            warrenguard_transport::multihop::DialRefusedHop::Entry => {
-                                WarrenRefusedHop::Entry(relay_id)
-                            }
-                            warrenguard_transport::multihop::DialRefusedHop::Exit => {
-                                WarrenRefusedHop::Exit(exit_id)
-                            }
-                        };
+                        let refused = WarrenRefusedEntry(relay_id);
                         let hook = hook.clone();
                         tokio::spawn(async move {
                             let retargeted = hook(refused).await;
