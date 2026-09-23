@@ -143,6 +143,18 @@ impl SettingsPersister {
                 error.display_chain_with_msg("Failed to save updated settings")
             );
         }
+        // A file an earlier daemon wrote kept the default, world-readable mode
+        // until the next change to the settings.
+        #[cfg(unix)]
+        if let Err(error) = fs::set_permissions(
+            &persister.path,
+            std::os::unix::fs::PermissionsExt::from_mode(0o600),
+        )
+        .await
+            && error.kind() != std::io::ErrorKind::NotFound
+        {
+            log::warn!("Failed to make the settings file private: {error}");
+        }
 
         persister
     }
@@ -243,6 +255,12 @@ impl SettingsPersister {
 
         let buffer = serde_json::to_string_pretty(settings).map_err(Error::SerializeError)?;
         let mut file = mullvad_fs::AtomicFile::new(path)
+            .await
+            .map_err(|e| Error::WriteError(path.display().to_string(), e))?;
+        // The settings hold proxy credentials, a custom relay's key and the
+        // owner's exits, and every local account can list the directory.
+        #[cfg(unix)]
+        file.set_permissions(std::os::unix::fs::PermissionsExt::from_mode(0o600))
             .await
             .map_err(|e| Error::WriteError(path.display().to_string(), e))?;
         file.write_all(&buffer.into_bytes())
@@ -543,6 +561,40 @@ impl SettingsSummary<'_> {
 mod test {
     use super::*;
     use mullvad_types::settings::SettingsVersion;
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn the_settings_file_is_readable_by_root_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("wsettings-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("settings.json");
+
+        SettingsPersister::save_inner(&path, &Settings::default())
+            .await
+            .unwrap();
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(mode & 0o777, 0o600);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn a_settings_file_left_readable_by_an_earlier_daemon_is_made_private() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = std::env::temp_dir().join(format!("wsettings-old-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join(SETTINGS_FILE);
+        std::fs::write(&path, serde_json::to_vec(&Settings::default()).unwrap()).unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+        let _persister = SettingsPersister::load(&dir).await;
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(mode & 0o777, 0o600);
+    }
 
     #[test]
     #[should_panic]
