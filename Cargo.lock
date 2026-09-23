@@ -297,15 +297,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "atomic-polyfill"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cf2bce30dfe09ef0bfaef228b9d414faaf7e563035494d7fe092dba54b300f4"
-dependencies = [
- "critical-section",
-]
-
-[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1867,15 +1858,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hash32"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b0c35f58762feb77d74ebe43bdbc3210f09be9fe6742234d573bacc26ed92b67"
-dependencies = [
- "byteorder",
-]
-
-[[package]]
 name = "hashbrown"
 version = "0.15.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1889,20 +1871,6 @@ name = "hashbrown"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
-
-[[package]]
-name = "heapless"
-version = "0.7.17"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cdc6457c0eb62c71aac4bc17216026d8410337c4126773b9c5daba343f17964f"
-dependencies = [
- "atomic-polyfill",
- "hash32",
- "rustc_version",
- "serde",
- "spin 0.9.9",
- "stable_deref_trait",
-]
 
 [[package]]
 name = "heck"
@@ -4421,7 +4389,6 @@ dependencies = [
  "cobs",
  "embedded-io 0.4.0",
  "embedded-io 0.6.1",
- "heapless",
  "serde",
 ]
 
@@ -7042,6 +7009,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tracing",
+ "warrenguard-systool",
 ]
 
 [[package]]
@@ -7142,6 +7110,7 @@ dependencies = [
  "tracing",
  "warrenguard-killswitch-os",
  "warrenguard-socket-bypass",
+ "warrenguard-systool",
  "warrenguard-tun-core",
  "warrenguard-winroute",
  "warrenguard-wire",
@@ -7155,6 +7124,14 @@ dependencies = [
  "socket2 0.6.3",
  "warrenguard-tun-core",
  "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "warrenguard-systool"
+version = "0.1.0"
+dependencies = [
+ "tokio",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7198,6 +7175,7 @@ version = "0.1.0"
 dependencies = [
  "blind-rsa-signatures",
  "rand 0.10.1",
+ "rsa",
  "sha2",
  "subtle",
  "thiserror 2.0.18",
