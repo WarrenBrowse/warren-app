@@ -296,6 +296,41 @@ fn status_and_body(case: &serde_json::Value) -> (u16, &str) {
     )
 }
 
+/// The outcome with its completion set aside, so the kind and the identity
+/// compare with `==` and the completion is read through its accessors.
+fn without_completion(outcome: &ForumLoginOutcome) -> ForumLoginOutcome {
+    match outcome {
+        ForumLoginOutcome::Approved { identity, .. } => ForumLoginOutcome::Approved {
+            identity: identity.clone(),
+            completion: None,
+        },
+        other => other.clone(),
+    }
+}
+
+fn completion_of(outcome: &ForumLoginOutcome) -> Option<(String, Option<String>)> {
+    match outcome {
+        ForumLoginOutcome::Approved {
+            completion: Some(completion),
+            ..
+        } => Some((
+            completion.code().to_owned(),
+            completion.handoff_url().map(str::to_owned),
+        )),
+        _ => None,
+    }
+}
+
+fn expected_completion(expect: &serde_json::Value) -> Option<(String, Option<String>)> {
+    let completion = expect.get("completion")?;
+    Some((
+        str_of(completion, "code").to_owned(),
+        completion
+            .get("handoff_url")
+            .map(|url| url.as_str().expect("handoff_url").to_owned()),
+    ))
+}
+
 #[test]
 fn every_login_case_classes_and_envelopes_as_the_fixture_says() {
     let outcomes = fixture("forum_outcomes.json");
@@ -309,7 +344,10 @@ fn every_login_case_classes_and_envelopes_as_the_fixture_says() {
         let (status, body) = status_and_body(case);
         let expect = &case["expect"];
         let expected = match str_of(expect, "kind") {
-            "approved" => ForumLoginOutcome::Approved(expected_identity(expect)),
+            "approved" => ForumLoginOutcome::Approved {
+                identity: expected_identity(expect),
+                completion: None,
+            },
             "subscription-required" => ForumLoginOutcome::SubscriptionRequired,
             "clock-skew" => ForumLoginOutcome::ClockSkew,
             "expired" => ForumLoginOutcome::Expired,
@@ -317,7 +355,12 @@ fn every_login_case_classes_and_envelopes_as_the_fixture_says() {
             other => panic!("{name}: unknown login kind {other}"),
         };
         let outcome = outcome_for_response(status, body.as_bytes());
-        assert_eq!(outcome, expected, "{name}: outcome");
+        assert_eq!(without_completion(&outcome), expected, "{name}: outcome");
+        assert_eq!(
+            completion_of(&outcome),
+            expected_completion(expect),
+            "{name}: completion"
+        );
         assert_eq!(
             envelope(&outcome),
             str_of(case, "envelope"),

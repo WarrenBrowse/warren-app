@@ -27,7 +27,8 @@ everywhere is the definition of parity.
 | `forum_link.json` attach cases | `warren-forum/tests/client_rules.rs` (sid/host/topic rules, status and cancel URLs, the pre-topic body; the URL-level classes have no Rust parser yet) | `ForumAttachLinkTest` (`classifyForumAttachLink`, the full class vocabulary) | `forum-login.spec.ts` (`parseForumAttachUrl`) | `WarrenForumLinkTests` (`WarrenForumLinks.classifyAttach`, the full class vocabulary) |
 | `forum_link.json` sign-in codes | `warren-forum/tests/client_rules.rs` (`normalize_sign_in_code`; the crate has no code-to-link builder, so `sign_in_code_cross_device` has no Rust reader) | `ForumLoginLinkTest` (`normalizeForumSignInCode`, `forumLoginLinkFromCode` incl. `sign_in_code_cross_device`) | `forum-login.spec.ts` (`normalizeForumSignInCode`, `forumLoginRequestFromCode` incl. `sign_in_code_cross_device`) | `WarrenForumLinkTests` (`WarrenForumLinks.normalizeSignInCode`, `linkFromCode` incl. `sign_in_code_cross_device`) |
 | `forum_link.json` `allowed_hosts`, `schemes`, `pending_ttl_secs` | `client_rules.rs` (hosts, schemes against `product_env.json`) | `ForumLoginLinkTest` (host, login TTL), `ProductEnvBuildConfigTest` (scheme) | `forum-login.spec.ts` (hosts, both TTLs), `product-env.spec.ts` (schemes) | `WarrenForumLinkTests` (hosts, schemes against `product_env.json` and the compiled table) |
-| `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`) | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | `WarrenForumLoginOutcomeTests` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminal`) |
+| `forum_outcomes.json` login | `client_rules.rs` (`outcome_for_response`, `envelope`, the `completion` through its accessors); `forum_login_v2_vector_tests.rs` replays the vector's answers the cases are built from | `ForumLoginOutcomeTest` (decodes `envelope`; `terminal_kinds` through `isTerminalOutcome`) | `forum-login.spec.ts` (`resultForProviderResponse`, `parseForumIdentityResponse`; `terminal_kinds` through `isTerminalForumLoginResult`) | `WarrenForumLoginOutcomeTests` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminal`) |
+| `forum_outcomes.json` login completion | none (how the sid reached the app is a platform fact the crate never sees; the crate's half is the `completion` of the login cases) | pending | pending | pending |
 | `forum_outcomes.json` report | `client_rules.rs` (`report_outcome_for_response`, `report_envelope`) | `ReportOutcomeTest` (decodes `envelope`) | `forum-report.spec.ts` (`forumReportResultForResponse`, the `expect` column: kind, topic, trusted URL, logs, identity) | none |
 | `forum_outcomes.json` attach | `client_rules.rs` (`attach_outcome_for_response`, `attach_envelope`, the client-side failures, `max_log_gz_bytes` against `MAX_LOG_GZ_BYTES`) | `WarrenForumAttachUseCaseTest` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminalAttachOutcome`; `max_log_gz_bytes` against `WarrenSupportReporterImpl.MAX_LOG_GZ_BYTES`) | none (the desktop maps the answers in `main/forum-attach.ts`, which has no fixture reader yet; its `MAX_LOG_GZ_BYTES` is still its own copy) | `WarrenForumAttachOutcomeTests` (decodes `envelope`, the client-side failures; `terminal_kinds` through `isTerminal`), `WarrenForumAttachUploadTests` (`max_log_gz_bytes` against the FFI's `warren_forum_max_log_gz_bytes`); both run in the non-hosted bundle |
 | `product_env.json` | `warren-product-env/tests/client_rules.rs` (every column, and `ProductEnv::anchors_json()` equals the row), `warren-product-env/tests/platform_lockstep.rs` (`product-env.ts`, `tasks/distribution.cjs`, `android/app/build.gradle.kts` and `ios/Configurations/ProductEnv.xcconfig` read as text and held to the crate, and the iOS `Info.plist` URL scheme held to the xcconfig selector), `warren-forum` `client_rules.rs` (connect host, forum origin) | `ProductEnvBuildConfigTest` (`BuildConfig` of the running flavor against the row, and against the row decoded as the native table `WarrenJni.productAnchorsJson()` returns; `testAllUnitTests` runs the **prod flavor only**, so the beta and staging rows are covered by `platform_lockstep.rs` alone); `ProductAnchorsJniTest` (instrumented, the real native table against `BuildConfig`) | `product-env.spec.ts` (`product-env.ts`, `tasks/distribution.cjs`, the `urls.forum` origin) | `WarrenProductAnchorsTests` (the live table `warren_product_anchors()` returns against the row of the compiled environment, and every row through the Swift decoder) |
@@ -103,13 +104,29 @@ which readers ignore. A case may carry `"skip": ["desktop", "android", "ios",
 
 - `login.cases[]`: `{name, status, body, expect, envelope, skip?}`. `status`
   and `body` are the broker's answer to `POST /v1/forum/login`; `expect` is
-  `{kind, handle?, notify_slot?, reason?}` with `kind` in `login._kinds`
-  (`failed` carries `reason`, `http-<status>` for an HTTP-born failure);
-  `envelope` is the exact JSON the shared crate hands the mobile decoders.
+  `{kind, handle?, notify_slot?, completion?, reason?}` with `kind` in
+  `login._kinds` (`failed` carries `reason`, `http-<status>` for an HTTP-born
+  failure); `completion` is `{code, handoff_url?}`, what a bound approval
+  hands back once validated (warren-connect `docs/FORUM-LOGIN-V2.md`: six
+  ASCII digits, and a handoff URL of exactly
+  `https://<connect host>/handoff#sid=<32 lowercase hex>&code=<the code>`,
+  dropped on its own when it is anything else); `envelope` is the exact JSON
+  the shared crate hands the mobile decoders.
 - `login.terminal_kinds`: the outcomes after which the pending link is spent
   and the prompt must not offer a retry.
 - `login.client_side_failures.cases[]`: `{name, reason, envelope}`, the
   failures that never reached the broker.
+- `login.completion`: which screen an approved login leads to.
+  `cases[]` are `{name, approach, answer, expect}`: `approach` in
+  `approaches` (`same-device-link` a deep link without `xd`,
+  `cross-device-link` the QR's `xd=1` link, `typed-code` a sign-in code typed
+  under Settings), `answer` the name of a `login.cases` entry (its `body` for
+  a reader of the HTTP answer, its `envelope` for a reader of the FFI
+  envelope), `expect` `{screen, handoff}` with `screen` in `screens`
+  (`returned-to-browser` without a completion, `finishing-in-browser`,
+  `show-code`) and `handoff` in `handoffs` (`open-at-once`, `on-button`,
+  `never`). `code_lifetime_secs` is how long after the answer a client may
+  still show the code (the session's own lifetime).
 - `report.cases[]`: same shape for `POST /v1/forum/report`; `expect` is
   `{kind, topic_id?, topic_url?, logs?, handle?, notify_slot?, reason?}` with
   `kind` in `report._kinds`. A `topic_url` of `null` means the topic is shown

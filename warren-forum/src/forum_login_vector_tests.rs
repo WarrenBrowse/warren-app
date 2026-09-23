@@ -1,7 +1,9 @@
 //! Replays the shared golden vector `vectors/forum_login_v1.json` (the
 //! warren-vectors submodule): the exact signed request bytes a client sends
-//! to the connect broker for a login and for an in-app report, and the
-//! outcome each of the broker's pinned answers must class as. The same file
+//! to the connect broker for an in-app report and an attach-logs upload, the
+//! login form that predates the completion code (the app now signs the bound
+//! form of `forum_login_v2.json`), and the outcome each of the broker's pinned
+//! answers must class as. The same file
 //! is replayed by warren-connect on the other side of the wire, so a
 //! mismatch here is a real wire regression, never a reason to touch the
 //! vector.
@@ -104,22 +106,19 @@ fn every_pinned_request_is_rebuilt_byte_for_byte() {
 
         let built = match name {
             "login" => {
+                // The approval form that predates the completion code. The
+                // app signs the bound form of forum_login_v2.json instead, so
+                // its own builder must no longer produce these bytes; the raw
+                // signer still pins the signing rule and the URL over them.
                 let sid = str_of(request, "sid");
-                // The allowlisted host is the one the app signs for; the
-                // signature covers the path and the body, never the host,
-                // so the headers must be the vector's exactly.
-                let allowlisted =
+                let bound =
                     build_signed_request_with_nonce(&key, sid, connect_host(), timestamp, nonce)
                         .expect("the vector's sid builds against the allowlisted host");
-                assert_eq!(
-                    allowlisted.url,
-                    format!("https://{}{path}", connect_host()),
-                    "{name}: url"
+                assert_ne!(
+                    bound.body,
+                    body_utf8.as_bytes(),
+                    "{name}: the app signs the bound form"
                 );
-                assert_eq!(allowlisted.body, body_utf8.as_bytes(), "{name}: body");
-                assert_headers(&allowlisted, &request["headers"], name);
-                // The vector's own synthetic host goes through the raw
-                // builder, which is what pins the URL byte for byte.
                 signed_post_with_nonce(
                     &key,
                     host,
@@ -249,7 +248,10 @@ fn every_pinned_login_answer_classes_as_its_outcome() {
         }
         let (status, body) = answer(group, name);
         let expected = match name.as_str() {
-            "approved" => ForumLoginOutcome::Approved(Some(identity(&vector))),
+            "approved" => ForumLoginOutcome::Approved {
+                identity: Some(identity(&vector)),
+                completion: None,
+            },
             "clock_skew" => ForumLoginOutcome::ClockSkew,
             "subscription_required" => ForumLoginOutcome::SubscriptionRequired,
             "session_unknown" => ForumLoginOutcome::Expired,

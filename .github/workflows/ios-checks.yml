@@ -100,6 +100,7 @@ jobs:
             git submodule update --init vectors
           fi
           test -f vectors/forum_login_v1.json
+          test -f vectors/forum_login_v2.json
 
       # Checks out the pinned sibling engines (warrenguard, warren-sdk-rs,
       # warren-contract) that warren-ios consumes by path. The Xcode build

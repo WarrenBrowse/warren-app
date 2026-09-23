@@ -103,6 +103,7 @@
       },
       {
         "name": "forum_unavailable",
+        "_comment": "A database read or write failed, or the login gate is full. The session keeps waiting, so the failure is not terminal and Approve stays armed for a retry.",
         "status": 502,
         "body": "forum backend error",
         "expect": { "kind": "failed", "reason": "http-502" },
@@ -114,6 +115,132 @@
         "body": "feature disabled",
         "expect": { "kind": "failed", "reason": "http-503" },
         "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-503\"}"
+      },
+      {
+        "name": "approved_same_device",
+        "_comment": "A bound approval of the same-device id: the one-time code and the handoff URL that carries it to this device's browser (forum_login_v2.json, approved_same_device, on the production connect host).",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917", "handoff_url": "https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917\"}}"
+      },
+      {
+        "name": "approved_cross_device",
+        "_comment": "A bound approval of the QR's cross-device id: the code alone, for the person to type on the other device.",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "approved_completion_without_identity",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\"},\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "handoff_on_a_foreign_host_is_dropped",
+        "_comment": "Only the allowlisted connect host may receive the code in a browser; the code itself still stands.",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.example.test/handoff#sid=0123456789abcdef0123456789abcdef&code=042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "handoff_in_a_query_string_is_dropped",
+        "_comment": "A query string reaches the server's access log; the code rides in the fragment only.",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff?sid=0123456789abcdef0123456789abcdef&code=042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "handoff_naming_another_code_is_dropped",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=111111\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "handoff_with_trailing_bytes_is_dropped",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=042917&next=https://evil.example\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "handoff_behind_a_userinfo_is_dropped",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com@evil.example/handoff#sid=0123456789abcdef0123456789abcdef&code=042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "handoff_with_an_uppercase_sid_is_dropped",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"042917\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789ABCDEF0123456789ABCDEF&code=042917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1, "completion": { "code": "042917" } },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"completion\":{\"code\":\"042917\"}}"
+      },
+      {
+        "name": "completion_code_of_five_digits_is_ignored",
+        "_comment": "A code of any other shape is ignored as absent, with its handoff: the login falls back to the answer of a provider that predates the code.",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"04291\",\"handoff_url\":\"https://connect.warrenbrowse.com/handoff#sid=0123456789abcdef0123456789abcdef&code=04291\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1 },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1}"
+      },
+      {
+        "name": "completion_code_with_a_letter_is_ignored",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"04a917\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1 },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1}"
+      },
+      {
+        "name": "completion_code_in_non_ascii_digits_is_ignored",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":\"٠٤٢٩١٧\"},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1 },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1}"
+      },
+      {
+        "name": "completion_code_as_a_number_is_ignored",
+        "status": 200,
+        "body": "{\"completion\":{\"code\":42917},\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1 },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1}"
+      },
+      {
+        "name": "completion_as_a_string_is_ignored",
+        "status": 200,
+        "body": "{\"completion\":\"042917\",\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1,\"status\":\"approved\"}",
+        "expect": { "kind": "approved", "handle": "konid-vodub-lonap", "notify_slot": 1 },
+        "envelope": "{\"ok\":true,\"handle\":\"konid-vodub-lonap\",\"notify_slot\":1}"
+      },
+      {
+        "name": "app_update_required",
+        "_comment": "The provider refused an approval without login_version. A client that signs the bound form never meets it, so it is the generic failure.",
+        "status": 400,
+        "body": "{\"error\":\"app_update_required\"}",
+        "expect": { "kind": "failed", "reason": "http-400" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-400\"}"
+      },
+      {
+        "name": "too_many_open_approvals",
+        "_comment": "The wallet already holds three approved sign-ins no browser has completed. The session keeps waiting, so a retry stays open.",
+        "status": 429,
+        "body": "rate limited",
+        "expect": { "kind": "failed", "reason": "http-429" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-429\"}"
+      },
+      {
+        "name": "login_version_unsupported",
+        "status": 400,
+        "body": "malformed payload",
+        "expect": { "kind": "failed", "reason": "http-400" },
+        "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"http-400\"}"
       }
     ],
     "client_side_failures": {
@@ -133,6 +260,81 @@
           "name": "build",
           "reason": "build",
           "envelope": "{\"ok\":false,\"error\":\"error\",\"reason\":\"build\"}"
+        }
+      ]
+    },
+    "completion": {
+      "_comment": "Which screen an approved login leads to, from how its sid reached the app and the completion the answer carried (warren-connect docs/FORUM-LOGIN-V2.md). approach: same-device-link (a deep link without xd), cross-device-link (the QR, xd=1), typed-code (a sign-in code typed under Settings). answer names a login case above: its body for a reader of the HTTP answer, its envelope for a reader of the FFI envelope. screen: returned-to-browser (no completion: the browser completes on its own), finishing-in-browser (the handoff opens in the default browser, the code stays behind a Show the code action), show-code (the code with the warning never to share it). handoff: when the app opens the handoff URL, open-at-once, on-button (the Finish in this device's browser action) or never. A QR approval never opens a handoff, even one a provider sent.",
+      "approaches": ["same-device-link", "cross-device-link", "typed-code"],
+      "screens": ["returned-to-browser", "finishing-in-browser", "show-code"],
+      "handoffs": ["open-at-once", "on-button", "never"],
+      "code_lifetime_secs": 300,
+      "cases": [
+        {
+          "name": "same_device_link_opens_the_handoff_at_once",
+          "approach": "same-device-link",
+          "answer": "approved_same_device",
+          "expect": { "screen": "finishing-in-browser", "handoff": "open-at-once" }
+        },
+        {
+          "name": "same_device_link_without_a_handoff_shows_the_code",
+          "approach": "same-device-link",
+          "answer": "approved_cross_device",
+          "expect": { "screen": "show-code", "handoff": "never" }
+        },
+        {
+          "name": "same_device_link_with_a_dropped_handoff_shows_the_code",
+          "approach": "same-device-link",
+          "answer": "handoff_on_a_foreign_host_is_dropped",
+          "expect": { "screen": "show-code", "handoff": "never" }
+        },
+        {
+          "name": "same_device_link_legacy_answer",
+          "approach": "same-device-link",
+          "answer": "approved_with_identity",
+          "expect": { "screen": "returned-to-browser", "handoff": "never" }
+        },
+        {
+          "name": "qr_link_never_opens_a_handoff",
+          "approach": "cross-device-link",
+          "answer": "approved_same_device",
+          "expect": { "screen": "show-code", "handoff": "never" }
+        },
+        {
+          "name": "qr_link_shows_the_code",
+          "approach": "cross-device-link",
+          "answer": "approved_cross_device",
+          "expect": { "screen": "show-code", "handoff": "never" }
+        },
+        {
+          "name": "qr_link_legacy_answer",
+          "approach": "cross-device-link",
+          "answer": "approved_with_identity",
+          "expect": { "screen": "returned-to-browser", "handoff": "never" }
+        },
+        {
+          "name": "typed_code_offers_the_handoff_on_a_button",
+          "approach": "typed-code",
+          "answer": "approved_same_device",
+          "expect": { "screen": "show-code", "handoff": "on-button" }
+        },
+        {
+          "name": "typed_code_without_a_handoff_shows_the_code",
+          "approach": "typed-code",
+          "answer": "approved_cross_device",
+          "expect": { "screen": "show-code", "handoff": "never" }
+        },
+        {
+          "name": "typed_code_legacy_answer",
+          "approach": "typed-code",
+          "answer": "approved_without_slot",
+          "expect": { "screen": "returned-to-browser", "handoff": "never" }
+        },
+        {
+          "name": "ignored_completion_is_the_legacy_answer",
+          "approach": "same-device-link",
+          "answer": "completion_code_of_five_digits_is_ignored",
+          "expect": { "screen": "returned-to-browser", "handoff": "never" }
         }
       ]
     }

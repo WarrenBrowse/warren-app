@@ -295,8 +295,18 @@ fn forum_login(mnemonic: &str, sid: &str, host: &str) -> ForumLoginOutcome {
 
 fn outcome_class(outcome: &ForumLoginOutcome) -> &'static str {
     match outcome {
-        ForumLoginOutcome::Approved(Some(_)) => "approved with identity",
-        ForumLoginOutcome::Approved(None) => "approved",
+        ForumLoginOutcome::Approved {
+            completion: Some(completion),
+            ..
+        } if completion.handoff_url().is_some() => "approved, bound, with handoff",
+        ForumLoginOutcome::Approved {
+            completion: Some(_),
+            ..
+        } => "approved, bound",
+        ForumLoginOutcome::Approved {
+            identity: Some(_), ..
+        } => "approved with identity",
+        ForumLoginOutcome::Approved { .. } => "approved",
         ForumLoginOutcome::SubscriptionRequired => "subscription required",
         ForumLoginOutcome::ClockSkew => "clock skew",
         ForumLoginOutcome::Expired => "expired",

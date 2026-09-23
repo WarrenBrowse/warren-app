@@ -3650,12 +3650,12 @@ impl Daemon {
         );
     }
 
-    /// Signs the community-forum login challenge for `sid` (doc 55).
-    /// Signs the fixed canonical request `POST /v1/forum/login` with body
-    /// `{"sid":"<sid>"}` using the Warren identity key held in the daemon,
-    /// and returns the header values + body. Replies `None` when no signer
-    /// is bootstrapped. The `sid` is validated (32 lowercase hex) upstream
-    /// in the gRPC layer, so it is safe to embed here.
+    /// Signs the community-forum login approval for `sid` (doc 55): the
+    /// canonical request `POST /v1/forum/login` with the bound body
+    /// `{"login_version":2,"sid":"<sid>"}`, using the Warren identity key held
+    /// in the daemon, and returns the header values + body. Replies `None`
+    /// when no signer is bootstrapped or the sid is malformed (the gRPC layer
+    /// refuses one first).
     ///
     /// **No-log policy**: the `sid`, pubkey and signature are never logged.
     fn on_sign_forum_login(
@@ -3663,12 +3663,12 @@ impl Daemon {
         tx: oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         sid: String,
     ) {
-        self.sign_forum_request(
-            tx,
-            "/v1/forum/login",
-            forum_login_body(&sid),
-            "sign_forum_login",
-        );
+        let Some(body) = forum_login_body(&sid) else {
+            log::debug!("sign_forum_login: not signed (malformed sid)");
+            Self::oneshot_send(tx, None, "sign_forum_login");
+            return;
+        };
+        self.sign_forum_request(tx, warren_forum::FORUM_LOGIN_PATH, body, "sign_forum_login");
     }
 
     /// Signs the community-forum notification read (doc 55). The body is
@@ -6091,11 +6091,6 @@ fn oneshot_map<T1: Send + 'static, T2: Send + 'static>(
     new_tx
 }
 
-/// Canonical `POST /v1/forum/login` JSON body (doc 55). Frozen wire
-/// contract with warren-connect: the daemon signs exactly this string and
-/// the GUI POSTs it verbatim, so a reformat here would silently break
-/// signature verification. `sid` is validated to `^[0-9a-f]{32}$` upstream,
-/// so it needs no JSON escaping.
 /// Whether a blocking error state deserves a periodic reconnect.
 ///
 /// Pure so the cause matrix is testable without a daemon. The blocked state is
@@ -6127,8 +6122,15 @@ const fn reschedules_reconnect(cause: &ErrorStateCause) -> bool {
     }
 }
 
-fn forum_login_body(sid: &str) -> String {
-    format!("{{\"sid\":\"{sid}\"}}")
+/// Canonical `POST /v1/forum/login` JSON body (doc 55): the bound approval
+/// of the crate the Android and iOS FFI share (`warren_forum::login_body`),
+/// so the desktop signs the bytes the mobile clients do and the GUI POSTs
+/// them verbatim. `None` for a sid that is not 32 lowercase hex, which the
+/// gRPC layer already refuses.
+fn forum_login_body(sid: &str) -> Option<String> {
+    let body = warren_forum::login_body(sid).ok()?;
+    // Validated ASCII: the version, the key names and hex.
+    String::from_utf8(body).ok()
 }
 
 /// Canonical `POST /v1/forum/notifications` JSON body (doc 55). Empty by
@@ -6556,13 +6558,73 @@ mod forum_report_tests {
 #[cfg(test)]
 mod forum_attach_body_tests {
     use super::{forum_attach_body, forum_login_body, forum_notifications_body};
+    use mullvad_api::warren_auth::WarrenAuthSigner;
+    use warren_identity::ed25519_dalek::SigningKey;
+
+    /// The bound forum login (the warren-vectors submodule), replayed by the
+    /// mobile clients through `warren-forum` and by warren-connect.
+    const VECTOR_PATH: &str = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../vectors/forum_login_v2.json"
+    );
+
+    fn str_of<'a>(value: &'a serde_json::Value, key: &str) -> &'a str {
+        value[key]
+            .as_str()
+            .unwrap_or_else(|| panic!("`{key}` is a string in {value}"))
+    }
 
     #[test]
-    fn forum_login_body_pins_the_wire_contract() {
-        assert_eq!(
-            forum_login_body("0123456789abcdef0123456789abcdef"),
-            "{\"sid\":\"0123456789abcdef0123456789abcdef\"}"
+    fn the_daemon_signs_the_vectors_bound_login_byte_for_byte() {
+        // A desktop approval the broker cannot tell from the mobile ones: the
+        // same bytes, signed by the daemon's own signer. The body of the form
+        // that predates the completion code is refused for staff wallets.
+        let raw = std::fs::read_to_string(VECTOR_PATH).unwrap_or_else(|err| {
+            panic!("read {VECTOR_PATH}: {err} (run `git submodule update --init vectors`)")
+        });
+        let vector: serde_json::Value = serde_json::from_str(&raw).expect("forum_login_v2.json");
+        assert_eq!(vector["version"], 2, "this test replays forum_login v2");
+        let secret: [u8; 32] = hex::decode(str_of(&vector["signer"], "signing_key_hex"))
+            .expect("hex")
+            .try_into()
+            .expect("32 bytes");
+        let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&secret));
+        let timestamp = vector["signer"]["timestamp"].as_u64().expect("timestamp");
+
+        let request = vector["requests"]
+            .as_array()
+            .expect("requests")
+            .iter()
+            .find(|r| r["name"] == "login_bound")
+            .expect("the vector pins the bound login");
+        let body = forum_login_body(str_of(request, "sid")).expect("the vector's sid");
+        assert_eq!(body, str_of(request, "body_utf8"));
+
+        let nonce: [u8; 16] = hex::decode(str_of(request, "nonce_hex"))
+            .expect("hex")
+            .try_into()
+            .expect("16 bytes");
+        let headers = signer.sign_request_at(
+            "POST",
+            str_of(request, "path"),
+            body.as_bytes(),
+            timestamp,
+            nonce,
         );
+        let pinned = &request["headers"];
+        assert_eq!(headers.pubkey_ss58, str_of(pinned, "X-Warren-PubKey"));
+        assert_eq!(headers.signature_hex, str_of(pinned, "X-Warren-Sig"));
+        assert_eq!(
+            headers.timestamp.to_string(),
+            str_of(pinned, "X-Warren-Timestamp")
+        );
+        assert_eq!(headers.nonce_hex, str_of(pinned, "X-Warren-Nonce"));
+    }
+
+    #[test]
+    fn a_malformed_sid_has_no_login_body() {
+        assert_eq!(forum_login_body("0123456789ABCDEF0123456789ABCDEF"), None);
+        assert_eq!(forum_login_body(r#"x","admin":true,"sid":"y"#), None);
     }
 
     #[test]

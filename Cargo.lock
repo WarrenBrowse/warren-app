@@ -6755,6 +6755,7 @@ dependencies = [
  "warren-discovery-core",
  "warren-identity",
  "warren-product-env",
+ "zeroize",
 ]
 
 [[package]]

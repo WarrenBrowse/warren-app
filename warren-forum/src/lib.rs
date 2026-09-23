@@ -190,18 +190,43 @@ pub(crate) fn build_signed_request_with_nonce(
     timestamp: u64,
     nonce: [u8; 16],
 ) -> Result<SignedForumRequest, ForumRequestError> {
-    if !is_allowed_connect_host(host) || !is_valid_sid(sid) {
+    if !is_allowed_connect_host(host) {
         return Err(ForumRequestError::Invalid);
     }
-    let body = format!("{{\"sid\":\"{sid}\"}}");
     signed_post_with_nonce(
         signing_key,
         host,
-        "/v1/forum/login",
-        body.into_bytes(),
+        FORUM_LOGIN_PATH,
+        login_body(sid)?,
         timestamp,
         nonce,
     )
+}
+
+/// The path the forum login approval is signed for and posted to.
+pub const FORUM_LOGIN_PATH: &str = "/v1/forum/login";
+
+/// The login form every client signs: the bound approval, whose answer carries
+/// the one-time completion code (warren-connect `docs/FORUM-LOGIN-V2.md`). It
+/// sits inside the signed bytes, so nobody relaying the request can strip it
+/// and fall back to the form a relayed approval completes without the code.
+pub const LOGIN_VERSION: u32 = 2;
+
+/// The canonical body of a forum login approval for `sid`, compact with the
+/// keys in ascending order: `{"login_version":2,"sid":"<sid>"}`. The one
+/// serialisation every platform signs: the FFI crates through
+/// [`build_signed_request`], the desktop daemon with its own signer over
+/// [`FORUM_LOGIN_PATH`]. The sid is checked to its 32 lowercase hex shape,
+/// so it needs no JSON escaping.
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if `sid` is malformed.
+pub fn login_body(sid: &str) -> Result<Vec<u8>, ForumRequestError> {
+    if !is_valid_sid(sid) {
+        return Err(ForumRequestError::Invalid);
+    }
+    Ok(format!("{{\"login_version\":{LOGIN_VERSION},\"sid\":\"{sid}\"}}").into_bytes())
 }
 
 /// Build the signed in-app report request. `report_json` is the report's
@@ -462,14 +487,108 @@ impl FailReason {
     }
 }
 
+/// What a bound approval hands back for the browser to finish the sign-in:
+/// the one-time code, and on a same-device approval the handoff URL that
+/// carries it to this device's default browser. Both are live credentials
+/// for the rest of the session (five minutes at most): they are held zeroized,
+/// never logged, and `Debug` prints neither.
+#[derive(Clone, PartialEq, Eq)]
+pub struct LoginCompletion {
+    code: zeroize::Zeroizing<String>,
+    handoff_url: Option<zeroize::Zeroizing<String>>,
+}
+
+impl LoginCompletion {
+    /// The six-digit code the browser that opened the sign-in must present.
+    #[must_use]
+    pub fn code(&self) -> &str {
+        &self.code
+    }
+
+    /// `https://<connect host>/handoff#sid=<sid>&code=<code>`, validated
+    /// against the allowlisted connect host and the code; `None` on a
+    /// cross-device approval or when the provider's URL failed validation.
+    #[must_use]
+    pub fn handoff_url(&self) -> Option<&str> {
+        self.handoff_url.as_deref().map(String::as_str)
+    }
+}
+
+impl core::fmt::Debug for LoginCompletion {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("LoginCompletion")
+            .field("code", &"<redacted>")
+            .field(
+                "handoff_url",
+                &self.handoff_url.as_ref().map(|_| "<redacted>"),
+            )
+            .finish()
+    }
+}
+
+/// The completion out of an approved body, validated against the allowlisted
+/// connect host: `None` when the body carries none (a provider that predates
+/// the bound approval) or a code that is not six ASCII digits. A handoff URL
+/// that fails validation is dropped and the code kept, so the person can
+/// still type it.
+#[must_use]
+pub fn parse_login_completion(body: &[u8]) -> Option<LoginCompletion> {
+    parse_login_completion_for(body, connect_host())
+}
+
+/// [`parse_login_completion`] against `host`, for the golden-vector replay,
+/// whose answers name a synthetic connect host.
+pub(crate) fn parse_login_completion_for(body: &[u8], host: &str) -> Option<LoginCompletion> {
+    let value: serde_json::Value = serde_json::from_slice(body).ok()?;
+    let completion = value.get("completion")?;
+    let code = completion.get("code")?.as_str()?;
+    if !is_completion_code(code) {
+        return None;
+    }
+    let handoff_url = completion
+        .get("handoff_url")
+        .and_then(serde_json::Value::as_str)
+        .filter(|url| is_handoff_url(url, host, code))
+        .map(|url| zeroize::Zeroizing::new(url.to_owned()));
+    Some(LoginCompletion {
+        code: zeroize::Zeroizing::new(code.to_owned()),
+        handoff_url,
+    })
+}
+
+fn is_completion_code(code: &str) -> bool {
+    code.len() == 6 && code.bytes().all(|b| b.is_ascii_digit())
+}
+
+/// True iff `url` is exactly `https://<host>/handoff#sid=<32 lowercase hex>&code=<code>`.
+/// The sid and the code ride in the fragment, which no browser sends to a
+/// server; anything around them (a query string, a userinfo, a parameter
+/// after the code) is a URL the provider does not build.
+fn is_handoff_url(url: &str, host: &str, code: &str) -> bool {
+    let Some(fragment) = url.strip_prefix(&format!("https://{host}/handoff#sid=")) else {
+        return false;
+    };
+    let Some((sid, rest)) = fragment.split_at_checked(32) else {
+        return false;
+    };
+    is_valid_sid(sid) && rest.strip_prefix("&code=") == Some(code)
+}
+
 /// Coarse outcome of a forum-login attempt. Kotlin / Swift map
 /// [`Self::SubscriptionRequired`] and [`Self::ClockSkew`] to their own messages
 /// and everything else to a generic failure.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ForumLoginOutcome {
-    /// The provider accepted the signature (the browser completes the login),
-    /// with the identity it handed back when the body carried one.
-    Approved(Option<ForumIdentity>),
+    /// The provider accepted the signature, with the identity it handed back
+    /// when the body carried one, and the completion the browser needs when
+    /// the provider binds the login to the code (`None` from a provider that
+    /// predates it: the browser then completes on its own).
+    Approved {
+        /// The forum identity, when the body carried a usable one.
+        identity: Option<ForumIdentity>,
+        /// The one-time code and the handoff URL of a bound approval.
+        completion: Option<LoginCompletion>,
+    },
     /// The wallet has never subscribed to Warren; forum access is refused (403).
     SubscriptionRequired,
     /// The device clock is outside the provider's accepted window, so the
@@ -503,8 +622,17 @@ fn body_carries(body: &[u8], token: &[u8]) -> bool {
 /// with its status.
 #[must_use]
 pub fn outcome_for_response(status: u16, body: &[u8]) -> ForumLoginOutcome {
+    outcome_for_response_for(status, body, connect_host())
+}
+
+/// [`outcome_for_response`] with the completion validated against `host`,
+/// for the golden-vector replay.
+pub(crate) fn outcome_for_response_for(status: u16, body: &[u8], host: &str) -> ForumLoginOutcome {
     match status {
-        200..=299 => ForumLoginOutcome::Approved(parse_login_identity(body)),
+        200..=299 => ForumLoginOutcome::Approved {
+            identity: parse_login_identity(body),
+            completion: parse_login_completion_for(body, host),
+        },
         403 => ForumLoginOutcome::SubscriptionRequired,
         401 if has_clock_skew_token(body) => ForumLoginOutcome::ClockSkew,
         404 => ForumLoginOutcome::Expired,
@@ -519,14 +647,33 @@ pub fn outcome_for_response(status: u16, body: &[u8]) -> ForumLoginOutcome {
 #[must_use]
 pub fn envelope(outcome: &ForumLoginOutcome) -> String {
     match outcome {
-        ForumLoginOutcome::Approved(None) => r#"{"ok":true}"#.to_owned(),
-        ForumLoginOutcome::Approved(Some(identity)) => match identity.notify_slot {
-            Some(slot) => format!(
-                r#"{{"ok":true,"handle":"{}","notify_slot":{slot}}}"#,
-                identity.handle
-            ),
-            None => format!(r#"{{"ok":true,"handle":"{}"}}"#, identity.handle),
-        },
+        ForumLoginOutcome::Approved {
+            identity,
+            completion,
+        } => {
+            // Every value interpolated here was validated to a shape with
+            // nothing to escape: a proquint, digits, and a handoff URL made of
+            // the allowlisted host, hex and digits.
+            let mut json = String::from(r#"{"ok":true"#);
+            if let Some(identity) = identity {
+                json.push_str(&format!(r#","handle":"{}""#, identity.handle));
+                if let Some(slot) = identity.notify_slot {
+                    json.push_str(&format!(r#","notify_slot":{slot}"#));
+                }
+            }
+            if let Some(completion) = completion {
+                json.push_str(&format!(
+                    r#","completion":{{"code":"{}""#,
+                    completion.code()
+                ));
+                if let Some(url) = completion.handoff_url() {
+                    json.push_str(&format!(r#","handoff_url":"{url}""#));
+                }
+                json.push('}');
+            }
+            json.push('}');
+            json
+        }
         ForumLoginOutcome::SubscriptionRequired => {
             r#"{"ok":false,"error":"subscription-required"}"#.to_owned()
         }
@@ -1416,6 +1563,9 @@ fn unix_secs_now() -> Option<u64> {
 mod forum_login_vector_tests;
 
 #[cfg(test)]
+mod forum_login_v2_vector_tests;
+
+#[cfg(test)]
 mod tests {
 
     #[test]
@@ -1446,6 +1596,165 @@ mod tests {
     fn signing_key() -> SigningKey {
         // A fixed non-zero secret: the request must build and sign every time.
         SigningKey::from_bytes(&[0x11u8; 32])
+    }
+
+    fn approved(identity: Option<ForumIdentity>) -> ForumLoginOutcome {
+        ForumLoginOutcome::Approved {
+            identity,
+            completion: None,
+        }
+    }
+
+    const CODE: &str = "042917";
+
+    fn handoff(host: &str, sid: &str, code: &str) -> String {
+        format!("https://{host}/handoff#sid={sid}&code={code}")
+    }
+
+    fn completion_body(code: &str, handoff_url: Option<&str>) -> Vec<u8> {
+        let mut completion = serde_json::json!({ "code": code });
+        if let Some(url) = handoff_url {
+            completion["handoff_url"] = url.into();
+        }
+        serde_json::to_vec(&serde_json::json!({
+            "completion": completion,
+            "handle": "lusab-babad-dovok",
+            "status": "approved",
+        }))
+        .expect("serialises")
+    }
+
+    #[test]
+    fn the_login_body_is_the_bound_form_with_its_version_first() {
+        assert_eq!(
+            login_body(SID).expect("a valid sid"),
+            format!(r#"{{"login_version":2,"sid":"{SID}"}}"#).into_bytes()
+        );
+        assert_eq!(login_body("not-a-sid"), Err(ForumRequestError::Invalid));
+        assert_eq!(
+            login_body(&SID.to_uppercase()),
+            Err(ForumRequestError::Invalid)
+        );
+    }
+
+    #[test]
+    fn a_bound_answer_yields_its_code_and_its_handoff() {
+        let url = handoff("connect.warrenbrowse.com", SID, CODE);
+        let completion = parse_login_completion(&completion_body(CODE, Some(&url)))
+            .expect("a six-digit code is a completion");
+        assert_eq!(completion.code(), CODE);
+        assert_eq!(completion.handoff_url(), Some(url.as_str()));
+
+        let cross = parse_login_completion(&completion_body(CODE, None))
+            .expect("the code alone is a completion");
+        assert_eq!(cross.code(), CODE);
+        assert_eq!(cross.handoff_url(), None);
+    }
+
+    #[test]
+    fn an_answer_without_a_usable_code_has_no_completion() {
+        assert_eq!(
+            parse_login_completion(br#"{"handle":"lusab-babad-dovok","status":"approved"}"#),
+            None
+        );
+        for code in [
+            "04291",
+            "0429170",
+            "04a917",
+            "",
+            " 42917",
+            "\u{660}\u{664}\u{662}\u{669}\u{661}\u{667}",
+        ] {
+            let body = format!(r#"{{"completion":{{"code":"{code}"}},"status":"approved"}}"#);
+            assert_eq!(parse_login_completion(body.as_bytes()), None, "{code:?}");
+        }
+        assert_eq!(
+            parse_login_completion(br#"{"completion":{"code":42917},"status":"approved"}"#),
+            None
+        );
+        assert_eq!(
+            parse_login_completion(br#"{"completion":"042917","status":"approved"}"#),
+            None
+        );
+        assert_eq!(parse_login_completion(b"not json"), None);
+    }
+
+    #[test]
+    fn a_handoff_that_is_not_the_connect_hosts_own_is_dropped_and_the_code_kept() {
+        let host = "connect.warrenbrowse.com";
+        for url in [
+            handoff("connect.example.test", SID, CODE),
+            handoff("connect.warrenbrowse.com.evil.example", SID, CODE),
+            format!("https://{host}@evil.example/handoff#sid={SID}&code={CODE}"),
+            format!("http://{host}/handoff#sid={SID}&code={CODE}"),
+            format!("https://{host}/handoff?sid={SID}&code={CODE}"),
+            format!("https://{host}/other#sid={SID}&code={CODE}"),
+            handoff(host, SID, "111111"),
+            handoff(host, &SID.to_uppercase(), CODE),
+            handoff(host, &SID[..31], CODE),
+            format!("{}&next=https://evil.example", handoff(host, SID, CODE)),
+            format!("https://{host}/handoff#code={CODE}&sid={SID}"),
+        ] {
+            let completion = parse_login_completion(&completion_body(CODE, Some(&url)))
+                .unwrap_or_else(|| panic!("the code stands whatever the handoff: {url}"));
+            assert_eq!(completion.code(), CODE, "{url}");
+            assert_eq!(completion.handoff_url(), None, "{url}");
+        }
+    }
+
+    #[test]
+    fn a_2xx_login_answer_carries_the_completion() {
+        let url = handoff("connect.warrenbrowse.com", SID, CODE);
+        match outcome_for_response(200, &completion_body(CODE, Some(&url))) {
+            ForumLoginOutcome::Approved {
+                identity: Some(identity),
+                completion: Some(completion),
+            } => {
+                assert_eq!(identity.handle, "lusab-babad-dovok");
+                assert_eq!(completion.code(), CODE);
+                assert_eq!(completion.handoff_url(), Some(url.as_str()));
+            }
+            other => panic!("{other:?}"),
+        }
+    }
+
+    #[test]
+    fn the_envelope_carries_the_completion_after_the_identity() {
+        let url = handoff("connect.warrenbrowse.com", SID, CODE);
+        let bound = outcome_for_response(200, &completion_body(CODE, Some(&url)));
+        assert_eq!(
+            envelope(&bound),
+            format!(
+                r#"{{"ok":true,"handle":"lusab-babad-dovok","completion":{{"code":"{CODE}","handoff_url":"{url}"}}}}"#
+            )
+        );
+        let cross = outcome_for_response(
+            200,
+            &serde_json::to_vec(&serde_json::json!({
+                "completion": { "code": CODE },
+                "status": "approved",
+            }))
+            .expect("serialises"),
+        );
+        assert_eq!(
+            envelope(&cross),
+            format!(r#"{{"ok":true,"completion":{{"code":"{CODE}"}}}}"#)
+        );
+    }
+
+    #[test]
+    fn a_completion_debug_print_carries_neither_the_code_nor_the_handoff() {
+        let url = handoff("connect.warrenbrowse.com", SID, CODE);
+        let completion =
+            parse_login_completion(&completion_body(CODE, Some(&url))).expect("completion");
+        let outcome = ForumLoginOutcome::Approved {
+            identity: None,
+            completion: Some(completion),
+        };
+        let printed = format!("{outcome:?}");
+        assert!(!printed.contains(CODE), "{printed}");
+        assert!(!printed.contains(SID), "{printed}");
+        assert!(printed.contains("redacted"), "{printed}");
     }
 
     #[test]
@@ -1555,7 +1864,10 @@ mod tests {
         let req = build_signed_request(&signing_key(), SID, "connect.warrenbrowse.com")
             .expect("a valid host + sid must build a request");
         assert_eq!(req.url, "https://connect.warrenbrowse.com/v1/forum/login");
-        assert_eq!(req.body, format!("{{\"sid\":\"{SID}\"}}").into_bytes());
+        assert_eq!(
+            req.body,
+            format!("{{\"login_version\":2,\"sid\":\"{SID}\"}}").into_bytes()
+        );
         assert_wire_parity(&req, "/v1/forum/login");
     }
 
@@ -1779,14 +2091,8 @@ mod tests {
 
     #[test]
     fn status_maps_to_the_desktop_outcomes() {
-        assert_eq!(
-            outcome_for_response(200, b""),
-            ForumLoginOutcome::Approved(None)
-        );
-        assert_eq!(
-            outcome_for_response(204, b""),
-            ForumLoginOutcome::Approved(None)
-        );
+        assert_eq!(outcome_for_response(200, b""), approved(None));
+        assert_eq!(outcome_for_response(204, b""), approved(None));
         assert_eq!(
             outcome_for_response(403, b""),
             ForumLoginOutcome::SubscriptionRequired
@@ -1812,7 +2118,7 @@ mod tests {
                 200,
                 br#"{"status":"approved","handle":"lusab-babad-dovok","notify_slot":42}"#
             ),
-            ForumLoginOutcome::Approved(Some(ForumIdentity {
+            approved(Some(ForumIdentity {
                 handle: "lusab-babad-dovok".into(),
                 notify_slot: Some(42),
             }))
@@ -1822,14 +2128,14 @@ mod tests {
                 200,
                 br#"{"status":"approved","handle":"lusab-babad-dovok"}"#
             ),
-            ForumLoginOutcome::Approved(Some(ForumIdentity {
+            approved(Some(ForumIdentity {
                 handle: "lusab-babad-dovok".into(),
                 notify_slot: None,
             }))
         );
         assert_eq!(
             outcome_for_response(200, br#"{"status":"approved","handle":"Admin Bob"}"#),
-            ForumLoginOutcome::Approved(None)
+            approved(None)
         );
         assert!(is_forum_handle("lusab-babad-dovok"));
         assert!(!is_forum_handle("lusab-babad"));
@@ -1858,25 +2164,22 @@ mod tests {
         );
         assert_eq!(
             outcome_for_response(200, br#"{"error":"clock_skew"}"#),
-            ForumLoginOutcome::Approved(None)
+            approved(None)
         );
     }
 
     #[test]
     fn envelope_json_matches_the_ffi_contract() {
+        assert_eq!(envelope(&approved(None)), r#"{"ok":true}"#);
         assert_eq!(
-            envelope(&ForumLoginOutcome::Approved(None)),
-            r#"{"ok":true}"#
-        );
-        assert_eq!(
-            envelope(&ForumLoginOutcome::Approved(Some(ForumIdentity {
+            envelope(&approved(Some(ForumIdentity {
                 handle: "lusab-babad-dovok".into(),
                 notify_slot: Some(42),
             }))),
             r#"{"ok":true,"handle":"lusab-babad-dovok","notify_slot":42}"#
         );
         assert_eq!(
-            envelope(&ForumLoginOutcome::Approved(Some(ForumIdentity {
+            envelope(&approved(Some(ForumIdentity {
                 handle: "lusab-babad-dovok".into(),
                 notify_slot: None,
             }))),

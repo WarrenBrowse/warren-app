@@ -198,7 +198,10 @@ mod tests {
             build_signed_request_at(&identity, SID, "connect.warrenbrowse.com", 1_800_000_000)
                 .expect("a valid identity + host + sid must build a request");
         assert_eq!(req.url, "https://connect.warrenbrowse.com/v1/forum/login");
-        assert_eq!(req.body, format!("{{\"sid\":\"{SID}\"}}").into_bytes());
+        assert_eq!(
+            req.body,
+            format!("{{\"login_version\":2,\"sid\":\"{SID}\"}}").into_bytes()
+        );
         let names: Vec<&str> = req.headers.iter().map(|(n, _)| n.as_str()).collect();
         assert!(names.contains(&"X-Warren-Sig"));
         assert!(names.contains(&"Content-Type"));

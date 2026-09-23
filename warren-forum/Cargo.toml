@@ -33,6 +33,9 @@ base64 = "0.22"
 # The connect host's `Date` header is the trusted clock a skewed device
 # corrects itself against before signing.
 httpdate = "1"
+# The completion code of a bound login approval, and the handoff URL that
+# carries it, are live credentials until the session ends.
+zeroize = { workspace = true }
 
 [dev-dependencies]
 # Wire-parity test: reconstruct the SHA-256 body hash and verify the signature
