@@ -1475,6 +1475,14 @@ impl WarrenTunnelMonitor {
             // loop. The daemon hook moves a two-hop circuit off a refusing
             // entry, for the same exit; the cooldown keeps one reaction per
             // rollout wave instead of one per redial.
+            //
+            // `relay_id` is the entry of the target the supervisor holds when
+            // it reports, which is not always the one it dialed: a refusal
+            // from a dial still in flight when a retarget lands is charged to
+            // the entry just moved to. That entry is then avoided for the
+            // drain window and replaced once more, in front of the same exit;
+            // the cooldown drops such a report when the retarget came from a
+            // refusal less than a cooldown earlier.
             on_dial_refused: params.warren_dial_refused.clone().map(|hook| {
                 Arc::new(
                     move |_hop: warrenguard_transport::multihop::DialRefusedHop,
