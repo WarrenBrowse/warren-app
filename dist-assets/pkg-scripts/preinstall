@@ -25,7 +25,35 @@ exec > "$LOG_DIR/preinstall.log" 2>&1
 
 echo "Running preinstall at $(date)"
 
-SETUP="$INSTALL_DIR/Warren VPN.app/Contents/Resources/warren-setup"
+BUNDLE="$INSTALL_DIR/Warren VPN.app"
+SETUP="$BUNDLE/Contents/Resources/warren-setup"
+
+# The account that must own every path this script executes as root. Only the
+# test harness, which cannot run as root, names another one.
+TRUSTED_UID=${WARREN_TRUSTED_OWNER_UID:-0}
+
+# Whether $1 is owned by TRUSTED_UID and writable by nobody else.
+owned_by_trusted_uid_alone() {
+    local entry mode owner
+    entry=$(ls -ldn "$1") || return 1
+    mode=${entry%% *}
+    owner=$(echo "$entry" | awk '{print $3}')
+    [[ "$owner" == "$TRUSTED_UID" && "${mode:5:1}" != "w" && "${mode:8:1}" != "w" ]]
+}
+
+# Whether the previous bundle's warren-setup may run as root. The bundle sits
+# in a directory every admin can write to, so an admin can replace it without
+# root; running a binary from it as root would let that admin become root at
+# the next update. Only a warren-setup that root alone controls, down from the
+# bundle itself, runs as root.
+setup_may_run_as_root() {
+    local path=$SETUP
+    while true; do
+        owned_by_trusted_uid_alone "$path" || return 1
+        [[ "$path" == "$BUNDLE" ]] && return 0
+        path=$(dirname "$path")
+    done
+}
 
 # The whole seal below belongs to an UPGRADE: it protects the host while the
 # old bundle is deleted and its daemon killed. A first install has neither, so
@@ -41,7 +69,11 @@ if [[ -x "$SETUP" ]]; then
     # waiting for a human with a terminal. Runs as root: it writes a LaunchDaemon.
     # Not fatal: a machine that cannot schedule the guard is still better served by
     # an update that proceeds with the in-daemon dead-man than by no update at all.
-    "$SETUP" arm-deadman || echo "Failed to arm the detached update guard"
+    if setup_may_run_as_root; then
+        "$SETUP" arm-deadman || echo "Failed to arm the detached update guard"
+    else
+        echo "The previous warren-setup is not controlled by root alone; not running it as root"
+    fi
 
     # Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing warren-setup.
     #
@@ -57,7 +89,9 @@ if [[ -x "$SETUP" ]]; then
     # a failure. Windows tolerates the same status (MVSETUP_DAEMON_NOT_RUNNING).
     if [[ $PREPARE_RESTART_STATUS -ne 0 && $PREPARE_RESTART_STATUS -ne 3 ]]; then
         echo "Failed to send 'prepare-restart' command to old warren-daemon; aborting the install"
-        "$SETUP" disarm-deadman || true
+        if setup_may_run_as_root; then
+            "$SETUP" disarm-deadman || true
+        fi
         exit 1
     fi
 fi

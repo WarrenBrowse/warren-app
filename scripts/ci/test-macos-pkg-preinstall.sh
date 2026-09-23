@@ -96,6 +96,7 @@ run_preinstall() {
         HOME="$dir" \
         WARREN_TEST_SANDBOX="$dir" \
         WARREN_LOG_DIR="$dir/log" \
+        WARREN_TRUSTED_OWNER_UID="$(id -u)" \
         bash "$PREINSTALL" "$dir/package.pkg" "$dir/Applications" \
         2> "$dir/prologue.log" || status=$?
 
@@ -168,6 +169,21 @@ if [ -e "$dir/Applications/Warren VPN.app" ]; then
 else
     echo "ok - a nominal upgrade removes the old bundle"
 fi
+
+# The previous bundle sits where any admin can replace it. A warren-setup that
+# another account can write is never run as root, whatever it would do: that
+# would hand the next update's root to whoever planted it. The seal itself runs
+# unprivileged and still happens.
+dir=$(make_sandbox writable-setup 0 with-old-bundle)
+chmod g+w "$dir/Applications/Warren VPN.app/Contents/Resources/warren-setup"
+report "an upgrade over a bundle another account can write proceeds" 0 "$(run_preinstall "$dir")" "$dir"
+assert_setup_not_called "a writable warren-setup is not run as root" "$dir" arm-deadman
+assert_setup_called "the unprivileged seal still runs" "$dir" prepare-restart
+
+dir=$(make_sandbox writable-bundle 0 with-old-bundle)
+chmod o+w "$dir/Applications/Warren VPN.app"
+report "an upgrade over a bundle directory another account can write proceeds" 0 "$(run_preinstall "$dir")" "$dir"
+assert_setup_not_called "a warren-setup under a writable bundle is not run as root" "$dir" arm-deadman
 
 if [ "$failures" -ne 0 ]; then
     echo "$failures assertion(s) failed"
