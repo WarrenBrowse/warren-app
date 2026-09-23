@@ -328,9 +328,18 @@ fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
 #[cfg(windows)]
 #[must_use]
 fn foreign_socket_is_privileged(path: &std::path::Path) -> bool {
+    use std::os::windows::io::AsRawHandle;
+    use windows_sys::Win32::Storage::FileSystem::{FILE_TYPE_PIPE, GetFileType};
+
     let Ok(pipe) = std::fs::File::options().read(true).open(path) else {
         return false;
     };
+    // A path that is not a pipe is not an endpoint, whoever owns it: an
+    // administrator's own files are admin-owned too.
+    // SAFETY: the handle stays open for the duration of the call.
+    if unsafe { GetFileType(pipe.as_raw_handle()) } != FILE_TYPE_PIPE {
+        return false;
+    }
     endpoint_admits(talpid_windows::fs::is_admin_owned(pipe).ok())
 }
 
