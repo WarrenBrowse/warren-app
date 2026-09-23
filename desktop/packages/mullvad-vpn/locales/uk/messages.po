@@ -1889,8 +1889,18 @@ msgstr "Якщо це не допоможе, надішліть звіт про 
 
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
-msgid "Only the account that set Warren up, or an administrator, can use it here. If you set it up yourself, open Warren from that account at the computer’s own screen."
-msgstr "Користуватися Warren тут може лише обліковий запис, який його налаштував, або адміністратор. Якщо ви налаштовували його самі, відкрийте Warren з цього облікового запису на екрані самого комп’ютера."
+msgid "Only the account that set Warren up, or an administrator, can use it here."
+msgstr "Користуватися Warren тут може лише обліковий запис, який його налаштував, або адміністратор."
+
+#. Message in launch view when Warren was set up on this computer before it recorded an owner, and this account is not the one at the computer's own screen.
+msgctxt "launch-view"
+msgid "Open Warren from the account signed in at this computer’s own screen to become its owner, or ask an administrator."
+msgstr "Відкрийте Warren з облікового запису, у який виконано вхід на екрані самого комп’ютера, щоб стати його власником, або зверніться до адміністратора."
+
+#. Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
+msgctxt "launch-view"
+msgid "Warren on this computer has no owner yet"
+msgstr "Warren на цьому комп’ютері ще не має власника"
 
 #. Status text when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"

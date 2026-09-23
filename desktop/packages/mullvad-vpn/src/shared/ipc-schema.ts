@@ -3,6 +3,7 @@ import { GetTextTranslations } from 'gettext-parser';
 import { MapData } from '../renderer/lib/3dmap';
 import { AppUpgradeError, AppUpgradeEvent } from './app-upgrade';
 import { ILinuxSplitTunnelingApplication, ISplitTunnelingApplication } from './application-types';
+import { DaemonAccessRefusal } from './daemon-access-refusal';
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
@@ -100,7 +101,7 @@ export interface IAppStateSnapshot {
   settings: ISettings;
   isPerformingPostUpgrade: boolean;
   daemonAllowed?: boolean;
-  daemonAccessDenied: boolean;
+  daemonAccessRefusal: DaemonAccessRefusal | null;
   deviceState?: DeviceState;
   relayList?: IRelayListWithEndpointData;
   currentVersion: ICurrentAppVersionInfo;
@@ -271,7 +272,7 @@ export const ipcSchema = {
   daemon: {
     isPerformingPostUpgrade: notifyRenderer<boolean>(),
     daemonAllowed: notifyRenderer<boolean>(),
-    accessDenied: notifyRenderer<boolean>(),
+    accessRefusal: notifyRenderer<DaemonAccessRefusal | null>(),
     connected: notifyRenderer<void>(),
     disconnected: notifyRenderer<void>(),
     prepareRestart: send<boolean>(),

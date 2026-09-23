@@ -1877,8 +1877,18 @@ msgstr "Hvis disse trinnene ikke løser noe, kan du sende inn en problemrapport.
 
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
-msgid "Only the account that set Warren up, or an administrator, can use it here. If you set it up yourself, open Warren from that account at the computer’s own screen."
-msgstr "Bare kontoen som satte opp Warren, eller en administrator, kan bruke det her. Hvis du satte det opp selv, åpner du Warren fra den kontoen på datamaskinens egen skjerm."
+msgid "Only the account that set Warren up, or an administrator, can use it here."
+msgstr "Bare kontoen som satte opp Warren, eller en administrator, kan bruke det her."
+
+#. Message in launch view when Warren was set up on this computer before it recorded an owner, and this account is not the one at the computer's own screen.
+msgctxt "launch-view"
+msgid "Open Warren from the account signed in at this computer’s own screen to become its owner, or ask an administrator."
+msgstr "Åpne Warren fra kontoen som er logget på datamaskinens egen skjerm for å bli eieren, eller spør en administrator."
+
+#. Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
+msgctxt "launch-view"
+msgid "Warren on this computer has no owner yet"
+msgstr "Warren på denne datamaskinen har ingen eier ennå"
 
 #. Status text when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"

@@ -1,3 +1,4 @@
+import { DaemonAccessRefusal } from '../../../shared/daemon-access-refusal';
 import { MacOsScrollbarVisibility } from '../../../shared/ipc-schema';
 import { DaemonStatus, IChangelog } from '../../../shared/ipc-types';
 import { LocationType } from '../../features/locations/types';
@@ -41,9 +42,9 @@ export interface ISetDaemonAllowed {
   daemonAllowed: boolean;
 }
 
-export interface ISetDaemonAccessDenied {
-  type: 'SET_DAEMON_ACCESS_DENIED';
-  daemonAccessDenied: boolean;
+export interface ISetDaemonAccessRefusal {
+  type: 'SET_DAEMON_ACCESS_REFUSAL';
+  daemonAccessRefusal: DaemonAccessRefusal | null;
 }
 
 export interface ISetChangelog {
@@ -75,7 +76,7 @@ export type UserInterfaceAction =
   | ISetConnectedToDaemon
   | ISetDaemonStatus
   | ISetDaemonAllowed
-  | ISetDaemonAccessDenied
+  | ISetDaemonAccessRefusal
   | ISetChangelog
   | ISetIsPerformingPostUpgrade
   | ISetSelectLocationView
@@ -138,10 +139,12 @@ function setDaemonAllowed(daemonAllowed: boolean): ISetDaemonAllowed {
   };
 }
 
-function setDaemonAccessDenied(daemonAccessDenied: boolean): ISetDaemonAccessDenied {
+function setDaemonAccessRefusal(
+  daemonAccessRefusal: DaemonAccessRefusal | null,
+): ISetDaemonAccessRefusal {
   return {
-    type: 'SET_DAEMON_ACCESS_DENIED',
-    daemonAccessDenied,
+    type: 'SET_DAEMON_ACCESS_REFUSAL',
+    daemonAccessRefusal,
   };
 }
 
@@ -182,7 +185,7 @@ export default {
   setConnectedToDaemon,
   setDaemonStatus,
   setDaemonAllowed,
-  setDaemonAccessDenied,
+  setDaemonAccessRefusal,
   setChangelog,
   setIsPerformingPostUpgrade,
   setSelectLocationView,

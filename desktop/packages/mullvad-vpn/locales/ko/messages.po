@@ -1871,8 +1871,18 @@ msgstr "이러한 단계로 문제가 해결되지 않으면 문제 보고서를
 
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
-msgid "Only the account that set Warren up, or an administrator, can use it here. If you set it up yourself, open Warren from that account at the computer’s own screen."
-msgstr "Warren을 설정한 계정 또는 관리자만 여기에서 사용할 수 있습니다. 직접 설정했다면 컴퓨터 본체 화면에서 해당 계정으로 Warren을 여세요."
+msgid "Only the account that set Warren up, or an administrator, can use it here."
+msgstr "Warren을 설정한 계정 또는 관리자만 여기에서 사용할 수 있습니다."
+
+#. Message in launch view when Warren was set up on this computer before it recorded an owner, and this account is not the one at the computer's own screen.
+msgctxt "launch-view"
+msgid "Open Warren from the account signed in at this computer’s own screen to become its owner, or ask an administrator."
+msgstr "소유자가 되려면 이 컴퓨터 본체 화면에 로그인한 계정에서 Warren을 열거나 관리자에게 요청하세요."
+
+#. Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
+msgctxt "launch-view"
+msgid "Warren on this computer has no owner yet"
+msgstr "이 컴퓨터의 Warren에는 아직 소유자가 없습니다"
 
 #. Status text when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"

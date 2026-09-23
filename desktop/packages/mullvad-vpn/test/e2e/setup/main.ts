@@ -125,7 +125,7 @@ class ApplicationMain {
       tunnelState: { state: 'disconnected', location: this.location, lockedDown: false },
       settings: this.settings,
       isPerformingPostUpgrade: false,
-      daemonAccessDenied: false,
+      daemonAccessRefusal: null,
       deviceState: this.deviceState,
       relayList: {
         relayList: mockData.relayList,

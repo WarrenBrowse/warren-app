@@ -1871,8 +1871,18 @@ msgstr "ဤအဆင့်များ အလုပ်မဖြစ်ပါက �
 
 #. Message in launch view when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
-msgid "Only the account that set Warren up, or an administrator, can use it here. If you set it up yourself, open Warren from that account at the computer’s own screen."
-msgstr "Warren ကို စနစ်ထည့်သွင်းခဲ့သော အကောင့် သို့မဟုတ် စီမံခန့်ခွဲသူသာ ဤနေရာတွင် အသုံးပြုနိုင်သည်။ သင်ကိုယ်တိုင် စနစ်ထည့်သွင်းခဲ့ပါက ကွန်ပျူတာ၏ ကိုယ်ပိုင်မျက်နှာပြင်ပေါ်တွင် ထိုအကောင့်မှ Warren ကို ဖွင့်ပါ။"
+msgid "Only the account that set Warren up, or an administrator, can use it here."
+msgstr "Warren ကို စနစ်ထည့်သွင်းခဲ့သော အကောင့် သို့မဟုတ် စီမံခန့်ခွဲသူသာ ဤနေရာတွင် အသုံးပြုနိုင်သည်။"
+
+#. Message in launch view when Warren was set up on this computer before it recorded an owner, and this account is not the one at the computer's own screen.
+msgctxt "launch-view"
+msgid "Open Warren from the account signed in at this computer’s own screen to become its owner, or ask an administrator."
+msgstr "ပိုင်ရှင်ဖြစ်လာရန် ဤကွန်ပျူတာ၏ ကိုယ်ပိုင်မျက်နှာပြင်တွင် ဝင်ရောက်ထားသော အကောင့်မှ Warren ကို ဖွင့်ပါ၊ သို့မဟုတ် စီမံခန့်ခွဲသူကို မေးပါ။"
+
+#. Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
+msgctxt "launch-view"
+msgid "Warren on this computer has no owner yet"
+msgstr "ဤကွန်ပျူတာပေါ်ရှိ Warren တွင် ပိုင်ရှင် မရှိသေးပါ"
 
 #. Status text when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"

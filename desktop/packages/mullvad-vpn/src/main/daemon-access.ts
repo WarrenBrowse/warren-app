@@ -1,15 +1,25 @@
 import * as grpc from '@grpc/grpc-js';
 
+import { DaemonAccessRefusal } from '../shared/daemon-access-refusal';
+
+/** Where the daemon puts the machine-readable reason of a refused call. */
+const REASON_TRAILER = 'grpc-status-details-bin';
+
 /**
- * Whether the daemon refused a call because this account may not use Warren
- * on this computer: another account set it up, and only that account or an
- * administrator may drive the tunnel or reach the wallet. Retrying cannot
- * change that answer, so the app stops and says so.
+ * The daemon's reason for refusing a call from this account, or `null` when
+ * the error is not a refusal. Retrying cannot change the answer until the
+ * ownership changes, so the app stops, says why, and asks again slowly.
  */
-export function isDaemonAccessRefusal(error: unknown): boolean {
-  return (
-    typeof error === 'object' &&
-    error !== null &&
-    (error as { code?: unknown }).code === grpc.status.PERMISSION_DENIED
-  );
+export function daemonAccessRefusal(error: unknown): DaemonAccessRefusal | null {
+  if (
+    typeof error !== 'object' ||
+    error === null ||
+    (error as { code?: unknown }).code !== grpc.status.PERMISSION_DENIED
+  ) {
+    return null;
+  }
+  const metadata = (error as { metadata?: unknown }).metadata;
+  const reason =
+    metadata instanceof grpc.Metadata ? metadata.get(REASON_TRAILER)[0]?.toString() : undefined;
+  return reason === 'claim_needs_console_user' ? 'claimNeedsConsoleUser' : 'ownedByAnotherAccount';
 }

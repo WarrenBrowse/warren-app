@@ -21,6 +21,7 @@ import {
   ISplitTunnelingAppListRetriever,
 } from '../shared/application-types';
 import { urls } from '../shared/constants';
+import { DaemonAccessRefusal } from '../shared/daemon-access-refusal';
 import {
   AccessMethodSetting,
   DaemonAppUpgradeEvent,
@@ -75,7 +76,7 @@ import {
   printCommandLineOptions,
   printElectronOptions,
 } from './command-line-options';
-import { isDaemonAccessRefusal } from './daemon-access';
+import { daemonAccessRefusal } from './daemon-access';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
 import ForumActivityMonitor, { ForumActivityMonitorDelegate } from './forum-activity-monitor';
@@ -157,6 +158,7 @@ const ALLOWED_PERMISSIONS = ['clipboard-sanitized-write'];
 
 const SANDBOX_DISABLED = app.commandLine.hasSwitch('no-sandbox');
 const UPDATE_NOTIFICATION_DISABLED = process.env.MULLVAD_DISABLE_UPDATE_NOTIFICATION === '1';
+const DAEMON_ACCESS_RETRY_MS = 60_000;
 
 const GEO_DIR = path.resolve(import.meta.dirname, 'assets/geo');
 
@@ -252,7 +254,8 @@ class ApplicationMain
   private beforeFirstDaemonConnection = true;
   private isPerformingPostUpgrade = false;
   private daemonAllowed?: boolean;
-  private daemonAccessDenied = false;
+  private daemonAccessRefusal: DaemonAccessRefusal | null = null;
+  private daemonAccessRetry?: NodeJS.Timeout;
   private quitInitiated = false;
 
   private linuxSplitTunneling?: typeof import('./linux-split-tunneling');
@@ -1135,7 +1138,7 @@ class ApplicationMain
 
     // reset the reconnect backoff when connection established.
     this.reconnectBackoff.reset();
-    this.setDaemonAccessDenied(false);
+    this.setDaemonAccessRefusal(null);
 
     // notify renderer, this.daemonRpc.isConnected could have changed if the daemon disconnected
     // again before this if-statement is reached.
@@ -1154,6 +1157,8 @@ class ApplicationMain
   };
 
   private onDaemonDisconnected = (wasConnected: boolean, error?: Error, planned?: boolean) => {
+    clearTimeout(this.daemonAccessRetry);
+    this.daemonAccessRetry = undefined;
     if (this.daemonEventListener) {
       this.daemonRpc.unsubscribeDaemonEventListener(this.daemonEventListener);
     }
@@ -1221,9 +1226,11 @@ class ApplicationMain
   }
 
   private handleBootstrapError(error?: Error) {
-    if (isDaemonAccessRefusal(error)) {
-      log.info('The daemon refuses this account: Warren is set up by another account here');
-      this.setDaemonAccessDenied(true);
+    const refusal = daemonAccessRefusal(error);
+    if (refusal !== null) {
+      log.info(`The daemon refuses this account (${refusal}); asking again in a minute`);
+      this.setDaemonAccessRefusal(refusal);
+      this.scheduleDaemonAccessRetry();
     }
 
     // Unsubscribe from daemon, app upgrade, and Warren status events
@@ -1247,11 +1254,23 @@ class ApplicationMain
     }
   }
 
-  private setDaemonAccessDenied(denied: boolean) {
-    if (this.daemonAccessDenied !== denied) {
-      this.daemonAccessDenied = denied;
-      IpcMainEventChannel.daemon.notifyAccessDenied?.(denied);
+  private setDaemonAccessRefusal(refusal: DaemonAccessRefusal | null) {
+    if (this.daemonAccessRefusal !== refusal) {
+      this.daemonAccessRefusal = refusal;
+      IpcMainEventChannel.daemon.notifyAccessRefusal?.(refusal);
     }
+  }
+
+  // The refusal lasts until the ownership changes, which only the owner or an
+  // administrator can do, so a slow retry is enough to notice it.
+  private scheduleDaemonAccessRetry() {
+    clearTimeout(this.daemonAccessRetry);
+    this.daemonAccessRetry = setTimeout(() => {
+      this.daemonAccessRetry = undefined;
+      if (this.daemonRpc.isConnected && this.daemonAccessRefusal !== null) {
+        void this.onDaemonConnected();
+      }
+    }, DAEMON_ACCESS_RETRY_MS);
   }
 
   private subscribeEvents(): SubscriptionListener<DaemonEvent> {
@@ -1407,7 +1426,7 @@ class ApplicationMain
       settings: this.settings.all,
       isPerformingPostUpgrade: this.isPerformingPostUpgrade,
       daemonAllowed: this.daemonAllowed,
-      daemonAccessDenied: this.daemonAccessDenied,
+      daemonAccessRefusal: this.daemonAccessRefusal,
       deviceState: this.account.deviceState,
       relayList: this.relayList,
       currentVersion: this.version.currentVersion,

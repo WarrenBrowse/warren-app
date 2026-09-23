@@ -1,3 +1,4 @@
+import { DaemonAccessRefusal } from '../../../shared/daemon-access-refusal';
 import { MacOsScrollbarVisibility } from '../../../shared/ipc-schema';
 import { DaemonStatus, IChangelog } from '../../../shared/ipc-types';
 import { LocationType } from '../../features/locations/types';
@@ -12,8 +13,8 @@ export interface IUserInterfaceReduxState {
   connectedToDaemon: boolean;
   daemonStatus?: DaemonStatus;
   daemonAllowed?: boolean;
-  // The daemon refuses this account: Warren is set up by another one here.
-  daemonAccessDenied: boolean;
+  // Why the daemon refuses this account, if it does.
+  daemonAccessRefusal: DaemonAccessRefusal | null;
   changelog: IChangelog;
   isPerformingPostUpgrade: boolean;
   selectLocationView: LocationType;
@@ -27,7 +28,7 @@ const initialState: IUserInterfaceReduxState = {
   macOsScrollbarVisibility: undefined,
   connectedToDaemon: false,
   daemonAllowed: undefined,
-  daemonAccessDenied: false,
+  daemonAccessRefusal: null,
   changelog: [],
   isPerformingPostUpgrade: false,
   selectLocationView: LocationType.exit,
@@ -66,8 +67,8 @@ export default function (
     case 'SET_DAEMON_ALLOWED':
       return { ...state, daemonAllowed: action.daemonAllowed };
 
-    case 'SET_DAEMON_ACCESS_DENIED':
-      return { ...state, daemonAccessDenied: action.daemonAccessDenied };
+    case 'SET_DAEMON_ACCESS_REFUSAL':
+      return { ...state, daemonAccessRefusal: action.daemonAccessRefusal };
 
     case 'SET_CHANGELOG':
       return {
