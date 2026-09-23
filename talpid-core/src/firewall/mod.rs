@@ -237,12 +237,7 @@ impl fmt::Display for FirewallPolicy {
                         f,
                         " over \"{}\" (ip: {}, v4 gw: {}, v6 gw: {:?}, allowed in-tunnel traffic: {}), {} LAN. Allowing endpoint {}",
                         tunnel.interface,
-                        tunnel
-                            .ips
-                            .iter()
-                            .map(|ip| ip.to_string())
-                            .collect::<Vec<_>>()
-                            .join(","),
+                        tunnel_addresses(&tunnel.ips),
                         tunnel.ipv4_gateway,
                         tunnel.ipv6_gateway,
                         allowed_tunnel_traffic,
@@ -272,12 +267,7 @@ impl fmt::Display for FirewallPolicy {
                     f,
                     " over \"{}\" (ip: {}, v4 gw: {}, v6 gw: {:?}), {} LAN",
                     tunnel.interface,
-                    tunnel
-                        .ips
-                        .iter()
-                        .map(|ip| ip.to_string())
-                        .collect::<Vec<_>>()
-                        .join(","),
+                    tunnel_addresses(&tunnel.ips),
                     tunnel.ipv4_gateway,
                     tunnel.ipv6_gateway,
                     if *allow_lan { "Allowing" } else { "Blocking" }
@@ -298,6 +288,16 @@ impl fmt::Display for FirewallPolicy {
             ),
         }
     }
+}
+
+/// The address families of the tunnel interface, for the policy line. The
+/// addresses themselves stay out of the log: the exit keys the session on
+/// the inner address it assigned, so the address identifies the session.
+fn tunnel_addresses(ips: &[IpAddr]) -> String {
+    ips.iter()
+        .map(|ip| if ip.is_ipv4() { "IPv4" } else { "IPv6" })
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 /// Manages network security of the computer/device. Can apply and enforce firewall policies
@@ -485,5 +485,26 @@ mod allowed_tunnel_dns_tests {
         let local = IpAddr::V4(Ipv4Addr::new(192, 168, 1, 1));
         let allowed = allowed_tunnel_dns(&resolved(&[], &[local]));
         assert!(!allowed.contains(&local), "leaked a non-tunnel resolver");
+    }
+}
+
+#[cfg(test)]
+mod policy_log_tests {
+    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+    use super::tunnel_addresses;
+
+    #[test]
+    fn the_policy_line_names_no_tunnel_address() {
+        // "Applying firewall policy" is logged at info on every connect, and
+        // the exit keys the session on the inner address it assigned.
+        let line = tunnel_addresses(&[
+            IpAddr::V4(Ipv4Addr::new(10, 66, 7, 201)),
+            IpAddr::V6(Ipv6Addr::new(0xfdcc, 0xf, 1, 0, 0, 0, 0, 0x7c9)),
+        ]);
+
+        assert!(!line.contains("10.66."), "{line}");
+        assert!(!line.contains("fdcc:"), "{line}");
+        assert_eq!(line, "IPv4,IPv6");
     }
 }

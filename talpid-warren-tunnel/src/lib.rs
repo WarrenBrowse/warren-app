@@ -1659,12 +1659,7 @@ impl WarrenTunnelMonitor {
                          not a silent fallback."
                     );
                 }
-                log::info!(
-                    "{TRACE_PREFIX} multi-hop TUN using exit-allocated IPv4 {} (gateway {}, dual_stack={})",
-                    spec.assigned,
-                    spec.gateway,
-                    spec.assigned_v6.is_some()
-                );
+                log::info!("{}", tun_address_line(&spec));
                 session_placement::SESSION_PLACEMENT.remember(spec.assigned);
                 (
                     spec.assigned,
@@ -2286,17 +2281,12 @@ impl WarrenTunnelMonitor {
                     }
                     let republished = *assign_rx.borrow_and_update();
                     if let Some(spec) = republished
-                        && spec.assigned != tun_ip_v4
+                        && let Some(msg) = reassignment_escalation(tun_ip_v4, &spec)
                     {
                         // The rebuild this escalates must ask to be placed
                         // back here, not start yet another session that the
                         // exit would put somewhere else again.
                         session_placement::SESSION_PLACEMENT.remember(spec.assigned);
-                        let msg = format!(
-                            "exit reassigned the tunnel IPv4 {tun_ip_v4} -> {} on reconnect; \
-                             rebuilding the tunnel to adopt it",
-                            spec.assigned
-                        );
                         log::warn!("{TRACE_PREFIX} {msg}");
                         if let Some(tx) = pump_error_tx
                             .lock()
@@ -3160,6 +3150,31 @@ fn idle_cover_effective(knob: bool, daita_requested: bool) -> bool {
     knob && !daita_requested
 }
 
+/// The log line recording where the TUN address came from. It names no
+/// address: the exit keys the session on the inner IPv4 it assigned, so a
+/// log carrying it ties whoever holds the log to that session.
+#[must_use]
+fn tun_address_line(spec: &warrenguard_transport::IpAssignSpec) -> String {
+    format!(
+        "{TRACE_PREFIX} multi-hop TUN using the exit-allocated IPv4 (dual_stack={})",
+        spec.assigned_v6.is_some()
+    )
+}
+
+/// The escalation that rebuilds the tunnel when a reconnect republished a
+/// different inner IPv4 than the TUN holds, or `None` when it did not move.
+/// Like [`tun_address_line`] it names neither address: it is logged here
+/// and travels on as the tunnel's close error.
+#[must_use]
+fn reassignment_escalation(
+    tun_ip: std::net::Ipv4Addr,
+    republished: &warrenguard_transport::IpAssignSpec,
+) -> Option<String> {
+    (republished.assigned != tun_ip).then(|| {
+        "exit reassigned the tunnel IPv4 on reconnect; rebuilding the tunnel to adopt it".to_owned()
+    })
+}
+
 /// Derives a deterministic IPv4 in `warrenguard_config::TUNNEL_POOL_CIDR`
 /// (`10.66.0.0/16`) from the client Ed25519 pubkey bytes.
 ///
@@ -3555,6 +3570,56 @@ fn detect_default_iface() -> std::io::Result<String> {
         std::io::ErrorKind::NotFound,
         "no IPv4 default route in /proc/net/route",
     ))
+}
+
+#[cfg(test)]
+mod tun_address_log_tests {
+    use std::net::Ipv4Addr;
+
+    use warrenguard_transport::IpAssignSpec;
+
+    use super::{reassignment_escalation, tun_address_line};
+
+    fn assigned(address: Ipv4Addr) -> IpAssignSpec {
+        IpAssignSpec {
+            assigned: address,
+            prefix_len: 16,
+            gateway: Ipv4Addr::new(10, 66, 0, 1),
+            assigned_v6: None,
+            prefix_len_v6: 0,
+            gateway_v6: None,
+        }
+    }
+
+    #[test]
+    fn the_tun_address_line_names_no_inner_address() {
+        // The exit keys the session on the inner IPv4 it assigned, so a log
+        // line carrying it ties the user's log to that session.
+        let line = tun_address_line(&assigned(Ipv4Addr::new(10, 66, 7, 201)));
+
+        assert!(!line.contains("10.66."), "{line}");
+        assert!(line.contains("dual_stack=false"), "{line}");
+    }
+
+    #[test]
+    fn a_moved_inner_address_escalates_without_naming_either_address() {
+        // The escalation is logged here and travels on as the tunnel's close
+        // error, so it carries neither the old nor the new address.
+        let msg = reassignment_escalation(
+            Ipv4Addr::new(10, 66, 7, 201),
+            &assigned(Ipv4Addr::new(10, 66, 3, 17)),
+        )
+        .expect("a moved address must rebuild the tunnel");
+
+        assert!(!msg.contains("10.66."), "{msg}");
+    }
+
+    #[test]
+    fn a_republished_inner_address_that_did_not_move_escalates_nothing() {
+        let address = Ipv4Addr::new(10, 66, 7, 201);
+
+        assert_eq!(reassignment_escalation(address, &assigned(address)), None);
+    }
 }
 
 #[cfg(test)]

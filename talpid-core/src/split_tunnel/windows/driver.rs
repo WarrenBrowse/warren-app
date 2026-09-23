@@ -278,12 +278,14 @@ impl DeviceHandle {
         internet_ipv4: Option<Ipv4Addr>,
         internet_ipv6: Option<Ipv6Addr>,
     ) -> io::Result<()> {
+        // Presence only: the tunnel addresses identify the session to its
+        // exit, and the internet ones are this host's own.
         log::debug!(
-            "Register IPs: tunnel IPv4: {:?}, tunnel IPv6 {:?}, internet IPv4: {:?}, internet IPv6: {:?}",
-            tunnel_ipv4,
-            tunnel_ipv6,
-            internet_ipv4,
-            internet_ipv6
+            "Register IPs: tunnel IPv4: {}, tunnel IPv6 {}, internet IPv4: {}, internet IPv6: {}",
+            tunnel_ipv4.is_some(),
+            tunnel_ipv6.is_some(),
+            internet_ipv4.is_some(),
+            internet_ipv6.is_some()
         );
         let mut addresses: SplitTunnelAddresses = unsafe { mem::zeroed() };
 
