@@ -9,7 +9,7 @@ who cannot get through the browser still reaches the support team.
 
 | flow | trigger | what the app signs | server route |
 |---|---|---|---|
-| Forum sign-in | `<scheme>://forum-login?sid&host(&xd=1)` deep link, or a sign-in code typed under Settings | `{"sid":...}` | `POST /v1/forum/login` |
+| Forum sign-in | `<scheme>://forum-login?sid&host(&xd=1)` deep link, or a sign-in code typed under Settings | `{"login_version":2,"sid":...}` | `POST /v1/forum/login` |
 | Attach logs to a topic | `<scheme>://attach-logs?sid&topic&host` (desktop today) | `{"sid","topic_id","log_gz_b64"}` | `POST /v1/forum/attach-logs` |
 | In-app report | Settings, "Report a problem" (Android and desktop) | the form fields plus `log_gz_b64` | `POST /v1/forum/report` |
 
@@ -57,6 +57,69 @@ host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
   included, and it disarms Approve after a terminal refusal
   (`isTerminalForumLoginResult`) the way the Android prompt does.
 
+## The bound approval: the code that finishes the sign-in
+
+warren-connect binds a login to the browser that opened it
+(`warren-connect/docs/FORUM-LOGIN-V2.md`, pinned by
+`vectors/forum_login_v2.json`): `/sso` sets a `__Host-warren_login` cookie
+in that browser, and the app's signed approval
+(`{"login_version":2,"sid":...}`, built once by `warren_forum::login_body`
+for every platform, the desktop daemon included) is answered with a
+one-time six-digit code that the browser must present before it completes. A
+relayed link, QR or typed code hands the code to the victim's app and leaves
+the attacker's browser with a cookie and no code.
+
+What the app does with the answer depends on how the sid arrived, one table
+for every platform (`login.completion` in
+`fixtures/client-rules/forum_outcomes.json`):
+
+| how the sid arrived | screen | handoff |
+|---|---|---|
+| deep link without `xd` | "Finishing the sign-in in your browser", the code behind "The sign-in page is in another browser? Show the code" | `handoff_url` opened in the default browser at once, once |
+| deep link with `xd=1` (the QR) | the code, large, with the warning never to read it out or send it | never, even one the provider sent |
+| sign-in code typed under Settings | the code with the same warning, and "Finish in this device's browser" | on that button only |
+| any of them, answer without `completion` | the approval as before: the browser completes on its own (a provider that predates the code, warren-connect v0.15.8 and older) | none |
+
+The completion is validated before anything uses it: six ASCII digits, and a
+handoff URL of exactly
+`https://<connect host>/handoff#sid=<32 lowercase hex>&code=<the code>` (the
+sid and the code ride in the fragment, which reaches no server log). A code of
+another shape drops the whole completion; a handoff of another shape is
+dropped on its own and the code kept. The Rust crate validates it for the
+mobile envelope (`parse_login_completion`), the desktop main process validates
+the HTTP answer itself (`parseForumLoginCompletion`), and Kotlin and Swift
+re-check the envelope before they open anything.
+
+The code and the handoff URL are live credentials until the session ends: they
+live in memory for the screen that shows them, at most 300 s after the answer
+(`code_lifetime_secs`), and are never logged, journaled, persisted, put in a
+notification, copied to the clipboard or included in a problem report. Every
+`Debug`, `toString` and `description` of the types that hold them prints
+`<redacted>`, and the logs and the Android events journal carry the class
+only (`approved-bound`). Where they live per platform:
+
+- Desktop: `main/forum-login.ts` parses the answer and splits the plan
+  (`planForumLoginApproval`): the handoff URL stays in main (opened at once, or
+  kept in `PendingForumHandoff` for the button), the renderer gets the code and
+  the screen through `forumLogin.approve` and asks main to open the kept
+  handoff through `forumLogin.finishInBrowser`. The screen is the completion
+  view of `ForumLoginPrompt`; its state is `prompt-state.ts`.
+- Android: the FFI envelope carries an additive `completion` object;
+  `WarrenForumLoginUseCase` decodes it into `ForumLoginCompletion`,
+  `ForumLoginPromptState.complete` holds the screen and the handoffs (taken
+  once, so a rotation opens nothing twice), and `ForumLoginPromptHost` shows
+  the dialog and opens the handoff with an `ACTION_VIEW` intent.
+- iOS: `WarrenAccountClient.forumLoginOutcome` decodes the same envelope into
+  `WarrenForumLoginCompletion`, `WarrenForumCompletionSession` holds the
+  handoffs, and `WarrenForumLoginCompletionView` is the sheet; the handoff
+  opens with `UIApplication.open`.
+
+Every other answer maps as before: `400 app_update_required` (the provider
+refused an approval without `login_version`, which these clients never sign),
+`429` (the wallet holds three approved sign-ins no browser completed) and
+`502` (a database or gate read failed) are the generic failure, and the last
+two leave the session waiting, so Approve stays armed for a retry.
+
 ## The sign-in, step by step (Android)
 
 1. The browser shows the approval page and the user taps the button. Chromium
@@ -86,8 +149,9 @@ host is a hard allowlist (`connect.warrenbrowse.com`) on every platform.
    signed POST.
 5. The approved body carries the forum identity (`handle`, `notify_slot`);
    Android stores it (`ForumIdentityRepository`) and shows the "Forum name"
-   on the account page. The app then moves to the background so the browser
-   page, which only re-polls when visible, completes the login.
+   on the account page. With a completion code the app shows the completion
+   dialog of the section above; without one it moves to the background so the
+   browser page, which only re-polls when visible, completes the login.
 
 Every step writes its class to the events journal and the Rust log, so a
 report filed afterwards explains a failure without a second round trip.
@@ -263,12 +327,18 @@ Two files keep the four implementations (Rust, Kotlin, TypeScript, Swift)
 from drifting, each replayed by every platform's own unit tests:
 
 - `vectors/forum_login_v1.json` (the warren-vectors submodule): the exact
-  signed bytes of a login and of a report, and the broker's exact answer per
-  outcome; synthetic host and key. Replayed by
-  `warren-forum/src/forum_login_vector_tests.rs` through the nonce-taking
-  builders (`build_signed_request_with_nonce`,
-  `build_signed_report_request_with_nonce`), and by warren-connect on the
+  signed bytes of a report and of an attach, the login form that predates the
+  completion code, and the broker's exact answer per outcome; synthetic host
+  and key. Replayed by `warren-forum/src/forum_login_vector_tests.rs` through
+  the nonce-taking builders (`build_signed_report_request_with_nonce`,
+  `build_signed_attach_request_with_nonce`), and by warren-connect on the
   other side of the wire.
+- `vectors/forum_login_v2.json`: the bound login the app signs, its answers
+  with the completion code and the handoff URL, and the browser half.
+  Replayed by `warren-forum/src/forum_login_v2_vector_tests.rs` (the request
+  through `build_signed_request_with_nonce`, every login answer, the handoff
+  validation on a foreign host, a query string and another code) and by the
+  daemon's `the_daemon_signs_the_vectors_bound_login_byte_for_byte`.
 - `fixtures/client-rules/` (this repo): the deep-link classes per scheme,
   the outcome table with the FFI envelope of every outcome, the product
   anchors per environment. Readers, schema and the skip lists still in force
